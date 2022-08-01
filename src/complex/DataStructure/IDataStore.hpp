@@ -29,8 +29,8 @@ class COMPLEX_EXPORT IDataStore
 public:
   using ShapeType = typename std::vector<usize>;
 
-  static inline constexpr const char k_TupleShape[] = "TupleShape";
-  static inline constexpr const char k_ComponentShape[] = "ComponentShape";
+  static inline constexpr const char k_TupleShape[] = "TupleDimensions";
+  static inline constexpr const char k_ComponentShape[] = "ComponentDimensions";
 
   enum class StoreType : int32
   {

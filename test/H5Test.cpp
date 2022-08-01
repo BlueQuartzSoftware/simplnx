@@ -14,7 +14,9 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
@@ -30,6 +32,8 @@
 #include <string>
 #include <type_traits>
 
+#define TEST_LEGACY 1
+
 using namespace complex;
 namespace fs = std::filesystem;
 
@@ -42,7 +46,7 @@ namespace
 namespace Constants
 {
 const fs::path k_DataDir = "test/data";
-const fs::path k_LegacyFilepath = "SmallN100.dream3d";
+const StringLiteral k_LegacyFilepath = "LegacyData.dream3d";
 const fs::path k_ComplexH5File = "new.h5";
 } // namespace Constants
 
@@ -53,7 +57,8 @@ fs::path GetDataDir(const Application& app)
 
 fs::path GetLegacyFilepath(const Application& app)
 {
-  return GetDataDir(app) / Constants::k_LegacyFilepath;
+  std::string path = fmt::format("{}/test/Data/{}", unit_test::k_SourceDir.view(), Constants::k_LegacyFilepath);
+  return std::filesystem::path(path);
 }
 
 fs::path GetComplexH5File(const Application& app)
@@ -75,73 +80,48 @@ bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
 }
 } // namespace
 
+#if TEST_LEGACY
 TEST_CASE("Read Legacy DREAM.3D Data")
 {
-#if 0
   Application app;
-  DataStructure ds = H5::Reader::DataStructure::readLegacyFile(getLegacyFilepath(app));
+  std::filesystem::path filepath = GetLegacyFilepath(app);
+  REQUIRE(exists(filepath));
+  Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
+  REQUIRE(result.valid());
+  DataStructure ds = result.value();
 
   const std::string geomName = "Small IN100";
-  auto geom = ds.getData(DataPath({geomName}));
-  REQUIRE(geom != nullptr);
-  auto image = dynamic_cast<ImageGeom*>(geom);
+  const auto* image = ds.getDataAs<ImageGeom>(DataPath({geomName}));
   REQUIRE(image != nullptr);
   REQUIRE(equalsf(image->getOrigin(), FloatVec3(-47.0f, 0.0f, -29.0f)));
   REQUIRE(image->getDimensions() == SizeVec3(189, 201, 117));
   REQUIRE(equalsf(image->getSpacing(), FloatVec3(0.25f, 0.25f, 0.25f)));
 
   {
-    const std::string scanData = "EBSD Scan Data";
-    REQUIRE(ds.getData(DataPath({geomName, scanData})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "Confidence Index"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "EulerAngles"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "FeatureIds"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "Fit"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "IPFColor"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "Image Quality"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "Mask"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "ParentIds"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "Phases"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "Quats"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, scanData, "SEM Signal"})) != nullptr);
+    const std::string testDCName = "DataContainer";
+    DataPath testDCPath({testDCName});
+    auto* testDC = ds.getDataAs<DataGroup>(testDCPath);
+    REQUIRE(testDC != nullptr);
+
+    DataPath testAMPath = testDCPath.createChildPath("AttributeMatrix");
+    REQUIRE(ds.getDataAs<DataGroup>(DataPath({testAMPath})) != nullptr);
+
+    REQUIRE(ds.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
+    REQUIRE(ds.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
+    REQUIRE(ds.getDataAs<Float32Array>(testAMPath.createChildPath("Float32")) != nullptr);
+    REQUIRE(ds.getDataAs<Float64Array>(testAMPath.createChildPath("Float64")) != nullptr);
+    REQUIRE(ds.getDataAs<BoolArray>(testAMPath.createChildPath("Bool")) != nullptr);
   }
 
   {
     const std::string grainData = "Grain Data";
     REQUIRE(ds.getData(DataPath({geomName, grainData})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "Active"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "AvgEulerAngles"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "AvgQuats"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "EquivalentDiameters"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "NeighborList"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "NeighborList2"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "NumElements"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "NumNeighbors"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "NumNeighbors2"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "ParentIds"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "Phases"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "SharedSurfaceAreaList"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "SharedSurfaceAreaList2"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "Volumes"})) != nullptr);
+    REQUIRE(ds.getDataAs<NeighborList<int32_t>>(DataPath({geomName, grainData, "NeighborList"})) != nullptr);
+    REQUIRE(ds.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumElements"})) != nullptr);
+    REQUIRE(ds.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumNeighbors"})) != nullptr);
   }
-
-  {
-    const std::string grainData = "NewGrain Data";
-    REQUIRE(ds.getData(DataPath({geomName, grainData})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, grainData, "Active"})) != nullptr);
-  }
-
-  {
-    const std::string phaseData = "Phase Data";
-    REQUIRE(ds.getData(DataPath({geomName, phaseData})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, phaseData, "CrystalStructures"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, phaseData, "LatticeConstants"})) != nullptr);
-    REQUIRE(ds.getData(DataPath({geomName, phaseData, "MaterialName"})) != nullptr);
-  }
-#else
-  REQUIRE(true);
-#endif
 }
+#endif
 
 DataStructure GetTestDataStructure()
 {
@@ -465,6 +445,8 @@ void CreateArrayTypes(DataStructure& dataStructure)
 
   DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Float32Array", tupleShape, componentShape);
   DataArray<float64>::CreateWithStore<DataStore<float64>>(dataStructure, "Float64Array", tupleShape, componentShape);
+
+  StringArray::CreateWithValues(dataStructure, "StringArray", {"Foo", "Bar", "Bazz"});
 }
 
 //------------------------------------------------------------------------------
@@ -739,12 +721,17 @@ TEST_CASE("DataArray<bool> IO")
     REQUIRE(ds.getDataAs<DataArray<uint64>>(DataPath({"UInt64Array"})) != nullptr);
     REQUIRE(ds.getDataAs<DataArray<float32>>(DataPath({"Float32Array"})) != nullptr);
     REQUIRE(ds.getDataAs<DataArray<float64>>(DataPath({"Float64Array"})) != nullptr);
+    REQUIRE(ds.getDataAs<StringArray>(DataPath({"StringArray"})) != nullptr);
 
     BoolArray* boolArray = ds.getDataAs<BoolArray>(DataPath({"BoolArray"}));
     REQUIRE(boolArray != nullptr);
     AbstractDataStore<bool>& boolStore = boolArray->getDataStoreRef();
     REQUIRE(boolStore[0] == false);
     REQUIRE(boolStore[1] == true);
+
+    StringArray* stringArray = ds.getDataAs<StringArray>(DataPath({"StringArray"}));
+    REQUIRE(stringArray != nullptr);
+    REQUIRE(stringArray->values() == std::vector<std::string>{"Foo", "Bar", "Bazz"});
   } catch(const std::exception& e)
   {
     FAIL(e.what());

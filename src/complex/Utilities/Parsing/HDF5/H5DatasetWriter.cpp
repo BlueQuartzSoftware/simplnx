@@ -200,82 +200,48 @@ H5::ErrorType H5::DatasetWriter::writeVectorOfStrings(std::vector<std::string>& 
     return -1;
   }
 
-  closeHdf5();
-
-  herr_t error = 0;
+  hid_t dataspaceID = -1;
+  hid_t memSpace = -1;
+  hid_t datatype = -1;
+  herr_t error = -1;
   herr_t returnError = 0;
 
-  setId(H5Dopen(getParentId(), getName().c_str(), H5P_DEFAULT));
-  if(getId() < 0)
+  std::array<hsize_t, 1> dims = {text.size()};
+  if((dataspaceID = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr)) >= 0)
   {
-    std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Error opening Dataset at locationID (" << getParentId() << ") with object name (" << getParentName() << ")" << std::endl;
-    return -1;
-  }
-  /*
-   * Get the datatype.
-   */
-  hid_t typeID = H5Dget_type(getId());
-  if(typeID >= 0)
-  {
-    hsize_t dims[1] = {0};
-    /*
-     * Get dataspace and allocate memory for read buffer.
-     */
-    hid_t dataspaceID = H5Dget_space(getId());
-    int nDims = H5Sget_simple_extent_dims(dataspaceID, dims, nullptr);
-    if(nDims != 1)
+    dims[0] = 1;
+
+    if((memSpace = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr)) >= 0)
     {
-      H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
-      H5S_CLOSE_H5_TYPE(typeID, error, returnError);
-      closeHdf5();
-      std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Number of dims should be 1 but it was " << nDims << ". Returning early. Is your data file correct?" << std::endl;
-      return -2;
+      datatype = H5Tcopy(H5T_C_S1);
+      H5Tset_size(datatype, H5T_VARIABLE);
+
+      setId(H5Dcreate(getParentId(), getName().c_str(), datatype, dataspaceID, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
+      if(getId() >= 0)
+      {
+        // Select the "memory" to be written out - just 1 record.
+        hsize_t dataset_offset[] = {0};
+        hsize_t dataset_count[] = {1};
+        H5Sselect_hyperslab(memSpace, H5S_SELECT_SET, dataset_offset, nullptr, dataset_count, nullptr);
+        hsize_t pos = 0;
+        for(const auto& element : text)
+        {
+          // Select the file position, 1 record at position 'pos'
+          hsize_t element_count[] = {1};
+          hsize_t element_offset[] = {pos};
+          pos++;
+          H5Sselect_hyperslab(dataspaceID, H5S_SELECT_SET, element_offset, nullptr, element_count, nullptr);
+          const char* strPtr = element.c_str();
+          error = H5Dwrite(getId(), datatype, memSpace, dataspaceID, H5P_DEFAULT, &strPtr);
+          if(error < 0)
+          {
+            std::cout << "Error Writing String Data: " __FILE__ << "(" << __LINE__ << ")" << std::endl;
+            returnError = error;
+          }
+        }
+      }
+      H5Tclose(datatype);
     }
-
-    std::vector<char*> rData(dims[0], nullptr);
-
-    /*
-     * Create the memory datatype.
-     */
-    hid_t memtype = H5Tcopy(H5T_C_S1);
-    herr_t status = H5Tset_size(memtype, H5T_VARIABLE);
-
-    H5T_cset_t characterSet = H5Tget_cset(typeID);
-    status = H5Tset_cset(memtype, characterSet);
-
-    /*
-     * Read the data.
-     */
-    status = H5Dread(getId(), memtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, rData.data());
-    if(status < 0)
-    {
-      status = H5Dvlen_reclaim(memtype, dataspaceID, H5P_DEFAULT, rData.data());
-      H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
-      H5S_CLOSE_H5_TYPE(typeID, error, returnError);
-      H5S_CLOSE_H5_TYPE(memtype, error, returnError);
-      closeHdf5();
-      std::cout << "H5Lite.cpp::readVectorOfStringDataset(" << __LINE__ << ") Error reading Dataset at locationID (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
-      return -3;
-    }
-    /*
-     * copy the data into the vector of strings
-     */
-    text.resize(dims[0]);
-    for(size_t i = 0; i < dims[0]; i++)
-    {
-      // printf("%s[%d]: %s\n", "VlenStrings", i, rData[i].p);
-      text[i] = std::string(rData[i]);
-    }
-    /*
-     * Close and release resources.  Note that H5Dvlen_reclaim works
-     * for variable-length strings as well as variable-length arrays.
-     * Also note that we must still free the array of pointers stored
-     * in rData, as H5Tvlen_reclaim only frees the data these point to.
-     */
-    status = H5Dvlen_reclaim(memtype, dataspaceID, H5P_DEFAULT, rData.data());
-    H5S_CLOSE_H5_DATASPACE(dataspaceID, error, returnError);
-    H5S_CLOSE_H5_TYPE(typeID, error, returnError);
-    H5S_CLOSE_H5_TYPE(memtype, error, returnError);
   }
 
   return returnError;

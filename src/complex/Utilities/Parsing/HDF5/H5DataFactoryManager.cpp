@@ -10,6 +10,7 @@
 #include "complex/DataStructure/Factory/QuadGeomFactory.hpp"
 #include "complex/DataStructure/Factory/RectGridGeomFactory.hpp"
 #include "complex/DataStructure/Factory/ScalarDataFactory.hpp"
+#include "complex/DataStructure/Factory/StringArrayFactory.hpp"
 #include "complex/DataStructure/Factory/TetrahedralGeomFactory.hpp"
 #include "complex/DataStructure/Factory/TriangleGeomFactory.hpp"
 #include "complex/DataStructure/Factory/VertexGeomFactory.hpp"
@@ -40,6 +41,7 @@ void H5::DataFactoryManager::addCoreFactories()
   addFactory(new Float32ArrayFactory());
   addFactory(new Float64ArrayFactory());
   addFactory(new BoolArrayFactory());
+  addFactory(new StringArrayFactory());
 
   addFactory(new NeighborListFactory());
 
