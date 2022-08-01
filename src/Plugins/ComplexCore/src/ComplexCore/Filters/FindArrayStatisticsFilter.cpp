@@ -136,7 +136,7 @@ std::string FindArrayStatisticsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindArrayStatisticsFilter::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Statistics"};
+  return {"#ComplexCore", "#Statistics"};
 }
 
 //------------------------------------------------------------------------------

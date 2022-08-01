@@ -283,17 +283,25 @@ Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
 {
   Parameters params;
 
-  params.insert(std::make_unique<BoolParameter>(k_ApplySinglePhase_Key, "Apply to Single Phase", "Apply to Single Phase", true));
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<NumberParameter<int64>>(k_MinAllowedFeaturesSize_Key, "Minimum Allowed Features Size", "Minimum allowed features size", 0));
-  params.insert(std::make_unique<NumberParameter<int64>>(k_PhaseNumber_Key, "Phase Number", "Target Phase", 0));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "[Feature] Phases Array", "DataPath to Feature Phases DataArray", DataPath{},
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySinglePhase_Key, "Apply to Single Phase", "Apply to Single Phase", false));
+  params.insert(std::make_unique<NumberParameter<int64>>(k_PhaseNumber_Key, "Phase Index", "Target phase to remove", 0));
+
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath({"FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+
+  params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "Num Cells Array", "DataPath to NumCells DataArray", DataPath({"NumElements"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(
-      std::make_unique<ArraySelectionParameter>(k_NumCellsPath_Key, "[Feature] Num Cells Array", "DataPath to NumCells DataArray", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "[Cell] FeatureIds Array", "DataPath to FeatureIds DataArray", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "DataPath to Image Geometry", DataPath{}));
+      std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Phases Array", "DataPath to Feature Phases DataArray", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  // Link the checkbox to the other parameters
+  params.linkParameters(k_ApplySinglePhase_Key, k_PhaseNumber_Key, std::make_any<bool>(true));
+  params.linkParameters(k_ApplySinglePhase_Key, k_FeaturePhasesPath_Key, std::make_any<bool>(true));
 
   return params;
 }

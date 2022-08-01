@@ -14,8 +14,8 @@
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
-#include "complex/Utilities/TBBTaskRunner.hpp"
 
 namespace complex
 {
@@ -477,7 +477,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 
   std::array<uint64, 6> bounds = {xMin, ((xMax - xMin) + 1), yMin, ((yMax - yMin) + 1), zMin, ((zMax - zMin) + 1)};
 
-  TBBTaskRunner taskRunner;
+  ParallelTaskAlgorithm taskRunner;
 
   for(const auto& voxelPath : voxelArrayPaths)
   {
@@ -496,47 +496,47 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     switch(type)
     {
     case DataType::boolean: {
-      taskRunner.run(CropImageGeomDataArray<bool>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<bool>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::int8: {
-      taskRunner.run(CropImageGeomDataArray<int8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<int8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::int16: {
-      taskRunner.run(CropImageGeomDataArray<int16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<int16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::int32: {
-      taskRunner.run(CropImageGeomDataArray<int32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<int32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::int64: {
-      taskRunner.run(CropImageGeomDataArray<int64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<int64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::uint8: {
-      taskRunner.run(CropImageGeomDataArray<uint8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<uint8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::uint16: {
-      taskRunner.run(CropImageGeomDataArray<uint16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<uint16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::uint32: {
-      taskRunner.run(CropImageGeomDataArray<uint32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<uint32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::uint64: {
-      taskRunner.run(CropImageGeomDataArray<uint64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<uint64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::float32: {
-      taskRunner.run(CropImageGeomDataArray<float32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<float32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     case DataType::float64: {
-      taskRunner.run(CropImageGeomDataArray<float64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
+      taskRunner.execute(CropImageGeomDataArray<float64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
       break;
     }
     default: {

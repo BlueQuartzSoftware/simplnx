@@ -48,7 +48,7 @@ std::string PointSampleTriangleGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> PointSampleTriangleGeometryFilter::defaultTags() const
 {
-  return {"#DREAM3D Review", "#Geometry", "#TriangleGeometry", "#Resample"};
+  return {"#ComplexCore", "#Geometry", "#TriangleGeometry", "#Resample"};
 }
 
 //------------------------------------------------------------------------------

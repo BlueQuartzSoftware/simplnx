@@ -3,8 +3,8 @@
 #include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-#include "complex/Utilities/TBBTaskRunner.hpp"
 
 #include <chrono>
 
@@ -140,7 +140,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
   // Now Adjust the actual DataArrays
   std::vector<DataPath> selectedCellArrays = getSelectedDataPaths();
 
-  TBBTaskRunner taskRunner;
+  ParallelTaskAlgorithm taskRunner;
 
   for(const auto& cellArrayPath : selectedCellArrays)
   {
@@ -156,47 +156,47 @@ Result<> AlignSections::execute(const SizeVec3& udims)
     switch(type)
     {
     case DataType::boolean: {
-      taskRunner.run(AlignSectionsTransferDataImpl<bool>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<bool>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<bool>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<bool>>(cellArrayPath)));
       break;
     }
     case DataType::int8: {
-      taskRunner.run(AlignSectionsTransferDataImpl<int8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int8>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<int8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int8>>(cellArrayPath)));
       break;
     }
     case DataType::int16: {
-      taskRunner.run(AlignSectionsTransferDataImpl<int16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int16>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<int16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int16>>(cellArrayPath)));
       break;
     }
     case DataType::int32: {
-      taskRunner.run(AlignSectionsTransferDataImpl<int32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int32>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<int32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int32>>(cellArrayPath)));
       break;
     }
     case DataType::int64: {
-      taskRunner.run(AlignSectionsTransferDataImpl<int64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int64>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<int64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int64>>(cellArrayPath)));
       break;
     }
     case DataType::uint8: {
-      taskRunner.run(AlignSectionsTransferDataImpl<uint8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint8>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<uint8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint8>>(cellArrayPath)));
       break;
     }
     case DataType::uint16: {
-      taskRunner.run(AlignSectionsTransferDataImpl<uint16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint16>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<uint16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint16>>(cellArrayPath)));
       break;
     }
     case DataType::uint32: {
-      taskRunner.run(AlignSectionsTransferDataImpl<uint32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint32>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<uint32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint32>>(cellArrayPath)));
       break;
     }
     case DataType::uint64: {
-      taskRunner.run(AlignSectionsTransferDataImpl<uint64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint64>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<uint64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint64>>(cellArrayPath)));
       break;
     }
     case DataType::float32: {
-      taskRunner.run(AlignSectionsTransferDataImpl<float32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float32>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<float32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float32>>(cellArrayPath)));
       break;
     }
     case DataType::float64: {
-      taskRunner.run(AlignSectionsTransferDataImpl<float64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float64>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<float64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float64>>(cellArrayPath)));
       break;
     }
     default: {

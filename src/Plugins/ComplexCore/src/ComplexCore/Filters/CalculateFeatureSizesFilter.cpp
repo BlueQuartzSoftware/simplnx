@@ -39,7 +39,7 @@ Uuid CalculateFeatureSizesFilter::uuid() const
 
 std::string CalculateFeatureSizesFilter::humanName() const
 {
-  return "Calculate Feature Sizes (Find Feature Sizes)";
+  return "Find Feature Sizes";
 }
 
 //------------------------------------------------------------------------------
@@ -51,13 +51,18 @@ std::vector<std::string> CalculateFeatureSizesFilter::defaultTags() const
 Parameters CalculateFeatureSizesFilter::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_SaveElementSizes_Key, "Save Element Sizes", "Save element sizes", false));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_GeometryPath_Key, "Target Geometry", "DataPath to target geometry", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
-  params.insert(std::make_unique<ArrayCreationParameter>(k_VolumesPath_Key, "Volumes array", "DataPath to volumes array", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_EquivalentDiametersPath_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NumElementsPath_Key, "Num Elements", "DataPath to Num Elements array", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_GeometryPath_Key, "Target Geometry", "DataPath to target geometry", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_EquivalentDiametersPath_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", DataPath({"EquivalentDiameters"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NumElementsPath_Key, "Number of Elements", "DataPath to Num Elements array", DataPath({"NumElements"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_VolumesPath_Key, "Volumes", "DataPath to volumes array", DataPath({"Volumes"})));
+
   return params;
 }
 
@@ -70,14 +75,14 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
 {
   auto geometryPath = args.value<DataPath>(k_GeometryPath_Key);
 
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
+  auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto volumesPath = args.value<DataPath>(k_VolumesPath_Key);
   auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
   auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
 
-  auto featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
+  const auto* featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
 
-  auto geometry = data.getDataAs<AbstractGeometry>(geometryPath);
+  const auto* geometry = data.getDataAs<AbstractGeometry>(geometryPath);
 
   if(geometry == nullptr)
   {
@@ -114,48 +119,38 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
 
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
+  auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto volumesPath = args.value<DataPath>(k_VolumesPath_Key);
   auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
   auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
 
-  Int32Array& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
-  Float32Array& volumesArray = data.getDataRefAs<Float32Array>(volumesPath);
-  Float32Array& equivalentDiametersArray = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
-  Int32Array& numElementsArray = data.getDataRefAs<Int32Array>(numElementsPath);
+  auto& featureIds = data.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& volumes = data.getDataRefAs<Float32Array>(volumesPath);
+  auto& equivalentDiameters = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
+  auto& numElements = data.getDataRefAs<Int32Array>(numElementsPath);
 
-  usize totalPoints = featureIdsArray.getNumberOfTuples();
+  usize totalPoints = featureIds.getNumberOfTuples();
   std::set<int32_t> uniqueFeatureIds;
   for(size_t i = 0; i < totalPoints; i++)
   {
-    uniqueFeatureIds.insert((featureIdsArray)[i]);
+    uniqueFeatureIds.insert((featureIds)[i]);
   }
 
   usize numfeatures = uniqueFeatureIds.size();
 
-  volumesArray.getDataStoreRef().reshapeTuples({numfeatures});
-  equivalentDiametersArray.getDataStoreRef().reshapeTuples({numfeatures});
-  numElementsArray.getDataStoreRef().reshapeTuples({numfeatures});
+  volumes.getDataStoreRef().reshapeTuples({numfeatures});
+  equivalentDiameters.getDataStoreRef().reshapeTuples({numfeatures});
+  numElements.getDataStoreRef().reshapeTuples({numfeatures});
 
-  auto* featureIds = featureIdsArray.getDataStore();
-  auto* volumes = volumesArray.getDataStore();
-  auto* equivalentDiameters = equivalentDiametersArray.getDataStore();
-  auto* numElements = numElementsArray.getDataStore();
+  std::vector<uint64> featureCountsStore(numfeatures, 0);
 
-  DataStructure tempStructure;
-  auto* featureCounts = UInt64Array::CreateWithStore<DataStore<uint64>>(tempStructure, std::string("_INTERNAL_USE_ONLY_FeatureCounts"), std::vector<usize>{numfeatures}, std::vector<usize>{1});
-  featureCounts->fill(0);
-  auto* featureCountsStore = featureCounts->getDataStore();
-
-  float rad = 0.0f;
-  float diameter = 0.0f;
   float res_scalar = 0.0f;
 
   for(size_t j = 0; j < totalPoints; j++)
   {
-    int32_t gnum = featureIds->getValue(j);
-    auto temp = featureCountsStore->getValue(gnum) + 1;
-    featureCountsStore->setValue(gnum, temp);
+    int32_t gnum = featureIds[j];
+    auto temp = featureCountsStore[gnum] + 1;
+    featureCountsStore[gnum] = temp;
   }
 
   FloatVec3 spacing = image->getSpacing();
@@ -177,17 +172,17 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
 
     for(size_t i = 1; i < numfeatures; i++)
     {
-      numElements->setValue(i, static_cast<int32_t>(featureCountsStore->getValue(i)));
-      if(featureCountsStore->getValue(i) > 9007199254740992ULL)
+      numElements[i] = static_cast<int32_t>(featureCountsStore[i]);
+      if(featureCountsStore[i] > 9007199254740992ULL)
       {
-        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCountsStore->getValue(i));
+        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCountsStore[i]);
         return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
       }
-      volumes->setValue(i, static_cast<double>(featureCountsStore->getValue(i)) * static_cast<double>(res_scalar));
+      volumes[i] = static_cast<double>(featureCountsStore[i]) * static_cast<double>(res_scalar);
 
-      rad = volumes->getValue(i) / k_PI;
-      diameter = (2 * sqrtf(rad));
-      equivalentDiameters->setValue(i, diameter);
+      float rad = volumes[i] / k_PI;
+      float diameter = (2 * sqrtf(rad));
+      equivalentDiameters[i] = diameter;
     }
   }
   else
@@ -196,24 +191,24 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
     float vol_term = (4.0f / 3.0f) * k_PI;
     for(usize i = 1; i < numfeatures; i++)
     {
-      numElements->setValue(i, static_cast<int32>(featureCountsStore->getValue(i)));
-      if(featureCountsStore->getValue(i) > 9007199254740992ULL)
+      numElements[i] = static_cast<int32>(featureCountsStore[i]);
+      if(featureCountsStore[i] > 9007199254740992ULL)
       {
-        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCountsStore->getValue(i));
+        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCountsStore[i]);
         return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
       }
 
-      volumes->setValue(i, static_cast<double>(featureCountsStore->getValue(i)) * static_cast<double>(res_scalar));
+      volumes[i] = static_cast<double>(featureCountsStore[i]) * static_cast<double>(res_scalar);
 
-      rad = volumes->getValue(i) / vol_term;
-      diameter = 2.0f * powf(rad, 0.3333333333f);
-      equivalentDiameters->setValue(i, diameter);
+      float rad = volumes[i] / vol_term;
+      float diameter = 2.0f * powf(rad, 0.3333333333f);
+      equivalentDiameters[i] = diameter;
     }
   }
 
   if(saveElementSizes)
   {
-    if(!image->getElementSizes())
+    if(nullptr != image->getElementSizes())
     {
       int32 err = image->findElementSizes();
       if(err < 0)
@@ -231,23 +226,18 @@ Result<> CalculateFeatureSizesFilter::findSizesUnstructured(DataStructure& data,
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
 
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPath_Key);
+  auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto volumesPath = args.value<DataPath>(k_VolumesPath_Key);
   auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
   auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
 
-  auto featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
-  auto volumesArray = data.getDataAs<Float32Array>(volumesPath);
-  auto equivalentDiametersArray = data.getDataAs<Float32Array>(equivalentDiametersPath);
-  auto numElementsArray = data.getDataAs<Int32Array>(numElementsPath);
+  const auto& featureIds = data.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& volumes = data.getDataRefAs<Float32Array>(volumesPath);
+  auto& equivalentDiameters = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
+  auto& numElements = data.getDataRefAs<Int32Array>(numElementsPath);
 
-  usize totalPoints = featureIdsArray->getNumberOfTuples();
-  usize numfeatures = volumesArray->getNumberOfTuples();
-
-  auto featureIds = featureIdsArray->getDataStore();
-  auto volumes = volumesArray->getDataStore();
-  auto equivalentDiameters = equivalentDiametersArray->getDataStore();
-  auto numElements = numElementsArray->getDataStore();
+  usize totalPoints = featureIds.getNumberOfTuples();
+  usize numfeatures = volumes.getNumberOfTuples();
 
   if(!igeom->getElementSizes())
   {
@@ -259,32 +249,25 @@ Result<> CalculateFeatureSizesFilter::findSizesUnstructured(DataStructure& data,
     }
   }
 
-  auto elemSizes = igeom->getElementSizes();
-  auto sizes = elemSizes->getDataStore();
+  const Float32Array* elemSizes = igeom->getElementSizes();
 
-  DataStructure tempStructure;
-  auto featureCountsArray = Float32Array::CreateWithStore<DataStore<float32>>(tempStructure, std::string("_INTERNAL_USE_ONLY_FeatureCounts"), std::vector<usize>{numfeatures}, std::vector<usize>{1});
-  featureCountsArray->fill(0);
-  auto featureCounts = featureCountsArray->getDataStore();
-
-  float rad = 0.0f;
-  float diameter = 0.0f;
+  std::vector<float> featureCounts(numfeatures, 1);
 
   for(size_t j = 0; j < totalPoints; j++)
   {
-    int32 gnum = featureIds->getValue(j);
-    auto temp = featureCounts->getValue(gnum) + 1;
-    featureCounts->setValue(gnum, temp);
-    auto temp2 = volumes->getValue(gnum);
-    volumes->setValue(gnum, temp2 + sizes->getValue(j));
+    int32 gnum = featureIds[j];
+    auto temp = featureCounts[gnum] + 1;
+    featureCounts[gnum] = temp;
+    auto temp2 = volumes[gnum];
+    volumes[gnum] = temp2 + (*elemSizes)[j];
   }
   float vol_term = (4.0f / 3.0f) * k_PI;
   for(size_t i = 1; i < numfeatures; i++)
   {
-    numElements->setValue(i, static_cast<int32>(featureCounts->getValue(i)));
-    rad = volumes->getValue(i) / vol_term;
-    diameter = 2.0f * powf(rad, 0.3333333333f);
-    equivalentDiameters->setValue(i, diameter);
+    numElements[i] = static_cast<int32>(featureCounts[i]);
+    float rad = volumes[i] / vol_term;
+    float diameter = 2.0f * powf(rad, 0.3333333333f);
+    equivalentDiameters[i] = diameter;
   }
 
   if(!saveElementSizes)
@@ -298,17 +281,14 @@ Result<> CalculateFeatureSizesFilter::findSizesUnstructured(DataStructure& data,
 Result<> CalculateFeatureSizesFilter::findSizes(DataStructure& data, const Arguments& args) const
 {
   auto geomPath = args.value<DataPath>(k_GeometryPath_Key);
-  auto geom = data.getDataAs<AbstractGeometry>(geomPath);
+  auto* geom = data.getDataAs<AbstractGeometry>(geomPath);
 
-  // If the geometry is an Image, it may be 2D;
-  // if so, call the specialized findSizesImage() function
-  if(auto image = dynamic_cast<ImageGeom*>(geom))
+  // If the geometry is an ImageGeometry or a RectilinearGeometry
+  auto* imageGeom = dynamic_cast<ImageGeom*>(geom);
+  if(nullptr != imageGeom)
   {
-    return findSizesImage(data, args, image);
+    return findSizesImage(data, args, imageGeom);
   }
-  else
-  {
-    return findSizesUnstructured(data, args, geom);
-  }
+  return findSizesUnstructured(data, args, geom);
 }
 } // namespace complex
