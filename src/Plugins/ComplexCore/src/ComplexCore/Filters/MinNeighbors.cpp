@@ -20,17 +20,21 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_ImageGeom_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIds_Key);
-  auto featurePhasesPath = args.value<DataPath>(MinNeighbors::k_FeaturePhases_Key);
   auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighbors_Key);
   auto voxelArrayPaths = args.value<std::vector<DataPath>>(MinNeighbors::k_VoxelArrays_Key);
 
   auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& featurePhasesArray = data.getDataRefAs<Int32Array>(featurePhasesPath);
   auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
 
   auto& featureIds = featureIdsArray.getDataStoreRef();
-  auto& featurePhases = featurePhasesArray.getDataStoreRef();
 
+  auto applyToSinglePhase = args.value<bool>(MinNeighbors::k_ApplyToSinglePhase_Key);
+  Int32Array* featurePhasesArray = nullptr;
+  if(applyToSinglePhase)
+  {
+    auto featurePhasesPath = args.value<DataPath>(MinNeighbors::k_FeaturePhases_Key);
+    featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
+  }
   std::vector<std::reference_wrapper<IDataArray>> voxelArrays;
   for(const auto& arrayPath : voxelArrayPaths)
   {
@@ -170,6 +174,8 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
         }
       }
     }
+
+    // TODO This can be parallelized much like NeighborOrientationCorrelation
     for(usize j = 0; j < totalPoints; j++)
     {
       featurename = featureIds[j];
@@ -189,23 +195,26 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_ImageGeom_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIds_Key);
-  auto featurePhasesPath = args.value<DataPath>(MinNeighbors::k_FeaturePhases_Key);
   auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighbors_Key);
   auto minNumNeighbors = args.value<uint64>(MinNeighbors::k_MinNumNeighbors_Key);
 
-  auto applyToSinglePhase = args.value<bool>(MinNeighbors::k_ApplyToSinglePhase_Key);
   auto phaseNumber = args.value<uint64>(MinNeighbors::k_PhaseNumber_Key);
 
   auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& featurePhasesArray = data.getDataRefAs<Int32Array>(featurePhasesPath);
   auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
 
   auto& featureIds = featureIdsArray.getDataStoreRef();
-  auto& featurePhases = featurePhasesArray.getDataStoreRef();
   auto& numNeighbors = numNeighborsArray.getDataStoreRef();
 
-  bool good = false;
+  auto applyToSinglePhase = args.value<bool>(MinNeighbors::k_ApplyToSinglePhase_Key);
+  Int32Array* featurePhasesArray = nullptr;
+  if(applyToSinglePhase)
+  {
+    auto featurePhasesPath = args.value<DataPath>(MinNeighbors::k_FeaturePhases_Key);
+    featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
+  }
 
+  bool good = false;
   usize totalPoints = data.getDataRefAs<ImageGeom>(imageGeomPath).getNumberOfElements();
   usize totalFeatures = numNeighborsArray.getNumberOfTuples();
 
@@ -226,7 +235,7 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
     }
     else
     {
-      if(numNeighbors[i] >= minNumNeighbors || featurePhases[i] != phaseNumber)
+      if(numNeighbors[i] >= minNumNeighbors || (*featurePhasesArray)[i] != phaseNumber)
       {
         good = true;
       }
@@ -275,17 +284,23 @@ std::string MinNeighbors::humanName() const
 Parameters MinNeighbors::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<UInt64Parameter>(k_MinNumNeighbors_Key, "Minimum Number Neighbors", "", 0));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyToSinglePhase_Key, "Apply to Single Phase Only", "", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyToSinglePhase_Key, "Apply to Single Phase Only", "", false));
   params.insert(std::make_unique<UInt64Parameter>(k_PhaseNumber_Key, "Phase Index", "", 0));
+
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+
+  params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Voxel Arrays", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  // Attribute Arrays to Ignore
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Cell Arrays to Ignore", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
 
   params.linkParameters(k_ApplyToSinglePhase_Key, k_PhaseNumber_Key, std::make_any<bool>(true));
-  params.linkParameters(k_ApplyToSinglePhase_Key, k_FeaturePhases_Key, std::make_any<bool>(false));
+  params.linkParameters(k_ApplyToSinglePhase_Key, k_FeaturePhases_Key, std::make_any<bool>(true));
   return params;
 }
 

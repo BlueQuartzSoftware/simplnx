@@ -114,3 +114,12 @@ There are several filters (those that create a new geometry from an existing one
 the user is allowed to "transfer" data from the source geometry onto the newly created
 geometry. QuickSurfaceMeshFilter and PointSampleTriangleGeometryFilter both are examples
 of how to perform this transfer of data.
+
+
+## Parallel Algorithms ##
+
+There are several classes that can be used to help the developer write parallel algorithms.
+
+`complex/Utilities/ParallelAlgorithm` and `complex/Utilties/ParallelTaskAlgorithm` are the two main classes depending
+on the situation. `AlignSections.cpp` and `CropImageGeoemtry.cpp` both use a task based parallelism. `RotateSampleRefFrameFilter.cpp` shows an example
+of using ParallelData3DAlgorithm.
