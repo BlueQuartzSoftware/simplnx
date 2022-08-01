@@ -43,7 +43,18 @@ void H5::DataFactoryManager::addCoreFactories()
   addFactory(new BoolArrayFactory());
   addFactory(new StringArrayFactory());
 
-  addFactory(new NeighborListFactory());
+  addFactory(new UInt8NeighborFactory());
+  addFactory(new UInt16NeighborFactory());
+  addFactory(new UInt32NeighborFactory());
+  addFactory(new UInt64NeighborFactory());
+  addFactory(new Int8NeighborFactory());
+  addFactory(new Int16NeighborFactory());
+  addFactory(new Int32NeighborFactory());
+  addFactory(new Int64NeighborFactory());
+  addFactory(new USizeNeighborFactory());
+  addFactory(new Float32NeighborFactory());
+  addFactory(new Float64NeighborFactory());
+  addFactory(new BoolNeighborFactory());
 
   addFactory(new DataGroupFactory());
   addFactory(new EdgeGeomFactory());

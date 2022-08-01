@@ -8,6 +8,8 @@ namespace H5
 {
 class DatasetReader;
 class GroupReader;
+
+template <typename T>
 class NeighborListFactory;
 
 namespace Constants
@@ -24,6 +26,7 @@ constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
 template <typename T>
 class NeighborList : public INeighborList
 {
+  template <typename T>
   friend class H5::NeighborListFactory;
 
 public:
