@@ -581,7 +581,6 @@ void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, 
 
 Result<DataStructure> ImportLegacyDataStructure(const H5::FileReader& fileReader, bool preflight)
 {
-  // H5::ErrorType errorCode = 0;
   DataStructure ds;
 
   auto dcaGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
