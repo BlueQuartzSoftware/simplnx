@@ -46,7 +46,7 @@ public:
    * @brief
    * @param other
    */
-  EdgeGeom(EdgeGeom&& other) noexcept;
+  EdgeGeom(EdgeGeom&& other);
 
   ~EdgeGeom() noexcept override;
 

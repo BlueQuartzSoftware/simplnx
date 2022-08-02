@@ -22,7 +22,7 @@ EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, IdType importId)
 
 EdgeGeom::EdgeGeom(const EdgeGeom&) = default;
 
-EdgeGeom::EdgeGeom(EdgeGeom&&) noexcept = default;
+EdgeGeom::EdgeGeom(EdgeGeom&&) = default;
 
 EdgeGeom::~EdgeGeom() noexcept = default;
 

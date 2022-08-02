@@ -46,7 +46,7 @@ public:
    * @brief
    * @param other
    */
-  VertexGeom(VertexGeom&& other) noexcept;
+  VertexGeom(VertexGeom&& other);
 
   ~VertexGeom() noexcept override;
 

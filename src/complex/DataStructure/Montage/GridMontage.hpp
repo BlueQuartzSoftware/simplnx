@@ -69,7 +69,7 @@ public:
    * montage.
    * @param other
    */
-  GridMontage(GridMontage&& other) noexcept;
+  GridMontage(GridMontage&& other);
 
   virtual ~GridMontage();
 

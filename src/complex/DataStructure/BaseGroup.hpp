@@ -49,7 +49,7 @@ public:
    * the provided BaseGroup.
    * @param other
    */
-  BaseGroup(BaseGroup&& other) noexcept;
+  BaseGroup(BaseGroup&& other);
 
   /**
    * @brief Destroys the BaseGroup and removes it from the list of it's

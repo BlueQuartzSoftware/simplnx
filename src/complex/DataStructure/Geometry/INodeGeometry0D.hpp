@@ -117,7 +117,7 @@ protected:
   INodeGeometry0D(DataStructure& ds, std::string name, IdType importId);
 
   INodeGeometry0D(const INodeGeometry0D&) = default;
-  INodeGeometry0D(INodeGeometry0D&&) noexcept = default;
+  INodeGeometry0D(INodeGeometry0D&&) = default;
 
   INodeGeometry0D& operator=(const INodeGeometry0D&) = delete;
   INodeGeometry0D& operator=(INodeGeometry0D&&) noexcept = delete;

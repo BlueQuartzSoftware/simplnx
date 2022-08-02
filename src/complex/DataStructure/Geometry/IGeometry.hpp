@@ -201,7 +201,7 @@ protected:
   IGeometry(DataStructure& ds, std::string name, IdType importId);
 
   IGeometry(const IGeometry&) = default;
-  IGeometry(IGeometry&&) noexcept = default;
+  IGeometry(IGeometry&&) = default;
 
   IGeometry& operator=(const IGeometry&) = delete;
   IGeometry& operator=(IGeometry&&) noexcept = delete;

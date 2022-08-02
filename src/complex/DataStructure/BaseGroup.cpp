@@ -23,7 +23,7 @@ BaseGroup::BaseGroup(const BaseGroup& other)
 {
 }
 
-BaseGroup::BaseGroup(BaseGroup&& other) noexcept
+BaseGroup::BaseGroup(BaseGroup&& other)
 : DataObject(std::move(other))
 , m_DataMap(std::move(other.m_DataMap))
 {

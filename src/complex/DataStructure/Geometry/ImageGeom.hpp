@@ -63,7 +63,7 @@ public:
    * @brief
    * @param other
    */
-  ImageGeom(ImageGeom&& other) noexcept;
+  ImageGeom(ImageGeom&& other);
 
   ~ImageGeom() noexcept override;
 

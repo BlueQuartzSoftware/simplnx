@@ -45,7 +45,7 @@ public:
    * @brief
    * @param other
    */
-  RectGridGeom(RectGridGeom&& other) noexcept;
+  RectGridGeom(RectGridGeom&& other);
 
   ~RectGridGeom() noexcept override;
 
