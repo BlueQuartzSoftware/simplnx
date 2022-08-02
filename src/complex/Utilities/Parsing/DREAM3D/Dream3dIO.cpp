@@ -667,7 +667,7 @@ Result<complex::DREAM3D::FileData> complex::DREAM3D::ReadFile(const H5::FileRead
   auto pipeline = ImportPipelineFromFile(fileReader);
   if(pipeline.invalid())
   {
-    return {{nonstd::make_unexpected(std::vector<Error>(pipeline.errors()))}};
+    return {{nonstd::make_unexpected(std::move(pipeline.errors()))}, std::move(pipeline.warnings())};
   }
 
   auto dataStructure = ImportDataStructureFromFile(fileReader, preflight);
