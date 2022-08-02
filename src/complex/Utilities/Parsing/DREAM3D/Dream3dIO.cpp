@@ -678,7 +678,7 @@ Result<complex::DREAM3D::FileData> complex::DREAM3D::ReadFile(const H5::FileRead
     return {{nonstd::make_unexpected(std::vector<Error>(dataStructure.errors()))}};
   }
 
-  return {DREAM3D::FileData{pipeline.value(), dataStructure.value()}};
+  return {DREAM3D::FileData{std::move(pipeline.value()), std::move(dataStructure.value())}};
 }
 
 Result<complex::DREAM3D::FileData> complex::DREAM3D::ReadFile(const std::filesystem::path& path)
