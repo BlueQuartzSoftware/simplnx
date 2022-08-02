@@ -25,8 +25,8 @@ using FileData = std::pair<complex::Pipeline, complex::DataStructure>;
 using FileVersionType = std::string;
 using PipelineVersionType = int32;
 
-constexpr int32 k_InvalidPipelineVersion = -404;
-constexpr int32 k_InvalidDataStructureVersion = -405;
+inline constexpr int32 k_InvalidPipelineVersion = -404;
+inline constexpr int32 k_InvalidDataStructureVersion = -405;
 
 /**
  * @brief Returns the DREAM3D file version.
