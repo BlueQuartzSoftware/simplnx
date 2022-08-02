@@ -160,7 +160,7 @@ protected:
   INodeGeometry3D(DataStructure& ds, std::string name, IdType importId);
 
   INodeGeometry3D(const INodeGeometry3D&) = default;
-  INodeGeometry3D(INodeGeometry3D&&) noexcept = default;
+  INodeGeometry3D(INodeGeometry3D&&) = default;
 
   INodeGeometry3D& operator=(const INodeGeometry3D&) = delete;
   INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = delete;

@@ -23,7 +23,7 @@ ImageGeom::ImageGeom(DataStructure& ds, std::string name, IdType importId)
 
 ImageGeom::ImageGeom(const ImageGeom& other) = default;
 
-ImageGeom::ImageGeom(ImageGeom&& other) noexcept = default;
+ImageGeom::ImageGeom(ImageGeom&& other) = default;
 
 ImageGeom::~ImageGeom() noexcept = default;
 

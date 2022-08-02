@@ -63,7 +63,7 @@ public:
    * @brief Constructs a AttributeMatrix and moves values from the specified target.
    * @param other
    */
-  AttributeMatrix(AttributeMatrix&& other) noexcept;
+  AttributeMatrix(AttributeMatrix&& other);
 
   /**
    * @brief Destructor.

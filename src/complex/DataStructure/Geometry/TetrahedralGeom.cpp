@@ -22,7 +22,7 @@ TetrahedralGeom::TetrahedralGeom(DataStructure& ds, std::string name, IdType imp
 
 TetrahedralGeom::TetrahedralGeom(const TetrahedralGeom&) = default;
 
-TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&&) noexcept = default;
+TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&&) = default;
 
 TetrahedralGeom::~TetrahedralGeom() noexcept = default;
 

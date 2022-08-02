@@ -163,7 +163,7 @@ protected:
   INodeGeometry2D(DataStructure& ds, std::string name, IdType importId);
 
   INodeGeometry2D(const INodeGeometry2D&) = default;
-  INodeGeometry2D(INodeGeometry2D&&) noexcept = default;
+  INodeGeometry2D(INodeGeometry2D&&) = default;
 
   INodeGeometry2D& operator=(const INodeGeometry2D&) = delete;
   INodeGeometry2D& operator=(INodeGeometry2D&&) noexcept = delete;

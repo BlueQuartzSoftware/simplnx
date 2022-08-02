@@ -24,7 +24,7 @@ VertexGeom::VertexGeom(DataStructure& ds, std::string name, IdType importId)
 
 VertexGeom::VertexGeom(const VertexGeom&) = default;
 
-VertexGeom::VertexGeom(VertexGeom&&) noexcept = default;
+VertexGeom::VertexGeom(VertexGeom&&) = default;
 
 VertexGeom::~VertexGeom() noexcept = default;
 

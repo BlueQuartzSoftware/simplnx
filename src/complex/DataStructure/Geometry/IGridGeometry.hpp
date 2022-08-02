@@ -218,7 +218,7 @@ protected:
   IGridGeometry(DataStructure& ds, std::string name, IdType importId);
 
   IGridGeometry(const IGridGeometry&) = default;
-  IGridGeometry(IGridGeometry&&) noexcept = default;
+  IGridGeometry(IGridGeometry&&) = default;
 
   IGridGeometry& operator=(const IGridGeometry&) = delete;
   IGridGeometry& operator=(IGridGeometry&&) noexcept = delete;

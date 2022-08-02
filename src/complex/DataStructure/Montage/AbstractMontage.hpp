@@ -37,7 +37,7 @@ public:
    * AbstractMontage.
    * @param other
    */
-  AbstractMontage(AbstractMontage&& other) noexcept;
+  AbstractMontage(AbstractMontage&& other);
 
   ~AbstractMontage() override;
 

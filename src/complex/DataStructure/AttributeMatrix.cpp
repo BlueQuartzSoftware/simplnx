@@ -23,7 +23,7 @@ AttributeMatrix::AttributeMatrix(const AttributeMatrix& other)
 {
 }
 
-AttributeMatrix::AttributeMatrix(AttributeMatrix&& other) noexcept
+AttributeMatrix::AttributeMatrix(AttributeMatrix&& other)
 : BaseGroup(std::move(other))
 {
 }

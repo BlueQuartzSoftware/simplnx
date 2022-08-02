@@ -22,7 +22,7 @@ HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, IdType impor
 
 HexahedralGeom::HexahedralGeom(const HexahedralGeom&) = default;
 
-HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept = default;
+HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) = default;
 
 HexahedralGeom::~HexahedralGeom() noexcept = default;
 

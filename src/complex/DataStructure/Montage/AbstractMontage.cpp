@@ -20,7 +20,7 @@ AbstractMontage::AbstractMontage(const AbstractMontage& other)
 {
 }
 
-AbstractMontage::AbstractMontage(AbstractMontage&& other) noexcept
+AbstractMontage::AbstractMontage(AbstractMontage&& other)
 : BaseGroup(std::move(other))
 , m_Collection(std::move(other.m_Collection))
 {
