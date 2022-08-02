@@ -87,7 +87,7 @@ TEST_CASE("Read Legacy DREAM.3D Data")
   std::filesystem::path filepath = GetLegacyFilepath(app);
   REQUIRE(exists(filepath));
   Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
-  REQUIRE(result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(result);
   DataStructure ds = result.value();
 
   const std::string geomName = "Small IN100";
