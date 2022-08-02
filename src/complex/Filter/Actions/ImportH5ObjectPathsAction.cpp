@@ -55,7 +55,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   }
 
   // Ensure there are no conflicting DataObject ID values
-  DataStructure importStructure = dataStructureResult.value();
+  DataStructure importStructure = std::move(dataStructureResult.value());
   importStructure.resetIds(dataStructure.getNextId());
 
   auto importPaths = getImportPaths(importStructure, m_Paths);
