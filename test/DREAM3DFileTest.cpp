@@ -18,10 +18,10 @@
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
 
 using namespace complex;

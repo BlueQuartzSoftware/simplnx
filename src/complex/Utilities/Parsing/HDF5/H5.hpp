@@ -83,8 +83,8 @@ std::string COMPLEX_EXPORT GetParentPath(const std::string& objectPath);
 inline constexpr StringLiteral k_DataTypeTag = "DataType";
 
 inline constexpr StringLiteral k_DataStoreTag = "DataStore";
-inline constexpr StringLiteral k_TupleShapeTag = "TupleShape";
-inline constexpr StringLiteral k_ComponentShapeTag = "ComponentShape";
+inline constexpr StringLiteral k_TupleShapeTag = "TupleDimensions";
+inline constexpr StringLiteral k_ComponentShapeTag = "ComponentDimensions";
 inline constexpr StringLiteral k_DataObjectIdTag = "DataObjectId";
 inline constexpr StringLiteral k_DataArrayTag = "DataArray";
 

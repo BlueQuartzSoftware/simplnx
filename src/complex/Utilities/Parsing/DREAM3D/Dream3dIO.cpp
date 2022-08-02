@@ -608,7 +608,8 @@ Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(con
     return ImportLegacyDataStructure(fileReader, preflight);
   }
   // Unsupported file version
-  return MakeErrorResult<DataStructure>(k_InvalidDataStructureVersion, fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}", fileVersion, k_CurrentFileVersion, Legacy::FileVersion));
+  return MakeErrorResult<DataStructure>(k_InvalidDataStructureVersion,
+                                        fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}", fileVersion, k_CurrentFileVersion, Legacy::FileVersion));
 }
 
 Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath)
