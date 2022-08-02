@@ -20,6 +20,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "GeometryTestUtilities.hpp"
 
