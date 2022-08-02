@@ -631,9 +631,7 @@ Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const H5::Fil
 {
   if(GetPipelineVersion(fileReader) != k_CurrentPipelineVersion)
   {
-    Result<complex::Pipeline> result({});
-    result.warnings().push_back(Warning{k_InvalidPipelineVersion, fmt::format("Could not parse Pipeline version {}. Expected version: {}", GetPipelineVersion(fileReader), k_CurrentFileVersion)});
-    return result;
+    return MakeErrorResult<Pipeline>(k_InvalidPipelineVersion, fmt::format("Could not parse Pipeline version {}. Expected version: {}", GetPipelineVersion(fileReader), k_CurrentFileVersion));
   }
 
   auto pipelineGroupReader = fileReader.openGroup(k_PipelineJsonTag);
