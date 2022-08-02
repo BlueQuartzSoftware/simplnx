@@ -421,7 +421,7 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
   auto numNeighborsPtr = Int32DataStore::ReadHdf5(numNeighborsReader);
   auto& numNeighborsStore = *numNeighborsPtr.get();
 
-  auto flatDataStorePtr = DataStore<T>::ReadHdf5(dataReader, true);
+  auto flatDataStorePtr = DataStore<T>::ReadHdf5NeighborList(dataReader);
   auto& flatDataStore = *flatDataStorePtr.get();
 
   std::vector<SharedVectorType> dataVector;

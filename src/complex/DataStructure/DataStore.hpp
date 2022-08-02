@@ -364,28 +364,37 @@ public:
     return err;
   }
 
-  static std::unique_ptr<DataStore> ReadHdf5(const H5::DatasetReader& datasetReader, bool isNeighborList = false)
+  static std::unique_ptr<DataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
   {
     auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
     auto componentShape = IDataStore::ReadComponentShape(datasetReader);
 
     // Create DataStore
     auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
-    if(isNeighborList)
-    {
-      const auto size = datasetReader.getNumElements();
-      auto dataPtr = std::make_unique<value_type[]>(size);
-      nonstd::span<value_type> span(dataPtr.get(), size);
-      if(!datasetReader.readIntoSpan(span))
-      {
-        throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-      }
-      dataStore->m_Data = std::move(dataPtr);
-    }
-    else if(!datasetReader.readIntoSpan(dataStore->createSpan()))
+     if(!datasetReader.readIntoSpan(dataStore->createSpan()))
     {
       throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
     }
+
+    return dataStore;
+  }
+
+  static std::unique_ptr<DataStore> ReadHdf5NeighborList(const H5::DatasetReader& datasetReader)
+  {
+    auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
+    auto componentShape = IDataStore::ReadComponentShape(datasetReader);
+
+    // Create DataStore
+    auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
+
+    const auto size = datasetReader.getNumElements();
+    auto dataPtr = std::make_unique<value_type[]>(size);
+    nonstd::span<value_type> span(dataPtr.get(), size);
+    if(!datasetReader.readIntoSpan(span))
+    {
+      throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+    }
+    dataStore->m_Data = std::move(dataPtr);
 
     return dataStore;
   }
