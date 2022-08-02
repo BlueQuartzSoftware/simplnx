@@ -628,14 +628,14 @@ Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const H5::Fil
 {
   if(GetPipelineVersion(fileReader) != k_CurrentPipelineVersion)
   {
-    return MakeErrorResult<Pipeline>(k_InvalidPipelineVersion, fmt::format("Could not parse Pipeline version {}. Expected version: {}", GetPipelineVersion(fileReader), k_CurrentFileVersion));
+    return MakeErrorResult<Pipeline>(k_InvalidPipelineVersion, fmt::format("Could not parse Pipeline version '{}'. Expected version: '{}'", GetPipelineVersion(fileReader), k_CurrentFileVersion));
   }
 
   auto pipelineGroupReader = fileReader.openGroup(k_PipelineJsonTag);
   auto pipelineDatasetReader = pipelineGroupReader.openDataset(k_PipelineJsonTag);
   if(!pipelineDatasetReader.isValid())
   {
-    return {};
+    return MakeErrorResult<Pipeline>(k_PipelineGroupUnavailable, "Could not open '/Pipeline' HDF5 Group.");
   }
 
   auto pipelineJsonString = pipelineDatasetReader.readAsString();
