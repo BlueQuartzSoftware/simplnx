@@ -276,7 +276,7 @@ TEST_CASE("DREAM3D File IO Test")
   {
     H5::FileReader fileReader(GetIODataPath());
     auto fileResult = DREAM3D::ReadFile(fileReader);
-    REQUIRE(fileResult.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(fileResult);
 
     auto [pipeline, dataStructure] = fileResult.value();
 
