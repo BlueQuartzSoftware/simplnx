@@ -103,7 +103,7 @@ Result<DataStructure> ImportDataStructureV8(const H5::FileReader& fileReader, bo
   {
     return MakeErrorResult<DataStructure>(errorCode, fmt::format("Failed to import DataStructure"));
   }
-  return {dataStructure};
+  return {std::move(dataStructure)};
 }
 
 // Begin legacy DCA importing
