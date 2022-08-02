@@ -593,7 +593,7 @@ Result<DataStructure> ImportLegacyDataStructure(const H5::FileReader& fileReader
     readLegacyDataContainer(ds, dcGroup, preflight);
   }
 
-  return {ds};
+  return {std::move(ds)};
 }
 
 Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const H5::FileReader& fileReader, bool preflight)
