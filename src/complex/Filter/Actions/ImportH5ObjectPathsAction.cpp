@@ -48,14 +48,14 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   bool preflighting = (mode == Mode::Preflight);
 
   H5::FileReader fileReader(m_H5FilePath);
-  const Result<DREAM3D::FileData> fileData = DREAM3D::ReadFile(fileReader, preflighting);
-  if(fileData.invalid())
+  const Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, preflighting);
+  if(dataStructureResult.invalid())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{fileData.errors().front().code, "Failed to import a DataStructure from the target HDF5 file."}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{dataStructureResult.errors().front().code, "Failed to import a DataStructure from the target HDF5 file."}})};
   }
 
   // Ensure there are no conflicting DataObject ID values
-  DataStructure importStructure = fileData.value().second;
+  DataStructure importStructure = dataStructureResult.value();
   importStructure.resetIds(dataStructure.getNextId());
 
   auto importPaths = getImportPaths(importStructure, m_Paths);
