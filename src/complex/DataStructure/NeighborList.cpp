@@ -284,6 +284,12 @@ typename NeighborList<T>::VectorType& NeighborList<T>::operator[](usize grainId)
   return *(m_Array[grainId]);
 }
 
+template <typename T>
+DataObject::Type NeighborList<T>::getDataObjectType() const
+{
+  return Type::NeighborList;
+}
+
 template <>
 DataType COMPLEX_EXPORT NeighborList<int8>::getDataType() const
 {
@@ -421,8 +427,11 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
   auto numNeighborsPtr = Int32DataStore::ReadHdf5(numNeighborsReader);
   auto& numNeighborsStore = *numNeighborsPtr.get();
 
-  auto flatDataStorePtr = DataStore<T>::ReadHdf5NeighborList(dataReader);
-  auto& flatDataStore = *flatDataStorePtr.get();
+  std::vector<T> flatDataStore = dataReader.template readAsVector<T>();
+  if(flatDataStore.empty())
+  {
+    throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(dataReader.getParentId()), dataReader.getName()));
+  }
 
   std::vector<SharedVectorType> dataVector;
   usize offset = 0;
@@ -433,10 +442,9 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
     auto sharedVector = std::make_shared<std::vector<T>>(numNeighbors);
     std::vector<T>& vector = *sharedVector.get();
 
-    for(usize j = 0; j < numNeighbors; j++)
-    {
-      vector[j] = flatDataStore[offset + j];
-    }
+    size_t neighborListStart = offset;
+    size_t neighborListEnd = offset + numNeighbors;
+    sharedVector->template assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
     offset += numNeighbors;
     dataVector.push_back(sharedVector);
   }

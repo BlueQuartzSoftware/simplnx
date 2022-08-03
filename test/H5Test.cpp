@@ -419,7 +419,10 @@ void CreateNeighborList(DataStructure& dataStructure)
   auto* neighborList = NeighborList<int64>::Create(dataStructure, "NeighborList", numItems, neighborGroup->getId());
   for(usize i = 0; i < numItems; i++)
   {
-    neighborList->addEntry(i + 1, i);
+    for(usize j = 0; j < i + 1; j++)
+    {
+      neighborList->addEntry(j, j);
+    }
   }
   dataStructure.setAdditionalParent(neighborList->getId(), neighborGroup2->getId());
 }

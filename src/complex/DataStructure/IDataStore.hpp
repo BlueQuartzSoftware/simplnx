@@ -114,12 +114,6 @@ public:
    */
   virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
 
-protected:
-  /**
-   * @brief Default constructor
-   */
-  IDataStore() = default;
-
   static ShapeType ReadTupleShape(const H5::DatasetReader& datasetReader)
   {
     H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(complex::H5::k_TupleShapeTag);
@@ -139,5 +133,11 @@ protected:
     }
     return componentShapeAttribute.readAsVector<usize>();
   }
+
+protected:
+  /**
+   * @brief Default constructor
+   */
+  IDataStore() = default;
 };
 } // namespace complex
