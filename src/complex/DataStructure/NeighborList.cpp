@@ -444,7 +444,7 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
 
     size_t neighborListStart = offset;
     size_t neighborListEnd = offset + numNeighbors;
-    sharedVector->template assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
+    sharedVector->assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
     offset += numNeighbors;
     dataVector.push_back(sharedVector);
   }
