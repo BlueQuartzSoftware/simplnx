@@ -29,9 +29,6 @@ class COMPLEX_EXPORT IDataStore
 public:
   using ShapeType = typename std::vector<usize>;
 
-  static inline constexpr const char k_TupleShape[] = "TupleShape";
-  static inline constexpr const char k_ComponentShape[] = "ComponentShape";
-
   enum class StoreType : int32
   {
     Unknown = -1,
@@ -117,32 +114,30 @@ public:
    */
   virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
 
-protected:
-  /**
-   * @brief Default constructor
-   */
-  IDataStore()
-  {
-  }
-
   static ShapeType ReadTupleShape(const H5::DatasetReader& datasetReader)
   {
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(k_TupleShape);
+    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(complex::H5::k_TupleShapeTag);
     if(!tupleShapeAttribute.isValid())
     {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      throw std::runtime_error(fmt::format("Error reading Tuple Shape from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
     }
     return tupleShapeAttribute.readAsVector<usize>();
   }
 
   static ShapeType ReadComponentShape(const H5::DatasetReader& datasetReader)
   {
-    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(k_ComponentShape);
+    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(complex::H5::k_ComponentShapeTag);
     if(!componentShapeAttribute.isValid())
     {
-      throw std::runtime_error(fmt::format("Error reading DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
+      throw std::runtime_error(fmt::format("Error reading Component Shape from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
     }
     return componentShapeAttribute.readAsVector<usize>();
   }
+
+protected:
+  /**
+   * @brief Default constructor
+   */
+  IDataStore() = default;
 };
 } // namespace complex

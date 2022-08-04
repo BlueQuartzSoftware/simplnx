@@ -18,10 +18,10 @@
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
 #include "complex/unit_test/complex_test_dirs.hpp"
 
 using namespace complex;
@@ -32,7 +32,6 @@ namespace
 namespace Constants
 {
 const fs::path k_DataDir = "test/data";
-const fs::path k_LegacyFilepath = "SmallN100.dream3d";
 const fs::path k_Dream3dFilename = "newFile.dream3d";
 const fs::path k_ExportFilename1 = "export.dream3d";
 const fs::path k_ExportFilename2 = "export2.dream3d";
@@ -275,10 +274,11 @@ TEST_CASE("DREAM3D File IO Test")
 
   // Read .dream3d file
   {
-    H5::ErrorType errorCode;
     H5::FileReader fileReader(GetIODataPath());
-    auto [pipeline, dataStructure] = DREAM3D::ReadFile(fileReader, errorCode);
-    REQUIRE(errorCode >= 0);
+    auto fileResult = DREAM3D::ReadFile(fileReader);
+    COMPLEX_RESULT_REQUIRE_VALID(fileResult);
+
+    auto [pipeline, dataStructure] = fileResult.value();
 
     // Test reading the DataStructure
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);

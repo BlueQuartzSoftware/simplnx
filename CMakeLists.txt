@@ -183,6 +183,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/StringArrayFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.hpp
@@ -238,6 +239,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/ScalarData.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/StringArray.hpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/AnyParameter.hpp
@@ -359,6 +361,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/StringArrayFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.cpp
@@ -401,6 +404,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Metadata.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/NeighborList.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/StringArray.cpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.cpp
