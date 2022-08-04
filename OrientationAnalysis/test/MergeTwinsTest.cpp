@@ -23,11 +23,8 @@
 #include <catch2/catch.hpp>
 
 #include "complex/Core/Application.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -41,32 +38,10 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
+#include "complex_plugins/EbsdLibConstants.hpp"
+#include "complex_plugins/Utilities/TestUtilities.hpp"
+
 using namespace complex;
-
-namespace EbsdLib
-{
-namespace Ang
-{
-const std::string ConfidenceIndex("Confidence Index");
-const std::string ImageQuality("Image Quality");
-
-} // namespace Ang
-namespace CellData
-{
-inline const std::string EulerAngles("EulerAngles");
-inline const std::string Phases("Phases");
-} // namespace CellData
-namespace EnsembleData
-{
-inline const std::string CrystalStructures("CrystalStructures");
-inline const std::string LatticeConstants("LatticeConstants");
-inline const std::string MaterialName("MaterialName");
-} // namespace EnsembleData
-} // namespace EbsdLib
-
-struct make_shared_enabler : public complex::Application
-{
-};
 
 TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check", "[Reconstruction][MergeTwinsFilter][.][UNIMPLEMENTED][!mayfail]")
 {
@@ -75,45 +50,15 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
   auto* filterList = Application::Instance()->getFilterList();
 
   // Make sure we can load the needed filters from the plugins
-  const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-
-  const Uuid k_ImportDream3dFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
-  const FilterHandle k_ImportDream3dFilterHandle(k_ImportDream3dFilterId, k_ComplexCorePluginId);
-  const Uuid k_FindFeaturePhasesObjectsId = *Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa");
-  const FilterHandle k_FindNFeaturePhasesFilterHandle(k_FindFeaturePhasesObjectsId, k_ComplexCorePluginId);
-  const Uuid k_FindNeighborsObjectsId = *Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac");
-  const FilterHandle k_FindNeighborsFilterHandle(k_FindNeighborsObjectsId, k_ComplexCorePluginId);
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
   const static DynamicTableData::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
 
-  const std::string k_Quats("Quats");
-  const std::string k_Phases("Phases");
-  const std::string k_ConfidenceIndex = EbsdLib::Ang::ConfidenceIndex;
-  const std::string k_ImageQuality = EbsdLib::Ang::ImageQuality;
-  const std::string k_FeatureIds("FeatureIds");
   const std::string k_FeatureAttributeMatrix("CellFeatureData");
-  const std::string k_Active("Active");
 
-  const std::string k_Mask("Mask");
-  const std::string k_DataContainer("Exemplar Data");
-  const DataPath k_DataContainerPath({k_DataContainer});
-
-  const DataPath k_CalculatedShiftsPath = k_DataContainerPath.createChildPath("Calculated Shifts");
-
-  const DataPath k_CellAttributeMatrix = k_DataContainerPath.createChildPath("CellData");
-  const DataPath k_EulersArrayPath = k_CellAttributeMatrix.createChildPath(EbsdLib::CellData::EulerAngles);
-  const DataPath k_QuatsArrayPath = k_CellAttributeMatrix.createChildPath(k_Quats);
-  const DataPath k_PhasesArrayPath = k_CellAttributeMatrix.createChildPath(k_Phases);
-  const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_ConfidenceIndex);
-  const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_ImageQuality);
-  const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
   const DataPath k_FeatureIdsPath = k_CellAttributeMatrix.createChildPath(k_FeatureIds);
   const DataPath k_CellParentIdsPath = k_CellAttributeMatrix.createChildPath("ParentIds");
-
-  const DataPath k_CellEnsembleAttributeMatrix = k_DataContainerPath.createChildPath("CellEnsembleData");
-  const DataPath k_CrystalStructuresArrayPath = k_CellEnsembleAttributeMatrix.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
 
   const DataPath k_CellFeauteAttributeMatrix = k_DataContainerPath.createChildPath(k_FeatureAttributeMatrix);
   const DataPath k_CellFeaturePhasesPath = k_CellFeauteAttributeMatrix.createChildPath(k_Phases);
@@ -124,8 +69,8 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
   const DataPath k_SharedSurfaceAreaListPath = k_CellFeauteAttributeMatrix.createChildPath("SharedSurfaceAreaList2");
   const DataPath k_FeatureParentIdsPath = k_CellFeauteAttributeMatrix.createChildPath("ParentIds");
 
-  const DataPath k_NewFeauteAttributeMatrix = k_DataContainerPath.createChildPath("NewCellFeatureData");
-  const DataPath k_NewFeauteActivePath = k_NewFeauteAttributeMatrix.createChildPath("Active");
+  const DataPath k_NewFeatureAttributeMatrix = k_DataContainerPath.createChildPath("NewCellFeatureData");
+  const DataPath k_NewFeatureActivePath = k_NewFeatureAttributeMatrix.createChildPath("Active");
 
   DataStructure ds;
 
@@ -277,9 +222,9 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(MergeTwinsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
     args.insertOrAssign(MergeTwinsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
     args.insertOrAssign(MergeTwinsFilter::k_CellParentIdsArrayName_Key, std::make_any<DataPath>(k_CellParentIdsPath));
-    args.insertOrAssign(MergeTwinsFilter::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_NewFeauteAttributeMatrix));
+    args.insertOrAssign(MergeTwinsFilter::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_NewFeatureAttributeMatrix));
     args.insertOrAssign(MergeTwinsFilter::k_FeatureParentIdsArrayName_Key, std::make_any<DataPath>(k_FeatureParentIdsPath));
-    args.insertOrAssign(MergeTwinsFilter::k_ActiveArrayName_Key, std::make_any<DataPath>(k_NewFeauteActivePath));
+    args.insertOrAssign(MergeTwinsFilter::k_ActiveArrayName_Key, std::make_any<DataPath>(k_NewFeatureActivePath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
@@ -310,7 +255,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     REQUIRE(featureParentIdsTupleShape[0] == 5416);
     REQUIRE(featureParentIdsNumComps == 1);
 
-    BoolArray* activeArray = ds.getDataAs<BoolArray>(k_NewFeauteActivePath);
+    BoolArray* activeArray = ds.getDataAs<BoolArray>(k_NewFeatureActivePath);
     REQUIRE(activeArray != nullptr);
     auto activeTupleShape = activeArray->getIDataStore()->getTupleShape();
     auto activeNumComps = activeArray->getNumberOfComponents();

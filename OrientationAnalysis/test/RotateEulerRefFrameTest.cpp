@@ -29,7 +29,6 @@ of doing that.
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
@@ -40,11 +39,9 @@ of doing that.
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+#include "complex_plugins/Utilities/TestUtilities.hpp"
 
-struct make_shared_enabler : public complex::Application
-{
-};
+using namespace complex;
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
 {
@@ -57,7 +54,6 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
   const complex::NumericType k_NumericType = complex::NumericType::float32;
 
   // Constant strings and DataPaths to be used later
-  const std::string k_EulerAngles("EulerAngles");
   const DataPath k_EulerAnglesDataPath({k_EulerAngles});
 
   const std::string k_EulersRotated("EulersRotated");
@@ -77,11 +73,8 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
   static constexpr StringLiteral k_DataArrayKey = "output_data_array";
 
   // Make sure we can load the "Import Text Filter" filter from the plugin
-  const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
   auto* filterList = Application::Instance()->getFilterList();
   // Make sure we can instantiate the Import Text Filter
-  const Uuid k_ImportTextFilterId = *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4");
-  const FilterHandle k_ImportTextFilterHandle(k_ImportTextFilterId, k_ComplexCorePluginId);
 
   DataStructure dataStructure;
 

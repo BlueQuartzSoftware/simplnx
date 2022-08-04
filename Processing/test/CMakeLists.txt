@@ -7,7 +7,6 @@
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
     DetectEllipsoidsTest.cpp
-    ErodeDilateBadDataTest.cpp
     ErodeDilateCoordinationNumberTest.cpp
     ErodeDilateMaskTest.cpp
     FindProjectedImageStatisticsTest.cpp

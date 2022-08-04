@@ -125,7 +125,7 @@ foreach(file_name ${STUB_FILTERS})
 endforeach()
 
 option(${PLUGIN_NAME}_COMPILE_PRIVATE_FILTERS "Compile the Stubbed out filters" OFF)
-if(${PLUGIN_NAME}_COMPILE_PRIVATE_FILTERS)
+if(${${PLUGIN_NAME}_COMPILE_PRIVATE_FILTERS})
   target_sources(${PLUGIN_NAME}
     PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
   )

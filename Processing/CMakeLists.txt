@@ -10,7 +10,6 @@ set(FilterList
 
 set(STUB_FILTERS
   DetectEllipsoids
-  ErodeDilateBadData
   ErodeDilateCoordinationNumber
   ErodeDilateMask
   FindProjectedImageStatistics

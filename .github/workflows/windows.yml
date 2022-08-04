@@ -44,23 +44,23 @@ jobs:
         uses: suisei-cn/actions-download-file@v1.0.1
         id: downloadfile  # Remember to give an ID if you need the output filename
         with:
-          url: "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_4/TestFiles.tar.gz"
+          url: "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_5/TestFiles_6_5.tar.gz"
           target: ${{github.workspace}}/DREAM3D_Data
       - name: PWD
         shell: bash
         run: >
           pwd
-      - name: List Files
+      - name: Find TestFiles.tar.gz
         shell: bash
         run: >
-          find . -type f -name "TestFiles.tar.gz"
-      - name: Decompress TestFiles.tar.gz
+          find . -type f -name "TestFiles_6_5.tar.gz"
+      - name: Decompress TestFiles_6_5.tar.gz
         run: |
-          cmake -E tar xvzf ${{github.workspace}}/DREAM3D_Data/TestFiles.tar.gz
+          cmake -E tar xvzf ${{github.workspace}}/DREAM3D_Data/TestFiles_6_5.tar.gz
       - name: Move TestFiles Directory into location
         run: |
           cmake -E rename ${{github.workspace}}/TestFiles ${{github.workspace}}/DREAM3D_Data/TestFiles
-      - name: List Files 2
+      - name: Find TestFiles directory
         shell: bash
         run: >
           find . -type d -name "TestFiles"
