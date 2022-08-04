@@ -72,6 +72,8 @@ public:
     INeighborList = 20,
     NeighborList = 21,
 
+    StringArray = 22,
+
     Unknown = 999,
     Any = 4294967295U
   };
