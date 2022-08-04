@@ -13,6 +13,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindShapesFilterTest.cpp
   ResampleImageGeomFilterTest.cpp # NEEDS TEST IMPLEMENTED
   RotateSampleRefFrameTest.cpp
+  ErodeDilateBadDataTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -26,14 +27,14 @@ create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 # ------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin
 # can use the target_sources(...) cmake call
- target_sources(${PLUGIN_NAME}UnitTest
-  PRIVATE ${${PLUGIN_NAME}_SOURCE_DIR}/test/${PLUGIN_NAME}TestUtilities.hpp
- )
+# target_sources(${PLUGIN_NAME}UnitTest
+#  PRIVATE ${${PLUGIN_NAME}_SOURCE_DIR}/test/${PLUGIN_NAME}TestUtilities.hpp
+# )
 
 # ------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
 # you can use the target_include_directories(.....) cmake call
-# target_include_directories(${PLUGIN_NAME}UnitTest
-# PUBLIC
-# additional include directories here
-# )
+target_include_directories(${PLUGIN_NAME}UnitTest
+  PUBLIC
+  ${CMAKE_CURRENT_LIST_DIR}/../../src
+)

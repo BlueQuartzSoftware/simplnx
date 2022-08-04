@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Processing/Processing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,29 +8,31 @@
 namespace complex
 {
 /**
- * @class ErodeDilateBadData
+ * @class ErodeDilateBadDataFilter
  * @brief This filter will ....
  */
-class PROCESSING_EXPORT ErodeDilateBadData : public IFilter
+class CORE_EXPORT ErodeDilateBadDataFilter : public IFilter
 {
 public:
-  ErodeDilateBadData() = default;
-  ~ErodeDilateBadData() noexcept override = default;
+  ErodeDilateBadDataFilter() = default;
+  ~ErodeDilateBadDataFilter() noexcept override = default;
 
-  ErodeDilateBadData(const ErodeDilateBadData&) = delete;
-  ErodeDilateBadData(ErodeDilateBadData&&) noexcept = delete;
+  ErodeDilateBadDataFilter(const ErodeDilateBadDataFilter&) = delete;
+  ErodeDilateBadDataFilter(ErodeDilateBadDataFilter&&) noexcept = delete;
 
-  ErodeDilateBadData& operator=(const ErodeDilateBadData&) = delete;
-  ErodeDilateBadData& operator=(ErodeDilateBadData&&) noexcept = delete;
+  ErodeDilateBadDataFilter& operator=(const ErodeDilateBadDataFilter&) = delete;
+  ErodeDilateBadDataFilter& operator=(ErodeDilateBadDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Direction_Key = "Direction";
+  static inline constexpr StringLiteral k_Operation_Key = "Operation";
   static inline constexpr StringLiteral k_NumIterations_Key = "NumIterations";
   static inline constexpr StringLiteral k_XDirOn_Key = "XDirOn";
   static inline constexpr StringLiteral k_YDirOn_Key = "YDirOn";
   static inline constexpr StringLiteral k_ZDirOn_Key = "ZDirOn";
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
   static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_SelectedFeatureDataGroup_Key = "selected_feature_group";
 
   /**
    * @brief Returns the name of the filter.
@@ -98,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ErodeDilateBadData, "3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254");
+COMPLEX_DEF_FILTER_TRAITS(complex, ErodeDilateBadDataFilter, "3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254");

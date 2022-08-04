@@ -1,38 +1,37 @@
 #pragma once
 
-#include "Processing/Processing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  ErodeDilateBadDataInputValues inputValues;
+namespace
+{
+const std::string k_ErodeString("Erode");
+const std::string k_DilateString("Dilate");
+const complex::ChoicesParameter::Choices k_OperationChoices = {k_ErodeString, k_DilateString};
 
-  inputValues.Direction = filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key);
-  inputValues.NumIterations = filterArgs.value<int32>(k_NumIterations_Key);
-  inputValues.XDirOn = filterArgs.value<bool>(k_XDirOn_Key);
-  inputValues.YDirOn = filterArgs.value<bool>(k_YDirOn_Key);
-  inputValues.ZDirOn = filterArgs.value<bool>(k_ZDirOn_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-
-  return ErodeDilateBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+const complex::ChoicesParameter::ValueType k_ErodeIndex = 0ULL;
+const complex::ChoicesParameter::ValueType k_DilateIndex = 1ULL;
+} // namespace
 
 namespace complex
 {
 
-struct PROCESSING_EXPORT ErodeDilateBadDataInputValues
+struct CORE_EXPORT ErodeDilateBadDataInputValues
 {
-  ChoicesParameter::ValueType Direction;
+  ChoicesParameter::ValueType Operation;
   int32 NumIterations;
   bool XDirOn;
   bool YDirOn;
   bool ZDirOn;
   DataPath FeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
+  DataPath InputImageGeometry;
+  DataPath FeatureDataPath;
 };
 
 /**
@@ -40,8 +39,7 @@ struct PROCESSING_EXPORT ErodeDilateBadDataInputValues
  * @brief This filter replaces values in the target array with a user specified value
  * where a bool mask array specifies.
  */
-
-class PROCESSING_EXPORT ErodeDilateBadData
+class CORE_EXPORT ErodeDilateBadData
 {
 public:
   ErodeDilateBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateBadDataInputValues* inputValues);
@@ -55,6 +53,7 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+  void updateProgress(const std::string& progMessage);
 
 private:
   DataStructure& m_DataStructure;

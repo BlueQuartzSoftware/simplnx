@@ -1,33 +1,26 @@
 #include <catch2/catch.hpp>
 
-#include "OrientationAnalysis/Filters/Algorithms/ReadH5Ebsd.hpp"
 #include "OrientationAnalysis/Filters/AlignSectionsMisorientationFilter.hpp"
-#include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-#include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
 
 #include "complex/Common/Types.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArrayThresholdsParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/ArrayThreshold.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
-#include "EbsdLib/IO/TSL/AngConstants.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+#include "complex_plugins/Utilities/SmallIN100Utilties.hpp"
+#include "complex_plugins/Utilities/TestUtilities.hpp"
 
-constexpr float EPSILON = 0.00001;
+using namespace complex;
 
 /**
  * Read H5Ebsd File
@@ -43,29 +36,6 @@ constexpr float EPSILON = 0.00001;
  *
  * Compare all the data arrays from the "Exemplar Data / CellData"
  */
-template <typename T>
-void CompareDataArrays(const IDataArray& left, const IDataArray& right)
-{
-  const auto& oldDataStore = left.getIDataStoreRefAs<AbstractDataStore<T>>();
-  const auto& newDataStore = right.getIDataStoreRefAs<AbstractDataStore<T>>();
-  usize start = 0;
-  usize end = oldDataStore.getSize();
-  for(usize i = start; i < end; i++)
-  {
-    if(oldDataStore[i] != newDataStore[i])
-    {
-      auto oldVal = oldDataStore[i];
-      auto newVal = newDataStore[i];
-      float diff = std::fabs(static_cast<float>(oldVal - newVal));
-      REQUIRE(diff < EPSILON);
-      break;
-    }
-  }
-}
-
-struct make_shared_enabler : public complex::Application
-{
-};
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline", "[OrientationAnalysis][AlignSectionsMisorientation]")
 {
@@ -73,56 +43,15 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
-  // Make sure we can load the needed filters from the plugins
-  const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-  // Make sure we can instantiate the Import Text Filter
-  const Uuid k_MultiThresholdObjectsId = *Uuid::FromString("4246245e-1011-4add-8436-0af6bed19228");
-  const FilterHandle k_MultiThresholdObjectsFilterHandle(k_MultiThresholdObjectsId, k_ComplexCorePluginId);
-
-  const Uuid k_ImportTextFilterId = *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4");
-  const FilterHandle k_ImportTextFilterHandle(k_ImportTextFilterId, k_ComplexCorePluginId);
-
-  const Uuid k_ImportDream3dFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
-  const FilterHandle k_ImportDream3dFilterHandle(k_ImportDream3dFilterId, k_ComplexCorePluginId);
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  const std::string k_Quats("Quats");
-  const std::string k_Phases("Phases");
-  const std::string k_ConfidenceIndex = EbsdLib::Ang::ConfidenceIndex;
-  const std::string k_ImageQuality = EbsdLib::Ang::ImageQuality;
-
-  const std::string k_Mask("Mask");
-  const std::string k_DataContainer("DataContainer");
-  const DataPath k_DataContainerPath({k_DataContainer});
-
-  const std::string k_ExemplarDataContainer("Exemplar Data");
-  const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
-
-  const DataPath k_CalculatedShiftsPath = k_DataContainerPath.createChildPath("Calculated Shifts");
-
-  const DataPath k_CellAttributeMatrix = k_DataContainerPath.createChildPath("CellData");
-  const DataPath k_EulersArrayPath = k_CellAttributeMatrix.createChildPath(EbsdLib::CellData::EulerAngles);
-  const DataPath k_QuatsArrayPath = k_CellAttributeMatrix.createChildPath(k_Quats);
-  const DataPath k_PhasesArrayPath = k_CellAttributeMatrix.createChildPath(k_Phases);
-  const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_ConfidenceIndex);
-  const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_ImageQuality);
-  const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
-
-  const DataPath k_CellEnsembleAttributeMatrix = k_DataContainerPath.createChildPath("CellEnsembleData");
-  const DataPath k_CrystalStructuresArrayPath = k_CellEnsembleAttributeMatrix.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-
   const DataPath k_ExemplarShiftsPath = k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
 
-  DataStructure exemplarDataStructure;
   // Read Exemplar DREAM3D File Filter
-  {
-    auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/align_sections_misorientation.dream3d", unit_test::k_DREAM3DDataDir));
-    REQUIRE(fs::exists(exemplarFilePath));
-    H5::FileReader exemplarReader(exemplarFilePath);
-    H5::ErrorType h5Error = 0;
-    exemplarDataStructure = DataStructure::readFromHdf5(exemplarReader, h5Error);
-    REQUIRE(h5Error >= 0);
-  }
+  auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_align_sections_misorientation.dream3d", unit_test::k_DREAM3DDataDir));
+  DataStructure exemplarDataStructure = complex::LoadDataStructure(exemplarFilePath);
+
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
+  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
 
   // Read Exemplar Shifts File
   {
@@ -158,86 +87,11 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  DataStructure dataStructure;
-  // Read the Small IN100 Data set
-  {
-    constexpr StringLiteral k_ImportFileData = "Import_File_Data";
-
-    auto filter = filterList->createFilter(k_ImportDream3dFilterHandle);
-    REQUIRE(nullptr != filter);
-
-    Dream3dImportParameter::ImportData parameter;
-    parameter.FilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
-
-    Arguments args;
-    args.insertOrAssign(k_ImportFileData, std::make_any<Dream3dImportParameter::ImportData>(parameter));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter->preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter->execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-
   // MultiThreshold Objects Filter (From ComplexCore Plugins)
-  {
-    constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
-    constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
-
-    auto filter = filterList->createFilter(k_MultiThresholdObjectsFilterHandle);
-    REQUIRE(nullptr != filter);
-
-    Arguments args;
-
-    ArrayThresholdSet arrayThresholdset;
-    ArrayThresholdSet::CollectionType thresholds;
-
-    std::shared_ptr<ArrayThreshold> ciThreshold = std::make_shared<ArrayThreshold>();
-    ciThreshold->setArrayPath(k_ConfidenceIndexArrayPath);
-    ciThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    ciThreshold->setComparisonValue(0.1);
-    thresholds.push_back(ciThreshold);
-
-    std::shared_ptr<ArrayThreshold> iqThreshold = std::make_shared<ArrayThreshold>();
-    iqThreshold->setArrayPath(k_ImageQualityArrayPath);
-    iqThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    iqThreshold->setComparisonValue(120.0);
-    thresholds.push_back(iqThreshold);
-
-    arrayThresholdset.setArrayThresholds(thresholds);
-
-    args.insertOrAssign(k_ArrayThresholds_Key, std::make_any<ArrayThresholdsParameter::ValueType>(arrayThresholdset));
-    args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter->preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
-
-    // Execute the filter and check the result
-    auto executeResult = filter->execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
-  }
+  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
 
   // Convert Orientations Filter (From OrientationAnalysis Plugin)
-  {
-    Arguments args;
-    ConvertOrientations filter;
-
-    args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-    args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(2));
-    args.insertOrAssign(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(k_EulersArrayPath));
-    args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<DataPath>(k_QuatsArrayPath));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
-  }
+  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterList);
 
   // Align Sections Misorientation Filter (From OrientationAnalysis Plugin)
   {
@@ -405,13 +259,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     }
   }
 
-  {
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/align_sections_misorientation.dream3d", unit_test::k_BinaryDir));
-    H5::FileWriter fileWriter = std::move(result.value());
-
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
-  }
+  WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_misorientation.dream3d", unit_test::k_BinaryDir));
 }
 
 #if 0

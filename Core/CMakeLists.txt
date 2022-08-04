@@ -20,6 +20,7 @@ set(FilterList
   FindShapesFilter
   ResampleImageGeomFilter
   RotateSampleRefFrameFilter
+  ErodeDilateBadDataFilter
 )
 
 set(STUB_FILTERS
@@ -83,6 +84,7 @@ set(filter_algorithms
   FindFeatureCentroids
   FindShapes
   ResampleImageGeom
+  ErodeDilateBadData
 )
 
 foreach(algorithm ${filter_algorithms})

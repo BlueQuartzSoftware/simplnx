@@ -5,12 +5,12 @@ include(ExternalProject)
 include(download_dir)
 
 ExternalProject_Add(TestFiles
-  URL  https://github.com/dream3d/DREAM3D_Data/releases/download/v6_4/TestFiles.tar.gz
-
+  URL https://github.com/dream3d/DREAM3D_Data/releases/download/v6_5/TestFiles_6_5.tar.gz
+  URL_HASH SHA512=a8e92701cb47d8d66311c04ad86bbaa6ced45b9c9167b8fc2780e4030db7ad82223c011901a3609a33edb60ebed0962dc49f465ed86c8d8a17b398c9ab264afd
   DOWNLOAD_DIR ${DREAM3D_DATA_DIR}
 
-  CONFIGURE_COMMAND "" 
-  BUILD_COMMAND "" 
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
   INSTALL_COMMAND ""
 
   LOG_DOWNLOAD 1

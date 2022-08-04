@@ -40,11 +40,9 @@ of doing that.
 #include <filesystem>
 namespace fs = std::filesystem;
 
-using namespace complex;
+#include "complex_plugins/Utilities/TestUtilities.hpp"
 
-struct make_shared_enabler : public complex::Application
-{
-};
+using namespace complex;
 
 namespace FindAvgOrientationsTest
 {
@@ -62,12 +60,6 @@ static constexpr StringLiteral k_DataArrayKey = "output_data_array";
 void runImportTextFilter(const std::string k_InputFileName, complex::NumericType k_NumericType, const uint64 k_NumTuples, const uint64 k_NumComponents, const DataPath k_InputFileDataPath,
                          DataStructure& dataStructure)
 {
-  // Make sure we can load the "Import Text Filter" filter from the plugin
-  const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-  // Make sure we can instantiate the Import Text Filter
-  const Uuid k_ImportTextFilterId = *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4");
-  const FilterHandle k_ImportTextFilterHandle(k_ImportTextFilterId, k_ComplexCorePluginId);
-
   auto* filterList = Application::Instance()->getFilterList();
 
   Arguments args;
@@ -117,13 +109,10 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
   const std::string k_CrystalStuctures("Crystal Structures");
   const DataPath k_CrystalStructureDataPath({k_CrystalStuctures});
 
-  const std::string k_Phases("Phases");
   const DataPath k_PhasesDataPath({k_Phases});
 
-  const std::string k_FeatureIds("FeatureIds");
   const DataPath k_FeatureIdsDataPath({k_FeatureIds});
 
-  const std::string k_Quats("Quats");
   const DataPath k_QuatsDataPath({k_Quats});
 
   DataStructure dataStructure;
