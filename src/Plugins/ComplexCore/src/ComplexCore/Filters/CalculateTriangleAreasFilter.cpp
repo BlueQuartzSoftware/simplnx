@@ -157,8 +157,6 @@ Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure,
 
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
   Float64Array& faceAreas = dataStructure.getDataRefAs<Float64Array>(pCalculatedAreasDataPath);
-  // Associate the calculated face areas with the Face Data in the Triangle Geometry
-  triangleGeom.getLinkedGeometryData().addFaceData(pCalculatedAreasDataPath);
 
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;

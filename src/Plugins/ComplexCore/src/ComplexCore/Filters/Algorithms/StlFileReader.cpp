@@ -149,7 +149,6 @@ Result<> StlFileReader::operator()()
   }
 
   TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
-  LinkedGeometryData& linkedGeometryData = triangleGeom.getLinkedGeometryData();
 
   triangleGeom.resizeFaceList(triCount);
   triangleGeom.resizeVertexList(triCount * 3);
@@ -161,8 +160,6 @@ Result<> StlFileReader::operator()()
   SharedVertList& nodes = *(triangleGeom.getVertices());
 
   Float64Array& faceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_FaceNormalsDataPath);
-  // Associate the Face Normals with the Face Data in the Triangle Geometry
-  linkedGeometryData.addFaceData(m_FaceNormalsDataPath);
 
   // Read the triangles
   constexpr size_t k_StlElementCount = 12;

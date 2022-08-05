@@ -19,6 +19,11 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
+namespace
+{
+const std::string k_FaceNormals = "FaceNormals";
+}
+
 namespace complex
 {
 
@@ -59,16 +64,11 @@ Parameters StlFileReaderFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilePath_Key, "STL File", "Input STL File", fs::path("*.stl"), FileSystemPathParameter::ExtensionsType{".stl"},
                                                           FileSystemPathParameter::PathType::InputFile));
-  // params.insert(std::make_unique<DataGroupSelectionParameter>(k_ParentDataGroupPath_Key, "Parent DataGroup", "", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
 
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryDataPath_Key, "Geometry Name [Data Group]", "The complete path to the DataGroup containing the created Geometry data",
                                                              DataPath({"[Triangle Geometry]"})));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_FaceGroupDataPath_Key, "Triangle Face Data [Data Group]", "The complete path to the DataGroup containing the created Face Data",
-                                                             DataPath({"[Triangle Geometry]", "Triangle Face Data"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceNormalsDataPath_Key, "Face Normals [Data Array]", "The complete path to the Array specifying the normal of each Face",
-                                                         DataPath({"[Triangle Geometry]", "Triangle Face Data", "Normals"})));
 
   return params;
 }
@@ -89,8 +89,6 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
    */
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
-  auto pFaceDataGroupName = filterArgs.value<DataPath>(k_FaceGroupDataPath_Key);
-  auto pFaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsDataPath_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -155,20 +153,12 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   // past this point, we are going to scope each section so that we don't accidentally introduce bugs
 
   // Create the Triangle Geometry action and store it
-  {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1);
-    resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
-  }
-  // Create Triangle FaceData (for the Normals) action and store it
-  {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pFaceDataGroupName);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
-  }
+  auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1);
+  auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(k_FaceNormals);
+  resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
   // Create the face Normals DataArray action and store it
-  {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, std::vector<usize>{3}, pFaceNormalsPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
-  }
+  auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, std::vector<usize>{3}, faceNormalsPath);
+  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods. (None to store for this filter... yet)
@@ -183,8 +173,8 @@ Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& 
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
-  auto pFaceDataGroupPath = filterArgs.value<DataPath>(k_FaceGroupDataPath_Key);
-  auto pFaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsDataPath_Key);
+  auto pFaceDataGroupPath = pTriangleGeometryPath.createChildPath(CreateTriangleGeometryAction::k_FaceData);
+  auto pFaceNormalsPath = pFaceDataGroupPath.createChildPath(k_FaceNormals);
 
   // The actual STL File Reading is placed in a separate class `StlFileReader`
   Result<> result = StlFileReader(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, shouldCancel)();

@@ -37,8 +37,8 @@ static const std::vector<float> s_Vertices = {
 TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[ApproximatePointCloudHull]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = "Face Data";
-  std::string normalsDataArrayName = "Normals";
+  std::string triangleFaceDataGroupName = "FaceData";
+  std::string normalsDataArrayName = "FaceNormals";
   DataPath hullVertexGeomPath({"[Point Cloud Hull]"});
 
   DataStructure dataGraph;
@@ -54,8 +54,6 @@ TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
     // Create default Parameters for the filter.
     args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
     args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
-    args.insertOrAssign(StlFileReaderFilter::k_FaceGroupDataPath_Key, std::make_any<DataPath>(triangleFaceDataGroupDataPath));
-    args.insertOrAssign(StlFileReaderFilter::k_FaceNormalsDataPath_Key, std::make_any<DataPath>(normalsDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);

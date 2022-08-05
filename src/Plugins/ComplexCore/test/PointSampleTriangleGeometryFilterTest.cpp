@@ -73,8 +73,8 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 {
 
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = "Face Data";
-  std::string normalsDataArrayName = "Normals";
+  std::string triangleFaceDataGroupName = "FaceData";
+  std::string normalsDataArrayName = "FaceNormals";
   std::string triangleAreasName = "Triangle Areas";
   std::string vertexGeometryName = "[Vertex Geometry]";
   std::string vertexNodeDataGroup = "Vertex Data";
@@ -94,8 +94,6 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     // Create default Parameters for the filter.
     args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
     args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
-    args.insertOrAssign(StlFileReaderFilter::k_FaceGroupDataPath_Key, std::make_any<DataPath>(triangleFaceDataGroupDataPath));
-    args.insertOrAssign(StlFileReaderFilter::k_FaceNormalsDataPath_Key, std::make_any<DataPath>(normalsDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
