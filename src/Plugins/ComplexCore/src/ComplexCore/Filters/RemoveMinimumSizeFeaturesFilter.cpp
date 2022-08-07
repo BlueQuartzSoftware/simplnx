@@ -329,7 +329,6 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
     return {nonstd::make_unexpected(std::vector<Error>{Error{-k_BadMinAllowedFeatureSize, ss}})};
   }
 
-  std::vector<size_t> cDims(1, 1);
   const FeatureIdsArrayType* featureIdsPtr = data.getDataAs<FeatureIdsArrayType>(featureIdsPath);
   if(featureIdsPtr == nullptr)
   {
@@ -369,17 +368,15 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   OutputActions outputActions;
 
   // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
-  std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the parent group '{}'.  These arrays are:\n",
+  std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
                                featureIdsPath.toString(), featureGroupDataPath.toString());
-  for(const auto& [id, sharedChild] : (*featureDataGroup))
+
+  std::vector<DataPath> featureNeighborListArrays = complex::GetAllChildDataPaths(data, featureGroupDataPath, DataObject::Type::NeighborList);
+  for(const auto& featureNeighborList : featureNeighborListArrays)
   {
-    if(sharedChild->getTypeName() != "NeighborList<T>")
-    {
-      DataPath removedPath = featureGroupDataPath.createChildPath(sharedChild->getName());
-      ss.append("\n" + removedPath.toString());
-      auto action = std::make_unique<DeleteDataAction>(removedPath);
-      outputActions.actions.push_back(std::move(action));
-    }
+    ss.append("\n" + featureNeighborList.toString());
+    auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
+    outputActions.actions.push_back(std::move(action));
   }
 
   preflightResult.outputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});

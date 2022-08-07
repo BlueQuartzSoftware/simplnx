@@ -24,7 +24,7 @@ public:
   RemoveMinimumSizeFeaturesFilter& operator=(const RemoveMinimumSizeFeaturesFilter&) = delete;
   RemoveMinimumSizeFeaturesFilter& operator=(RemoveMinimumSizeFeaturesFilter&&) noexcept = delete;
 
-  static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_Phiases_path";
+  static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
   static inline constexpr StringLiteral k_NumCellsPath_Key = "num_cells_path";
   static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
