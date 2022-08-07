@@ -71,10 +71,9 @@ IFilter::PreflightResult FindFeaturePhasesFilter::preflightImpl(const DataStruct
 
   complex::Result<OutputActions> resultOutputActions;
 
-  const IDataArray& featureIds = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
-
+  const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
   {
-    auto createFeaturePhasesAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{featureIds.getNumberOfTuples()}, std::vector<usize>{1}, pFeaturePhasesArrayPathValue);
+    auto createFeaturePhasesAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{1}, std::vector<usize>{1}, pFeaturePhasesArrayPathValue);
     resultOutputActions.value().actions.push_back(std::move(createFeaturePhasesAction));
   }
 
