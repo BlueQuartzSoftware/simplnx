@@ -32,4 +32,13 @@ COMPLEX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath
  */
 COMPLEX_EXPORT std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<DataPath>& ignoredDataPaths);
 
+/**
+ * @brief This function will return all the DataPaths within a BaseGroup that are of a certain type
+ * @param dataStructure The DataStructure to use
+ * @param parentGroup The parent group whose children you want to get
+ * @param dataObjectType The type of children you want to get
+ * @return std::vector<DataPath> of child paths that meet the DataObjectType requirement
+ */
+COMPLEX_EXPORT std::vector<DataPath> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType);
+
 } // namespace complex
