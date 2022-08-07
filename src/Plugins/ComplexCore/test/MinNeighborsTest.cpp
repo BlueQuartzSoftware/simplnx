@@ -102,7 +102,7 @@ TEST_CASE("ComplexCore::MinNeighbors: Phase 0", "[MinNeighbors]")
   args.insertOrAssign(MinNeighbors::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
   args.insertOrAssign(MinNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(k_NumNeighbors));
   args.insertOrAssign(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<uint64>(k_MinNumNeighbors));
-  args.insertOrAssign(MinNeighbors::k_VoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
+  args.insertOrAssign(MinNeighbors::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
@@ -142,7 +142,7 @@ TEST_CASE("ComplexCore::MinNeighbors: Bad Phase Number", "[MinNeighbors]")
   args.insertOrAssign(MinNeighbors::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
   args.insertOrAssign(MinNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(k_NumNeighbors));
   args.insertOrAssign(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<uint64>(k_MinNumNeighbors));
-  args.insertOrAssign(MinNeighbors::k_VoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
+  args.insertOrAssign(MinNeighbors::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
@@ -175,7 +175,7 @@ TEST_CASE("ComplexCore::MinNeighbors: Phase Array", "[MinNeighbors]")
   args.insertOrAssign(MinNeighbors::k_FeaturePhases_Key, std::make_any<DataPath>(k_FeaturePhases));
   args.insertOrAssign(MinNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(k_NumNeighbors));
   args.insertOrAssign(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<uint64>(k_MinNumNeighbors));
-  args.insertOrAssign(MinNeighbors::k_VoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
+  args.insertOrAssign(MinNeighbors::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);

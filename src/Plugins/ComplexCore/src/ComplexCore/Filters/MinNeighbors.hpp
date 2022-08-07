@@ -28,7 +28,8 @@ public:
   static inline constexpr StringLiteral k_FeaturePhases_Key = "feature_phases";
   static inline constexpr StringLiteral k_NumNeighbors_Key = "num_neighbors";
   static inline constexpr StringLiteral k_MinNumNeighbors_Key = "min_num_neighbors";
-  static inline constexpr StringLiteral k_VoxelArrays_Key = "voxel_arrays";
+  static inline constexpr StringLiteral k_IgnoredVoxelArrays_Key = "ignored_voxel_arrays";
+  static inline constexpr StringLiteral k_CellDataAttributeMatrix_Key = "cell_attribute_matrix";
 
   /**
    * @brief
