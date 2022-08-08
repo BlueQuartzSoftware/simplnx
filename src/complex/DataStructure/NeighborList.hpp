@@ -23,11 +23,10 @@ constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
  * @brief
  * @tparam T
  */
-template <typename T>
+template <class T>
 class NeighborList : public INeighborList
 {
-  template <typename T>
-  friend class H5::NeighborListFactory;
+  friend class H5::NeighborListFactory<T>;
 
 public:
   using value_type = T;
@@ -360,18 +359,37 @@ using FloatNeighborListType = NeighborList<float>;
 
 // -----------------------------------------------------------------------------
 // Declare our extern templates
+//extern template class NeighborList<int8>;
+//extern template class NeighborList<uint8>;
+//extern template class NeighborList<int16>;
+//extern template class NeighborList<uint16>;
+//extern template class NeighborList<int32>;
+//extern template class NeighborList<uint32>;
+//extern template class NeighborList<int64>;
+//extern template class NeighborList<uint64>;
 
-extern template class NeighborList<int8>;
-extern template class NeighborList<uint8>;
-extern template class NeighborList<int16>;
-extern template class NeighborList<uint16>;
-extern template class NeighborList<int32>;
-extern template class NeighborList<uint32>;
-extern template class NeighborList<int64>;
-extern template class NeighborList<uint64>;
+//extern template class NeighborList<float32>;
+//extern template class NeighborList<float64>;
 
-extern template class NeighborList<float32>;
-extern template class NeighborList<float64>;
+//extern template class NeighborList<usize>;
 
-extern template class NeighborList<usize>;
+//Declare Aliases
+using UInt8NeighborList = NeighborList<uint8>;
+using UInt16NeighborList = NeighborList<uint16>;
+using UInt32NeighborList = NeighborList<uint32>;
+using UInt64NeighborList = NeighborList<uint64>;
+
+using Int8NeighborList = NeighborList<int8>;
+using Int16NeighborList = NeighborList<int16>;
+using Int32NeighborList = NeighborList<int32>;
+using Int64NeighborList = NeighborList<int64>;
+
+using USizeNeighborList = NeighborList<usize>;
+
+using Float32NeighborList = NeighborList<float32>;
+using Float64NeighborList = NeighborList<float64>;
+
+using BoolNeighborList = NeighborList<bool>;
+
+using VectorOfFloat32NeighborList = std::vector<std::shared_ptr<Float32NeighborList>>;
 } // namespace complex
