@@ -408,6 +408,17 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   }
   assignBadPoints(data, args, shouldCancel);
 
+  auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIds_Key);
+  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+
+  auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighbors_Key);
+  auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
+
+  DataPath cellFeatureGroupPath = featurePhasesPath.getParent();
+  size_t currentFeatureCount = numNeighborsArray.getNumberOfTuples();
+  complex::RemoveInactiveObjects(data, cellFeatureGroupPath, activeObjects.value(), featureIdsArray, currentFeatureCount);
+
+
   return {};
 }
 } // namespace complex
