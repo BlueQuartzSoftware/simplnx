@@ -6,8 +6,8 @@
 #include "ComplexCore/Filters/CreateImageGeometry.hpp"
 #include "ComplexCore/Filters/FindSurfaceFeatures.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 using namespace complex;
 namespace fs = std::filesystem;
@@ -23,7 +23,6 @@ const std::string k_FeatureIds2DFileName = "FeatureIds_2D.raw";
 const std::string k_SurfaceFeatures2DExemplaryFileName = "SurfaceFeatures2D.raw";
 const std::string k_SurfaceFeatures3DExemplaryFileName = "SurfaceFeatures3D.raw";
 const std::string k_SurfaceFeatures("SurfaceFeatures");
-
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {

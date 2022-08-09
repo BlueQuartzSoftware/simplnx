@@ -15,7 +15,6 @@ using namespace complex;
 using namespace complex::UnitTest;
 using namespace complex::Constants;
 
-
 TEST_CASE("ComplexCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentFeatures]")
 {
   // Read the Small IN100 Data set
