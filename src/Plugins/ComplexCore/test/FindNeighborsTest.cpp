@@ -42,7 +42,7 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
   const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
   REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
 
-  for(usize i = 0; i < exemplaryList.getSize(); i++)
+  for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
   {
     const auto exemplary = exemplaryList.getList(i);
     const auto computed = computedNeighborList.getList(i);
