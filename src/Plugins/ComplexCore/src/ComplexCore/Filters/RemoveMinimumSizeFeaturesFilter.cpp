@@ -438,6 +438,11 @@ Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructu
 
   DataPath cellFeatureGroupPath = numCellsPath.getParent();
   size_t currentFeatureCount = numCellsStoreRef.getNumberOfTuples();
+
+  int32 count = std::count(activeObjects.begin(), activeObjects.end(), [](bool b) { return b; });
+  std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
+  messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});
+
   complex::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArrayRef, currentFeatureCount);
 
   return {};
