@@ -229,7 +229,7 @@ Parameters FindSurfaceFeatures::parameters() const
                                                 true));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_FeatureGeometryPath_Key, "Feature Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Created  Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeaturesArrayPath_Key, "Surface Features", "", DataPath({"CellFeatureData", "SurfaceFeatures"})));
 
