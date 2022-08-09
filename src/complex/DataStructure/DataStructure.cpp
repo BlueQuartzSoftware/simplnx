@@ -15,6 +15,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
+#include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
+
+#include "FileVec/collection/Group.hpp"
 
 #include <numeric>
 #include <stdexcept>
@@ -753,6 +757,26 @@ DataStructure DataStructure::readFromHdf5(const H5::GroupReader& groupReader, H5
 {
   H5::DataStructureReader dataStructureReader;
   return dataStructureReader.readH5Group(groupReader, err);
+}
+
+Zarr::ErrorType DataStructure::writeZarr(FileVec::Group& parentGroupWriter) const
+{
+  Zarr::DataStructureWriter dataStructureWriter;
+  auto groupWriterPtr = parentGroupWriter.createOrFindGroup(Constants::k_DataStructureTag);
+  if(groupWriterPtr == nullptr)
+  {
+    return -5;
+  }
+  FileVec::Group& groupWriter = *groupWriterPtr.get();
+  auto idAttribute = groupWriter.attributes()[Constants::k_NextIdTag] = m_NextId;
+
+  return m_RootGroup.writeZarrGroup(dataStructureWriter, groupWriter);
+}
+
+DataStructure DataStructure::readFromZarr(const FileVec::Group& groupReader, Zarr::ErrorType& err)
+{
+  Zarr::DataStructureReader dataStructureReader;
+  return dataStructureReader.readGroup(groupReader, err);
 }
 
 bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const

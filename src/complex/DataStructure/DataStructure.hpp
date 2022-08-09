@@ -69,6 +69,7 @@ public:
   friend class DataMap;
   friend class DataObject;
   friend class H5::DataStructureReader;
+  friend class Zarr::DataStructureReader;
 
   /**
    * @brief Default constructor
@@ -608,6 +609,10 @@ public:
    * @return H5::ErrorType
    */
   static DataStructure readFromHdf5(const H5::GroupReader& groupReader, H5::ErrorType& err);
+
+  Zarr::ErrorType writeZarr(FileVec::Group& parentGroupWriter) const;
+
+  static DataStructure readFromZarr(const FileVec::Group& groupReader, Zarr::ErrorType& err);
 
   /**
    * @brief Checks if all IDataArrays at the target paths have the same tuple count.

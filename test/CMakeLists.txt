@@ -16,7 +16,7 @@ MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+2")
 
 add_subdirectory(UnitTestCommon)
 
-add_executable(complex_test 
+add_executable(complex_test
   ${COMPLEX_TEST_DIRS_HEADER}
   complex_test_main.cpp
   ArgumentsTest.cpp
@@ -32,6 +32,7 @@ add_executable(complex_test
   PipelineTest.cpp
   PluginTest.cpp
   FilePathGeneratorTest.cpp
+  FileVecTest.cpp
   DataArrayTest.cpp
   FileStoreTest.cpp
   DREAM3DFileTest.cpp

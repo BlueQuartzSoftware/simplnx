@@ -10,6 +10,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
+#include "FileVec/collection/Group.hpp"
+
 using namespace complex;
 
 VertexGeom::VertexGeom(DataStructure& ds, std::string name)
@@ -98,4 +100,24 @@ void VertexGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoo
   shape[0] = 0.0;
   shape[1] = 0.0;
   shape[2] = 0.0;
+}
+
+Zarr::ErrorType VertexGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
+{
+  m_VertexListId = ReadZarrDataId(collection, H5Constants::k_VertexListTag);
+  m_VertexSizesId = ReadZarrDataId(collection, H5Constants::k_VertexSizesTag);
+
+  return BaseGroup::readZarr(dataStructureReader, collection, preflight);
+}
+
+Zarr::ErrorType VertexGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+{
+  auto groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
+  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
+
+  // Write DataObject IDs
+  WriteZarrDataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
+  WriteZarrDataId(groupWriter, m_VertexSizesId, H5Constants::k_VertexSizesTag);
+
+  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }

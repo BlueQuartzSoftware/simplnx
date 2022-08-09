@@ -7,6 +7,9 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
+#include "FileVec/collection/Array.hpp"
+#include "FileVec/collection/Group.hpp"
+
 namespace complex
 {
 template <typename T>
@@ -451,6 +454,99 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
   }
 
   return dataVector;
+}
+
+template <typename T>
+std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadZarrData(const FileVec::Group& parentGroup, const FileVec::IArray& iArray)
+{
+  const FileVec::Array<T>& fileArray = reinterpret_cast<const FileVec::Array<T>&>(iArray);
+
+  auto numNeighborsAttributeName = fileArray.attributes()["Linked NumNeighbors Dataset"];
+  auto numNeighborsName = numNeighborsAttributeName.get<std::string>();
+
+  const FileVec::BaseCollection* numNeighborsReader = parentGroup[numNeighborsName]->get();
+  const auto* numNeighborsArray = reinterpret_cast<const FileVec::Array<int32>*>(numNeighborsReader);
+
+  auto numNeighborsPtr = Int32DataStore::ReadZarr(*numNeighborsArray);
+  auto& numNeighborsStore = *numNeighborsPtr.get();
+
+  auto flatDataStorePtr = DataStore<T>::ReadZarr(fileArray);
+  auto& flatDataStore = *flatDataStorePtr.get();
+
+  std::vector<SharedVectorType> dataVector;
+  usize offset = 0;
+  const auto numTuples = numNeighborsStore.getNumberOfTuples();
+  for(usize i = 0; i < numTuples; i++)
+  {
+    const auto numNeighbors = numNeighborsStore[i];
+    auto sharedVector = std::make_shared<std::vector<T>>(numNeighbors);
+    std::vector<T>& vector = *sharedVector.get();
+
+    for(usize j = 0; j < numNeighbors; j++)
+    {
+      vector[j] = flatDataStore[offset + j];
+    }
+    offset += numNeighbors;
+    dataVector.push_back(sharedVector);
+  }
+
+  return dataVector;
+}
+
+template <typename T>
+Zarr::ErrorType NeighborList<T>::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+{
+  DataStructure tmp;
+
+  // Create NumNeighbors DataStore
+  const usize arraySize = m_Array.size();
+  auto* numNeighborsArray = Int32Array::CreateWithStore<Int32DataStore>(tmp, getNumNeighborsArrayName(), {arraySize}, {1});
+  auto& numNeighborsStore = numNeighborsArray->getDataStoreRef();
+  usize totalItems = 0;
+  for(usize i = 0; i < arraySize; i++)
+  {
+    const auto numNeighbors = m_Array[i]->size();
+    numNeighborsStore[i] = static_cast<int32>(numNeighbors);
+    totalItems += numNeighbors;
+  }
+
+  // Write NumNeighbors data
+  auto error = numNeighborsArray->writeZarr(dataStructureWriter, parentGroupWriter, false);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  // Create flattened neighbor DataStore
+  DataStore<T> flattenedData(totalItems, static_cast<T>(0));
+  usize offset = 0;
+  for(const auto& segment : m_Array)
+  {
+    usize numElements = segment->size();
+    if(numElements == 0)
+    {
+      continue;
+    }
+    T* start = segment->data();
+    for(usize i = 0; i < numElements; i++)
+    {
+      flattenedData[offset + i] = start[i];
+    }
+    offset += numElements;
+  }
+
+  // Write flattened array to HDF5 as a separate array
+  auto datasetWriterPtr = parentGroupWriter.createOrFindArray<T>(getName(), {arraySize}, {arraySize});
+  FileVec::Array<T>& datasetWriter = *std::dynamic_pointer_cast<FileVec::Array<T>>(datasetWriterPtr).get();
+  auto err = flattenedData.writeZarr(datasetWriter);
+  if(err < 0)
+  {
+    return err;
+  }
+  datasetWriter.attributes()["Linked NumNeighbors Dataset"] = getNumNeighborsArrayName();
+
+  writeZarrObjectAttributes(dataStructureWriter, datasetWriter, importable);
+  return 0;
 }
 
 #if !defined(__APPLE__) && !defined(_MSC_VER)

@@ -8,6 +8,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
+#include "FileVec/collection/Group.hpp"
+
 using namespace complex;
 
 QuadGeom::QuadGeom(DataStructure& ds, std::string name)
@@ -183,4 +185,30 @@ IGeometry::StatusCode QuadGeom::findUnsharedEdges()
   }
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
   return 1;
+}
+
+Zarr::ErrorType QuadGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
+{
+  m_QuadListId = ReadZarrDataId(collection, H5Constants::k_QuadListTag);
+  m_QuadsContainingVertId = ReadZarrDataId(collection, H5Constants::k_QuadsContainingVertTag);
+  m_QuadNeighborsId = ReadZarrDataId(collection, H5Constants::k_QuadNeighborsTag);
+  m_QuadCentroidsId = ReadZarrDataId(collection, H5Constants::k_QuadCentroidsTag);
+  m_QuadSizesId = ReadZarrDataId(collection, H5Constants::k_QuadSizesTag);
+
+  return AbstractGeometry2D::readZarr(dataStructureReader, collection, preflight);
+}
+
+Zarr::ErrorType QuadGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+{
+  auto groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
+  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
+
+  // Write DataObject IDs
+  WriteZarrDataId(groupWriter, m_QuadListId, H5Constants::k_QuadListTag);
+  WriteZarrDataId(groupWriter, m_QuadsContainingVertId, H5Constants::k_QuadsContainingVertTag);
+  WriteZarrDataId(groupWriter, m_QuadNeighborsId, H5Constants::k_QuadNeighborsTag);
+  WriteZarrDataId(groupWriter, m_QuadCentroidsId, H5Constants::k_QuadCentroidsTag);
+  WriteZarrDataId(groupWriter, m_QuadSizesId, H5Constants::k_QuadSizesTag);
+
+  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }

@@ -5,6 +5,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
+#include "FileVec/collection/Group.hpp"
+
 #include <stdexcept>
 
 using namespace complex;
@@ -304,4 +306,31 @@ H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWrite
   }
 
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
+}
+
+Zarr::ErrorType GridMontage::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& groupReader, bool preflight)
+{
+  auto rowCountAttribute = groupReader.attributes()[H5Constants::k_RowCountTag];
+  m_RowCount = rowCountAttribute.get<uint64_t>();
+
+  auto colCountAttribute = groupReader.attributes()[H5Constants::k_ColCountTag];
+  m_ColumnCount = colCountAttribute.get<uint64_t>();
+
+  auto depthCountAttribute = groupReader.attributes()[H5Constants::k_DepthCountTag];
+  m_DepthCount = depthCountAttribute.get<uint64_t>();
+
+  return BaseGroup::readZarr(dataStructureReader, groupReader, preflight);
+}
+
+Zarr::ErrorType GridMontage::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+{
+  auto groupWriterPtr = parentGroupWriter.createOrFindGroup(getName());
+  auto& groupWriter = *groupWriterPtr.get();
+  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
+
+  groupWriter.attributes()[H5Constants::k_RowCountTag] = m_RowCount;
+  groupWriter.attributes()[H5Constants::k_ColCountTag] = m_ColumnCount;
+  groupWriter.attributes()[H5Constants::k_DepthCountTag] = m_DepthCount;
+
+  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }

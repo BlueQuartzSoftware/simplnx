@@ -102,6 +102,14 @@ public:
    */
   H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
 
+  /**
+   * @brief Reads the DataStructure group from a target Zarr data.
+   * @param dataStructureReader
+   * @param collection
+   * @return Zarr::Error
+   */
+  Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight = false) override;
+
 protected:
   /**
    * @brief Creates the DataGroup for the target DataStructure and with the
@@ -136,5 +144,13 @@ protected:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+
+  /**
+   * @brief Writes the DataObject to the target HDF5 group.
+   * @param parentGroupWriter
+   * @param importable
+   * @return Zarr::ErrorType
+   */
+  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const override;
 };
 } // namespace complex

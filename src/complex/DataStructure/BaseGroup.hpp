@@ -10,11 +10,20 @@
 
 #include "complex/complex_export.hpp"
 
+namespace FileVec
+{
+class Group;
+}
+
 namespace complex
 {
 namespace H5
 {
 class GroupReader;
+}
+namespace Zarr
+{
+class DataStructureReader;
 }
 
 /**
@@ -332,6 +341,22 @@ protected:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+
+  /**
+   * @brief Reads the DataStructure group from a target Zarr data.
+   * @param dataStructureReader
+   * @param collection
+   * @return Zarr::Error
+   */
+  virtual Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight = false);
+
+  /**
+   * @brief Writes the contained DataObjects to the target HDF5 group.
+   * @param parentGroupWriter
+   * @param importable
+   * @return H5::ErrorType
+   */
+  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const override;
 
 private:
   DataMap m_DataMap;

@@ -10,6 +10,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
+#include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
+#include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
+
+#include "FileVec/collection/Group.hpp"
 
 using namespace complex;
 
@@ -337,6 +341,34 @@ H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter
   for(const auto& [id, dataObject] : *this)
   {
     herr_t err = dataStructureWriter.writeDataObject(dataObject.get(), groupWriter);
+    if(err < 0)
+    {
+      std::cout << "Error writing object (" << dataObject->getName() << ") in DataMap to HDF5 " << std::endl;
+      return err;
+    }
+  }
+  return 0;
+}
+
+Zarr::ErrorType DataMap::readZarGroup(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& group, const std::optional<IdType>& dsParentId, bool preflight)
+{
+  auto childrenNames = group.childNames();
+  for(const auto& childName : childrenNames)
+  {
+    auto errorCode = dataStructureReader.readObjectFromGroup(group, childName, dsParentId, preflight);
+    if(errorCode != 0)
+    {
+      return errorCode;
+    }
+  }
+  return 0;
+}
+
+Zarr::ErrorType DataMap::writeZarrGroup(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& groupWriter) const
+{
+  for(const auto& [id, dataObject] : *this)
+  {
+    auto err = dataStructureWriter.writeDataObject(dataObject.get(), groupWriter);
     if(err < 0)
     {
       std::cout << "Error writing object (" << dataObject->getName() << ") in DataMap to HDF5 " << std::endl;

@@ -6,6 +6,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include "FileVec/collection/Array.hpp"
+
 #include <fmt/core.h>
 
 #include <nonstd/span.hpp>
@@ -13,6 +15,7 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -377,6 +380,42 @@ public:
     }
 
     return dataStore;
+  }
+
+  static std::unique_ptr<DataStore> ReadZarr(const FileVec::Array<T>& fArray)
+  {
+    auto tupleShape = IDataStore::ReadTupleShape(fArray);
+    auto componentShape = IDataStore::ReadComponentShape(fArray);
+
+    // Create DataStore
+    auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
+    std::copy(fArray.begin(), fArray.end(), dataStore->begin());
+
+    return dataStore;
+  }
+
+  /**
+   * @brief Writes the data store to Zarr. Returns an error code should
+   * the array be invalid. Otherwise, returns 0.
+   * @param fileArray
+   * @return Zarr::ErrorType
+   */
+  Zarr::ErrorType writeZarrImpl(FileVec::Array<T>& fileArray) const override
+  {
+    const auto fileShape = fileArray.shape();
+    const uint64 fileSize = std::accumulate(fileShape.begin(), fileShape.end(), 1, std::multiplies<uint64>());
+    if(fileSize != IDataStore::getSize())
+    {
+      return -1;
+    }
+
+    std::copy(this->begin(), this->end(), fileArray.begin());
+
+    // Write shape attributes to the dataset
+    fileArray.attributes()[IDataStore::k_TupleShape] = m_TupleShape;
+    fileArray.attributes()[IDataStore::k_ComponentShape] = m_ComponentShape;
+
+    return 0;
   }
 
 private:

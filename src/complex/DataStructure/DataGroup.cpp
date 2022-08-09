@@ -82,3 +82,13 @@ H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
 {
   return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
 }
+
+Zarr::ErrorType DataGroup::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
+{
+  return BaseGroup::readZarr(dataStructureReader, collection, preflight);
+}
+
+Zarr::ErrorType DataGroup::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+{
+  return BaseGroup::writeZarr(dataStructureWriter, parentGroupWriter, importable);
+}

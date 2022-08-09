@@ -4,6 +4,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include "FileVec/collection/IArray.hpp"
+
 #include <fmt/format.h>
 
 #include <numeric>
@@ -236,6 +238,24 @@ public:
     // Create DataStore
     auto dataStore = std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
     return dataStore;
+  }
+
+  static std::unique_ptr<EmptyDataStore> ReadZarr(const FileVec::IArray& fileArray)
+  {
+    auto tupleShape = IDataStore::ReadTupleShape(fileArray);
+    auto componentShape = IDataStore::ReadComponentShape(fileArray);
+
+    return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
+  }
+
+  /**
+   * @brief Throws a runtime error due to the inability to write values to HDF5.
+   * @param datasetWriter
+   * @return H5::ErrorType
+   */
+  Zarr::ErrorType writeZarrImpl(FileVec::Array<T>& fileArray) const override
+  {
+    throw std::runtime_error("");
   }
 
 private:

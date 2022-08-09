@@ -54,12 +54,12 @@ add_library(complex::complex ALIAS complex)
 
 target_compile_features(complex
   PUBLIC
-    cxx_std_17
+  cxx_std_17
 )
 
 set_target_properties(complex
   PROPERTIES
-    DEBUG_POSTFIX "_d"
+  DEBUG_POSTFIX "_d"
 )
 
 complex_enable_warnings(TARGET complex)
@@ -67,7 +67,7 @@ complex_enable_warnings(TARGET complex)
 if(MSVC)
   target_compile_options(complex
     PRIVATE
-      /MP
+    /MP
   )
 endif()
 
@@ -94,17 +94,18 @@ target_link_libraries(complex
 if(UNIX)
   target_link_libraries(complex
     PRIVATE
-      ${CMAKE_DL_LIBS}
+    ${CMAKE_DL_LIBS}
   )
 endif()
 
 option(COMPLEX_ENABLE_LINK_FILESYSTEM "Enables linking to a C++ filesystem library" OFF)
+
 if(COMPLEX_ENABLE_LINK_FILESYSTEM)
   set(COMPLEX_FILESYSTEM_LIB "stdc++fs" CACHE STRING "C++ filesystem library to link to")
   set_property(CACHE COMPLEX_FILESYSTEM_LIB PROPERTY STRINGS "stdc++fs" "c++fs")
   target_link_libraries(complex
     PUBLIC
-      ${COMPLEX_FILESYSTEM_LIB}
+    ${COMPLEX_FILESYSTEM_LIB}
   )
 endif()
 
@@ -193,6 +194,20 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataArrayFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataGroupFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/EdgeGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/GridMontageFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/HexahedralGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ImageGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/NeighborListFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/QuadGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/RectGridGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ScalarDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TetrahedralGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TriangleGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/VertexGeomFactory.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
@@ -350,6 +365,12 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Constants.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/Zarr.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrDataFactoryManager.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrIDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp
 )
 
 set(COMPLEX_GENERATED_HEADERS
@@ -380,6 +401,19 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataGroupFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/EdgeGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/GridMontageFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/HexahedralGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ImageGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/NeighborListFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/QuadGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/RectGridGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ScalarDataFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TetrahedralGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TriangleGeomFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/VertexGeomFactory.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
@@ -508,8 +542,12 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
-)
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrDataFactoryManager.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrIDataFactory.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureWriter.cpp
+)
 
 # Add Core FilterParameters
 foreach(param ${CoreParameters})
@@ -528,8 +566,8 @@ set(COMPLEX_ALL_HDRS
 
 target_sources(complex
   PRIVATE
-    ${COMPLEX_ALL_HDRS}
-    ${COMPLEX_SRCS}
+  ${COMPLEX_ALL_HDRS}
+  ${COMPLEX_SRCS}
 )
 
 source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_HDRS})
@@ -573,11 +611,12 @@ endif()
 # Complex Plugins Section
 #------------------------------------------------------------------------------
 get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+
 if("${ComplexPluginTargets}" STREQUAL "")
   set_property(GLOBAL PROPERTY ComplexPluginTargets "")
 endif()
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Add in the ComplexCore Plugin
 set(P_PLUGIN_NAME "ComplexCore")
 add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/${P_PLUGIN_NAME} ${complex_BINARY_DIR}/Plugins/${P_PLUGIN_NAME})
@@ -585,7 +624,7 @@ get_property(PluginNumFilters GLOBAL PROPERTY ${P_PLUGIN_NAME}_filter_count)
 message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
 set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 1)
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Add user defined Plugin Dirs based on the COMPLEX_PLUGIN_SEARCH_DIRS variable
 # and falling back to complex_SOURCE_DIR/../complex_plugins if not defined
 # Use 'COMPLEX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
@@ -596,8 +635,8 @@ endforeach()
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 
 option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
-if(COMPLEX_ENABLE_INSTALL)
 
+if(COMPLEX_ENABLE_INSTALL)
   install(TARGETS complex
     EXPORT complexTargets
   )
@@ -627,15 +666,15 @@ if(COMPLEX_ENABLE_INSTALL)
   include(GNUInstallDirs)
   install(TARGETS complex
     RUNTIME
-      DESTINATION ${CMAKE_INSTALL_BINDIR}
-      COMPONENT runtime
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT runtime
     LIBRARY
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      COMPONENT runtime
-      NAMELINK_COMPONENT develop
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT runtime
+    NAMELINK_COMPONENT develop
     ARCHIVE
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      COMPONENT develop
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT develop
   )
 
   install(EXPORT complexTargets
@@ -657,12 +696,14 @@ if(COMPLEX_ENABLE_INSTALL)
 endif()
 
 option(COMPLEX_ENABLE_PACKAGING "Enables COMPLEX packaging" ON)
+
 if(COMPLEX_ENABLE_PACKAGING)
   if(WIN32)
     set(CPACK_GENERATOR ZIP)
   else()
     set(CPACK_GENERATOR TGZ)
   endif()
+
   include(CPack)
 endif()
 
@@ -676,6 +717,7 @@ if(COMPLEX_BUILD_PYTHON)
 endif()
 
 option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
+
 if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()

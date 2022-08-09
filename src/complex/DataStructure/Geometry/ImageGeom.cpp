@@ -9,6 +9,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
+#include "FileVec/collection/Group.hpp"
+
 using namespace complex;
 
 ImageGeom::ImageGeom(DataStructure& ds, std::string name)
@@ -518,4 +520,68 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   }
 
   return error;
+}
+
+Zarr::ErrorType ImageGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
+{
+  const auto& attributes = collection.attributes();
+  nlohmann::json volumeAttribute = attributes[H5Constants::k_H5_DIMENSIONS];
+  if(volumeAttribute.empty())
+  {
+    return -1;
+  }
+
+  nlohmann::json spacingAttribute = attributes[H5Constants::k_H5_SPACING];
+  if(spacingAttribute.empty())
+  {
+    return -1;
+  }
+
+  nlohmann::json originAttribute = attributes[H5Constants::k_H5_ORIGIN];
+  if(originAttribute.empty())
+  {
+    return -1;
+  }
+
+  std::vector<size_t> volDims = volumeAttribute.get<std::vector<size_t>>();
+  std::vector<float> spacing = spacingAttribute.get<std::vector<float>>();
+  std::vector<float> origin = originAttribute.get<std::vector<float>>();
+
+  setDimensions(volDims);
+  setSpacing(spacing);
+  setOrigin(origin);
+
+  // Read DataObject ID
+  m_VoxelSizesId = ReadZarrDataId(collection, H5Constants::k_VoxelSizesTag);
+
+  return BaseGroup::readZarr(dataStructureReader, collection, preflight);
+}
+
+Zarr::ErrorType ImageGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+{
+  auto groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
+  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
+
+  SizeVec3 volDims = getDimensions();
+  FloatVec3 spacing = getSpacing();
+  FloatVec3 origin = getOrigin();
+  H5::AttributeWriter::DimsVector dims = {3};
+  std::vector<size_t> volDimsVector(3);
+  std::vector<float> spacingVector(3);
+  std::vector<float> originVector(3);
+  for(size_t i = 0; i < 3; i++)
+  {
+    volDimsVector[i] = volDims[i];
+    spacingVector[i] = spacing[i];
+    originVector[i] = origin[i];
+  }
+
+  groupWriter.attributes()[H5Constants::k_H5_DIMENSIONS] = volDimsVector;
+  groupWriter.attributes()[H5Constants::k_H5_ORIGIN] = originVector;
+  groupWriter.attributes()[H5Constants::k_H5_SPACING] = spacingVector;
+
+  // Write DataObject ID
+  WriteZarrDataId(groupWriter, m_VoxelSizesId, H5Constants::k_VoxelSizesTag);
+
+  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }

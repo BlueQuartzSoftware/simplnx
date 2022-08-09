@@ -2,6 +2,12 @@
 
 #include "complex/DataStructure/INeighborList.hpp"
 
+namespace FileVec
+{
+class Group;
+class IArray;
+} // namespace FileVec
+
 namespace complex
 {
 namespace H5
@@ -306,6 +312,19 @@ public:
    * @return std::vector<SharedVectorType>
    */
   static std::vector<SharedVectorType> ReadHdf5Data(const H5::GroupReader& parentGroup, const H5::DatasetReader& dataReader);
+
+  static std::vector<SharedVectorType> ReadZarrData(const FileVec::Group& parentGroup, const FileVec::IArray& fileArray);
+
+  /**
+   * @brief Writes the DataArray to Zarr using the provided group.
+   *
+   * This method will fail if no DataStore has been set.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @param importable
+   * @return Zarr::ErrorType
+   */
+  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const override;
 
 protected:
   /**

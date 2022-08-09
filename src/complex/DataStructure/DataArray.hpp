@@ -8,6 +8,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 #include "FileVec/collection/Array.hpp"
+#include "FileVec/collection/Group.hpp"
 
 namespace complex
 {
@@ -622,6 +623,20 @@ public:
       return err;
     }
     return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
+  }
+
+  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const override
+  {
+    auto size = m_DataStore->getSize();
+    auto datasetWriterPtr = parentGroupWriter.createOrFindArray<T>(getName(), {size}, {size});
+    auto& datasetWriter = *datasetWriterPtr.get();
+    auto err = m_DataStore->writeZarr(datasetWriter);
+    if(err < 0)
+    {
+      return err;
+    }
+    writeZarrObjectAttributes(dataStructureWriter, datasetWriter, importable);
+    return 0;
   }
 
 protected:

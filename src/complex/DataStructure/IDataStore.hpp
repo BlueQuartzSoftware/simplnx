@@ -5,10 +5,17 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include "FileVec/collection/IArray.hpp"
+
 #include <algorithm>
 #include <iterator>
 
 #include "fmt/format.h"
+
+namespace FileVec
+{
+class IArray;
+}
 
 namespace complex
 {
@@ -115,6 +122,14 @@ public:
    * @return H5::ErrorType
    */
   virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
+
+  /**
+   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
+   * one be encountered. Otherwise, returns 0.
+   * @param datasetWriter
+   * @return Zarr::ErrorType
+   */
+  virtual Zarr::ErrorType writeZarr(FileVec::IArray& datasetWriter) const = 0;
 
   static ShapeType ReadTupleShape(const H5::DatasetReader& datasetReader)
   {

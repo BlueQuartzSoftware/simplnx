@@ -9,6 +9,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
+#include "FileVec/collection/Group.hpp"
+
 using namespace complex;
 
 RectGridGeom::RectGridGeom(DataStructure& ds, std::string name)
@@ -539,6 +541,51 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
   }
 
   return error;
+}
+
+Zarr::ErrorType RectGridGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
+{
+  // Read Dimensions
+  const auto& attributes = collection.attributes();
+  nlohmann::json volumeAttribute = attributes["Dimensions"];
+  if(volumeAttribute.empty())
+  {
+    return -1;
+  }
+  std::vector<size_t> volumeDimensions = volumeAttribute.get<std::vector<size_t>>();
+  setDimensions(volumeDimensions);
+
+  // Read DataObject IDs
+  m_xBoundsId = ReadZarrDataId(collection, H5Constants::k_XBoundsTag);
+  m_yBoundsId = ReadZarrDataId(collection, H5Constants::k_YBoundsTag);
+  m_zBoundsId = ReadZarrDataId(collection, H5Constants::k_ZBoundsTag);
+  m_VoxelSizesId = ReadZarrDataId(collection, H5Constants::k_VoxelSizesTag);
+
+  return BaseGroup::readZarr(dataStructureReader, collection, preflight);
+}
+
+Zarr::ErrorType RectGridGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+{
+  auto groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
+  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
+
+  // Write dimensions
+  H5::AttributeWriter::DimsVector dims = {3};
+  std::vector<size_t> dimsVector(3);
+  for(size_t i = 0; i < 3; i++)
+  {
+    dimsVector[i] = m_Dimensions[i];
+  }
+
+  groupWriter.attributes()[H5Constants::k_DimensionsTag] = dimsVector;
+
+  // Write DataObject IDs
+  WriteZarrDataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
+  WriteZarrDataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
+  WriteZarrDataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
+  WriteZarrDataId(groupWriter, m_VoxelSizesId, H5Constants::k_VoxelSizesTag);
+
+  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
 
 void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)

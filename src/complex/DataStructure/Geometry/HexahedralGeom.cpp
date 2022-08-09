@@ -8,6 +8,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
+#include "FileVec/collection/Group.hpp"
+
 using namespace complex;
 
 HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name)

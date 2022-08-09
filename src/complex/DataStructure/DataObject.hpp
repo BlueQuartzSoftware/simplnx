@@ -9,6 +9,7 @@
 
 #include "complex/DataStructure/Metadata.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/Utilities/Parsing/Zarr/Zarr.hpp"
 #include "complex/Utilities/TooltipGenerator.hpp"
 
 #include "complex/complex_export.hpp"
@@ -25,6 +26,11 @@ class DataStructureWriter;
 class GroupWriter;
 class ObjectWriter;
 } // namespace H5
+
+namespace Zarr
+{
+class DataStructureWriter;
+}
 
 /**
  * @class DataObject
@@ -249,6 +255,15 @@ public:
    */
   virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable = true) const = 0;
 
+  /**
+   * @brief Writes the DataObject to the target HDF5 group.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @param importable = true
+   * @return H5::ErrorType
+   */
+  virtual Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable = true) const = 0;
+
 protected:
   /**
    * @brief DataObject constructor takes a reference to the DataStructure and
@@ -336,6 +351,14 @@ protected:
    * @return H5::ErrorType
    */
   H5::ErrorType writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter, bool importable = true) const;
+
+  /**
+   * @brief Writes the dataType as a string attribute for the target Zarr object.
+   * @param dataStructureWriter
+   * @param objectWriter
+   * @param importable = true
+   */
+  void writeZarrObjectAttributes(Zarr::DataStructureWriter& dataStructureWriter, FileVec::BaseCollection& objectWriter, bool importable = true) const;
 
 private:
   DataStructure* m_DataStructure = nullptr;

@@ -306,6 +306,16 @@ public:
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
+  /**
+   * @brief Reads the DataStructure group from a target Zarr data.
+   * @param dataStructureReader
+   * @param collection
+   * @return Zarr::Error
+   */
+  Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight = false) override;
+
+  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const override;
+
 protected:
   /**
    * @brief

@@ -33,6 +33,8 @@ template <typename T>
 class FileStore : public AbstractDataStore<T>
 {
 public:
+  using array_type = typename FileVec::Array<T>;
+  using array_pointer = std::unique_ptr<array_type>;
   using value_type = typename AbstractDataStore<T>::value_type;
   using reference = typename AbstractDataStore<T>::reference;
   using const_reference = typename AbstractDataStore<T>::const_reference;
@@ -76,7 +78,7 @@ public:
    * @param tupleShape
    * @param componentShape
    */
-  FileStore(std::unique_ptr<File::Array<T>> buffer, ShapeType tupleShape, ShapeType componentShape)
+  FileStore(array_pointer buffer, ShapeType tupleShape, ShapeType componentShape)
   : m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_Data(std::move(buffer))
@@ -92,9 +94,9 @@ public:
   , m_TupleShape(other.m_TupleShape)
   {
     const usize count = other.getSize();
-    m_Data = File::Array<T>::CreatePtr({count}, {count});
-    File::Array<T>& data = *m_Data.get();
-    File::Array<T>& otherData = *other.m_Data.get();
+    m_Data = array_type::CreatePtr({count}, {count});
+    array_type& data = *m_Data.get();
+    array_type& otherData = *other.m_Data.get();
     for(uint64 i = 0; i < count; ++i)
     {
       data[i] = otherData[i];
@@ -117,14 +119,29 @@ public:
    * @param rhs
    * @return
    */
-  FileStore& operator=(const FileStore& rhs) = delete;
+  FileStore& operator=(const FileStore& rhs)
+  {
+    AbstractDataStore<T>::operator=(rhs);
+    m_TupleShape = rhs.m_TupleShape;
+    m_ComponentShape = rhs.m_ComponentShape;
+    m_Data = rhs.m_Data;
+
+    return *this;
+  }
 
   /**
    * @brief Move assignment.
    * @param rhs
    * @return
    */
-  FileStore& operator=(FileStore&& rhs) = default;
+  FileStore& operator=(FileStore&& rhs) noexcept
+  {
+    m_TupleShape = std::move(rhs.m_TupleShape);
+    m_ComponentShape = std::move(rhs.m_ComponentShape);
+    m_Data = std::move(rhs.m_Data);
+
+    return *this;
+  }
 
   ~FileStore() override = default;
 
@@ -212,7 +229,7 @@ public:
 
     if(m_Data.get() == nullptr) // Data was never allocated
     {
-      m_Data = File::Array<T>::CreatePtr({newSize}, {newSize});
+      m_Data = array_type::CreatePtr({newSize}, {newSize});
       return;
     }
 
@@ -226,7 +243,7 @@ public:
     // We have now figured out that the old array and the new array are different sizes so
     // copy the old data into the newly allocated data array or as much or as little
     // as possible
-    auto data = File::Array<T>::CreatePtr({newSize}, {newSize});
+    auto data = array_type::CreatePtr({newSize}, {newSize});
     for(usize i = 0; i < newSize && i < oldSize; i++)
     {
       data->operator[](i) = m_Data->operator[](i);
@@ -382,10 +399,40 @@ public:
     return dataStore;
   }
 
+  /**
+   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
+   * one be encountered. Otherwise, returns 0.
+   * @param datasetWriter
+   * @return Zarr::ErrorType
+   */
+  Zarr::ErrorType writeZarrImpl(FileVec::Array<T>& fileArray) const override
+  {
+    // Consolodate the Tuple and Component Dims into a single array which is used
+    // to write the entire data array to HDF5
+    std::vector<hsize_t> h5dims;
+    for(const auto& value : m_TupleShape)
+    {
+      h5dims.push_back(static_cast<hsize_t>(value));
+    }
+    for(const auto& value : m_ComponentShape)
+    {
+      h5dims.push_back(static_cast<hsize_t>(value));
+    }
+
+    usize count = this->getSize();
+    std::copy(this->begin(), this->end(), fileArray.begin());
+
+    // Write shape attributes to the dataset
+    fileArray.attributes()[IDataStore::k_TupleShape] = m_TupleShape;
+    fileArray.attributes()[IDataStore::k_ComponentShape] = m_ComponentShape;
+
+    return 0;
+  }
+
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
-  std::unique_ptr<File::Array<T>> m_Data = nullptr;
+  array_pointer m_Data = nullptr;
 };
 
 // Declare aliases

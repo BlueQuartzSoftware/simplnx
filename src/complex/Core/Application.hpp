@@ -15,6 +15,11 @@ namespace complex
 class AbstractPlugin;
 class JsonPipelineBuilder;
 
+namespace Zarr
+{
+class DataFactoryManager;
+}
+
 /**
  * @class Application
  * @brief The Application class serves as the core of the framework. The
@@ -106,6 +111,8 @@ public:
    */
   H5::DataFactoryManager* getH5FactoryManager() const;
 
+  Zarr::DataFactoryManager* getZarrFactoryManager() const;
+
   /**
    * @brief Returns a filepath pointing to the current executable.
    * @return std::filesystem::path
@@ -141,5 +148,6 @@ private:
   std::unique_ptr<complex::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
   std::unique_ptr<H5::DataFactoryManager> m_DataReader;
+  std::unique_ptr<Zarr::DataFactoryManager> m_ZarrFactoryManager;
 };
 } // namespace complex

@@ -102,6 +102,23 @@ public:
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
+  /**
+   * @brief Reads the DataStructure group from a target Zarr data.
+   * @param dataStructureReader
+   * @param collection
+   * @return Zarr::Error
+   */
+  Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight = false) override;
+
+  /**
+   * @brief Writes the geometry to Zarr using the provided parent group ID.
+   * @param dataStructureWriter
+   * @param parentGroupWriter
+   * @param importable
+   * @return Zarr::ErrorType
+   */
+  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const override;
+
 protected:
   /**
    * @brief
