@@ -10,10 +10,13 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
+
+namespace fs = std::filesystem;
 
 #define COMPLEX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
   for(const auto& warning : result.warnings())                                                                                                                                                         \
@@ -104,6 +107,16 @@ inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
 
 namespace UnitTest
 {
+
+inline DataStructure LoadDataStructure(const fs::path& filepath)
+{
+  DataStructure exemplarDataStructure;
+  REQUIRE(fs::exists(filepath));
+  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
+  REQUIRE(result.valid());
+  return result.value();
+}
+
 /**
  * @brief Creates a DataArray backed by a DataStore (in memory).
  * @tparam T The primitive type to use, i.e. int8, float, double

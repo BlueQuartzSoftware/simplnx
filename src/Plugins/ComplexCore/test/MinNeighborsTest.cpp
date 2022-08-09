@@ -1,10 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
@@ -12,7 +9,6 @@
 #include "ComplexCore/Filters/MinNeighbors.hpp"
 
 #include <filesystem>
-#include <iostream>
 #include <random>
 #include <string>
 
@@ -52,14 +48,6 @@ std::vector<int32> k_NumElements = {
     86,   1741, 1049,  8,    92,   10,   1429, 745,  4807, 3676, 952,  1801,  183,   952,  1010, 1888, 1208, 14,    260,  43,   273,  2959,  187,  248,   22,    102,  1551,  523,  2986, 244,  8509,
     1417, 3294, 1410,  147,  5,    1787, 2368, 877,  2682, 880,  4646, 770,   4178,  72,   43,   211};
 
-inline DataStructure LoadDataStructure(const fs::path& filepath)
-{
-  DataStructure exemplarDataStructure;
-  REQUIRE(fs::exists(filepath));
-  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
-  REQUIRE(result.valid());
-  return result.value();
-}
 
 } // namespace
 
@@ -67,7 +55,7 @@ TEST_CASE("ComplexCore::MinNeighbors", "[ComplexCore][MinNeighbors]")
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
   DataPath cellDataAttributeMatrix = smallIn100Group.createChildPath(k_CellData);
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});

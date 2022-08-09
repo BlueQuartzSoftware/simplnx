@@ -7,7 +7,6 @@
 #include "ComplexCore/Filters/FindSurfaceFeatures.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 using namespace complex;
@@ -25,14 +24,6 @@ const std::string k_SurfaceFeatures2DExemplaryFileName = "SurfaceFeatures2D.raw"
 const std::string k_SurfaceFeatures3DExemplaryFileName = "SurfaceFeatures3D.raw";
 const std::string k_SurfaceFeatures("SurfaceFeatures");
 
-inline DataStructure LoadDataStructure(const fs::path& filepath)
-{
-  DataStructure exemplarDataStructure;
-  REQUIRE(fs::exists(filepath));
-  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
-  REQUIRE(result.valid());
-  return result.value();
-}
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
@@ -131,7 +122,7 @@ TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[Co
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
   DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData);
