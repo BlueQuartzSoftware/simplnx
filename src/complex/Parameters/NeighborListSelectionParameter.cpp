@@ -128,7 +128,7 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
   const INeighborList* neighborList = dynamic_cast<const INeighborList*>(object);
   if(neighborList == nullptr)
   {
-    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is a neighbor list.", prefix, value.toString()));
+    return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not a neighbor list.", prefix, value.toString()));
   }
 
   if(!m_AllowedTypes.empty())
