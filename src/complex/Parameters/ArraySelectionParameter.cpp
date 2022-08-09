@@ -38,7 +38,8 @@ ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const 
 {
   if(allowedTypes.empty())
   {
-    throw std::runtime_error("ArraySelectionParameter REQUIRES a non-empty AllowedTypes variable. Please report this to the developer.");
+    throw std::runtime_error(
+        fmt::format("ArraySelectionParameter REQUIRES a non-empty AllowedTypes variable. Please report this to the developer. \n  Parameter Name:{}\n  Human Name:{}", name, humanName));
   }
 }
 
