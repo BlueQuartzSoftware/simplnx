@@ -398,7 +398,7 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
       std::string tDimsStr = info.tupleDimensions;
       std::vector<std::string> tDims = StringUtilities::split(tDimsStr, ',');
       size_t tDimsProduct = 1;
-      for(auto& tDim : tDims)
+      for(const auto& tDim : tDims)
       {
         size_t tdim = std::stoi(tDim);
         tDimsProduct = tDimsProduct * tdim;
@@ -407,14 +407,14 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
       std::string cDimsStr = info.componentDimensions;
       std::vector<std::string> tokens = StringUtilities::split(cDimsStr, ',');
       std::vector<size_t> cDims;
-      for(auto& token : tokens)
+      for(const auto& token : tokens)
       {
         cDims.push_back(std::stoi(token));
       }
 
       // Calculate the total number of components
       size_t cDimsProduct = 1;
-      for(unsigned long cDim : cDims)
+      for(size_t cDim : cDims)
       {
         cDimsProduct = cDimsProduct * cDim;
       }
@@ -477,18 +477,18 @@ void testFilterExecute(ImportHDF5Dataset& filter)
   cDimsVector.push_back(std::vector<size_t>(4) = {COMPDIMPROD - 1, 43, 12, 53});
 
   // Execute all combinations of tests
-  for(auto tDims : tDimsVector)
+  for(const auto& tDims : tDimsVector)
   {
-    for(auto cDims : cDimsVector)
+    for(const auto& cDims : cDimsVector)
     {
       size_t amTupleCount = 1;
-      for(unsigned long tDim : tDims)
+      for(size_t tDim : tDims)
       {
         amTupleCount *= tDim;
       }
 
       size_t cDimsProd = 1;
-      for(unsigned long cDim : cDims)
+      for(size_t cDim : cDims)
       {
         cDimsProd *= cDim;
       }

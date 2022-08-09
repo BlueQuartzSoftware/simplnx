@@ -1,17 +1,12 @@
 #include "DynamicTableData.hpp"
 
-#include <cstdlib>
 #include <sstream>
 
 using namespace complex;
 
-DynamicTableData::DynamicTableData()
-
-{
-}
+DynamicTableData::DynamicTableData() = default;
 
 DynamicTableData::DynamicTableData(int32 nRows, int32 nCols)
-
 {
   TableDataType data(nRows, std::vector<double>(nCols, 0));
   m_TableData = data;
@@ -33,7 +28,6 @@ DynamicTableData::DynamicTableData(int32 nRows, int32 nCols)
 }
 
 DynamicTableData::DynamicTableData(int32 nRows, int32 nCols, const HeadersListType& rHeaders, const HeadersListType& cHeaders)
-
 {
   TableDataType data(nRows, std::vector<double>(nCols, 0));
   m_TableData = data;
@@ -46,7 +40,6 @@ DynamicTableData::DynamicTableData(int32 nRows, int32 nCols, const HeadersListTy
 }
 
 DynamicTableData::DynamicTableData(const TableDataType& data, const HeadersListType& rHeaders, const HeadersListType& cHeaders)
-
 {
   m_TableData = data;
   m_RowHeaders = rHeaders;
@@ -125,9 +118,9 @@ std::string DynamicTableData::serializeData(char delimiter) const
 
   for(const auto& row : m_TableData)
   {
-    for(int col = 0; col < row.size(); col++)
+    for(const auto r : row)
     {
-      ss << row[col] << delimiter;
+      ss << r << delimiter;
     }
   }
   std::string str = ss.str();
