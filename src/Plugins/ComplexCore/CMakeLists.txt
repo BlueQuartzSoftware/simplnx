@@ -3,7 +3,7 @@ include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 set(PLUGIN_NAME "ComplexCore")
 set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
@@ -41,6 +41,7 @@ set(FilterList
   LinkGeometryDataFilter
   MapPointCloudToRegularGridFilter
   MinNeighbors
+  MoveData
   MultiThresholdObjects
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
