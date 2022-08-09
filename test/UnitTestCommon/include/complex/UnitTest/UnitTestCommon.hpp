@@ -40,12 +40,19 @@ namespace complex
 {
 namespace Constants
 {
+
+inline constexpr StringLiteral k_DataContainer("DataContainer");
+inline constexpr StringLiteral k_CellData("CellData");
+inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
+
 inline constexpr StringLiteral k_SmallIN1002("Small IN1002");
 inline constexpr StringLiteral k_SmallIN100("Small IN100");
 inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
 inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
 inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
-inline constexpr StringLiteral k_ConfidenceIndex("Confidence Index");
+inline constexpr StringLiteral k_Confidence_Index("Confidence Index");
+inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
+
 inline constexpr StringLiteral k_EulerAngles("EulerAngles");
 inline constexpr StringLiteral k_AxisAngles("AxisAngles");
 inline constexpr StringLiteral k_Quats("Quats");
@@ -55,9 +62,11 @@ inline constexpr StringLiteral k_ActiveName("Active");
 inline constexpr StringLiteral k_SlipVector("SlipVector");
 
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
-inline constexpr StringLiteral k_ImageQuality("Image Quality");
+inline constexpr StringLiteral k_Image_Quality("Image Quality");
+inline constexpr StringLiteral k_ImageQuality("ImageQuality");
 inline constexpr StringLiteral k_Phases("Phases");
-inline constexpr StringLiteral k_IpfColors("IPF Colors");
+inline constexpr StringLiteral k_Ipf_Colors("IPF Colors");
+inline constexpr StringLiteral k_IPFColors("IPFColors");
 inline constexpr StringLiteral k_PhaseData("Phase Data");
 inline constexpr StringLiteral k_LaueClass("Laue Class");
 inline constexpr StringLiteral k_SmallIn100ImageGeom("[Image Geometry]");

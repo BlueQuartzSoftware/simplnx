@@ -401,10 +401,10 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
     }
   }
 
-  auto activeObjects = mergeContainedFeatures(data, args, shouldCancel);
-  if(!activeObjects.has_value())
+  auto activeObjectsResult = mergeContainedFeatures(data, args, shouldCancel);
+  if(!activeObjectsResult.has_value())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{activeObjects.error()})};
+    return {nonstd::make_unexpected(std::vector<Error>{activeObjectsResult.error()})};
   }
   assignBadPoints(data, args, shouldCancel);
 
@@ -414,10 +414,15 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighbors_Key);
   auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
 
-  DataPath cellFeatureGroupPath = featurePhasesPath.getParent();
+  DataPath cellFeatureGroupPath = numNeighborsPath.getParent();
   size_t currentFeatureCount = numNeighborsArray.getNumberOfTuples();
-  complex::RemoveInactiveObjects(data, cellFeatureGroupPath, activeObjects.value(), featureIdsArray, currentFeatureCount);
 
+  auto activeObjects = activeObjectsResult.value();
+  int32 count = std::count(activeObjects.begin(), activeObjects.end(), [](bool b) { return b; });
+  std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
+  messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});
+
+  complex::RemoveInactiveObjects(data, cellFeatureGroupPath, activeObjects, featureIdsArray, currentFeatureCount);
 
   return {};
 }
