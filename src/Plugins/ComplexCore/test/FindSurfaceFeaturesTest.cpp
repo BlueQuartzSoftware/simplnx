@@ -1,25 +1,3 @@
-/**
- * This file is auto generated from the original Generic/FindSurfaceFeatures
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[FindSurfaceFeatures][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
 #include <catch2/catch.hpp>
 
 #include "complex/Parameters/DynamicTableParameter.hpp"
@@ -28,6 +6,7 @@
 #include "ComplexCore/Filters/CreateImageGeometry.hpp"
 #include "ComplexCore/Filters/FindSurfaceFeatures.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
@@ -44,6 +23,16 @@ const std::string k_FeatureIdsFileName = "FeatureIds.raw";
 const std::string k_FeatureIds2DFileName = "FeatureIds_2D.raw";
 const std::string k_SurfaceFeatures2DExemplaryFileName = "SurfaceFeatures2D.raw";
 const std::string k_SurfaceFeatures3DExemplaryFileName = "SurfaceFeatures3D.raw";
+const std::string k_SurfaceFeatures("SurfaceFeatures");
+
+inline DataStructure LoadDataStructure(const fs::path& filepath)
+{
+  DataStructure exemplarDataStructure;
+  REQUIRE(fs::exists(filepath));
+  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
+  REQUIRE(result.valid());
+  return result.value();
+}
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
@@ -117,7 +106,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 }
 } // namespace
 
-TEST_CASE("ComplexCore::FindSurfaceFeatures: Instantiation and Parameter Check", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Instantiation and Parameter Check", "[ComplexCore][FindSurfaceFeatures]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSurfaceFeatures filter;
@@ -138,22 +127,63 @@ TEST_CASE("ComplexCore::FindSurfaceFeatures: Instantiation and Parameter Check",
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
-TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[ComplexCore][FindSurfaceFeatures]")
 {
-  test_impl(std::vector<uint64>({100, 100, 100}), k_FeatureIdsFileName, 1000000, k_SurfaceFeatures3DExemplaryFileName);
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
+  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+
+  DataPath smallIn100Group({complex::Constants::k_DataContainer});
+  DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData);
+  DataPath cellPhasesPath = cellDataPath.createChildPath(complex::Constants::k_Phases);
+  DataPath featureIdsPath = cellDataPath.createChildPath(complex::Constants::k_FeatureIds);
+  DataPath featurePhasesPath({complex::Constants::k_Phases});
+  DataPath computedSurfaceFeaturesPath({k_SurfaceFeatures});
+
+  {
+    FindSurfaceFeatures filter;
+    Arguments args;
+
+    args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insertOrAssign(FindSurfaceFeatures::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+    args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(computedSurfaceFeaturesPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(computedSurfaceFeaturesPath));
+
+    DataPath exemplaryDataPath = smallIn100Group.createChildPath("CellFeatureData").createChildPath(k_SurfaceFeatures);
+    const DataArray<bool>& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<bool>>(exemplaryDataPath);
+
+    const DataArray<bool>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<bool>>(computedSurfaceFeaturesPath);
+    REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
+
+    for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
+    {
+      REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
+    }
+  }
 }
 
-TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - XY Plane", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - XY Plane", "[ComplexCore][FindSurfaceFeatures]")
 {
   test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - XZ Plane", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - XZ Plane", "[ComplexCore][FindSurfaceFeatures]")
 {
   test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - YZ Plane", "[Core][FindSurfaceFeatures]")
+TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 2D - YZ Plane", "[ComplexCore][FindSurfaceFeatures]")
 {
   test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, 10000, k_SurfaceFeatures2DExemplaryFileName);
 }
