@@ -11,7 +11,7 @@
 namespace complex
 {
 
-class AbstractGeometryGrid;
+class IGridGeometry;
 
 class COMPLEX_EXPORT AlignSections
 {
