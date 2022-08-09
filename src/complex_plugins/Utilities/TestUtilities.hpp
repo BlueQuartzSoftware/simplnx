@@ -146,7 +146,6 @@ struct make_shared_enabler : public complex::Application
 inline DataStructure LoadDataStructure(const fs::path& filepath)
 {
   DataStructure exemplarDataStructure;
-  //  auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/bad_data_neighbor_orientation_check.dream3d", unit_test::k_DREAM3DDataDir));
   REQUIRE(fs::exists(filepath));
   auto result = DREAM3D::ImportDataStructureFromFile(filepath);
   REQUIRE(result.valid());
