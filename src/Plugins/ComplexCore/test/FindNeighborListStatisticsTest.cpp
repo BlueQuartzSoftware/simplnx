@@ -196,7 +196,7 @@ TEST_CASE("ComplexCore::FindNeighborListStatistics: Invalid Input Array", "[Find
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{0}, std::vector<usize>{3}, 0.0f);
   auto* dataArray = DataArray<float32>::Create(dataStructure, "Data Array", std::move(dataStore), topLevelGroup->getId());
   dataArray->fill(10.0f);
-  
+
   FindNeighborListStatistics filter;
   Arguments args;
 
@@ -207,7 +207,7 @@ TEST_CASE("ComplexCore::FindNeighborListStatistics: Invalid Input Array", "[Find
   args.insertOrAssign(FindNeighborListStatistics::k_FindMedian_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindNeighborListStatistics::k_FindStandardDeviation_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
-  
+
   args.insertOrAssign(FindNeighborListStatistics::k_InputArray_Key, std::make_any<DataPath>(inputArrayPath));
   args.insertOrAssign(FindNeighborListStatistics::k_Length_Key, std::make_any<DataPath>(lengthOutputPath));
   args.insertOrAssign(FindNeighborListStatistics::k_Minimum_Key, std::make_any<DataPath>(minimumOutputPath));
@@ -216,12 +216,12 @@ TEST_CASE("ComplexCore::FindNeighborListStatistics: Invalid Input Array", "[Find
   args.insertOrAssign(FindNeighborListStatistics::k_Median_Key, std::make_any<DataPath>(medianOutputPath));
   args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviation_Key, std::make_any<DataPath>(stdDevOutputPath));
   args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<DataPath>(summationOutputPath));
-  
-  //Preflight the filter and check result
+
+  // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
-  //Execute the filter and check the result
+  // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid());
 }

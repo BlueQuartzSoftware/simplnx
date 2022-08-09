@@ -343,7 +343,7 @@ IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStr
     std::string ss = fmt::format("Missing input array");
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, ss}})};
   }
-  
+
   dataArrayPaths.push_back(inputArrayPath);
 
   return {std::move(createCompatibleArrays(data, args))};
