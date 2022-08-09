@@ -1,9 +1,6 @@
 #include "MinNeighbors.hpp"
 
-#include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -418,7 +415,11 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   size_t currentFeatureCount = numNeighborsArray.getNumberOfTuples();
 
   auto activeObjects = activeObjectsResult.value();
-  int32 count = std::count(activeObjects.begin(), activeObjects.end(), [](bool b) { return b; });
+  int32 count = 0;
+  for(const auto& value : activeObjects)
+  {
+    value == true ? count++ : count = count;
+  }
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
   messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});
 

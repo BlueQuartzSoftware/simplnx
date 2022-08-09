@@ -96,12 +96,12 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   REQUIRE(surfaceFeaturesExemplary.getSize() == 796);
 
   REQUIRE(surfaceFeaturesExemplary[0] == 1); // This is due to a bug in legacy DREAM.3D that sets featureID 0 as a surface feature (DREAM3D issue #989)
-  REQUIRE(surfaceFeatures[0] == 0);          // This bug is fixed in complex.
+  REQUIRE(surfaceFeatures[0] == false);      // This bug is fixed in complex.
 
   for(usize i = 1; i < surfaceFeatures.getSize(); i++)
   {
     INFO(fmt::format("i = {}", i));
-    REQUIRE(surfaceFeatures[i] == surfaceFeaturesExemplary[i]);
+    REQUIRE(static_cast<int8>(surfaceFeatures[i]) == surfaceFeaturesExemplary[i]);
   }
 }
 } // namespace
