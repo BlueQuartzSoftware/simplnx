@@ -36,6 +36,11 @@
         6_5_test_data_1.dream3d:/DataContainers/DataContainer/CellData/Phases
       </DataItem>
     </Attribute>
+    <Attribute Name="BoundaryCells" AttributeType="Scalar" Center="Cell">
+      <DataItem Format="HDF" Dimensions="100 100 100 1" NumberType="Char" Precision="1" >
+        6_5_test_data_1.dream3d:/DataContainers/DataContainer/CellData/BoundaryCells
+      </DataItem>
+    </Attribute>
   </Grid>
   <!-- *************** END OF DataContainer *************** -->
  </Domain>
