@@ -136,7 +136,7 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
     uniqueFeatureIds.insert((featureIds)[i]);
   }
 
-  usize numfeatures = uniqueFeatureIds.size();
+  usize numfeatures = uniqueFeatureIds.size() + 1;
 
   volumes.getDataStoreRef().reshapeTuples({numfeatures});
   equivalentDiameters.getDataStoreRef().reshapeTuples({numfeatures});
