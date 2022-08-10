@@ -113,7 +113,7 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
   DataStructure exemplarDataStructure;
   REQUIRE(fs::exists(filepath));
   auto result = DREAM3D::ImportDataStructureFromFile(filepath);
-  REQUIRE(result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(result);
   return result.value();
 }
 
