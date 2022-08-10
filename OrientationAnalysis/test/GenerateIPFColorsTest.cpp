@@ -46,6 +46,7 @@ inline constexpr StringLiteral k_Mask("Mask");
 inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
 inline constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
+inline constexpr StringLiteral k_CellData("CellData");
 } // namespace complex::Constants
 
 TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][GenerateIPFColors]")
@@ -100,7 +101,7 @@ TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][Gener
       REQUIRE(err >= 0);
     }
 
-    DataPath ipfColors({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_Ipf_Colors});
+    DataPath ipfColors({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_IpfColors});
 
     UInt8Array& exemplar = dataStructure.getDataRefAs<UInt8Array>(ipfColors);
     UInt8Array& output = dataStructure.getDataRefAs<UInt8Array>(cellIPFColorsArrayName);
