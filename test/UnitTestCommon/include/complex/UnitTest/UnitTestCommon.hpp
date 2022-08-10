@@ -11,6 +11,7 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -108,6 +109,11 @@ inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
 namespace UnitTest
 {
 
+/**
+ * @brief
+ * @param filepath
+ * @return
+ */
 inline DataStructure LoadDataStructure(const fs::path& filepath)
 {
   DataStructure exemplarDataStructure;
@@ -115,6 +121,20 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
   auto result = DREAM3D::ImportDataStructureFromFile(filepath);
   COMPLEX_RESULT_REQUIRE_VALID(result);
   return result.value();
+}
+
+/**
+ * @brief
+ * @param dataStructure
+ * @param filepath
+ */
+inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
+{
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filepath);
+  H5::FileWriter fileWriter = std::move(result.value());
+
+  herr_t err = dataStructure.writeHdf5(fileWriter);
+  REQUIRE(err >= 0);
 }
 
 /**

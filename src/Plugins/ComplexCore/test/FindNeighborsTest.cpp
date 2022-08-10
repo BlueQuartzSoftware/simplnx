@@ -2,7 +2,6 @@
 
 #include "ComplexCore/Filters/FindNeighbors.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
@@ -115,11 +114,6 @@ TEST_CASE("ComplexCore::FindNeighbors", "[ComplexCore][FindNeighbors]")
     CompareNeighborLists<float32>(dataStructure, exemplaryDataPath, sharedSurfaceAreaListPath);
   }
 
-  {
-    // Write out the DataStructure for later viewing/debugging
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/find_neighbors_test.dream3d", unit_test::k_BinaryDir));
-    H5::FileWriter fileWriter = std::move(result.value());
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
-  }
+  // Write the DataStructure out to the file system
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighbors_test.dream3d", unit_test::k_BinaryDir)));
 }

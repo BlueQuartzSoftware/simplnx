@@ -1,30 +1,12 @@
 #include <catch2/catch.hpp>
 
 #include "ComplexCore/Filters/FindFeaturePhasesFilter.hpp"
-#include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 using namespace complex;
 namespace fs = std::filesystem;
-
-namespace
-{
-
-inline DataStructure LoadDataStructure(const fs::path& filepath)
-{
-  DataStructure exemplarDataStructure;
-  REQUIRE(fs::exists(filepath));
-  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
-  REQUIRE(result.valid());
-  return result.value();
-}
-
-} // namespace
 
 TEST_CASE("ComplexCore::FindFeaturePhasesFilter(Valid Parameters)", "[ComplexCore][FindFeaturePhasesFilter]")
 {
@@ -63,11 +45,6 @@ TEST_CASE("ComplexCore::FindFeaturePhasesFilter(Valid Parameters)", "[ComplexCor
     }
   }
 
-  {
-    // Write out the DataStructure for later viewing/debugging
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/find_feature_phases_filter.dream3d", unit_test::k_BinaryDir));
-    H5::FileWriter fileWriter = std::move(result.value());
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
-  }
+  // Write the DataStructure out to the file system
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_phases_filter.dream3d", unit_test::k_BinaryDir)));
 }

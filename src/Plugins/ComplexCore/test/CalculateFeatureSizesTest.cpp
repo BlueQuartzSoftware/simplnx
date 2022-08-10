@@ -2,10 +2,8 @@
 
 #include "ComplexCore/Filters/CalculateFeatureSizesFilter.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
@@ -61,15 +59,6 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  {
-    fs::path filepath = fmt::format("{}/calculate_feature_sizes.dream3d", unit_test::k_BinaryDir);
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filepath);
-    H5::FileWriter fileWriter = std::move(result.value());
-
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
-  }
-
   // Output
   DataPath featureGroup = smallIn100Group.createChildPath(complex::Constants::k_CellFeatureData);
   {
@@ -114,4 +103,7 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
       REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
     }
   }
+
+  // Write the DataStructure out to the file system
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes.dream3d", unit_test::k_BinaryDir)));
 }

@@ -2,7 +2,6 @@
 
 #include "complex/Common/Numbers.hpp"
 
-
 namespace complex::Constants
 {
 
@@ -188,4 +187,4 @@ inline constexpr double k_Cos_ThreeEighthPiD = k_Cos_ThreeEighthPi<double>;
 
 inline constexpr float k_Sin_ThreeEighthPiF = k_Sin_ThreeEighthPi<float>;
 inline constexpr double k_Sin_ThreeEighthPiD = k_Sin_ThreeEighthPi<double>;
-}
+} // namespace complex::Constants
