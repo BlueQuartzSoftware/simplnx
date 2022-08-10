@@ -2,7 +2,6 @@
 
 #include "complex/Common/Numbers.hpp"
 
-using namespace complex::numbers;
 
 namespace complex::Constants
 {
@@ -80,7 +79,7 @@ template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
 inline constexpr T k_1Over3 = static_cast<T>(0.33333333333333331);
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
-inline constexpr T k_ACosNeg1 = complex::numbers::pi_v<T>;
+inline constexpr T k_ACosNeg1 = numbers::pi_v<T>;
 
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
 inline constexpr T k_ACos1 = static_cast<T>(0.0);
@@ -97,8 +96,8 @@ inline constexpr T k_Cos_ThreeEighthPi = static_cast<T>(0.38268343236508984);
 template <class T, class = std::enable_if_t<std::is_floating_point_v<T>>>
 inline constexpr T k_Sin_ThreeEighthPi = static_cast<T>(0.92387953251128674);
 
-inline constexpr float k_PiF = complex::numbers::pi_v<float>;
-inline constexpr double k_PiD = complex::numbers::pi_v<double>;
+inline constexpr float k_PiF = numbers::pi_v<float>;
+inline constexpr double k_PiD = numbers::pi_v<double>;
 
 inline constexpr float k_SqrtPiF = k_SqrtPi<float>;
 inline constexpr double k_SqrtPiD = k_SqrtPi<double>;
