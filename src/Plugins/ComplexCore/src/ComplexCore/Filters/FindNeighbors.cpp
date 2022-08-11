@@ -40,22 +40,24 @@ std::string FindNeighbors::humanName() const
 Parameters FindNeighbors::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreBoundary_Key, "Store Boundary Cells Array", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "", false));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "", DataPath({"Data Container", "Feature Data"})));
+  params.insert(
+      std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath({"DataContainer"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "", DataPath({"DataContainer", "CellFeatureData"})));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCells_Key, "Boundary Cells", "", DataPath({"BoundaryCells"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath({"NumNeighbors2"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborList_Key, "Neighbor List", "", DataPath({"NeighborList2"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List", "", DataPath({"SharedSurfaceAreaList2"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeatures_Key, "Surface Features", "", DataPath({"SurfaceFeatures"})));
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCells_Key, "Boundary Cells", "", DataPath({"CellData", "BoundaryCells"})));
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath({"CellFeatureData", "NumNeighbors2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborList_Key, "Neighbor List", "", DataPath({"CellFeatureData", "NeighborList2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List", "", DataPath({"CellFeatureData", "SharedSurfaceAreaList2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeatures_Key, "Surface Features", "", DataPath({"CellFeatureData", "SurfaceFeatures"})));
 
   params.linkParameters(k_StoreBoundary_Key, k_BoundaryCells_Key, std::make_any<bool>(true));
   params.linkParameters(k_StoreSurface_Key, k_SurfaceFeatures_Key, std::make_any<bool>(true));
