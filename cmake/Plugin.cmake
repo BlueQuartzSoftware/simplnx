@@ -18,7 +18,7 @@ function(complex_COMPILE_PLUGIN)
   if(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME})
     add_subdirectory(${ARGS_PLUGIN_SOURCE_DIR} ${PROJECT_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME})
     get_property(PluginNumFilters GLOBAL PROPERTY ${ARGS_PLUGIN_NAME}_filter_count)
-
+    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/test_output)
     message(STATUS "${ARGS_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
 
     get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
