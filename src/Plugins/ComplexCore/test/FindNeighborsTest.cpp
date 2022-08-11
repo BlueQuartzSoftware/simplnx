@@ -10,64 +10,20 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-namespace
-{
-
-template <typename T>
-void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
-{
-  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
-
-  const auto& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
-  const auto& createdFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
-  REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
-
-  for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
-  {
-    REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
-  }
-}
-
-template <typename T>
-void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
-{
-  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(computedPath));
-
-  const auto& exemplaryList = dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath);
-  const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
-  REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
-
-  for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
-  {
-    const auto exemplary = exemplaryList.getList(i);
-    const auto computed = computedNeighborList.getList(i);
-    if(exemplary.get() != nullptr && computed.get() != nullptr)
-    {
-      REQUIRE(exemplary->size() == computed->size());
-    }
-  }
-}
-
-} // namespace
-
 TEST_CASE("ComplexCore::FindNeighbors", "[ComplexCore][FindNeighbors]")
 {
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
   DataPath cellDataAttributeMatrix = smallIn100Group.createChildPath(k_CellData);
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath cellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
-  DataPath numNeighborPath = cellFeatureAttributeMatrixPath.createChildPath("NumNeighbors2");
-  DataPath neighborListPath = cellFeatureAttributeMatrixPath.createChildPath("NeighborList2");
-  DataPath sharedSurfaceAreaListPath = cellFeatureAttributeMatrixPath.createChildPath("SharedSurfaceAreaList2");
+  DataPath numNeighborPath = cellFeatureAttributeMatrixPath.createChildPath("NumNeighbors_computed");
+  DataPath neighborListPath = cellFeatureAttributeMatrixPath.createChildPath("NeighborList_computed");
+  DataPath sharedSurfaceAreaListPath = cellFeatureAttributeMatrixPath.createChildPath("SharedSurfaceAreaList_computed");
   DataPath boundaryCellsPath = cellFeatureAttributeMatrixPath.createChildPath("BoundaryCells_computed");
   DataPath surfaceFeaturesPath = cellFeatureAttributeMatrixPath.createChildPath("SurfaceFeatures_computed");
 
@@ -102,18 +58,18 @@ TEST_CASE("ComplexCore::FindNeighbors", "[ComplexCore][FindNeighbors]")
   {
     DataPath featureGroup = smallIn100Group.createChildPath(complex::Constants::k_CellFeatureData);
     DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
-    CompareArrays<bool>(dataStructure, exemplaryDataPath, surfaceFeaturesPath);
+    UnitTest::CompareArrays<bool>(dataStructure, exemplaryDataPath, surfaceFeaturesPath);
 
-    exemplaryDataPath = featureGroup.createChildPath("NumNeighbors2");
-    CompareArrays<int32>(dataStructure, exemplaryDataPath, numNeighborPath);
+    exemplaryDataPath = featureGroup.createChildPath("NumNeighbors");
+    UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, numNeighborPath);
 
-    exemplaryDataPath = featureGroup.createChildPath("NeighborList2");
-    CompareNeighborLists<int32>(dataStructure, exemplaryDataPath, neighborListPath);
+    exemplaryDataPath = featureGroup.createChildPath("NeighborList");
+    UnitTest::CompareNeighborLists<int32>(dataStructure, exemplaryDataPath, neighborListPath);
 
-    exemplaryDataPath = featureGroup.createChildPath("SharedSurfaceAreaList2");
-    CompareNeighborLists<float32>(dataStructure, exemplaryDataPath, sharedSurfaceAreaListPath);
+    exemplaryDataPath = featureGroup.createChildPath("SharedSurfaceAreaList");
+    UnitTest::CompareNeighborLists<float32>(dataStructure, exemplaryDataPath, sharedSurfaceAreaListPath);
   }
 
   // Write the DataStructure out to the file system
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighbors_test.dream3d", unit_test::k_BinaryDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

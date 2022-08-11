@@ -138,6 +138,59 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
 }
 
 /**
+ * @brief
+ * @tparam T
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+template <typename T>
+void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
+
+  const auto& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
+  const auto& createdFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
+  REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
+
+  for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
+  {
+    REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
+  }
+}
+
+/**
+ * @brief
+ * @tparam T
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+template <typename T>
+void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(computedPath));
+
+  const auto& exemplaryList = dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath);
+  const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
+  REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
+
+  for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
+  {
+    const auto exemplary = exemplaryList.getList(i);
+    const auto computed = computedNeighborList.getList(i);
+    if(exemplary.get() != nullptr && computed.get() != nullptr)
+    {
+      REQUIRE(exemplary->size() == computed->size());
+    }
+  }
+}
+
+/**
  * @brief Creates a DataArray backed by a DataStore (in memory).
  * @tparam T The primitive type to use, i.e. int8, float, double
  * @param dataGraph The DataStructure to use

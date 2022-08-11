@@ -17,21 +17,13 @@ const std::string k_Volumes("Volumes");
 const std::string k_EquivalentDiameters("EquivalentDiameters");
 const std::string k_NumElements("NumElements");
 
-inline DataStructure LoadDataStructure(const fs::path& filepath)
-{
-  DataStructure exemplarDataStructure;
-  REQUIRE(fs::exists(filepath));
-  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
-  REQUIRE(result.valid());
-  return result.value();
-}
 } // namespace
 
 TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureSizes]")
 {
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
   DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData);
   DataPath cellPhasesPath = cellDataPath.createChildPath(complex::Constants::k_Phases);
@@ -105,5 +97,5 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
   }
 
   // Write the DataStructure out to the file system
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes.dream3d", unit_test::k_BinaryDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 }
