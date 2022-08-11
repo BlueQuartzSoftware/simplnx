@@ -50,7 +50,7 @@ public:
    */
   template <typename K>
   inline void importNeighborList(DataStructure& dataStructure, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::string& dataArrayName,
-                                 DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool preflight)
+                                 DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false)
   {
     using NeighborListType = NeighborList<K>;
     auto dataVector = NeighborListType::ReadHdf5Data(parentReader, datasetReader);
@@ -67,8 +67,8 @@ public:
    * to create the generated DataObject under.
    * @return H5::ErrorType
    */
-  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId,
-                            bool preflight) override
+  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
+                            const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false) override
   {
     return -1;
   }
@@ -82,7 +82,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
-                              const std::optional<DataObject::IdType>& parentId, bool preflight) override
+                              const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false) override
   {
     H5::ErrorType err = 0;
     H5::Type type = datasetReader.getType();
