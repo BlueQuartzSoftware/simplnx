@@ -142,7 +142,7 @@ Result<std::any> FileSystemPathParameter::fromJson(const nlohmann::json& json) c
 //-----------------------------------------------------------------------------
 IParameter::UniquePointer FileSystemPathParameter::clone() const
 {
-  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AvailableExtensions, m_PathType);
+  return std::make_unique<FileSystemPathParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AvailableExtensions, m_PathType, m_acceptAllExtensions);
 }
 
 //-----------------------------------------------------------------------------
