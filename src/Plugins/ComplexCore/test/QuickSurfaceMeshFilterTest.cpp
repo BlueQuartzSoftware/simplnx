@@ -53,8 +53,6 @@ TEST_CASE("ComplexCore::QuickSurfaceMeshFilter", "[ComplexCore][QuickSurfaceMesh
 
     args.insertOrAssign(QuickSurfaceMeshFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedArrayPaths));
 
-    // args.insertOrAssign(QuickSurfaceMeshFilter::k_ParentDataGroupPath_Key, std::make_any<DataPath>({}));
-
     DataPath triangleGeometryPath = triangleParentGroup.createChildPath(k_TriangleGeometryName);
     args.insertOrAssign(QuickSurfaceMeshFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeometryPath));
 
