@@ -33,6 +33,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
+  MoveDataTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   ImportCSVDataTest.cpp
