@@ -29,7 +29,7 @@ DataStructure createDataStructure()
 }
 } // namespace
 
-TEST_CASE("Move Data Successful", "MoveData")
+TEST_CASE("ComplexCore::MoveData Successful", "[Complex::Core][MoveData]")
 {
   MoveData filter;
   Arguments args;
@@ -61,7 +61,7 @@ TEST_CASE("Move Data Successful", "MoveData")
   REQUIRE(dataGraph.getDataAs<DataGroup>(newGroup3Path) != nullptr);
 }
 
-TEST_CASE("Move Data Unsuccessful", "MoveData")
+TEST_CASE("ComplexCore::MoveData Unsuccessful", "[Complex::Core][MoveData]")
 {
   MoveData filter;
   Arguments args;
