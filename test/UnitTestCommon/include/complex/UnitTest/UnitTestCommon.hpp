@@ -112,9 +112,9 @@ namespace UnitTest
 constexpr float EPSILON = 0.00001;
 
 /**
- * @brief
+ * @brief Loads a .dream3d file into a DataStructure. Checks are made to ensure the filepath does exist
  * @param filepath
- * @return
+ * @return DataStructure
  */
 inline DataStructure LoadDataStructure(const fs::path& filepath)
 {
@@ -126,7 +126,7 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
 }
 
 /**
- * @brief
+ * @brief Writes out a DataStructure to a .dream3d file at the given file path
  * @param dataStructure
  * @param filepath
  */
@@ -139,19 +139,25 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
   REQUIRE(err >= 0);
 }
 
+/**
+ * @brief Compares IDataArray
+ * @tparam T
+ * @param left
+ * @param right
+ */
 template <typename T>
-inline void CompareDataArrays(const IDataArray& left, const IDataArray& right)
+void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize start = 0)
 {
   const auto& oldDataStore = left.getIDataStoreRefAs<AbstractDataStore<T>>();
   const auto& newDataStore = right.getIDataStoreRefAs<AbstractDataStore<T>>();
-  usize start = 0;
   usize end = oldDataStore.getSize();
+  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
   for(usize i = start; i < end; i++)
   {
-    if(oldDataStore[i] != newDataStore[i])
+    auto oldVal = oldDataStore[i];
+    auto newVal = newDataStore[i];
+    if(oldVal != newVal)
     {
-      auto oldVal = oldDataStore[i];
-      auto newVal = newDataStore[i];
       float diff = std::fabs(static_cast<float>(oldVal - newVal));
       REQUIRE(diff < EPSILON);
       break;
@@ -176,6 +182,8 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
   const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
   const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
   REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
+
+  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
 
   usize start = 0;
   usize end = exemplaryDataArray.getSize();
@@ -209,6 +217,8 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
   const auto& exemplaryList = dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath);
   const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
   REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
+
+  INFO(fmt::format("Input NeighborList:'{}'  Output NeighborList: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
 
   for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
   {
