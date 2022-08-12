@@ -215,7 +215,7 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
-  
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridMontage.hpp
@@ -268,6 +268,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportH5ObjectPathsAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/EmptyAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/MoveDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.hpp
 
@@ -333,7 +334,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Constants.hpp
-
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
 )
@@ -427,6 +427,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportH5ObjectPathsAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/MoveDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.cpp
 
@@ -488,7 +489,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
-  )
+)
 
 
 # Add Core FilterParameters
