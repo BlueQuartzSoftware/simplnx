@@ -36,6 +36,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
+      - name: Checkout DREAM3D_Data Repo
+        uses: actions/checkout@v2
+        with:
+          repository: DREAM3D/DREAM3D_Data
+          path: DREAM3D_Data
+          submodules: true          
       - name: Add C++ Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
       - name: Install Dependencies
@@ -51,12 +57,20 @@ jobs:
           -name "GitHub"
           -username "BlueQuartzSoftware"
           -password "${{secrets.GITHUB_TOKEN}}"
+      - name: Download Test Files
+        shell: bash
+        run: >
+          wget --quiet "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_7/TestFiles_6_7.tar.gz" -O ${{github.workspace}}/DREAM3D_Data/TestFiles.tar.gz
+      - name: Extract Test Files
+        shell: bash
+        run: >
+          cd ${{github.workspace}}/DREAM3D_Data/ && tar -xvzf TestFiles.tar.gz
       - name: Configure
         env:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
         run: |
-          cmake --preset ci ${{github.workspace}} -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic
+          cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic
       - name: Build
         run: |
           cmake --build --preset ci
