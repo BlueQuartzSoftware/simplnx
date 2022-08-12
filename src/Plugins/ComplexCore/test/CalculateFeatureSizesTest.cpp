@@ -51,49 +51,21 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Output
+  // Compare Outputs
   DataPath featureGroup = smallIn100Group.createChildPath(complex::Constants::k_CellFeatureData);
   {
     DataPath exemplaryDataPath = featureGroup.createChildPath(k_Volumes);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(exemplaryDataPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(DataPath({k_Volumes})));
-    const DataArray<float32>& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<float32>>(exemplaryDataPath);
-    const DataArray<float32>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<float32>>(DataPath({k_Volumes}));
-    REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
-
-    for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
-    {
-      REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
-    }
+    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, DataPath({k_Volumes}));
   }
 
   {
     DataPath exemplaryDataPath = featureGroup.createChildPath(k_EquivalentDiameters);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(exemplaryDataPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(DataPath({k_EquivalentDiameters})));
-    const DataArray<float32>& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<float32>>(exemplaryDataPath);
-    const DataArray<float32>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<float32>>(DataPath({k_EquivalentDiameters}));
-    REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
-
-    for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
-    {
-      REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
-    }
+    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, DataPath({k_EquivalentDiameters}));
   }
 
   {
     DataPath exemplaryDataPath = featureGroup.createChildPath(k_NumElements);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(exemplaryDataPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(DataPath({k_NumElements})));
-
-    const DataArray<int32>& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<int32>>(exemplaryDataPath);
-    const DataArray<int32>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<int32>>(DataPath({k_NumElements}));
-    REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
-
-    for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
-    {
-      REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
-    }
+    UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, DataPath({k_NumElements}));
   }
 
   // Write the DataStructure out to the file system

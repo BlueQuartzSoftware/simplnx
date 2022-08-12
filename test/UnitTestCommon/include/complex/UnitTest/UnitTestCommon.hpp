@@ -109,6 +109,8 @@ inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
 namespace UnitTest
 {
 
+constexpr float EPSILON = 0.00001;
+
 /**
  * @brief
  * @param filepath
@@ -137,8 +139,28 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
   REQUIRE(err >= 0);
 }
 
+template <typename T>
+inline void CompareDataArrays(const IDataArray& left, const IDataArray& right)
+{
+  const auto& oldDataStore = left.getIDataStoreRefAs<AbstractDataStore<T>>();
+  const auto& newDataStore = right.getIDataStoreRefAs<AbstractDataStore<T>>();
+  usize start = 0;
+  usize end = oldDataStore.getSize();
+  for(usize i = start; i < end; i++)
+  {
+    if(oldDataStore[i] != newDataStore[i])
+    {
+      auto oldVal = oldDataStore[i];
+      auto newVal = newDataStore[i];
+      float diff = std::fabs(static_cast<float>(oldVal - newVal));
+      REQUIRE(diff < EPSILON);
+      break;
+    }
+  }
+}
+
 /**
- * @brief
+ * @brief Compares 2 DataArrays using an EPSILON value. Useful for floating point comparisons
  * @tparam T
  * @param dataStructure
  * @param exemplaryDataPath
@@ -151,13 +173,22 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
 
-  const auto& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
-  const auto& createdFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
-  REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
+  const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
+  const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
+  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
 
-  for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
+  usize start = 0;
+  usize end = exemplaryDataArray.getSize();
+  for(usize i = start; i < end; i++)
   {
-    REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
+    auto oldVal = exemplaryDataArray[i];
+    auto newVal = generatedDataArray[i];
+    if(oldVal != newVal)
+    {
+      float diff = std::fabs(static_cast<float>(oldVal - newVal));
+      REQUIRE(diff < EPSILON);
+      break;
+    }
   }
 }
 
