@@ -9,7 +9,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsMisorientationTest.cpp
   BadDataNeighborOrientationCheckTest.cpp
   ConvertOrientationsTest.cpp
-  EBSDSegmentFeaturesFilterTest.cpp   # NEEDS TEST IMPLEMENTED
+  EBSDSegmentFeaturesFilterTest.cpp   
   FindAvgOrientationsTest.cpp
   GenerateFZQuaternionsTest.cpp
   GenerateIPFColorsTest.cpp
