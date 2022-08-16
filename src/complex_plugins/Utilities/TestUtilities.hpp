@@ -30,6 +30,8 @@ const std::string k_Phases("Phases");
 const std::string k_FeatureIds("FeatureIds");
 const std::string k_ConfidenceIndex("Confidence Index");
 const std::string k_ImageQuality("Image Quality");
+const std::string k_Fit("Fit");
+const std::string k_SEMSignal("SEM Signal");
 
 const std::string k_Mask("Mask");
 const std::string k_Active("Active");
