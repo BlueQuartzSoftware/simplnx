@@ -76,10 +76,10 @@ public:
     HexahedralGeom = 20,
     TetrahedralGeom = 21,
 
-    INeighborList = 20,
-    NeighborList = 21,
+    INeighborList = 22,
+    NeighborList = 23,
 
-    StringArray = 22,
+    StringArray = 24,
 
     Unknown = 999,
     Any = 4294967295U
