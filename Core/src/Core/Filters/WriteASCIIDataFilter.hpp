@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SIMPL/SIMPL_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,27 +8,41 @@
 namespace complex
 {
 /**
- * @class WriteASCIIData
+ * @class WriteASCIIDataFilter
  * @brief This filter will ....
  */
-class SIMPL_EXPORT WriteASCIIData : public IFilter
+class CORE_EXPORT WriteASCIIDataFilter : public IFilter
 {
 public:
-  WriteASCIIData() = default;
-  ~WriteASCIIData() noexcept override = default;
+  WriteASCIIDataFilter() = default;
+  ~WriteASCIIDataFilter() noexcept override = default;
 
-  WriteASCIIData(const WriteASCIIData&) = delete;
-  WriteASCIIData(WriteASCIIData&&) noexcept = delete;
+  WriteASCIIDataFilter(const WriteASCIIDataFilter&) = delete;
+  WriteASCIIDataFilter(WriteASCIIDataFilter&&) noexcept = delete;
 
-  WriteASCIIData& operator=(const WriteASCIIData&) = delete;
-  WriteASCIIData& operator=(WriteASCIIData&&) noexcept = delete;
+  WriteASCIIDataFilter& operator=(const WriteASCIIDataFilter&) = delete;
+  WriteASCIIDataFilter& operator=(WriteASCIIDataFilter&&) noexcept = delete;
+
+  enum class OutputStyle : uint64
+  {
+    MultipleFiles = 0,
+    SingleFile = 1
+  };
+
+  enum class Delimiter : uint64
+  {
+    Space = 0,
+    Semicolon = 1,
+    Comma = 2,
+    Colon = 3,
+    Tab = 4
+  };
 
   // Parameter Keys
   static inline constexpr StringLiteral k_OutputStyle_Key = "OutputStyle";
   static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
   static inline constexpr StringLiteral k_FileExtension_Key = "FileExtension";
   static inline constexpr StringLiteral k_MaxValPerLine_Key = "MaxValPerLine";
-  static inline constexpr StringLiteral k_OutputFilePath_Key = "OutputFilePath";
   static inline constexpr StringLiteral k_Delimiter_Key = "Delimiter";
   static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
 
@@ -98,4 +112,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, WriteASCIIData, "5fbf9204-2c6c-597b-856a-f4612adbac38");
+COMPLEX_DEF_FILTER_TRAITS(complex, WriteASCIIDataFilter, "5fbf9204-2c6c-597b-856a-f4612adbac38");
