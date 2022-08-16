@@ -21,6 +21,7 @@ set(FilterList
   ResampleImageGeomFilter
   RotateSampleRefFrameFilter
   ErodeDilateBadDataFilter
+  WriteASCIIDataFilter
 )
 
 set(STUB_FILTERS
@@ -85,6 +86,7 @@ set(filter_algorithms
   FindShapes
   ResampleImageGeom
   ErodeDilateBadData
+  WriteASCIIData
 )
 
 foreach(algorithm ${filter_algorithms})
