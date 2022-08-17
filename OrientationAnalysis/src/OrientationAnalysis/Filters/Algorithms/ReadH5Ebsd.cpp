@@ -335,7 +335,7 @@ Result<> ReadH5Ebsd::operator()()
   }
   else if(manufacturer == EbsdLib::Ctf::Manufacturer)
   {
-    std::vector<std::string> eulerPhaseArrays = {EbsdLib::Ang::Phi1, EbsdLib::Ang::Phi, EbsdLib::Ang::Phi2, EbsdLib::Ctf::Phase};
+    std::vector<std::string> eulerPhaseArrays = {EbsdLib::Ctf::Euler1, EbsdLib::Ctf::Euler2, EbsdLib::Ctf::Euler3, EbsdLib::Ctf::Phase};
     std::vector<std::string> floatArrays = {EbsdLib::Ctf::MAD, EbsdLib::Ctf::X, EbsdLib::Ctf::Y};
     std::vector<std::string> intArrays = {EbsdLib::Ctf::Bands, EbsdLib::Ctf::Error, EbsdLib::Ctf::BC, EbsdLib::Ctf::BS};
     Result<> result = LoadEbsdData<H5CtfVolumeReader, CtfPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, m_SelectedArrayNames, dcDims, floatArrays, intArrays);
