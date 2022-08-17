@@ -28,6 +28,7 @@ public:
   static inline constexpr StringLiteral k_Dimensions_Key = "Dimensions";
   static inline constexpr StringLiteral k_Origin_Key = "Origin";
   static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
+  static inline constexpr StringLiteral k_CellDataName_Key = "CellDataName";
 
   /**
    * @brief Returns the name of the filter.

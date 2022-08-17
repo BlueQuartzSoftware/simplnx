@@ -353,18 +353,18 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     {
       spacingVec[i] = spacing[i];
     }
-    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec);
+    const AttributeMatrix* cellData = srcImageGeom->getCellData();
+    if(cellData == nullptr)
+    {
+      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+    }
+    std::string cellDataName = cellData->getName();
+    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec, cellDataName);
     actions.actions.push_back(std::move(geomAction));
 
     DataPath newCellFeaturesPath = destImagePath.createChildPath(IGridGeometry::k_CellDataName);
 
-    const AttributeMatrix* am = srcImageGeom->getCellData();
-    if(am == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
-    }
-
-    for(const auto& [id, object] : *am)
+    for(const auto& [id, object] : *cellData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
