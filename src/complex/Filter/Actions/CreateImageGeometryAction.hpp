@@ -19,8 +19,7 @@ public:
 
   CreateImageGeometryAction() = delete;
 
-  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing,
-                            const std::string& cellAttributeMatrixName = IGridGeometry::k_CellDataName);
+  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName);
 
   ~CreateImageGeometryAction() noexcept override;
 
