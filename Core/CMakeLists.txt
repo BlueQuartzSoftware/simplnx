@@ -22,6 +22,7 @@ set(FilterList
   RotateSampleRefFrameFilter
   ErodeDilateBadDataFilter
   WriteASCIIDataFilter
+  WriteBinaryDataFilter
 )
 
 set(STUB_FILTERS
@@ -87,6 +88,7 @@ set(filter_algorithms
   ResampleImageGeom
   ErodeDilateBadData
   WriteASCIIData
+  WriteBinaryData
 )
 
 foreach(algorithm ${filter_algorithms})
