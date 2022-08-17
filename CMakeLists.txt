@@ -128,6 +128,7 @@ set(CoreParameters
   ChoicesParameter
   DataGroupCreationParameter
   DataGroupSelectionParameter
+  DataObjectNameParameter
   DataPathSelectionParameter
   DynamicTableParameter
   FileSystemPathParameter
