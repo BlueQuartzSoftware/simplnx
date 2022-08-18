@@ -106,4 +106,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, QuickSurfaceMeshFilter, "07b49e30-3900-5c34-862a-f1fb48bad568");
+COMPLEX_DEF_FILTER_TRAITS(complex, QuickSurfaceMeshFilter, "13dd00bd-ad49-4e04-95eb-3267952fd6e5");
