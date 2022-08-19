@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindFeatureSignedDistanceFields, "4cf2cb82-76ee-504b-8d31-061d52ae6d30");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindFeatureSignedDistanceFields, "e42cb38e-b23f-4bdd-b761-5dd880c32280");

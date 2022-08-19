@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindFeatureCentroidsFilter, "6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindFeatureCentroidsFilter, "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421");

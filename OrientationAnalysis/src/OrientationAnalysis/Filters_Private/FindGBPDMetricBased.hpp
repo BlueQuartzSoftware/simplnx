@@ -106,4 +106,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindGBPDMetricBased, "00d20627-5b88-56ba-ac7a-fc2a4b337903");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindGBPDMetricBased, "8267878b-d23a-4666-83a0-f1a7711861ce");

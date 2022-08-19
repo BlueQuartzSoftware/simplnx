@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, GenerateVectorColors, "ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc");
+COMPLEX_DEF_FILTER_TRAITS(complex, GenerateVectorColors, "1a35650d-a9f5-4ea2-af70-5b9ce894e45f");

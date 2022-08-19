@@ -98,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CleaveTetVolumeMesh, "7fc3ba91-781e-5627-b375-b4d4c402e57f");
+COMPLEX_DEF_FILTER_TRAITS(complex, CleaveTetVolumeMesh, "c26c57cd-f9f8-4941-bc12-c58cc9413294");

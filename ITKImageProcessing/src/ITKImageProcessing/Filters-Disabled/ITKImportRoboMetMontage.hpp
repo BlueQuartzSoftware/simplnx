@@ -108,4 +108,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportRoboMetMontage, "cdb130af-3616-57b1-be59-fe18113b2621");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportRoboMetMontage, "56b6e862-13f4-4c90-87e9-ec76db1c584b");

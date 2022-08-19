@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, Stereographic3D, "3630623e-724b-5154-a060-a5fca4ecfff5");
+COMPLEX_DEF_FILTER_TRAITS(complex, Stereographic3D, "42ddcd69-dde3-4b08-b90c-6002079540eb");

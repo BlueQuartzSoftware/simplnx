@@ -101,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportH5EspritData, "8abdea7d-f715-5a24-8165-7f946bbc2fe9");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportH5EspritData, "694a0d54-b492-41bc-993b-ce0f5006e927");

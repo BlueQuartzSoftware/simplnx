@@ -99,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, VMFindDistanceFieldFromTriangleGeometry, "e2b44fbc-f216-5009-a258-578bbe56b587");
+COMPLEX_DEF_FILTER_TRAITS(complex, VMFindDistanceFieldFromTriangleGeometry, "b90d6860-4921-4586-b424-66658f281d8b");

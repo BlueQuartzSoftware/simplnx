@@ -98,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, VtkStructuredPointsReader, "f2fecbf9-636b-5ef9-89db-5cb57e4c5676");
+COMPLEX_DEF_FILTER_TRAITS(complex, VtkStructuredPointsReader, "60d55662-ca7a-4be7-b0a0-ed6e785eb51b");

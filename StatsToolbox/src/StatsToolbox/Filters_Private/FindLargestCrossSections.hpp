@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindLargestCrossSections, "9f77b4a9-6416-5220-a688-115f4e14c90d");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindLargestCrossSections, "18ba2f7a-4e3a-4547-bd8c-b0955d542a9f");

@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindGBCD, "6e97ff50-48bf-5403-a049-1d271bd72df9");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindGBCD, "0cc592b7-a3d3-4c6a-8894-1533670a31b9");

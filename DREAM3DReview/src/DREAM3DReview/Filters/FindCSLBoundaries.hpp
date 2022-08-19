@@ -101,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindCSLBoundaries, "d87ff37c-120d-577d-a955-571c8280fa8e");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindCSLBoundaries, "3b2365ec-3eed-44d3-8838-baaddff8155a");

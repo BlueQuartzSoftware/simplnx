@@ -99,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindSlipTransmissionMetrics, "97523038-5fb2-5e82-9177-ed3e8b24b4bd");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindSlipTransmissionMetrics, "7569d075-d05a-4e07-8660-5cca3e78ee49");

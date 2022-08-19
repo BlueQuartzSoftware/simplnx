@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomCentroids, "a5cff82b-9fe4-5a8c-90c9-6db74b6dcd50");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomCentroids, "074c0523-ab7a-4097-b0c3-c4dcbfb9a05e");

@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, EMsoftSO3Sampler, "b78d8825-d3ac-5351-be20-172f07fd2aec");
+COMPLEX_DEF_FILTER_TRAITS(complex, EMsoftSO3Sampler, "74478e86-ce29-40b8-8c17-d20009195f91");

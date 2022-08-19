@@ -91,4 +91,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CreateGridMontage, "c5bb92df-c1bb-5e57-a2bf-280303a81935");
+COMPLEX_DEF_FILTER_TRAITS(complex, CreateGridMontage, "82ff5ee4-334c-447f-b5cb-b279b202d31f");

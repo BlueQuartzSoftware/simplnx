@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ErodeDilateMask, "4fff1aa6-4f62-56c4-8ee9-8e28ec2fcbba");
+COMPLEX_DEF_FILTER_TRAITS(complex, ErodeDilateMask, "cab66cd1-f64c-42b4-8f94-18f0835a967f");

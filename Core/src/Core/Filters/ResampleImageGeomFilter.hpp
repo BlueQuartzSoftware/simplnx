@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ResampleImageGeomFilter, "1966e540-759c-5798-ae26-0c6a3abc65c0");
+COMPLEX_DEF_FILTER_TRAITS(complex, ResampleImageGeomFilter, "9783ea2c-4cf7-46de-ab21-b40d91a48c5b");

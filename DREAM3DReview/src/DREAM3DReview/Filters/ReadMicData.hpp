@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ReadMicData, "5a2b714e-bae9-5213-8171-d1e190609e2d");
+COMPLEX_DEF_FILTER_TRAITS(complex, ReadMicData, "09887e07-c1e5-4631-91fb-1e28be5b7054");

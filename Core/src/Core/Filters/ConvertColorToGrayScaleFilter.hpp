@@ -98,4 +98,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ConvertColorToGrayScaleFilter, "eb5a89c4-4e71-59b1-9719-d10a652d961e");
+COMPLEX_DEF_FILTER_TRAITS(complex, ConvertColorToGrayScaleFilter, "d938a2aa-fee2-4db9-aa2f-2c34a9736580");

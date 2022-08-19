@@ -99,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomShapes, "26765457-89fb-5686-87f6-878ca549f0df");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomShapes, "e8f0fed3-d0d8-456e-b5a1-7961cc17b739");

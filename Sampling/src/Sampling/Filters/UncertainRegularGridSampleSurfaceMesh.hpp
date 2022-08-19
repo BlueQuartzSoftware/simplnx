@@ -101,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, UncertainRegularGridSampleSurfaceMesh, "75cfeb9b-cd4b-5a20-a344-4170b39bbfaf");
+COMPLEX_DEF_FILTER_TRAITS(complex, UncertainRegularGridSampleSurfaceMesh, "c594cc3b-3f45-43b1-9030-1aa56c755fc8");

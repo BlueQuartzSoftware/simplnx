@@ -132,4 +132,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKMinMaxCurvatureFlowImage, "bd9bdf46-a229-544a-b158-151920261a63");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKMinMaxCurvatureFlowImage, "cc1f2f12-dfd4-4d25-b269-0c08a088b290");

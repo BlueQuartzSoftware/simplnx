@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportEbsdMontage, "179b0c7a-4e62-5070-ba49-ae58d5ccbfe8");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportEbsdMontage, "53b4d0b2-1aa3-4725-93df-f2857e491931");

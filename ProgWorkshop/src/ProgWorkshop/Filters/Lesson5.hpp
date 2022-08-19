@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, Lesson5, "169f34c2-62b2-57cf-ac79-9067dbac0d73");
+COMPLEX_DEF_FILTER_TRAITS(complex, Lesson5, "e64d4f6b-33d2-41ab-b0c5-511d86829dcf");

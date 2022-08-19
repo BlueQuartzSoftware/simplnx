@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ConvertQuaternion, "439e31b7-3198-5d0d-aef6-65a9e9c1a016");
+COMPLEX_DEF_FILTER_TRAITS(complex, ConvertQuaternion, "d6b51fb2-279d-41cd-ad1a-c7a5a3f4b1cc");

@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AdaptiveAlignmentFeature, "28977b7a-5b88-5145-abcd-d1c933f7d975");
+COMPLEX_DEF_FILTER_TRAITS(complex, AdaptiveAlignmentFeature, "a44834c7-59c7-4aad-b1c2-bb88c79f60a0");

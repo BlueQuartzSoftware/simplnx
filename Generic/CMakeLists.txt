@@ -11,7 +11,6 @@ set(FilterList
 set(STUB_FILTERS
   FindBoundaryCells
   FindBoundingBoxFeatures
-  FindFeaturePhases
   FindFeaturePhasesBinary
   FindSurfaceFeatures
   GenerateVectorColors

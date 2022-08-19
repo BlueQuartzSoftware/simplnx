@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, VMFillLevelSetWithTetrahedra, "317afa50-defb-541c-8d42-ea659953bde2");
+COMPLEX_DEF_FILTER_TRAITS(complex, VMFillLevelSetWithTetrahedra, "548b1e1f-7c4e-4fa9-a851-2f66a2a7c87f");
