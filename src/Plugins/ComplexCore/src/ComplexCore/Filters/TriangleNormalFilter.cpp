@@ -15,7 +15,11 @@ using namespace complex;
 
 namespace
 {
-class CalcTriangleNormals
+/**
+ * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
+ * triangle for a set of triangles
+ */
+class CalculateNormalsImpl
 {
 public:
   CalculateNormalsImpl(const AbstractGeometry::SharedVertexList& nodes, const AbstractGeometry::SharedTriList& triangles, Float64Array& normals)
@@ -34,29 +38,28 @@ public:
     std::array<float, 3> normal = {0.0f, 0.0f, 0.0f};
     for(size_t i = start; i < end; i++)
     {
-      nIdx0 = triangles[i * 3] * 3;
-      nIdx1 = triangles[i * 3 + 1] * 3;
-      nIdx2 = triangles[i * 3 + 2] * 3;
-      std::array<float, 3> n0 = nodes[nIdx1];
-      std::array<float, 3> n1 = nodes[nIdx1];
-      std::array<float, 3> n2 = nodes[nIdx2];
+      nIdx0 = m_Triangles[i * 3] * 3;
+      nIdx1 = m_Triangles[i * 3 + 1] * 3;
+      nIdx2 = m_Triangles[i * 3 + 2] * 3;
+      std::array<float, 3> n0 = {m_Nodes[nIdx0 * 3], m_Nodes[nIdx0 * 3 + 1], m_Nodes[nIdx0 * 3 + 2]};
+      std::array<float, 3> n1 = {m_Nodes[nIdx1 * 3], m_Nodes[nIdx1 * 3 + 1], m_Nodes[nIdx1 * 3 + 2]};
+      std::array<float, 3> n2 = {m_Nodes[nIdx2 * 3], m_Nodes[nIdx2 * 3 + 1], m_Nodes[nIdx2 * 3 + 2]};
 
-      MatrixMath::Subtract3x1s(A.data(), B.data(), vecA.data());
-      MatrixMath::Subtract3x1s(A.data(), C.data(), vecB.data());
+      MatrixMath::Subtract3x1s(n0.data(), n1.data(), vecA.data());
+      MatrixMath::Subtract3x1s(n0.data(), n2.data(), vecB.data());
       MatrixMath::CrossProduct(vecA.data(), vecB.data(), normal.data());
       MatrixMath::Normalize3x1(normal.data());
       for(int32 count = 0; count < normal.size(); count++)
       {
-        m_Normals[i * 3 + count] =  static_cast<float64>(normal[count]);
+        m_Normals[i * 3 + count] = static_cast<float64>(normal[count]);
       }
     }
   }
 
   void operator()(const ComplexRange& range) const
   {
-    convert(range.min(), range.max());
-  }   
-  
+    generate(range.min(), range.max());
+  }
 
 private:
   const AbstractGeometry::SharedVertexList& m_Nodes;
@@ -130,7 +133,8 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
   const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
   if(triangleGeom != nullptr)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, pSurfaceMeshTriangleNormalsArrayPath);
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, pSurfaceMeshTriangleNormalsArrayPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
@@ -143,7 +147,7 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
   auto pSurfaceMeshTriangleNormalsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshTriangleNormalsArrayPath_Key);
-  
+
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
   Float64Array& normals = dataStructure.getDataRefAs<Float64Array>(pSurfaceMeshTriangleNormalsArrayPath);
   // Associate the calculated normals with the Face Data in the Triangle Geometry

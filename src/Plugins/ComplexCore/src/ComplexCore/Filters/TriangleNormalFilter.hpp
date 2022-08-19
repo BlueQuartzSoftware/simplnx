@@ -1,8 +1,7 @@
 #pragma once
 
-#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "complex/Common/StringLiteral.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
@@ -10,9 +9,9 @@ namespace complex
 {
 /**
  * @class TriangleNormalFilter
- * @brief 
+ * @brief
  */
-class SURFACEMESHING_EXPORT TriangleNormalFilter : public IFilter
+class COMPLEXCORE_EXPORT TriangleNormalFilter : public IFilter
 {
 public:
   TriangleNormalFilter() = default;
