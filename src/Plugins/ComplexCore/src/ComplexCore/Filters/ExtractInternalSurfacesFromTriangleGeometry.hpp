@@ -88,4 +88,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExtractInternalSurfacesFromTriangleGeometry, "52a069b4-6a46-5810-b0ec-e0693c636034");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExtractInternalSurfacesFromTriangleGeometry, "e020f76f-a77f-4999-8bf1-9b7529f06d0a");

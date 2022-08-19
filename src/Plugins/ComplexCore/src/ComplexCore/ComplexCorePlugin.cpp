@@ -17,7 +17,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("05cc618b-781f-4ac0-b9
 ComplexCorePlugin::ComplexCorePlugin()
 : AbstractPlugin(k_ID, "ComplexCore", "Description", "BlueQuartz Software")
 {
-  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  std::vector<complex::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
   for(const auto& filterFunc : filterFuncs)
   {
     addFilter(filterFunc);
