@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExtractTripleLinesFromTriangleGeometry, "1422a4d7-ecd3-5e84-8883-8d2c8c551675");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExtractTripleLinesFromTriangleGeometry, "bb1ca09e-d445-4cad-914e-9998132807d8");

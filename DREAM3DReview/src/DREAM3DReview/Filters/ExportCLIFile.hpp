@@ -99,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExportCLIFile, "351c38c9-330d-599c-8632-19d74868be86");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExportCLIFile, "207630e3-7372-46e4-93be-096f249dc7b5");

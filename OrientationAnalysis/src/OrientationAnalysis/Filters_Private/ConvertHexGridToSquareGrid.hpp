@@ -92,4 +92,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ConvertHexGridToSquareGrid, "e1343abe-e5ad-5eb1-a89d-c209e620e4de");
+COMPLEX_DEF_FILTER_TRAITS(complex, ConvertHexGridToSquareGrid, "fcdb311f-a70c-4bf8-9e83-9275b36bc57f");

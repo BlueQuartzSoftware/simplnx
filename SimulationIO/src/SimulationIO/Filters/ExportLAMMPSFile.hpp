@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExportLAMMPSFile, "33c10889-4cdc-5992-ae00-1795e9bee022");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExportLAMMPSFile, "8ae1680d-1216-43ac-9a6d-c8a8924ad0b3");

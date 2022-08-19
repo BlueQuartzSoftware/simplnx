@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AvizoUniformCoordinateWriter, "339f1349-9236-5023-9a56-c82fb8eafd12");
+COMPLEX_DEF_FILTER_TRAITS(complex, AvizoUniformCoordinateWriter, "0ed4ae48-3295-4a5d-8505-d5d2a6f2a212");

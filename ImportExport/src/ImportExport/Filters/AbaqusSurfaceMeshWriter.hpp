@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, AbaqusSurfaceMeshWriter, "abbe2e1e-6fb2-5511-91f3-0637252f0705");
+COMPLEX_DEF_FILTER_TRAITS(complex, AbaqusSurfaceMeshWriter, "155db7a2-7b12-4c52-8000-9f4421bd32d4");

@@ -50,7 +50,6 @@ set(STUB_FILTERS
   RemoveComponentFromArray
   RenameAttributeArray
   RenameAttributeMatrix
-  RenameDataContainer
   ReplaceValueInArray
   RequiredZThickness
   #RotateSampleRefFrame # MISSING 1 or more Parameter Implementations

@@ -101,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, PointSampleTriangleGeometry, "119861c5-e303-537e-b210-2e62936222e9");
+COMPLEX_DEF_FILTER_TRAITS(complex, PointSampleTriangleGeometry, "e279743f-a76f-4751-ad4f-674f83f19fb3");

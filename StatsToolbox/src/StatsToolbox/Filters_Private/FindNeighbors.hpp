@@ -100,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindNeighbors, "97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindNeighbors, "7177e88c-c3ab-4169-abe9-1fdaff20e598");

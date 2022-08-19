@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryAreas, "0cdb2c7f-55cb-5fc7-9108-b0c6826bd803");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryAreas, "7d9ead78-65d0-400f-aeb8-8f85bb941bc9");

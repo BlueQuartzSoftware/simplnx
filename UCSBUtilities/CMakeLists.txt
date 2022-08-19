@@ -12,7 +12,6 @@ set(STUB_FILTERS
   ClearDataMask
   CopyAttributeArray
   CopyAttributeMatrix
-  CopyDataContainer
   FindBoundaryAreas
   FindDirectionalModuli
   FindModulusMismatch

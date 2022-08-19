@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ErodeDilateCoordinationNumber, "d26e85ff-7e52-53ae-b095-b1d969c9e73c");
+COMPLEX_DEF_FILTER_TRAITS(complex, ErodeDilateCoordinationNumber, "e4553e82-ab82-49d7-993c-8b55b15c7724");

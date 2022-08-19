@@ -126,4 +126,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKCurvatureAnisotropicDiffusionImage, "009fb2d0-6f65-5406-bb2a-4a883d0bc18c");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKCurvatureAnisotropicDiffusionImage, "ae839936-b2a1-4911-911b-54d2e18d873f");

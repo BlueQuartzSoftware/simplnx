@@ -99,4 +99,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExportDAMASKFiles, "7c58e612-d7d6-5ec7-806b-cce0c1c211a3");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExportDAMASKFiles, "ab4b77ef-973c-48dc-977e-2771e3163095");

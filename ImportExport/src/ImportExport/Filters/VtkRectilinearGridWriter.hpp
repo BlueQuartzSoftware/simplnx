@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, VtkRectilinearGridWriter, "a043bd66-2681-5126-82e1-5fdc46694bf4");
+COMPLEX_DEF_FILTER_TRAITS(complex, VtkRectilinearGridWriter, "58a4d758-c5ff-43d3-a394-1508ad00a0d2");

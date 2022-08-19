@@ -109,4 +109,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKIsoContourDistanceImage, "e9952e0e-97e4-53aa-8c6c-115fd18f0b89");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKIsoContourDistanceImage, "fc68ef8d-ab37-4b1d-b336-0a9b12fb81e3");

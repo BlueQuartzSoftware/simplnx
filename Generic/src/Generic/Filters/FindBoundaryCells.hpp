@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryCells, "8a1106d4-c67f-5e09-a02a-b2e9b99d031e");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundaryCells, "a1dd1c29-9152-4648-836c-3b6967e32600");

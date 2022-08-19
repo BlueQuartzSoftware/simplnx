@@ -108,4 +108,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKGradientMagnitudeImage, "3aa99151-e722-51a0-90ba-71e93347ab09");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKGradientMagnitudeImage, "719df7b2-8db2-43eb-a40c-a015982eec08");

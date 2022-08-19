@@ -120,4 +120,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKSignedMaurerDistanceMapImage, "bb15d42a-3077-582a-be1a-76b2bae172e9");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKSignedMaurerDistanceMapImage, "e81f72d3-e806-4afe-ab4c-795c6a3f526f");

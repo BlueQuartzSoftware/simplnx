@@ -110,4 +110,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportPrintRiteTDMSFiles, "38fde424-0292-5c42-b3b4-18d80c95524d");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportPrintRiteTDMSFiles, "60a8c8f1-c877-48cb-891f-df4e4a3a3535");

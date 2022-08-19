@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, GenerateFaceMisorientationColoring, "7cd30864-7bcf-5c10-aea7-d107373e2d40");
+COMPLEX_DEF_FILTER_TRAITS(complex, GenerateFaceMisorientationColoring, "f3473af9-db77-43db-bd25-60df7230ea73");

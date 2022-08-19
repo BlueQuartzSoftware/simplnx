@@ -104,4 +104,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, DetectEllipsoids, "14a39c35-8558-58c1-9d00-952396e6632b");
+COMPLEX_DEF_FILTER_TRAITS(complex, DetectEllipsoids, "033ea842-43c9-424c-9480-fa3042d45ecd");

@@ -94,4 +94,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, LabelTriangleGeometry, "a250a228-3b6b-5b37-a6e4-8687484f04c4");
+COMPLEX_DEF_FILTER_TRAITS(complex, LabelTriangleGeometry, "7a7a2c6f-3b03-444d-8b8c-5976b0e5c82e");

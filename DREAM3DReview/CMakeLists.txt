@@ -48,15 +48,12 @@ set(STUB_FILTERS
   ImportQMMeltpoolTDMSFile
   ImportVolumeGraphicsFile
   InsertTransformationPhases
-  InterpolatePointCloudToRegularGrid
-  IterativeClosestPoint
   KDistanceGraph
   KMeans
   KMedoids
   LabelTriangleGeometry
   LaplacianSmoothPointCloud
   LocalDislocationDensityCalculator
-  MapPointCloudToRegularGrid
   NormalizeArrays
   ParaDisReader
   PointSampleTriangleGeometry

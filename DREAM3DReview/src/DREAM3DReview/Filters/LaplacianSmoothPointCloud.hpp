@@ -96,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, LaplacianSmoothPointCloud, "1cf52f08-a11a-5870-a38c-ea8958071bd8");
+COMPLEX_DEF_FILTER_TRAITS(complex, LaplacianSmoothPointCloud, "4fa2d9ed-dcfd-44bb-90c1-d561f1f24541");

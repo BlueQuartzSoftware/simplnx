@@ -51,7 +51,7 @@ DataPath ConvertColorToGrayScale(DataStructure& dataStructure, DataPath inputGeo
 {
   const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313a69");
 
-  const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("eb5a89c4-4e71-59b1-9719-d10a652d961e");
+  const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
   const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_CorePluginId);
 
   // Parameter Keys

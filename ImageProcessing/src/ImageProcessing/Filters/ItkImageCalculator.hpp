@@ -95,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ItkImageCalculator, "d0916970-0294-5970-aa76-efbee321b56f");
+COMPLEX_DEF_FILTER_TRAITS(complex, ItkImageCalculator, "b1502eac-1772-46ed-be36-003351dc9ecd");

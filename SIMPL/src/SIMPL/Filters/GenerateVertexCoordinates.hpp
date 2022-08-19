@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, GenerateVertexCoordinates, "657a79de-7d60-5d9d-9f41-80abb62a3158");
+COMPLEX_DEF_FILTER_TRAITS(complex, GenerateVertexCoordinates, "b6c685f1-28e5-4975-8b00-996876678159");

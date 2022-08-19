@@ -84,10 +84,10 @@ const FilterHandle k_ImportDream3dFilterHandle(k_ImportDream3dFilterId, k_Comple
 const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6");
 const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the Crop Image Geometry
-const Uuid k_CropImageGeometryFilterId = *Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf");
+const Uuid k_CropImageGeometryFilterId = *Uuid::FromString("e6476737-4aa7-48ba-a702-3dfab82c96e2");
 const FilterHandle k_CropImageGeometryFilterHandle(k_CropImageGeometryFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the IdentifySample
-const Uuid k_IdentifySampleFilterId = *Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a");
+const Uuid k_IdentifySampleFilterId = *Uuid::FromString("94d47495-5a89-4c7f-a0ee-5ff20e6bd273");
 const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the CopyDataGroup
 const Uuid k_CopyDataGroupFilterId = *Uuid::FromString("ac8d51d8-9167-5628-a060-95a8863a76b1");
@@ -95,30 +95,30 @@ const FilterHandle k_CopyDataGroupFilterHandle(k_CopyDataGroupFilterId, k_Comple
 
 const Uuid k_OrientationAnalysisPluginId = *Uuid::FromString("c09cf01b-014e-5adb-84eb-ea76fc79eeb1");
 // Make sure we can instantiate the Convert Orientations
-const Uuid k_ConvertOrientationsFilterId = *Uuid::FromString("e5629880-98c4-5656-82b8-c9fe2b9744de");
+const Uuid k_ConvertOrientationsFilterId = *Uuid::FromString("501e54e6-a66f-4eeb-ae37-00e649c00d4b");
 const FilterHandle k_ConvertOrientationsFilterHandle(k_ConvertOrientationsFilterId, k_OrientationAnalysisPluginId);
 // Make sure we can instantiate the EbsdSegmentFeatures
-const Uuid k_EbsdSegmentFeaturesFilterId = *Uuid::FromString("7861c691-b821-537b-bd25-dc195578e0ea");
+const Uuid k_EbsdSegmentFeaturesFilterId = *Uuid::FromString("1810c2c7-63e3-41db-b204-a5821e6271c0");
 const FilterHandle k_EbsdSegmentFeaturesFilterHandle(k_EbsdSegmentFeaturesFilterId, k_OrientationAnalysisPluginId);
 // Make sure we can instantiate the Align Sections Misorientation
-const Uuid k_AlignSectionMisorientationFilterId = *Uuid::FromString("4fb2b9de-3124-534b-b914-dbbbdbc14604");
+const Uuid k_AlignSectionMisorientationFilterId = *Uuid::FromString("8df2135c-7079-49f4-9756-4f3c028a5ced");
 const FilterHandle k_AlignSectionMisorientationFilterHandle(k_AlignSectionMisorientationFilterId, k_OrientationAnalysisPluginId);
 // Make sure we can instantiate the NeighborOrientationCorrelation
-const Uuid k_NeighborOrientationCorrelationFilterId = *Uuid::FromString("6427cd5e-0ad2-5a24-8847-29f8e0720f4f");
+const Uuid k_NeighborOrientationCorrelationFilterId = *Uuid::FromString("4625c192-7e46-4333-a294-67a2eb64cb37");
 const FilterHandle k_NeighborOrientationCorrelationFilterHandle(k_NeighborOrientationCorrelationFilterId, k_OrientationAnalysisPluginId);
 // Make sure we can instantiate the
-const Uuid k_BadDataNeighborOrientationCheckFilterId = *Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99");
+const Uuid k_BadDataNeighborOrientationCheckFilterId = *Uuid::FromString("3f342977-aea1-49e1-a9c2-f73760eba0d3");
 const FilterHandle k_BadDataNeighborOrientationCheckFilterHandle(k_BadDataNeighborOrientationCheckFilterId, k_OrientationAnalysisPluginId);
 
 const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313a69");
 
 // Make sure we can instantiate the Align Sections Feature Centroid
-const Uuid k_AlignSectionsFeatureCentroidFilterId = *Uuid::FromString("886f8b46-51b6-5682-a289-6febd10b7ef0");
+const Uuid k_AlignSectionsFeatureCentroidFilterId = *Uuid::FromString("b83f9bae-9ccf-4932-96c3-7f2fdb091452");
 const FilterHandle k_AlignSectionsFeatureCentroidFilterHandle(k_AlignSectionsFeatureCentroidFilterId, k_CorePluginId);
 
-const Uuid k_FindFeaturePhasesObjectsId = *Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa");
+const Uuid k_FindFeaturePhasesObjectsId = *Uuid::FromString("da5bb20e-4a8e-49d9-9434-fbab7bc434fc");
 const FilterHandle k_FindNFeaturePhasesFilterHandle(k_FindFeaturePhasesObjectsId, k_ComplexCorePluginId);
-const Uuid k_FindNeighborsObjectsId = *Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac");
+const Uuid k_FindNeighborsObjectsId = *Uuid::FromString("7177e88c-c3ab-4169-abe9-1fdaff20e598");
 const FilterHandle k_FindNeighborsFilterHandle(k_FindNeighborsObjectsId, k_ComplexCorePluginId);
 
 template <typename T>

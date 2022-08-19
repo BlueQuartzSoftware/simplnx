@@ -130,4 +130,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKThresholdMaximumConnectedComponentsImage, "2a531add-79fd-5c07-98a6-f875d2ecef4e");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKThresholdMaximumConnectedComponentsImage, "97008e55-96cc-49ea-98ff-768c0a964145");

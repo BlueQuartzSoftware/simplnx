@@ -101,4 +101,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CreateLambertSphere, "c4398303-db7d-506e-81ea-08f253895ccb");
+COMPLEX_DEF_FILTER_TRAITS(complex, CreateLambertSphere, "916e2881-4c1c-47bd-99b0-6fb183ecdcea");
