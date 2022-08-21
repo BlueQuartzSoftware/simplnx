@@ -12,7 +12,6 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
