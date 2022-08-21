@@ -3,7 +3,7 @@
 using namespace complex;
 
 TooltipRowItem::TooltipRowItem()
-: m_Type(Type::Spacer)
+
 {
 }
 

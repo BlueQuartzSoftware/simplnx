@@ -3,7 +3,7 @@
 using namespace complex;
 
 AbstractTileIndex::AbstractTileIndex()
-: m_Montage(nullptr)
+
 {
 }
 

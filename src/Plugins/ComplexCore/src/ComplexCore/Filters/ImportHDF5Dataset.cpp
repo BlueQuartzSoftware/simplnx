@@ -1,9 +1,5 @@
 #include "ImportHDF5Dataset.hpp"
 
-#include <set>
-
-#include <nonstd/span.hpp>
-
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -11,8 +7,9 @@
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+
+#include <nonstd/span.hpp>
 
 using namespace complex;
 namespace fs = std::filesystem;
@@ -24,10 +21,9 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 {
   std::vector<size_t> cDims;
   std::vector<std::string> dimsStrVec = StringUtilities::split(cDimsStr, std::vector<char>{','}, true);
-  for(int i = 0; i < dimsStrVec.size(); i++)
+  for(const auto& stringValue : dimsStrVec)
   {
-    std::string dimsStr = dimsStrVec[i];
-    dimsStr = StringUtilities::trimmed(dimsStr);
+    std::string dimsStr = StringUtilities::trimmed(stringValue);
 
     try
     {
@@ -35,10 +31,10 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
       cDims.push_back(val);
     } catch(std::invalid_argument const& e)
     {
-      return std::vector<size_t>();
+      return {};
     } catch(std::out_of_range const& e)
     {
-      return std::vector<size_t>();
+      return {};
     }
   }
 
