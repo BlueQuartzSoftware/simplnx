@@ -119,6 +119,7 @@ inline constexpr float EPSILON = 0.00001;
 inline DataStructure LoadDataStructure(const fs::path& filepath)
 {
   DataStructure exemplarDataStructure;
+  INFO(fmt::format("Error loading file: '{}'  ", filepath.string()));
   REQUIRE(fs::exists(filepath));
   auto result = DREAM3D::ImportDataStructureFromFile(filepath);
   COMPLEX_RESULT_REQUIRE_VALID(result);
