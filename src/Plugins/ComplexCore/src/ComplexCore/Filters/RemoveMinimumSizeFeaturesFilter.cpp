@@ -25,6 +25,7 @@ constexpr int32 k_BadMinAllowedFeatureSize = -5555;
 constexpr int32 k_BadNumCellsPath = -5556;
 constexpr int32 k_ParentlessPathError = -5557;
 constexpr int32 k_NeighborListRemoval = -5558;
+constexpr int32 k_FetchChildArrayError = -5559;
 
 void assign_badpoints(DataStructure& dataStructure, const DataPath& featureIdsPath, SizeVec3 dimensions, const NumCellsArrayType& numCellsArrayRef)
 {
@@ -371,7 +372,13 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
                                featureIdsPath.toString(), featureGroupDataPath.toString());
 
-  std::vector<DataPath> featureNeighborListArrays = complex::GetAllChildDataPaths(data, featureGroupDataPath, DataObject::Type::NeighborList);
+  auto result = complex::GetAllChildDataPaths(data, featureGroupDataPath, DataObject::Type::NeighborList);
+  if(!result.has_value())
+  {
+    return {nonstd::make_unexpected(
+        std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the neighbor list children of group '{}'", featureGroupDataPath.toString())}})};
+  }
+  std::vector<DataPath> featureNeighborListArrays = result.value();
   for(const auto& featureNeighborList : featureNeighborListArrays)
   {
     ss.append("\n" + featureNeighborList.toString());

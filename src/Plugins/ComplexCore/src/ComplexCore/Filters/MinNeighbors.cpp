@@ -41,7 +41,10 @@ void assignBadPoints(DataStructure& data, const Arguments& args, const std::atom
   usize totalPoints = featureIdsArray.getNumberOfTuples();
   SizeVec3 udims = data.getDataRefAs<ImageGeom>(imageGeomPath).getDimensions();
 
-  std::vector<DataPath> cellDataArrayPaths = complex::GetAllChildDataPaths(data, cellDataAttrMatrix, DataObject::Type::DataArray);
+  // This was checked up in the execute function (which is called before this function)
+  // so if we got this far then all should be good with the return. We might get
+  // an empty vector<> but that is OK.
+  std::vector<DataPath> cellDataArrayPaths = complex::GetAllChildDataPaths(data, cellDataAttrMatrix, DataObject::Type::DataArray).value();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -403,6 +406,15 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
   {
     return {nonstd::make_unexpected(std::vector<Error>{activeObjectsResult.error()})};
   }
+
+  auto cellDataAttrMatrix = args.value<DataPath>(MinNeighbors::k_CellDataAttributeMatrix_Key);
+  auto result = complex::GetAllChildDataPaths(data, cellDataAttrMatrix, DataObject::Type::DataArray);
+  if(!result.has_value())
+  {
+    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Group '{}'", cellDataAttrMatrix.toString()));
+  }
+
+  // Run the algorithm.
   assignBadPoints(data, args, shouldCancel);
 
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIds_Key);

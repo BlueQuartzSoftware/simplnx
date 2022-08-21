@@ -97,13 +97,27 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
   }
 
   // We must find a child IDataArray subclass to get the tuple shape correct for the Feature Data
-  std::vector<DataPath> featureDataArrayPaths = complex::GetAllChildDataPaths(data, featureAttrMatrixPath, DataObject::Type::DataArray);
+  auto result = complex::GetAllChildDataPaths(data, featureAttrMatrixPath, DataObject::Type::DataArray);
+  if(!result.has_value())
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-12602, fmt::format("Error fetching Child DataArrays from Group '{}'", featureAttrMatrixPath.toString())}})};
+  }
+  std::vector<DataPath> featureDataArrayPaths = result.value();
   if(featureDataArrayPaths.empty())
   {
-    featureDataArrayPaths = complex::GetAllChildDataPaths(data, featureAttrMatrixPath, DataObject::Type::NeighborList);
+    result = complex::GetAllChildDataPaths(data, featureAttrMatrixPath, DataObject::Type::NeighborList);
+    if(!result.has_value())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-12603, fmt::format("Error fetching Child NeighborLists from Group '{}'", featureAttrMatrixPath.toString())}})};
+    }
+    featureDataArrayPaths = result.value();
     if(featureDataArrayPaths.empty())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-12601, fmt::format("Feature Attribute Matrix '{}' does not have a child IDataArray", featureAttrMatrixPath.toString())}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{
+          -12604,
+          fmt::format(
+              "Feature Attribute Matrix '{}' does not have any child DataArray or NeighborLists to use to determine the proper tuple shape. Please ensure you are selecting the proper parent group.",
+              featureAttrMatrixPath.toString())}})};
     }
     else
     {

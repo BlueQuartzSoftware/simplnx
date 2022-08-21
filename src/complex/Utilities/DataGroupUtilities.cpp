@@ -84,7 +84,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
 
       // Loop over all the points and correct all the feature names
       size_t totalPoints = cellFeatureIds.getNumberOfTuples();
-      Int32DataStore& featureIds = cellFeatureIds.getIDataStoreRefAs<Int32DataStore>();
+      auto& featureIds = cellFeatureIds.getIDataStoreRefAs<Int32DataStore>();
       bool featureIdsChanged = false;
       for(size_t i = 0; i < totalPoints; i++)
       {
@@ -97,10 +97,14 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
 
       if(featureIdsChanged)
       {
-        std::vector<DataPath> neighborListDataPaths = GetAllChildDataPaths(dataStructure, featureDataGroupPath, DataObject::Type::NeighborList);
-        for(const auto& neighborListDataPath : neighborListDataPaths)
+        auto result = GetAllChildDataPaths(dataStructure, featureDataGroupPath, DataObject::Type::NeighborList);
+        if(result.has_value())
         {
-          dataStructure.removeData(neighborListDataPath);
+          std::vector<DataPath> neighborListDataPaths = result.value();
+          for(const auto& neighborListDataPath : neighborListDataPaths)
+          {
+            dataStructure.removeData(neighborListDataPath);
+          }
         }
       }
     }
@@ -146,7 +150,7 @@ std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructu
   return arrays;
 }
 
-std::vector<DataPath> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType)
+std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType)
 {
   std::vector<DataPath> childDataObjects;
   try
@@ -165,8 +169,9 @@ std::vector<DataPath> GetAllChildDataPaths(const DataStructure& dataStructure, c
     }
   } catch(std::exception& e)
   {
+    return {};
   }
-  return childDataObjects;
+  return {childDataObjects};
 }
 
 } // namespace complex

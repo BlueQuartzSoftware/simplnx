@@ -109,7 +109,7 @@ inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
 namespace UnitTest
 {
 
-constexpr float EPSILON = 0.00001;
+inline constexpr float EPSILON = 0.00001;
 
 /**
  * @brief Loads a .dream3d file into a DataStructure. Checks are made to ensure the filepath does exist
