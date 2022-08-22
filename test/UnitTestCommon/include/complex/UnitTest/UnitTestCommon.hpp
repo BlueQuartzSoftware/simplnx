@@ -153,17 +153,34 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
   const auto& newDataStore = right.getIDataStoreRefAs<AbstractDataStore<T>>();
   usize end = oldDataStore.getSize();
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
+  T oldVal;
+  T newVal;
+  bool failed = false;
   for(usize i = start; i < end; i++)
   {
-    auto oldVal = oldDataStore[i];
-    auto newVal = newDataStore[i];
+    oldVal = oldDataStore[i];
+    newVal = newDataStore[i];
     if(oldVal != newVal)
     {
-      float diff = std::fabs(static_cast<float>(oldVal - newVal));
-      REQUIRE(diff < EPSILON);
+      UNSCOPED_INFO(fmt::format("oldValue != newValue. {} != {}", oldVal, newVal));
+
+      if constexpr(std::is_floating_point_v<T>)
+      {
+        float diff = std::fabs(static_cast<float>(oldVal - newVal));
+        if(diff > EPSILON)
+        {
+          failed = true;
+          break;
+        }
+      }
+      else
+      {
+        failed = true;
+      }
       break;
     }
   }
+  REQUIRE(!failed);
 }
 
 /**

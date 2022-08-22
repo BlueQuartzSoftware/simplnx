@@ -100,7 +100,7 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
   auto result = complex::GetAllChildDataPaths(data, featureAttrMatrixPath, DataObject::Type::DataArray);
   if(!result.has_value())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12602, fmt::format("Error fetching Child DataArrays from Group '{}'", featureAttrMatrixPath.toString())}})};
+    return {MakeErrorResult<OutputActions>(-12602, fmt::format("Error fetching Child DataArrays from Group '{}'", featureAttrMatrixPath.toString()))};
   }
   std::vector<DataPath> featureDataArrayPaths = result.value();
   if(featureDataArrayPaths.empty())
@@ -108,7 +108,7 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
     result = complex::GetAllChildDataPaths(data, featureAttrMatrixPath, DataObject::Type::NeighborList);
     if(!result.has_value())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-12603, fmt::format("Error fetching Child NeighborLists from Group '{}'", featureAttrMatrixPath.toString())}})};
+      return {MakeErrorResult<OutputActions>(-12603, fmt::format("Error fetching Child NeighborLists from Group '{}'", featureAttrMatrixPath.toString()))};
     }
     featureDataArrayPaths = result.value();
     if(featureDataArrayPaths.empty())

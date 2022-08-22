@@ -449,7 +449,10 @@ Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructu
   int32 count = 0;
   for(const auto& value : activeObjects)
   {
-    value == true ? count++ : count = count;
+    if(value)
+    {
+      count++;
+    }
   }
   std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
   messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});

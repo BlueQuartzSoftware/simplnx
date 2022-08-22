@@ -24,7 +24,6 @@
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CreateFeatureArrayFromElementArray.hpp"
@@ -37,21 +36,12 @@ namespace
 const std::string k_FeatureIDs("FeatureIds");
 const std::string k_Computed_CellData("Computed_CellData");
 
-inline DataStructure LoadDataStructure(const fs::path& filepath)
-{
-  DataStructure exemplarDataStructure;
-  REQUIRE(fs::exists(filepath));
-  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
-  COMPLEX_RESULT_REQUIRE_VALID(result);
-  return result.value();
-}
-
 template <typename T>
 void testElementArray(const DataPath& cellDataPath)
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
 
   DataPath featureDataGroupPath = smallIn100Group.createChildPath(k_Computed_CellData);
@@ -88,7 +78,13 @@ void testElementArray(const DataPath& cellDataPath)
 
     for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
     {
-      REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
+      auto oldVal = featureArrayExemplary[i];
+      auto newVal = createdFeatureArray[i];
+      if(oldVal != newVal)
+      {
+        REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
+        break;
+      }
     }
   }
 }
