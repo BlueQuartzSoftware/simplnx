@@ -1,11 +1,8 @@
 #pragma once
 
-#include "complex/Common/ComplexRange.hpp"
+#include "complex/Common/Range.hpp"
 #include "complex/complex_export.hpp"
 
-// complex MUST be included before this or the guard will block the include but not its uses below.
-// This is consistent with previous behavior, only earlier parallelization split the includes between
-// the corresponding .h and .cpp files.
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
@@ -26,6 +23,8 @@ namespace complex
 class COMPLEX_EXPORT ParallelDataAlgorithm
 {
 public:
+  using RangeType = Range;
+
   ParallelDataAlgorithm();
   virtual ~ParallelDataAlgorithm();
 
@@ -45,13 +44,13 @@ public:
    * @brief Returns the range to operate over.
    * @return
    */
-  ComplexRange getRange() const;
+  Range getRange() const;
 
   /**
    * @brief Sets the range to operate over.
    * @param range2D
    */
-  void setRange(const ComplexRange& range);
+  void setRange(const Range& range);
 
   /**
    * @brief Sets the range to operate over.
@@ -93,7 +92,7 @@ public:
   }
 
 private:
-  ComplexRange m_Range;
+  RangeType m_Range;
   bool m_RunParallel = false;
 #ifdef COMPLEX_ENABLE_MULTICORE
   tbb::auto_partitioner m_Partitioner;

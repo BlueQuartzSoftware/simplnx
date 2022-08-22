@@ -2,7 +2,7 @@
 
 #include "ComplexCore/utils/StlUtilities.hpp"
 
-#include "complex/Common/ComplexRange.hpp"
+#include "complex/Common/Range.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -54,7 +54,7 @@ public:
   }
 
   // -----------------------------------------------------------------------------
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     convert(range.min(), range.max());
   }

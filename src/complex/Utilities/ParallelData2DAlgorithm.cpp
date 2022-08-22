@@ -4,7 +4,7 @@ using namespace complex;
 
 // -----------------------------------------------------------------------------
 ParallelData2DAlgorithm::ParallelData2DAlgorithm()
-: m_Range(ComplexRange2D())
+: m_Range(Range2D())
 #ifdef COMPLEX_ENABLE_MULTICORE
 , m_RunParallel(true)
 , m_Partitioner(tbb::auto_partitioner())
@@ -28,13 +28,13 @@ void ParallelData2DAlgorithm::setParallelizationEnabled(bool doParallel)
 }
 
 // -----------------------------------------------------------------------------
-ComplexRange2D ParallelData2DAlgorithm::getRange() const
+Range2D ParallelData2DAlgorithm::getRange() const
 {
   return m_Range;
 }
 
 // -----------------------------------------------------------------------------
-void ParallelData2DAlgorithm::setRange(const ComplexRange2D& range)
+void ParallelData2DAlgorithm::setRange(const Range2D& range)
 {
   m_Range = range;
 }

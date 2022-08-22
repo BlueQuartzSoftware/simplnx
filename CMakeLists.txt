@@ -166,9 +166,9 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/TypesUtility.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange2D.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange3D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range2D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range3D.hpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.hpp
@@ -345,9 +345,9 @@ set(COMPLEX_GENERATED_HEADERS
 
 set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Common/RgbColor.cpp
-  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange.cpp
-  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange2D.cpp
-  ${COMPLEX_SOURCE_DIR}/Common/ComplexRange3D.cpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range.cpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range2D.cpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range3D.cpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp

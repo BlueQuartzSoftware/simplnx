@@ -2,38 +2,40 @@
 
 #include "complex/complex_export.hpp"
 
-#include <array>
-#include <cstddef>
-
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/blocked_range3d.h>
 #endif
+
+#include <array>
+#include <cstddef>
+
 namespace complex
 {
 
 /**
- * @class ComplexRange3D ComplexRange3D.h complex/Common/ComplexRange3D.h
- * @brief The ComplexRange3D class defines a range between set of minimum and
+ * @class Range3D Range3D.h complex/Common/Range3D.h
+ * @brief The Range3D class defines a range between set of minimum and
  * maximum values. The purpose of this class is mainly to allow a more unified
  * control flow during parallelization between builds using TBB and those that
  * do not.  Because tbb::blocked_range is used in an implicit conversion constructor,
- * a single operator accepting a ComplexRange can be used TBB parallelized and
+ * a single operator accepting a Range can be used TBB parallelized and
  * non-paralleled versions without a branching code base.
  */
-class COMPLEX_EXPORT ComplexRange3D
+class COMPLEX_EXPORT Range3D
 {
 public:
   using RangeType = std::array<size_t, 6>; //<* {size_t xMin, size_t xMax, size_t yMin, size_t yMax, size_t zMin, size_t zMax}
   using DimensionRange = std::array<size_t, 2>;
 
-  ComplexRange3D();
+  Range3D();
   /**
    * @brief
    * @param x
    * @param y
    * @param z
    */
-  ComplexRange3D(size_t x, size_t y, size_t z);
+  Range3D(size_t x, size_t y, size_t z);
+
   /**
    * @brief Creates a 3D Range to use for iterate over 3D data. Note that in this
    * context the X is the fastest moving axis, then Y, then Z.
@@ -44,9 +46,10 @@ public:
    * @param zMin
    * @param zMax
    */
-  ComplexRange3D(size_t xMin, size_t xMax, size_t yMin, size_t yMax, size_t zMin, size_t zMax);
+  Range3D(size_t xMin, size_t xMax, size_t yMin, size_t yMax, size_t zMin, size_t zMax);
+
 #ifdef COMPLEX_ENABLE_MULTICORE
-  ComplexRange3D(const tbb::blocked_range3d<size_t>& r);
+  Range3D(const tbb::blocked_range3d<size_t, size_t, size_t>& r);
 #endif
 
   /**

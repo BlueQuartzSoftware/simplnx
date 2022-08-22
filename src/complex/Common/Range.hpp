@@ -12,23 +12,24 @@
 namespace complex
 {
 /**
- * @class ComplexRange ComplexRange.h complex/Common/ComplexRange.h
- * @brief The ComplexRange class defines a range between set of minimum and
+ * @class Range Range.h complex/Common/Range.h
+ * @brief The Range class defines a range between set of minimum and
  * maximum values. The purpose of this class is mainly to allow a more unified
  * control flow during parallelization between builds using TBB and those that
  * do not.  Because tbb::blocked_range is used in an implicit conversion constructor,
- * a single operator accepting a ComplexRange can be used TBB parallelized and
+ * a single operator accepting a Range can be used TBB parallelized and
  * non-paralleled versions without a branching code base.
  */
-class COMPLEX_EXPORT ComplexRange
+class COMPLEX_EXPORT Range
 {
 public:
   using RangeType = std::array<size_t, 2>;
 
-  ComplexRange();
-  ComplexRange(size_t begin, size_t end);
+  Range();
+  Range(size_t begin, size_t end);
+
 #ifdef COMPLEX_ENABLE_MULTICORE
-  ComplexRange(const tbb::blocked_range<size_t>& r);
+  Range(const tbb::blocked_range<size_t>& r);
 #endif
 
   /**

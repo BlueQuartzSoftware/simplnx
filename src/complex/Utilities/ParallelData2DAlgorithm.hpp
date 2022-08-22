@@ -2,12 +2,9 @@
 
 #include <array>
 
-#include "complex/Common/ComplexRange2D.hpp"
+#include "complex/Common/Range2D.hpp"
 #include "complex/complex_export.hpp"
 
-// complex MUST be included before this or the guard will block the include but not its uses below.
-// This is consistent with previous behavior, only earlier parallelization split the includes between
-// the corresponding .h and .cpp files.
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
@@ -29,7 +26,7 @@ namespace complex
 class COMPLEX_EXPORT ParallelData2DAlgorithm
 {
 public:
-  using RangeType = ComplexRange2D;
+  using RangeType = Range2D;
 
   ParallelData2DAlgorithm();
   virtual ~ParallelData2DAlgorithm();
