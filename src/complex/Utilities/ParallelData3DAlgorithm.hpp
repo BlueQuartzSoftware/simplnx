@@ -1,13 +1,10 @@
 #pragma once
 
-#include "complex/Common/ComplexRange3D.hpp"
+#include "complex/Common/Range3D.hpp"
 #include "complex/complex_export.hpp"
 
-// complex MUST be included before this or the guard will block the include but not its uses below.
-// This is consistent with previous behavior, only earlier parallelization split the includes between
-// the corresponding .h and .cpp files.
 #ifdef COMPLEX_ENABLE_MULTICORE
-#include <tbb/blocked_range.h>
+#include <tbb/blocked_range3d.h>
 #include <tbb/parallel_for.h>
 #include <tbb/partitioner.h>
 #endif
@@ -26,6 +23,8 @@ namespace complex
 class COMPLEX_EXPORT ParallelData3DAlgorithm
 {
 public:
+  using RangeType = Range3D;
+
   ParallelData3DAlgorithm();
   virtual ~ParallelData3DAlgorithm();
 
@@ -45,31 +44,19 @@ public:
    * @brief Returns the range to operate over.
    * @return
    */
-  ComplexRange3D getRange() const;
+  RangeType getRange() const;
 
   /**
    * @brief Sets the range to operate over.
    * @param range3D
    */
-  void setRange(const ComplexRange3D& range);
+  void setRange(const RangeType& range);
 
   /**
    * @brief Sets the range to operate over.
    * @param range3D
    */
   void setRange(size_t xMax, size_t yMax, size_t zMax);
-
-  /**
-   * @brief Returns the grain size.
-   * @return
-   */
-  size_t getGrain() const;
-
-  /**
-   * @brief Sets the grain size.
-   * @param grain
-   */
-  void setGrain(size_t grain);
 
 #ifdef COMPLEX_ENABLE_MULTICORE
   /**
@@ -104,8 +91,7 @@ public:
   }
 
 private:
-  ComplexRange3D m_Range;
-  size_t m_Grain = 1;
+  RangeType m_Range;
   bool m_RunParallel = false;
 #ifdef COMPLEX_ENABLE_MULTICORE
   tbb::auto_partitioner m_Partitioner;

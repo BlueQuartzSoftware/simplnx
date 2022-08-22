@@ -6,7 +6,7 @@ using namespace complex;
 //
 // -----------------------------------------------------------------------------
 ParallelDataAlgorithm::ParallelDataAlgorithm()
-: m_Range(ComplexRange())
+: m_Range(Range())
 #ifdef COMPLEX_ENABLE_MULTICORE
 , m_RunParallel(true)
 , m_Partitioner(tbb::auto_partitioner())
@@ -38,7 +38,7 @@ void ParallelDataAlgorithm::setParallelizationEnabled(bool doParallel)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ComplexRange ParallelDataAlgorithm::getRange() const
+Range ParallelDataAlgorithm::getRange() const
 {
   return m_Range;
 }
@@ -46,7 +46,7 @@ ComplexRange ParallelDataAlgorithm::getRange() const
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ParallelDataAlgorithm::setRange(const ComplexRange& range)
+void ParallelDataAlgorithm::setRange(const Range& range)
 {
   m_Range = range;
 }

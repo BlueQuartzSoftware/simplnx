@@ -11,20 +11,20 @@
 namespace complex
 {
 /**
- * @class ComplexRange2D ComplexRange2D.h complex/Common/ComplexRange2D.h
- * @brief The ComplexRange2D class defines a range between set of minimum and
+ * @class Range2D Range2D.h complex/Common/Range2D.h
+ * @brief The Range2D class defines a range between set of minimum and
  * maximum values. The purpose of this class is mainly to allow a more unified
  * control flow during parallelization between builds using TBB and those that
  * do not.  Because tbb::blocked_range is used in an implicit conversion constructor,
- * a single operator accepting a ComplexRange can be used TBB parallelized and
+ * a single operator accepting a Range can be used TBB parallelized and
  * non-paralleled versions without a branching code base.
  */
-class COMPLEX_EXPORT ComplexRange2D
+class COMPLEX_EXPORT Range2D
 {
 public:
   using RangeType = std::array<size_t, 4>; // {  col Start, col end, row start, row end }
 
-  ComplexRange2D();
+  Range2D();
 
   /**
    * @brief Creates a 2D Range where X is the fastest moving axis, and then Y
@@ -33,13 +33,14 @@ public:
    * @param xStart
    * @param xEnd
    */
-  ComplexRange2D(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd);
+  Range2D(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd);
+
 #ifdef COMPLEX_ENABLE_MULTICORE
   /**
    * @brief Uses the tbb::blocked_rang2d<T,T> as the init value
    * @param r
    */
-  ComplexRange2D(const tbb::blocked_range2d<size_t, size_t>& r);
+  Range2D(const tbb::blocked_range2d<size_t, size_t>& r);
 #endif
 
   /**

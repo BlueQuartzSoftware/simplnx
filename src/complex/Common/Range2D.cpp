@@ -1,101 +1,77 @@
-#include "complex/Common/ComplexRange2D.hpp"
+#include "complex/Common/Range2D.hpp"
 
 #include <stdexcept>
 using namespace complex;
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D()
+Range2D::Range2D()
 : m_Range({{0, 0, 0, 0}})
 {
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd)
+Range2D::Range2D(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd)
 : m_Range({{xStart, xEnd, yStart, yEnd}})
 {
 }
 
 #ifdef COMPLEX_ENABLE_MULTICORE
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::ComplexRange2D(const tbb::blocked_range2d<size_t, size_t>& r)
+Range2D::Range2D(const tbb::blocked_range2d<size_t, size_t>& r)
 : m_Range({{r.cols().begin(), r.cols().end(), r.rows().begin(), r.rows().end()}})
 {
 }
 #endif
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ComplexRange2D::RangeType ComplexRange2D::getRange() const
+Range2D::RangeType Range2D::getRange() const
 {
   return m_Range;
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::minRow() const
+size_t Range2D::minRow() const
 {
   return m_Range[0];
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::minCol() const
+size_t Range2D::minCol() const
 {
   return m_Range[1];
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::maxRow() const
+size_t Range2D::maxRow() const
 {
   return m_Range[2];
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::maxCol() const
+size_t Range2D::maxCol() const
 {
   return m_Range[3];
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::numRows() const
+size_t Range2D::numRows() const
 {
   return maxRow() - minRow();
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::numCols() const
+size_t Range2D::numCols() const
 {
   return maxCol() - minCol();
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::size() const
+size_t Range2D::size() const
 {
   return numRows() * numCols();
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-bool ComplexRange2D::empty() const
+bool Range2D::empty() const
 {
   const bool emptyRows = (m_Range[2] == m_Range[3]) && (m_Range[2] == 0);
   const bool emptyCols = (m_Range[0] == m_Range[1]) && (m_Range[0] == 0);
@@ -103,9 +79,7 @@ bool ComplexRange2D::empty() const
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-size_t ComplexRange2D::operator[](size_t index) const
+size_t Range2D::operator[](size_t index) const
 {
   if(index < 4)
   {
