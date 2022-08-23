@@ -33,20 +33,20 @@ public:
   void generate(size_t start, size_t end) const
   {
     AbstractGeometry::MeshIndexType nIdx0 = 0, nIdx1 = 0, nIdx2 = 0;
-    std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
-    std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
-    std::array<float, 3> normal = {0.0f, 0.0f, 0.0f};
+    std::array<float64, 3> vecA = {0.0f, 0.0f, 0.0f};
+    std::array<float64, 3> vecB = {0.0f, 0.0f, 0.0f};
+    std::array<float64, 3> normal = {0.0f, 0.0f, 0.0f};
     for(size_t i = start; i < end; i++)
     {
-      nIdx0 = m_Triangles[i * 3] * 3;
-      nIdx1 = m_Triangles[i * 3 + 1] * 3;
-      nIdx2 = m_Triangles[i * 3 + 2] * 3;
-      std::array<float, 3> n0 = {m_Nodes[nIdx0 * 3], m_Nodes[nIdx0 * 3 + 1], m_Nodes[nIdx0 * 3 + 2]};
-      std::array<float, 3> n1 = {m_Nodes[nIdx1 * 3], m_Nodes[nIdx1 * 3 + 1], m_Nodes[nIdx1 * 3 + 2]};
-      std::array<float, 3> n2 = {m_Nodes[nIdx2 * 3], m_Nodes[nIdx2 * 3 + 1], m_Nodes[nIdx2 * 3 + 2]};
+      nIdx0 = m_Triangles[i * 3];
+      nIdx1 = m_Triangles[i * 3 + 1];
+      nIdx2 = m_Triangles[i * 3 + 2];
+      std::array<float64, 3> n0 = {m_Nodes[nIdx0 * 3], m_Nodes[nIdx0 * 3 + 1], m_Nodes[nIdx0 * 3 + 2]};
+      std::array<float64, 3> n1 = {m_Nodes[nIdx1 * 3], m_Nodes[nIdx1 * 3 + 1], m_Nodes[nIdx1 * 3 + 2]};
+      std::array<float64, 3> n2 = {m_Nodes[nIdx2 * 3], m_Nodes[nIdx2 * 3 + 1], m_Nodes[nIdx2 * 3 + 2]};
 
-      MatrixMath::Subtract3x1s(n0.data(), n1.data(), vecA.data());
-      MatrixMath::Subtract3x1s(n0.data(), n2.data(), vecB.data());
+      MatrixMath::Subtract3x1s(n1.data(), n0.data(), vecA.data());
+      MatrixMath::Subtract3x1s(n2.data(), n0.data(), vecB.data());
       MatrixMath::CrossProduct(vecA.data(), vecB.data(), normal.data());
       MatrixMath::Normalize3x1(normal.data());
       for(int32 count = 0; count < normal.size(); count++)
@@ -134,7 +134,7 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
   if(triangleGeom != nullptr)
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, pSurfaceMeshTriangleNormalsArrayPath);
+        std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pSurfaceMeshTriangleNormalsArrayPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
