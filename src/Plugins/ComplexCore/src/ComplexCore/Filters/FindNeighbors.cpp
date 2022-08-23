@@ -13,6 +13,7 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 
 namespace complex
 {
@@ -45,8 +46,7 @@ Parameters FindNeighbors::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "", false));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath({"DataContainer"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath({"DataContainer"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "", DataPath({"DataContainer", "CellFeatureData"})));
 
