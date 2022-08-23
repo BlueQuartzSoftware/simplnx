@@ -6,6 +6,7 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
+#include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 using namespace complex;

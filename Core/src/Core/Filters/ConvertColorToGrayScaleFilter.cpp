@@ -121,6 +121,20 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
     return {nonstd::make_unexpected(std::vector<Error>{Error{-10701, fmt::format("Color channel selection is invalid. Valid values are 0, 1, 2. Value supplied is {}", pColorChannelValue)}})};
   }
 
+  if(pConversionAlgorithmValue == 0)
+  {
+    if(pColorWeightsValue[0] < 0.0F || pColorWeightsValue[1] < 0.0F || pColorWeightsValue[2] < 0.0F)
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-10704, "1 of more of the Color Weight values have a negative value. This is not allowed."}})};
+    }
+
+    float colorWeightSum = pColorWeightsValue[0] + pColorWeightsValue[1] + pColorWeightsValue[2];
+    if(colorWeightSum < .9800 || colorWeightSum > 1.02)
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-10704, fmt::format("Color Weight values should sum up to 1.0. Current sum is {}", colorWeightSum)}})};
+    }
+  }
+
   if(pCreateNewAttributeMatrixValue)
   {
     resultOutputActions.value().actions.push_back(std::make_unique<CreateDataGroupAction>(outputDataGroupPath));

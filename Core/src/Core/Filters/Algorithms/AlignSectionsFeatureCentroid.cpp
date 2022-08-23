@@ -1,6 +1,5 @@
 #include "AlignSectionsFeatureCentroid.hpp"
 
-#include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"

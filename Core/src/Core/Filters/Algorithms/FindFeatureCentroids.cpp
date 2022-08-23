@@ -108,9 +108,14 @@ const std::atomic_bool& FindFeatureCentroids::getCancel()
 // -----------------------------------------------------------------------------
 Result<> FindFeatureCentroids::operator()()
 {
+  // Input Cell Data
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+
+  // Output Feature Data
   auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
+
+  // Required Geometry
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
   size_t totalFeatures = centroids.getNumberOfTuples();
 

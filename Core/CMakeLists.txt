@@ -23,10 +23,21 @@ set(FilterList
   ErodeDilateBadDataFilter
   WriteASCIIDataFilter
   WriteBinaryDataFilter
+  FindEuclideanDistMapFilter
+  FindNeighborhoodsFilter
+  FindSurfaceAreaToVolumeFilter
 )
 
 set(STUB_FILTERS
 )
+
+# ------------------------------------------------------------------------------
+foreach(file_name ${FilterList})
+  string(REPLACE "Filter" "" file_name ${file_name})
+  if(NOT EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/docs/${PLUGIN_NAME}/${file_name}.md")
+    message(STATUS "!!!> DOCUMENTATION WARNING:${${PLUGIN_NAME}_SOURCE_DIR}/docs/${PLUGIN_NAME}/${file_name}.md Does Not Exist")
+  endif()
+endforeach()
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
@@ -89,7 +100,11 @@ set(filter_algorithms
   ErodeDilateBadData
   WriteASCIIData
   WriteBinaryData
+  FindEuclideanDistMap
+  FindNeighborhoods
+  FindSurfaceAreaToVolume
 )
+
 
 foreach(algorithm ${filter_algorithms})
   target_sources(${PLUGIN_NAME}

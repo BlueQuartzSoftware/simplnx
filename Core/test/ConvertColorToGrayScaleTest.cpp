@@ -9,6 +9,7 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include "Core/Core_test_dirs.hpp"
@@ -283,7 +284,7 @@ void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructur
 }
 
 //------------------------------------------------------------------------------
-void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::ConversionType& algorithm, const std::vector<float32>& colorWeights, const int32& colorChannel)
+void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::ConversionType& algorithm, const std::vector<float32>& colorWeights, const int32& colorChannel, bool shouldFail)
 {
   DataStructure dataStruct;
   const std::vector<size_t> tDims{numTuples};
@@ -311,11 +312,29 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStruct, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  if(shouldFail)
+  {
+    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  }
+  else
+  {
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  }
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStruct, args);
-  REQUIRE(executeResult.result.valid());
+  if(shouldFail)
+  {
+    COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
+  }
+  else
+  {
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  if(shouldFail)
+  {
+    return;
+  }
 
   CompareResults(algoMapIndex, dataStruct);
 }
@@ -324,48 +343,48 @@ TEST_CASE("Core::ConvertColorToGrayScale: Instantiation and Parameter Check", "[
 {
   // Luminosity Algorithm testing
   // Test defaults
-  std::cout << "Testing luminosity algorithm...";
+  std::cout << "Testing luminosity algorithm..." << std::endl;
   std::cout << "Default weights (0.2125, 0.7154, 0.0721)...";
-  RunTest(0, ConvertColorToGrayScale::ConversionType::Luminosity, {0.2125f, 0.7154f, 0.0721f}, 0);
+  RunTest(0, ConvertColorToGrayScale::ConversionType::Luminosity, {0.2125f, 0.7154f, 0.0721f}, 0, false);
 
   // Test custom
   std::vector<float32> colorWeights{0.75, 0.75, 0.75};
-  std::cout << "Custom weights (0.75, 0.75, 0.75)...";
-  RunTest(1, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0);
+  std::cout << "Custom weights (0.75, 0.75, 0.75)..." << std::endl;
+  RunTest(1, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test <0
   colorWeights = {-0.75, -0.75, -0.75};
-  std::cout << "Testing weights < 0 (-0.75, -0.75, -0.75)...";
-  RunTest(2, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0);
+  std::cout << "Testing weights < 0 (-0.75, -0.75, -0.75)..." << std::endl;
+  RunTest(2, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test >1
   colorWeights = {1.75, 1.75, 1.75};
-  std::cout << "Testing weights > 1 (1.75, 1.75, 1.75)...";
-  RunTest(3, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0);
+  std::cout << "Testing weights > 1 (1.75, 1.75, 1.75)..." << std::endl;
+  RunTest(3, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test <-1
   colorWeights = {-1.75, -1.75, -1.75};
-  std::cout << "Testing weights < -1 (-1.75, -1.75, -1.75)...";
-  RunTest(4, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0);
+  std::cout << "Testing weights < -1 (-1.75, -1.75, -1.75)..." << std::endl;
+  RunTest(4, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Average Algorithm testing
-  std::cout << "Testing average algorithm...";
-  RunTest(5, ConvertColorToGrayScale::ConversionType::Average, {0.2125f, 0.7154f, 0.0721f}, 0);
+  std::cout << "Testing average algorithm..." << std::endl;
+  RunTest(5, ConvertColorToGrayScale::ConversionType::Average, {0.2125f, 0.7154f, 0.0721f}, 0, false);
 
   // Lightness Algorithm testing
-  std::cout << "Testing lightness algorithm...";
-  RunTest(6, ConvertColorToGrayScale::ConversionType::Lightness, {0.2125f, 0.7154f, 0.0721f}, 0);
+  std::cout << "Testing lightness algorithm..." << std::endl;
+  RunTest(6, ConvertColorToGrayScale::ConversionType::Lightness, {0.2125f, 0.7154f, 0.0721f}, 0, false);
 
   // Single Channel Algorithm testing
   // Red channel
-  std::cout << "Testing red channel algorithm...";
-  RunTest(7, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 0);
+  std::cout << "Testing red channel algorithm..." << std::endl;
+  RunTest(7, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 0, false);
 
   // Green channel
-  std::cout << "Testing green channel algorithm...";
-  RunTest(8, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 1);
+  std::cout << "Testing green channel algorithm..." << std::endl;
+  RunTest(8, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 1, false);
 
   // Blue channel
-  std::cout << "Testing blue channel algorithm...";
-  RunTest(9, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 2);
+  std::cout << "Testing blue channel algorithm..." << std::endl;
+  RunTest(9, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 2, false);
 }

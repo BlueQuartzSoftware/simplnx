@@ -1,7 +1,6 @@
 #include <catch2/catch.hpp>
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "Core/Core_test_dirs.hpp"
@@ -17,21 +16,21 @@ using namespace complex;
 TEST_CASE("Core::FindShapesFilter", "[Core][FindShapesFilter]")
 {
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_find_shapes.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
   DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
 
   const std::string k_Omega3sArrayName("Omega3s");
   const std::string k_AxisLengthsArrayName("AxisLengths");
   const std::string k_AxisEulerAnglesArrayName("AxisEulerAngles");
   const std::string k_AspectRatiosArrayName("AspectRatios");
-  const std::string k_VolumesArrayName("Volumes");
+  const std::string k_VolumesArrayName("Shape Volumes");
 
   // Instantiate FindShapesFilter
   {
     FindShapesFilter filter;
     Arguments args;
 
-    const DataPath k_FeatureIdsArrayPath2({k_DataContainer, k_SmallIN100ScanData, k_FeatureIds});
+    const DataPath k_FeatureIdsArrayPath2({k_DataContainer, k_CellData, k_FeatureIds});
     const DataPath k_CellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
     const DataPath k_CentroidsArrayPath({k_DataContainer, k_CellFeatureData, k_Centroids});
 
@@ -75,5 +74,5 @@ TEST_CASE("Core::FindShapesFilter", "[Core][FindShapesFilter]")
   }
 
   // Write the DataStructure out to the file system
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_shapes.dream3d", unit_test::k_BinaryDir)));
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_shapes.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

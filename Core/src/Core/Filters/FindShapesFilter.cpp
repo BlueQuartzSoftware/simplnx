@@ -2,7 +2,6 @@
 
 #include "Core/Filters/Algorithms/FindShapes.hpp"
 
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"

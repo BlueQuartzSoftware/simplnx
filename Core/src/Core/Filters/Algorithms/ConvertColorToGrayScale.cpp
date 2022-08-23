@@ -26,12 +26,16 @@ public:
   LuminosityImpl& operator=(LuminosityImpl&&) = delete;      // Move Assignment Not Implemented
   ~LuminosityImpl() = default;
 
+  // Careful when converting from negative floats to unsigned ints. This is why
+  // there is a double static cast.
+  // C Standard: Section 6.3.1 Arithmetic operands (specifically Section 6.3.1.4 Real floating and integer)
   void convert(size_t start, size_t end) const
   {
     for(size_t i = start; i < end; i++)
     {
-      m_FlatImageData[i] = static_cast<uint8_t>(
+      auto temp = static_cast<int32>(
           roundf((m_ImageData[m_NumComp * i] * m_ColorWeights.getX()) + (m_ImageData[m_NumComp * i + 1] * m_ColorWeights.getY()) + (m_ImageData[m_NumComp * i + 2] * m_ColorWeights.getZ())));
+      m_FlatImageData[i] = static_cast<uint8>(temp);
     }
   }
 
