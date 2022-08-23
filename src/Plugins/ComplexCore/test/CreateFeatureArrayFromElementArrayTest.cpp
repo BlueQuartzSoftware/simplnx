@@ -22,11 +22,7 @@
 
 #include <catch2/catch.hpp>
 
-#include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
-#include "complex/Common/TypesUtility.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
@@ -37,77 +33,59 @@ namespace fs = std::filesystem;
 
 namespace
 {
-const DataPath k_CellArrayPath({"Cell Array"});
-const DataPath k_FeatureIDsPath({"Feature IDs"});
-const DataPath k_CreatedFeatureArrayPath({"Created Array"});
-const DataPath k_FeatureArrayExemplaryPath({"Exemplary Array"});
-const std::string k_FeatureIdsFileName = "FeatureIds.raw";
+const std::string k_FeatureIDs("FeatureIds");
+const std::string k_Computed_CellData("Computed_CellData");
 
 template <typename T>
-void testElementArray(const std::string& elementArrayFileName, uint64 compCount, const std::string& exemplaryFileName)
+void testElementArray(const DataPath& cellDataPath)
 {
-  DataStructure ds;
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({complex::Constants::k_DataContainer});
 
-  // Load binary files
+  DataPath featureDataGroupPath = smallIn100Group.createChildPath(k_Computed_CellData);
   {
-    Arguments args;
-
-    NumericType elementArrayType = GetNumericType<T>();
-
-    RawBinaryReaderFilter rbrFilter;
-    args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir.str()).append(elementArrayFileName));
-    args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(compCount));
-    args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, elementArrayType);
-    args.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{{1000000}}, {}, {}}));
-    args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_CellArrayPath));
-
-    auto result = rbrFilter.execute(ds, args);
-    COMPLEX_RESULT_REQUIRE_VALID(result.result);
-
-    args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir.str()).append(k_FeatureIdsFileName));
-    args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, NumericType::int32);
-    args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
-
-    result = rbrFilter.execute(ds, args);
-    COMPLEX_RESULT_REQUIRE_VALID(result.result);
-
-    args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir.str()).append(exemplaryFileName));
-    args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(compCount));
-    args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, elementArrayType);
-    args.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{{796}}, {}, {}}));
-    args.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureArrayExemplaryPath));
-
-    result = rbrFilter.execute(ds, args);
-    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+    DataGroup* computedFeatureData = DataGroup::Create(dataStructure, k_Computed_CellData, dataStructure.getId(smallIn100Group));
   }
 
-  CreateFeatureArrayFromElementArray filter;
-  Arguments args;
+  DataPath featureIdsDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData).createChildPath(k_FeatureIDs);
+  DataPath computedFeatureGroupPath = smallIn100Group.createChildPath(k_Computed_CellData);
+  DataPath computedFeatureArrayPath = computedFeatureGroupPath.createChildPath(cellDataPath.getTargetName());
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(k_CellArrayPath));
-  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
-  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(k_CreatedFeatureArrayPath));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
-
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(k_FeatureArrayExemplaryPath));
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(k_CreatedFeatureArrayPath));
-
-  const DataArray<T>& featureArrayExemplary = ds.getDataRefAs<DataArray<T>>(k_FeatureArrayExemplaryPath);
-  const DataArray<T>& createdFeatureArray = ds.getDataRefAs<DataArray<T>>(k_CreatedFeatureArrayPath);
-  REQUIRE(createdFeatureArray.getSize() == featureArrayExemplary.getSize());
-
-  for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
   {
-    REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
+    CreateFeatureArrayFromElementArray filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(cellDataPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(computedFeatureArrayPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    DataPath exemplaryDataPath = smallIn100Group.createChildPath("CellFeatureData").createChildPath(cellDataPath.getTargetName());
+    const DataArray<T>& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
+
+    const DataArray<T>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(computedFeatureArrayPath);
+    REQUIRE(createdFeatureArray.getNumberOfTuples() == featureArrayExemplary.getNumberOfTuples());
+
+    for(usize i = 0; i < featureArrayExemplary.getSize(); i++)
+    {
+      auto oldVal = featureArrayExemplary[i];
+      auto newVal = createdFeatureArray[i];
+      if(oldVal != newVal)
+      {
+        REQUIRE(featureArrayExemplary[i] == createdFeatureArray[i]);
+        break;
+      }
+    }
   }
 }
 } // namespace
@@ -135,10 +113,14 @@ TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Instantiation and Pa
 
 TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Valid filter execution - 1 Component")
 {
-  testElementArray<float32>("ConfidenceIndex.raw", 1, "ConfidenceIndex_FeatureArray.raw");
+  DataPath smallIn100Group({complex::Constants::k_DataContainer});
+  DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData).createChildPath(complex::Constants::k_ConfidenceIndex);
+  testElementArray<float32>(cellDataPath);
 }
 
 TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Valid filter execution - 3 Component")
 {
-  testElementArray<uint8>("IPFColors.raw", 3, "IPFColors_FeatureArray.raw");
+  DataPath smallIn100Group({complex::Constants::k_DataContainer});
+  DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData).createChildPath(complex::Constants::k_IPFColors);
+  testElementArray<uint8>(cellDataPath);
 }

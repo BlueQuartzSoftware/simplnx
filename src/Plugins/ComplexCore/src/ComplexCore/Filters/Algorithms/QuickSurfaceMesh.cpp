@@ -73,7 +73,6 @@ QuickSurfaceMesh::~QuickSurfaceMesh() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> QuickSurfaceMesh::operator()()
 {
-  DataObject::IdType parentGroupId = m_DataStructure.getId(m_Inputs->pParentDataGroupPath).value();
   // Get the ImageGeometry
   AbstractGeometryGrid& grid = m_DataStructure.getDataRefAs<AbstractGeometryGrid>(m_Inputs->pGridGeomDataPath);
 
@@ -114,6 +113,7 @@ Result<> QuickSurfaceMesh::operator()()
 
   createNodesAndTriangles(nodeIds, nodeCount, triangleCount);
 
+#if 0
   if(m_Inputs->pGenerateTripleLines)
   {
     AbstractGeometry::SharedTriList* triangle = triangleGeom.getFaces();
@@ -181,6 +181,7 @@ Result<> QuickSurfaceMesh::operator()()
     // Now that we all of that out of the way, generate the triple lines
     generateTripleLines();
   }
+#endif
 
   return {};
 }
@@ -1528,11 +1529,12 @@ void QuickSurfaceMesh::generateTripleLines()
   }
 
   std::string edgeGeometryName = "[Edge Geometry]";
-  DataPath edgeGeometryDataPath = m_Inputs->pParentDataGroupPath.createChildPath(edgeGeometryName);
+
+  DataPath edgeGeometryDataPath({edgeGeometryName});
   std::string sharedVertListName = "SharedVertList";
   DataPath sharedVertListDataPath = edgeGeometryDataPath.createChildPath(sharedVertListName);
 
-  EdgeGeom* tripleLineEdge = EdgeGeom::Create(m_DataStructure, edgeGeometryName, m_DataStructure.getId(m_Inputs->pParentDataGroupPath));
+  EdgeGeom* tripleLineEdge = EdgeGeom::Create(m_DataStructure, edgeGeometryName);
   size_t numVerts = vertexMap.size();
   size_t numComps = 3;
   AbstractGeometry::SharedVertexList* vertices =

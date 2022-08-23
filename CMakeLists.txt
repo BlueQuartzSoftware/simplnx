@@ -150,6 +150,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Bit.hpp
   ${COMPLEX_SOURCE_DIR}/Common/ComplexConstants.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Constants.hpp
   ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Numbers.hpp

@@ -13,6 +13,7 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 
 namespace complex
 {
@@ -39,22 +40,24 @@ std::string FindNeighbors::humanName() const
 Parameters FindNeighbors::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreBoundary_Key, "Store Boundary Cells Array", "", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "", false));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath({"DataContainer"}), GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "", DataPath({"DataContainer", "CellFeatureData"})));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "", DataPath({"Data Container", "Feature Data"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCells_Key, "Boundary Cells", "", DataPath({"BoundaryCells"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath({"NumNeighbors2"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborList_Key, "Neighbor List", "", DataPath({"NeighborList2"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List", "", DataPath({"SharedSurfaceAreaList2"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeatures_Key, "Surface Features", "", DataPath({"SurfaceFeatures"})));
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCells_Key, "Boundary Cells", "", DataPath({"CellData", "BoundaryCells"})));
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath({"CellFeatureData", "NumNeighbors2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborList_Key, "Neighbor List", "", DataPath({"CellFeatureData", "NeighborList2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List", "", DataPath({"CellFeatureData", "SharedSurfaceAreaList2"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeatures_Key, "Surface Features", "", DataPath({"CellFeatureData", "SurfaceFeatures"})));
 
   params.linkParameters(k_StoreBoundary_Key, k_BoundaryCells_Key, std::make_any<bool>(true));
   params.linkParameters(k_StoreSurface_Key, k_SurfaceFeatures_Key, std::make_any<bool>(true));
@@ -83,66 +86,72 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
 
   auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
   auto tupleCount = featureIdsArray.getNumberOfTuples();
-  std::vector<usize> tupleShape{tupleCount};
-
+  std::vector<usize> tupleShape = featureIdsArray.getIDataStore()->getTupleShape();
   const std::vector<usize> cDims{1};
 
+  // Create output Cell Data Arrays (if the user requested it)
   if(storeBoundaryCells)
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int8, tupleShape, cDims, boundaryCellsPath);
     actions.actions.push_back(std::move(action));
   }
 
-  // Feature Data:
-  // Validating the Feature Attribute Matrix and trying to find a child of the Group
-  // that is an IDataArray subclass, so we can get the proper tuple shape
-  const auto* featureAttrMatrix = data.getDataAs<DataGroup>(featureAttrMatrixPath);
-  if(featureAttrMatrix == nullptr)
+  // We must find a child IDataArray subclass to get the tuple shape correct for the Feature Data
+  auto result = complex::GetAllChildDataPaths(data, featureAttrMatrixPath, DataObject::Type::DataArray);
+  if(!result.has_value())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12600, "Feature Attribute Matrix Path is NOT a DataGroup"}})};
+    return {MakeErrorResult<OutputActions>(-12602, fmt::format("Error fetching Child DataArrays from Group '{}'", featureAttrMatrixPath.toString()))};
   }
-  const auto& featureAttrMatrixChildren = featureAttrMatrix->getDataMap();
-  bool childDataArrayFound = false;
-  for(const auto& child : featureAttrMatrixChildren)
+  std::vector<DataPath> featureDataArrayPaths = result.value();
+  if(featureDataArrayPaths.empty())
   {
-    if(child.second->getDataObjectType() == DataObject::Type::DataArray)
+    result = complex::GetAllChildDataPaths(data, featureAttrMatrixPath, DataObject::Type::NeighborList);
+    if(!result.has_value())
     {
-      const auto* childDataArray = dynamic_cast<IDataArray*>(child.second.get());
-      tupleShape = childDataArray->getIDataStore()->getTupleShape();
-      tupleCount = childDataArray->getNumberOfTuples();
-      childDataArrayFound = true;
-      break;
+      return {MakeErrorResult<OutputActions>(-12603, fmt::format("Error fetching Child NeighborLists from Group '{}'", featureAttrMatrixPath.toString()))};
+    }
+    featureDataArrayPaths = result.value();
+    if(featureDataArrayPaths.empty())
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{
+          -12604,
+          fmt::format(
+              "Feature Attribute Matrix '{}' does not have any child DataArray or NeighborLists to use to determine the proper tuple shape. Please ensure you are selecting the proper parent group.",
+              featureAttrMatrixPath.toString())}})};
+    }
+    else
+    {
+      const auto* neighborList = data.getDataAs<INeighborList>(featureDataArrayPaths.at(0));
+      tupleCount = neighborList->getNumberOfTuples();
+      tupleShape = {tupleCount};
     }
   }
-  // We must find a child IDataArray subclass to get the tuple shape correct.
-  if(!childDataArrayFound)
+  else
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12601, "Feature Attribute Matrix does not have a child IDataArray"}})};
+    const auto* dataArray = data.getDataAs<IDataArray>(featureDataArrayPaths.at(0));
+    tupleCount = dataArray->getNumberOfTuples();
+    tupleShape = {tupleCount};
   }
 
-  // Create the NumNeighbors Output Data Array
+  // Create the NumNeighbors Output Data Array in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, cDims, numNeighborsPath);
     actions.actions.push_back(std::move(action));
   }
-
-  if(storeSurfaceFeatures)
-  {
-    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleShape, cDims, surfaceFeaturesPath);
-    actions.actions.push_back(std::move(action));
-  }
-
-  // Do this whole block FIRST otherwise the side effect is that a call to m->getNumCellFeatureTuples will = 0
-  // because we are just creating an empty NeighborList object.
-  // Now we are going to get a "Pointer" to the NeighborList object out of the DataContainer
+  // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, tupleCount, neighborListPath);
     actions.actions.push_back(std::move(action));
   }
-
-  // And we do the same for the SharedSurfaceArea list
+  // And we do the same for the SharedSurfaceArea list in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleCount, sharedSurfaceAreaPath);
+    actions.actions.push_back(std::move(action));
+  }
+  // Create the SurfaceFeatures Output Data Array in the Feature Attribute Matrix
+  if(storeSurfaceFeatures)
+  {
+    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleShape, cDims, surfaceFeaturesPath);
     actions.actions.push_back(std::move(action));
   }
 
@@ -166,8 +175,8 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
   auto& neighborList = data.getDataRefAs<Int32NeighborListType>(neighborListPath);
   auto& sharedSurfaceAreaList = data.getDataRefAs<FloatNeighborListType>(sharedSurfaceAreaPath);
 
-  auto* boundaryCellsArray = data.getDataAs<Int32Array>(boundaryCellsPath);
-  auto* surfaceFeaturesArray = data.getDataAs<Int32Array>(surfaceFeaturesPath);
+  auto* boundaryCellsArray = data.getDataAs<Int8Array>(boundaryCellsPath);
+  auto* surfaceFeaturesArray = data.getDataAs<BoolArray>(surfaceFeaturesPath);
 
   auto& featureIds = featureIdsArray.getDataStoreRef();
   auto& numNeighbors = numNeighborsArray.getDataStoreRef();

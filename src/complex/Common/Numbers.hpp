@@ -59,5 +59,6 @@ inline constexpr double sqrt3 = sqrt3_v<double>;
 inline constexpr double inv_sqrt3 = inv_sqrt3_v<double>;
 inline constexpr double egamma = egamma_v<double>;
 inline constexpr double phi = phi_v<double>;
+
 } // namespace numbers
 } // namespace complex

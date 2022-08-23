@@ -20,7 +20,6 @@ struct COMPLEXCORE_EXPORT QuickSurfaceMeshInputValues
   DataPath pGridGeomDataPath;
   DataPath pFeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType pSelectedDataArrayPaths;
-  DataPath pParentDataGroupPath;
   DataPath pTriangleGeometryPath;
   DataPath pVertexGroupDataPath;
   DataPath pNodeTypesDataPath;

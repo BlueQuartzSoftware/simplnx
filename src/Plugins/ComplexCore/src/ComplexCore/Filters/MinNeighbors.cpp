@@ -1,13 +1,14 @@
 #include "MinNeighbors.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 
 namespace complex
 {
@@ -16,12 +17,13 @@ namespace
 constexpr int64 k_TupleCountInvalidError = -250;
 constexpr int64 k_MissingFeaturePhasesError = -251;
 
-void assignBadPoints(DataStructure& data, const Arguments& args)
+void assignBadPoints(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_ImageGeom_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIds_Key);
   auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighbors_Key);
-  auto voxelArrayPaths = args.value<std::vector<DataPath>>(MinNeighbors::k_VoxelArrays_Key);
+  auto ignoredVoxelArrayPaths = args.value<std::vector<DataPath>>(MinNeighbors::k_IgnoredVoxelArrays_Key);
+  auto cellDataAttrMatrix = args.value<DataPath>(MinNeighbors::k_CellDataAttributeMatrix_Key);
 
   auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
   auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
@@ -35,14 +37,14 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
     auto featurePhasesPath = args.value<DataPath>(MinNeighbors::k_FeaturePhases_Key);
     featurePhasesArray = data.getDataAs<Int32Array>(featurePhasesPath);
   }
-  std::vector<std::reference_wrapper<IDataArray>> voxelArrays;
-  for(const auto& arrayPath : voxelArrayPaths)
-  {
-    voxelArrays.push_back(data.getDataRefAs<IDataArray>(arrayPath));
-  }
 
   usize totalPoints = featureIdsArray.getNumberOfTuples();
   SizeVec3 udims = data.getDataRefAs<ImageGeom>(imageGeomPath).getDimensions();
+
+  // This was checked up in the execute function (which is called before this function)
+  // so if we got this far then all should be good with the return. We might get
+  // an empty vector<> but that is OK.
+  std::vector<DataPath> cellDataArrayPaths = complex::GetAllChildDataPaths(data, cellDataAttrMatrix, DataObject::Type::DataArray).value();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -50,7 +52,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
       static_cast<int64>(udims[2]),
   };
 
-  Int32DataStore neighbors(IDataStore::ShapeType{totalPoints}, IDataStore::ShapeType{1}, -1);
+  std::vector<int32_t> neighbors(totalPoints, -1);
 
   int32 good = 1;
   int32 current = 0;
@@ -72,9 +74,15 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
   int32 featurename = 0, feature = 0;
   int32 neighbor = 0;
   std::vector<int32> n(numfeatures + 1, 0);
+  std::vector<size_t> badFeatureIdIndexes;
   while(counter != 0)
   {
+    if(shouldCancel)
+    {
+      return;
+    }
     counter = 0;
+    badFeatureIdIndexes.clear();
     for(int64 k = 0; k < dims[2]; k++)
     {
       kstride = dims[0] * dims[1] * k;
@@ -87,6 +95,7 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
           featurename = featureIds[count];
           if(featurename < 0)
           {
+            badFeatureIdIndexes.push_back(count);
             counter++;
             current = 0;
             most = 0;
@@ -176,22 +185,24 @@ void assignBadPoints(DataStructure& data, const Arguments& args)
     }
 
     // TODO This can be parallelized much like NeighborOrientationCorrelation
-    for(usize j = 0; j < totalPoints; j++)
+    // Only iterate over the cell data with a featureId = -1;
+    for(const auto& featureIdIndex : badFeatureIdIndexes)
     {
-      featurename = featureIds[j];
-      neighbor = neighbors[j];
+      featurename = featureIds[featureIdIndex];
+      neighbor = neighbors[featureIdIndex];
       if(featurename < 0 && neighbor >= 0 && featureIds[neighbor] >= 0)
       {
-        for(const auto& voxelArray : voxelArrays)
+        for(const auto& cellArrayPath : cellDataArrayPaths)
         {
-          voxelArray.get().copyTuple(neighbor, j);
+          auto* voxelArray = data.getDataAs<IDataArray>(cellArrayPath);
+          dynamic_cast<IDataArray*>(voxelArray)->copyTuple(neighbor, featureIdIndex);
         }
       }
     }
   }
 }
 
-nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& data, const Arguments& args)
+nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure& data, const Arguments& args, const std::atomic_bool& shouldCancel)
 {
   auto imageGeomPath = args.value<DataPath>(MinNeighbors::k_ImageGeom_Key);
   auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIds_Key);
@@ -249,6 +260,10 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
   {
     return nonstd::make_unexpected<Error>({-1, "The minimum number of neighbors is larger than the Feature with the most neighbors.  All Features would be removed"});
   }
+  if(shouldCancel)
+  {
+    return {};
+  }
   for(usize i = 0; i < totalPoints; i++)
   {
     int32 featureId = featureIds[i];
@@ -291,13 +306,17 @@ Parameters MinNeighbors::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellDataAttributeMatrix_Key, "Cell AttributeMatrix", "", DataPath({"Data Container", "CellData"})));
+
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath({"Data Container", "Feature Data", "NumNeighbors"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath({"Data Container", "Feature Data", "Phases"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
   // Attribute Arrays to Ignore
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Cell Arrays to Ignore", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredVoxelArrays_Key, "Cell Arrays to Ignore", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
 
   params.linkParameters(k_ApplyToSinglePhase_Key, k_PhaseNumber_Key, std::make_any<bool>(true));
   params.linkParameters(k_ApplyToSinglePhase_Key, k_FeaturePhases_Key, std::make_any<bool>(true));
@@ -382,12 +401,41 @@ Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, c
     }
   }
 
-  auto activeObjects = mergeContainedFeatures(data, args);
-  if(!activeObjects.has_value())
+  auto activeObjectsResult = mergeContainedFeatures(data, args, shouldCancel);
+  if(!activeObjectsResult.has_value())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{activeObjects.error()})};
+    return {nonstd::make_unexpected(std::vector<Error>{activeObjectsResult.error()})};
   }
-  assignBadPoints(data, args);
+
+  auto cellDataAttrMatrix = args.value<DataPath>(MinNeighbors::k_CellDataAttributeMatrix_Key);
+  auto result = complex::GetAllChildDataPaths(data, cellDataAttrMatrix, DataObject::Type::DataArray);
+  if(!result.has_value())
+  {
+    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Group '{}'", cellDataAttrMatrix.toString()));
+  }
+
+  // Run the algorithm.
+  assignBadPoints(data, args, shouldCancel);
+
+  auto featureIdsPath = args.value<DataPath>(MinNeighbors::k_FeatureIds_Key);
+  auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
+
+  auto numNeighborsPath = args.value<DataPath>(MinNeighbors::k_NumNeighbors_Key);
+  auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
+
+  DataPath cellFeatureGroupPath = numNeighborsPath.getParent();
+  size_t currentFeatureCount = numNeighborsArray.getNumberOfTuples();
+
+  auto activeObjects = activeObjectsResult.value();
+  int32 count = 0;
+  for(const auto& value : activeObjects)
+  {
+    value == true ? count++ : count = count;
+  }
+  std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
+  messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});
+
+  complex::RemoveInactiveObjects(data, cellFeatureGroupPath, activeObjects, featureIdsArray, currentFeatureCount);
 
   return {};
 }
