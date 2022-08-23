@@ -53,7 +53,7 @@ Parameters DetectEllipsoids::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_HoughTransformThreshold_Key, "Threshold for Hough Transform", "", 1.23345f));
   params.insert(std::make_unique<Float32Parameter>(k_MinAspectRatio_Key, "Minimum Aspect Ratio", "", 1.23345f));
   params.insert(std::make_unique<Int32Parameter>(k_ImageScaleBarLength_Key, "Length of Image Scale Bar", "", 1234356));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_EllipseFeatureAttributeMatrixPath_Key, "Ellipsoid Feature Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CenterCoordinatesArrayName_Key, "Ellipsoid Center Coordinates", "", DataPath{}));

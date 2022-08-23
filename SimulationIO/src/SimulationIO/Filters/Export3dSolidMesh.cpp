@@ -61,7 +61,7 @@ Parameters Export3dSolidMesh::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath({"FeatureData", "Phases"}), ArraySelectionParameter::AllowedTypes{complex::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureCentroidArrayPath_Key, "Feature Centroids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ChoicesParameter>(k_MeshFileFormat_Key, "Mesh File Format", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insertSeparator(Parameters::Separator{"Mesh Quality Options"});

@@ -58,14 +58,16 @@ Parameters FindAvgOrientationsFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Element Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Cell Quaternions", "", DataPath({"Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"CellData", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellQuatsArrayPath_Key, "Cell Quaternions", "", DataPath({"CellData", "Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, std::set<complex::DataType>({complex::DataType::uint32})));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"CellEnsembleData", "CrystalStructures"}),
+                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::uint32}));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "", DataPath({"AvgQuats"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_AvgEulerAnglesArrayPath_Key, "Average Euler Angles", "", DataPath({"EulerAngles"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "", DataPath({"CellFeatureData", "AvgQuats"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_AvgEulerAnglesArrayPath_Key, "Average Euler Angles", "", DataPath({"CellFeatureData", "AvgEulerAngles"})));
 
   return params;
 }

@@ -6,7 +6,7 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  AlignSectionsFeatureCentroidTest.cpp 
+  AlignSectionsFeatureCentroidTest.cpp
   ConvertColorToGrayScaleTest.cpp
   FillBadDataTest.cpp # NEEDS TEST IMPLEMENTED
   FindFeatureCentroidsFilterTest.cpp
@@ -16,6 +16,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ErodeDilateBadDataTest.cpp
   WriteASCIIDataTest.cpp
   WriteBinaryDataTest.cpp
+  RemoveMinimumSizeFeaturesTest.cpp
+  FindEuclideanDistMapTest.cpp
+  FindNeighborhoodsTest.cpp
+  FindSurfaceAreaToVolumeTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -30,7 +34,7 @@ create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 # If there are additional source files that need to be compiled for this plugin
 # can use the target_sources(...) cmake call
 # target_sources(${PLUGIN_NAME}UnitTest
-#  PRIVATE ${${PLUGIN_NAME}_SOURCE_DIR}/test/${PLUGIN_NAME}TestUtilities.hpp
+# PRIVATE ${${PLUGIN_NAME}_SOURCE_DIR}/test/${PLUGIN_NAME}TestUtilities.hpp
 # )
 
 # ------------------------------------------------------------------------------

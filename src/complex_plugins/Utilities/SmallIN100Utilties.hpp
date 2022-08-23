@@ -1,8 +1,9 @@
 #pragma once
 
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-//#include "complex_plugins/EbsdLibConstants.hpp"
 #include "complex_plugins/Utilities/TestUtilities.hpp"
+
+#include <fmt/format.h>
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -17,6 +18,7 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
 {
   constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
   constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
+  INFO(fmt::format("Error creating Filter '{}'  ", k_MultiThresholdObjectsFilterHandle.getFilterName()));
 
   auto filter = filterList.createFilter(k_MultiThresholdObjectsFilterHandle);
   REQUIRE(nullptr != filter);
@@ -55,6 +57,7 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
 //------------------------------------------------------------------------------
 inline void ExecuteConvertOrientations(DataStructure& dataStructure, const FilterList& filterList)
 {
+  INFO(fmt::format("Error creating Filter '{}'  ", k_ConvertOrientationsFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_ConvertOrientationsFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -82,6 +85,7 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
 //------------------------------------------------------------------------------
 inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filterList)
 {
+  INFO(fmt::format("Error creating Filter '{}'  ", k_IdentifySampleFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_IdentifySampleFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -107,6 +111,7 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
 //------------------------------------------------------------------------------
 inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const FilterList& filterList)
 {
+  INFO(fmt::format("Error creating Filter '{}'  ", k_EbsdSegmentFeaturesFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_EbsdSegmentFeaturesFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -150,6 +155,7 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
 //------------------------------------------------------------------------------
 inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, const FilterList& filterList, const fs::path& shiftsFile)
 {
+  INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionMisorientationFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_AlignSectionMisorientationFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -200,6 +206,7 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 //------------------------------------------------------------------------------
 inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, const FilterList& filterList, const fs::path& shiftsFile)
 {
+  INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionsFeatureCentroidFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_AlignSectionsFeatureCentroidFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -235,6 +242,7 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
 inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure, const FilterList& filterList)
 {
 
+  INFO(fmt::format("Error creating Filter '{}'  ", k_BadDataNeighborOrientationCheckFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_BadDataNeighborOrientationCheckFilterHandle);
   REQUIRE(nullptr != filter);
   // Parameter Keys
@@ -268,6 +276,7 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
 //------------------------------------------------------------------------------
 inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, const FilterList& filterList)
 {
+  INFO(fmt::format("Error creating Filter '{}'  ", k_NeighborOrientationCorrelationFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_NeighborOrientationCorrelationFilterHandle);
   REQUIRE(nullptr != filter);
 

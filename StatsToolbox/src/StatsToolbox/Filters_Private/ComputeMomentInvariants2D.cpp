@@ -45,7 +45,7 @@ Parameters ComputeMomentInvariants2D::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureRectArrayPath_Key, "Feature Rect", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<BoolParameter>(k_NormalizeMomentInvariants_Key, "Normalize Moment Invariants", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});

@@ -235,7 +235,7 @@ set(Filters_Disabled
 
 # ------------------------------------------------------------------------------
 foreach(file_name ${FilterList})
-
+  string(REPLACE "Filter" "" file_name ${file_name})
   if(NOT EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/docs/${PLUGIN_NAME}/${file_name}.md")
     message(STATUS "!!!> DOCUMENTATION WARNING:${${PLUGIN_NAME}_SOURCE_DIR}/docs/${PLUGIN_NAME}/${file_name}.md Does Not Exist")
   endif()

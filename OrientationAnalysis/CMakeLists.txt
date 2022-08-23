@@ -38,6 +38,11 @@ set(FilterList
   BadDataNeighborOrientationCheckFilter
   NeighborOrientationCorrelationFilter
   MergeTwinsFilter
+
+  FindFeatureReferenceMisorientationsFilter
+  FindKernelAvgMisorientationsFilter
+  FindMisorientationsFilter
+  FindSchmidsFilter
 )
 
 set(STUB_FILTERS
@@ -51,13 +56,12 @@ set(STUB_FILTERS
   # EbsdToH5Ebsd # MISSING 1 or more Parameter Implementations
   EnsembleInfoReader
   FindAvgCAxes
-
   FindBoundaryStrengths
   FindCAxisLocations
   FindDistsToCharactGBs
   FindFeatureNeighborCAxisMisalignments
   FindFeatureReferenceCAxisMisorientations
-  FindFeatureReferenceMisorientations
+
   FindGBCD
   FindGBCDMetricBased
   FindGBPDMetricBased
@@ -80,11 +84,19 @@ set(STUB_FILTERS
   ReadCtfData
   ReplaceElementAttributesWithNeighborValues
   RodriguesConvertor
-
   Stereographic3D
   WritePoleFigure
   WriteStatsGenOdfAngleFile
 )
+
+# ------------------------------------------------------------------------------
+foreach(file_name ${FilterList})
+  string(REPLACE "Filter" "" file_name ${file_name})
+  if(NOT EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/docs/${PLUGIN_NAME}/${file_name}.md")
+    message(STATUS "!!!> DOCUMENTATION WARNING:${${PLUGIN_NAME}_SOURCE_DIR}/docs/${PLUGIN_NAME}/${file_name}.md Does Not Exist")
+  endif()
+endforeach()
+
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
@@ -102,12 +114,12 @@ set(Parameter_List
 
 foreach(source ${Parameter_List})
   target_sources(${PLUGIN_NAME} PRIVATE
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/H5EbsdReaderParameter.h
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/H5EbsdReaderParameter.cpp)
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.h
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.cpp)
 
   source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME}
-    FILES ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/H5EbsdReaderParameter.h
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/H5EbsdReaderParameter.cpp)
+    FILES ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.h
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.cpp)
 endforeach()
 
 # ------------------------------------------------------------------------------
@@ -147,7 +159,13 @@ set(filter_algorithms
   NeighborOrientationCorrelation
   MergeTwins
   GroupFeatures
+
+  FindFeatureReferenceMisorientations
+  FindKernelAvgMisorientations
+  FindMisorientations
+  FindSchmids
 )
+
 
 foreach(algorithm ${filter_algorithms})
   target_sources(${PLUGIN_NAME}
@@ -171,8 +189,8 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC EbsdLib::EbsdLib)
 # you can use the target_include_directories(.....) cmake call
 target_include_directories(${PLUGIN_NAME}
   PUBLIC
-  ${EbsdLib_INCLUDE_DIRS}
-  ${${PLUGIN_NAME}_BINARY_DIR}
+    "${EbsdLib_INCLUDE_DIRS}"
+    "${${PLUGIN_NAME}_BINARY_DIR}"
 )
 
 # ------------------------------------------------------------------------------

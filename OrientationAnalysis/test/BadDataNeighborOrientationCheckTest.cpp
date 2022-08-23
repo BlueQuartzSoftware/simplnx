@@ -185,5 +185,5 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Small IN1
     }
   }
 
-  WriteTestDataStructure(dataStructure, fmt::format("{}/bad_data_neighbor_orientation_check.dream3d", unit_test::k_BinaryDir));
+  WriteTestDataStructure(dataStructure, fmt::format("{}/bad_data_neighbor_orientation_check.dream3d", unit_test::k_BinaryTestOutputDir));
 }

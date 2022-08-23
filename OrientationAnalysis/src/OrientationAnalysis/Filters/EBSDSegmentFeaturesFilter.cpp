@@ -72,10 +72,11 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_GridGeomPath_Key, "Grid Geometry", "DataPath to target Grid Geometry", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath{}, std::set<complex::DataType>({complex::DataType::float32})));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, std::set<complex::DataType>({complex::DataType::int32})));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath{}, ArraySelectionParameter::AllowedTypes{complex::DataType::float32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Required Input Cell Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, std::set<complex::DataType>({complex::DataType::uint32})));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"Ensemble Data", "CrystalStructures"}),
+                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::uint32}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"})));

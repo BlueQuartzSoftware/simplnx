@@ -120,7 +120,7 @@ Result<> ResampleImageGeom::operator()()
   }
   std::vector<int64> newIndices(destDims[2] * destDims[1] * destDims[0]);
   ParallelData3DAlgorithm dataAlg;
-  dataAlg.setRange(destDims[2], destDims[1], destDims[0]);
+  dataAlg.setRange(destDims[0], destDims[1], destDims[2]);
   dataAlg.setGrain(grain);
   dataAlg.setParallelizationEnabled(true);
   dataAlg.execute(ChangeResolutionImpl(this, newIndices, m_InputValues->spacing, origSpacing, sourceDims, destDims));

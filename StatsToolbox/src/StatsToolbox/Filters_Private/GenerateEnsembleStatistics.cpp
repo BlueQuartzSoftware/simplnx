@@ -70,7 +70,8 @@ Parameters GenerateEnsembleStatistics::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SharedSurfaceAreaListArrayPath_Key, "Shared Surface Area List", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"Ensemble Data", "CrystalStructures"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}));
   params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_PhaseTypesArrayName_Key, "Phase Types", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_StatisticsArrayName_Key, "Statistics", "", DataPath{}));

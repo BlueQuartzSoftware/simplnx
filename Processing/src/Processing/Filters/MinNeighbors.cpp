@@ -49,7 +49,7 @@ Parameters MinNeighbors::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplyToSinglePhase_Key, "Apply to Single Phase Only", "", false));
   params.insert(std::make_unique<Int32Parameter>(k_PhaseNumber_Key, "Phase Index", "", 1234356));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighborsArrayPath_Key, "Number of Neighbors", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));

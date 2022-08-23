@@ -50,7 +50,7 @@ Parameters FitFeatureData::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveBiasedFeatures_Key, "Remove Biased Features", "", false));
   params.insertSeparator(Parameters::Separator{"Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedFeatureArrayPath_Key, "Feature Array to Fit", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath({"FeatureData", "Phases"}), ArraySelectionParameter::AllowedTypes{complex::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_BiasedFeaturesArrayPath_Key, "Biased Features", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Ensemble Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewEnsembleArrayArray_Key, "Fit Parameters", "", DataPath{}));

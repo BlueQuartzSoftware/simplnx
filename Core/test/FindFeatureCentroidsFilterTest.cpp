@@ -22,7 +22,7 @@ TEST_CASE("Core::FindFeatureCentroidsFilter", "[Core][FindFeatureCentroidsFilter
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_find_feature_centroids.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
   DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
 
   const std::string k_CentroidsNX("Centroids NX");
@@ -32,7 +32,7 @@ TEST_CASE("Core::FindFeatureCentroidsFilter", "[Core][FindFeatureCentroidsFilter
     FindFeatureCentroidsFilter filter;
     Arguments args;
 
-    const DataPath k_FeatureIdsArrayPath2({k_DataContainer, k_SmallIN100ScanData, k_FeatureIds});
+    const DataPath k_FeatureIdsArrayPath2({k_DataContainer, k_CellData, k_FeatureIds});
     const DataPath k_CentroidsNXArrayPath({k_DataContainer, k_CellFeatureData, k_CentroidsNX});
     const DataPath k_FeatureAttributeMatrix({k_DataContainer, k_CellFeatureData});
     const DataPath k_SelectedImageGeometry({k_DataContainer});
@@ -62,5 +62,5 @@ TEST_CASE("Core::FindFeatureCentroidsFilter", "[Core][FindFeatureCentroidsFilter
     CompareDataArrays<float>(k_CentroidsArray, k_CentroidsNXArray);
   }
 
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_centroids.dream3d", unit_test::k_BinaryDir)));
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_centroids.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

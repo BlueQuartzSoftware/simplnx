@@ -73,7 +73,8 @@ Parameters GenerateIPFColorsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Required Input Cell Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"Ensemble Data", "CrystalStructures"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellIPFColorsArrayName_Key, "IPF Colors", "", DataPath({"IPFColors"})));

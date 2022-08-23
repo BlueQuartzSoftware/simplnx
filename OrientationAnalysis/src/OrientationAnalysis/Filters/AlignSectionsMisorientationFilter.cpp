@@ -85,7 +85,7 @@ Parameters AlignSectionsMisorientationFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Ensemble Data"});
   params.insert(
-      std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"Crystal Structures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32}));
+      std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32}));
 
   params.insertSeparator(Parameters::Separator{"Optional File Output"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteAlignmentShifts_Key, "Write Alignment Shift File", "", false));

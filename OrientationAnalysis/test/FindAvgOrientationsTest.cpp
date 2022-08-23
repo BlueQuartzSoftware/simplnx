@@ -94,7 +94,6 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
   const uint64 k_FeatureNumTuples = 409;
 
   // Setup constants here that are going to be needed in multiple contexts
-  const std::string k_AvgQuats("AvgQuats");
   const DataPath k_AvgQuatsDataPath({k_AvgQuats});
 
   const std::string k_AvgEulers("AvgEulerAngles");

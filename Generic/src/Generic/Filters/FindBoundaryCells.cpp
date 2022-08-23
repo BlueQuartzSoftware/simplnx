@@ -47,7 +47,7 @@ Parameters FindBoundaryCells::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_IgnoreFeatureZero_Key, "Ignore Feature 0", "", false));
   params.insert(std::make_unique<BoolParameter>(k_IncludeVolumeBoundary_Key, "Include Volume Boundary", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCellsArrayName_Key, "Boundary Cells", "", DataPath{}));
 
