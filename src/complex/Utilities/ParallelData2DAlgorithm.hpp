@@ -6,7 +6,7 @@
 #include "complex/complex_export.hpp"
 
 #ifdef COMPLEX_ENABLE_MULTICORE
-#include <tbb/blocked_range.h>
+#include <tbb/blocked_range2d.h>
 #include <tbb/parallel_for.h>
 #include <tbb/partitioner.h>
 #endif
@@ -29,7 +29,12 @@ public:
   using RangeType = Range2D;
 
   ParallelData2DAlgorithm();
-  virtual ~ParallelData2DAlgorithm();
+  ~ParallelData2DAlgorithm();
+
+  ParallelData2DAlgorithm(const ParallelData2DAlgorithm&) = delete;
+  ParallelData2DAlgorithm(ParallelData2DAlgorithm&&) noexcept = delete;
+  ParallelData2DAlgorithm& operator=(const ParallelData2DAlgorithm&) = delete;
+  ParallelData2DAlgorithm& operator=(ParallelData2DAlgorithm&&) noexcept = delete;
 
   /**
    * @brief Returns true if parallelization is enabled.  Returns false otherwise.
@@ -64,14 +69,6 @@ public:
    */
   void setRange(size_t minCols, size_t maxCols, size_t minRows, size_t maxRows);
 
-#ifdef COMPLEX_ENABLE_MULTICORE
-  /**
-   * @brief Sets the partitioner for parallelization.
-   * @param partitioner
-   */
-  void setPartitioner(const tbb::auto_partitioner& partitioner);
-#endif
-
   /**
    * @brief Runs the data algorithm.  Parallelization is used if appropriate.
    * @param body
@@ -79,18 +76,16 @@ public:
   template <typename Body>
   void execute(const Body& body)
   {
-    bool doParallel = false;
 #ifdef COMPLEX_ENABLE_MULTICORE
-    doParallel = m_RunParallel;
-    if(doParallel)
+    if(m_RunParallel)
     {
+      tbb::auto_partitioner partitioner;
       tbb::blocked_range2d<size_t, size_t> tbbRange(m_Range.minRow(), m_Range.maxRow(), m_Range.minCol(), m_Range.maxCol());
-      tbb::parallel_for(tbbRange, body, m_Partitioner);
+      tbb::parallel_for(tbbRange, body, partitioner);
     }
+    else
 #endif
-
     // Run non-parallel operation
-    if(!doParallel)
     {
       body(m_Range);
     }
@@ -98,9 +93,10 @@ public:
 
 private:
   RangeType m_Range;
-  bool m_RunParallel = false;
 #ifdef COMPLEX_ENABLE_MULTICORE
-  tbb::auto_partitioner m_Partitioner;
+  bool m_RunParallel = true;
+#else
+  bool m_RunParallel = false;
 #endif
 };
 

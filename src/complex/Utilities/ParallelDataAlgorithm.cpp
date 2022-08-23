@@ -3,24 +3,11 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-ParallelDataAlgorithm::ParallelDataAlgorithm()
-: m_Range(Range())
-#ifdef COMPLEX_ENABLE_MULTICORE
-, m_RunParallel(true)
-, m_Partitioner(tbb::auto_partitioner())
-#endif
-{
-}
+ParallelDataAlgorithm::ParallelDataAlgorithm() = default;
 
-// -----------------------------------------------------------------------------
-//
 // -----------------------------------------------------------------------------
 ParallelDataAlgorithm::~ParallelDataAlgorithm() = default;
 
-// -----------------------------------------------------------------------------
-//
 // -----------------------------------------------------------------------------
 bool ParallelDataAlgorithm::getParallelizationEnabled() const
 {
@@ -28,15 +15,11 @@ bool ParallelDataAlgorithm::getParallelizationEnabled() const
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void ParallelDataAlgorithm::setParallelizationEnabled(bool doParallel)
 {
   m_RunParallel = doParallel;
 }
 
-// -----------------------------------------------------------------------------
-//
 // -----------------------------------------------------------------------------
 Range ParallelDataAlgorithm::getRange() const
 {
@@ -44,27 +27,13 @@ Range ParallelDataAlgorithm::getRange() const
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void ParallelDataAlgorithm::setRange(const Range& range)
 {
   m_Range = range;
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void ParallelDataAlgorithm::setRange(size_t min, size_t max)
 {
   m_Range = {min, max};
 }
-
-#ifdef COMPLEX_ENABLE_MULTICORE
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ParallelDataAlgorithm::setPartitioner(const tbb::auto_partitioner& partitioner)
-{
-  m_Partitioner = partitioner;
-}
-#endif

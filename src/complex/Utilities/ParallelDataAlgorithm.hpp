@@ -26,7 +26,12 @@ public:
   using RangeType = Range;
 
   ParallelDataAlgorithm();
-  virtual ~ParallelDataAlgorithm();
+  ~ParallelDataAlgorithm();
+
+  ParallelDataAlgorithm(const ParallelDataAlgorithm&) = delete;
+  ParallelDataAlgorithm(ParallelDataAlgorithm&&) noexcept = delete;
+  ParallelDataAlgorithm& operator=(const ParallelDataAlgorithm&) = delete;
+  ParallelDataAlgorithm& operator=(ParallelDataAlgorithm&&) noexcept = delete;
 
   /**
    * @brief Returns true if parallelization is enabled.  Returns false otherwise.
@@ -59,14 +64,6 @@ public:
    */
   void setRange(size_t min, size_t max);
 
-#ifdef COMPLEX_ENABLE_MULTICORE
-  /**
-   * @brief Sets the partitioner for parallelization.
-   * @param partitioner
-   */
-  void setPartitioner(const tbb::auto_partitioner& partitioner);
-#endif
-
   /**
    * @brief Runs the data algorithm.  Parallelization is used if appropriate.
    * @param body
@@ -74,18 +71,16 @@ public:
   template <typename Body>
   void execute(const Body& body)
   {
-    bool doParallel = false;
 #ifdef COMPLEX_ENABLE_MULTICORE
-    doParallel = m_RunParallel;
-    if(doParallel)
+    if(m_RunParallel)
     {
+      tbb::auto_partitioner partitioner;
       tbb::blocked_range<size_t> tbbRange(m_Range[0], m_Range[1]);
-      tbb::parallel_for(tbbRange, body, m_Partitioner);
+      tbb::parallel_for(tbbRange, body, partitioner);
     }
+    else
 #endif
-
     // Run non-parallel operation
-    if(!doParallel)
     {
       body(m_Range);
     }
@@ -93,9 +88,10 @@ public:
 
 private:
   RangeType m_Range;
-  bool m_RunParallel = false;
 #ifdef COMPLEX_ENABLE_MULTICORE
-  tbb::auto_partitioner m_Partitioner;
+  bool m_RunParallel = true;
+#else
+  bool m_RunParallel = false;
 #endif
 };
 } // namespace complex
