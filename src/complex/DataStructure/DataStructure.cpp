@@ -3,6 +3,7 @@
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
 #include "complex/DataStructure/Messaging/DataAddedMessage.hpp"
 #include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
@@ -736,22 +737,34 @@ bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPath
     return true;
   }
 
-  usize tupleCount = 0;
-  for(usize i = 0; i < dataPaths.size(); i++)
+  usize tupleCount = std::numeric_limits<usize>::max();
+  for(const auto& dataPath : dataPaths)
   {
-    const auto& dataPath = dataPaths[i];
-    auto* dataArray = getDataAs<IDataArray>(dataPath);
-    // Must be an IDataArray
-    if(dataArray == nullptr)
+    auto* dataObject = getData(dataPath);
+
+    DataObject::Type dataObjectType = dataObject->getDataObjectType();
+    size_t numTuples = 0;
+    if(dataObjectType == DataObject::Type::NeighborList)
+    {
+      auto* dataArray = getDataAs<INeighborList>(dataPath);
+      numTuples = dataArray->getNumberOfTuples();
+    }
+    else if(dataObjectType == DataObject::Type::DataArray)
+    {
+      auto* dataArray = getDataAs<IDataArray>(dataPath);
+      numTuples = dataArray->getNumberOfTuples();
+    }
+    else // We can only check DataObject subclasses that hold items that can be expressed as getNumberOfTuples();
     {
       return false;
     }
+
     // Check equality if not first item
-    if(i == 0)
+    if(tupleCount == std::numeric_limits<usize>::max())
     {
-      tupleCount = dataArray->getNumberOfTuples();
+      tupleCount = numTuples;
     }
-    else if(tupleCount != dataArray->getNumberOfTuples())
+    else if(tupleCount != numTuples)
     {
       return false;
     }

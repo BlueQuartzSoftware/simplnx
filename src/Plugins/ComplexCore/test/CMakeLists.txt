@@ -10,6 +10,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ApproximatePointCloudHullTest.cpp
   ApplyTransformationToGeometryFilterTest.cpp
   CalculateTriangleAreasFilterTest.cpp
+  CalculateFeatureSizesTest.cpp
   ChangeAngleRepresentationTest.cpp
   ConditionalSetValueTest.cpp
   CopyDataGroupTest.cpp

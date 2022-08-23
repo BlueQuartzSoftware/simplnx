@@ -123,3 +123,16 @@ There are several classes that can be used to help the developer write parallel 
 `complex/Utilities/ParallelAlgorithm` and `complex/Utilties/ParallelTaskAlgorithm` are the two main classes depending
 on the situation. `AlignSections.cpp` and `CropImageGeoemtry.cpp` both use a task based parallelism. `RotateSampleRefFrameFilter.cpp` shows an example
 of using ParallelData3DAlgorithm.
+
+
+## Constants for Pi and Others ##
+
+```c++
+  #include "complex/Common/Numbers.hpp"
+``` 
+and use it this way:
+
+```c++
+  double foo = complex::numbers::k_180OverPi * 232.0;
+```
+

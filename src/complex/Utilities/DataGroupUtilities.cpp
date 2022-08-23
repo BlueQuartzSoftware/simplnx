@@ -27,6 +27,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
   // Loop over all the paths from the feature group and remove the data arrays that do NOT have the
   // same number of Tuples as the 'activeObjects' vector
   std::vector<std::shared_ptr<IDataArray>> matchingDataArrayPtrs;
+
   for(const auto& entry : featureDataMap)
   {
     DataObject::IdType entryId = entry.first;
@@ -51,63 +52,59 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
 
     for(int32_t i = 1; i < activeObjects.size(); i++)
     {
-      if(!activeObjects[i])
-      {
-        removeList.push_back(i);
-        newNames[i] = 0;
-      }
-      else
+      if(activeObjects[i])
       {
         newNames[i] = goodcount;
         goodcount++;
         keepList.push_back(i);
       }
+      else
+      {
+        removeList.push_back(i);
+        newNames[i] = 0;
+      }
     }
 
     if(!removeList.empty())
     {
-
       for(const auto& dataArray : matchingDataArrayPtrs)
       {
-        // IDataArray* p = dataStructure.getDataAs<IDataArray>(header);
-        std::string typeName = dataArray->getTypeName();
-        if(typeName == "NeighborList<T>")
+        // Do the update "in place". This works because the keepList _should_ be sorted lowest to
+        // highest. So we are constantly grabbing values from further in the array and copying
+        // them to an closer to the front location in the array.
+        size_t destIdx = 1;
+        for(const auto& keepIdx : keepList)
         {
-          dataStructure.removeData(dataArray->getId());
+          dataArray->copyTuple(keepIdx, destIdx);
+          destIdx++;
         }
-        else
-        {
-          DataObject* dataObjectCopy = dataArray->deepCopy();
-          auto dataObjectCopyId = dataObjectCopy->getId();
-          std::shared_ptr<IDataArray> copy = dataStructure.getSharedDataAs<IDataArray>(dataObjectCopyId);
-
-          //          IDataArray* copy = dynamic_cast<IDataArray*>(dataObjectCopy);
-          size_t destIdx = 0;
-          for(const auto& keepIdx : keepList)
-          {
-            copy->copyTuple(keepIdx, destIdx);
-            destIdx++;
-          }
-          // Remove the original array from the DataStructure
-          dataStructure.removeData(dataArray->getId());
-          // Add in the modified DataArray to the "Feature Data Group"
-          // Now chop off the end of the copy and modified array
-          copy->getIDataStore()->reshapeTuples({keepList.size()});
-          if(!dataStructure.insert(copy, featureDataGroupPath))
-          {
-            DataPath copyDataPath = featureDataGroupPath.createChildPath(copy->getName());
-          }
-        }
+        // Now chop off the end of the copy and modified array
+        dataArray->getIDataStore()->reshapeTuples({keepList.size() + 1});
       }
 
       // Loop over all the points and correct all the feature names
       size_t totalPoints = cellFeatureIds.getNumberOfTuples();
-      Int32DataStore& featureIdPtr = cellFeatureIds.getIDataStoreRefAs<Int32DataStore>();
+      auto& featureIds = cellFeatureIds.getIDataStoreRefAs<Int32DataStore>();
+      bool featureIdsChanged = false;
       for(size_t i = 0; i < totalPoints; i++)
       {
-        if(featureIdPtr[i] >= 0 && featureIdPtr[i] < newNames.size())
+        if(featureIds[i] >= 0 && featureIds[i] < newNames.size())
         {
-          featureIdPtr[i] = static_cast<int32_t>(newNames[featureIdPtr[i]]);
+          featureIds[i] = static_cast<int32_t>(newNames[featureIds[i]]);
+          featureIdsChanged = true;
+        }
+      }
+
+      if(featureIdsChanged)
+      {
+        auto result = GetAllChildDataPaths(dataStructure, featureDataGroupPath, DataObject::Type::NeighborList);
+        if(result.has_value())
+        {
+          std::vector<DataPath> neighborListDataPaths = result.value();
+          for(const auto& neighborListDataPath : neighborListDataPaths)
+          {
+            dataStructure.removeData(neighborListDataPath);
+          }
         }
       }
     }
@@ -151,6 +148,30 @@ std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructu
     }
   }
   return arrays;
+}
+
+std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType)
+{
+  std::vector<DataPath> childDataObjects;
+  try
+  {
+    const auto& featureAttributeMatrix = dataStructure.getDataRefAs<BaseGroup>(parentGroup); // this may throw.
+    std::vector<std::string> childrenNames = featureAttributeMatrix.getDataMap().getNames();
+
+    for(const auto& childName : childrenNames)
+    {
+      DataPath childPath = parentGroup.createChildPath(childName);
+      const DataObject* dataObject = dataStructure.getData(childPath);
+      if(dataObject->getDataObjectType() == dataObjectType)
+      {
+        childDataObjects.push_back(childPath);
+      }
+    }
+  } catch(std::exception& e)
+  {
+    return {};
+  }
+  return {childDataObjects};
 }
 
 } // namespace complex

@@ -124,19 +124,24 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
   auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
 
-  auto& featureIds = data.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& featureIds = data.getDataRefAs<Int32Array>(featureIdsPath);
   auto& volumes = data.getDataRefAs<Float32Array>(volumesPath);
   auto& equivalentDiameters = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
   auto& numElements = data.getDataRefAs<Int32Array>(numElementsPath);
 
   usize totalPoints = featureIds.getNumberOfTuples();
   std::set<int32_t> uniqueFeatureIds;
+  int32 zeroFeature = 1;
   for(size_t i = 0; i < totalPoints; i++)
   {
-    uniqueFeatureIds.insert((featureIds)[i]);
+    if(featureIds[i] == 0)
+    {
+      zeroFeature = 0;
+    }
+    uniqueFeatureIds.insert(featureIds[i]);
   }
 
-  usize numfeatures = uniqueFeatureIds.size();
+  usize numfeatures = uniqueFeatureIds.size() + zeroFeature;
 
   volumes.getDataStoreRef().reshapeTuples({numfeatures});
   equivalentDiameters.getDataStoreRef().reshapeTuples({numfeatures});

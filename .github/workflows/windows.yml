@@ -28,6 +28,36 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: true
+      - name: Checkout DREAM3D_Data Repo
+        uses: actions/checkout@v2
+        with:
+          repository: DREAM3D/DREAM3D_Data
+          path: DREAM3D_Data
+          submodules: true
+      - name: Download Test Files
+        uses: suisei-cn/actions-download-file@v1.0.1
+        id: downloadfile  # Remember to give an ID if you need the output filename
+        with:
+          url: "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_7/TestFiles_6_7.tar.gz"
+          target: ${{github.workspace}}/DREAM3D_Data
+      - name: PWD
+        shell: bash
+        run: >
+          pwd
+      - name: Find TestFiles.tar.gz
+        shell: bash
+        run: >
+          find . -type f -name "TestFiles_6_5.tar.gz"
+      - name: Decompress TestFiles_6_7.tar.gz
+        run: |
+          cmake -E tar xvzf ${{github.workspace}}/DREAM3D_Data/TestFiles_6_7.tar.gz
+      - name: Move TestFiles Directory into location
+        run: |
+          cmake -E rename ${{github.workspace}}/TestFiles ${{github.workspace}}/DREAM3D_Data/TestFiles
+      - name: Find TestFiles directory
+        shell: bash
+        run: >
+          find . -type d -name "TestFiles"
       - name: Add C++ Problem Matcher
         uses: ammaraskar/msvc-problem-matcher@0.1
       - name: Setup Build Environment
@@ -44,7 +74,7 @@ jobs:
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         run: |
-          cmake --preset ci ${{github.workspace}} -G "Visual Studio 16 2019" -T ${{matrix.toolset}}
+          cmake --preset ci ${{github.workspace}} -G "Visual Studio 16 2019" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data 
       - name: Build
         run: |
           cmake --build --preset ci

@@ -10,10 +10,14 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
+#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
+
+namespace fs = std::filesystem;
 
 #define COMPLEX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
   for(const auto& warning : result.warnings())                                                                                                                                                         \
@@ -40,12 +44,19 @@ namespace complex
 {
 namespace Constants
 {
+
+inline constexpr StringLiteral k_DataContainer("DataContainer");
+inline constexpr StringLiteral k_CellData("CellData");
+inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
+
 inline constexpr StringLiteral k_SmallIN1002("Small IN1002");
 inline constexpr StringLiteral k_SmallIN100("Small IN100");
 inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
 inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
 inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
-inline constexpr StringLiteral k_ConfidenceIndex("Confidence Index");
+inline constexpr StringLiteral k_Confidence_Index("Confidence Index");
+inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
+
 inline constexpr StringLiteral k_EulerAngles("EulerAngles");
 inline constexpr StringLiteral k_AxisAngles("AxisAngles");
 inline constexpr StringLiteral k_Quats("Quats");
@@ -55,9 +66,11 @@ inline constexpr StringLiteral k_ActiveName("Active");
 inline constexpr StringLiteral k_SlipVector("SlipVector");
 
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
-inline constexpr StringLiteral k_ImageQuality("Image Quality");
+inline constexpr StringLiteral k_Image_Quality("Image Quality");
+inline constexpr StringLiteral k_ImageQuality("ImageQuality");
 inline constexpr StringLiteral k_Phases("Phases");
-inline constexpr StringLiteral k_IpfColors("IPF Colors");
+inline constexpr StringLiteral k_Ipf_Colors("IPF Colors");
+inline constexpr StringLiteral k_IPFColors("IPFColors");
 inline constexpr StringLiteral k_PhaseData("Phase Data");
 inline constexpr StringLiteral k_LaueClass("Laue Class");
 inline constexpr StringLiteral k_SmallIn100ImageGeom("[Image Geometry]");
@@ -95,6 +108,147 @@ inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
 
 namespace UnitTest
 {
+
+inline constexpr float EPSILON = 0.00001;
+
+/**
+ * @brief Loads a .dream3d file into a DataStructure. Checks are made to ensure the filepath does exist
+ * @param filepath
+ * @return DataStructure
+ */
+inline DataStructure LoadDataStructure(const fs::path& filepath)
+{
+  DataStructure exemplarDataStructure;
+  INFO(fmt::format("Error loading file: '{}'  ", filepath.string()));
+  REQUIRE(fs::exists(filepath));
+  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
+  COMPLEX_RESULT_REQUIRE_VALID(result);
+  return result.value();
+}
+
+/**
+ * @brief Writes out a DataStructure to a .dream3d file at the given file path
+ * @param dataStructure
+ * @param filepath
+ */
+inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
+{
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filepath);
+  H5::FileWriter fileWriter = std::move(result.value());
+
+  herr_t err = dataStructure.writeHdf5(fileWriter);
+  REQUIRE(err >= 0);
+}
+
+/**
+ * @brief Compares IDataArray
+ * @tparam T
+ * @param left
+ * @param right
+ */
+template <typename T>
+void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize start = 0)
+{
+  const auto& oldDataStore = left.getIDataStoreRefAs<AbstractDataStore<T>>();
+  const auto& newDataStore = right.getIDataStoreRefAs<AbstractDataStore<T>>();
+  usize end = oldDataStore.getSize();
+  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
+  T oldVal;
+  T newVal;
+  bool failed = false;
+  for(usize i = start; i < end; i++)
+  {
+    oldVal = oldDataStore[i];
+    newVal = newDataStore[i];
+    if(oldVal != newVal)
+    {
+      UNSCOPED_INFO(fmt::format("oldValue != newValue. {} != {}", oldVal, newVal));
+
+      if constexpr(std::is_floating_point_v<T>)
+      {
+        float diff = std::fabs(static_cast<float>(oldVal - newVal));
+        if(diff > EPSILON)
+        {
+          failed = true;
+          break;
+        }
+      }
+      else
+      {
+        failed = true;
+      }
+      break;
+    }
+  }
+  REQUIRE(!failed);
+}
+
+/**
+ * @brief Compares 2 DataArrays using an EPSILON value. Useful for floating point comparisons
+ * @tparam T
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+template <typename T>
+void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
+
+  const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
+  const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
+  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
+
+  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+
+  usize start = 0;
+  usize end = exemplaryDataArray.getSize();
+  for(usize i = start; i < end; i++)
+  {
+    auto oldVal = exemplaryDataArray[i];
+    auto newVal = generatedDataArray[i];
+    if(oldVal != newVal)
+    {
+      float diff = std::fabs(static_cast<float>(oldVal - newVal));
+      REQUIRE(diff < EPSILON);
+      break;
+    }
+  }
+}
+
+/**
+ * @brief
+ * @tparam T
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+template <typename T>
+void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(computedPath));
+
+  const auto& exemplaryList = dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath);
+  const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
+  REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
+
+  INFO(fmt::format("Input NeighborList:'{}'  Output NeighborList: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+
+  for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
+  {
+    const auto exemplary = exemplaryList.getList(i);
+    const auto computed = computedNeighborList.getList(i);
+    if(exemplary.get() != nullptr && computed.get() != nullptr)
+    {
+      REQUIRE(exemplary->size() == computed->size());
+    }
+  }
+}
+
 /**
  * @brief Creates a DataArray backed by a DataStore (in memory).
  * @tparam T The primitive type to use, i.e. int8, float, double
