@@ -9,7 +9,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -198,7 +198,7 @@ Zarr::ErrorType TriangleGeom::readZarr(Zarr::DataStructureReader& dataStructureR
   return AbstractGeometry2D::readZarr(dataStructureReader, collection, preflight);
 }
 
-Zarr::ErrorType TriangleGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+Zarr::ErrorType TriangleGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
 {
   auto groupWriterPtr = parentGroupWriter.createOrFindGroup(getName());
   auto& groupWriter = *groupWriterPtr.get();

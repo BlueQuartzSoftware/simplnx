@@ -12,7 +12,7 @@
 
 namespace FileVec
 {
-class Group;
+class IGroup;
 }
 
 namespace complex
@@ -320,14 +320,14 @@ public:
    */
   H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const;
 
-  Zarr::ErrorType readZarGroup(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& group, const std::optional<IdType>& dsParentId = {}, bool preflight = false);
+  Zarr::ErrorType readZarGroup(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& group, const std::optional<IdType>& dsParentId = {}, bool preflight = false);
 
   /**
    * @brief Writes the DataMap and its DataObjects to the target HDF5 group.
    * @param groupWriter
    * @return H5::ErrorType
    */
-  Zarr::ErrorType writeZarrGroup(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& groupWriter) const;
+  Zarr::ErrorType writeZarrGroup(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& groupWriter) const;
 
   /**
    * @brief Updates the map IDs using a vector of updated IDs and their new values.

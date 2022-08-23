@@ -7,8 +7,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
-#include "FileVec/collection/Array.hpp"
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IArray.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 namespace complex
 {
@@ -457,15 +457,15 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
 }
 
 template <typename T>
-std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadZarrData(const FileVec::Group& parentGroup, const FileVec::IArray& iArray)
+std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadZarrData(const FileVec::IGroup& parentGroup, const FileVec::BaseGenericArray& iArray)
 {
-  const FileVec::Array<T>& fileArray = reinterpret_cast<const FileVec::Array<T>&>(iArray);
+  const FileVec::IArray<T>& fileArray = reinterpret_cast<const FileVec::IArray<T>&>(iArray);
 
   auto numNeighborsAttributeName = fileArray.attributes()["Linked NumNeighbors Dataset"];
   auto numNeighborsName = numNeighborsAttributeName.get<std::string>();
 
   const FileVec::BaseCollection* numNeighborsReader = parentGroup[numNeighborsName]->get();
-  const auto* numNeighborsArray = reinterpret_cast<const FileVec::Array<int32>*>(numNeighborsReader);
+  const auto* numNeighborsArray = reinterpret_cast<const FileVec::IArray<int32>*>(numNeighborsReader);
 
   auto numNeighborsPtr = Int32DataStore::ReadZarr(*numNeighborsArray);
   auto& numNeighborsStore = *numNeighborsPtr.get();
@@ -494,7 +494,7 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadZar
 }
 
 template <typename T>
-Zarr::ErrorType NeighborList<T>::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+Zarr::ErrorType NeighborList<T>::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
 {
   DataStructure tmp;
 
@@ -537,7 +537,7 @@ Zarr::ErrorType NeighborList<T>::writeZarr(Zarr::DataStructureWriter& dataStruct
 
   // Write flattened array to HDF5 as a separate array
   auto datasetWriterPtr = parentGroupWriter.createOrFindArray<T>(getName(), {arraySize}, {arraySize});
-  FileVec::Array<T>& datasetWriter = *std::dynamic_pointer_cast<FileVec::Array<T>>(datasetWriterPtr).get();
+  FileVec::IArray<T>& datasetWriter = *std::dynamic_pointer_cast<FileVec::IArray<T>>(datasetWriterPtr).get();
   auto err = flattenedData.writeZarr(datasetWriter);
   if(err < 0)
   {

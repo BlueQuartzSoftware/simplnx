@@ -5,12 +5,7 @@
 #include <memory>
 
 #include "complex/DataStructure/DataStructure.hpp"
-
-namespace FileVec
-{
-class BaseCollection;
-class Group;
-} // namespace FileVec
+#include "complex/Utilities/Parsing/Zarr/Zarr.hpp"
 
 namespace complex
 {
@@ -43,7 +38,7 @@ public:
    * @param parentId
    * @return ErrorType
    */
-  ErrorType writeDataObject(const DataObject* dataObject, FileVec::Group& parentGroup);
+  ErrorType writeDataObject(const DataObject* dataObject, FileVec::IGroup& parentGroup);
 
 protected:
   /**

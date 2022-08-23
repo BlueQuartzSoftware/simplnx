@@ -1,6 +1,6 @@
 #include "ZarrIDataFactory.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 namespace complex
 {

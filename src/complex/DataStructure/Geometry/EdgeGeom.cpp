@@ -8,7 +8,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -159,4 +159,33 @@ void EdgeGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoord
 {
   shape[0] = -1.0;
   shape[1] = 1.0;
+}
+
+Zarr::ErrorType EdgeGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
+{
+  m_VertexListId = ReadZarrDataId(collection, H5Constants::k_VertexListTag);
+  m_EdgeListId = ReadZarrDataId(collection, H5Constants::k_EdgeListTag);
+  m_EdgesContainingVertId = ReadZarrDataId(collection, H5Constants::k_EdgesContainingVertTag);
+  m_EdgeNeighborsId = ReadZarrDataId(collection, H5Constants::k_EdgeNeighborsTag);
+  m_EdgeCentroidsId = ReadZarrDataId(collection, H5Constants::k_EdgeCentroidTag);
+  m_EdgeSizesId = ReadZarrDataId(collection, H5Constants::k_EdgeSizesTag);
+
+  return BaseGroup::readZarr(dataStructureReader, collection, preflight);
+}
+
+Zarr::ErrorType EdgeGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
+{
+  auto groupWriterPtr = parentGroupWriter.createOrFindGroup(getName());
+  auto& groupWriter = *groupWriterPtr.get();
+
+  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
+
+  WriteZarrDataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
+  WriteZarrDataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
+  WriteZarrDataId(groupWriter, m_EdgesContainingVertId, H5Constants::k_EdgesContainingVertTag);
+  WriteZarrDataId(groupWriter, m_EdgeNeighborsId, H5Constants::k_EdgeNeighborsTag);
+  WriteZarrDataId(groupWriter, m_EdgeCentroidsId, H5Constants::k_EdgeCentroidTag);
+  WriteZarrDataId(groupWriter, m_EdgeSizesId, H5Constants::k_EdgeSizesTag);
+
+  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }

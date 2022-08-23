@@ -9,12 +9,6 @@
 #include <optional>
 #include <string>
 
-namespace FileVec
-{
-class Group;
-class BaseCollection;
-} // namespace FileVec
-
 namespace complex
 {
 namespace Zarr
@@ -47,7 +41,7 @@ public:
    * @param preflight
    * @return complex::DataStructure
    */
-  complex::DataStructure readGroup(const FileVec::Group& groupReader, Zarr::ErrorType& errorCode, bool preflight = false);
+  complex::DataStructure readGroup(const FileVec::IGroup& groupReader, Zarr::ErrorType& errorCode, bool preflight = false);
 
   /**
    * @brief Imports a complex::DataObject with the specified name from the target
@@ -58,7 +52,7 @@ public:
    * @param preflight
    * @return Zarr::ErrorType
    */
-  Zarr::ErrorType readObjectFromGroup(const FileVec::Group& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false);
+  Zarr::ErrorType readObjectFromGroup(const FileVec::IGroup& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {}, bool preflight = false);
 
   /**
    * @brief Returns a reference to the current DataStructure. Returns an empty

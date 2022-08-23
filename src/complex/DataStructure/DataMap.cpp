@@ -13,7 +13,7 @@
 #include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
 #include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -350,7 +350,7 @@ H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter
   return 0;
 }
 
-Zarr::ErrorType DataMap::readZarGroup(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& group, const std::optional<IdType>& dsParentId, bool preflight)
+Zarr::ErrorType DataMap::readZarGroup(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& group, const std::optional<IdType>& dsParentId, bool preflight)
 {
   auto childrenNames = group.childNames();
   for(const auto& childName : childrenNames)
@@ -364,7 +364,7 @@ Zarr::ErrorType DataMap::readZarGroup(Zarr::DataStructureReader& dataStructureRe
   return 0;
 }
 
-Zarr::ErrorType DataMap::writeZarrGroup(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& groupWriter) const
+Zarr::ErrorType DataMap::writeZarrGroup(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& groupWriter) const
 {
   for(const auto& [id, dataObject] : *this)
   {

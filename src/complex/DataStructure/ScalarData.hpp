@@ -6,7 +6,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 #include <array>
 
@@ -242,7 +242,7 @@ public:
    * @param importable
    * @return H5::ErrorType
    */
-  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const override
+  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override
   {
     std::vector<uint64> shape = {};
     auto datasetWriterPtr = parentGroupWriter.createOrFindArray<T>(getName(), shape, shape);
@@ -250,7 +250,7 @@ public:
     {
       return -5;
     }
-    auto& datasetWriter = *std::dynamic_pointer_cast<FileVec::Array<T>>(datasetWriterPtr).get();
+    auto& datasetWriter = *std::dynamic_pointer_cast<FileVec::IArray<T>>(datasetWriterPtr).get();
     datasetWriter[0] = m_Data;
 
     writeZarrObjectAttributes(dataStructureWriter, datasetWriter, importable);

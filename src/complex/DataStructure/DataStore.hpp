@@ -6,7 +6,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
-#include "FileVec/collection/Array.hpp"
+#include "FileVec/collection/IArray.hpp"
 
 #include <fmt/core.h>
 
@@ -382,7 +382,7 @@ public:
     return dataStore;
   }
 
-  static std::unique_ptr<DataStore> ReadZarr(const FileVec::Array<T>& fArray)
+  static std::unique_ptr<DataStore> ReadZarr(const FileVec::IArray<T>& fArray)
   {
     auto tupleShape = IDataStore::ReadTupleShape(fArray);
     auto componentShape = IDataStore::ReadComponentShape(fArray);
@@ -400,9 +400,10 @@ public:
    * @param fileArray
    * @return Zarr::ErrorType
    */
-  Zarr::ErrorType writeZarrImpl(FileVec::Array<T>& fileArray) const override
+  Zarr::ErrorType writeZarrImpl(FileVec::IArray<T>& fileArray) const override
   {
-    const auto fileShape = fileArray.shape();
+    const auto& header = fileArray.header();
+    const auto fileShape = header->shape();
     const uint64 fileSize = std::accumulate(fileShape.begin(), fileShape.end(), 1, std::multiplies<uint64>());
     if(fileSize != IDataStore::getSize())
     {

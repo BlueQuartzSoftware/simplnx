@@ -2,7 +2,7 @@
 
 #include "complex/DataStructure/INeighborList.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -12,7 +12,7 @@ Zarr::DataStructureWriter::DataStructureWriter()
 
 Zarr::DataStructureWriter::~DataStructureWriter() = default;
 
-Zarr::ErrorType Zarr::DataStructureWriter::writeDataObject(const DataObject* dataObject, FileVec::Group& parentGroup)
+Zarr::ErrorType Zarr::DataStructureWriter::writeDataObject(const DataObject* dataObject, FileVec::IGroup& parentGroup)
 {
   return dataObject->writeZarr(*this, parentGroup);
 }

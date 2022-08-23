@@ -240,7 +240,7 @@ public:
     return dataStore;
   }
 
-  static std::unique_ptr<EmptyDataStore> ReadZarr(const FileVec::IArray& fileArray)
+  static std::unique_ptr<EmptyDataStore> ReadZarr(const FileVec::BaseGenericArray& fileArray)
   {
     auto tupleShape = IDataStore::ReadTupleShape(fileArray);
     auto componentShape = IDataStore::ReadComponentShape(fileArray);
@@ -253,7 +253,7 @@ public:
    * @param datasetWriter
    * @return H5::ErrorType
    */
-  Zarr::ErrorType writeZarrImpl(FileVec::Array<T>& fileArray) const override
+  Zarr::ErrorType writeZarrImpl(FileVec::IArray<T>& fileArray) const override
   {
     throw std::runtime_error("");
   }

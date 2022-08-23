@@ -5,7 +5,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
-#include "FileVec/collection/IArray.hpp"
+#include "FileVec/collection/BaseGenericArray.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -14,7 +14,7 @@
 
 namespace FileVec
 {
-class IArray;
+class BaseGenericArray;
 }
 
 namespace complex
@@ -129,7 +129,7 @@ public:
    * @param datasetWriter
    * @return Zarr::ErrorType
    */
-  virtual Zarr::ErrorType writeZarr(FileVec::IArray& datasetWriter) const = 0;
+  virtual Zarr::ErrorType writeZarr(FileVec::BaseGenericArray& datasetWriter) const = 0;
 
   static ShapeType ReadTupleShape(const H5::DatasetReader& datasetReader)
   {

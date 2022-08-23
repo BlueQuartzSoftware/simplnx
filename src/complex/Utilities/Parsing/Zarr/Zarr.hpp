@@ -8,6 +8,9 @@ using ErrorType = int64_t;
 namespace FileVec
 {
 class BaseCollection;
-class Group;
+class IGroup;
+class BaseGenericArray;
+
+template <typename T>
 class IArray;
 } // namespace FileVec

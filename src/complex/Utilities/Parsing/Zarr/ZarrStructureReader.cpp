@@ -5,7 +5,7 @@
 #include "complex/Utilities/Parsing/Zarr/ZarrDataFactoryManager.hpp"
 #include "complex/Utilities/Parsing/Zarr/ZarrIDataFactory.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -16,7 +16,7 @@ Zarr::DataStructureReader::DataStructureReader(DataFactoryManager* h5FactoryMana
 
 Zarr::DataStructureReader::~DataStructureReader() = default;
 
-complex::DataStructure Zarr::DataStructureReader::readGroup(const FileVec::Group& groupReader, Zarr::ErrorType& errorCode, bool preflight)
+complex::DataStructure Zarr::DataStructureReader::readGroup(const FileVec::IGroup& groupReader, Zarr::ErrorType& errorCode, bool preflight)
 {
   clearDataStructure();
 
@@ -40,7 +40,7 @@ complex::DataStructure Zarr::DataStructureReader::readGroup(const FileVec::Group
   return std::move(m_CurrentStructure);
 }
 
-Zarr::ErrorType Zarr::DataStructureReader::readObjectFromGroup(const FileVec::Group& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId, bool preflight)
+Zarr::ErrorType Zarr::DataStructureReader::readObjectFromGroup(const FileVec::IGroup& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   Zarr::IDataFactory* factory = nullptr;
 

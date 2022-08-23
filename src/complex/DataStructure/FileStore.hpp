@@ -6,7 +6,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
-#include "FileVec/collection/Array.hpp"
+#include "FileVec/collection/IArray.hpp"
 
 #include <fmt/core.h>
 
@@ -21,6 +21,8 @@
 
 #include <cstring>
 
+#include "FileVec/Zarr/Array.hpp"
+
 namespace complex
 {
 /**
@@ -33,7 +35,7 @@ template <typename T>
 class FileStore : public AbstractDataStore<T>
 {
 public:
-  using array_type = typename FileVec::Array<T>;
+  using array_type = typename FileVec::Zarr::Array<T>;
   using array_pointer = std::unique_ptr<array_type>;
   using value_type = typename AbstractDataStore<T>::value_type;
   using reference = typename AbstractDataStore<T>::reference;
@@ -94,7 +96,7 @@ public:
   , m_TupleShape(other.m_TupleShape)
   {
     const usize count = other.getSize();
-    m_Data = array_type::CreatePtr({count}, {count});
+    m_Data = array_type::Create({count}, {count});
     array_type& data = *m_Data.get();
     array_type& otherData = *other.m_Data.get();
     for(uint64 i = 0; i < count; ++i)
@@ -229,7 +231,7 @@ public:
 
     if(m_Data.get() == nullptr) // Data was never allocated
     {
-      m_Data = array_type::CreatePtr({newSize}, {newSize});
+      m_Data = array_type::Create({newSize}, {newSize});
       return;
     }
 
@@ -243,7 +245,7 @@ public:
     // We have now figured out that the old array and the new array are different sizes so
     // copy the old data into the newly allocated data array or as much or as little
     // as possible
-    auto data = array_type::CreatePtr({newSize}, {newSize});
+    auto data = array_type::Create({newSize}, {newSize});
     for(usize i = 0; i < newSize && i < oldSize; i++)
     {
       data->operator[](i) = m_Data->operator[](i);
@@ -405,7 +407,7 @@ public:
    * @param datasetWriter
    * @return Zarr::ErrorType
    */
-  Zarr::ErrorType writeZarrImpl(FileVec::Array<T>& fileArray) const override
+  Zarr::ErrorType writeZarrImpl(FileVec::IArray<T>& fileArray) const override
   {
     // Consolodate the Tuple and Component Dims into a single array which is used
     // to write the entire data array to HDF5

@@ -5,7 +5,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 #include <stdexcept>
 
@@ -308,7 +308,7 @@ H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWrite
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
 
-Zarr::ErrorType GridMontage::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& groupReader, bool preflight)
+Zarr::ErrorType GridMontage::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& groupReader, bool preflight)
 {
   auto rowCountAttribute = groupReader.attributes()[H5Constants::k_RowCountTag];
   m_RowCount = rowCountAttribute.get<uint64_t>();
@@ -322,7 +322,7 @@ Zarr::ErrorType GridMontage::readZarr(Zarr::DataStructureReader& dataStructureRe
   return BaseGroup::readZarr(dataStructureReader, groupReader, preflight);
 }
 
-Zarr::ErrorType GridMontage::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+Zarr::ErrorType GridMontage::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
 {
   auto groupWriterPtr = parentGroupWriter.createOrFindGroup(getName());
   auto& groupWriter = *groupWriterPtr.get();

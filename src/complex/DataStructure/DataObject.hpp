@@ -262,7 +262,7 @@ public:
    * @param importable = true
    * @return H5::ErrorType
    */
-  virtual Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable = true) const = 0;
+  virtual Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable = true) const = 0;
 
 protected:
   /**

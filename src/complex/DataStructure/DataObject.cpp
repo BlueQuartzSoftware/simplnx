@@ -6,7 +6,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
 #include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 #include <algorithm>
 #include <stdexcept>

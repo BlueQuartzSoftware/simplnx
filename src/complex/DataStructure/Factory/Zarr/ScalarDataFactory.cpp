@@ -3,7 +3,7 @@
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 using namespace complex::Zarr;
@@ -30,14 +30,14 @@ H5::ErrorType readZarrScalar(DataStructure& dataStructure, const nlohmann::json&
   return err;
 }
 
-IDataFactory::error_type ScalarDataFactory::read(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& parentReader, const FileVec::BaseCollection& baseReader,
+IDataFactory::error_type ScalarDataFactory::read(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& parentReader, const FileVec::BaseCollection& baseReader,
                                                  const std::optional<complex::DataObject::IdType>& parentId, bool preflight)
 {
-  const auto& iArrayReader = reinterpret_cast<const FileVec::IArray&>(baseReader);
+  const auto& iArrayReader = reinterpret_cast<const FileVec::BaseGenericArray&>(baseReader);
   std::string name = iArrayReader.name();
   auto importId = ReadObjectId(iArrayReader);
   auto valueAttribute = iArrayReader.attributes()["Value"];
-  auto valueType = iArrayReader.header().dataType();
+  auto valueType = iArrayReader.header()->dataType();
   switch(valueType)
   {
   case FileVec::DataType::float32:

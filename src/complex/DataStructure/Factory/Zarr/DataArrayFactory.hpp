@@ -7,7 +7,7 @@
 #include "complex/Utilities/Parsing/Zarr/ZarrIDataFactory.hpp"
 #include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
 
-#include "FileVec/collection/Array.hpp"
+#include "FileVec/collection/IArray.hpp"
 
 #include <memory>
 #include <numeric>
@@ -48,7 +48,7 @@ public:
    * @param preflight
    */
   template <typename K>
-  void importDataArray(Zarr::DataStructureReader& datasetReader, const FileVec::Array<K>& fArray, DataObject::IdType importId, error_type& err, const std::optional<DataObject::IdType>& parentId,
+  void importDataArray(Zarr::DataStructureReader& datasetReader, const FileVec::IArray<K>& fArray, DataObject::IdType importId, error_type& err, const std::optional<DataObject::IdType>& parentId,
                        bool preflight)
   {
     std::unique_ptr<AbstractDataStore<K>> dataStore =
@@ -68,10 +68,10 @@ public:
    * @param preflight = false
    * @return error_type
    */
-  error_type read(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& parentReader, const FileVec::BaseCollection& baseReader,
+  error_type read(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& parentReader, const FileVec::BaseCollection& baseReader,
                   const std::optional<complex::DataObject::IdType>& parentId = {}, bool preflight = false) override
   {
-    const FileVec::Array<T>& fArray = reinterpret_cast<const FileVec::Array<T>&>(baseReader);
+    const FileVec::IArray<T>& fArray = dynamic_cast<const FileVec::IArray<T>&>(baseReader);
     // const FileVec::DataType type = fArray.header().dataType();
 
     error_type err = 0;

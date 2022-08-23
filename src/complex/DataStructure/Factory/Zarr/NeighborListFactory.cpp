@@ -4,7 +4,7 @@
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
 
-#include "FileVec/collection/Array.hpp"
+#include "FileVec/collection/IArray.hpp"
 
 #include <optional>
 
@@ -24,21 +24,21 @@ std::string NeighborListFactory::getDataTypeName() const
 }
 
 template <typename T>
-inline void importNeighborList(DataStructure& dataStructure, const FileVec::Group& parentReader, const FileVec::IArray& iArray, DataObject::IdType importId,
+inline void importNeighborList(DataStructure& dataStructure, const FileVec::IGroup& parentReader, const FileVec::BaseGenericArray& iArray, DataObject::IdType importId,
                                const std::optional<DataObject::IdType>& parentId, bool preflight)
 {
   using NeighborListType = NeighborList<T>;
 
-  const auto& fileArray = dynamic_cast<const FileVec::Array<T>&>(iArray);
+  const auto& fileArray = dynamic_cast<const FileVec::IArray<T>&>(iArray);
   auto dataVector = NeighborListType::ReadZarrData(parentReader, fileArray);
   NeighborListType::Import(dataStructure, iArray.name(), importId, dataVector, parentId);
 }
 
-IDataFactory::error_type NeighborListFactory::read(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& parentReader, const FileVec::BaseCollection& baseReader,
+IDataFactory::error_type NeighborListFactory::read(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& parentReader, const FileVec::BaseCollection& baseReader,
                                                    const std::optional<complex::DataObject::IdType>& parentId, bool preflight)
 {
-  const FileVec::IArray& iArray = reinterpret_cast<const FileVec::IArray&>(baseReader);
-  const FileVec::DataType type = iArray.header().dataType();
+  const FileVec::BaseGenericArray& iArray = reinterpret_cast<const FileVec::BaseGenericArray&>(baseReader);
+  const FileVec::DataType type = iArray.header()->dataType();
 
   H5::ErrorType err = 0;
 

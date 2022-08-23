@@ -8,7 +8,7 @@
 namespace FileVec
 {
 class BaseCollection;
-class Group;
+class IGroup;
 } // namespace FileVec
 
 namespace complex
@@ -41,7 +41,7 @@ public:
    * @param preflight = false
    * @return error_type
    */
-  virtual error_type read(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& parentReader, const FileVec::BaseCollection& baseReader,
+  virtual error_type read(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& parentReader, const FileVec::BaseCollection& baseReader,
                           const std::optional<complex::DataObject::IdType>& parentId = {}, bool preflight = false) = 0;
 
   // Copy and move constuctors / operators deleted

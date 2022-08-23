@@ -9,7 +9,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -543,7 +543,7 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
   return error;
 }
 
-Zarr::ErrorType RectGridGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
+Zarr::ErrorType RectGridGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   // Read Dimensions
   const auto& attributes = collection.attributes();
@@ -564,9 +564,9 @@ Zarr::ErrorType RectGridGeom::readZarr(Zarr::DataStructureReader& dataStructureR
   return BaseGroup::readZarr(dataStructureReader, collection, preflight);
 }
 
-Zarr::ErrorType RectGridGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+Zarr::ErrorType RectGridGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
 {
-  auto groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
+  auto& groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
   writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
 
   // Write dimensions

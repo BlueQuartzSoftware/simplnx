@@ -31,7 +31,7 @@ public:
    * @param preflight = false
    * @return error_type
    */
-  error_type read(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& parentReader, const FileVec::BaseCollection& baseReader,
+  error_type read(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& parentReader, const FileVec::BaseCollection& baseReader,
                   const std::optional<complex::DataObject::IdType>& parentId = {}, bool preflight = false) override;
 };
 } // namespace Zarr

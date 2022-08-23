@@ -4,7 +4,7 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
-#include "FileVec/collection/Array.hpp"
+#include "FileVec/collection/IArray.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -624,7 +624,7 @@ public:
    * @param datasetWriter
    * @return Zarr::ErrorType
    */
-  virtual Zarr::ErrorType writeZarrImpl(FileVec::Array<T>& fileArray) const = 0;
+  virtual Zarr::ErrorType writeZarrImpl(FileVec::IArray<T>& fileArray) const = 0;
 
   /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
@@ -632,9 +632,10 @@ public:
    * @param datasetWriter
    * @return Zarr::ErrorType
    */
-  Zarr::ErrorType writeZarr(FileVec::IArray& fileArray) const override
+  Zarr::ErrorType writeZarr(FileVec::BaseGenericArray& fileArray) const override
   {
-    return writeZarrImpl(reinterpret_cast<FileVec::Array<T>&>(fileArray));
+    auto& iArray = static_cast<FileVec::IArray<T>&>(fileArray);
+    return writeZarrImpl(iArray);
   }
 
 protected:

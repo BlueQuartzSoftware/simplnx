@@ -9,7 +9,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
-#include "FileVec/collection/Group.hpp"
+#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -522,7 +522,7 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   return error;
 }
 
-Zarr::ErrorType ImageGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
+Zarr::ErrorType ImageGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   const auto& attributes = collection.attributes();
   nlohmann::json volumeAttribute = attributes[H5Constants::k_H5_DIMENSIONS];
@@ -557,9 +557,9 @@ Zarr::ErrorType ImageGeom::readZarr(Zarr::DataStructureReader& dataStructureRead
   return BaseGroup::readZarr(dataStructureReader, collection, preflight);
 }
 
-Zarr::ErrorType ImageGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const
+Zarr::ErrorType ImageGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
 {
-  auto groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
+  auto& groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
   writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
 
   SizeVec3 volDims = getDimensions();

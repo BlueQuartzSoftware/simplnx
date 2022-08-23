@@ -610,9 +610,9 @@ public:
    */
   static DataStructure readFromHdf5(const H5::GroupReader& groupReader, H5::ErrorType& err);
 
-  Zarr::ErrorType writeZarr(FileVec::Group& parentGroupWriter) const;
+  Zarr::ErrorType writeZarr(FileVec::IGroup& parentGroupWriter) const;
 
-  static DataStructure readFromZarr(const FileVec::Group& groupReader, Zarr::ErrorType& err);
+  static DataStructure readFromZarr(const FileVec::IGroup& groupReader, Zarr::ErrorType& err);
 
   /**
    * @brief Checks if all IDataArrays at the target paths have the same tuple count.

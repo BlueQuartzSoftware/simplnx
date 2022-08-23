@@ -381,7 +381,7 @@ protected:
    * @param importable
    * @return H5::ErrorType
    */
-  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::Group& parentGroupWriter, bool importable) const override
+  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override
   {
     throw std::runtime_error("");
   }
