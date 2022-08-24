@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+#include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,23 +8,45 @@
 namespace complex
 {
 /**
- * @class TriangleDihedralAngleFilter
- * @brief This filter will ....
+ * @class ITKMorphologicalWatershedImage
+ * @brief Watershed segmentation implementation with morphological operators.
+ *
+ * Watershed pixel are labeled 0. TOutputImage should be an integer type. Labels of output image are in no particular order. You can reorder the labels such that object labels are consecutive and
+ * sorted based on object size by passing the output of this filter to a RelabelComponentImageFilter .
+ *
+ * The morphological watershed transform algorithm is described in Chapter 9.2 of Pierre Soille's book "Morphological Image Analysis:
+ * Principles and Applications", Second Edition, Springer, 2003.
+ *
+ * This code was contributed in the Insight Journal paper: "The watershed transform in ITK - discussion and new developments" by Beare R., Lehmann G. https://hdl.handle.net/1926/202
+ * http://www.insight-journal.org/browse/publication/92
+ *
+ * @author Gaetan Lehmann. Biologie du Developpement et de la Reproduction, INRA de Jouy-en-Josas, France.
+ *
+ *
+ * @see WatershedImageFilter , MorphologicalWatershedFromMarkersImageFilter
+ *
+ * ITK Module: ITKWatersheds
+ * ITK Group: Watersheds
  */
-class SURFACEMESHING_EXPORT TriangleDihedralAngleFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKMorphologicalWatershedImage : public IFilter
 {
 public:
-  TriangleDihedralAngleFilter() = default;
-  ~TriangleDihedralAngleFilter() noexcept override = default;
+  ITKMorphologicalWatershedImage() = default;
+  ~ITKMorphologicalWatershedImage() noexcept override = default;
 
-  TriangleDihedralAngleFilter(const TriangleDihedralAngleFilter&) = delete;
-  TriangleDihedralAngleFilter(TriangleDihedralAngleFilter&&) noexcept = delete;
+  ITKMorphologicalWatershedImage(const ITKMorphologicalWatershedImage&) = delete;
+  ITKMorphologicalWatershedImage(ITKMorphologicalWatershedImage&&) noexcept = delete;
 
-  TriangleDihedralAngleFilter& operator=(const TriangleDihedralAngleFilter&) = delete;
-  TriangleDihedralAngleFilter& operator=(TriangleDihedralAngleFilter&&) noexcept = delete;
+  ITKMorphologicalWatershedImage& operator=(const ITKMorphologicalWatershedImage&) = delete;
+  ITKMorphologicalWatershedImage& operator=(ITKMorphologicalWatershedImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key = "SurfaceMeshTriangleDihedralAnglesArrayPath";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
+  static inline constexpr StringLiteral k_Level_Key = "Level";
+  static inline constexpr StringLiteral k_MarkWatershedLine_Key = "MarkWatershedLine";
+  static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
 
   /**
    * @brief Returns the name of the filter.
@@ -76,6 +98,7 @@ protected:
    * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
@@ -86,10 +109,11 @@ protected:
    * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Boolean that gets set if the filter should stop executing and return
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, TriangleDihedralAngleFilter, "dd42c521-4ae5-485d-ad35-d1276547d2f1");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKMorphologicalWatershedImage, "b2248340-a371-5899-90a2-86047950f0a2");

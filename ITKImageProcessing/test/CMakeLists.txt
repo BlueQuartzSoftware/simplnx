@@ -27,6 +27,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ITKSinImageTest.cpp
   ITKSqrtImageTest.cpp
   ITKTanImageTest.cpp
+  ITKMorphologicalWatershedImageTest.cpp
 
 
   # ITKBilateralImageTest.cpp
@@ -160,7 +161,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS_Disabled
   # These filters use the itk::InPlaceDream3DDataToImageFilter filter
   # -----------------------------------------------------------------------------
   ITKPatchBasedDenoisingImageTest.cpp # itk::InPlaceDream3DDataToImageFilter
-  ITKMorphologicalWatershedImageTest.cpp # itk::InPlaceDream3DDataToImageFilter
   ITKMaskImageTest.cpp # itk::InPlaceDream3DDataToImageFilter
   ITKFFTNormalizedCorrelationImageTest.cpp # itk::InPlaceDream3DDataToImageFilter
   ITKHistogramMatchingImageTest.cpp # itk::InPlaceDream3DDataToImageFilter

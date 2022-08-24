@@ -18,7 +18,6 @@ set(STUB_FILTERS
   ReverseTriangleWinding
   SharedFeatureFaceFilter
   TriangleCentroidFilter
-  TriangleDihedralAngleFilter
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

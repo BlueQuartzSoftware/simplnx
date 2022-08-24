@@ -115,6 +115,7 @@ set(FilterList
   # ITKMedianProjectionImage
   # ITKMinimumProjectionImage
   # ITKMorphologicalGradientImage
+  ITKMorphologicalWatershedImage
   # ITKMultiScaleHessianBasedObjectnessImage
   # ITKNotImage
   ITKOpeningByReconstructionImage
@@ -222,7 +223,6 @@ set(Filters_Disabled
   # These filters use the itk::InPlaceDream3DDataToImageFilter filter
   # -----------------------------------------------------------------------------
   ITKPatchBasedDenoisingImage # itk::InPlaceDream3DDataToImageFilter
-  ITKMorphologicalWatershedImage # itk::InPlaceDream3DDataToImageFilter
   ITKFFTNormalizedCorrelationImage # itk::InPlaceDream3DDataToImageFilter
   ITKHistogramMatchingImage # itk::InPlaceDream3DDataToImageFilter
 
