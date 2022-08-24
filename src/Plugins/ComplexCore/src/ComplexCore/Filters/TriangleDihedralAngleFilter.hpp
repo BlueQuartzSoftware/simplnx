@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -9,9 +9,9 @@ namespace complex
 {
 /**
  * @class TriangleDihedralAngleFilter
- * @brief This filter will ....
+ * @brief This filter will create a list of all dihedral angles ordered from smallest angle to largest from a **TriangleGeom** object 
  */
-class SURFACEMESHING_EXPORT TriangleDihedralAngleFilter : public IFilter
+class COMPLEXCORE_EXPORT TriangleDihedralAngleFilter : public IFilter
 {
 public:
   TriangleDihedralAngleFilter() = default;

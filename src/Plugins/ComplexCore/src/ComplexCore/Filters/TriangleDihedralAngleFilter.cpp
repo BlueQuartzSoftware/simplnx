@@ -1,8 +1,15 @@
 #include "TriangleDihedralAngleFilter.hpp"
 
+#include "complex/Common/ComplexRange.hpp"
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/Math/MatrixMath.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
 

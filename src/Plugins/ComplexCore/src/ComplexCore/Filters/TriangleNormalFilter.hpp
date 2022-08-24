@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class TriangleNormalFilter
- * @brief
+ * @brief This filter caluates the normals for each face of a **TriangleGeom** object
  */
 class COMPLEXCORE_EXPORT TriangleNormalFilter : public IFilter
 {
