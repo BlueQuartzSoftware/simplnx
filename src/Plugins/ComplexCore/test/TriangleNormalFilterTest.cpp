@@ -12,7 +12,6 @@
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 
 #include <filesystem>
-#include <iostream>
 #include <string>
 namespace fs = std::filesystem;
 
