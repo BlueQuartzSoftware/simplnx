@@ -31,10 +31,10 @@ public:
   ParallelData2DAlgorithm();
   ~ParallelData2DAlgorithm();
 
-  ParallelData2DAlgorithm(const ParallelData2DAlgorithm&) = delete;
-  ParallelData2DAlgorithm(ParallelData2DAlgorithm&&) noexcept = delete;
-  ParallelData2DAlgorithm& operator=(const ParallelData2DAlgorithm&) = delete;
-  ParallelData2DAlgorithm& operator=(ParallelData2DAlgorithm&&) noexcept = delete;
+  ParallelData2DAlgorithm(const ParallelData2DAlgorithm&) = default;
+  ParallelData2DAlgorithm(ParallelData2DAlgorithm&&) noexcept = default;
+  ParallelData2DAlgorithm& operator=(const ParallelData2DAlgorithm&) = default;
+  ParallelData2DAlgorithm& operator=(ParallelData2DAlgorithm&&) noexcept = default;
 
   /**
    * @brief Returns true if parallelization is enabled.  Returns false otherwise.
