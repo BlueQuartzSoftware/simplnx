@@ -56,6 +56,7 @@ set(FilterList
   StlFileReaderFilter
   FindArrayStatisticsFilter
   TriangleNormalFilter
+  TriangleDihedralAngleFilter
 )
 
 set(ActionList
