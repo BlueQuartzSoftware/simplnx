@@ -123,6 +123,7 @@ set(CoreParameters
   ArrayThresholdsParameter
   ArrayCreationParameter
   ArraySelectionParameter
+  AttributeMatrixSelectionParameter
   NeighborListSelectionParameter
   BoolParameter
   ChoicesParameter
