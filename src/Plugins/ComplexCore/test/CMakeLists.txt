@@ -46,6 +46,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SetImageGeomOriginScalingFilterTest.cpp
   StlFileReaderTest.cpp
   FindArrayStatisticsTest.cpp
+  TriangleNormalFilterTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
