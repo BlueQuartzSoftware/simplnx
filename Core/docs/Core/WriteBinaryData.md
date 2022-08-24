@@ -1,23 +1,21 @@
-# WriteASCIIData #
+# WriteBinaryData #
 
 
 ## Group (Subgroup) ##
 
-IO (Output) (Write) (Export) (Text) (CSV) (ASCII)
+IO (Output) (Write) (Export) (Binary)
 
 ## Description ##
 
-This **Filter** accepts DataArray(s) as input, extracts the data, creates the file(s), and writes it out according to parameter choices
+This **Filter** accepts DataArray(s) as input, extracts the data, creates the file(s), and writes it out to a single file in binary
 
 ## Parameters ##
 
 | Name | Type | Decision |
 |-------|---------------|------------|-----------------|----------------|----------|
-| Output Type | OutputSytle enum class | Whether data is printed to one file or multiple |
+| Endianess | Endianess enum class | Determines underlying ordering of binary, if unsure, use Little (most universal) |
 | Output Path | Filesystem::path | Directory to store printed array files |
 | File Extension | string | The file extension used for generated files |
-| Maximum Tuples Per Line | int32 | Number of tuples printed before newline character is printed |
-| Delimiter | Delimiter enum class | ASCII character used to seperate values |
 
 ## Required Geometry ##
 

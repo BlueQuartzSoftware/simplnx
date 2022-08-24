@@ -24,9 +24,8 @@ struct CORE_EXPORT WriteASCIIDataInputValues
 };
 
 /**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
+ * @class WriteASCIIData
+ * @brief This algorithm will print out data values from **DataArray** to one or more files based on parameter selections
  */
 
 class CORE_EXPORT WriteASCIIData

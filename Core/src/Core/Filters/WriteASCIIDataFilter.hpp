@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class WriteASCIIDataFilter
- * @brief This filter will ....
+ * @brief This filter will export data from **DataArray** as "plaintext" to one or more files according to selection parameters
  */
 class CORE_EXPORT WriteASCIIDataFilter : public IFilter
 {
