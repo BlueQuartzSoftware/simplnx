@@ -1,5 +1,6 @@
 #include "FindArrayStatistics.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
@@ -426,14 +427,12 @@ Result<> FindArrayStatistics::operator()()
   }
 
   int32 numFeatures = 0;
-
-  // When we eventually get the Attribute Matrix class functionality back we will need to add these checks back in!
-#if 0
   if(m_InputValues->ComputeByIndex)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-    const auto* destAttrMat = m_DataStructure.getData(m_InputValues->DestinationAttributeMatrix);
-    numFeatures = static_cast<int32>(destAttrMat->getNumberOfTuples());
+    const auto* destAttrMat = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
+    AttributeMatrix::ShapeType tupleShape = destAttrMat->getShape();
+    numFeatures = std::accumulate(tupleShape.begin(), tupleShape.end(), 1ULL, std::multiplies<>());
     bool mismatchedFeatures = false;
     int32 largestFeature = 0;
     size_t totalPoints = featureIds.getNumberOfTuples();
@@ -463,7 +462,6 @@ Result<> FindArrayStatistics::operator()()
                              fmt::format("The number of objects in the selected Attribute Matrix destination ('{}') does not match the largest Id in the  Feature/Ensemble Ids array", numFeatures));
     }
   }
-#endif
 
   std::vector<IDataArray*> arrays(8, nullptr);
 
@@ -540,4 +538,19 @@ Result<> FindArrayStatistics::operator()()
   }
 
   return {};
+}
+
+// -----------------------------------------------------------------------------
+usize FindArrayStatistics::FindNumFeatures(const Int32Array& featureIds)
+{
+  usize numFeatures = 0;
+  size_t totalPoints = featureIds.getNumberOfTuples();
+  for(size_t i = 0; i < totalPoints; i++)
+  {
+    if(featureIds[i] > numFeatures)
+    {
+      numFeatures = featureIds[i];
+    }
+  }
+  return numFeatures + 1;
 }
