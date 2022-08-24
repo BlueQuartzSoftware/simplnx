@@ -16,10 +16,9 @@ public:
   using ValueType = DataPath;
 
   using AllowedTypes = std::set<DataObject::Type>;
-  using ShapeType = std::vector<usize>;
 
   AttributeMatrixSelectionParameter() = delete;
-  AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ShapeType& tupleShape);
+  AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
   ~AttributeMatrixSelectionParameter() override = default;
 
   AttributeMatrixSelectionParameter(const AttributeMatrixSelectionParameter&) = delete;
@@ -73,12 +72,6 @@ public:
   ValueType defaultPath() const;
 
   /**
-   * @brief Returns the required tuple shape for the selected Attribute Matrix.
-   * @return
-   */
-  ShapeType tupleShape() const;
-
-  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
@@ -105,7 +98,6 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
-  ShapeType m_TupleShape = {};
 };
 } // namespace complex
-COMPLEX_DEF_PARAMETER_TRAITS(complex::AttributeMatrixSelectionParameter, "bff3d4ac-04a6-5251-b178-4f83f7865074");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::AttributeMatrixSelectionParameter, "a3619d74-a1d9-4bc2-9e03-ca001d65b119");

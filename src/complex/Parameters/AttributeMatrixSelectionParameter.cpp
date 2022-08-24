@@ -11,11 +11,9 @@
 
 namespace complex
 {
-AttributeMatrixSelectionParameter::AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                                     const ShapeType& tupleShape)
+AttributeMatrixSelectionParameter::AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
-, m_TupleShape(tupleShape)
 {
 }
 
@@ -56,7 +54,7 @@ Result<std::any> AttributeMatrixSelectionParameter::fromJson(const nlohmann::jso
 
 IParameter::UniquePointer AttributeMatrixSelectionParameter::clone() const
 {
-  return std::make_unique<AttributeMatrixSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_TupleShape);
+  return std::make_unique<AttributeMatrixSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
 
 std::any AttributeMatrixSelectionParameter::defaultValue() const
@@ -67,11 +65,6 @@ std::any AttributeMatrixSelectionParameter::defaultValue() const
 typename AttributeMatrixSelectionParameter::ValueType AttributeMatrixSelectionParameter::defaultPath() const
 {
   return m_DefaultValue;
-}
-
-AttributeMatrixSelectionParameter::ShapeType AttributeMatrixSelectionParameter::tupleShape() const
-{
-  return m_TupleShape;
 }
 
 Result<> AttributeMatrixSelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
@@ -100,13 +93,6 @@ Result<> AttributeMatrixSelectionParameter::validatePath(const DataStructure& da
   if(attrMatrix == nullptr)
   {
     return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is *not* an AttributeMatrix", prefix, value.toString()));
-  }
-
-  if(attrMatrix->getShape() != m_TupleShape)
-  {
-    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_TupleShapeValue,
-                                    fmt::format("{}AttributeMatrix at path '{}' has tuple shape of '{}' but needs a tuple shape of '{}'", prefix, value.toString(),
-                                                fmt::join(attrMatrix->getShape(), " x "), fmt::join(m_TupleShape, " x ")));
   }
 
   return {};
