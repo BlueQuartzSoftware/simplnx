@@ -1,12 +1,14 @@
 #include "FindArrayStatisticsFilter.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
@@ -18,7 +20,7 @@ using namespace complex;
 
 namespace complex
 {
-OutputActions FindArrayStatisticsFilter::createCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins) const
+OutputActions FindArrayStatisticsFilter::createCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins, std::vector<usize> tupleDims) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
   auto findMin = args.value<bool>(k_FindMin_Key);
@@ -31,25 +33,18 @@ OutputActions FindArrayStatisticsFilter::createCompatibleArrays(const DataStruct
   auto minRangeValue = args.value<float64>(k_MinRange_Key);
   auto maxRangeValue = args.value<float64>(k_MaxRange_Key);
   auto useFullRangeValue = args.value<bool>(k_UseFullRange_Key);
-  auto computeByIndexValue = false; // args.value<bool>(k_ComputeByIndex_Key) // Leave out for now until we have the AttributeMatrix functionality back again
+  auto computeByIndexValue = args.value<bool>(k_ComputeByIndex_Key);
   auto standardizeDataValue = args.value<bool>(k_StandardizeData_Key);
   auto inputArrayPath = args.value<DataPath>(k_SelectedArrayPath_Key);
   auto* inputArray = data.getDataAs<IDataArray>(inputArrayPath);
   auto destinationAttributeMatrixValue = args.value<DataPath>(k_DestinationAttributeMatrix_Key);
-
-  std::vector<usize> tupleDims;
-  if(computeByIndexValue)
-  {
-    auto featureIdsArrayPathValue = args.value<DataPath>(k_FeatureIdsArrayPath_Key);
-    tupleDims = {data.getDataAs<Int32Array>(featureIdsArrayPathValue)->getNumberOfTuples()};
-  }
-  else
-  {
-    tupleDims = {1};
-  }
   DataType dataType = inputArray->getDataType();
 
   OutputActions actions;
+
+  auto amAction = std::make_unique<CreateAttributeMatrixAction>(destinationAttributeMatrixValue, tupleDims);
+  actions.actions.push_back(std::move(amAction));
+
   if(findLength)
   {
     auto arrayPath = args.value<std::string>(k_LengthArrayName_Key);
@@ -102,7 +97,7 @@ OutputActions FindArrayStatisticsFilter::createCompatibleArrays(const DataStruct
   {
     auto arrayPath = args.value<std::string>(k_StandardizedArrayName_Key);
     auto action =
-        std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
+        std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, inputArrayPath.getParent().createChildPath(arrayPath));
     actions.actions.push_back(std::move(action));
   }
 
@@ -146,7 +141,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "", DataPath{}, complex::GetAllDataTypes()));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Histogram Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindHistogram_Key, "Find Histogram", "", false));
@@ -185,11 +180,9 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
 
-#if 0 // Leave out for now until we have the AttributeMatrix functionality back again
   params.insertSeparator(Parameters::Separator{"Optional Algorithm Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
-#endif
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FindHistogram_Key, k_HistogramArrayName_Key, true);
@@ -205,9 +198,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.linkParameters(k_FindStdDeviation_Key, k_StdDeviationArrayName_Key, true);
   params.linkParameters(k_FindSummation_Key, k_SummationArrayName_Key, true);
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
-#if 0 // Leave out for now until we have the AttributeMatrix functionality back again
   params.linkParameters(k_ComputeByIndex_Key, k_FeatureIdsArrayPath_Key, true);
-#endif
   params.linkParameters(k_StandardizeData_Key, k_StandardizedArrayName_Key, true);
 
   return params;
@@ -233,7 +224,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
   auto pFindStdDeviationValue = filterArgs.value<bool>(k_FindStdDeviation_Key);
   auto pFindSummationValue = filterArgs.value<bool>(k_FindSummation_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
-  auto pComputeByIndexValue = false; // filterArgs.value<bool>(k_ComputeByIndex_Key); // Leave out for now until we have the AttributeMatrix functionality back again
+  auto pComputeByIndexValue = filterArgs.value<bool>(k_ComputeByIndex_Key);
   auto pStandardizeDataValue = filterArgs.value<bool>(k_StandardizeData_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
@@ -271,14 +262,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     return {MakeErrorResult<OutputActions>(-57203, fmt::format("Input array must be a scalar array")), {}};
   }
 
-  const auto* destAttrMat = dataStructure.getData(pDestinationAttributeMatrixValue);
-  if(destAttrMat == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-57204, fmt::format("Could not find selected destination Data Group at path '{}' ", pDestinationAttributeMatrixValue.toString())), {}};
-  }
-
-  std::vector<size_t> cDims = {1};
-
+  AttributeMatrix::ShapeType tupleDims = {1};
   const Int32Array* featureIdsPtr = nullptr;
   if(pComputeByIndexValue)
   {
@@ -289,6 +273,9 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
       return {MakeErrorResult<OutputActions>(-57205, fmt::format("Could not find feature ids array at path '{}' ", pFeatureIdsArrayPathValue.toString())), {}};
     }
     inputDataArrayPaths.push_back(pFeatureIdsArrayPathValue);
+
+    usize numFeatures = FindArrayStatistics::FindNumFeatures(*featureIdsPtr);
+    tupleDims = {numFeatures};
   }
 
   if(pUseMaskValue)
@@ -318,7 +305,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     return {nonstd::make_unexpected(std::vector<Error>{Error{-57209, "Input arrays do not have matching tuple counts."}})};
   }
 
-  resultOutputActions.value().actions = createCompatibleArrays(dataStructure, filterArgs, numBins).actions;
+  resultOutputActions.value().actions = createCompatibleArrays(dataStructure, filterArgs, numBins, tupleDims).actions;
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -342,10 +329,10 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.FindStdDeviation = filterArgs.value<bool>(k_FindStdDeviation_Key);
   inputValues.FindSummation = filterArgs.value<bool>(k_FindSummation_Key);
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.ComputeByIndex = false; // filterArgs.value<bool>(k_ComputeByIndex_Key); // Leave out for now until we have the AttributeMatrix functionality back again
+  inputValues.ComputeByIndex = filterArgs.value<bool>(k_ComputeByIndex_Key);
   inputValues.StandardizeData = filterArgs.value<bool>(k_StandardizeData_Key);
   inputValues.SelectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = DataPath{}; // filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key); // Leave out for now until we have the AttributeMatrix functionality back again
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrix_Key);
   inputValues.HistogramArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistogramArrayName_Key));
@@ -356,7 +343,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.MedianArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_MedianArrayName_Key));
   inputValues.StdDeviationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_StdDeviationArrayName_Key));
   inputValues.SummationArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_SummationArrayName_Key));
-  inputValues.StandardizedArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
+  inputValues.StandardizedArrayName = inputValues.SelectedArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_StandardizedArrayName_Key));
 
   return FindArrayStatistics(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
