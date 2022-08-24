@@ -25,6 +25,7 @@ constexpr int32 k_BadMinAllowedFeatureSize = -5555;
 constexpr int32 k_BadNumCellsPath = -5556;
 constexpr int32 k_ParentlessPathError = -5557;
 constexpr int32 k_NeighborListRemoval = -5558;
+constexpr int32 k_FetchChildArrayError = -5559;
 
 void assign_badpoints(DataStructure& dataStructure, const DataPath& featureIdsPath, SizeVec3 dimensions, const NumCellsArrayType& numCellsArrayRef)
 {
@@ -329,7 +330,6 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
     return {nonstd::make_unexpected(std::vector<Error>{Error{-k_BadMinAllowedFeatureSize, ss}})};
   }
 
-  std::vector<size_t> cDims(1, 1);
   const FeatureIdsArrayType* featureIdsPtr = data.getDataAs<FeatureIdsArrayType>(featureIdsPath);
   if(featureIdsPtr == nullptr)
   {
@@ -369,17 +369,21 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   OutputActions outputActions;
 
   // Throw a warning to inform the user that the neighbor list arrays could be deleted by this filter
-  std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the parent group '{}'.  These arrays are:\n",
+  std::string ss = fmt::format("If this filter modifies the Cell Level Array '{}', all arrays of type NeighborList will be deleted from the feature data group '{}'.  These arrays are:\n",
                                featureIdsPath.toString(), featureGroupDataPath.toString());
-  for(const auto& [id, sharedChild] : (*featureDataGroup))
+
+  auto result = complex::GetAllChildDataPaths(data, featureGroupDataPath, DataObject::Type::NeighborList);
+  if(!result.has_value())
   {
-    if(sharedChild->getTypeName() != "NeighborList<T>")
-    {
-      DataPath removedPath = featureGroupDataPath.createChildPath(sharedChild->getName());
-      ss.append("\n" + removedPath.toString());
-      auto action = std::make_unique<DeleteDataAction>(removedPath);
-      outputActions.actions.push_back(std::move(action));
-    }
+    return {nonstd::make_unexpected(
+        std::vector<Error>{Error{k_FetchChildArrayError, fmt::format("Errors were encountered trying to retrieve the neighbor list children of group '{}'", featureGroupDataPath.toString())}})};
+  }
+  std::vector<DataPath> featureNeighborListArrays = result.value();
+  for(const auto& featureNeighborList : featureNeighborListArrays)
+  {
+    ss.append("\n" + featureNeighborList.toString());
+    auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
+    outputActions.actions.push_back(std::move(action));
   }
 
   preflightResult.outputActions.warnings().push_back(Warning{k_NeighborListRemoval, ss});
@@ -441,6 +445,18 @@ Result<> RemoveMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructu
 
   DataPath cellFeatureGroupPath = numCellsPath.getParent();
   size_t currentFeatureCount = numCellsStoreRef.getNumberOfTuples();
+
+  int32 count = 0;
+  for(const auto& value : activeObjects)
+  {
+    if(value)
+    {
+      count++;
+    }
+  }
+  std::string message = fmt::format("Feature Count Changed: Previous: {} New: {}", currentFeatureCount, count);
+  messageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});
+
   complex::RemoveInactiveObjects(dataStructure, cellFeatureGroupPath, activeObjects, featureIdsArrayRef, currentFeatureCount);
 
   return {};
