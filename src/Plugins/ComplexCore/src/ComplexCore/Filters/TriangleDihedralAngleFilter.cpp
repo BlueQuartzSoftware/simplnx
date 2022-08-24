@@ -11,7 +11,83 @@
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <algorithm>
+
 using namespace complex;
+
+namespace
+{
+constexpr float64 k_radToDeg = 180.0; // used for translating radians to degrees
+/**
+ * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
+ * triangle for a set of triangles
+ */
+class CalculateDihedralAnglesImpl
+{
+public:
+  CalculateDihedralAnglesImpl(const AbstractGeometry::SharedVertexList& nodes, const AbstractGeometry::SharedTriList& triangles, Float64Array& dihedralAngles)
+  : m_Nodes(nodes)
+  , m_Triangles(triangles)
+  , m_DihedralAngles(dihedralAngles)
+  {
+  }
+  virtual ~CalculateDihedralAnglesImpl() = default;
+
+  void generate(size_t start, size_t end) const
+  {
+    AbstractGeometry::MeshIndexType nIdx0 = 0, nIdx1 = 0, nIdx2 = 0;
+    // std::array<float64, 3> vectorEx = {x, y, z};  // coordintate example
+    std::array<float64, 3> vecAB = {0.0f, 0.0f, 0.0f};
+    std::array<float64, 3> vecAC = {0.0f, 0.0f, 0.0f};
+    std::array<float64, 3> vecBC = {0.0f, 0.0f, 0.0f};
+    for(size_t i = start; i < end; i++)
+    {
+      nIdx0 = m_Triangles[i * 3];
+      nIdx1 = m_Triangles[i * 3 + 1];
+      nIdx2 = m_Triangles[i * 3 + 2];
+      std::array<float64, 3> node0 = {m_Nodes[nIdx0 * 3], m_Nodes[nIdx0 * 3 + 1], m_Nodes[nIdx0 * 3 + 2]};
+      std::array<float64, 3> node1 = {m_Nodes[nIdx1 * 3], m_Nodes[nIdx1 * 3 + 1], m_Nodes[nIdx1 * 3 + 2]};
+      std::array<float64, 3> node2 = {m_Nodes[nIdx2 * 3], m_Nodes[nIdx2 * 3 + 1], m_Nodes[nIdx2 * 3 + 2]};
+
+      MatrixMath::Subtract3x1s(node0.data(), node1.data(), vecAB.data());
+      MatrixMath::Subtract3x1s(node0.data(), node2.data(), vecAC.data());
+      MatrixMath::Subtract3x1s(node1.data(), node2.data(), vecBC.data());
+
+      auto magAB = sqrtf(sumOfMultiplyCoords(vecAB, vecAB));
+      auto magAC = sqrtf(sumOfMultiplyCoords(vecAC, vecAC));
+      auto magBC = sqrtf(sumOfMultiplyCoords(vecBC, vecBC));
+
+      std::vector<float64> dihedralAnglesVec;
+      dihedralAnglesVec.push_back(k_radToDeg * acos((sumOfMultiplyCoords(vecAB, vecAC) / (magAB * magAC))));
+      // 180 - angle because AB points out of vertex and BC points into vertex, so angle is actually angle outside of triangle
+      dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((sumOfMultiplyCoords(vecAB, vecBC) / (magAB * magBC)))));
+      dihedralAnglesVec.push_back(k_radToDeg * acos((sumOfMultiplyCoords(vecBC, vecAC) / (magBC * magAC))));
+
+      m_DihedralAngles[i] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
+    }
+  }
+
+  void operator()(const ComplexRange& range) const
+  {
+    generate(range.min(), range.max());
+  }
+
+private:
+  const AbstractGeometry::SharedVertexList& m_Nodes;
+  const AbstractGeometry::SharedTriList& m_Triangles;
+  Float64Array& m_DihedralAngles;
+
+  float64 sumOfMultiplyCoords(std::array<float64, 3> vec1, std::array<float64, 3> vec2) const
+  {
+    float64 result = 0.0f;
+    for(int32 index = 0; index < 3; index++)
+    {
+      result += vec1.at(index) * vec2.at(index);
+    }
+    return result;
+  }
+};
+} // namespace
 
 namespace complex
 {
@@ -51,7 +127,10 @@ Parameters TriangleDihedralAngleFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key, "Face Dihedral Angles", "", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the dihedral angles", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key, "Face Dihedral Angles",
+                                                         "The complete path to the array storing the calculated dihedral angles", DataPath{}));
 
   return params;
 }
@@ -66,62 +145,21 @@ IFilter::UniquePointer TriangleDihedralAngleFilter::clone() const
 IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Write any preflight sanity checking codes in this function
-   ***************************************************************************/
-
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
+  auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
   auto pSurfaceMeshTriangleDihedralAnglesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key);
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
-  PreflightResult preflightResult;
-
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
-
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
-  // These are some proposed Actions based on the FilterParameters used. Please check them for correctness.
-  // This block is commented out because it needs some variables to be filled in.
+  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  if(triangleGeom != nullptr)
   {
-    // auto createArrayAction = std::make_unique<CreateArrayAction>(complex::NumericType::FILL_ME_IN, std::vector<usize>{NUM_TUPLES_VALUE}, NUM_COMPONENTS,
-    // pSurfaceMeshTriangleDihedralAnglesArrayPathValue); resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
+    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -129,14 +167,18 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
 Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Extract the actual input values from the 'filterArgs' object
-   ***************************************************************************/
+  auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
   auto pSurfaceMeshTriangleDihedralAnglesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key);
 
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
+  Float64Array& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
+  // Associate the calculated normals with the Face Data in the Triangle Geometry
+  triangleGeom.getLinkedGeometryData().addFaceData(pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
+
+  // Parallel algorithm to find duplicate nodes
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom.getNumberOfFaces()));
+  dataAlg.execute(::CalculateDihedralAnglesImpl(*(triangleGeom.getVertices()), *(triangleGeom.getFaces()), dihedralAngles));
 
   return {};
 }

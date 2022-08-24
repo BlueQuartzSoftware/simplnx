@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class TriangleDihedralAngleFilter
- * @brief This filter will create a list of all dihedral angles ordered from smallest angle to largest from a **TriangleGeom** object 
+ * @brief This filter will create a list of all dihedral angles ordered from smallest angle to largest from a **TriangleGeom** object
  */
 class COMPLEXCORE_EXPORT TriangleDihedralAngleFilter : public IFilter
 {
@@ -25,6 +25,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key = "SurfaceMeshTriangleDihedralAnglesArrayPath";
+  static inline constexpr StringLiteral k_TGeometryDataPath_Key = "TriGeometryDataPath";
 
   /**
    * @brief Returns the name of the filter.
