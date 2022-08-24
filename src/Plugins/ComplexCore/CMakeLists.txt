@@ -55,6 +55,7 @@ set(FilterList
   SetImageGeomOriginScalingFilter
   StlFileReaderFilter
   FindArrayStatisticsFilter
+  TriangleNormalFilter
 )
 
 set(ActionList
