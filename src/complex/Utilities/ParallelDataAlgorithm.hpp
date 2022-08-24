@@ -28,10 +28,10 @@ public:
   ParallelDataAlgorithm();
   ~ParallelDataAlgorithm();
 
-  ParallelDataAlgorithm(const ParallelDataAlgorithm&) = delete;
-  ParallelDataAlgorithm(ParallelDataAlgorithm&&) noexcept = delete;
-  ParallelDataAlgorithm& operator=(const ParallelDataAlgorithm&) = delete;
-  ParallelDataAlgorithm& operator=(ParallelDataAlgorithm&&) noexcept = delete;
+  ParallelDataAlgorithm(const ParallelDataAlgorithm&) = default;
+  ParallelDataAlgorithm(ParallelDataAlgorithm&&) noexcept = default;
+  ParallelDataAlgorithm& operator=(const ParallelDataAlgorithm&) = default;
+  ParallelDataAlgorithm& operator=(ParallelDataAlgorithm&&) noexcept = default;
 
   /**
    * @brief Returns true if parallelization is enabled.  Returns false otherwise.

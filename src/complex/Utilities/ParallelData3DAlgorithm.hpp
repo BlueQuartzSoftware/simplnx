@@ -28,10 +28,10 @@ public:
   ParallelData3DAlgorithm();
   ~ParallelData3DAlgorithm();
 
-  ParallelData3DAlgorithm(const ParallelData3DAlgorithm&) = delete;
-  ParallelData3DAlgorithm(ParallelData3DAlgorithm&&) noexcept = delete;
-  ParallelData3DAlgorithm& operator=(const ParallelData3DAlgorithm&) = delete;
-  ParallelData3DAlgorithm& operator=(ParallelData3DAlgorithm&&) noexcept = delete;
+  ParallelData3DAlgorithm(const ParallelData3DAlgorithm&) = default;
+  ParallelData3DAlgorithm(ParallelData3DAlgorithm&&) noexcept = default;
+  ParallelData3DAlgorithm& operator=(const ParallelData3DAlgorithm&) = default;
+  ParallelData3DAlgorithm& operator=(ParallelData3DAlgorithm&&) noexcept = default;
 
   /**
    * @brief Returns true if parallelization is enabled.  Returns false otherwise.
