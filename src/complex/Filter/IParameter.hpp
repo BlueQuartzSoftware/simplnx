@@ -38,6 +38,7 @@ inline constexpr int32 k_Validate_Does_Not_Exist = -204;
 inline constexpr int32 k_Validate_Type_Error = -205;
 inline constexpr int32 k_Validate_OutOfRange_Error = -206;
 inline constexpr int32 k_Validate_AllowedType_Error = -207;
+inline constexpr int32 k_Validate_TupleShapeValue = -208;
 
 } // namespace FilterParameter::Constants
 
