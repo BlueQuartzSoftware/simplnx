@@ -373,7 +373,7 @@ public:
    * @param yCoord
    * @param zCoord
    */
-  usize getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const override;
+  std::optional<usize> getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const override;
 
   /**
    * @brief
@@ -381,7 +381,7 @@ public:
    * @param yCoord
    * @param zCoord
    */
-  usize getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
+  std::optional<usize> getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
 
   /**
    * @brief
