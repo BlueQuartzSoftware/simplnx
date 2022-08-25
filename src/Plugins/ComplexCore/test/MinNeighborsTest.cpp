@@ -59,11 +59,16 @@ TEST_CASE("ComplexCore::MinNeighbors", "[ComplexCore][MinNeighbors]")
   DataPath cellDataAttributeMatrix = smallIn100Group.createChildPath(k_CellData);
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath cellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
-  DataPath numNeighborPath = cellFeatureAttributeMatrixPath.createChildPath("NumNeighbors2");
-  DataPath neighborListPath = cellFeatureAttributeMatrixPath.createChildPath("NeighborList2");
-  DataPath sharedSurfaceAreaListPath = cellFeatureAttributeMatrixPath.createChildPath("SharedSurfaceAreaList2");
-  DataPath boundaryCellsPath = cellFeatureAttributeMatrixPath.createChildPath("BoundaryCells_computed");
-  DataPath surfaceFeaturesPath = cellFeatureAttributeMatrixPath.createChildPath("SurfaceFeatures_computed");
+  std::string numNeighborName = "NumNeighbors2";
+  std::string neighborListName = "NeighborList2";
+  std::string sharedSurfaceAreaListName = "SharedSurfaceAreaList2";
+  std::string boundaryCellsName = "BoundaryCells_computed";
+  std::string surfaceFeaturesName = "SurfaceFeatures_computed";
+  DataPath numNeighborPath = cellFeatureAttributeMatrixPath.createChildPath(numNeighborName);
+  DataPath neighborListPath = cellFeatureAttributeMatrixPath.createChildPath(neighborListName);
+  DataPath sharedSurfaceAreaListPath = cellFeatureAttributeMatrixPath.createChildPath(sharedSurfaceAreaListName);
+  DataPath boundaryCellsPath = cellFeatureAttributeMatrixPath.createChildPath(boundaryCellsName);
+  DataPath surfaceFeaturesPath = cellFeatureAttributeMatrixPath.createChildPath(surfaceFeaturesName);
 
   {
     FindNeighbors filter;
@@ -74,14 +79,14 @@ TEST_CASE("ComplexCore::MinNeighbors", "[ComplexCore][MinNeighbors]")
     args.insertOrAssign(FindNeighbors::k_CellFeatures_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
 
     args.insertOrAssign(FindNeighbors::k_StoreBoundary_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighbors::k_BoundaryCells_Key, std::make_any<DataPath>(boundaryCellsPath));
+    args.insertOrAssign(FindNeighbors::k_BoundaryCells_Key, std::make_any<std::string>(boundaryCellsName));
 
     args.insertOrAssign(FindNeighbors::k_StoreSurface_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighbors::k_SurfaceFeatures_Key, std::make_any<DataPath>(surfaceFeaturesPath));
+    args.insertOrAssign(FindNeighbors::k_SurfaceFeatures_Key, std::make_any<std::string>(surfaceFeaturesName));
 
-    args.insertOrAssign(FindNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(numNeighborPath));
-    args.insertOrAssign(FindNeighbors::k_NeighborList_Key, std::make_any<DataPath>(neighborListPath));
-    args.insertOrAssign(FindNeighbors::k_SharedSurfaceArea_Key, std::make_any<DataPath>(sharedSurfaceAreaListPath));
+    args.insertOrAssign(FindNeighbors::k_NumNeighbors_Key, std::make_any<std::string>(numNeighborName));
+    args.insertOrAssign(FindNeighbors::k_NeighborList_Key, std::make_any<std::string>(neighborListName));
+    args.insertOrAssign(FindNeighbors::k_SharedSurfaceArea_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
