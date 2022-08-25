@@ -156,7 +156,7 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   if(triangleGeom != nullptr)
   {
     auto createArrayAction =
-        std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
+        std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
@@ -175,8 +175,8 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
   // Associate the calculated normals with the Face Data in the Triangle Geometry
   triangleGeom.getLinkedGeometryData().addFaceData(pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
 
-  // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
+  dataAlg.setParallelizationEnabled(false);
   dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom.getNumberOfFaces()));
   dataAlg.execute(::CalculateDihedralAnglesImpl(*(triangleGeom.getVertices()), *(triangleGeom.getFaces()), dihedralAngles));
 
