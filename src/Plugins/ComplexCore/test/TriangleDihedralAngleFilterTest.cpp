@@ -20,58 +20,44 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-class DreamFileReadInForTest
+namespace
+{
+constexpr float64 k_max_difference = 0.0001;
+}
+
+class RunDihedralAnglesTest
 {
 public:
   // ctor
-  DreamFileReadInForTest(DataStructure& dataStructure, DataArray<float64>& dihedralArray)
+  RunDihedralAnglesTest(DataStructure& dataStructure, std::string fileName)
   : m_DataStructure(dataStructure)
-  , m_DihedralArray(dihedralArray)
+  , m_FileName(fileName)
   {
   }
   // virtual dtor
-  ~DreamFileReadInForTest() = default;
+  ~RunDihedralAnglesTest() = default;
 
    void execute()
   {
-    constexpr StringLiteral k_ImportFileData = "Import_File_Data";
-
-    auto filter = filterList->createFilter(k_ImportDream3dFilterHandle);
-    REQUIRE(nullptr != filter);
-
-    Dream3dImportParameter::ImportData parameter;
-    parameter.FilePath = fs::path(fmt::format("{}/TestFiles/.dream3d", unit_test::k_DREAM3DDataDir)); // verify
-
-    Arguments args;
-    args.insertOrAssign(k_ImportFileData, std::make_any<Dream3dImportParameter::ImportData>(parameter));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter->preflight(m_DataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-    // Execute the filter and check the result
-    auto executeResult = filter->execute(m_DataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
-
-    auto allDataPaths = m_DataStructure.getAllDataPaths();
-
-    for(auto path : allDataPaths)
-    {
-      usize found = path.toString().find("FaceDihedralAngles");
-      if (found!=std::string::npos)
-      {
-        m_DihedralArray = m_DataStructure.getDataRefAs(path);
-        return {};
-      }
-    }
-
+    auto acuteTriangle = *createGeom<TriangleGeom>(dataStructure);
+    
   }
 private:
-  DataArray<float64>& m_DihedralArray;
+  DataStore& m_FileName;
   DataStructure& m_DataStructure;
 }
 
-TEST_CASE("ComplexCore::TriangleDihedralAngleFilter", "[ComplexCore][TriangleDihedralAngleFilter]")
+TEST_CASE("ComplexCore::TriangleDihedralAngleFilter[acute triangle]", "[ComplexCore][TriangleDihedralAngleFilter]")
+{
+  DataStructure dataStructure;
+  auto acuteTriangle = createGeom<TriangleGeom>(dataStructure);
+
+  acuteTriangle
+  
+
+  }
+
+TEST_CASE("ComplexCore::TriangleDihedralAngleFilter[obtuse triangle]", "[ComplexCore][TriangleDihedralAngleFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
@@ -81,36 +67,26 @@ TEST_CASE("ComplexCore::TriangleDihedralAngleFilter", "[ComplexCore][TriangleDih
 
   DreamFileReadInForTest(dataStructure, correctAngles).execute();
 
-  
+}
 
-  // DataStructure dataGraph;
-  //   TriangleNormalFilter filter;
-  //   Arguments args;
-  //   std::string triangleNormalsName = "Triangle Normals";
+TEST_CASE("ComplexCore::TriangleDihedralAngleFilter[overlapping vertex]", "[ComplexCore][TriangleDihedralAngleFilter]")
+{
+  std::string triangleGeometryName = "[Triangle Geometry]";
+  std::string triangleFaceDataGroupName = "Face Data";
+  std::string dihedralAnglesDataArrayName = "Dihedral_Angles";
+  DataStructure dataStructure;
+  DataArray<float64> correctAngles;
 
-  //   DataPath geometryPath = DataPath({triangleGeometryName});
+  DreamFileReadInForTest(dataStructure, correctAngles).execute();
+}
 
-  //   // Create default Parameters for the filter.
-  //   DataPath triangleNormalsDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleNormalsName);
-  //   args.insertOrAssign(TriangleNormalFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
-  //   args.insertOrAssign(TriangleNormalFilter::k_SurfaceMeshTriangleNormalsArrayPath_Key, std::make_any<DataPath>(triangleNormalsDataPath));
+TEST_CASE("ComplexCore::TriangleDihedralAngleFilter[disconnected vertex]", "[ComplexCore][TriangleDihedralAngleFilter]")
+{
+  std::string triangleGeometryName = "[Triangle Geometry]";
+  std::string triangleFaceDataGroupName = "Face Data";
+  std::string dihedralAnglesDataArrayName = "Dihedral_Angles";
+  DataStructure dataStructure;
+  DataArray<float64> correctAngles;
 
-  //   // Preflight the filter and check result
-  //   auto preflightResult = filter.preflight(dataGraph, args);
-  //   REQUIRE(preflightResult.outputActions.valid());
-
-  //   // Execute the filter and check the result
-  //   auto executeResult = filter.execute(dataGraph, args);
-  //   REQUIRE(executeResult.result.valid());
-
-  //   // Let's compare the normals.
-  //   DataPath normalsDataPath({triangleGeometryName, triangleFaceDataGroupName, normalsDataArrayName});
-  //   auto& officialNormals = dataGraph.getDataRefAs<Float64Array>(normalsDataPath);
-  //   Float64Array& calculatedNormals = dataGraph.getDataRefAs<Float64Array>(triangleNormalsDataPath);
-  //   std::vector<double> offNorms, calcNorms;
-  //   for(int64 i = 0; i < officialNormals.getSize(); i++)
-  //   {
-  //     auto result = fabs(officialNormals[i] - calculatedNormals[i]);
-  //     REQUIRE(result < ::k_max_difference);
-  //   }
-  }
+  DreamFileReadInForTest(dataStructure, correctAngles).execute();
+}
