@@ -471,18 +471,48 @@ complex::Point3D<float64> ImageGeom::getCoords(usize idx) const
 
 usize ImageGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
 {
-  usize x = (xCoord - (0.5f * m_Spacing[0]) - m_Origin[0]) / m_Spacing[0];
-  usize y = (yCoord - (0.5f * m_Spacing[1]) - m_Origin[1]) / m_Spacing[1];
-  usize z = (zCoord - (0.5f * m_Spacing[2]) - m_Origin[2]) / m_Spacing[2];
+  if(xCoord < m_Origin[0] || xCoord > (static_cast<float32>(m_Dimensions[0]) * m_Spacing[0] + m_Origin[0]))
+  {
+    return {};
+  }
+
+  if(yCoord < m_Origin[1] || yCoord > (static_cast<float32>(m_Dimensions[1]) * m_Spacing[1] + m_Origin[1]))
+  {
+    return {};
+  }
+
+  if(zCoord < m_Origin[2] || zCoord > (static_cast<float32>(m_Dimensions[2]) * m_Spacing[2] + m_Origin[2]))
+  {
+    return {};
+  }
+
+  usize x = (xCoord - m_Origin[0]) / m_Spacing[0];
+  usize y = (yCoord - m_Origin[1]) / m_Spacing[1];
+  usize z = (zCoord - m_Origin[2]) / m_Spacing[2];
 
   return (m_Dimensions[1] * m_Dimensions[0] * z) + (m_Dimensions[0] * y) + x;
 }
 
 usize ImageGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const
 {
-  usize x = (xCoord - (0.5 * m_Spacing[0]) - m_Origin[0]) / m_Spacing[0];
-  usize y = (yCoord - (0.5 * m_Spacing[1]) - m_Origin[1]) / m_Spacing[1];
-  usize z = (zCoord - (0.5 * m_Spacing[2]) - m_Origin[2]) / m_Spacing[2];
+  if(xCoord < m_Origin[0] || xCoord > (static_cast<float64>(m_Dimensions[0]) * m_Spacing[0] + m_Origin[0]))
+  {
+    return {};
+  }
+
+  if(yCoord < m_Origin[1] || yCoord > (static_cast<float64>(m_Dimensions[1]) * m_Spacing[1] + m_Origin[1]))
+  {
+    return {};
+  }
+
+  if(zCoord < m_Origin[2] || zCoord > (static_cast<float64>(m_Dimensions[2]) * m_Spacing[2] + m_Origin[2]))
+  {
+    return {};
+  }
+
+  usize x = (xCoord - m_Origin[0]) / m_Spacing[0];
+  usize y = (yCoord - m_Origin[1]) / m_Spacing[1];
+  usize z = (zCoord - m_Origin[2]) / m_Spacing[2];
 
   return (m_Dimensions[1] * m_Dimensions[0] * z) + (m_Dimensions[0] * y) + x;
 }
