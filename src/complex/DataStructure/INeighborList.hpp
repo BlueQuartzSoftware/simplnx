@@ -1,13 +1,13 @@
 #pragma once
 
-#include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/IArray.hpp"
 
 namespace complex
 {
 /**
  * @brief Non-templated base class for NeighborList class.
  */
-class COMPLEX_EXPORT INeighborList : public DataObject
+class COMPLEX_EXPORT INeighborList : public IArray
 {
 public:
   virtual ~INeighborList();
@@ -34,7 +34,25 @@ public:
    * @brief Returns the number of elements in the internal array.
    * @return usize
    */
-  usize getNumberOfTuples() const;
+  usize getNumberOfTuples() const override;
+
+  /**
+   * @brief Returns the number of components per tuple.
+   * @return usize
+   */
+  usize getNumberOfComponents() const override;
+
+  /**
+   * @brief Returns the tuple shape.
+   * @return
+   */
+  ShapeType getTupleShape() const override;
+
+  /**
+   * @brief Returns the component shape.
+   * @return
+   */
+  ShapeType getComponentShape() const override;
 
   /**
    * @brief copyTuple
@@ -42,13 +60,6 @@ public:
    * @param newPos
    */
   virtual void copyTuple(usize currentPos, usize newPos) = 0;
-
-  /**
-   * @brief getSize Returns the total number of data items that are being stored. This is the sum of all the sizes
-   * of the internal storage arrays for this class.
-   * @return usize
-   */
-  virtual usize getSize() const = 0;
 
   /**
    * @brief Returns the DataType of the underlying data.

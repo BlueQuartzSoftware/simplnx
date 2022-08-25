@@ -1,6 +1,6 @@
 #pragma once
 
-#include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/IArray.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 
 namespace complex
@@ -9,37 +9,28 @@ namespace complex
  * @class IDataArray
  * @brief The IDataArray class is a typeless interface for the templated DataArray class.
  */
-class COMPLEX_EXPORT IDataArray : public DataObject
+class COMPLEX_EXPORT IDataArray : public IArray
 {
 public:
   virtual ~IDataArray() = default;
 
   /**
-   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @brief Returns the tuple shape.
    * @return
    */
-  DataObject::Type getDataObjectType() const override
+  ShapeType getTupleShape() const override
   {
-    return Type::IDataArray;
-  };
+    return getIDataStoreRef().getTupleShape();
+  }
 
   /**
-   * @brief Returns the number of elements in the DataArray.
-   * @return usize
+   * @brief Returns the component shape.
+   * @return
    */
-  virtual usize getSize() const = 0;
-
-  /**
-   * @brief Returns the number of tuples in the DataArray.
-   * @return usize
-   */
-  virtual usize getNumberOfTuples() const = 0;
-
-  /**
-   * @brief Returns the tuple getSize.
-   * @return usize
-   */
-  virtual usize getNumberOfComponents() const = 0;
+  ShapeType getComponentShape() const override
+  {
+    return getIDataStoreRef().getComponentShape();
+  }
 
   /**
    * @brief Copies values from one tuple to another.
@@ -143,11 +134,11 @@ public:
 
 protected:
   IDataArray(DataStructure& dataStructure, std::string name)
-  : DataObject(dataStructure, std::move(name))
+  : IArray(dataStructure, std::move(name))
   {
   }
   IDataArray(DataStructure& dataStructure, std::string name, IdType importId)
-  : DataObject(dataStructure, std::move(name), importId)
+  : IArray(dataStructure, std::move(name), importId)
   {
   }
 };

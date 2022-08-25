@@ -15,6 +15,7 @@ StringArray* StringArray::Create(DataStructure& ds, const std::string_view& name
 {
   return CreateWithValues(ds, name, {}, parentId);
 }
+
 StringArray* StringArray::CreateWithValues(DataStructure& ds, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<StringArray>(new StringArray(ds, name.data()));
@@ -37,21 +38,24 @@ StringArray* StringArray::Import(DataStructure& ds, const std::string_view& name
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name)
-: DataObject(dataStructure, std::move(name))
+: IArray(dataStructure, std::move(name))
 {
 }
+
 StringArray::StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings)
-: DataObject(dataStructure, std::move(name), importId)
+: IArray(dataStructure, std::move(name), importId)
 , m_Strings(std::move(strings))
 {
 }
+
 StringArray::StringArray(const StringArray& other)
-: DataObject(other)
+: IArray(other)
 , m_Strings(other.m_Strings)
 {
 }
+
 StringArray::StringArray(StringArray&& other) noexcept
-: DataObject(other)
+: IArray(other)
 , m_Strings(std::move(other.m_Strings))
 {
 }
@@ -71,6 +75,7 @@ DataObject* StringArray::shallowCopy()
 {
   return new StringArray(*this);
 }
+
 DataObject* StringArray::deepCopy()
 {
   return new StringArray(*getDataStructure(), getName(), getId(), m_Strings);
@@ -90,10 +95,12 @@ StringArray::reference StringArray::operator[](usize index)
 {
   return m_Strings[index];
 }
+
 StringArray::const_reference StringArray::operator[](usize index) const
 {
   return m_Strings[index];
 }
+
 StringArray::const_reference StringArray::at(usize index) const
 {
   if(index >= size())
@@ -107,14 +114,17 @@ StringArray::iterator StringArray::begin()
 {
   return m_Strings.begin();
 }
+
 StringArray::iterator StringArray::end()
 {
   return m_Strings.end();
 }
+
 StringArray::const_iterator StringArray::begin() const
 {
   return m_Strings.begin();
 }
+
 StringArray::const_iterator StringArray::end() const
 {
   return m_Strings.end();
@@ -123,6 +133,7 @@ StringArray::const_iterator StringArray::cbegin() const
 {
   return m_Strings.begin();
 }
+
 StringArray::const_iterator StringArray::cend() const
 {
   return m_Strings.end();
@@ -134,11 +145,37 @@ StringArray& StringArray::operator=(const StringArray& rhs)
   m_Strings = rhs.m_Strings;
   return *this;
 }
+
 StringArray& StringArray::operator=(StringArray&& rhs) noexcept
 {
   DataObject::operator=(rhs);
   m_Strings = std::move(rhs.m_Strings);
   return *this;
+}
+
+usize StringArray::getSize() const
+{
+  return size();
+}
+
+IArray::ShapeType StringArray::getTupleShape() const
+{
+  return {size()};
+}
+
+IArray::ShapeType StringArray::getComponentShape() const
+{
+  return {1};
+}
+
+usize StringArray::getNumberOfTuples() const
+{
+  return size();
+}
+
+usize StringArray::getNumberOfComponents() const
+{
+  return 1;
 }
 
 H5::ErrorType StringArray::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const

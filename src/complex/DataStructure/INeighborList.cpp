@@ -3,13 +3,13 @@
 namespace complex
 {
 INeighborList::INeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
-: DataObject(dataStructure, name)
+: IArray(dataStructure, name)
 , m_NumTuples(numTuples)
 {
 }
 
 INeighborList::INeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, IdType importId)
-: DataObject(dataStructure, name, importId)
+: IArray(dataStructure, name, importId)
 , m_NumTuples(numTuples)
 {
 }
@@ -45,4 +45,20 @@ void INeighborList::setNumberOfTuples(usize numTuples)
 {
   m_NumTuples = numTuples;
 }
+
+usize INeighborList::getNumberOfComponents() const
+{
+  return 1;
+}
+
+IArray::ShapeType INeighborList::getTupleShape() const
+{
+  return {m_NumTuples};
+}
+
+IArray::ShapeType INeighborList::getComponentShape() const
+{
+  return {1};
+}
+
 } // namespace complex
