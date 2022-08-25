@@ -4,6 +4,10 @@
 #include <stdexcept>
 
 #include "complex/DataStructure/IArray.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5AttributeWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
@@ -88,12 +92,40 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
 
 H5::ErrorType AttributeMatrix::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  H5::ErrorType error = BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  auto attribute = groupReader.getAttribute(H5Constants::k_TupleDims);
+  m_TupleShape = attribute.readAsVector<usize>();
+
+  if(m_TupleShape.empty())
+  {
+    return -1;
+  }
+
+  return error;
 }
 
 H5::ErrorType AttributeMatrix::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
-  return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+  H5::ErrorType error = BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
+  auto attribute = groupWriter.createAttribute(H5Constants::k_TupleDims);
+  error = attribute.writeVector(H5::AttributeWriter::DimsVector{m_TupleShape.size()}, m_TupleShape);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  return error;
 }
 
 const AttributeMatrix::ShapeType& AttributeMatrix::getShape() const

@@ -6,6 +6,9 @@ namespace complex
 {
 namespace H5Constants
 {
+// AttributeMatrix
+inline constexpr StringLiteral k_TupleDims = "TupleDims";
+
 // Grid Montage
 inline constexpr StringLiteral k_RowCountTag = "Row Count";
 inline constexpr StringLiteral k_ColCountTag = "Column Count";
