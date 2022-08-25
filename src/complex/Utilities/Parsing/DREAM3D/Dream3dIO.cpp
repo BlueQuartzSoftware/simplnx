@@ -2,6 +2,7 @@
 
 #include "nlohmann/json.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
@@ -335,10 +336,17 @@ bool isLegacyStringArray(const H5::DatasetReader& arrayReader)
   return objectType == "StringDataArray";
 }
 
-void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroupReader, DataObject::IdType parentId, bool preflight = false)
+void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroupReader, DataObject& parent, bool preflight = false)
 {
+  DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
-  auto attributeMatrix = DataGroup::Create(ds, amName, parentId);
+  auto* attributeMatrix = AttributeMatrix::Create(ds, amName, parentId);
+
+  auto tDimsReader = amGroupReader.getAttribute("TupleDimensions");
+  auto tDims = tDimsReader.readAsVector<uint64>();
+  auto reversedTDims = AttributeMatrix::ShapeType(tDims.crbegin(), tDims.crend());
+
+  attributeMatrix->setShape(reversedTDims);
 
   auto dataArrayNames = amGroupReader.getChildNames();
   for(const auto& daName : dataArrayNames)
@@ -357,6 +365,45 @@ void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroup
     {
       readLegacyDataArray(ds, dataArraySet, attributeMatrix->getId(), preflight);
     }
+  }
+
+  auto amTypeReader = amGroupReader.getAttribute("AttributeMatrixType");
+
+  auto amType = amTypeReader.readAsValue<uint32>();
+  switch(amType)
+  {
+  case 0: {
+    auto* nodeGeom0D = dynamic_cast<INodeGeometry0D*>(&parent);
+    if(nodeGeom0D != nullptr)
+    {
+      nodeGeom0D->setVertexData(*attributeMatrix);
+    }
+    break;
+  }
+  case 1: {
+    auto* nodeGeom1D = dynamic_cast<INodeGeometry1D*>(&parent);
+    if(nodeGeom1D != nullptr)
+    {
+      nodeGeom1D->setEdgeData(*attributeMatrix);
+    }
+    break;
+  }
+  case 2: {
+    auto* nodeGeom2D = dynamic_cast<INodeGeometry2D*>(&parent);
+    if(nodeGeom2D != nullptr)
+    {
+      nodeGeom2D->setFaceData(*attributeMatrix);
+    }
+    break;
+  }
+  case 3: {
+    auto* gridGeom = dynamic_cast<IGridGeometry*>(&parent);
+    if(gridGeom != nullptr)
+    {
+      gridGeom->setCellData(*attributeMatrix);
+    }
+    break;
+  }
   }
 }
 
@@ -575,7 +622,7 @@ void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, 
     }
 
     auto attributeMatrixGroup = dcGroup.openGroup(amName);
-    readLegacyAttributeMatrix(ds, attributeMatrixGroup, container->getId(), preflight);
+    readLegacyAttributeMatrix(ds, attributeMatrixGroup, *container, preflight);
   }
 }
 
