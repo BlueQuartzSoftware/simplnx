@@ -26,7 +26,6 @@ public:
   static inline constexpr StringLiteral k_MinPos_Key = "min_pos";
   static inline constexpr StringLiteral k_MaxPos_Key = "max_pos";
   static inline constexpr StringLiteral k_TargetArrayPaths_Key = "target_arrays";
-  static inline constexpr StringLiteral k_CroppedGroupName_Key = "cropped_group";
 
   /**
    * @brief
