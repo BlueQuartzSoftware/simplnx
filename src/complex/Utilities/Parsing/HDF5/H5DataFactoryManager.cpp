@@ -1,5 +1,6 @@
 #include "H5DataFactoryManager.hpp"
 
+#include "complex/DataStructure/Factory/AttributeMatrixFactory.hpp"
 #include "complex/DataStructure/Factory/DataArrayFactory.hpp"
 #include "complex/DataStructure/Factory/DataGroupFactory.hpp"
 #include "complex/DataStructure/Factory/EdgeGeomFactory.hpp"
@@ -56,6 +57,7 @@ void H5::DataFactoryManager::addCoreFactories()
   addFactory(new Float64NeighborFactory());
   addFactory(new BoolNeighborFactory());
 
+  addFactory(new AttributeMatrixFactory());
   addFactory(new DataGroupFactory());
   addFactory(new EdgeGeomFactory());
   addFactory(new GridMontageFactory());
