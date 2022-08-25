@@ -2,7 +2,6 @@
 
 #include "complex/Common/ComplexRange.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -22,7 +21,7 @@ namespace
 class CalculateNormalsImpl
 {
 public:
-  CalculateNormalsImpl(const AbstractGeometry::SharedVertexList& nodes, const AbstractGeometry::SharedTriList& triangles, Float64Array& normals)
+  CalculateNormalsImpl(const IGeometry::SharedVertexList& nodes, const IGeometry::SharedTriList& triangles, Float64Array& normals)
   : m_Nodes(nodes)
   , m_Triangles(triangles)
   , m_Normals(normals)
@@ -32,7 +31,7 @@ public:
 
   void generate(size_t start, size_t end) const
   {
-    AbstractGeometry::MeshIndexType nIdx0 = 0, nIdx1 = 0, nIdx2 = 0;
+    IGeometry::MeshIndexType nIdx0 = 0, nIdx1 = 0, nIdx2 = 0;
     std::array<float64, 3> vecA = {0.0f, 0.0f, 0.0f};
     std::array<float64, 3> vecB = {0.0f, 0.0f, 0.0f};
     std::array<float64, 3> normal = {0.0f, 0.0f, 0.0f};
@@ -62,8 +61,8 @@ public:
   }
 
 private:
-  const AbstractGeometry::SharedVertexList& m_Nodes;
-  const AbstractGeometry::SharedTriList& m_Triangles;
+  const IGeometry::SharedVertexList& m_Nodes;
+  const IGeometry::SharedTriList& m_Triangles;
   Float64Array& m_Normals;
 };
 } // namespace
@@ -107,7 +106,7 @@ Parameters TriangleNormalFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshTriangleNormalsArrayPath_Key, "Face Normals", "The complete path to the array storing the calculated normals", DataPath{}));
 
   return params;
