@@ -18,15 +18,9 @@ AttributeMatrix::AttributeMatrix(DataStructure& ds, std::string name, IdType imp
 {
 }
 
-AttributeMatrix::AttributeMatrix(const AttributeMatrix& other)
-: BaseGroup(other)
-{
-}
+AttributeMatrix::AttributeMatrix(const AttributeMatrix&) = default;
 
-AttributeMatrix::AttributeMatrix(AttributeMatrix&& other)
-: BaseGroup(std::move(other))
-{
-}
+AttributeMatrix::AttributeMatrix(AttributeMatrix&&) = default;
 
 AttributeMatrix::~AttributeMatrix() noexcept = default;
 
