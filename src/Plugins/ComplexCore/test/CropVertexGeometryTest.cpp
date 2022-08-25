@@ -11,10 +11,11 @@ using namespace complex;
 namespace
 {
 constexpr uint64 k_TupleCount = 8;
-constexpr StringLiteral k_CroppedGroupName = "Cropped Geom";
+constexpr StringLiteral k_VertexDataName = "VertexData";
 const DataPath k_VertexGeomPath{std::vector<std::string>{"VertexGeom"}};
+const DataPath k_VertexDataPath = k_VertexGeomPath.createChildPath(k_VertexDataName);
 const DataPath k_CroppedGeomPath{std::vector<std::string>{"Cropped VertexGeom"}};
-const std::vector<DataPath> targetDataArrays{k_VertexGeomPath.createChildPath("DataArray")};
+const std::vector<DataPath> targetDataArrays{k_VertexDataPath.createChildPath("DataArray")};
 
 DataStructure createTestData()
 {
@@ -23,7 +24,11 @@ DataStructure createTestData()
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
   vertexGeom->setVertices(*vertexArray);
 
-  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "DataArray", {k_TupleCount}, {1}, vertexGeom->getId());
+  auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, k_VertexDataName, vertexGeom->getId());
+  vertexAttributeMatrix->setShape({k_TupleCount});
+  vertexGeom->setVertexData(*vertexAttributeMatrix);
+
+  auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "DataArray", {k_TupleCount}, {1}, vertexAttributeMatrix->getId());
   auto& dataStore = dataArray->getDataStoreRef();
   auto& vertices = vertexArray->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
@@ -52,7 +57,6 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Instantiate)", "[ComplexCore][CropVer
   args.insert(CropVertexGeometry::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
   args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
-  args.insert(CropVertexGeometry::k_CroppedGroupName_Key, std::make_any<std::string>(k_CroppedGroupName));
 
   auto result = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
@@ -72,7 +76,6 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Data)", "[ComplexCore][CropVertexGeom
   args.insert(CropVertexGeometry::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
   args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
-  args.insert(CropVertexGeometry::k_CroppedGroupName_Key, std::make_any<std::string>(k_CroppedGroupName));
 
   auto result = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
@@ -83,7 +86,7 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Data)", "[ComplexCore][CropVertexGeom
   auto* croppedVertices = croppedGeom->getVertices();
   REQUIRE(croppedVertices != nullptr);
 
-  auto* croppedData = ds.getDataAs<Int32Array>(k_CroppedGeomPath.createChildPath(k_CroppedGroupName).createChildPath("DataArray"));
+  auto* croppedData = ds.getDataAs<Int32Array>(k_CroppedGeomPath.createChildPath(k_VertexDataName).createChildPath("DataArray"));
   REQUIRE(croppedData != nullptr);
 
   REQUIRE(croppedData->getNumberOfTuples() == 6);
