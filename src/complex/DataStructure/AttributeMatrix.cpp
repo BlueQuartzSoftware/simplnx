@@ -3,7 +3,7 @@
 #include <exception>
 #include <stdexcept>
 
-#include "complex/DataStructure/IDataArray.hpp"
+#include "complex/DataStructure/IArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
@@ -77,18 +77,17 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
     return false;
   }
 
-  Type type = obj->getDataObjectType();
-  if(type != Type::DataArray)
+  const auto* arrayObject = dynamic_cast<const IArray*>(obj);
+
+  if(arrayObject == nullptr)
   {
     return false;
   }
 
-  const auto& dataArray = dynamic_cast<const IDataArray&>(*obj);
+  IArray::ShapeType arrayTupleShape = arrayObject->getTupleShape();
 
-  IDataStore::ShapeType arrayTupleShape = dataArray.getIDataStoreRef().getTupleShape();
-
-  auto totalTuples = std::accumulate(m_TupleShape.begin(), m_TupleShape.end(), 1ULL, std::multiplies<>());
-  auto incomingTupleCount = std::accumulate(arrayTupleShape.begin(), arrayTupleShape.end(), 1ULL, std::multiplies<>());
+  usize totalTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+  usize incomingTupleCount = std::accumulate(arrayTupleShape.cbegin(), arrayTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
 
   return (totalTuples == incomingTupleCount);
 }

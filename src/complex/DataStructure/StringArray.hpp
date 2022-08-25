@@ -1,11 +1,11 @@
 #pragma once
 
-#include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/IArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT StringArray : public DataObject
+class COMPLEX_EXPORT StringArray : public IArray
 {
 public:
   using value_type = std::string;
@@ -53,6 +53,36 @@ public:
 
   StringArray& operator=(const StringArray& rhs);
   StringArray& operator=(StringArray&& rhs) noexcept;
+
+  /**
+   * @brief Returns the number of elements.
+   * @return usize
+   */
+  usize getSize() const override;
+
+  /**
+   * @brief Returns the tuple shape.
+   * @return
+   */
+  ShapeType getTupleShape() const override;
+
+  /**
+   * @brief Returns the component shape.
+   * @return
+   */
+  ShapeType getComponentShape() const override;
+
+  /**
+   * @brief Returns the number of tuples.
+   * @return usize
+   */
+  usize getNumberOfTuples() const override;
+
+  /**
+   * @brief Returns the number of components per tuple.
+   * @return usize
+   */
+  usize getNumberOfComponents() const override;
 
   /**
    * @brief Writes the DataObject to the target HDF5 group.
