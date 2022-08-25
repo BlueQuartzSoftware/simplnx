@@ -535,7 +535,7 @@ complex::Point3D<float64> RectGridGeom::getCoords(usize idx) const
   return coords;
 }
 
-usize RectGridGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
+std::optional<usize> RectGridGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
 {
   auto& xBnds = *getXBounds();
   auto& yBnds = *getYBounds();
@@ -565,7 +565,7 @@ usize RectGridGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) con
   return (ySize * xSize * z) + (xSize * y) + x;
 }
 
-usize RectGridGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const
+std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const
 {
   auto& xBnds = *getXBounds();
   auto& yBnds = *getYBounds();

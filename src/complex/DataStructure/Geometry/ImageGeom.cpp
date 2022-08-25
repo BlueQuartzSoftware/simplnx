@@ -469,7 +469,7 @@ complex::Point3D<float64> ImageGeom::getCoords(usize idx) const
   return coords;
 }
 
-usize ImageGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
+std::optional<usize> ImageGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
 {
   if(xCoord < m_Origin[0] || xCoord > (static_cast<float32>(m_Dimensions[0]) * m_Spacing[0] + m_Origin[0]))
   {
@@ -493,7 +493,7 @@ usize ImageGeom::getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const
   return (m_Dimensions[1] * m_Dimensions[0] * z) + (m_Dimensions[0] * y) + x;
 }
 
-usize ImageGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const
+std::optional<usize> ImageGeom::getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const
 {
   if(xCoord < m_Origin[0] || xCoord > (static_cast<float64>(m_Dimensions[0]) * m_Spacing[0] + m_Origin[0]))
   {
