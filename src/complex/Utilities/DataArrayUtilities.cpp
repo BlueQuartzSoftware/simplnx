@@ -231,4 +231,19 @@ std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArray)
   }
 }
 
+void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape)
+{
+  attributeMatrix.setShape(newShape);
+  auto childArrays = attributeMatrix.findAllChildrenOfType<IDataArray>();
+  for(auto array : childArrays)
+  {
+    array->getIDataStoreRef().reshapeTuples(newShape);
+  }
+  // TODO :
+  // auto childNeighborLists = attributeMatrix.findAllChildrenOfType<INeighborList>();
+  // for(auto neighborList : childNeighborLists)
+  //{
+  //}
+}
+
 } // namespace complex

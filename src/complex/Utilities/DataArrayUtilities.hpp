@@ -668,4 +668,6 @@ COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure
  */
 COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArrayPtr);
 
+COMPLEX_EXPORT void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape);
+
 } // namespace complex
