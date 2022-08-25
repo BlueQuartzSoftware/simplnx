@@ -1,6 +1,6 @@
-
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Core/Application.hpp"
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataObject.hpp"
@@ -105,7 +105,7 @@ TEST_CASE("Read Legacy DREAM.3D Data")
     REQUIRE(testDC != nullptr);
 
     DataPath testAMPath = testDCPath.createChildPath("AttributeMatrix");
-    REQUIRE(ds.getDataAs<DataGroup>(DataPath({testAMPath})) != nullptr);
+    REQUIRE(ds.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
 
     REQUIRE(ds.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
     REQUIRE(ds.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
