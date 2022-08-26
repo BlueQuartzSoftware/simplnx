@@ -8,24 +8,24 @@
 namespace complex
 {
 /**
- * @class TriangleNormalFilter
- * @brief This filter caluates the normals for each face of a **TriangleGeom** object
+ * @class TriangleDihedralAngleFilter
+ * @brief This filter will create a list of all dihedral angles ordered from smallest angle to largest from a **TriangleGeom** object
  */
-class COMPLEXCORE_EXPORT TriangleNormalFilter : public IFilter
+class COMPLEXCORE_EXPORT TriangleDihedralAngleFilter : public IFilter
 {
 public:
-  TriangleNormalFilter() = default;
-  ~TriangleNormalFilter() noexcept override = default;
+  TriangleDihedralAngleFilter() = default;
+  ~TriangleDihedralAngleFilter() noexcept override = default;
 
-  TriangleNormalFilter(const TriangleNormalFilter&) = delete;
-  TriangleNormalFilter(TriangleNormalFilter&&) noexcept = delete;
+  TriangleDihedralAngleFilter(const TriangleDihedralAngleFilter&) = delete;
+  TriangleDihedralAngleFilter(TriangleDihedralAngleFilter&&) noexcept = delete;
 
-  TriangleNormalFilter& operator=(const TriangleNormalFilter&) = delete;
-  TriangleNormalFilter& operator=(TriangleNormalFilter&&) noexcept = delete;
+  TriangleDihedralAngleFilter& operator=(const TriangleDihedralAngleFilter&) = delete;
+  TriangleDihedralAngleFilter& operator=(TriangleDihedralAngleFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshTriangleNormalsArrayPath_Key = "SurfaceMeshTriangleNormalsArrayPath";
-  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "TriGeometryDataPath";
+  static inline constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key = "SurfaceMeshTriangleDihedralAnglesArrayPath";
+  static inline constexpr StringLiteral k_TGeometryDataPath_Key = "TriGeometryDataPath";
 
   /**
    * @brief Returns the name of the filter.
@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, TriangleNormalFilter, "8133d419-1919-4dbf-a5bf-1c97282ba63f");
+COMPLEX_DEF_FILTER_TRAITS(complex, TriangleDihedralAngleFilter, "dd42c521-4ae5-485d-ad35-d1276547d2f1");
