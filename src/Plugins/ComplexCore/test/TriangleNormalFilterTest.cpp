@@ -27,7 +27,7 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
   std::string triangleFaceDataGroupName = "Face Data";
-  std::string normalsDataArrayName = "Normals";
+  std::string normalsDataArrayName = "FaceNormals";
 
   DataStructure dataGraph;
 
