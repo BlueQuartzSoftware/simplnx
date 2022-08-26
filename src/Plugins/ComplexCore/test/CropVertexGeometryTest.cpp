@@ -54,6 +54,7 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Instantiate)", "[ComplexCore][CropVer
 
   args.insert(CropVertexGeometry::k_VertexGeom_Key, std::make_any<DataPath>(k_VertexGeomPath));
   args.insert(CropVertexGeometry::k_CroppedGeom_Key, std::make_any<DataPath>(k_CroppedGeomPath));
+  args.insert(CropVertexGeometry::k_VertexDataName_Key, std::make_any<std::string>(k_VertexDataName));
   args.insert(CropVertexGeometry::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
   args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
@@ -73,6 +74,7 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Data)", "[ComplexCore][CropVertexGeom
 
   args.insert(CropVertexGeometry::k_VertexGeom_Key, std::make_any<DataPath>(k_VertexGeomPath));
   args.insert(CropVertexGeometry::k_CroppedGeom_Key, std::make_any<DataPath>(k_CroppedGeomPath));
+  args.insert(CropVertexGeometry::k_VertexDataName_Key, std::make_any<std::string>(k_VertexDataName));
   args.insert(CropVertexGeometry::k_MinPos_Key, std::make_any<std::vector<float32>>(k_MinPos));
   args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));

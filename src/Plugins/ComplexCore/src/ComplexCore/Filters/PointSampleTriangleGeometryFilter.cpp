@@ -1,6 +1,7 @@
 #include "PointSampleTriangleGeometryFilter.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
@@ -10,6 +11,7 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -78,7 +80,7 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Vertex Geometry Name",
                                                              "The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points", DataPath({"[Vertex Geometry]"})));
   params.insert(
-      std::make_unique<ArrayCreationParameter>(k_VertexDataGroupPath_Key, "Vertex Data", "The complete path to the Array for the Vertex Geometry", DataPath({"[Vertex Geometry]", "Vertex Data"})));
+      std::make_unique<DataObjectNameParameter>(k_VertexDataGroupPath_Key, "Vertex Data", "The complete path to the vertex data arrays for the Vertex Geometry", INodeGeometry0D::k_VertexDataName));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   //  params.linkParameters(k_SamplesNumberType_Key, k_NumberOfSamples_Key, 0);
@@ -111,7 +113,8 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   auto pMaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
-  auto pVertexGroupDataPath = filterArgs.value<DataPath>(k_VertexDataGroupPath_Key);
+  auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupPath_Key);
+  DataPath pVertexGroupDataPath = pVertexGeometryDataPath.createChildPath(pVertexGroupDataName);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -132,15 +135,16 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
 
   // Create the Vertex Geometry action and store it
   {
-    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, pNumberOfSamples);
+    uint64 numTuples = 0;
+    if(!pSelectedDataArrayPaths.empty())
+    {
+      numTuples = dataStructure.getDataAs<IDataArray>(pSelectedDataArrayPaths[0])->getNumberOfTuples();
+    }
+
+    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, numTuples, pVertexGroupDataName);
     resultOutputActions.value().actions.push_back(std::move(createVertexGeometryAction));
   }
 
-  // Create  Vertex Data Group action and store it
-  {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pVertexGroupDataPath);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
-  }
   // Create all the target DataArray based on the Selected Node Arrays
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
@@ -189,7 +193,8 @@ Result<> PointSampleTriangleGeometryFilter::executeImpl(DataStructure& dataStruc
   inputs.pMaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputs.pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   inputs.pVertexGeometryPath = filterArgs.value<DataPath>(k_VertexGeometryPath_Key);
-  inputs.pVertexGroupDataPath = filterArgs.value<DataPath>(k_VertexDataGroupPath_Key);
+  auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupPath_Key);
+  inputs.pVertexGroupDataPath = inputs.pVertexGeometryPath.createChildPath(pVertexGroupDataName);
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
   for(const auto& selectedDataPath : inputs.pSelectedDataArrayPaths)

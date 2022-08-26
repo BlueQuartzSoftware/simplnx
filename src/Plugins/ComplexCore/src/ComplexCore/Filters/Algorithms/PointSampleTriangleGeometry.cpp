@@ -36,6 +36,7 @@
 
 #include "TupleTransfer.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include <cassert>
 #include <cstring>
@@ -64,6 +65,8 @@ Result<> PointSampleTriangleGeometry::operator()()
 
   VertexGeom& vertex = m_DataStructure.getDataRefAs<VertexGeom>(m_Inputs->pVertexGeometryPath);
   vertex.resizeVertexList(m_Inputs->pNumberOfSamples);
+  auto tupleShape = {static_cast<usize>(m_Inputs->pNumberOfSamples)};
+  ResizeAttributeMatrix(*vertex.getVertexData(), tupleShape);
 
   std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   std::mt19937_64 generator(seed);

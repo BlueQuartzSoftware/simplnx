@@ -26,6 +26,7 @@ public:
   static inline constexpr StringLiteral k_MinPos_Key = "min_pos";
   static inline constexpr StringLiteral k_MaxPos_Key = "max_pos";
   static inline constexpr StringLiteral k_TargetArrayPaths_Key = "target_arrays";
+  static inline constexpr StringLiteral k_VertexDataName_Key = "vertex_data_name";
 
   /**
    * @brief
