@@ -100,11 +100,13 @@ Result<> QuickSurfaceMesh::operator()()
   determineActiveNodes(nodeIds, nodeCount, triangleCount);
 
   // now create node and triangle arrays knowing the number that will be needed
+  std::vector<usize> tupleShape = {triangleCount};
   triangleGeom.resizeFaceList(triangleCount);
   triangleGeom.resizeVertexList(nodeCount);
+  ResizeAttributeMatrix(*triangleGeom.getFaceData(), tupleShape);
+  ResizeAttributeMatrix(*triangleGeom.getVertexData(), {nodeCount});
 
   // Resize the Face Arrays that are being copied over from the ImageGeom Cell Data
-  std::vector<usize> tupleShape = {triangleCount};
   for(const auto& dataPath : m_Inputs->pCreatedDataArrayPaths)
   {
     Result<> result = complex::ResizeAndReplaceDataArray(m_DataStructure, dataPath, tupleShape, complex::IDataAction::Mode::Execute);
@@ -806,6 +808,8 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   std::vector<size_t> tDims = {nodeCount};
   triangleGeom->resizeVertexList(nodeCount);
   triangleGeom->resizeFaceList(triangleCount);
+  ResizeAttributeMatrix(*triangleGeom->getFaceData(), {triangleCount});
+  ResizeAttributeMatrix(*triangleGeom->getVertexData(), tDims);
 
   // Remove and then insert a properly sized Int32Array for the FaceLabels
   m_DataStructure.removeData(m_Inputs->pFaceLabelsDataPath);

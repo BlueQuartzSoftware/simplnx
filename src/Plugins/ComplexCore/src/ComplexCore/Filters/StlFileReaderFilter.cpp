@@ -153,7 +153,7 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   // past this point, we are going to scope each section so that we don't accidentally introduce bugs
 
   // Create the Triangle Geometry action and store it
-  auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1);
+  auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName);
   auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(k_FaceNormals);
   resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
   // Create the face Normals DataArray action and store it
@@ -173,7 +173,7 @@ Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& 
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
-  auto pFaceDataGroupPath = pTriangleGeometryPath.createChildPath(CreateTriangleGeometryAction::k_FaceData);
+  auto pFaceDataGroupPath = pTriangleGeometryPath.createChildPath(INodeGeometry2D::k_FaceDataName);
   auto pFaceNormalsPath = pFaceDataGroupPath.createChildPath(k_FaceNormals);
 
   // The actual STL File Reading is placed in a separate class `StlFileReader`
