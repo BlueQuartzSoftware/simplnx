@@ -28,6 +28,10 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
   DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData);
   DataPath cellPhasesPath = cellDataPath.createChildPath(complex::Constants::k_Phases);
   DataPath featureIdsPath = cellDataPath.createChildPath(complex::Constants::k_FeatureIds);
+  DataPath featureGroup = smallIn100Group.createChildPath(complex::Constants::k_CellFeatureData);
+  std::string volumesName = "computed_volumes";
+  std::string numElementsName = "computed_NumElements";
+  std::string EquivalentDiametersName = "computed_EquivalentDiameters";
 
   std::vector<std::string> featureNames = {k_Volumes, k_EquivalentDiameters, k_NumElements};
 
@@ -38,9 +42,10 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
     args.insert(CalculateFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
     args.insert(CalculateFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
     args.insert(CalculateFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
-    args.insert(CalculateFeatureSizesFilter::k_VolumesPath_Key, std::make_any<DataPath>({k_Volumes}));
-    args.insert(CalculateFeatureSizesFilter::k_EquivalentDiametersPath_Key, std::make_any<DataPath>({k_EquivalentDiameters}));
-    args.insert(CalculateFeatureSizesFilter::k_NumElementsPath_Key, std::make_any<DataPath>({k_NumElements}));
+    args.insert(CalculateFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureGroup));
+    args.insert(CalculateFeatureSizesFilter::k_VolumesPath_Key, std::make_any<std::string>(volumesName));
+    args.insert(CalculateFeatureSizesFilter::k_EquivalentDiametersPath_Key, std::make_any<std::string>(EquivalentDiametersName));
+    args.insert(CalculateFeatureSizesFilter::k_NumElementsPath_Key, std::make_any<std::string>(numElementsName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -52,20 +57,19 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
   }
 
   // Compare Outputs
-  DataPath featureGroup = smallIn100Group.createChildPath(complex::Constants::k_CellFeatureData);
   {
     DataPath exemplaryDataPath = featureGroup.createChildPath(k_Volumes);
-    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, DataPath({k_Volumes}));
+    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(volumesName));
   }
 
   {
     DataPath exemplaryDataPath = featureGroup.createChildPath(k_EquivalentDiameters);
-    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, DataPath({k_EquivalentDiameters}));
+    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(EquivalentDiametersName));
   }
 
   {
     DataPath exemplaryDataPath = featureGroup.createChildPath(k_NumElements);
-    UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, DataPath({k_NumElements}));
+    UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(numElementsName));
   }
 
   // Write the DataStructure out to the file system
