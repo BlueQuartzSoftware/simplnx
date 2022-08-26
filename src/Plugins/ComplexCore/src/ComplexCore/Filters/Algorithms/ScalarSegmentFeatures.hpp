@@ -25,6 +25,7 @@ struct COMPLEXCORE_EXPORT ScalarSegmentFeaturesInputValues
   bool pUseGoodVoxels = false;
   DataPath pGoodVoxelsPath;
   DataPath pGridGeomPath;
+  DataPath pCellFeaturesPath;
 };
 
 /**

@@ -5,9 +5,11 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
@@ -80,10 +82,11 @@ Parameters ScalarSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPathKey, "Scalar Array to Segment", "Path to the DataArray to segment", DataPath(), complex::GetIntegerDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsPathKey, "Cell Feature IDs", "Path to the created Feature IDs path", DataPath()));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsPathKey, "Cell Feature IDs", "Path to the created Feature IDs path", "FeatureIds"));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ActiveArrayPathKey, "Active", "Created array", DataPath()));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeaturePathKey, "Cell Feature Attribute Matrix", "Created Cell Feature Attribute Matrix", "CellFeatureData"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayPathKey, "Active", "Created array", "Active"));
 
   return params;
 }
@@ -98,9 +101,10 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
 {
   auto inputDataPath = args.value<DataPath>(k_InputArrayPathKey);
   int scalarTolerance = args.value<int>(k_ScalarToleranceKey);
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
-  // auto cellFeaturesPath = args.value<DataPath>(k_CellFeaturePathKey);
-  auto activeArrayPath = args.value<DataPath>(k_ActiveArrayPathKey);
+  auto featureIdsName = args.value<std::string>(k_FeatureIdsPathKey);
+  auto cellFeaturesName = args.value<std::string>(k_CellFeaturePathKey);
+  auto activeArrayName = args.value<std::string>(k_ActiveArrayPathKey);
+  DataPath featureIdsPath = inputDataPath.getParent().createChildPath(featureIdsName);
 
   bool useGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
   DataPath goodVoxelsPath;
@@ -110,6 +114,8 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
 
   auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
+  DataPath cellFeaturesPath = gridGeomPath.createChildPath(cellFeaturesName);
+  DataPath activeArrayPath = cellFeaturesPath.createChildPath(activeArrayName);
 
   if(dataStructure.getDataAs<IGridGeometry>(gridGeomPath) == nullptr)
   {
@@ -160,10 +166,12 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
 
   // Create output DataStructure Items
+  auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellFeaturesPath, std::vector<usize>{numTuples});
   auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{numTuples}, std::vector<usize>{1}, activeArrayPath);
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{numTuples}, std::vector<usize>{1}, featureIdsPath);
 
   OutputActions actions;
+  actions.actions.push_back(std::move(createAttributeMatrixAction));
   actions.actions.push_back(std::move(createActiveAction));
   actions.actions.push_back(std::move(createFeatureIdsAction));
 
@@ -180,11 +188,12 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& data, const Arg
   inputValues.pInputDataPath = args.value<DataPath>(k_InputArrayPathKey);
   inputValues.pScalarTolerance = args.value<int>(k_ScalarToleranceKey);
   inputValues.pShouldRandomizeFeatureIds = args.value<bool>(k_RandomizeFeatures_Key);
-  inputValues.pActiveArrayPath = args.value<DataPath>(k_ActiveArrayPathKey);
-  inputValues.pFeatureIdsPath = args.value<DataPath>(k_FeatureIdsPathKey);
+  inputValues.pFeatureIdsPath = inputValues.pInputDataPath.getParent().createChildPath(args.value<std::string>(k_FeatureIdsPathKey));
   inputValues.pUseGoodVoxels = args.value<bool>(k_UseGoodVoxelsKey);
   inputValues.pGoodVoxelsPath = args.value<DataPath>(k_GoodVoxelsPath_Key);
   inputValues.pGridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
+  inputValues.pCellFeaturesPath = inputValues.pGridGeomPath.createChildPath(args.value<std::string>(k_CellFeaturePathKey));
+  inputValues.pActiveArrayPath = inputValues.pCellFeaturesPath.createChildPath(args.value<std::string>(k_ActiveArrayPathKey));
 
   complex::ScalarSegmentFeatures filterAlgorithm(data, &inputValues, shouldCancel, messageHandler);
   Result<> result = filterAlgorithm();
