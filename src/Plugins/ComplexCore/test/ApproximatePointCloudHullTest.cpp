@@ -74,7 +74,7 @@ TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
     DataArray<float>* triangleVertices = triangleGeom.getVertices();
 
     DataPath vertexGeomPath({"[Vertex Geometry]"});
-    CreateVertexGeometryAction createVertexGeometryAction(vertexGeomPath, triangleVertices->getNumberOfTuples());
+    CreateVertexGeometryAction createVertexGeometryAction(vertexGeomPath, triangleVertices->getNumberOfTuples(), INodeGeometry0D::k_VertexDataName);
     Result<> createVertexResult = createVertexGeometryAction.apply(dataGraph, IDataAction::Mode::Execute);
     REQUIRE(createVertexResult.valid());
 

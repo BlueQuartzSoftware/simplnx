@@ -6,6 +6,7 @@
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
@@ -67,6 +68,7 @@ Parameters CropVertexGeometry::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeom_Key, "Vertex Geometry to Crop", "DataPath to target VertexGeom", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CroppedGeom_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Vertex Data Arrays to crop", "", std::vector<DataPath>(), complex::GetAllDataTypes()));
@@ -85,6 +87,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
   auto posMin = args.value<std::vector<float32>>(k_MinPos_Key);
   auto posMax = args.value<std::vector<float32>>(k_MaxPos_Key);
   auto targetArrays = args.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
+  auto vertexDataName = args.value<std::string>(k_VertexDataName_Key);
 
   auto xMin = posMin[0];
   auto yMin = posMin[1];
@@ -130,7 +133,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
   }
   auto tupleShape = vertexAM->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
-  auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples);
+  auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples, vertexDataName);
   DataPath croppedVertexDataPath = action->getVertexDataPath();
   actions.actions.push_back(std::move(action));
 
@@ -156,6 +159,7 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
   auto posMin = args.value<std::vector<float32>>(k_MinPos_Key);
   auto posMax = args.value<std::vector<float32>>(k_MaxPos_Key);
   auto targetArrays = args.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
+  auto vertexDataName = args.value<std::string>(k_VertexDataName_Key);
 
   auto xMin = posMin[0];
   auto yMin = posMin[1];
@@ -190,7 +194,7 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
   crop.resizeVertexList(numTuples);
   std::vector<usize> tDims = {numTuples};
 
-  DataPath croppedVertexDataPath = croppedGeomPath.createChildPath(CreateVertexGeometryAction::k_VertexData);
+  DataPath croppedVertexDataPath = croppedGeomPath.createChildPath(vertexDataName);
   auto& vertedDataAttMatrix = dataStructure.getDataRefAs<AttributeMatrix>(croppedVertexDataPath);
   ResizeAttributeMatrix(vertedDataAttMatrix, tDims);
 

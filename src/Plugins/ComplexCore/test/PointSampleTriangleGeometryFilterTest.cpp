@@ -165,7 +165,7 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     DataPath vertGeometryDataPath({vertexGeometryName});
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexGeometryPath_Key, std::make_any<DataPath>(vertGeometryDataPath));
     DataPath vertexDataGroupPath = vertGeometryDataPath.createChildPath(vertexNodeDataGroup);
-    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupPath_Key, std::make_any<DataPath>(vertexDataGroupPath));
+    args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupPath_Key, std::make_any<std::string>(vertexNodeDataGroup));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);

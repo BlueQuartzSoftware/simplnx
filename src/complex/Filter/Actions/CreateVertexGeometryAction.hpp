@@ -22,13 +22,12 @@ namespace complex
 class CreateVertexGeometryAction : public IDataCreationAction
 {
 public:
-  static constexpr StringLiteral k_VertexData = "VertexData";
-
   CreateVertexGeometryAction() = delete;
 
-  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices)
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName)
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
+  , m_VertexDataName(vertexAttributeMatrixName)
   {
   }
 
@@ -47,7 +46,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    const std::string k_VertexDataName("SharedVertexList");
+    const std::string k_SharedVertexListName("SharedVertexList");
 
     // Check for empty Geometry DataPath
     if(getCreatedPath().empty())
@@ -83,7 +82,7 @@ public:
     using MeshIndexType = IGeometry::MeshIndexType;
 
     // Create the Vertex Array with a component size of 3
-    DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);
+    DataPath vertexPath = getCreatedPath().createChildPath(k_SharedVertexListName);
     std::vector<usize> tupleShape = {m_NumVertices}; // We don't probably know how many Vertices there are but take what ever the developer sends us
     std::vector<usize> componentShape = {3};
 
@@ -95,7 +94,7 @@ public:
     Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
     geometry2d->setVertices(*vertexArray);
 
-    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, k_VertexData, geometry2d->getId());
+    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry2d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-225, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", getVertexDataPath().toString()));
@@ -130,11 +129,12 @@ public:
    */
   DataPath getVertexDataPath() const
   {
-    return getCreatedPath().createChildPath(k_VertexData);
+    return getCreatedPath().createChildPath(m_VertexDataName);
   }
 
 private:
   IGeometry::MeshIndexType m_NumVertices;
+  std::string m_VertexDataName;
 };
 
 } // namespace complex
