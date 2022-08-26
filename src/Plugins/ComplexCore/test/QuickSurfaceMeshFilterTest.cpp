@@ -57,13 +57,13 @@ TEST_CASE("ComplexCore::QuickSurfaceMeshFilter", "[ComplexCore][QuickSurfaceMesh
     args.insertOrAssign(QuickSurfaceMeshFilter::k_TriangleGeometryName_Key, std::make_any<DataPath>(triangleGeometryPath));
 
     DataPath vertexGroupDataPath = triangleGeometryPath.createChildPath(k_VertexDataGroupName);
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<DataPath>(vertexGroupDataPath));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
 
     DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
     args.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<DataPath>(nodeTypeDataPath));
 
     DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<DataPath>(faceGroupDataPath));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
 
     DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabels);
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<DataPath>(faceLabelsDataPath));

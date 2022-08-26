@@ -26,6 +26,8 @@ public:
   static inline constexpr StringLiteral k_NodeTypesPath_Key = "node_types";
   static inline constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
   static inline constexpr StringLiteral k_CopyTrianglePaths_Key = "copy_triangle_array_paths";
+  static inline constexpr StringLiteral k_VertexDataName_Key = "vertex_data_name";
+  static inline constexpr StringLiteral k_FaceDataName_Key = "face_data_name";
 
   /**
    * @brief Returns the filter's name.
