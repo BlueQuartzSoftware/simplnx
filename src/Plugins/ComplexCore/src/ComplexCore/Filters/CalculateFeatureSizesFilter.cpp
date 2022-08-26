@@ -7,7 +7,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 
 #include <cmath>
@@ -18,6 +20,7 @@ namespace
 {
 constexpr complex::int32 k_MissingGeometry = -73225;
 constexpr complex::int32 k_MissingFeatureIds = -74789;
+constexpr complex::int32 k_MissingFeatureAttributeMatrix = -74769;
 constexpr complex::int32 k_BadFeatureCount = -78231;
 constexpr complex::float32 k_PI = numbers::pi_v<complex::float32>;
 } // namespace
@@ -57,11 +60,12 @@ Parameters CalculateFeatureSizesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_GeometryPath_Key, "Target Geometry", "DataPath to target geometry", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "", DataPath({"CellFeatureData"})));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_EquivalentDiametersPath_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", DataPath({"EquivalentDiameters"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NumElementsPath_Key, "Number of Elements", "DataPath to Num Elements array", DataPath({"NumElements"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_VolumesPath_Key, "Volumes", "DataPath to volumes array", DataPath({"Volumes"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_EquivalentDiametersPath_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", "EquivalentDiameters"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NumElementsPath_Key, "Number of Elements", "DataPath to Num Elements array", "NumElements"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesPath_Key, "Volumes", "DataPath to volumes array", "Volumes"));
 
   return params;
 }
@@ -76,9 +80,13 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   auto geometryPath = args.value<DataPath>(k_GeometryPath_Key);
 
   auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto volumesPath = args.value<DataPath>(k_VolumesPath_Key);
-  auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
-  auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
+  auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  auto volumesName = args.value<std::string>(k_VolumesPath_Key);
+  auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersPath_Key);
+  auto numElementsName = args.value<std::string>(k_NumElementsPath_Key);
+  DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
+  DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
+  DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
 
   const auto* featureIdsArray = data.getDataAs<Int32Array>(featureIdsPath);
 
@@ -94,7 +102,14 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingFeatureIds, "Could not find Feature IDs array."}})};
   }
 
-  std::vector<usize> tupleDimensions = {1ULL};
+  const AttributeMatrix* featAttributeMatrix = data.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  if(featAttributeMatrix == nullptr)
+  {
+    return {nonstd::make_unexpected(
+        std::vector<Error>{Error{k_MissingFeatureAttributeMatrix, fmt::format("Could not find Feature Attribute Matrix at path '{}'", featureAttributeMatrixPath.toString())}})};
+  }
+
+  std::vector<usize> tupleDimensions = featAttributeMatrix->getShape();
   uint64 numberOfComponents = 1;
 
   auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath);
@@ -120,9 +135,14 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
 
   auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto volumesPath = args.value<DataPath>(k_VolumesPath_Key);
-  auto equivalentDiametersPath = args.value<DataPath>(k_EquivalentDiametersPath_Key);
-  auto numElementsPath = args.value<DataPath>(k_NumElementsPath_Key);
+
+  auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  auto volumesName = args.value<std::string>(k_VolumesPath_Key);
+  auto equivalentDiametersName = args.value<std::string>(k_EquivalentDiametersPath_Key);
+  auto numElementsName = args.value<std::string>(k_NumElementsPath_Key);
+  DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
+  DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
+  DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
 
   const auto& featureIds = data.getDataRefAs<Int32Array>(featureIdsPath);
   auto& volumes = data.getDataRefAs<Float32Array>(volumesPath);
@@ -142,10 +162,6 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   }
 
   usize numfeatures = uniqueFeatureIds.size() + zeroFeature;
-
-  volumes.getDataStoreRef().reshapeTuples({numfeatures});
-  equivalentDiameters.getDataStoreRef().reshapeTuples({numfeatures});
-  numElements.getDataStoreRef().reshapeTuples({numfeatures});
 
   std::vector<uint64> featureCountsStore(numfeatures, 0);
 
