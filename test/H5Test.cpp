@@ -33,6 +33,8 @@
 #include <string>
 #include <type_traits>
 
+#include <random>
+
 #define TEST_LEGACY 1
 
 using namespace complex;
@@ -51,20 +53,20 @@ const StringLiteral k_LegacyFilepath = "LegacyData.dream3d";
 const fs::path k_ComplexH5File = "new.h5";
 } // namespace Constants
 
-fs::path GetDataDir(const Application& app)
+fs::path GetDataDir()
 {
   return COMPLEX_BUILD_DIR / Constants::k_DataDir;
 }
 
-fs::path GetLegacyFilepath(const Application& app)
+fs::path GetLegacyFilepath()
 {
   std::string path = fmt::format("{}/test/Data/{}", unit_test::k_SourceDir.view(), Constants::k_LegacyFilepath);
   return std::filesystem::path(path);
 }
 
-fs::path GetComplexH5File(const Application& app)
+fs::path GetComplexH5File()
 {
-  return GetDataDir(app) / Constants::k_ComplexH5File;
+  return GetDataDir() / Constants::k_ComplexH5File;
 }
 
 bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
@@ -85,7 +87,7 @@ bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
 TEST_CASE("Read Legacy DREAM.3D Data")
 {
   Application app;
-  std::filesystem::path filepath = GetLegacyFilepath(app);
+  std::filesystem::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
   Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
   COMPLEX_RESULT_REQUIRE_VALID(result);
@@ -200,14 +202,14 @@ TEST_CASE("Image Geometry IO")
 {
   Application app;
 
-  fs::path dataDir = GetDataDir(app);
+  fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "image_geometry_io.h5";
+  fs::path filePath = GetDataDir() / "image_geometry_io.h5";
 
   // Write HDF5 file
   try
@@ -238,7 +240,7 @@ TEST_CASE("Image Geometry IO")
     auto ds = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
-    filePath = GetDataDir(app) / "image_geometry_io_2.h5";
+    filePath = GetDataDir() / "image_geometry_io_2.h5";
 
     // Write DataStructure to another file
     try
@@ -570,14 +572,14 @@ TEST_CASE("Node Based Geometry IO")
 {
   Application app;
 
-  fs::path dataDir = GetDataDir(app);
+  fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "NodeGeometryTest.dream3d";
+  fs::path filePath = GetDataDir() / "NodeGeometryTest.dream3d";
 
   std::string filePathString = filePath.string();
 
@@ -622,14 +624,14 @@ TEST_CASE("NeighborList IO")
 {
   Application app;
 
-  fs::path dataDir = GetDataDir(app);
+  fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "NeighborListTest.dream3d";
+  fs::path filePath = GetDataDir() / "NeighborListTest.dream3d";
 
   std::string filePathString = filePath.string();
 
@@ -675,14 +677,14 @@ TEST_CASE("DataArray<bool> IO")
 {
   Application app;
 
-  fs::path dataDir = GetDataDir(app);
+  fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "BoolArrayTest.dream3d";
+  fs::path filePath = GetDataDir() / "BoolArrayTest.dream3d";
 
   std::string filePathString = filePath.string();
 
@@ -740,4 +742,34 @@ TEST_CASE("DataArray<bool> IO")
   {
     FAIL(e.what());
   }
+}
+
+TEST_CASE("xmdf")
+{
+  DataStructure ds;
+  auto* vertexGeom = VertexGeom::Create(ds, "VertexGeom");
+  DataObject::IdType geomId = vertexGeom->getId();
+  constexpr usize numVerts = 100;
+  std::random_device randomDevice;
+  std::mt19937 generator(randomDevice());
+  std::uniform_int_distribution<> intDistribution(0, 100);
+  std::uniform_real_distribution<> realDistribution(-10.0f, 10.0f);
+  auto vertsDataStore = std::make_unique<DataStore<float32>>(IDataStore::ShapeType{numVerts}, IDataStore::ShapeType{3}, 0.0f);
+  for(auto& item : vertsDataStore->createSpan())
+  {
+    item = realDistribution(generator);
+  }
+  auto* verts = DataArray<float32>::Create(ds, "Verts", std::move(vertsDataStore), geomId);
+  auto* vertexData = AttributeMatrix::Create(ds, "VertexData", geomId);
+  vertexData->setShape({numVerts});
+  vertexGeom->setVertexData(*vertexData);
+  vertexGeom->setVertices(*verts);
+  auto vertexAssociatedData = std::make_unique<DataStore<int32>>(numVerts, 0);
+  for(auto& item : vertexAssociatedData->createSpan())
+  {
+    item = intDistribution(generator);
+  }
+  auto* data = DataArray<int32>::Create(ds, "Data", std::move(vertexAssociatedData), vertexData->getId());
+  Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", ds, {}, true);
+  COMPLEX_RESULT_REQUIRE_VALID(result);
 }

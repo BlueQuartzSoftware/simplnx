@@ -1,6 +1,7 @@
 #include "INodeGeometry0D.hpp"
 
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 namespace complex
@@ -119,6 +120,22 @@ H5::ErrorType INodeGeometry0D::writeHdf5(H5::DataStructureWriter& dataStructureW
   if(error < 0)
   {
     return error;
+  }
+
+  if(m_VertexListId.has_value())
+  {
+    usize numVerts = getNumberOfVertices();
+    auto datasetWriter = groupWriter.createDatasetWriter("_VertexIndices");
+    std::vector<int64> indices(numVerts);
+    for(usize i = 0; i < numVerts; i++)
+    {
+      indices[i] = i;
+    }
+    error = datasetWriter.writeSpan(H5::DatasetWriter::DimsType{numVerts, 1}, nonstd::span<const int64>{indices});
+    if(error < 0)
+    {
+      return 0;
+    }
   }
 
   error = WriteH5DataId(groupWriter, m_VertexDataId, H5Constants::k_VertexDataTag);
