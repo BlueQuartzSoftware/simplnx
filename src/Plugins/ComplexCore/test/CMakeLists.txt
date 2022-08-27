@@ -27,6 +27,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindNeighborsTest.cpp
   FindSurfaceFeaturesTest.cpp
   IdentifySampleTest.cpp
+  ImageGeomTest.cpp
   IterativeClosestPointTest.cpp
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
