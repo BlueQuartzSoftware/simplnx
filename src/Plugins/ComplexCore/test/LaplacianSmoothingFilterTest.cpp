@@ -23,9 +23,9 @@ using namespace complex::Constants;
 TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSmoothingFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = "FaceData";
+  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceDataName;
   std::string normalsDataArrayName = "FaceNormals";
-  std::string triangleVertexDataGroupName = "Vertex Data";
+  std::string triangleVertexDataGroupName = INodeGeometry0D::k_VertexDataName;
   std::string nodeTypeArrayName = "Node Type";
 
   DataStructure dataGraph;
@@ -62,7 +62,6 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
 
     DataObject::IdType triangleGeometryId = dataGraph.getId(triangleGeometryPath).value();
     DataPath vertexDataGroupPath = triangleGeometryPath.createChildPath(triangleVertexDataGroupName);
-    DataGroup::Create(dataGraph, triangleVertexDataGroupName, triangleGeometryId);
     DataObject::IdType vertexDataGroupId = dataGraph.getId(vertexDataGroupPath).value();
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
