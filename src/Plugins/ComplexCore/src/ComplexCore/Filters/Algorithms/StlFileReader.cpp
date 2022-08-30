@@ -6,6 +6,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <cstdio>
@@ -376,6 +377,9 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
     triangles[i * 3 + 1] = uniqueIds[node2];
     triangles[i * 3 + 2] = uniqueIds[node3];
   }
+
+  ResizeAttributeMatrix(*triangleGeom.getFaceData(), {triangleGeom.getNumberOfFaces()});
+  ResizeAttributeMatrix(*triangleGeom.getVertexData(), {triangleGeom.getNumberOfVertices()});
 
   return {};
 }
