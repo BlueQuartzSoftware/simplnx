@@ -214,6 +214,9 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   Arguments args;
   DataStructure dataStructure;
   DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
+  std::string levelZeroAMName = Constants::k_LevelZero.str() + "AM";
+  AttributeMatrix* levelZeroAttributeMatrix = AttributeMatrix::Create(dataStructure, levelZeroAMName);
+  levelZeroAttributeMatrix->setShape({COMPDIMPROD * TUPLEDIMPROD});
   std::optional<DataPath> levelZeroPath = {DataPath::FromString(Constants::k_LevelZero.view()).value()};
 
   ImportHDF5DatasetParameter::ValueType val = {levelZeroPath, "", {}};
@@ -314,6 +317,15 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
   results = filter.preflight(dataStructure, args);
   REQUIRE(!results.outputActions.valid());
+
+  // Check correct Attribute Matrix parent / dimensions
+  importInfoList.clear();
+  importInfo.componentDimensions = "1";
+  importInfoList.push_back(importInfo);
+  val = {DataPath::FromString(levelZeroAMName), m_FilePath, importInfoList};
+  args.insertOrAssign(ImportHDF5Dataset::k_ImportHDF5File_Key.str(), std::make_any<ImportHDF5DatasetParameter::ValueType>(val));
+  results = filter.preflight(dataStructure, args);
+  REQUIRE(results.outputActions.valid());
 }
 
 // -----------------------------------------------------------------------------
