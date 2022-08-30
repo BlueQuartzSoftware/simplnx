@@ -24,22 +24,22 @@ namespace
 {
 constexpr float64 k_max_difference = 0.0001;
 
-static const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry& geom)
+static const IGeometry::SharedVertexList* createVertexList(IGeometry& geom)
 {
   auto ds = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{30}, std::vector<usize>{3}, 0.0f);
-  auto dataArr = AbstractGeometry::SharedVertexList::Create(*ds, "Vertices", std::move(dataStore), geom.getId());
+  auto dataArr = IGeometry::SharedVertexList::Create(*ds, "Vertices", std::move(dataStore), geom.getId());
   REQUIRE(dataArr != nullptr);
-  return dynamic_cast<const AbstractGeometry::SharedVertexList*>(dataArr);
+  return dynamic_cast<const IGeometry::SharedVertexList*>(dataArr);
 }
 
-static const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry& geom)
+static const IGeometry::SharedFaceList* createFaceList(IGeometry& geom)
 {
   auto ds = geom.getDataStructure();
-  auto dataStore = std::make_unique<DataStore<AbstractGeometry::MeshIndexType>>(std::vector<usize>{16}, std::vector<usize>{4}, 0);
-  auto dataArr = AbstractGeometry::SharedFaceList::Create(*ds, "Faces", std::move(dataStore), geom.getId());
+  auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{16}, std::vector<usize>{4}, 0);
+  auto dataArr = IGeometry::SharedFaceList::Create(*ds, "Faces", std::move(dataStore), geom.getId());
   REQUIRE(dataArr != nullptr);
-  return dynamic_cast<const AbstractGeometry::SharedFaceList*>(dataArr);
+  return dynamic_cast<const IGeometry::SharedFaceList*>(dataArr);
 }
 
 } // namespace
@@ -63,7 +63,7 @@ TEST_CASE("ComplexCore::TriangleDihedralAngleFilter[valid results]", "[ComplexCo
     count++;
   }
   // load face list
-  std::vector<AbstractGeometry::MeshIndexType> faces = {0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 7, 3, 8, 9, 10};
+  std::vector<IGeometry::MeshIndexType> faces = {0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 7, 3, 8, 9, 10};
   count = 0;
   for(auto element : faces)
   {
