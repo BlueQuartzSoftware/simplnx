@@ -2,10 +2,14 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -22,9 +26,9 @@ namespace complex
 namespace
 {
 template <typename T>
-void copyDataTuple(IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
+void copyDataTuple(const IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
 {
-  auto& oldArrayCast = static_cast<DataArray<T>&>(oldArray);
+  const auto& oldArrayCast = static_cast<const DataArray<T>&>(oldArray);
   auto& newArrayCast = static_cast<DataArray<T>&>(newArray);
 
   auto numComponents = oldArrayCast.getNumberOfComponents();
@@ -37,7 +41,7 @@ void copyDataTuple(IDataArray& oldArray, IDataArray& newArray, usize oldIndex, u
   }
 }
 
-void copyDataArrayTuple(IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
+void copyDataArrayTuple(const IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
 {
   auto dataType = oldArray.getDataType();
   switch(dataType)
@@ -176,6 +180,62 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
+void cropDataArray(ParallelTaskAlgorithm& taskRunner, const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds,
+                   const std::atomic_bool& shouldCancel)
+{
+  DataType type = oldCellArray.getDataType();
+  switch(type)
+  {
+  case DataType::boolean: {
+    taskRunner.execute(CropImageGeomDataArray<bool>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::int8: {
+    taskRunner.execute(CropImageGeomDataArray<int8>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::int16: {
+    taskRunner.execute(CropImageGeomDataArray<int16>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::int32: {
+    taskRunner.execute(CropImageGeomDataArray<int32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::int64: {
+    taskRunner.execute(CropImageGeomDataArray<int64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::uint8: {
+    taskRunner.execute(CropImageGeomDataArray<uint8>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::uint16: {
+    taskRunner.execute(CropImageGeomDataArray<uint16>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::uint32: {
+    taskRunner.execute(CropImageGeomDataArray<uint32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::uint64: {
+    taskRunner.execute(CropImageGeomDataArray<uint64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::float32: {
+    taskRunner.execute(CropImageGeomDataArray<float32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::float64: {
+    taskRunner.execute(CropImageGeomDataArray<float64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  default: {
+    throw std::runtime_error("Invalid DataType");
+  }
+  }
+}
+
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -222,7 +282,10 @@ Parameters CropImageGeometry::parameters() const
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the call feature Attribute Matrix",
+                                                                    DataPath({"CellFeatureData"})));
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureIds_Key, true);
+  params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrix_Key, true);
 
   return params;
 }
@@ -241,6 +304,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
+  auto cellFeatureAMPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
 
   auto xMin = minVoxels[0];
   auto xMax = maxVoxels[0];
@@ -249,7 +313,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto zMax = maxVoxels[2];
   auto zMin = minVoxels[2];
 
-  OutputActions actions;
+  complex::Result<OutputActions> actions;
 
   if(xMax < xMin)
   {
@@ -360,9 +424,9 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
     std::string cellDataName = cellData->getName();
     auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec, cellDataName);
-    actions.actions.push_back(std::move(geomAction));
+    actions.value().actions.push_back(std::move(geomAction));
 
-    DataPath newCellFeaturesPath = destImagePath.createChildPath(IGridGeometry::k_CellDataName);
+    DataPath newCellFeaturesPath = destImagePath.createChildPath(cellDataName);
 
     for(const auto& [id, object] : *cellData)
     {
@@ -370,14 +434,13 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       DataType dataType = srcArray.getDataType();
       IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellFeaturesPath.createChildPath(srcArray.getName());
-      actions.actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
+      actions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
     }
   }
 
   if(shouldRenumberFeatures)
   {
-    std::vector<usize> cDims = {1};
-    const auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
+    auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
     if(nullptr == featureIdsPtr)
     {
       std::string errMsg = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
@@ -387,6 +450,35 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     {
       std::string errMsg = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
       return {MakeErrorResult<OutputActions>(-55501, errMsg)};
+    }
+    const AttributeMatrix* srcCellFeaturData = data.getDataAs<AttributeMatrix>(cellFeatureAMPath);
+    if(nullptr == srcCellFeaturData)
+    {
+      std::string errMsg = fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAMPath.toString());
+      return {MakeErrorResult<OutputActions>(-55502, errMsg)};
+    }
+    std::string warningMsg = "";
+    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
+    tDims = srcCellFeaturData->getShape();
+    actions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
+    for(const auto& [id, object] : *srcCellFeaturData)
+    {
+      if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
+      {
+        DataType dataType = srcArray->getDataType();
+        IDataStore::ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
+        DataPath dataArrayPath = destCellFeatureAMPath.createChildPath(srcArray->getName());
+        actions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
+      }
+      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
+      {
+        warningMsg += "\n" + cellFeatureAMPath.toString() + "/" + srcNeighborListArray->getName();
+      }
+    }
+    if(!warningMsg.empty())
+    {
+      actions.m_Warnings.push_back(Warning({-55503, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}",
+                                                                featureIdsArrayPath.toString(), warningMsg)}));
     }
   }
 
@@ -402,6 +494,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
+  auto cellFeatureAMPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
 
   uint64 xMin = minVoxels[0];
   uint64 xMax = maxVoxels[0];
@@ -476,58 +569,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
     std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", srcName);
     messageHandler(progMsg);
 
-    DataType type = oldDataArray.getDataType();
-
-    switch(type)
-    {
-    case DataType::boolean: {
-      taskRunner.execute(CropImageGeomDataArray<bool>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::int8: {
-      taskRunner.execute(CropImageGeomDataArray<int8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::int16: {
-      taskRunner.execute(CropImageGeomDataArray<int16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::int32: {
-      taskRunner.execute(CropImageGeomDataArray<int32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::int64: {
-      taskRunner.execute(CropImageGeomDataArray<int64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::uint8: {
-      taskRunner.execute(CropImageGeomDataArray<uint8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::uint16: {
-      taskRunner.execute(CropImageGeomDataArray<uint16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::uint32: {
-      taskRunner.execute(CropImageGeomDataArray<uint32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::uint64: {
-      taskRunner.execute(CropImageGeomDataArray<uint64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::float32: {
-      taskRunner.execute(CropImageGeomDataArray<float32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::float64: {
-      taskRunner.execute(CropImageGeomDataArray<float64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Invalid DataType");
-    }
-    }
+    cropDataArray(taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
   }
 
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
@@ -542,6 +584,31 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   tDims[0] = bounds[1];
   tDims[1] = bounds[3];
   tDims[2] = bounds[5];
+
+  if(shouldRenumberFeatures)
+  {
+    const AttributeMatrix* srcCellFeaturData = data.getDataAs<AttributeMatrix>(cellFeatureAMPath);
+    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
+    AttributeMatrix* cellFeaturData = data.getDataAs<AttributeMatrix>(destCellFeatureAMPath);
+    for(const auto& [id, object] : *cellFeaturData)
+    {
+      if(shouldCancel)
+      {
+        return {};
+      }
+      auto& newDataArray = dynamic_cast<IDataArray&>(*object);
+      const auto& oldDataArray = data.getDataRefAs<const IDataArray>(cellFeatureAMPath.createChildPath(newDataArray.getName()));
+
+      for(usize i = 0; i < oldDataArray.getNumberOfTuples(); ++i)
+      {
+        copyDataArrayTuple(oldDataArray, newDataArray, i, i);
+      }
+    }
+    // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+    // taskRunner.wait();
+    DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
+    return Sampling::RenumberFeatures(data, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, shouldCancel);
+  }
 
   return {};
 }

@@ -28,6 +28,7 @@ public:
   static inline constexpr StringLiteral k_NewImageGeom_Key = "new_image_geom";
   static inline constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
   static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrix_Key = "cell_feature_attribute_matrix";
 
   /**
    * @brief

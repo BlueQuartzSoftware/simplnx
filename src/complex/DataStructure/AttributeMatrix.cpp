@@ -137,3 +137,8 @@ void AttributeMatrix::setShape(ShapeType shape)
 {
   m_TupleShape = std::move(shape);
 }
+
+usize AttributeMatrix::getNumTuples() const
+{
+  return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+}
