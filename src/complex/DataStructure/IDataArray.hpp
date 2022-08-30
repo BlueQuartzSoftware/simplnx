@@ -132,6 +132,14 @@ public:
     return getIDataStoreRef().getDataType();
   }
 
+  /**
+   * @brief Resizes the internal array to accomondate
+   */
+  void reshapeTuples(const std::vector<usize>& tupleShape) override
+  {
+    getIDataStoreRef().reshapeTuples(tupleShape);
+  }
+
 protected:
   IDataArray(DataStructure& dataStructure, std::string name)
   : IArray(dataStructure, std::move(name))

@@ -284,6 +284,11 @@ public:
   DataObject::Type getDataObjectType() const override;
 
   /**
+   * @brief Resizes the internal array to accomondate
+   */
+  void reshapeTuples(const std::vector<usize>& tupleShape) override;
+
+  /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    *
    * This method will fail if no DataStore has been set.

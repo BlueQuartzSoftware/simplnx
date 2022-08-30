@@ -85,6 +85,11 @@ public:
   usize getNumberOfComponents() const override;
 
   /**
+   * @brief Resizes the internal array to accomondate
+   */
+  void reshapeTuples(const std::vector<usize>& tupleShape) override;
+
+  /**
    * @brief Writes the DataObject to the target HDF5 group.
    * @param dataStructureWriter
    * @param parentGroupWriter

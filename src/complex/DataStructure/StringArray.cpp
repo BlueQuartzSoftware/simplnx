@@ -178,6 +178,15 @@ usize StringArray::getNumberOfComponents() const
   return 1;
 }
 
+void StringArray::reshapeTuples(const std::vector<usize>& tupleShape)
+{
+  auto numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+  if(numTuples != size())
+  {
+    m_Strings.resize(numTuples);
+  }
+}
+
 H5::ErrorType StringArray::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
   auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
