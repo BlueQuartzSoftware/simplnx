@@ -21,7 +21,8 @@ namespace complex
  * @param cellFeatureIds
  * @return
  */
-COMPLEX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount);
+COMPLEX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds,
+                                          size_t currentFeatureCount);
 
 /**
  * @brief This function will gather all of the sibling DataArrays to the input DataPath, then filter out all the 'IgnoredDataPaths`

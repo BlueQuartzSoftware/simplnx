@@ -1,10 +1,11 @@
 #include "DataGroupUtilities.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 
 namespace complex
 {
-bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount)
+bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount)
 {
   bool acceptableMatrix = false;
   // Only valid for feature or ensemble type matrices
@@ -65,6 +66,13 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
       }
     }
 
+    std::vector<usize> newShape = {keepList.size() + 1};
+    auto* featureAttMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureDataGroupPath);
+    if(featureAttMatrixPtr != nullptr)
+    {
+      featureAttMatrixPtr->setShape(newShape);
+    }
+
     if(!removeList.empty())
     {
       for(const auto& dataArray : matchingDataArrayPtrs)
@@ -79,7 +87,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
           destIdx++;
         }
         // Now chop off the end of the copy and modified array
-        dataArray->getIDataStore()->reshapeTuples({keepList.size() + 1});
+        dataArray->getIDataStore()->reshapeTuples(newShape);
       }
 
       // Loop over all the points and correct all the feature names

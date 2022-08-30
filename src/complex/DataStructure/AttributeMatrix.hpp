@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/DataStructure/BaseGroup.hpp"
+#include "complex/DataStructure/DataArray.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -117,6 +118,12 @@ public:
    * @param shape
    */
   void setShape(ShapeType shape);
+
+  /**
+   * @brief Returns the total number of tuples.
+   * @return
+   */
+  usize getNumTuples() const;
 
 protected:
   /**
