@@ -75,40 +75,35 @@ TEST_CASE("ComplexCore::ImageGeom: Test Coords To Index", "[Geometry][ImageGeom]
     std::array<float, 3> coords = {-9.9f, 5.25f, 2.15f};
     std::optional<size_t> result = imageGeom->getIndex(coords[0], coords[1], coords[2]);
     REQUIRE(result.has_value());
-    size_t index = result.value();
-    REQUIRE(index == 0);
+    REQUIRE(result.value() == 0);
   }
 
   {
     std::array<float, 3> coords = {-9.26f, 5.25f, 2.1f};
     std::optional<size_t> result = imageGeom->getIndex(coords[0], coords[1], coords[2]);
     REQUIRE(result.has_value());
-    size_t index = result.value();
-    REQUIRE(index == 1);
+    REQUIRE(result.value() == 1);
   }
 
   {
     std::array<float, 3> coords = {-9.8f, 5.8f, 2.05f};
     std::optional<size_t> result = imageGeom->getIndex(coords[0], coords[1], coords[2]);
     REQUIRE(result.has_value());
-    size_t index = result.value();
-    REQUIRE(index == 10);
+    REQUIRE(result.value() == 10);
   }
 
   {
     std::array<float, 3> coords = {-6.55f, 5.6f, 2.45f};
     std::optional<size_t> result = imageGeom->getIndex(coords[0], coords[1], coords[2]);
     REQUIRE(result.has_value());
-    size_t index = result.value();
-    REQUIRE(index == 16);
+    REQUIRE(result.value() == 16);
   }
 
   {
     std::array<float, 3> coords = {-6.95f, 5.9f, 2.55f};
     std::optional<size_t> result = imageGeom->getIndex(coords[0], coords[1], coords[2]);
     REQUIRE(result.has_value());
-    size_t index = result.value();
-    REQUIRE(index == 216);
+    REQUIRE(result.value() == 216);
   }
 
   {
