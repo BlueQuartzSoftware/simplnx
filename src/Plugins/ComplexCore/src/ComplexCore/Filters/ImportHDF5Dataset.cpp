@@ -138,10 +138,16 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     return {nonstd::make_unexpected(std::vector<Error>{Error{-20004, "No dataset has been checked.  Please check a dataset."}})};
   }
 
-  if(pSelectedAttributeMatrixValue.has_value() && dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue.value()) == nullptr)
+  if(pSelectedAttributeMatrixValue.has_value())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-20005, fmt::format("The selected data group '{}' does not exist.", pSelectedAttributeMatrixValue.value().toString())}})};
+    if(dataStructure.getDataAs<DataGroup>(pSelectedAttributeMatrixValue.value()) == nullptr && dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) == nullptr)
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{
+          Error{-20005, fmt::format("The selected data path '{}' does not exist. Make sure you are selecting a DataGroup or AttributeMatrix.", pSelectedAttributeMatrixValue.value().toString())}})};
+    }
   }
+
+  const AttributeMatrix* parentAM = pSelectedAttributeMatrixValue.has_value() ? dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) : nullptr;
 
   int err = 0;
   H5::FileReader h5FileReader(inputFilePath);
@@ -184,19 +190,27 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
           Error{-20010, fmt::format("Component Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
     }
 
-    std::string tDimsStr = datasetImportInfo.tupleDimensions;
-    if(tDimsStr.empty())
+    std::vector<size_t> tDims;
+    if(parentAM == nullptr)
     {
-      return {nonstd::make_unexpected(std::vector<Error>{
-          Error{-20011,
-                fmt::format("The tuple dimensions are empty for dataset with path '{}'.  Please enter the tuple dimensions, using comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
-    }
+      std::string tDimsStr = datasetImportInfo.tupleDimensions;
+      if(tDimsStr.empty())
+      {
+        return {nonstd::make_unexpected(std::vector<Error>{
+            Error{-20011, fmt::format("The tuple dimensions are empty for dataset with path '{}'.  Please enter the tuple dimensions, using comma-separated values (ex: 4x2 would be '4, 2').",
+                                      datasetPath)}})};
+      }
 
-    std::vector<size_t> tDims = createDimensionVector(tDimsStr);
-    if(tDims.empty())
+      tDims = createDimensionVector(tDimsStr);
+      if(tDims.empty())
+      {
+        return {nonstd::make_unexpected(std::vector<Error>{
+            Error{-20012, fmt::format("Tuple Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
+      }
+    }
+    else
     {
-      return {nonstd::make_unexpected(std::vector<Error>{
-          Error{-20012, fmt::format("Tuple Dimensions are not in the right format for dataset with path '{}'. Use comma-separated values (ex: 4x2 would be '4, 2').", datasetPath)}})};
+      tDims = parentAM->getShape();
     }
 
     // Calculate the product of the dataset dimensions and the product of the component dimensions.
@@ -282,7 +296,6 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     }
     else
     {
-      // DataPath dataArrayPath = pSelectedAttributeMatrixValue.createChildPath(objectName);
       auto type = datasetReader.getDataType();
       if(type.invalid())
       {
