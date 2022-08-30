@@ -41,6 +41,11 @@ public:
    */
   virtual usize getNumberOfComponents() const = 0;
 
+  /**
+   * @brief Resizes the internal array to accomondate
+   */
+  virtual void reshapeTuples(const std::vector<usize>& tupleShape) = 0;
+
 protected:
   IArray() = delete;
 
