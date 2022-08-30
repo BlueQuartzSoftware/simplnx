@@ -21,7 +21,7 @@ using namespace complex::Constants;
 TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateTriangleAreasFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = "FaceData";
+  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceDataName;
   std::string normalsDataArrayName = "FaceNormals";
 
   DataStructure dataGraph;
