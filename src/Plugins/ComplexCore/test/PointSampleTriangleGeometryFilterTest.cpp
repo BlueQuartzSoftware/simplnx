@@ -73,7 +73,7 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 {
 
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = "FaceData";
+  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceDataName;
   std::string normalsDataArrayName = "FaceNormals";
   std::string triangleAreasName = "Triangle Areas";
   std::string vertexGeometryName = "[Vertex Geometry]";
