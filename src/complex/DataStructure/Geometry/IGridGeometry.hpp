@@ -139,18 +139,18 @@ public:
    * @param xCoord
    * @param yCoord
    * @param zCoord
-   * @return usize
+   * @return std::optional<usize>
    */
-  virtual usize getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const = 0;
+  virtual std::optional<usize> getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const = 0;
 
   /**
    * @brief
    * @param xCoord
    * @param yCoord
    * @param zCoord
-   * @return usize
+   * @return std::optional<usize>
    */
-  virtual usize getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const = 0;
+  virtual std::optional<usize> getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const = 0;
 
   /**
    * @brief
