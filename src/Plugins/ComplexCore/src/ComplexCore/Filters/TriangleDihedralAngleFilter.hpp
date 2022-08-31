@@ -24,7 +24,7 @@ public:
   TriangleDihedralAngleFilter& operator=(TriangleDihedralAngleFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key = "SurfaceMeshTriangleDihedralAnglesArrayPath";
+  static inline constexpr StringLiteral k_SurfaceMeshTriangleDihedralAnglesArrayName_Key = "SurfaceMeshTriangleDihedralAnglesArrayName";
   static inline constexpr StringLiteral k_TGeometryDataPath_Key = "TriGeometryDataPath";
 
   /**
