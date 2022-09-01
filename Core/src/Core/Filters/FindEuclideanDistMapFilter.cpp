@@ -68,7 +68,11 @@ Parameters FindEuclideanDistMapFilter::parameters() const
   params.insert(std::make_unique<ArrayCreationParameter>(k_GBDistancesArrayName_Key, "Boundary Distances", "", DataPath({"CellData", "GBManhattanDistances"})));
   params.insert(std::make_unique<ArrayCreationParameter>(k_TJDistancesArrayName_Key, "Triple Line Distances", "", DataPath({"CellData", "TJManhattanDistances"})));
   params.insert(std::make_unique<ArrayCreationParameter>(k_QPDistancesArrayName_Key, "Quadruple Point Distances", "", DataPath({"CellData", "QPManhattanDistances"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NearestNeighborsArrayName_Key, "Nearest Neighbors", "", DataPath({"CellData", "NearestNeighbors"})));
+  // Interesting thing about this parameter: The Default VALUE must be at the root level of the Data Structure. This is because the
+  // user may not actually want to keep that created array in which case we then try to delete the array. The DeleteDataAction
+  // will fail in preflight because the Array was never actually created at its default location and so if fails. If the user
+  // does in fact want to keep this array, then the user would have actually set the DataPaths to something that will actually get created.
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NearestNeighborsArrayName_Key, "Nearest Boundary Cells", "", DataPath({"NearestNeighbors"})));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_DoBoundaries_Key, k_GBDistancesArrayName_Key, std::make_any<bool>(true));
@@ -149,6 +153,7 @@ IFilter::PreflightResult FindEuclideanDistMapFilter::preflightImpl(const DataStr
     resultOutputActions.value().actions.push_back(std::move(action));
   }
 
+  // If we are NOT saving the nearest neighbors then we need to delete this array that gets created.
   if(!pSaveNearestNeighborsValue)
   {
     auto action = std::make_unique<DeleteDataAction>(pNearestNeighborsArrayNameValue);
