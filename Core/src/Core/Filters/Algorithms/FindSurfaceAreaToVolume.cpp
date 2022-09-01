@@ -52,6 +52,7 @@ Result<> FindSurfaceAreaToVolume::operator()()
   bool mismatchedFeatures = false;
   int32_t largestFeature = 0;
   size_t numTuples = featureIds.getNumberOfTuples();
+  std::string errorMessage;
   for(size_t i = 0; i < numTuples; i++)
   {
     if(featureIds[i] > largestFeature)
@@ -60,19 +61,22 @@ Result<> FindSurfaceAreaToVolume::operator()()
       if(largestFeature >= numFeatures)
       {
         mismatchedFeatures = true;
+        errorMessage = fmt::format("The given FeatureIds Array '{}' has a value that is larger than allowed by the given Feature Attribute Matrix '{}'.\n {} >= {}", m_InputValues->FeatureIdsArrayPath.toString(),
+                    m_InputValues->NumCellsArrayPath.toString(), largestFeature, numFeatures);
+
       }
     }
   }
 
   if(mismatchedFeatures)
   {
-    return {MakeErrorResult(-5555, fmt::format("The number of Features in the NumCells array ({}) is larger than the largest Feature Id {} in the FeatureIds array", numFeatures, largestFeature))};
+    return {MakeErrorResult(-5555, errorMessage)};
   }
-
-  if(largestFeature != (numFeatures - 1))
-  {
-    return {MakeErrorResult(-5555, fmt::format("The number of Features in the NumCells array ({}) does not match the largest Feature Id {} in the FeatureIds array", numFeatures, largestFeature))};
-  }
+  //
+  //  if(largestFeature != (numFeatures - 1))
+  //  {
+  //    return {MakeErrorResult(-5555, fmt::format("The number of Features in the NumCells array ({}) does not match the largest Feature Id {} in the FeatureIds array", numFeatures, largestFeature))};
+  //  }
 
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();
