@@ -68,7 +68,7 @@ Result<> DataObjectNameParameter::validateName(const std::string& value) const
 {
   if(!DataObject::IsValidName(value))
   {
-    return MakeErrorResult(-3, fmt::format("'{}' is not a valid DataObject name"));
+    return MakeErrorResult(-3, fmt::format("'{}' is not a valid DataObject name", value));
   }
   return {};
 }
