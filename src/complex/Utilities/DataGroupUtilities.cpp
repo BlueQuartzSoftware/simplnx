@@ -158,7 +158,8 @@ std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructu
   return arrays;
 }
 
-std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType)
+std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+                                                          const std::vector<DataPath>& ignoredDataPaths)
 {
   std::vector<DataPath> childDataObjects;
   try
@@ -168,9 +169,18 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 
     for(const auto& childName : childrenNames)
     {
+      bool ignore = false;
       DataPath childPath = parentGroup.createChildPath(childName);
       const DataObject* dataObject = dataStructure.getData(childPath);
-      if(dataObject->getDataObjectType() == dataObjectType)
+      for(const auto& ignoredPath : ignoredDataPaths)
+      {
+        if(childPath == ignoredPath)
+        {
+          ignore = true;
+          break;
+        }
+      }
+      if(!ignore && dataObject->getDataObjectType() == dataObjectType)
       {
         childDataObjects.push_back(childPath);
       }

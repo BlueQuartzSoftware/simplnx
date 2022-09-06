@@ -38,8 +38,10 @@ COMPLEX_EXPORT std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(co
  * @param dataStructure The DataStructure to use
  * @param parentGroup The parent group whose children you want to get
  * @param dataObjectType The type of children you want to get
+ * @param ignoredDataPaths Vector of DataPaths that should be remove from the final vector.
  * @return std::optional<std::vector<DataPath>>  of child paths that meet the DataObjectType requirement if there no errors during the process.
  */
-COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType);
+COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+                                                                         const std::vector<DataPath>& ignoredDataPaths = {});
 
 } // namespace complex
