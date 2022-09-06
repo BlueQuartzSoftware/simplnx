@@ -6,6 +6,7 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
 
@@ -130,35 +131,10 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
   const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
 
-  usize numFeatures = selectedFeatureArray.getNumberOfTuples();
-  bool mismatchedFeatures = false;
-  usize largestFeature = 0;
-  for(const int32& featureId : featureIds)
+  auto results = ValidateNumFeaturesInArray(dataStructure, pSelectedFeatureArrayPathValue, featureIds);
+  if(results.invalid())
   {
-    if(shouldCancel)
-    {
-      return {};
-    }
-
-    if(static_cast<usize>(featureId) > largestFeature)
-    {
-      largestFeature = featureId;
-      if(largestFeature >= numFeatures)
-      {
-        mismatchedFeatures = true;
-        break;
-      }
-    }
-  }
-
-  if(mismatchedFeatures)
-  {
-    return MakeErrorResult(-5555, fmt::format("The largest Feature Id {} in the FeatureIds array is larger than the number of Features in the Feature Data array {}", largestFeature, numFeatures));
-  }
-
-  if(largestFeature != (numFeatures - 1))
-  {
-    return MakeErrorResult(-5555, fmt::format("The number of Features in the Feature Data array {} does not match the largest Feature Id in the FeatureIds array", numFeatures));
+    return results;
   }
 
   switch(selectedFeatureArray.getDataType())

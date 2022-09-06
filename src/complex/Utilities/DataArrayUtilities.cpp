@@ -241,4 +241,51 @@ void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<u
   }
 }
 
+Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds)
+{
+  const auto* featureArray = dataStructure.getDataAs<IDataArray>(arrayPath);
+  if(featureArray == nullptr)
+  {
+    return MakeErrorResult(-5550, fmt::format("Could not find the input array path '{}' for validating number of features", arrayPath.toString()));
+  }
+
+  usize numFeatures = featureArray->getNumberOfTuples();
+  bool mismatchedFeatures = false;
+  usize largestFeature = 0;
+  for(const int32& featureId : featureIds)
+  {
+    if(static_cast<usize>(featureId) > largestFeature)
+    {
+      largestFeature = featureId;
+      if(largestFeature >= numFeatures)
+      {
+        mismatchedFeatures = true;
+        break;
+      }
+    }
+  }
+
+  Result<> results = {};
+  if(mismatchedFeatures)
+  {
+    results.errors().push_back(Error{-5551, fmt::format("The largest Feature Id {} in the FeatureIds array is larger than the number of Features ({}) in the Feature Data array at path '{}'",
+                                                        largestFeature, numFeatures, arrayPath.toString())});
+  }
+
+  if(largestFeature != (numFeatures - 1))
+  {
+    results.errors().push_back(Error{-5552, fmt::format("The number of Features ({}) in the Feature Data array at path '{}' does not match the largest Feature Id in the FeatureIds array {}",
+                                                        numFeatures, arrayPath.toString(), largestFeature)});
+
+    const auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
+    if(parentAM != nullptr)
+    {
+      results.errors().push_back(Error{-5553, fmt::format("The input Attribute matrix at path '{}' has {} tuples which does not match the number of total features {}",
+                                                          arrayPath.getParent().toString(), parentAM->getNumTuples(), largestFeature + 1)});
+    }
+  }
+
+  return results;
+}
+
 } // namespace complex
