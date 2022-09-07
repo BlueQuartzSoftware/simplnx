@@ -2,9 +2,6 @@
 
 using namespace complex;
 
-StlUtilities::StlUtilities() = default;
-StlUtilities::~StlUtilities() = default;
-
 int32_t StlUtilities::DetermineStlFileType(const fs::path& path)
 {
   // Open File
