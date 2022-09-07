@@ -40,6 +40,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   QuickSurfaceMeshFilterTest.cpp
   ImportCSVDataTest.cpp
   RemoveFlaggedVerticesTest.cpp
+  RemoveMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
   RobustAutomaticThresholdTest.cpp
   RawBinaryReaderTest.cpp
