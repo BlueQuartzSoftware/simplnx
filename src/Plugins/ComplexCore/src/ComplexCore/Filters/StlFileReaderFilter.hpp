@@ -29,6 +29,11 @@ public:
   static inline constexpr StringLiteral k_StlFilePath_Key = "StlFilePath";
   static inline constexpr StringLiteral k_GeometryDataPath_Key = "GeometryDataPath";
 
+  static inline constexpr StringLiteral k_FaceGroupDataPath_Key = "FaceDataPath";
+  static inline constexpr StringLiteral k_FaceNormalsDataPath_Key = "FaceNormalsDataPath";
+  static inline constexpr StringLiteral k_ScaleOutput = "ScaleOutput";
+  static inline constexpr StringLiteral k_ScaleFactor = "ScaleFactor";
+
   /**
    * @brief Returns the name of the filter.
    * @return
