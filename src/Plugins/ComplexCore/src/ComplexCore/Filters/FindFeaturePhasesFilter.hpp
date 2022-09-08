@@ -31,6 +31,7 @@ public:
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
   static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
+  static inline constexpr StringLiteral k_CellFeaturesAttributeMatrixPath_Key = "CellFeaturesAttributeMatrixPath";
 
   /**
    * @brief Returns the name of the filter.
