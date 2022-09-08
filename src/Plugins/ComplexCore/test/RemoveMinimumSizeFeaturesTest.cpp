@@ -11,56 +11,51 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include "complex_plugins/Utilities/TestUtilities.hpp"
-
-#include "Core/Core_test_dirs.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp"
 
 using namespace complex;
 
 TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[ComplexCore][RemoveMinimumSizeFeatures]")
 {
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = Application::Instance()->getFilterList();
-
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_min_size_output.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = complex::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_min_size_input.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
+  const std::string k_GrainData("Grain Data");
+  const std::string k_NumCells("NumElements");
+  const std::string k_ExemplarDataContainer("Exemplar Data");
+  const DataPath k_DataContainerPath({Constants::k_DataContainer});
+  const DataPath k_CellAttributeMatrix = k_DataContainerPath.createChildPath(Constants::k_CellData);
+  const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_GrainData);
+  const DataPath k_FeatureIdsArrayPath = k_CellAttributeMatrix.createChildPath(Constants::k_FeatureIds);
+  const DataPath k_NumCellsPath = k_CellFeatureAttributeMatrix.createChildPath(k_NumCells);
+  const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPath(Constants::k_Phases);
 
   {
-    auto filter = filterList->createFilter(k_RemoveMinimumSizeFeaturesFilterHandle);
-    REQUIRE(nullptr != filter);
+    RemoveMinimumSizeFeaturesFilter filter;
 
     // Parameter Keys
-    constexpr StringLiteral k_MinAllowedFeaturesSize_Key = "min_allowed_features_size";
-
-    constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
-    constexpr StringLiteral k_NumCellsPath_Key = "num_cells_path";
-    constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
-    constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
-    constexpr StringLiteral k_ApplySinglePhase_Key = "apply_single_phase";
-    constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
-
     Arguments args;
     // Create default Parameters for the filter.
-    args.insertOrAssign(k_MinAllowedFeaturesSize_Key, std::make_any<int64>(16));
-    args.insertOrAssign(k_ApplySinglePhase_Key, std::make_any<bool>(false));
-    args.insertOrAssign(k_PhaseNumber_Key, std::make_any<int64>(1));
-    args.insertOrAssign(k_ImageGeomPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insertOrAssign(k_FeatureIdsPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
-    args.insertOrAssign(k_NumCellsPath_Key, std::make_any<DataPath>(k_NumCellsPath));
-    args.insertOrAssign(k_FeaturePhasesPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
+    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key, std::make_any<int64>(16));
+    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_ApplySinglePhase_Key, std::make_any<bool>(false));
+    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_PhaseNumber_Key, std::make_any<int64>(1));
+    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
+    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_NumCellsPath_Key, std::make_any<DataPath>(k_NumCellsPath));
+    args.insertOrAssign(RemoveMinimumSizeFeaturesFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
 
     // Preflight the filter and check result
-    auto preflightResult = filter->preflight(dataStructure, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter->execute(dataStructure, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
@@ -106,47 +101,47 @@ TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[Comp
       switch(type)
       {
       case DataType::boolean: {
-        CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int8: {
-        CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int16: {
-        CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int32: {
-        CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int64: {
-        CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint8: {
-        CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint16: {
-        CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint32: {
-        CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint64: {
-        CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::float32: {
-        CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::float64: {
-        CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
         break;
       }
       default: {
@@ -156,5 +151,5 @@ TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[Comp
     }
   }
 
-  WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_min_size_output.dream3d", unit_test::k_BinaryTestOutputDir));
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_min_size_output.dream3d", unit_test::k_BinaryTestOutputDir));
 }
