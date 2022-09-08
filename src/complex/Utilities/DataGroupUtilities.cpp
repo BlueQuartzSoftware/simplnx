@@ -192,4 +192,37 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
   return {childDataObjects};
 }
 
+std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths)
+{
+  std::vector<DataPath> childDataObjects;
+  try
+  {
+    const auto& featureAttributeMatrix = dataStructure.getDataRefAs<BaseGroup>(parentGroup); // this may throw.
+    std::vector<std::string> childrenNames = featureAttributeMatrix.getDataMap().getNames();
+
+    for(const auto& childName : childrenNames)
+    {
+      bool ignore = false;
+      DataPath childPath = parentGroup.createChildPath(childName);
+      const DataObject* dataObject = dataStructure.getData(childPath);
+      for(const auto& ignoredPath : ignoredDataPaths)
+      {
+        if(childPath == ignoredPath)
+        {
+          ignore = true;
+          break;
+        }
+      }
+      if(!ignore && dynamic_cast<const IArray*>(dataObject) != nullptr)
+      {
+        childDataObjects.push_back(childPath);
+      }
+    }
+  } catch(std::exception& e)
+  {
+    return {};
+  }
+  return {childDataObjects};
+}
+
 } // namespace complex

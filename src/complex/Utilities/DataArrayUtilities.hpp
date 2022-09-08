@@ -547,6 +547,10 @@ COMPLEX_EXPORT Result<> CheckValueConverts(const std::string& value, NumericType
  */
 COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
 
+COMPLEX_EXPORT void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape);
+
+COMPLEX_EXPORT Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds);
+
 /**
  * @brief These structs and functions are meant to make using a "mask array" or "Good Voxels Array" easier
  * for the developer. There is virtual function call overhead with using these structs and functions.
@@ -667,9 +671,5 @@ COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure
  * @return
  */
 COMPLEX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArrayPtr);
-
-COMPLEX_EXPORT void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape);
-
-COMPLEX_EXPORT Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds);
 
 } // namespace complex
