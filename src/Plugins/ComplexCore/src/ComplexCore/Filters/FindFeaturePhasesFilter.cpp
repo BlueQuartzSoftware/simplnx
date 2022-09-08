@@ -71,9 +71,11 @@ IFilter::PreflightResult FindFeaturePhasesFilter::preflightImpl(const DataStruct
 
   complex::Result<OutputActions> resultOutputActions;
 
-  const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
   {
-    auto createFeaturePhasesAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{1}, std::vector<usize>{1}, pFeaturePhasesArrayPathValue);
+    usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
+    usize maxValue = featureIds[featureIdsMaxIdx];
+    auto createFeaturePhasesAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{maxValue + 1}, std::vector<usize>{1}, pFeaturePhasesArrayPathValue);
     resultOutputActions.value().actions.push_back(std::move(createFeaturePhasesAction));
   }
 
@@ -93,13 +95,6 @@ Result<> FindFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, cons
   const Int32Array& cellPhases = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
   Int32Array& featurePhases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
-
-  // Resize the featurePhases array to the proper size
-  usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
-  usize maxValue = featureIds[featureIdsMaxIdx];
-
-  DataStore<int32>& featurePhasesStore = featurePhases.getIDataStoreRefAs<DataStore<int32>>();
-  featurePhasesStore.reshapeTuples(std::vector<usize>{maxValue + 1});
 
   usize totalPoints = featureIds.getNumberOfTuples();
   std::map<int32, int32> featureMap;
