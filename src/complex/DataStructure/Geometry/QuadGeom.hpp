@@ -49,7 +49,7 @@ public:
    */
   QuadGeom(QuadGeom&& other) noexcept;
 
-  ~QuadGeom() override;
+  ~QuadGeom() noexcept override;
 
   QuadGeom& operator=(const QuadGeom&) = delete;
   QuadGeom& operator=(QuadGeom&&) noexcept = delete;
