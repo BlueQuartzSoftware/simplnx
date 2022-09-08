@@ -16,16 +16,20 @@ TEST_CASE("ComplexCore::FindFeaturePhasesFilter(Valid Parameters)", "[ComplexCor
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
   DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData);
+  DataPath cellFeatureDataPath = smallIn100Group.createChildPath(Constants::k_CellFeatureData);
   DataPath cellPhasesPath = cellDataPath.createChildPath(complex::Constants::k_Phases);
   DataPath featureIdsPath = cellDataPath.createChildPath(complex::Constants::k_FeatureIds);
-  DataPath featurePhasesPath({complex::Constants::k_Phases});
+  std::string computedPrefix = "Computed_";
+  std::string featurePhasesName = computedPrefix + complex::Constants::k_Phases.str();
+  DataPath featurePhasesPath = cellFeatureDataPath.createChildPath(featurePhasesName);
 
   {
     FindFeaturePhasesFilter ffpFilter;
     Arguments args;
     args.insert(FindFeaturePhasesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellPhasesPath));
     args.insert(FindFeaturePhasesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
-    args.insert(FindFeaturePhasesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
+    args.insert(FindFeaturePhasesFilter::k_CellFeaturesAttributeMatrixPath_Key, std::make_any<DataPath>(cellFeatureDataPath));
+    args.insert(FindFeaturePhasesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<std::string>(featurePhasesName));
 
     auto preflightResult = ffpFilter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -33,7 +37,7 @@ TEST_CASE("ComplexCore::FindFeaturePhasesFilter(Valid Parameters)", "[ComplexCor
     auto result = ffpFilter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
-    DataPath exemplaryDataPath = smallIn100Group.createChildPath("CellFeatureData").createChildPath(complex::Constants::k_Phases);
+    DataPath exemplaryDataPath = cellFeatureDataPath.createChildPath(complex::Constants::k_Phases);
     const Int32Array& featureArrayExemplary = dataStructure.getDataRefAs<Int32Array>(exemplaryDataPath);
 
     const Int32Array& createdFeatureArray = dataStructure.getDataRefAs<Int32Array>(featurePhasesPath);
