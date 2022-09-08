@@ -162,11 +162,7 @@ Pipeline CreateExportPipeline()
     args.insert("numeric_type", std::make_any<NumericType>(NumericType::int8));
     args.insert("component_count", std::make_any<uint64>(3));
 
-    DynamicTableData::TableDataType tableData{{1.0}};
-    DynamicTableData::HeadersListType headers{"Headers"};
-    DynamicTableData::HeadersListType columns{"Columns"};
-    auto tupleDimsTable = DynamicTableData::Create(tableData, headers, columns);
-    args.insert("tuple_dimensions", tupleDimsTable);
+    args.insert("tuple_dimensions", DynamicTableInfo::TableDataType{{{1.0}}});
     args.insert("initialization_value", std::make_any<std::string>("7"));
     args.insert("output_data_array", DataPath({DataNames::k_ArrayName}));
     pipeline.push_back(k_CreateDataArrayHandle, args);

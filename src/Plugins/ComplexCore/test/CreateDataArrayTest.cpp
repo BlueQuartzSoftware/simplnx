@@ -13,7 +13,7 @@ TEST_CASE("ComplexCore::CreateDataArray(Instantiate)", "[ComplexCore][CreateData
 {
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableData::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
+  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
 
   static const DataPath k_DataPath({"foo"});
 
@@ -23,7 +23,7 @@ TEST_CASE("ComplexCore::CreateDataArray(Instantiate)", "[ComplexCore][CreateData
 
   args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
   args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(k_NComp));
-  args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData::Create(k_TupleDims, {}, {})));
+  args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
   args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
 
   auto result = filter.execute(ds, args);
@@ -34,7 +34,7 @@ TEST_CASE("ComplexCore::CreateDataArray(Invalid Parameters)", "[ComplexCore][Cre
 {
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableData::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
+  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
   static const DataPath k_DataPath({"foo"});
 
   CreateDataArray filter;
@@ -45,7 +45,7 @@ TEST_CASE("ComplexCore::CreateDataArray(Invalid Parameters)", "[ComplexCore][Cre
   {
     args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::uint16));
     args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(k_NComp));
-    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData::Create(k_TupleDims, {}, {})));
+    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("-1"));
 
@@ -56,7 +56,7 @@ TEST_CASE("ComplexCore::CreateDataArray(Invalid Parameters)", "[ComplexCore][Cre
   {
     args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(k_NComp));
-    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData::Create(k_TupleDims, {}, {})));
+    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("1024"));
 
@@ -67,7 +67,7 @@ TEST_CASE("ComplexCore::CreateDataArray(Invalid Parameters)", "[ComplexCore][Cre
   {
     args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(0));
-    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData::Create(k_TupleDims, {}, {})));
+    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("1"));
 
@@ -79,8 +79,8 @@ TEST_CASE("ComplexCore::CreateDataArray(Invalid Parameters)", "[ComplexCore][Cre
     args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(1));
 
-    DynamicTableData::TableDataType tupleDims = {{static_cast<double>(0.0)}};
-    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData::Create(tupleDims, {}, {})));
+    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(0.0)}};
+    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("1"));
 
@@ -91,8 +91,8 @@ TEST_CASE("ComplexCore::CreateDataArray(Invalid Parameters)", "[ComplexCore][Cre
   {
     args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(1));
-    DynamicTableData::TableDataType tupleDims = {{static_cast<double>(1.0)}};
-    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData::Create(tupleDims, {}, {})));
+    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
+    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>(""));
 
@@ -103,8 +103,8 @@ TEST_CASE("ComplexCore::CreateDataArray(Invalid Parameters)", "[ComplexCore][Cre
   {
     args.insert(CreateDataArray::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArray::k_NumComps_Key, std::make_any<uint64>(1));
-    DynamicTableData::TableDataType tupleDims = {{static_cast<double>(1.0)}};
-    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData::Create(tupleDims, {}, {})));
+    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
+    args.insert(CreateDataArray::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
     args.insert(CreateDataArray::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
     args.insert(CreateDataArray::k_InitilizationValue_Key, std::make_any<std::string>("1000"));
 

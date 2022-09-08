@@ -98,7 +98,7 @@ Arguments createArguments(const std::string& arrayName, std::optional<DataType> 
   data.numberOfLines = values.size() + 1;
 
   args.insertOrAssign(ImportCSVDataFilter::k_WizardData_Key, std::make_any<CSVWizardData>(data));
-  args.insertOrAssign(ImportCSVDataFilter::k_TupleDims_Key, std::make_any<DynamicTableData>(DynamicTableData{DynamicTableData::TableDataType{{static_cast<double>(values.size())}}, {""}, {""}}));
+  args.insertOrAssign(ImportCSVDataFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{{static_cast<float64>(values.size())}}}));
   args.insertOrAssign(ImportCSVDataFilter::k_UseExistingGroup_Key, std::make_any<bool>(false));
   args.insertOrAssign(ImportCSVDataFilter::k_CreatedDataGroup_Key, std::make_any<DataPath>(DataPath({newGroupName})));
   args.insertOrAssign(ImportCSVDataFilter::k_SelectedDataGroup_Key, std::make_any<DataPath>(DataPath({dummyGroupName})));
