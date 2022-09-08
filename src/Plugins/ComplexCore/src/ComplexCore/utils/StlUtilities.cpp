@@ -2,9 +2,6 @@
 
 using namespace complex;
 
-StlUtilities::StlUtilities() = default;
-StlUtilities::~StlUtilities() = default;
-
 int32_t StlUtilities::DetermineStlFileType(const fs::path& path)
 {
   // Open File
@@ -19,11 +16,11 @@ int32_t StlUtilities::DetermineStlFileType(const fs::path& path)
   std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
   if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, f) != StlConstants::k_STL_HEADER_LENGTH)
   {
-    std::ignore = fclose(f);
+    std::ignore = std::fclose(f);
     return StlConstants::k_StlHeaderParseError;
   }
   // close the file
-  std::ignore = fclose(f);
+  std::ignore = std::fclose(f);
 
   size_t solid_pos = header.find("solid", 0);
   // The word 'solid' was not found ANYWHERE in the first 80 bytes.
@@ -59,7 +56,7 @@ int32_t StlUtilities::NumFacesFromHeader(const fs::path& path)
   std::string header(StlConstants::k_STL_HEADER_LENGTH, 0x00);
   if(std::fread(header.data(), 1, StlConstants::k_STL_HEADER_LENGTH, f) != StlConstants::k_STL_HEADER_LENGTH)
   {
-    std::ignore = fclose(f);
+    std::ignore = std::fclose(f);
     return StlConstants::k_StlHeaderParseError;
   }
 
@@ -67,10 +64,10 @@ int32_t StlUtilities::NumFacesFromHeader(const fs::path& path)
   // Read the number of triangles in the file.
   if(std::fread(&triCount, sizeof(int32_t), 1, f) != 1)
   {
-    std::ignore = fclose(f);
+    std::ignore = std::fclose(f);
     return StlConstants::k_StlHeaderParseError;
   }
 
-  std::ignore = fclose(f);
+  std::ignore = std::fclose(f);
   return triCount;
 }

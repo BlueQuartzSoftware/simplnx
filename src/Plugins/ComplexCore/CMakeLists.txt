@@ -60,7 +60,7 @@ set(FilterList
 )
 
 set(ActionList
-  )
+)
 
 set(AlgorithmList
   ApplyTransformationToGeometry
@@ -72,7 +72,7 @@ set(AlgorithmList
   RawBinaryReader
   ScalarSegmentFeatures
   FindArrayStatistics
-  )
+)
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
@@ -101,23 +101,23 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 #------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin
 # can use the target_sources(...) cmake call
- target_sources(${PLUGIN_NAME}
-   PUBLIC
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
-    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
-#   PRIVATE
-#     additional source files
- )
- source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} 
-    FILES
-      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
-      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
-      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
-      ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
-   )
 
+set(PLUGIN_EXTRA_SOURCES
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
+)
+
+target_sources(${PLUGIN_NAME}
+  PRIVATE
+    ${PLUGIN_EXTRA_SOURCES}
+)
+
+source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME}
+  FILES
+    ${PLUGIN_EXTRA_SOURCES}
+)
 
 #------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
