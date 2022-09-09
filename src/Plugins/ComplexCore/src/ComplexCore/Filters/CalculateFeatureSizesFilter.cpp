@@ -150,18 +150,9 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   auto& numElements = data.getDataRefAs<Int32Array>(numElementsPath);
 
   usize totalPoints = featureIds.getNumberOfTuples();
-  std::set<int32_t> uniqueFeatureIds;
-  int32 zeroFeature = 1;
-  for(size_t i = 0; i < totalPoints; i++)
-  {
-    if(featureIds[i] == 0)
-    {
-      zeroFeature = 0;
-    }
-    uniqueFeatureIds.insert(featureIds[i]);
-  }
-
-  usize numfeatures = uniqueFeatureIds.size() + zeroFeature;
+  usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
+  usize maxValue = featureIds[featureIdsMaxIdx];
+  usize numfeatures = maxValue + 1;
 
   std::vector<uint64> featureCountsStore(numfeatures, 0);
 
