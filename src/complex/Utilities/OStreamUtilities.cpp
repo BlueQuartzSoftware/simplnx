@@ -1047,6 +1047,29 @@ void writeOutWrapper(std::map<size_t, std::string>& stringStore, T& outputStrm, 
   }
 }
 
+void multiFileWriteOutWrapper(std::map<std::string, std::map<size_t, std::string>>& printMap, const bool& isBinary = false)
+// requires unique stringStore for each Print2DMatrix to function properly
+{
+  std::ofstream outputStrm;
+  for(std::map<std::string, std::map<size_t, std::string>>::iterator itr = printMap.begin(); itr != printMap.end(); ++itr)
+  {
+    const auto& path = itr->first;
+    if(isBinary)
+    {
+      outputStrm = std::ofstream(path, std::ios_base::app | std::ios_base::binary);
+    }
+    else
+    {
+      outputStrm = std::ofstream(path, std::ios_base::app);
+    }
+    for(std::map<size_t, std::string>::iterator it = itr->second.begin(); it != itr->second.end(); ++it) // take advantage of maps automatic descending order sort
+    {
+      writeOut(it->second, outputStrm, isBinary);
+    }
+  }
+  outputStrm.close();
+}
+
 DataObject::Type getDataType(const DataPath& objectPath, DataStructure& dataStructure)
 {
   return dataStructure.getDataAs<DataObject>(objectPath)->getDataObjectType();
@@ -1153,82 +1176,191 @@ std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::ma
 
 namespace OutputFunctions
 {
-// multiple datapaths, Creates OFStream from filepath [BINARY CAPABLE] // endianess must be determined in calling class
-void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", const bool& exportToBinary = false,
-                                  bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0)
+// multiple datapaths, Creates OFStream from filepath [BINARY CAPABLE, unless neighborlist] // endianess must be determined in calling class
+void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::directory_entry& directoryPath, std::string fileExtension = ".txt",
+                                  const bool& exportToBinary = false, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0)
+// binary bool must come after fileExtension to force caller to input a fileExtension that could support binary
 {
+  if(!directoryPath.is_directory())
+  {
+    throw std::runtime_error("directoryPath must be a directory");
+  }
+  bool hasNeighborLists = false;
   if(exportToBinary)
   {
     includeHeaders = false;
     includeIndex = false;
     componentsPerLine = 0;
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, getDataTypesWrapper(objectPaths, dataStructure)), dataStructure, includeIndex, includeHeaders);
-
-  ParallelDataAlgorithm dataAlg;
-  std::vector<std::map<size_t, std::string>> stringStoreList;
-  for(auto& matrix : matrices) // neighborLists automatically stored at the end
+  auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
+  for(const auto& objType : objTypes)
   {
-    std::map<size_t, std::string> stringStore; // 1 per matrix
-    dataAlg.setRange(0, matrix->getRows());
-    dataAlg.execute(AssembleVerticalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
-    stringStoreList.push_back(stringStore);
+    if(objType == DataObject::Type::NeighborList)
+    {
+      hasNeighborLists = true;
+      if(objTypes.size() == 1)
+      {
+        throw std::runtime_error("This function doesn't support singular neighbor lists use printSingleDataObject() instead");
+      }
+    }
   }
-
-  for(auto& stringStore : stringStoreList)
+  auto sortedMap = createSortedMapbyType(objectPaths, objTypes); // used later
+  auto matrices = unpackSortedMapIntoMatricies(sortedMap, dataStructure, includeIndex, true);
+  ParallelDataAlgorithm dataAlg;
+  auto& matrix = matrices[0];             // first store never neighborlist so safe to parse vertically implicitly
+  dataAlg.setRange(1, matrix->getRows()); // skip 0 index because headers created implicitly
+  size_t arrayIndex = 0;
+  if(includeIndex)
   {
+    arrayIndex++;
+  }
+  std::map<std::string, std::map<size_t, std::string>> printMap;
+  std::ofstream fout;
+  while(arrayIndex < matrix->getColumns())
+  {
+    std::map<size_t, std::string> stringStore; // 1 per array
+    dataAlg.execute(AssembleVerticalStringFromIndex(matrix, stringStore, arrayIndex, delimiter, componentsPerLine));
+    auto path = directoryPath.path().string() + "/" + matrix->getValue(arrayIndex) + fileExtension;
+    if(exportToBinary)
+    {
+      fout = std::ofstream(path, std::ofstream::out | std::ios_base::binary);
+    }
+    else
+    {
+      fout = std::ofstream(path, std::ofstream::out);
+    }
+    if(!fout.is_open())
+    {
+      throw std::runtime_error("Error creating the file");
+    }
+    printMap.emplace(path, std::map<size_t, std::string>(std::move(stringStore))); // try to make as resource efficient as possible
+    arrayIndex++;
+  }
+  if(hasNeighborLists) // cant be binary
+  {
+    std::vector<std::string> neighborNames;
+    for(std::map<DataObject::Type, std::vector<DataPath>>::iterator it = sortedMap.begin(); it != sortedMap.end(); ++it) // this gets parse order correct for naming scheme
+    {
+      if(it->first == DataObject::Type::NeighborList)
+      {
+        for(const auto& path : it->second)
+        {
+          neighborNames.emplace_back(dataStructure.getDataAs<INeighborList>(path)->getName());
+        }
+      }
+    }
+    for(size_t i = 1; i < matrices.size(); i++) // neighborLists automatically stored at the end
+    {
+      std::map<size_t, std::string> stringStore; // 1 per matrix
+      dataAlg.execute(AssembleHorizontalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
+      auto path = directoryPath.path().string() + "/" + neighborNames[(i - 1)] + fileExtension;
+      fout = std::ofstream(path, std::ofstream::out);
+      if(!fout.is_open())
+      {
+        throw std::runtime_error("Error creating the file");
+      }
+      printMap.emplace(path, std::map<size_t, std::string>(std::move(stringStore))); // try to make as resource efficient as possible
+    }
+  }
+  fout.close();
+  if(hasNeighborLists)
+  {
+    multiFileWriteOutWrapper(printMap, false);
+  }
+  else
+  {
+    multiFileWriteOutWrapper(printMap, exportToBinary);
   }
 }
 
 // single path, custom OStream [BINARY CAPABLE] // endianess must be determined in calling class
 void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const std::string delimiter = "", const bool exportToBinary = false,
-                           bool includeIndex = false, bool includeHeaders = false, const size_t componentsPerLine = 0)
+                           size_t componentsPerLine = 0)
 {
+  bool hasNeighborLists = false;
   if(exportToBinary)
   {
-    includeHeaders = false;
-    includeIndex = false;
+    componentsPerLine = 0;
   }
   // wrap DataPath in vector to take advantage of existing framework
   const std::vector<DataPath> objectPaths = {objectPath};
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, getDataTypesWrapper(objectPaths, dataStructure)), dataStructure, includeIndex, includeHeaders);
+  auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
+  for(const auto& objType : objTypes)
+  {
+    if(objType == DataObject::Type::NeighborList)
+    {
+      hasNeighborLists = true;
+    }
+  }
+  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, false);
   // unpack matrix from vector
   auto matrix = matrices[0];
 
   ParallelDataAlgorithm dataAlg;
   std::map<size_t, std::string> stringStore; // 1 per matrix
-  dataAlg.setRange(0, matrix->getSize());
-  dataAlg.execute(AssembleHorizontalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
+  dataAlg.setRange(0, matrix->getRows());
+  dataAlg.execute(AssembleVerticalStringFromIndex(matrix, stringStore, 0, delimiter, componentsPerLine));
 
-  writeOutWrapper(stringStore, outputStrm, exportToBinary);
+  if(hasNeighborLists)
+  {
+    writeOutWrapper(stringStore, outputStrm, false);
+  }
+  else
+  {
+    writeOutWrapper(stringStore, outputStrm, exportToBinary);
+  }
 }
 
 // single path, Creates OFStream from filepath [BINARY CAPABLE] // endianess must be determined in calling class
 void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string delimiter = "", const bool exportToBinary = false,
-                           bool includeIndex = false, bool includeHeaders = false, const size_t componentsPerLine = 0)
+                           size_t componentsPerLine = 0)
 {
+  bool hasNeighborLists = false;
   if(exportToBinary)
   {
-    includeHeaders = false;
-    includeIndex = false;
+    componentsPerLine = 0;
   }
   // wrap DataPath in vector to take advantage of existing framework
   const std::vector<DataPath> objectPaths = {objectPath};
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, getDataTypesWrapper(objectPaths, dataStructure)), dataStructure, includeIndex, includeHeaders);
+  auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
+  for(const auto& objType : objTypes)
+  {
+    if(objType == DataObject::Type::NeighborList)
+    {
+      hasNeighborLists = true;
+    }
+  }
+  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, false);
   // unpack matrix from vector
   auto matrix = matrices[0];
 
   ParallelDataAlgorithm dataAlg;
   std::map<size_t, std::string> stringStore; // 1 per matrix
   dataAlg.setRange(0, matrix->getSize());
-  dataAlg.execute(AssembleHorizontalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
+  dataAlg.execute(AssembleVerticalStringFromIndex(matrix, stringStore, 0, delimiter, componentsPerLine));
 
-  std::ofstream outputStrm(filePath.string(), std::ios_base::app);
+  std::ofstream outputStrm;
+  if(exportToBinary)
+  {
+    outputStrm = std::ofstream(filePath.string(), std::ofstream::out | std::ios_base::binary);
+  }
+  else
+  {
+    outputStrm = std::ofstream(filePath.string(), std::ofstream::out);
+  }
   if(!outputStrm.is_open())
   {
     throw std::runtime_error("Invalid file path");
   }
-  writeOutWrapper(stringStore, outputStrm, exportToBinary);
+  if(hasNeighborLists)
+  {
+    writeOutWrapper(stringStore, outputStrm, false);
+  }
+  else
+  {
+    writeOutWrapper(stringStore, outputStrm, exportToBinary);
+  }
+
   outputStrm.close();
 }
 
@@ -1236,7 +1368,16 @@ void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStruct
 void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", const bool& includeIndex = false,
                                const size_t componentsPerLine = 0, const bool& includeHeaders = false)
 {
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, getDataTypesWrapper(objectPaths, dataStructure)), dataStructure, includeIndex, includeHeaders);
+  bool hasNeighborLists = false;
+  auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
+  for(const auto& objType : objTypes)
+  {
+    if(objType == DataObject::Type::NeighborList)
+    {
+      hasNeighborLists = true;
+    }
+  }
+  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, includeIndex);
 
   ParallelDataAlgorithm dataAlg;
   std::vector<std::map<size_t, std::string>> stringStoreList;
@@ -1258,7 +1399,16 @@ void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
 void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string& delimiter = "",
                                const bool& includeIndex = false, const size_t componentsPerLine = 0, const bool& includeHeaders = false)
 {
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, getDataTypesWrapper(objectPaths, dataStructure)), dataStructure, includeIndex);
+  bool hasNeighborLists = false;
+  auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
+  for(const auto& objType : objTypes)
+  {
+    if(objType == DataObject::Type::NeighborList)
+    {
+      hasNeighborLists = true;
+    }
+  }
+  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, hasNeighborLists, includeIndex);
 
   ParallelDataAlgorithm dataAlg;
 
@@ -1271,7 +1421,7 @@ void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStr
     stringStoreList.push_back(stringStore);
   }
 
-  std::ofstream outputStrm(filePath.string(), std::ios_base::app);
+  std::ofstream outputStrm(filePath.string(), std::ofstream::out); // overwrite old file just in case
   if(!outputStrm.is_open())
   {
     throw std::runtime_error("Invalid file path");
