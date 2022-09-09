@@ -220,7 +220,7 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
         for(size_t i = start; i < m_InputArray.getNumberOfLists(); i++)
         {
           auto grain = m_InputArray.getListReference(i);
-          m_OutputMatrix->getValue(row, 1) = StringUtilities::number(grain.size()); // add comp count
+          m_OutputMatrix->getValue(i, 1) = StringUtilities::number(grain.size()); // add comp count
           for(size_t index = 0; index < grain.size(); index++)
           {
             column = index + 2;
@@ -233,7 +233,7 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
         for(size_t i = start; i < m_InputArray.getNumberOfLists(); i++)
         {
           auto grain = m_InputArray.getListReference(i);
-          m_OutputMatrix->getValue(row, 1) = StringUtilities::number(grain.size()); // add comp count
+          m_OutputMatrix->getValue(i, 1) = StringUtilities::number(grain.size()); // add comp count
           for(size_t index = 0; index < grain.size(); index++)
           {
             column = index + 1;
@@ -1221,8 +1221,6 @@ void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
     dataAlg.execute(AssembleHorizontalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
     stringStoreList.push_back(stringStore);
   }
-
-
 }
 
 // Creates OFStream from filepath [NO BINARY SUPPORT]
