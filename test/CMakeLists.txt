@@ -70,3 +70,69 @@ target_compile_options(complex_test
 target_include_directories(complex_test PRIVATE ${COMPLEX_GENERATED_DIR})
 
 catch_discover_tests(complex_test)
+
+# -----------------------------------------------------------------------
+# Download the Test Data
+# -----------------------------------------------------------------------
+include(FetchContent)
+
+function(download_dream3d_test_files url hash)
+  message(STATUS "Downloading DREAM3D_Data/TestFiles")
+  FetchContent_Declare(download_DREAM3D_Data
+    URL ${url}
+    URL_HASH SHA512=${hash}
+    SOURCE_DIR "${DREAM3D_DATA_DIR}/TestFiles"
+    DOWNLOAD_DIR "${DREAM3D_DATA_DIR}"
+
+    # BINARY_DIR "${DREAM3D_DATA_DIR}/Binary"
+    # INSTALL_DIR "${DREAM3D_DATA_DIR}/Install"
+    # TMP_DIR "${DREAM3D_DATA_DIR}/tmp"
+    # STAMP_DIR "${DREAM3D_DATA_DIR}/stamp"
+  )
+
+  FetchContent_MakeAvailable(download_DREAM3D_Data)
+endfunction(download_dream3d_test_files)
+
+if(EXISTS "${DREAM3D_DATA_DIR}")
+  message(STATUS "DREAM3D Data: Found at '${DREAM3DNXProj_PARENT}/DREAM3D_Data/'")
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
+  add_custom_target(DataFolderCopy ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${DREAM3D_DATA_DIR}/Data
+    ${DATA_DEST_DIR}
+    COMMENT "Copying Data Folder into Binary Directory")
+  set_target_properties(DataFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
+
+  add_custom_target(H5EbsdDataCopy ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
+    ${DATA_DEST_DIR}/H5Ebsd/Small_IN100.h5ebsd
+    COMMENT "Copying Data Folder into Binary Directory")
+  set_target_properties(H5EbsdDataCopy PROPERTIES FOLDER ZZ_COPY_FILES)  
+
+  set(DREAM3D_DATA_DIRECTORIES
+    ${DREAM3D_DATA_DIR}/Data/Image
+    ${DREAM3D_DATA_DIR}/Data/Models
+    ${DREAM3D_DATA_DIR}/Data/H5Ebsd
+  )
+
+  set(INSTALL_DESTINATION "Data")
+
+  # NOTE: If we are creating an Anaconda install the install directory WILL be different
+  foreach(data_dir ${DREAM3D_DATA_DIRECTORIES})
+    if(EXISTS ${data_dir})
+      install(DIRECTORY
+        ${data_dir}
+        DESTINATION ${INSTALL_DESTINATION}
+        COMPONENT Applications
+      )
+    endif()
+  endforeach()
+
+  download_dream3d_test_files(
+    https://github.com/dream3d/DREAM3D_Data/releases/download/v6_8/TestFiles_6_8.tar.gz
+    17af96674010f07e77758ee2335199e866a3c036b8df9755f203b85a8ad1112c19a5a110539c634b0b2cefce73c76c999becc1a4661205925852e07f278b287e
+  )
+
+else()
+  message(STATUS "DREAM3D Data: NOT found at '${DREAM3DNXProj_PARENT}/DREAM3D_Data/'. Data will not be available for testing")
+endif()
+
