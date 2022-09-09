@@ -311,6 +311,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
