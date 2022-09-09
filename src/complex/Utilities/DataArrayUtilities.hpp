@@ -357,7 +357,11 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), dataObjectId);
   if(dataArray == nullptr)
   {
-    if(parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    if(dataStructure.getId(path).has_value())
+    {
+      return MakeErrorResult(-264, fmt::format("Cannot create Data Array at path '{}' because it already exists. Choose a different name.", path.toString()));
+    }
+    else if(parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
       auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
