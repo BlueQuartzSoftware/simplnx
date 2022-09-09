@@ -92,18 +92,18 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
 
 H5::ErrorType AttributeMatrix::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
-  H5::ErrorType error = BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
   auto attribute = groupReader.getAttribute(H5Constants::k_TupleDims);
   m_TupleShape = attribute.readAsVector<usize>();
 
   if(m_TupleShape.empty())
   {
     return -1;
+  }
+
+  H5::ErrorType error = BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  if(error < 0)
+  {
+    return error;
   }
 
   return error;
