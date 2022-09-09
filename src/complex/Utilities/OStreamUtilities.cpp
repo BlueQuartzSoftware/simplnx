@@ -14,6 +14,7 @@
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <iterator>
 #include <ostream>
 #include <sstream>
@@ -30,7 +31,7 @@ struct PrintMatrix2D
 {
   // visual representation of string matrix
   /*
-  * ****NOTE functionality for storing neighborlist below has been romed to preserve simplicity of use****
+  * ****NOTE functionality for storing neighborlist below has been removed to preserve simplicity of use****
   *
     ID | DataArray1 | StringArray | DataArray2  //Note the ID column is optional this is just an example (**view note next to neightborlist**)
   --------------------------------------------
@@ -40,15 +41,15 @@ struct PrintMatrix2D
   | "4"   "value"      "String"      "value" |  will be string represtentation of doubles to the end of array's index]
   | "5"   "value"      "String"      "value" |  However, its important to note that these columns are not explicitly
   | "6"   "value"      "String"      "value" |  numerically typed, so if you pull index of column below end of
-  | ...     ...          ...           ...   |  dataArray it can give odd values such as UNINITIALIZED or neighborlist values(if stored below).
+  | ...     ...          ...           ...   |  dataArray it can give odd values such as UNINITIALIZED or unexpected values(if stored below).
 
-  NeighborList Representation (can be stored below for simplicity but row location should be stored and must be processed horizontally)
-    ID   |   NumNeighbor |       Values           ...        //Just an example usage
+  NeighborList Representation (must be processed horizontally)
+    ID   |  NumNeighbor  |       Values           ...        //Just an example usage
   -----------------------------------------------------------
-  | "1"         "16"             "num"           "num"      |  In this case, UNITIALIZED are essentially empty values and will be ignored in
-  | "2"         "16"             "num"      "UNINITAILIZED" |  print if isBalanced bool is false (default)
-  | "3"         "7"         "UNINITAILIZED" "UNINITAILIZED" |  **checkBalanceType() should be run for uniform component arrays to speed up
-  | "4"         "12"             "num"           "num"      |  string assembly, but is not required [Neighbor lists and dataGroups will
+  | "1"         "2"              "num"           "num"      |  In this case, UNITIALIZED are essentially empty values and will be ignored in
+  | "2"         "1"              "num"      "UNINITAILIZED" |  print if isBalanced bool is false (default)
+  | "3"         "0"         "UNINITAILIZED" "UNINITAILIZED" |  **checkBalanceType() should be run for uniform component arrays to speed up
+  | "4"         "2"              "num"           "num"      |  string assembly, but is not required [Neighbor lists and dataGroups will
   | ...          ...              ...             ...       |  [Neighbor lists and dataGroups will almost always be unbalanced so its not
   -----------------------------------------------------------  worth preparsing time, unless you know component count is uniform(Attribute Matrix)]**
   */
@@ -1037,7 +1038,7 @@ void writeOut(const std::string& outStr, T& outputStrm, const bool isBinary = fa
 }
 
 template <typename T>
-void writeOutWrapper(std::map<size_t, std::string>& stringStore, T& outputStrm, const bool isBinary = false)
+void writeOutWrapper(std::map<size_t, std::string>& stringStore, T& outputStrm, const bool& isBinary = false)
 // requires unique stringStore for each Print2DMatrix to function properly
 {
   for(std::map<size_t, std::string>::iterator it = stringStore.begin(); it != stringStore.end(); ++it) // take advantage of maps automatic descending order sort
@@ -1150,29 +1151,38 @@ std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::ma
   return outputPtrs;
 }
 
-namespace MultiFileOuput
+namespace OutputFunctions
 {
 // multiple datapaths, Creates OFStream from filepath [BINARY CAPABLE] // endianess must be determined in calling class
 void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", const bool& exportToBinary = false,
-                                  bool includeIndex = false, bool includeHeaders = false)
+                                  bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0)
 {
   if(exportToBinary)
   {
     includeHeaders = false;
     includeIndex = false;
+    componentsPerLine = 0;
   }
   auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, getDataTypesWrapper(objectPaths, dataStructure)), dataStructure, includeIndex, includeHeaders);
 
   ParallelDataAlgorithm dataAlg;
+  std::vector<std::map<size_t, std::string>> stringStoreList;
+  for(auto& matrix : matrices) // neighborLists automatically stored at the end
+  {
+    std::map<size_t, std::string> stringStore; // 1 per matrix
+    dataAlg.setRange(0, matrix->getRows());
+    dataAlg.execute(AssembleVerticalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
+    stringStoreList.push_back(stringStore);
+  }
+
+  for(auto& stringStore : stringStoreList)
+  {
+  }
 }
 
-} // namespace MultiFileOuput
-
-namespace SingleFileOutput
-{
 // single path, custom OStream [BINARY CAPABLE] // endianess must be determined in calling class
 void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const std::string delimiter = "", const bool exportToBinary = false,
-                           bool includeIndex = false, bool includeHeaders = false)
+                           bool includeIndex = false, bool includeHeaders = false, const size_t componentsPerLine = 0)
 {
   if(exportToBinary)
   {
@@ -1186,11 +1196,16 @@ void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath,
   auto matrix = matrices[0];
 
   ParallelDataAlgorithm dataAlg;
+  std::map<size_t, std::string> stringStore; // 1 per matrix
+  dataAlg.setRange(0, matrix->getSize());
+  dataAlg.execute(AssembleHorizontalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
+
+  writeOutWrapper(stringStore, outputStrm, exportToBinary);
 }
 
 // single path, Creates OFStream from filepath [BINARY CAPABLE] // endianess must be determined in calling class
-void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, const std::string delimiter = "", const bool exportToBinary = false, bool includeIndex = false,
-                           bool includeHeaders = false)
+void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string delimiter = "", const bool exportToBinary = false,
+                           bool includeIndex = false, bool includeHeaders = false, const size_t componentsPerLine = 0)
 {
   if(exportToBinary)
   {
@@ -1204,6 +1219,17 @@ void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStruct
   auto matrix = matrices[0];
 
   ParallelDataAlgorithm dataAlg;
+  std::map<size_t, std::string> stringStore; // 1 per matrix
+  dataAlg.setRange(0, matrix->getSize());
+  dataAlg.execute(AssembleHorizontalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
+
+  std::ofstream outputStrm(filePath.string(), std::ios_base::app);
+  if(!outputStrm.is_open())
+  {
+    throw std::runtime_error("Invalid file path");
+  }
+  writeOutWrapper(stringStore, outputStrm, exportToBinary);
+  outputStrm.close();
 }
 
 // custom OStream [NO BINARY SUPPORT]
@@ -1221,18 +1247,45 @@ void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
     dataAlg.execute(AssembleHorizontalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
     stringStoreList.push_back(stringStore);
   }
+
+  for(auto& stringStore : stringStoreList)
+  {
+    writeOutWrapper(stringStore, outputStrm);
+  }
 }
 
 // Creates OFStream from filepath [NO BINARY SUPPORT]
-void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", const bool& includeIndex = false,
-                               const size_t componentsPerLine = 0, const bool& includeHeaders = false)
+void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string& delimiter = "",
+                               const bool& includeIndex = false, const size_t componentsPerLine = 0, const bool& includeHeaders = false)
 {
   auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, getDataTypesWrapper(objectPaths, dataStructure)), dataStructure, includeIndex);
 
   ParallelDataAlgorithm dataAlg;
+
+  std::vector<std::map<size_t, std::string>> stringStoreList;
+  for(auto& matrix : matrices) // neighborLists automatically stored at the end
+  {
+    std::map<size_t, std::string> stringStore; // 1 per matrix
+    dataAlg.setRange(0, matrix->getSize());
+    dataAlg.execute(AssembleHorizontalStringFromIndex(matrix, stringStore, delimiter, componentsPerLine));
+    stringStoreList.push_back(stringStore);
+  }
+
+  std::ofstream outputStrm(filePath.string(), std::ios_base::app);
+  if(!outputStrm.is_open())
+  {
+    throw std::runtime_error("Invalid file path");
+  }
+
+  for(auto& stringStore : stringStoreList)
+  {
+    writeOutWrapper(stringStore, outputStrm);
+  }
+
+  outputStrm.close();
 }
 
-} // namespace SingleFileOutput
+} // namespace OutputFunctions
 
 } // namespace OStreamUtilities
 
