@@ -153,6 +153,7 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
   return {};
 }
 
+//-----------------------------------------------------------------------------
 Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, std::vector<usize>& tupleShape, IDataAction::Mode mode)
 {
   auto* inputDataArray = dataStructure.getDataAs<IDataArray>(dataPath);
@@ -209,6 +210,7 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
   return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));
 }
 
+//-----------------------------------------------------------------------------
 void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape)
 {
   attributeMatrix.setShape(newShape);
@@ -219,6 +221,7 @@ void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<u
   }
 }
 
+//-----------------------------------------------------------------------------
 Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds)
 {
   const auto* featureArray = dataStructure.getDataAs<IDataArray>(arrayPath);
@@ -266,6 +269,7 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
   return results;
 }
 
+//-----------------------------------------------------------------------------
 std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath)
 {
   auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
@@ -273,6 +277,7 @@ std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure& dataStructure
   return InstantiateMaskCompare(maskArray);
 }
 
+//-----------------------------------------------------------------------------
 std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArray)
 {
   switch(maskArray.getDataType())
