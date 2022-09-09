@@ -19,6 +19,7 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
@@ -47,7 +48,9 @@ namespace DataNames
 constexpr StringLiteral k_Group1Name = "Top-Level";
 constexpr StringLiteral k_Group2Name = "Second-Level";
 constexpr StringLiteral k_Group3Name = "Third-Level";
+constexpr StringLiteral k_AttributeMatrixName = "AttributeMatrix";
 constexpr StringLiteral k_ArrayName = "Test-Array";
+constexpr StringLiteral k_Array2Name = "Test-Array2";
 
 constexpr StringLiteral k_CreateDataFilterName = "Create Data Group";
 constexpr StringLiteral k_ExportD3DFilterName = "Write DREAM3D NX File (V8)";
@@ -135,6 +138,14 @@ DataStructure CreateTestDataStructure()
   auto group1 = DataGroup::Create(dataStructure, DataNames::k_Group1Name);
   auto group2 = DataGroup::Create(dataStructure, DataNames::k_Group2Name, group1->getId());
   auto group3 = DataGroup::Create(dataStructure, DataNames::k_Group3Name, group2->getId());
+  auto attributeMatrix = AttributeMatrix::Create(dataStructure, DataNames::k_AttributeMatrixName, group1->getId());
+  std::vector<usize> tupleShape = {10};
+  attributeMatrix->setShape(tupleShape);
+  Result<> arrayCreationResults =
+      CreateArray<int8>(dataStructure, tupleShape, std::vector<usize>{1}, DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}), IDataAction::Mode::Execute);
+  auto& dataArray = dataStructure.getDataRefAs<Int8Array>(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}));
+  auto& dataStore = dataArray.getDataStoreRef();
+  std::fill(dataStore.begin(), dataStore.end(), 1);
   return dataStructure;
 }
 
@@ -284,6 +295,10 @@ TEST_CASE("DREAM3D File IO Test")
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_Group2Name})) != nullptr);
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_Group2Name, DataNames::k_Group3Name})) != nullptr);
+    auto attMatrix = dataStructure.getDataAs<AttributeMatrix>(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName}));
+    REQUIRE(attMatrix != nullptr);
+    REQUIRE(attMatrix->getShape() == AttributeMatrix::ShapeType{10});
+    REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name})) != nullptr);
 
     // Test reading the Pipeline
     REQUIRE(pipeline.size() == 3);
