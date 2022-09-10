@@ -1,16 +1,3 @@
-function(enable_vcpkg_manifest_feature)
-  set(optionsArgs)
-  set(oneValueArgs TEST_VAR FEATURE)
-  set(multiValueArgs)
-  cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-  if(${ARGS_TEST_VAR})
-    if(NOT ${ARGS_FEATURE} IN_LIST VCPKG_MANIFEST_FEATURES)
-      set(VCPKG_MANIFEST_FEATURES ${VCPKG_MANIFEST_FEATURES} ${ARGS_FEATURE} PARENT_SCOPE)
-    endif()
-  endif()
-endfunction()
-
 function(install_with_directory)
   set(optionsArgs)
   set(oneValueArgs DESTINATION COMPONENT BASE_DIR)

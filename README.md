@@ -15,20 +15,28 @@ In order to compile `complex` you will need a C++17 compiler suite installed on 
   + macOS 10.15 and Xcode 12.4 or higher
   + Linux with GCC Version 9.0 or higher or clang.
 
-## Install vcpkg ##
 
-The `complex` project uses the [vcpkg](https://www.github.com/microsoft/vcpkg) to manage it's dependent libraries. If this is not already installed on your system then you will need to download and compile it.
+## Dependent Libraries ##
+
+| Library Name | GitHub Source | Version |
+|--------------|---------------|---------|
+| boost-mp11  | https://github.com/boostorg/mp11  | 1.77.0 |
+| catch2  | https://github.com/catchorg/Catch2  | 2.13.6 |
+| eigen3  |  https://gitlab.com/libeigen/eigen.git | 3.3.9 |
+| expected-lite  | https://github.com/martinmoene/expected-lite  | 0.5.0 |
+| fmt  | https://github.com/fmtlib/fmt  | 7.1.3 |
+| hdf5  | https://github.com/HDFGroup/hdf5/  | 1.12.1 |
+| itk  | https://github.com/InsightSoftwareConsortium/ITK.git  | 5.2.1 |
+| nlohmann-json  | https://github.com/nlohmann/json/  | 3.9.1 |
+| pybind11  | https://github.com/pybind/pybind11.git  | 2.6.2 |
+| span-lite  | https://github.com/martinmoene/span-lite  | 0.10.3 |
+| tbb  | https://github.com/oneapi-src/onetbb  | 2021.5.0 |
+| ebsdlib  | https://www.github.com/bluequartzsoftware/EBSDLib   | 1.0.16 |
+| h5support  | https://www.github.com/bluequartzsoftware/H5Support  | 1.0.8 |
+
 
 ### Windows ###
 
-Clone the vcpkg repository into a location that it will be used from. inside your home directory or at `C:/vcpkg` is a reasonable spot. *DO NOT USE A PATH WITH SPACES IN ANY OF THE FOLDERS*.
-
-```(lang-console)
-cd C:/Users/[USERNAME]/Applications
-git clone https://www.github.com/microsoft/vcpkg
-```
-
-The `bootstrap-vcpkg.bat` file should be run automatically by CMake the first time. This will create the `vcpkg.exe` file. Additionally CMake should automatically find `vcpkg.exe`. If CMake does not find it, you may need to add it to your `PATH` variable.
 
 ### MacOS/Linux ###
 
@@ -37,8 +45,6 @@ Select an install location (the example below uses `/Users/Shared/DREAM3DNX_SDK/
 ```(lang-console)
 mkdir -p /Users/Shared/DREAM3DNX_SDK/
 cd /Users/Shared/DREAM3DNX_SDK/
-git clone https://github.com/microsoft/vcpkg
-export PATH=/Users/Shared/DREAM3DNX_SDK/vcpkg:$PATH
 ```
 
 ## Clone Appropriate Repositories ##
@@ -63,10 +69,9 @@ cd complex
 mkdir Release
 cd Release
 
-cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=C:/Applications/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release -DVCPKG_MANIFEST_FEATURES="tests;parallel" ../../complex
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../../complex
 ```
 
+CMake will error out because the dependent libraries are not found. Please point CMake to those library using the appropriate CMake variables. The error message will usually tell you what to use.
+
 Once the project is configured it should build using **ninja.exe**
-
-Stop the VCPKG from checking for updates for each build adjust the cmake variable **-DVCPKG_MANIFEST_INSTALL=OFF**
-

@@ -3,13 +3,10 @@ cmake_minimum_required(VERSION 3.19)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 
 option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
 
 option(COMPLEX_BUILD_TESTS "Enable building COMPLEX tests" ON)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
 
 option(COMPLEX_ENABLE_MULTICORE "Enable multicore support" ON)
-enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_MULTICORE FEATURE "parallel")
 
 project(complex
   VERSION 0.1.0

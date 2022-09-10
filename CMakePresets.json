@@ -13,10 +13,6 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": {
-          "type": "FILEPATH",
-          "value": "$env{VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
-        },
         "CMAKE_BUILD_TYPE": {
           "type": "STRING",
           "value": "Release"
@@ -32,10 +28,6 @@
         "COMPLEX_BUILD_PYTHON": {
           "type": "BOOL",
           "value": "OFF"
-        },
-        "VCPKG_OVERLAY_TRIPLETS": {
-          "type": "STRING",
-          "value": "${sourceDir}/cmake/triplets"
         }
       }
     }
