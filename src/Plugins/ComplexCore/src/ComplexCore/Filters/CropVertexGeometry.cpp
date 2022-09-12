@@ -6,6 +6,7 @@
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
@@ -25,7 +26,6 @@ struct CopyDataToCroppedGeometryFunctor
     const auto& inputData = inputDataArray.getDataStoreRef();
     DataArray<T>& croppedDataArray = dynamic_cast<DataArray<T>&>(outDataRef);
     auto& croppedData = croppedDataArray.getDataStoreRef();
-    croppedData.reshapeTuples({croppedPoints.size()});
 
     usize nComps = inDataRef.getNumberOfComponents();
 
@@ -66,12 +66,12 @@ Parameters CropVertexGeometry::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeom_Key, "Vertex Geometry to Crop", "DataPath to target VertexGeom", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CroppedGeom_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Vertex Data Arrays to crop", "", std::vector<DataPath>(), complex::GetAllDataTypes()));
-  params.insert(std::make_unique<StringParameter>(k_CroppedGroupName_Key, "Cropped Group Name", "", "Cropped Data"));
   return params;
 }
 
@@ -87,7 +87,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
   auto posMin = args.value<std::vector<float32>>(k_MinPos_Key);
   auto posMax = args.value<std::vector<float32>>(k_MaxPos_Key);
   auto targetArrays = args.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
-  auto croppedGroupName = args.value<std::string>(k_CroppedGroupName_Key);
+  auto vertexDataName = args.value<std::string>(k_VertexDataName_Key);
 
   auto xMin = posMin[0];
   auto yMin = posMin[1];
@@ -126,12 +126,16 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
     }
   }
 
-  auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, 0);
+  auto* vertexAM = vertexGeom.getVertexData();
+  if(vertexAM == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(-5551, "Could not find vertex data AttributeMatrix in selected Vertex Geometry"), {}};
+  }
+  auto tupleShape = vertexAM->getShape();
+  usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+  auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples, vertexDataName);
+  DataPath croppedVertexDataPath = action->getVertexDataPath();
   actions.actions.push_back(std::move(action));
-
-  DataPath croppedGroupPath = croppedGeomPath.createChildPath(croppedGroupName);
-  auto groupAction = std::make_unique<CreateDataGroupAction>(croppedGroupPath);
-  actions.actions.push_back(std::move(groupAction));
 
   for(auto&& targetArrayPath : targetArrays)
   {
@@ -140,7 +144,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
     DataType type = targetArray.getDataType();
     auto tDims = targetArray.getNumberOfTuples();
     auto cDims = targetArray.getNumberOfComponents();
-    auto createArrayAction = std::make_unique<CreateArrayAction>(type, std::vector<usize>{tDims}, std::vector<usize>{cDims}, croppedGroupPath.createChildPath(targetArrayPath.getTargetName()));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(type, std::vector<usize>{tDims}, std::vector<usize>{cDims}, croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
     actions.actions.push_back(std::move(createArrayAction));
   }
 
@@ -155,7 +159,7 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
   auto posMin = args.value<std::vector<float32>>(k_MinPos_Key);
   auto posMax = args.value<std::vector<float32>>(k_MaxPos_Key);
   auto targetArrays = args.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
-  auto croppedGroupName = args.value<std::string>(k_CroppedGroupName_Key);
+  auto vertexDataName = args.value<std::string>(k_VertexDataName_Key);
 
   auto xMin = posMin[0];
   auto yMin = posMin[1];
@@ -186,11 +190,15 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
   croppedPoints.shrink_to_fit();
 
   auto& crop = dataStructure.getDataRefAs<VertexGeom>(croppedGeomPath);
-  crop.resizeVertexList(croppedPoints.size());
+  usize numTuples = croppedPoints.size();
+  crop.resizeVertexList(numTuples);
+  std::vector<usize> tDims = {numTuples};
 
-  DataPath croppedGroupPath = croppedGeomPath.createChildPath(croppedGroupName);
+  DataPath croppedVertexDataPath = croppedGeomPath.createChildPath(vertexDataName);
+  auto& vertedDataAttMatrix = dataStructure.getDataRefAs<AttributeMatrix>(croppedVertexDataPath);
+  ResizeAttributeMatrix(vertedDataAttMatrix, tDims);
 
-  for(usize i = 0; i < croppedPoints.size(); i++)
+  for(usize i = 0; i < numTuples; i++)
   {
     if(shouldCancel)
     {
@@ -200,11 +208,9 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
     crop.setCoords(i, coords);
   }
 
-  std::vector<usize> tDims = {croppedPoints.size()};
-
   for(auto&& targetArrayPath : targetArrays)
   {
-    DataPath destArrayPath(croppedGroupPath.createChildPath(targetArrayPath.getTargetName()));
+    DataPath destArrayPath(croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
 
     const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
     auto& destArray = dataStructure.getDataRefAs<IDataArray>(destArrayPath);

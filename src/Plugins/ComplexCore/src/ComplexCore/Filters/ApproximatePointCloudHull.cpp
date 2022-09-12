@@ -81,7 +81,7 @@ IFilter::PreflightResult ApproximatePointCloudHull::preflightImpl(const DataStru
   auto vertexGeom = data.getDataAs<VertexGeom>(vertexGeomPath);
 
   int64 numVertices = vertexGeom->getNumberOfVertices();
-  auto action = std::make_unique<CreateVertexGeometryAction>(hullVertexGeomPath, numVertices);
+  auto action = std::make_unique<CreateVertexGeometryAction>(hullVertexGeomPath, numVertices, INodeGeometry0D::k_VertexDataName);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));

@@ -97,7 +97,7 @@ public:
   UniquePointer clone() const override;
 
 protected:
-  OutputActions createCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins) const;
+  OutputActions createCompatibleArrays(const DataStructure& data, const Arguments& args, usize numBins, std::vector<usize> tupleDims) const;
 
   /**
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.

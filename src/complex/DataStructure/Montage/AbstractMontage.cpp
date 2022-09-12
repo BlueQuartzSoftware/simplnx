@@ -1,6 +1,6 @@
 #include "AbstractMontage.hpp"
 
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 
 using namespace complex;
 
@@ -20,13 +20,14 @@ AbstractMontage::AbstractMontage(const AbstractMontage& other)
 {
 }
 
-AbstractMontage::AbstractMontage(AbstractMontage&& other) noexcept
+AbstractMontage::AbstractMontage(AbstractMontage&& other)
 : BaseGroup(std::move(other))
 , m_Collection(std::move(other.m_Collection))
 {
 }
 
 AbstractMontage::~AbstractMontage() = default;
+
 DataObject::Type AbstractMontage::getDataObjectType() const
 {
   return Type::AbstractMontage;
@@ -103,7 +104,7 @@ const AbstractMontage::CollectionType& AbstractMontage::getCollection() const
 
 bool AbstractMontage::canInsert(const DataObject* obj) const
 {
-  if(!dynamic_cast<const AbstractGeometry*>(obj))
+  if(!dynamic_cast<const IGeometry*>(obj))
   {
     return false;
   }

@@ -182,6 +182,14 @@ public:
   DataObject& getDataRef(const DataPath& path);
 
   /**
+   * @brief Returns a reference to the DataObject with the given id. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * @param id
+   * @return DataObject&
+   */
+  DataObject& getDataRef(DataObject::IdType id);
+
+  /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
    * DataObject is found, this method returns nullptr.
    * @param path
@@ -205,6 +213,19 @@ public:
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T&>(getDataRef(path));
+  }
+
+  /**
+   * @brief Returns a reference to the DataObject with the given id. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * @param id
+   * @return T&
+   */
+  template <class T>
+  T& getDataRefAs(DataObject::IdType id)
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return dynamic_cast<T&>(getDataRef(id));
   }
 
   /**
@@ -287,6 +308,14 @@ public:
   const DataObject& getDataRef(const DataPath& path) const;
 
   /**
+   * @brief Returns a reference to the DataObject with the given id. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * @param id
+   * @return const DataObject&
+   */
+  const DataObject& getDataRef(DataObject::IdType id) const;
+
+  /**
    * @brief Returns a pointer to the DataObject at the given DataPath.
    *
    * @throws std::out_of_range if path does not exist
@@ -316,6 +345,19 @@ public:
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T&>(getDataRef(path));
+  }
+
+  /**
+   * @brief Returns a reference to the DataObject with the given id. If no
+   * DataObject is found, this method throws std::out_of_range.
+   * @param id
+   * @return T&
+   */
+  template <class T>
+  const T& getDataRefAs(DataObject::IdType id) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return dynamic_cast<const T&>(getDataRef(id));
   }
 
   /**

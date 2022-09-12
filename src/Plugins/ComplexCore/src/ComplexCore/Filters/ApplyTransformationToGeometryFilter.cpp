@@ -128,10 +128,9 @@ std::vector<std::string> ApplyTransformationToGeometryFilter::defaultTags() cons
 Parameters ApplyTransformationToGeometryFilter::parameters() const
 {
   Parameters params;
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_GeometryToTransform_Key, "Geometry to Transform", "", DataPath{},
-                                                   GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Vertex, AbstractGeometry::Type::Edge, AbstractGeometry::Type::Triangle,
-                                                                                            AbstractGeometry::Type::Quad, AbstractGeometry::Type::Tetrahedral, AbstractGeometry::Type::Hexahedral}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryToTransform_Key, "Geometry to Transform", "", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
+                                                                                                      IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_TransformType_Key, "Transformation Type", "", 0,
                                          ChoicesParameter::Choices{"No Transformation", "Pre-Computed Transformation Matrix", "Manual Transformation Matrix", "Rotation", "Translation", "Scale"}));

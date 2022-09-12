@@ -1,7 +1,6 @@
 #include "QuickSurfaceMesh.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -27,7 +26,7 @@ inline void hashCombine(size_t& seed, const T& obj)
 
 // -----------------------------------------------------------------------------
 using Vertex = std::array<float, 3>;
-using Edge = std::array<AbstractGeometry::MeshIndexType, 2>;
+using Edge = std::array<IGeometry::MeshIndexType, 2>;
 
 // -----------------------------------------------------------------------------
 struct VertexHasher
@@ -46,15 +45,15 @@ struct EdgeHasher
 {
   size_t operator()(const Edge& edge) const
   {
-    size_t hash = std::hash<AbstractGeometry::MeshIndexType>()(edge[0]);
+    size_t hash = std::hash<IGeometry::MeshIndexType>()(edge[0]);
     hashCombine(hash, edge[1]);
     return hash;
   }
 };
 
 // -----------------------------------------------------------------------------
-using VertexMap = std::unordered_map<Vertex, AbstractGeometry::MeshIndexType, VertexHasher>;
-using EdgeMap = std::unordered_map<Edge, AbstractGeometry::MeshIndexType, EdgeHasher>;
+using VertexMap = std::unordered_map<Vertex, IGeometry::MeshIndexType, VertexHasher>;
+using EdgeMap = std::unordered_map<Edge, IGeometry::MeshIndexType, EdgeHasher>;
 
 } // namespace
 
@@ -74,7 +73,7 @@ QuickSurfaceMesh::~QuickSurfaceMesh() noexcept = default;
 Result<> QuickSurfaceMesh::operator()()
 {
   // Get the ImageGeometry
-  AbstractGeometryGrid& grid = m_DataStructure.getDataRefAs<AbstractGeometryGrid>(m_Inputs->pGridGeomDataPath);
+  auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
 
   // Get the Created Triangle Geometry
   TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_Inputs->pTriangleGeometryPath);
@@ -101,11 +100,13 @@ Result<> QuickSurfaceMesh::operator()()
   determineActiveNodes(nodeIds, nodeCount, triangleCount);
 
   // now create node and triangle arrays knowing the number that will be needed
+  std::vector<usize> tupleShape = {triangleCount};
   triangleGeom.resizeFaceList(triangleCount);
   triangleGeom.resizeVertexList(nodeCount);
+  ResizeAttributeMatrix(*triangleGeom.getFaceData(), tupleShape);
+  ResizeAttributeMatrix(*triangleGeom.getVertexData(), {nodeCount});
 
   // Resize the Face Arrays that are being copied over from the ImageGeom Cell Data
-  std::vector<usize> tupleShape = {triangleCount};
   for(const auto& dataPath : m_Inputs->pCreatedDataArrayPaths)
   {
     Result<> result = complex::ResizeAndReplaceDataArray(m_DataStructure, dataPath, tupleShape, complex::IDataAction::Mode::Execute);
@@ -116,11 +117,11 @@ Result<> QuickSurfaceMesh::operator()()
 #if 0
   if(m_Inputs->pGenerateTripleLines)
   {
-    AbstractGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-    AbstractGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+    IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+    IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
     EdgeGeom* edgeGeom = EdgeGeom::Create(m_DataStructure, "[Edge Geometry]", parentGroupId);
-    edgeGeom->setVertices(vertices);
+    edgeGeom->setVertices(*vertices);
 
     Int32Array& nodeTypes = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFaceLabelsDataPath);
 
@@ -149,8 +150,8 @@ Result<> QuickSurfaceMesh::operator()()
     std::string sharedEdgeListName = "SharedEdgeList";
     size_t numEdges = edgeCount;
     size_t numEdgeComps = 2;
-    AbstractGeometry::SharedEdgeList* edges =
-        AbstractGeometry::SharedEdgeList::CreateWithStore<DataStore<MeshIndexType>>(m_DataStructure, sharedEdgeListName, {numEdges}, {numEdgeComps}, m_DataStructure.getId(edgeGeometryDataPath));
+    IGeometry::SharedEdgeList* edges =
+        IGeometry::SharedEdgeList::CreateWithStore<DataStore<MeshIndexType>>(m_DataStructure, sharedEdgeListName, {numEdges}, {numEdgeComps}, m_DataStructure.getId(edgeGeometryDataPath));
 
     edgeCount = 0;
     for(MeshIndexType i = 0; i < triangleCount; i++)
@@ -187,7 +188,7 @@ Result<> QuickSurfaceMesh::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::getGridCoordinates(const AbstractGeometryGrid* grid, size_t x, size_t y, size_t z, AbstractGeometry::SharedVertexList& verts, AbstractGeometry::MeshIndexType nodeIndex)
+void QuickSurfaceMesh::getGridCoordinates(const IGridGeometry* grid, size_t x, size_t y, size_t z, IGeometry::SharedVertexList& verts, IGeometry::MeshIndexType nodeIndex)
 {
   complex::Point3D<float64> tmpCoords = grid->getPlaneCoords(x, y, z);
   verts[nodeIndex] = static_cast<float>(tmpCoords[0]);
@@ -299,10 +300,9 @@ void QuickSurfaceMesh::flipProblemVoxelCase3(Int32Array& featureIds, MeshIndexTy
 // -----------------------------------------------------------------------------
 void QuickSurfaceMesh::correctProblemVoxels()
 {
-
   m_MessageHandler(IFilter::Message::Type::Info, "Correcting Problem Voxels");
 
-  AbstractGeometryGrid* grid = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_Inputs->pGridGeomDataPath);
+  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
 
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
 
@@ -470,7 +470,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Determining active Nodes");
 
-  AbstractGeometryGrid* grid = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_Inputs->pGridGeomDataPath);
+  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
 
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
 
@@ -782,7 +782,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
     }
   }
 
-  AbstractGeometryGrid* grid = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_Inputs->pGridGeomDataPath);
+  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
 
   SizeVec3 udims = grid->getDimensions();
 
@@ -808,6 +808,8 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   std::vector<size_t> tDims = {nodeCount};
   triangleGeom->resizeVertexList(nodeCount);
   triangleGeom->resizeFaceList(triangleCount);
+  ResizeAttributeMatrix(*triangleGeom->getFaceData(), {triangleCount});
+  ResizeAttributeMatrix(*triangleGeom->getVertexData(), tDims);
 
   // Remove and then insert a properly sized Int32Array for the FaceLabels
   m_DataStructure.removeData(m_Inputs->pFaceLabelsDataPath);
@@ -821,8 +823,8 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   Int32Array& nodeTypes = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFaceLabelsDataPath);
   linkedGeometryData.addVertexData(m_Inputs->pFaceLabelsDataPath);
 
-  AbstractGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());
-  AbstractGeometry::SharedTriList& triangle = *(triangleGeom->getFaces());
+  IGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());
+  IGeometry::SharedTriList& triangle = *(triangleGeom->getFaces());
 
   ownerLists.resize(nodeCount);
 
@@ -1537,8 +1539,7 @@ void QuickSurfaceMesh::generateTripleLines()
   EdgeGeom* tripleLineEdge = EdgeGeom::Create(m_DataStructure, edgeGeometryName);
   size_t numVerts = vertexMap.size();
   size_t numComps = 3;
-  AbstractGeometry::SharedVertexList* vertices =
-      Float32Array::CreateWithStore<DataStore<float>>(m_DataStructure, sharedVertListName, {numVerts}, {numComps}, m_DataStructure.getId(edgeGeometryDataPath));
+  IGeometry::SharedVertexList* vertices = Float32Array::CreateWithStore<DataStore<float>>(m_DataStructure, sharedVertListName, {numVerts}, {numComps}, m_DataStructure.getId(edgeGeometryDataPath));
 
   for(auto vert : vertexMap)
   {
@@ -1550,13 +1551,13 @@ void QuickSurfaceMesh::generateTripleLines()
     vertices->getDataStore()->setValue(idx * numComps + 1, v1);
     vertices->getDataStore()->setValue(idx * numComps + 2, v2);
   }
-  tripleLineEdge->setVertices(vertices);
+  tripleLineEdge->setVertices(*vertices);
 
   std::string sharedEdgeListName = "SharedEdgeList";
   size_t numEdges = edgeMap.size();
   size_t numEdgeComps = 2;
-  AbstractGeometry::SharedEdgeList* edges =
-      AbstractGeometry::SharedEdgeList::CreateWithStore<DataStore<MeshIndexType>>(m_DataStructure, sharedEdgeListName, {numEdges}, {numEdgeComps}, m_DataStructure.getId(edgeGeometryDataPath));
+  IGeometry::SharedEdgeList* edges =
+      IGeometry::SharedEdgeList::CreateWithStore<DataStore<MeshIndexType>>(m_DataStructure, sharedEdgeListName, {numEdges}, {numEdgeComps}, m_DataStructure.getId(edgeGeometryDataPath));
 
   for(auto edge : edgeMap)
   {
@@ -1566,5 +1567,5 @@ void QuickSurfaceMesh::generateTripleLines()
     edges->getDataStore()->setValue(idx * numComps + 0, i0);
     edges->getDataStore()->setValue(idx * numComps + 1, i1);
   }
-  tripleLineEdge->setEdges(edges);
+  tripleLineEdge->setEdges(*edges);
 }

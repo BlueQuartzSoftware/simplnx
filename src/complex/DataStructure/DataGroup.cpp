@@ -22,7 +22,7 @@ DataGroup::DataGroup(const DataGroup& other)
 {
 }
 
-DataGroup::DataGroup(DataGroup&& other) noexcept
+DataGroup::DataGroup(DataGroup&& other)
 : BaseGroup(std::move(other))
 {
 }

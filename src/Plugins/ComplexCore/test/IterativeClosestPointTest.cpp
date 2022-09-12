@@ -46,7 +46,7 @@ TEST_CASE("ComplexCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DR
 
   auto* targetVertexGeom = VertexGeom::Create(dataGraph, "Vertex Geometry 2", movingVertexGeom->getParentIds().front());
   auto* euler_data_2 = Float32Array::CreateWithStore<DataStore<float>>(dataGraph, "Euler 2", {movingVertexGeom->getVertices()->getNumberOfTuples()}, {3}, targetVertexGeom->getParentIds().front());
-  targetVertexGeom->setVertices(euler_data_2);
+  targetVertexGeom->setVertices(*euler_data_2);
 
   DataPath targetVertexPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, targetVertexGeom->getName()});
 

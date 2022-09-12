@@ -2,9 +2,10 @@
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateTriangleGeomAction.hpp"
+#include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
@@ -18,11 +19,11 @@ using namespace complex;
 
 namespace
 {
-constexpr complex::int32 k_MissingTrianglVerticesArray = -351;
-constexpr complex::int32 k_MissingTriangleFacesArray = -352;
-constexpr complex::int32 k_NoNodeTypesArray = -353;
-constexpr complex::int32 k_MissingVertexArray = -354;
-constexpr complex::int32 k_MissingTriangleArray = -355;
+constexpr int32 k_MissingTrianglVerticesArray = -351;
+constexpr int32 k_MissingTriangleFacesArray = -352;
+constexpr int32 k_NoNodeTypesArray = -353;
+constexpr int32 k_MissingVertexArray = -354;
+constexpr int32 k_MissingTriangleArray = -355;
 
 template <class T>
 inline void hashCombine(usize& seed, const T& obj)
@@ -62,16 +63,16 @@ struct RemoveFlaggedVerticesFunctor
 {
   // copy data to masked geometry
   template <class T>
-  void operator()(IDataArray& inputDataPtr, IDataArray& outputDataArray, const std::vector<complex::AbstractGeometry::MeshIndexType>& indexMapping) const
+  void operator()(IDataArray& inputDataPtr, IDataArray& outputDataArray, const std::vector<IGeometry::MeshIndexType>& indexMapping) const
   {
     auto& inputData = dynamic_cast<DataArray<T>&>(inputDataPtr);
     auto& outputData = dynamic_cast<DataArray<T>&>(outputDataArray);
     usize nComps = inputData.getNumberOfComponents();
-    complex::AbstractGeometry::MeshIndexType notSeen = std::numeric_limits<complex::AbstractGeometry::MeshIndexType>::max();
+    IGeometry::MeshIndexType notSeen = std::numeric_limits<IGeometry::MeshIndexType>::max();
 
     for(usize i = 0; i < indexMapping.size(); i++)
     {
-      complex::AbstractGeometry::MeshIndexType newIndex = indexMapping[i];
+      IGeometry::MeshIndexType newIndex = indexMapping[i];
       if(newIndex != notSeen)
       {
         for(usize compIdx = 0; compIdx < nComps; compIdx++)
@@ -115,18 +116,19 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Geometry and Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{complex::DataType::int8}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int8}));
 
   params.insertSeparator(Parameters::Separator{"Created/Output Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name", INodeGeometry0D::k_VertexDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceDataName));
 
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, complex::GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Triangle Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, complex::GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, GetAllDataTypes()));
   return params;
 }
 
@@ -143,6 +145,8 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   auto nodeTypesArrayPath = filterArgs.value<DataPath>(k_NodeTypesPath_Key);
   auto copyVertexPaths = filterArgs.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
   auto copyTrianglePaths = filterArgs.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
+  auto vertexDataName = filterArgs.value<std::string>(k_VertexDataName_Key);
+  auto faceDataName = filterArgs.value<std::string>(k_FaceDataName_Key);
 
   std::vector<DataPath> arrays;
   OutputActions actions;
@@ -176,11 +180,11 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   dataStructure.validateNumberOfTuples(arrays);
 
   // Create Geometry
-  IDataStore::ShapeType geomShape = {1};
-  auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeomAction>(internalTrianglesGeomPath, geomShape,
-                                                                                  CreateTriangleGeomAction::AdditionalDataTypes{CreateTriangleGeomAction::AdditionalData::VerticesTriangles,
-                                                                                                                                CreateTriangleGeomAction::AdditionalData::CreateVertexGroup,
-                                                                                                                                CreateTriangleGeomAction::AdditionalData::CreateTriangleGroup});
+  usize numFaces = triangleGeom.getNumberOfFaces();
+  usize numVertices = triangleGeom.getNumberOfVertices();
+  auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeometryAction>(internalTrianglesGeomPath, numFaces, numVertices, vertexDataName, faceDataName);
+  DataPath internalVertexDataPath = createInternalTrianglesAction->getVertexDataPath();
+  DataPath internalFaceDataPath = createInternalTrianglesAction->getFaceDataPath();
   actions.actions.push_back(std::move(createInternalTrianglesAction));
 
   std::vector<usize> tDims(1, 0);
@@ -197,7 +201,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
     }
 
     DataType type = targetDataArray->getDataType();
-    DataPath copyPath = internalTrianglesGeomPath.createChildPath("VertexData").createChildPath(data_array.getTargetName());
+    DataPath copyPath = internalVertexDataPath.createChildPath(data_array.getTargetName());
     auto numTuples = targetDataArray->getNumberOfTuples();
     auto components = targetDataArray->getNumberOfComponents();
 
@@ -214,7 +218,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
     }
 
     DataType type = targetDataArray->getDataType();
-    DataPath copyPath = internalTrianglesGeomPath.createChildPath("FaceData").createChildPath(data_array.getTargetName());
+    DataPath copyPath = internalFaceDataPath.createChildPath(data_array.getTargetName());
     auto numTuples = targetDataArray->getNumberOfTuples();
     auto components = targetDataArray->getNumberOfComponents();
 
@@ -233,6 +237,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   auto internalTrianglesPath = args.value<DataPath>(k_InternalTriangleGeom_Key);
   auto copyVertexPaths = args.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
   auto copyTrianglePaths = args.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
+  auto vertexDataName = args.value<std::string>(k_VertexDataName_Key);
+  auto faceDataName = args.value<std::string>(k_FaceDataName_Key);
 
   auto& triangleGeom = data.getDataRefAs<TriangleGeom>(triangleGeomPath);
   auto& internalTriangleGeom = data.getDataRefAs<TriangleGeom>(internalTrianglesPath);
@@ -243,17 +249,17 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
 
   auto& nodeTypes = data.getDataRefAs<Int8Array>(nodeTypesArrayPath);
 
-  auto internalVerticesPath = internalTrianglesPath.createChildPath(CreateTriangleGeomAction::k_DefaultVerticesName);
-  internalTriangleGeom.setVertices(data.getDataAs<Float32Array>(internalVerticesPath));
+  auto internalVerticesPath = internalTrianglesPath.createChildPath(CreateTriangleGeometryAction::k_DefaultVerticesName);
+  internalTriangleGeom.setVertices(*data.getDataAs<Float32Array>(internalVerticesPath));
 
-  auto internalFacesPath = internalTrianglesPath.createChildPath(CreateTriangleGeomAction::k_DefaultFacesName);
-  internalTriangleGeom.setFaces(data.getDataAs<UInt64Array>(internalFacesPath));
+  auto internalFacesPath = internalTrianglesPath.createChildPath(CreateTriangleGeometryAction::k_DefaultFacesName);
+  internalTriangleGeom.setFaces(*data.getDataAs<UInt64Array>(internalFacesPath));
 
   // int64 progIncrement = numTris / 100;
   // int64 prog = 1;
   // int64 progressInt = 0;
   // int64 counter = 0;
-  using MeshIndexType = complex::AbstractGeometry::MeshIndexType;
+  using MeshIndexType = IGeometry::MeshIndexType;
 
   const MeshIndexType notSeen = std::numeric_limits<MeshIndexType>::max();
 
@@ -265,7 +271,6 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   // Loop over all of the triangles mapping the triangle and the vertices to the new array locations
   for(MeshIndexType triIndex = 0; triIndex < numTris; triIndex++)
   {
-
     MeshIndexType v0Index = triangles[3 * triIndex + 0];
     MeshIndexType v1Index = triangles[3 * triIndex + 1];
     MeshIndexType v2Index = triangles[3 * triIndex + 2];
@@ -302,9 +307,11 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   // Resize the vertex and triangle arrays
   internalTriangleGeom.resizeVertexList(currentNewVertIndex);
   internalTriangleGeom.resizeFaceList(currentNewTriIndex);
+  ResizeAttributeMatrix(*internalTriangleGeom.getVertexData(), {currentNewVertIndex});
+  ResizeAttributeMatrix(*internalTriangleGeom.getFaceData(), {currentNewTriIndex});
 
-  complex::AbstractGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
-  complex::AbstractGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
+  IGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
+  IGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
 
   // Transfer the data from the old SharedVertexList to the new VertexList
   for(MeshIndexType vertIndex = 0; vertIndex < numVerts; vertIndex++)
@@ -347,17 +354,16 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   // Copy any Vertex and Triangle DataArrays to extracted surface mesh
   for(const auto& targetArrayPath : copyVertexPaths)
   {
-    DataPath destinationPath = internalTrianglesPath.createChildPath("VertexData").createChildPath(targetArrayPath.getTargetName());
+    DataPath destinationPath = internalTrianglesPath.createChildPath(vertexDataName).createChildPath(targetArrayPath.getTargetName());
     auto& src = data.getDataRefAs<IDataArray>(targetArrayPath);
     auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
-    dest.getIDataStore()->reshapeTuples({currentNewVertIndex});
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, vertNewIndex);
   }
 
   for(const auto& targetArrayPath : copyTrianglePaths)
   {
-    DataPath destinationPath = internalTrianglesPath.createChildPath("FaceData").createChildPath(targetArrayPath.getTargetName());
+    DataPath destinationPath = internalTrianglesPath.createChildPath(faceDataName).createChildPath(targetArrayPath.getTargetName());
     auto& src = data.getDataRefAs<IDataArray>(targetArrayPath);
     auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
     dest.getIDataStore()->reshapeTuples({currentNewTriIndex});

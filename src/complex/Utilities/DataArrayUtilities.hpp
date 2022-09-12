@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Result.hpp"
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
@@ -315,9 +316,10 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   std::optional<DataObject::IdType> dataObjectId;
 
+  DataObject* parentObject = nullptr;
   if(parentPath.getLength() != 0)
   {
-    auto* parentObject = dataStructure.getData(parentPath);
+    parentObject = dataStructure.getData(parentPath);
     if(parentObject == nullptr)
     {
       return MakeErrorResult(-262, fmt::format("Parent object '{}' does not exist", parentPath.toString()));
@@ -355,7 +357,23 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), dataObjectId);
   if(dataArray == nullptr)
   {
-    return MakeErrorResult(-264, fmt::format("Unable to create DataArray at '{}'", path.toString()));
+    if(dataStructure.getId(path).has_value())
+    {
+      return MakeErrorResult(-264, fmt::format("Cannot create Data Array at path '{}' because it already exists. Choose a different name.", path.toString()));
+    }
+    else if(parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    {
+      auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
+      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
+      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(tupleShape, " x "));
+      return MakeErrorResult(-264, fmt::format("Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
+                                               "dimensions or the same total number of tuples.\n{}\n{}",
+                                               name, dataStructure.getDataPathsForId(parentObject->getId()).front().toString(), amShape, arrayShape));
+    }
+    else
+    {
+      return MakeErrorResult(-264, fmt::format("Unable to create DataArray at '{}'", path.toString()));
+    }
   }
 
   return {};
@@ -532,6 +550,10 @@ COMPLEX_EXPORT Result<> CheckValueConverts(const std::string& value, NumericType
  * @return
  */
 COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
+
+COMPLEX_EXPORT void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape);
+
+COMPLEX_EXPORT Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds);
 
 /**
  * @brief These structs and functions are meant to make using a "mask array" or "Good Voxels Array" easier

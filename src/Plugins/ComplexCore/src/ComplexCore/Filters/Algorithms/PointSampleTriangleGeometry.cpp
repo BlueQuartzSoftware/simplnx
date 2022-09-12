@@ -36,6 +36,7 @@
 
 #include "TupleTransfer.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include <cassert>
 #include <cstring>
@@ -64,6 +65,8 @@ Result<> PointSampleTriangleGeometry::operator()()
 
   VertexGeom& vertex = m_DataStructure.getDataRefAs<VertexGeom>(m_Inputs->pVertexGeometryPath);
   vertex.resizeVertexList(m_Inputs->pNumberOfSamples);
+  auto tupleShape = {static_cast<usize>(m_Inputs->pNumberOfSamples)};
+  ResizeAttributeMatrix(*vertex.getVertexData(), tupleShape);
 
   std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   std::mt19937_64 generator(seed);
@@ -109,7 +112,7 @@ Result<> PointSampleTriangleGeometry::operator()()
     return MakeErrorResult(-502, "Use Mask is true but the MaskArray could not be extracted from the DataStructure. Please ensure the path is correct and that the selected DataArray is of type bool");
   }
   // Get a reference to the Vertex List
-  AbstractGeometry::SharedVertexList* vertices = vertex.getVertices();
+  IGeometry::SharedVertexList* vertices = vertex.getVertices();
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to Vertex Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;

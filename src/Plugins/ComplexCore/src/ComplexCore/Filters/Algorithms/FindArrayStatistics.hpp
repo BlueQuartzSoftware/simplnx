@@ -66,6 +66,8 @@ public:
   template <typename T>
   Result<> findStats(const DataArray<T>& inputArray, std::vector<IDataArray*>& arrays, int32 numFeatures);
 
+  static usize FindNumFeatures(const Int32Array& featureIds);
+
 private:
   DataStructure& m_DataStructure;
   const FindArrayStatisticsInputValues* m_InputValues = nullptr;

@@ -20,7 +20,8 @@ usize convertPositionToOffset(const SizeVec3& position, const IDataStore::ShapeT
   return xOffset + yOffset + zOffset;
 }
 
-void compareDataValues(const Int32Array& oldDataArray, const Int32Array& newDataArray)
+template <typename T>
+void compareCellDataValues(const DataArray<T>& oldDataArray, const DataArray<T>& newDataArray)
 {
   auto oldDimensions = oldDataArray.getDataStoreRef().getTupleShape();
   auto newDimensions = newDataArray.getDataStoreRef().getTupleShape();
@@ -42,6 +43,28 @@ void compareDataValues(const Int32Array& oldDataArray, const Int32Array& newData
     }
   }
 }
+
+DataStructure CreateDataStructure()
+{
+  DataStructure dataGraph;
+  DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
+  DataGroup* scanData = DataGroup::Create(dataGraph, Constants::k_EbsdScanData, topLevelGroup->getId());
+
+  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, scanData->getId());
+  imageGeom->setSpacing({0.25f, 0.55f, 1.86});
+  imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
+  SizeVec3 imageGeomDims = {40, 60, 80};
+  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
+  auto* cellData = AttributeMatrix::Create(dataGraph, ImageGeom::k_CellDataName, imageGeom->getId());
+  auto imageDimsArray = imageGeomDims.toArray();
+  AttributeMatrix::ShapeType cellDataDims{imageDimsArray.crbegin(), imageDimsArray.crend()};
+  cellData->setShape(cellDataDims);
+  imageGeom->setCellData(*cellData);
+
+  Int32Array* phases_data = UnitTest::CreateTestDataArray<int32>(dataGraph, "Phases", cellDataDims, {1}, cellData->getId());
+
+  return dataGraph;
+}
 } // namespace
 
 TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImageGeometry]")
@@ -52,13 +75,11 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
   static constexpr bool k_UpdateOrigin = false;
   const DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
   const DataPath k_NewImageGeomPath({Constants::k_SmallIN100, "New Image Geom"});
-  std::vector<DataPath> k_VoxelArrays = {};
   static constexpr bool k_RenumberFeatures = false;
   const DataPath k_FeatureIdsPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds});
-  static constexpr StringLiteral k_NewFeaturesName = "New Feature IDs";
 
   CropImageGeometry filter;
-  DataStructure ds = UnitTest::CreateDataStructure();
+  DataStructure ds = CreateDataStructure();
   Arguments args;
 
   args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
@@ -66,10 +87,8 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
   args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometry::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometry::k_NewImageGeom_Key, std::make_any<DataPath>(k_NewImageGeomPath));
-  args.insert(CropImageGeometry::k_VoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
   args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometry::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insert(CropImageGeometry::k_NewFeaturesName_Key, std::make_any<std::string>(k_NewFeaturesName));
 
   auto result = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
@@ -81,16 +100,16 @@ TEST_CASE("ComplexCore::CropImageGeometry(Valid Parameters)", "[ComplexCore][Cro
   const std::vector<uint64> k_MaxVector{2, 3, 4};
 
   static constexpr bool k_UpdateOrigin = false;
-  const DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
-  const DataPath k_NewImageGeomPath({Constants::k_SmallIN100, "New Image Geom"});
-  const DataPath k_PhasesPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
-  std::vector<DataPath> k_VoxelArrays = {k_PhasesPath};
-  static constexpr bool k_RenumberFeatures = false;
-  const DataPath k_FeatureIdsPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds});
-  static constexpr StringLiteral k_NewFeaturesName = "New Feature IDs";
+  const DataPath k_ImageGeomPath({Constants::k_DataContainer});
+  const DataPath k_NewImageGeomPath({"New Image Geom"});
+  static constexpr bool k_RenumberFeatures = true;
+  const DataPath k_FeatureIdsPath({Constants::k_DataContainer, Constants::k_CellData, Constants::k_FeatureIds});
+  const DataPath k_CellFeatureAMPath({Constants::k_DataContainer, Constants::k_CellFeatureData});
 
   CropImageGeometry filter;
-  DataStructure ds = UnitTest::CreateDataStructure();
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
+  DataStructure ds = UnitTest::LoadDataStructure(baseDataFilePath);
   Arguments args;
 
   args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
@@ -98,10 +117,9 @@ TEST_CASE("ComplexCore::CropImageGeometry(Valid Parameters)", "[ComplexCore][Cro
   args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
   args.insert(CropImageGeometry::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insert(CropImageGeometry::k_NewImageGeom_Key, std::make_any<DataPath>(k_NewImageGeomPath));
-  args.insert(CropImageGeometry::k_VoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
   args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometry::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insert(CropImageGeometry::k_NewFeaturesName_Key, std::make_any<std::string>(k_NewFeaturesName));
+  args.insert(CropImageGeometry::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
 
   const auto oldDimensions = ds.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions();
 
@@ -117,10 +135,40 @@ TEST_CASE("ComplexCore::CropImageGeometry(Valid Parameters)", "[ComplexCore][Cro
   }
 
   const usize targetSize = (newDimensions[0]) * (newDimensions[1]) * (newDimensions[2]);
-  const auto& oldDataArray = ds.getDataRefAs<Int32Array>(k_PhasesPath);
-  const auto& newDataArray = ds.getDataRefAs<Int32Array>(k_NewImageGeomPath.createChildPath(k_NewFeaturesName).createChildPath("Phases"));
-  const auto dataSize = newDataArray.getSize();
+  const auto& oldPhasesDataArray = ds.getDataRefAs<Int32Array>(k_ImageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_Phases));
+  const auto& newPhasesDataArray = ds.getDataRefAs<Int32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_Phases));
+  const auto dataSize = newPhasesDataArray.getSize();
   REQUIRE(dataSize == targetSize);
+  compareCellDataValues<int32>(oldPhasesDataArray, newPhasesDataArray);
 
-  compareDataValues(oldDataArray, newDataArray);
+  {
+    // Write out the DataStructure for later viewing/debugging
+    Result<H5::FileWriter> ioResult = H5::FileWriter::CreateFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    H5::FileWriter fileWriter = std::move(ioResult.value());
+    herr_t err = ds.writeHdf5(fileWriter);
+    REQUIRE(err >= 0);
+  }
+
+  const auto& newCIDataArray = ds.getDataRefAs<Float32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath(Constants::k_ConfidenceIndex));
+  REQUIRE(std::fabs(newCIDataArray[0] - 0.0) < UnitTest::EPSILON);
+  REQUIRE(std::fabs(newCIDataArray[1] - 0.8) < UnitTest::EPSILON);
+
+  const auto& newIPFDataArray = ds.getDataRefAs<UInt8Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath(Constants::k_IPFColors));
+  REQUIRE(newIPFDataArray[0] == 0);
+  REQUIRE(newIPFDataArray[1] == 0);
+  REQUIRE(newIPFDataArray[2] == 0);
+  REQUIRE(newIPFDataArray[3] == 128);
+  REQUIRE(newIPFDataArray[4] == 255);
+  REQUIRE(newIPFDataArray[5] == 189);
+
+  const auto& newEqDiamDataArray = ds.getDataRefAs<Float32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath("EquivalentDiameters"));
+  REQUIRE(std::fabs(newEqDiamDataArray[0] - 0.0) < UnitTest::EPSILON);
+  REQUIRE(std::fabs(newEqDiamDataArray[1] - 16.661926) < UnitTest::EPSILON);
+
+  const auto& newNumEltsDataArray = ds.getDataRefAs<Int32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath("NumElements"));
+  REQUIRE(newNumEltsDataArray[0] == 0);
+  REQUIRE(newNumEltsDataArray[1] == 2422);
+
+  const auto* newNeighborListArray = ds.getDataAs<INeighborList>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath("NeighborList"));
+  REQUIRE(newNeighborListArray == nullptr);
 }

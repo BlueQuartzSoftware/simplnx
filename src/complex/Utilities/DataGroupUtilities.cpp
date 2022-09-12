@@ -1,10 +1,11 @@
 #include "DataGroupUtilities.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 
 namespace complex
 {
-bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount)
+bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount)
 {
   bool acceptableMatrix = false;
   // Only valid for feature or ensemble type matrices
@@ -65,6 +66,13 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
       }
     }
 
+    std::vector<usize> newShape = {keepList.size() + 1};
+    auto* featureAttMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureDataGroupPath);
+    if(featureAttMatrixPtr != nullptr)
+    {
+      featureAttMatrixPtr->setShape(newShape);
+    }
+
     if(!removeList.empty())
     {
       for(const auto& dataArray : matchingDataArrayPtrs)
@@ -79,7 +87,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGr
           destIdx++;
         }
         // Now chop off the end of the copy and modified array
-        dataArray->getIDataStore()->reshapeTuples({keepList.size() + 1});
+        dataArray->getIDataStore()->reshapeTuples(newShape);
       }
 
       // Loop over all the points and correct all the feature names
@@ -150,7 +158,8 @@ std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructu
   return arrays;
 }
 
-std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType)
+std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+                                                          const std::vector<DataPath>& ignoredDataPaths)
 {
   std::vector<DataPath> childDataObjects;
   try
@@ -160,9 +169,51 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 
     for(const auto& childName : childrenNames)
     {
+      bool ignore = false;
       DataPath childPath = parentGroup.createChildPath(childName);
       const DataObject* dataObject = dataStructure.getData(childPath);
-      if(dataObject->getDataObjectType() == dataObjectType)
+      for(const auto& ignoredPath : ignoredDataPaths)
+      {
+        if(childPath == ignoredPath)
+        {
+          ignore = true;
+          break;
+        }
+      }
+      if(!ignore && dataObject->getDataObjectType() == dataObjectType)
+      {
+        childDataObjects.push_back(childPath);
+      }
+    }
+  } catch(std::exception& e)
+  {
+    return {};
+  }
+  return {childDataObjects};
+}
+
+std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths)
+{
+  std::vector<DataPath> childDataObjects;
+  try
+  {
+    const auto& featureAttributeMatrix = dataStructure.getDataRefAs<BaseGroup>(parentGroup); // this may throw.
+    std::vector<std::string> childrenNames = featureAttributeMatrix.getDataMap().getNames();
+
+    for(const auto& childName : childrenNames)
+    {
+      bool ignore = false;
+      DataPath childPath = parentGroup.createChildPath(childName);
+      const DataObject* dataObject = dataStructure.getData(childPath);
+      for(const auto& ignoredPath : ignoredDataPaths)
+      {
+        if(childPath == ignoredPath)
+        {
+          ignore = true;
+          break;
+        }
+      }
+      if(!ignore && dynamic_cast<const IArray*>(dataObject) != nullptr)
       {
         childDataObjects.push_back(childPath);
       }

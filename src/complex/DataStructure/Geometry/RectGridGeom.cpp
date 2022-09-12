@@ -12,40 +12,24 @@
 using namespace complex;
 
 RectGridGeom::RectGridGeom(DataStructure& ds, std::string name)
-: AbstractGeometryGrid(ds, std::move(name))
+: IGridGeometry(ds, std::move(name))
 {
 }
 
 RectGridGeom::RectGridGeom(DataStructure& ds, std::string name, IdType importId)
-: AbstractGeometryGrid(ds, std::move(name), importId)
+: IGridGeometry(ds, std::move(name), importId)
 {
 }
 
-RectGridGeom::RectGridGeom(const RectGridGeom& other)
-: AbstractGeometryGrid(other)
-, m_xBoundsId(other.m_xBoundsId)
-, m_yBoundsId(other.m_yBoundsId)
-, m_zBoundsId(other.m_zBoundsId)
-, m_VoxelSizesId(other.m_VoxelSizesId)
-, m_Dimensions(other.m_Dimensions)
-{
-}
+RectGridGeom::RectGridGeom(const RectGridGeom& other) = default;
 
-RectGridGeom::RectGridGeom(RectGridGeom&& other) noexcept
-: AbstractGeometryGrid(std::move(other))
-, m_xBoundsId(std::move(other.m_xBoundsId))
-, m_yBoundsId(std::move(other.m_yBoundsId))
-, m_zBoundsId(std::move(other.m_zBoundsId))
-, m_VoxelSizesId(std::move(other.m_VoxelSizesId))
-, m_Dimensions(std::move(other.m_Dimensions))
-{
-}
+RectGridGeom::RectGridGeom(RectGridGeom&& other) = default;
 
-RectGridGeom::~RectGridGeom() = default;
+RectGridGeom::~RectGridGeom() noexcept = default;
 
-AbstractGeometry::Type RectGridGeom::getGeomType() const
+IGeometry::Type RectGridGeom::getGeomType() const
 {
-  return AbstractGeometry::Type::RectGrid;
+  return IGeometry::Type::RectGrid;
 }
 
 DataObject::Type RectGridGeom::getDataObjectType() const
@@ -75,7 +59,7 @@ RectGridGeom* RectGridGeom::Import(DataStructure& ds, std::string name, IdType i
 
 std::string RectGridGeom::getTypeName() const
 {
-  return getGeometryTypeAsString();
+  return "RectGridGeom";
 }
 
 DataObject* RectGridGeom::shallowCopy()
@@ -86,11 +70,6 @@ DataObject* RectGridGeom::shallowCopy()
 DataObject* RectGridGeom::deepCopy()
 {
   return new RectGridGeom(*this);
-}
-
-std::string RectGridGeom::getGeometryTypeAsString() const
-{
-  return "RectGridGeom";
 }
 
 void RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds)
@@ -153,23 +132,12 @@ const Float32Array* RectGridGeom::getZBounds() const
   return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_zBoundsId));
 }
 
-void RectGridGeom::initializeWithZeros()
-{
-  for(usize i = 0; i < 3; i++)
-  {
-    m_Dimensions[i] = 0;
-  }
-  m_xBoundsId.reset();
-  m_yBoundsId.reset();
-  m_zBoundsId.reset();
-}
-
 usize RectGridGeom::getNumberOfElements() const
 {
   return m_Dimensions.getX() * m_Dimensions.getY() * m_Dimensions.getZ();
 }
 
-AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
+IGeometry::StatusCode RectGridGeom::findElementSizes()
 {
   auto sizes = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1}, 0.0f);
   auto xBnds = getXBounds();
@@ -190,7 +158,7 @@ AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
         zRes = zBnds->at(z + 1) - zBnds->at(z);
         if(xRes <= 0.0f || yRes <= 0.0f || zRes <= 0.0f)
         {
-          m_VoxelSizesId.reset();
+          m_ElementSizesId.reset();
           return -1;
         }
         (*sizes)[(m_Dimensions[0] * m_Dimensions[1] * z) + (m_Dimensions[0] * y) + x] = zRes * yRes * xRes;
@@ -201,73 +169,20 @@ AbstractGeometry::StatusCode RectGridGeom::findElementSizes()
   Float32Array* sizeArray = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(sizes), getId());
   if(!sizeArray)
   {
-    m_VoxelSizesId.reset();
+    m_ElementSizesId.reset();
     return -1;
   }
 
-  m_VoxelSizesId = sizeArray->getId();
+  m_ElementSizesId = sizeArray->getId();
   return 1;
 }
 
-const Float32Array* RectGridGeom::getElementSizes() const
-{
-  return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_VoxelSizesId));
-}
-
-void RectGridGeom::deleteElementSizes()
-{
-  getDataStructure()->removeData(m_VoxelSizesId);
-  m_VoxelSizesId.reset();
-}
-
-AbstractGeometry::StatusCode RectGridGeom::findElementsContainingVert()
-{
-  return -1;
-}
-
-const AbstractGeometry::ElementDynamicList* RectGridGeom::getElementsContainingVert() const
-{
-  return nullptr;
-}
-
-void RectGridGeom::deleteElementsContainingVert()
-{
-}
-
-AbstractGeometry::StatusCode RectGridGeom::findElementNeighbors()
-{
-  return -1;
-}
-
-const AbstractGeometry::ElementDynamicList* RectGridGeom::getElementNeighbors() const
-{
-  return nullptr;
-}
-
-void RectGridGeom::deleteElementNeighbors()
-{
-}
-
-AbstractGeometry::StatusCode RectGridGeom::findElementCentroids()
-{
-  return -1;
-}
-
-const Float32Array* RectGridGeom::getElementCentroids() const
-{
-  return nullptr;
-}
-
-void RectGridGeom::deleteElementCentroids()
-{
-}
-
-complex::Point3D<float64> RectGridGeom::getParametricCenter() const
+Point3D<float64> RectGridGeom::getParametricCenter() const
 {
   return {0.5, 0.5, 0.5};
 }
 
-void RectGridGeom::getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const
+void RectGridGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const
 {
   float64 rm = 0.0;
   float64 sm = 0.0;
@@ -308,42 +223,12 @@ void RectGridGeom::getShapeFunctions(const complex::Point3D<float64>& pCoords, d
   shape[23] = pCoords[0] * pCoords[1];
 }
 
-void RectGridGeom::findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const
-{
-  throw std::runtime_error("");
-}
-
-std::string RectGridGeom::getInfoString(complex::InfoStringFormat format) const
-{
-  if(format == InfoStringFormat::HtmlFormat)
-  {
-    return getTooltipGenerator().generateHTML();
-  }
-
-  return "";
-}
-
-complex::TooltipGenerator RectGridGeom::getTooltipGenerator() const
-{
-  TooltipGenerator toolTipGen;
-
-  int64 volDims[3] = {static_cast<int64>(getNumXPoints()), static_cast<int64>(getNumYPoints()), static_cast<int64>(getNumZPoints())};
-
-  toolTipGen.addTitle("Geometry Info");
-  toolTipGen.addValue("Type", "RectGridGeom");
-  toolTipGen.addValue("Units", LengthUnitToString(getUnits()));
-  toolTipGen.addValue("Dimmensions", std::to_string(volDims[0]) + " x " + std::to_string(volDims[1]) + " x " + std::to_string(volDims[2]));
-  toolTipGen.addValue("Spacing", "Variable");
-
-  return toolTipGen;
-}
-
-void RectGridGeom::setDimensions(const complex::SizeVec3& dims)
+void RectGridGeom::setDimensions(const SizeVec3& dims)
 {
   m_Dimensions = dims;
 }
 
-complex::SizeVec3 RectGridGeom::getDimensions() const
+SizeVec3 RectGridGeom::getDimensions() const
 {
   return m_Dimensions;
 }
@@ -363,7 +248,7 @@ usize RectGridGeom::getNumZPoints() const
   return m_Dimensions.getZ();
 }
 
-complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx[3]) const
+Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx[3]) const
 {
   const Float32Array* xBnds = getXBounds();
   const Float32Array* yBnds = getYBounds();
@@ -376,20 +261,20 @@ complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx[3]) const
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(usize x, usize y, usize z) const
+Point3D<float32> RectGridGeom::getPlaneCoordsf(usize x, usize y, usize z) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float32> coords;
+  Point3D<float32> coords;
   coords[0] = (*xBnds)[x];
   coords[1] = (*yBnds)[y];
   coords[2] = (*zBnds)[z];
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx) const
+Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx) const
 {
   usize column = idx % m_Dimensions[0];
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
@@ -399,40 +284,40 @@ complex::Point3D<float32> RectGridGeom::getPlaneCoordsf(usize idx) const
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float32> coords;
+  Point3D<float32> coords;
   coords[0] = (*xBnds)[column];
   coords[1] = (*yBnds)[row];
   coords[2] = (*zBnds)[plane];
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getPlaneCoords(usize idx[3]) const
+Point3D<float64> RectGridGeom::getPlaneCoords(usize idx[3]) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float64> coords;
+  Point3D<float64> coords;
   coords[0] = static_cast<float64>((*xBnds)[idx[0]]);
   coords[1] = static_cast<float64>((*yBnds)[idx[1]]);
   coords[2] = static_cast<float64>((*zBnds)[idx[2]]);
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getPlaneCoords(usize x, usize y, usize z) const
+Point3D<float64> RectGridGeom::getPlaneCoords(usize x, usize y, usize z) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float64> coords;
+  Point3D<float64> coords;
   coords[0] = static_cast<float64>((*xBnds)[x]);
   coords[1] = static_cast<float64>((*yBnds)[y]);
   coords[2] = static_cast<float64>((*zBnds)[z]);
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getPlaneCoords(usize idx) const
+Point3D<float64> RectGridGeom::getPlaneCoords(usize idx) const
 {
   usize column = idx % m_Dimensions[0];
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
@@ -442,40 +327,40 @@ complex::Point3D<float64> RectGridGeom::getPlaneCoords(usize idx) const
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float64> coords;
+  Point3D<float64> coords;
   coords[0] = static_cast<float64>((*xBnds)[column]);
   coords[1] = static_cast<float64>((*yBnds)[row]);
   coords[2] = static_cast<float64>((*zBnds)[plane]);
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getCoordsf(usize idx[3]) const
+Point3D<float32> RectGridGeom::getCoordsf(usize idx[3]) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float32> coords;
+  Point3D<float32> coords;
   coords[0] = 0.5f * ((*xBnds)[idx[0]] + (*xBnds)[idx[0] + 1]);
   coords[1] = 0.5f * ((*yBnds)[idx[1]] + (*yBnds)[idx[1] + 1]);
   coords[2] = 0.5f * ((*zBnds)[idx[2]] + (*zBnds)[idx[2] + 1]);
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getCoordsf(usize x, usize y, usize z) const
+Point3D<float32> RectGridGeom::getCoordsf(usize x, usize y, usize z) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float32> coords;
+  Point3D<float32> coords;
   coords[0] = 0.5f * ((*xBnds)[x] + (*xBnds)[x + 1]);
   coords[1] = 0.5f * ((*yBnds)[y] + (*yBnds)[y + 1]);
   coords[2] = 0.5f * ((*zBnds)[z] + (*zBnds)[z + 1]);
   return coords;
 }
 
-complex::Point3D<float32> RectGridGeom::getCoordsf(usize idx) const
+Point3D<float32> RectGridGeom::getCoordsf(usize idx) const
 {
   usize column = idx % m_Dimensions[0];
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
@@ -485,40 +370,40 @@ complex::Point3D<float32> RectGridGeom::getCoordsf(usize idx) const
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float32> coords;
+  Point3D<float32> coords;
   coords[0] = 0.5f * ((*xBnds)[column] + (*xBnds)[column + 1]);
   coords[1] = 0.5f * ((*yBnds)[row] + (*yBnds)[row + 1]);
   coords[2] = 0.5f * ((*zBnds)[plane] + (*zBnds)[plane + 1]);
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getCoords(usize idx[3]) const
+Point3D<float64> RectGridGeom::getCoords(usize idx[3]) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float64> coords;
+  Point3D<float64> coords;
   coords[0] = 0.5 * (static_cast<float64>((*xBnds)[idx[0]]) + (*xBnds)[idx[0] + 1]);
   coords[1] = 0.5 * (static_cast<float64>((*yBnds)[idx[1]]) + (*yBnds)[idx[1] + 1]);
   coords[2] = 0.5 * (static_cast<float64>((*zBnds)[idx[2]]) + (*zBnds)[idx[2] + 1]);
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getCoords(usize x, usize y, usize z) const
+Point3D<float64> RectGridGeom::getCoords(usize x, usize y, usize z) const
 {
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float64> coords;
+  Point3D<float64> coords;
   coords[0] = 0.5 * (static_cast<float64>((*xBnds)[x]) + (*xBnds)[x + 1]);
   coords[1] = 0.5 * (static_cast<float64>((*yBnds)[y]) + (*yBnds)[y + 1]);
   coords[2] = 0.5 * (static_cast<float64>((*zBnds)[z]) + (*zBnds)[z + 1]);
   return coords;
 }
 
-complex::Point3D<float64> RectGridGeom::getCoords(usize idx) const
+Point3D<float64> RectGridGeom::getCoords(usize idx) const
 {
   usize column = idx % m_Dimensions[0];
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
@@ -528,7 +413,7 @@ complex::Point3D<float64> RectGridGeom::getCoords(usize idx) const
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();
 
-  complex::Point3D<float64> coords;
+  Point3D<float64> coords;
   coords[0] = 0.5 * (static_cast<float64>((*xBnds)[column]) + (*xBnds)[column + 1]);
   coords[1] = 0.5 * (static_cast<float64>((*yBnds)[row]) + (*yBnds)[row + 1]);
   coords[2] = 0.5 * (static_cast<float64>((*zBnds)[plane]) + (*zBnds)[plane + 1]);
@@ -596,33 +481,6 @@ std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, floa
   return (ySize * xSize * z) + (xSize * y) + x;
 }
 
-uint32 RectGridGeom::getXdmfGridType() const
-{
-  throw std::runtime_error("");
-}
-
-void RectGridGeom::setElementsContainingVert(const ElementDynamicList* elementsContainingVert)
-{
-}
-
-void RectGridGeom::setElementNeighbors(const ElementDynamicList* elementsNeighbors)
-{
-}
-
-void RectGridGeom::setElementCentroids(const Float32Array* elementCentroids)
-{
-}
-
-void RectGridGeom::setElementSizes(const Float32Array* elementSizes)
-{
-  if(!elementSizes)
-  {
-    m_VoxelSizesId.reset();
-    return;
-  }
-  m_VoxelSizesId = elementSizes->getId();
-}
-
 H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   // Read Dimensions
@@ -638,19 +496,19 @@ H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReade
   m_xBoundsId = ReadH5DataId(groupReader, H5Constants::k_XBoundsTag);
   m_yBoundsId = ReadH5DataId(groupReader, H5Constants::k_YBoundsTag);
   m_zBoundsId = ReadH5DataId(groupReader, H5Constants::k_ZBoundsTag);
-  m_VoxelSizesId = ReadH5DataId(groupReader, H5Constants::k_VoxelSizesTag);
 
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  return IGridGeometry::readHdf5(dataStructureReader, groupReader, preflight);
 }
 
 H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(errorCode < 0)
+  H5::ErrorType error = IGridGeometry::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
+
+  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
 
   // Write dimensions
   H5::AttributeWriter::DimsVector dims = {3};
@@ -661,43 +519,37 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
   }
 
   auto dimensionAttr = groupWriter.createAttribute(H5Constants::k_DimensionsTag);
-  errorCode = dimensionAttr.writeVector(dims, dimsVector);
-  if(errorCode < 0)
+  error = dimensionAttr.writeVector(dims, dimsVector);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
   // Write DataObject IDs
-  errorCode = WriteH5DataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
-  if(errorCode < 0)
+  error = WriteH5DataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
-  if(errorCode < 0)
+  error = WriteH5DataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
-  if(errorCode < 0)
+  error = WriteH5DataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
+  if(error < 0)
   {
-    return errorCode;
+    return error;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_VoxelSizesId, H5Constants::k_VoxelSizesTag);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
+  return error;
 }
 
 void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
-  AbstractGeometryGrid::checkUpdatedIdsImpl(updatedIds);
+  IGridGeometry::checkUpdatedIdsImpl(updatedIds);
 
   for(const auto& updatedId : updatedIds)
   {
@@ -714,11 +566,6 @@ void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdTyp
     if(m_zBoundsId == updatedId.first)
     {
       m_zBoundsId = updatedId.second;
-    }
-
-    if(m_VoxelSizesId == updatedId.first)
-    {
-      m_VoxelSizesId = updatedId.second;
     }
   }
 }

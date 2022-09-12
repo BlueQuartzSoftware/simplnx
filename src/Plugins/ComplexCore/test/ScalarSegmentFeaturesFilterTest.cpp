@@ -28,13 +28,10 @@ TEST_CASE("ComplexCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentF
     DataPath smallIn100Group({k_DataContainer});
     DataPath ebsdScanDataPath = smallIn100Group.createChildPath(k_CellData);
     DataPath inputDataArrayPath = ebsdScanDataPath.createChildPath(k_FeatureIds);
-    DataPath outputFeatureIdsPath = ebsdScanDataPath.createChildPath("Output_Feature_Ids");
-
-    DataPath featureDataGroupPath = smallIn100Group.createChildPath("Computed_CellData");
-    {
-      DataGroup* computedFeatureData = DataGroup::Create(dataStructure, "Computed_CellData", dataStructure.getId(smallIn100Group));
-    }
-
+    std::string outputFeatureIdsName = "Output_Feature_Ids";
+    std::string computedCellDataName = "Computed_CellData";
+    DataPath outputFeatureIdsPath = ebsdScanDataPath.createChildPath(outputFeatureIdsName);
+    DataPath featureDataGroupPath = smallIn100Group.createChildPath(computedCellDataName);
     DataPath activeArrayDataPath = featureDataGroupPath.createChildPath(k_ActiveName);
 
     DataPath gridGeomDataPath({k_DataContainer});
@@ -49,8 +46,9 @@ TEST_CASE("ComplexCore::ScalarSegmentFeatures", "[Reconstruction][ScalarSegmentF
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(inputDataArrayPath));
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(scalarTolerance));
     // Set the paths to the created arrays
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsPathKey, std::make_any<DataPath>(outputFeatureIdsPath));
-    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayPathKey, std::make_any<DataPath>(activeArrayDataPath));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsPathKey, std::make_any<std::string>(outputFeatureIdsName));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeaturePathKey, std::make_any<std::string>(computedCellDataName));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayPathKey, std::make_any<std::string>(k_ActiveName));
     // Are we going to randomize the featureIds when completed.
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
 

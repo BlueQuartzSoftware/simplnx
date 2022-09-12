@@ -86,9 +86,10 @@ COMPLEX_EXPORT H5::ErrorType WriteFile(H5::FileWriter& fileWriter, const Pipelin
  * @brief Writes a .dream3d file with the specified data.
  * @param path
  * @param dataStructure
+ * @param writeXdmf
  * @return bool
  */
-COMPLEX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {});
+COMPLEX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {}, bool writeXdmf = false);
 
 /**
  * @brief Imports and returns the DataStructure from the target .dream3d file.
@@ -124,5 +125,15 @@ COMPLEX_EXPORT Result<complex::Pipeline> ImportPipelineFromFile(const H5::FileRe
  * @return complex::Pipeline
  */
 COMPLEX_EXPORT Result<complex::Pipeline> ImportPipelineFromFile(const std::filesystem::path& filePath);
+
+/**
+ * @brief Writes an xdmf file for the given DataStructure.
+ * The hdf5 file path corresponds to an already written hdf5 file for the given DataStructure.
+ * @param filePath
+ * @param dataStructure
+ * @param hdf5FilePath
+ * @return
+ */
+COMPLEX_EXPORT void WriteXdmf(const std::filesystem::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath);
 } // namespace DREAM3D
 } // namespace complex

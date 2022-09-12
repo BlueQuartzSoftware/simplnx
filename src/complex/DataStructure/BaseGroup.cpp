@@ -23,7 +23,7 @@ BaseGroup::BaseGroup(const BaseGroup& other)
 {
 }
 
-BaseGroup::BaseGroup(BaseGroup&& other) noexcept
+BaseGroup::BaseGroup(BaseGroup&& other)
 : DataObject(std::move(other))
 , m_DataMap(std::move(other.m_DataMap))
 {
@@ -79,6 +79,16 @@ DataObject* BaseGroup::operator[](const std::string& name)
 const DataObject* BaseGroup::operator[](const std::string& name) const
 {
   return m_DataMap[name];
+}
+
+DataObject& BaseGroup::at(const std::string& name)
+{
+  return m_DataMap.at(name);
+}
+
+const DataObject& BaseGroup::at(const std::string& name) const
+{
+  return m_DataMap.at(name);
 }
 
 bool BaseGroup::canInsert(const DataObject* obj) const

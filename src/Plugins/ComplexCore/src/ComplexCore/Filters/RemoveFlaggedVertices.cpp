@@ -7,8 +7,10 @@
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
 #include <fmt/format.h>
@@ -79,13 +81,14 @@ Parameters RemoveFlaggedVertices::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraySelection_Key, "Vertex Data Arrays", "Paths to the target Vertex DataArrays to also reduce.", std::vector<DataPath>(),
                                                                complex::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask Array", "DataPath to the conditional array that will be used to decide which vertices are removed.", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}));
   params.insert(
       std::make_unique<DataGroupCreationParameter>(k_ReducedVertexPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.", DataPath()));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexDataName));
   return params;
 }
 
@@ -101,6 +104,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskPath_Key);
   auto targetArrayPaths = filterArgs.value<std::vector<DataPath>>(k_ArraySelection_Key);
   auto reducedVertexPath = filterArgs.value<DataPath>(k_ReducedVertexPath_Key);
+  auto vertexDataName = filterArgs.value<std::string>(k_VertexDataName_Key);
 
   OutputActions actions;
   std::vector<DataPath> dataArrayPaths;
@@ -111,7 +115,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
     std::string errorMsg = fmt::format("Vertex Geometry not found at path: '{}'", vertexGeomPath.toString());
     return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
   }
-  auto verticesId = vertex->getVerticesId();
+  auto verticesId = vertex->getVertexListId();
   auto* verticesArray = dataStructure.getDataAs<Float32Array>(verticesId);
   if(verticesArray == nullptr)
   {
@@ -130,14 +134,13 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
 
   // Create vertex geometry
   uint64 numVertices = vertex->getNumberOfVertices();
-  auto reduced = std::make_unique<CreateVertexGeometryAction>(reducedVertexPath, numVertices);
+  auto reduced = std::make_unique<CreateVertexGeometryAction>(reducedVertexPath, numVertices, vertexDataName);
+  DataPath reducedVertexDataPath = reduced->getVertexDataPath();
   actions.actions.push_back(std::move(reduced));
 
   dataStructure.validateNumberOfTuples(dataArrayPaths);
 
   // Create vertex copy
-  std::vector<usize> tDims(1, 0);
-
   for(const auto& targetArrayPath : targetArrayPaths)
   {
     const auto* targetArray = dataStructure.getDataAs<IDataArray>(targetArrayPath);
@@ -156,7 +159,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
     auto dataType = targetArray->getDataType();
     auto numTuples = targetArray->getNumberOfTuples();
     auto numComponents = targetArray->getNumberOfComponents();
-    auto outputPath = reducedVertexPath.createChildPath(targetArray->getName());
+    auto outputPath = reducedVertexDataPath.createChildPath(targetArray->getName());
     auto action = std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{numTuples}, std::vector<usize>{numComponents}, outputPath);
     actions.actions.push_back(std::move(action));
   }
@@ -171,6 +174,7 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
   auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
   auto targetArrayPaths = args.value<std::vector<DataPath>>(k_ArraySelection_Key);
   auto reducedVertexPath = args.value<DataPath>(k_ReducedVertexPath_Key);
+  auto vertexDataName = args.value<std::string>(k_VertexDataName_Key);
 
   VertexGeom& vertex = data.getDataRefAs<VertexGeom>(vertexGeomPath);
   auto& mask = data.getDataRefAs<BoolArray>(maskArrayPath);
@@ -186,9 +190,11 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
       trueIndices[trueIndex++] = i;
     }
   }
+  std::vector<usize> tDims = {trueCount};
 
   VertexGeom& reducedVertex = data.getDataRefAs<VertexGeom>(reducedVertexPath);
   reducedVertex.resizeVertexList(trueCount);
+  ResizeAttributeMatrix(*reducedVertex.getVertexData(), tDims);
 
   for(size_t i = 0; i < trueCount; i++)
   {
@@ -196,11 +202,9 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
     reducedVertex.setCoords(i, coords);
   }
 
-  std::vector<usize> tDims = {trueIndices.size()};
-
   for(const auto& targetArrayPath : targetArrayPaths)
   {
-    DataPath destinationPath = reducedVertexPath.createChildPath(targetArrayPath.getTargetName());
+    DataPath destinationPath = reducedVertexPath.createChildPath(vertexDataName).createChildPath(targetArrayPath.getTargetName());
     auto& src = data.getDataRefAs<IDataArray>(targetArrayPath);
     auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
 

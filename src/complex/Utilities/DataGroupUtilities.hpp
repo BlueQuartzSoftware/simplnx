@@ -21,7 +21,8 @@ namespace complex
  * @param cellFeatureIds
  * @return
  */
-COMPLEX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount);
+COMPLEX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds,
+                                          size_t currentFeatureCount);
 
 /**
  * @brief This function will gather all of the sibling DataArrays to the input DataPath, then filter out all the 'IgnoredDataPaths`
@@ -37,8 +38,19 @@ COMPLEX_EXPORT std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(co
  * @param dataStructure The DataStructure to use
  * @param parentGroup The parent group whose children you want to get
  * @param dataObjectType The type of children you want to get
+ * @param ignoredDataPaths Vector of DataPaths that should be remove from the final vector.
  * @return std::optional<std::vector<DataPath>>  of child paths that meet the DataObjectType requirement if there no errors during the process.
  */
-COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType);
+COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+                                                                         const std::vector<DataPath>& ignoredDataPaths = {});
+
+/**
+ * @brief This function will return all the DataPaths within a BaseGroup that are of an IArray type
+ * @param dataStructure The DataStructure to use
+ * @param parentGroup The parent group whose children you want to get
+ * @param ignoredDataPaths Vector of DataPaths that should be remove from the final vector.
+ * @return std::optional<std::vector<DataPath>>  of child paths that are an IArray type if there no errors during the process.
+ */
+COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths = {});
 
 } // namespace complex

@@ -82,4 +82,9 @@ DataPath CreateArrayAction::path() const
 {
   return getCreatedPath();
 }
+
+std::vector<DataPath> CreateArrayAction::getAllCreatedPaths() const
+{
+  return {getCreatedPath()};
+}
 } // namespace complex

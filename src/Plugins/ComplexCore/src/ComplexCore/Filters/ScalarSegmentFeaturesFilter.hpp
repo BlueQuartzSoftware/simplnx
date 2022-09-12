@@ -34,7 +34,7 @@ public:
   static inline constexpr StringLiteral k_UseGoodVoxelsKey = "use mask";
   static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "mask path";
   static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature ids path";
-  // static inline constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
+  static inline constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
   static inline constexpr StringLiteral k_ActiveArrayPathKey = "active array path";
   static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize features";
 

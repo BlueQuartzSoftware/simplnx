@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
@@ -18,6 +19,7 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Instantiate", "[ComplexCore][Remo
   args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
   args.insertOrAssign(RemoveFlaggedVertices::k_MaskPath_Key, std::make_any<DataPath>());
   args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexPath_Key, std::make_any<DataPath>());
+  args.insertOrAssign(RemoveFlaggedVertices::k_VertexDataName_Key, std::make_any<std::string>("Vertex Data"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
@@ -38,12 +40,16 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
   // Create a Vertex Geometry grid for the Scan Data
   VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, topLevelGroup->getId());
   Float32Array* coords = UnitTest::CreateTestDataArray<float>(dataGraph, "coords", vertexTupleDims, vertexCompDims, vertexGeom->getId());
-  vertexGeom->setVertices(coords); // Add the vertices to the VertexGeom object
+  vertexGeom->setVertices(*coords); // Add the vertices to the VertexGeom object
 
-  Int32Array* slipVector = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_SlipVector, vertexTupleDims, vertexCompDims, vertexGeom->getId());
-  Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexGeom->getId());
+  auto* vertexAttributeMatrix = AttributeMatrix::Create(dataGraph, Constants::k_VertexDataGroupName, vertexGeom->getId());
+  vertexAttributeMatrix->setShape(vertexTupleDims);
+  vertexGeom->setVertexData(*vertexAttributeMatrix);
 
-  BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataGraph, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexGeom->getId());
+  Int32Array* slipVector = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_SlipVector, vertexTupleDims, vertexCompDims, vertexAttributeMatrix->getId());
+  Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataGraph, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexAttributeMatrix->getId());
+
+  BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataGraph, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexAttributeMatrix->getId());
   conditionalArray->fill(true);
   // initialize the coords just to have something other than 0.0
   // Set the first 25 values of the conditional array to false, thus keeping 75 vertices
@@ -59,14 +65,17 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
   }
 
   DataPath vertexGeomPath({Constants::k_SmallIN100, Constants::k_VertexGeometry});
-  std::vector<DataPath> arraySelection{vertexGeomPath.createChildPath(Constants::k_SlipVector), vertexGeomPath.createChildPath(Constants::k_FeatureIds)};
-  DataPath maskPath({Constants::k_SmallIN100, Constants::k_VertexGeometry, Constants::k_ConditionalArray});
+  DataPath vertexAMPath = vertexGeomPath.createChildPath(Constants::k_VertexDataGroupName);
+  std::vector<DataPath> arraySelection{vertexAMPath.createChildPath(Constants::k_SlipVector), vertexAMPath.createChildPath(Constants::k_FeatureIds)};
+  DataPath maskPath = vertexAMPath.createChildPath(Constants::k_ConditionalArray);
   DataPath reducedVertexPath({Constants::k_SmallIN100, Constants::k_ReducedGeometry});
+  DataPath reducedVertexAMPath = reducedVertexPath.createChildPath(Constants::k_VertexDataGroupName);
 
   args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeomPath_Key, std::make_any<DataPath>(vertexGeomPath));
   args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(arraySelection));
   args.insertOrAssign(RemoveFlaggedVertices::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
   args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexPath_Key, std::make_any<DataPath>(reducedVertexPath));
+  args.insertOrAssign(RemoveFlaggedVertices::k_VertexDataName_Key, std::make_any<std::string>(Constants::k_VertexDataGroupName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
@@ -80,10 +89,10 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
   size_t reducedTupleCount = reducedVertexGeom->getNumberOfVertices();
   REQUIRE(reducedTupleCount == 75);
 
-  Int32Array& reducedFeatureIds = dataGraph.getDataRefAs<Int32Array>(reducedVertexPath.createChildPath(Constants::k_FeatureIds));
+  Int32Array& reducedFeatureIds = dataGraph.getDataRefAs<Int32Array>(reducedVertexAMPath.createChildPath(Constants::k_FeatureIds));
   REQUIRE((reducedFeatureIds.getNumberOfTuples() == 75));
 
-  Int32Array& reducedSlipVectors = dataGraph.getDataRefAs<Int32Array>(reducedVertexPath.createChildPath(Constants::k_SlipVector));
+  Int32Array& reducedSlipVectors = dataGraph.getDataRefAs<Int32Array>(reducedVertexAMPath.createChildPath(Constants::k_SlipVector));
   REQUIRE((reducedSlipVectors.getNumberOfTuples() == 75));
 
   for(size_t i = 0; i < reducedTupleCount; i++)

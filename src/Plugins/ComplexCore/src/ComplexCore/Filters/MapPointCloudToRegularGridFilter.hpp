@@ -34,6 +34,7 @@ public:
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_MaskPath_Key = "mask";
   static inline constexpr StringLiteral k_VoxelIndices_Key = "voxel_indices";
+  static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
 
   /**
    * @brief

@@ -26,10 +26,9 @@ public:
   static inline constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
   static inline constexpr StringLiteral k_ImageGeom_Key = "image_geom";
   static inline constexpr StringLiteral k_NewImageGeom_Key = "new_image_geom";
-  static inline constexpr StringLiteral k_VoxelArrays_Key = "voxel_arrays";
   static inline constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
   static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
-  static inline constexpr StringLiteral k_NewFeaturesName_Key = "new_features_group_name";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrix_Key = "cell_feature_attribute_matrix";
 
   /**
    * @brief
