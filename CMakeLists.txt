@@ -558,7 +558,6 @@ if("${DREAM3D_DATA_DIR}" STREQUAL "")
 endif()
 
 
-
 if(EXISTS "${DREAM3D_DATA_DIR}") 
   dowload_test_data(${DREAM3D_DATA_DIR})
   create_data_copy_rules(${DREAM3D_DATA_DIR})
