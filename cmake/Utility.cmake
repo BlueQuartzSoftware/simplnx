@@ -1,3 +1,7 @@
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
 function(enable_vcpkg_manifest_feature)
   set(optionsArgs)
   set(oneValueArgs TEST_VAR FEATURE)
@@ -11,6 +15,10 @@ function(enable_vcpkg_manifest_feature)
   endif()
 endfunction()
 
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
 function(install_with_directory)
   set(optionsArgs)
   set(oneValueArgs DESTINATION COMPONENT BASE_DIR)
@@ -27,6 +35,9 @@ function(install_with_directory)
   endforeach()
 endfunction()
 
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
 function(complex_enable_warnings)
   set(optionsArgs)
   set(oneValueArgs TARGET)
@@ -69,4 +80,76 @@ function(complex_enable_warnings)
     )
   
   endif()
+endfunction()
+
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+include(FetchContent)
+
+function(dowload_test_data)
+  set(optionsArgs)
+  set(oneValueArgs DREAM3D_DATA_DIR)
+  set(multiValueArgs FILES)
+  cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  # If the data directory does not exist then bail out now.
+  if(NOT EXISTS "${ARGS_DREAM3D_DATA_DIR}")
+    return()
+  endif()
+
+  message(STATUS "DREAM3D_Data: Found at '${ARGS_DREAM3D_DATA_DIR}'")
+  
+  message(STATUS "Downloading DREAM3D_Data/TestFiles")
+  FetchContent_Declare(download_DREAM3D_Data
+    URL "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_8/TestFiles_6_8.tar.gz"
+    URL_HASH SHA512="17af96674010f07e77758ee2335199e866a3c036b8df9755f203b85a8ad1112c19a5a110539c634b0b2cefce73c76c999becc1a4661205925852e07f278b287e"
+    SOURCE_DIR "${ARGS_DREAM3D_DATA_DIR}/TestFiles"
+    DOWNLOAD_DIR "${ARGS_DREAM3D_DATA_DIR}"
+  )
+  FetchContent_MakeAvailable(download_DREAM3D_Data)
+
+endfunction()
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+function(create_data_copy_rules)
+  set(optionsArgs)
+  set(oneValueArgs DREAM3D_DATA_DIR)
+  set(multiValueArgs FILES)
+  cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
+  add_custom_target(DataFolderCopy ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARGS_DREAM3D_DATA_DIR}/Data ${DATA_DEST_DIR}
+    COMMENT "Copying Data Folder into Binary Directory")
+  set_target_properties(DataFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
+
+  add_custom_target(H5EbsdDataCopy ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ARGS_DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
+    ${DATA_DEST_DIR}/H5Ebsd/Small_IN100.h5ebsd
+    COMMENT "Copying Data Folder into Binary Directory")
+  set_target_properties(H5EbsdDataCopy PROPERTIES FOLDER ZZ_COPY_FILES)  
+
+  set(DREAM3D_DATA_DIRECTORIES
+    ${ARGS_DREAM3D_DATA_DIR}/Data/Image
+    ${ARGS_DREAM3D_DATA_DIR}/Data/Models
+    ${ARGS_DREAM3D_DATA_DIR}/Data/H5Ebsd
+  )
+
+  set(INSTALL_DESTINATION "Data")
+
+  # NOTE: If we are creating an Anaconda install the install directory WILL be different
+  foreach(data_dir ${DREAM3D_DATA_DIRECTORIES})
+    if(EXISTS ${data_dir})
+      install(DIRECTORY
+        ${data_dir}
+        DESTINATION ${INSTALL_DESTINATION}
+        COMPONENT Applications
+      )
+    endif()
+  endforeach()
 endfunction()

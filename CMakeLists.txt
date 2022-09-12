@@ -540,6 +540,25 @@ target_include_directories(complex
     $<INSTALL_INTERFACE:include>
 )
 
+
+# -----------------------------------------------------------------------
+# Download the Test Data. This needs to be done BEFORE the Plugins and test
+# -----------------------------------------------------------------------
+
+# If DREAM3D_DATA_DIR is NOT defined/set then take a look at the same level as complex
+if("${DREAM3D_DATA_DIR}" STREQUAL "") 
+  get_filename_component(complex_PARENT ${complex_SOURCE_DIR} DIRECTORY CACHE)
+  set(DREAM3D_DATA_DIR "${complex_PARENT}/DREAM3D_Data" CACHE PATH "The directory where to find test data files")
+endif()
+
+if(EXISTS "${DREAM3D_DATA_DIR}") 
+  dowload_test_data(${DREAM3D_DATA_DIR})
+  create_data_copy_rules(${DREAM3D_DATA_DIR})
+endif()
+
+#------------------------------------------------------------------------------
+# Complex Plugins Section
+#------------------------------------------------------------------------------
 get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
 if("${ComplexPluginTargets}" STREQUAL "")
   set_property(GLOBAL PROPERTY ComplexPluginTargets "")
