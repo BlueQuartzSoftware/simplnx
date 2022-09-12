@@ -94,10 +94,10 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
   const uint64 k_FeatureNumTuples = 409;
 
   // Setup constants here that are going to be needed in multiple contexts
-  const DataPath k_AvgQuatsDataPath({k_AvgQuats});
+  const DataPath k_AvgQuatsDataPath({k_GrainData, k_AvgQuats});
 
   const std::string k_AvgEulers("AvgEulerAngles");
-  const DataPath k_AvgEulersDataPath({k_AvgEulers});
+  const DataPath k_AvgEulersDataPath({k_GrainData, k_AvgEulers});
 
   const std::string k_ExemplarAvgQuats("ExemplarAvgQuats");
   const DataPath k_ExemplarAvgQuatsDataPath({k_ExemplarAvgQuats});
@@ -128,6 +128,19 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
   runImportTextFilter(k_AvgQuats, NumericType::float32, k_FeatureNumTuples, 4, k_ExemplarAvgQuatsDataPath, dataStructure);
   runImportTextFilter(k_AvgEulers, NumericType::float32, k_FeatureNumTuples, 3, k_ExemplarAvgEulersDataPath, dataStructure);
 
+  // Create the cell feature attribute matrix where the output arrays will be stored
+  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsDataPath);
+  usize largestFeature = 0;
+  for(const int32& featureId : featureIds)
+  {
+    if(static_cast<usize>(featureId) > largestFeature)
+    {
+      largestFeature = featureId;
+    }
+  }
+  AttributeMatrix* cellFeatureData = AttributeMatrix::Create(dataStructure, k_GrainData);
+  cellFeatureData->setShape({largestFeature + 1});
+
   // Run the FindAvgOrientationsFilter
   {
     // Instantiate the filter and an Arguments Object
@@ -139,10 +152,11 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
     args.insertOrAssign(FindAvgOrientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesDataPath));
     args.insertOrAssign(FindAvgOrientationsFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsDataPath));
     args.insertOrAssign(FindAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructureDataPath));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>({k_GrainData}));
 
     // These are the output AvgQuats and output AvgEuler paths NOT the Exemplar AvgQuats & AvgEulers
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_AvgQuatsDataPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_AvgEulersDataPath));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<std::string>(k_AvgQuats));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayPath_Key, std::make_any<std::string>(k_AvgEulers));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -150,7 +164,7 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.invalid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Compare the data sets

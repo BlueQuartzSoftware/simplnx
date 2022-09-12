@@ -2,10 +2,12 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/FindAvgOrientations.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
 
@@ -65,9 +67,11 @@ Parameters FindAvgOrientationsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"CellEnsembleData", "CrystalStructures"}),
                                                           ArraySelectionParameter::AllowedTypes{complex::DataType::uint32}));
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "", DataPath({"CellFeatureData"})));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "", DataPath({"CellFeatureData", "AvgQuats"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_AvgEulerAnglesArrayPath_Key, "Average Euler Angles", "", DataPath({"CellFeatureData", "AvgEulerAngles"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "", "AvgQuats"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgEulerAnglesArrayPath_Key, "Average Euler Angles", "", "AvgEulerAngles"));
 
   return params;
 }
@@ -86,8 +90,9 @@ IFilter::PreflightResult FindAvgOrientationsFilter::preflightImpl(const DataStru
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellQuatsArrayPathValue = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  auto pAvgEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_AvgEulerAnglesArrayPath_Key);
+  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
+  auto pAvgQuatsArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgQuatsArrayPath_Key));
+  auto pAvgEulerAnglesArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgEulerAnglesArrayPath_Key));
 
   // Validate the Crystal Structures array
   const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
@@ -128,9 +133,17 @@ IFilter::PreflightResult FindAvgOrientationsFilter::preflightImpl(const DataStru
     return {nonstd::make_unexpected(std::vector<Error>{Error{-651, fmt::format("Input arrays do have matching tuple counts.")}})};
   }
 
+  const auto* cellFeatAttMatrix = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
+  if(cellFeatAttMatrix == nullptr)
+  {
+    return {
+        nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, fmt::format("Could not find selected Attribute matrix at path '{}'", pCellFeatureAttributeMatrixPathValue.toString())}})};
+  }
+
   // Create output DataStructure Items
-  auto createAvgQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{1}, std::vector<usize>{4}, pAvgQuatsArrayPathValue);
-  auto createAvgEulerAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{1}, std::vector<usize>{3}, pAvgEulerAnglesArrayPathValue);
+  auto tDims = cellFeatAttMatrix->getShape();
+  auto createAvgQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, tDims, std::vector<usize>{4}, pAvgQuatsArrayPathValue);
+  auto createAvgEulerAction = std::make_unique<CreateArrayAction>(DataType::float32, tDims, std::vector<usize>{3}, pAvgEulerAnglesArrayPathValue);
 
   OutputActions actions;
   actions.actions.push_back(std::move(createAvgQuatAction));
@@ -150,8 +163,9 @@ Result<> FindAvgOrientationsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.cellQuatsArrayPath = filterArgs.value<DataPath>(k_CellQuatsArrayPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.avgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.avgEulerAnglesArrayPath = filterArgs.value<DataPath>(k_AvgEulerAnglesArrayPath_Key);
+  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
+  inputValues.avgQuatsArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgQuatsArrayPath_Key));
+  inputValues.avgEulerAnglesArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgEulerAnglesArrayPath_Key));
 
   // Let the Algorithm instance do the work
   return FindAvgOrientations(dataStructure, messageHandler, shouldCancel, &inputValues)();

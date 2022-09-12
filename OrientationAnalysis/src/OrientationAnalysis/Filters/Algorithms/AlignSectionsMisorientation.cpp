@@ -2,7 +2,7 @@
 
 #include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
@@ -29,7 +29,7 @@ AlignSectionsMisorientation::~AlignSectionsMisorientation() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::operator()()
 {
-  const auto& gridGeom = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_InputValues->inputImageGeometry);
+  const auto& gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->inputImageGeometry);
 
   Result<> result = execute(gridGeom->getDimensions());
   if(result.invalid())
@@ -47,7 +47,7 @@ Result<> AlignSectionsMisorientation::operator()()
 std::vector<DataPath> AlignSectionsMisorientation::getSelectedDataPaths() const
 {
   auto cellDataGroupPath = m_InputValues->cellDataGroupPath;
-  auto& cellDataGroup = m_DataStructure.getDataRefAs<DataGroup>(cellDataGroupPath);
+  auto& cellDataGroup = m_DataStructure.getDataRefAs<AttributeMatrix>(cellDataGroupPath);
   std::vector<DataPath> selectedCellArrays;
 
   // Create the vector of selected cell DataPaths
@@ -72,7 +72,7 @@ void AlignSectionsMisorientation::find_shifts(std::vector<int64_t>& xshifts, std
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
       std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->goodVoxelsArrayPath.toString());
-      m_Result.errors().push_back({-53900, message});
+      m_Result = MergeResults(MakeErrorResult(-53900, message), m_Result);
       return;
     }
   }
@@ -84,12 +84,12 @@ void AlignSectionsMisorientation::find_shifts(std::vector<int64_t>& xshifts, std
     if(!outFile.is_open())
     {
       std::string message = fmt::format("Error creating Input Shifts File with file path {}", m_InputValues->alignmentShiftFileName.string());
-      m_Result.errors().push_back({-53901, message});
+      m_Result = MergeResults(MakeErrorResult(-53901, message), m_Result);
       return;
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_InputValues->inputImageGeometry);
+  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->inputImageGeometry);
 
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);

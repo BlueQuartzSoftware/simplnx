@@ -22,6 +22,7 @@ const std::string k_SlipSystemsArrayName("SlipSystems");
 const std::string k_PolesArrayName("Poles");
 const std::string k_PhisArrayName("Schmid_Phis");
 const std::string k_LambdasArrayName("Schmid_Lambdas");
+const std::string k_CalculatedArrayPrefix("Calculated_");
 } // namespace
 
 TEST_CASE("OrientationAnalysis::FindSchmidsFilter", "[OrientationAnalysis][FindSchmidsFilter]")
@@ -52,11 +53,11 @@ TEST_CASE("OrientationAnalysis::FindSchmidsFilter", "[OrientationAnalysis][FindS
     args.insertOrAssign(FindSchmidsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsDataPath));
     args.insertOrAssign(FindSchmidsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
 
-    args.insertOrAssign(FindSchmidsFilter::k_SchmidsArrayName_Key, std::make_any<DataPath>({k_SchmidsArrayName}));
-    args.insertOrAssign(FindSchmidsFilter::k_SlipSystemsArrayName_Key, std::make_any<DataPath>({k_SlipSystemsArrayName}));
-    args.insertOrAssign(FindSchmidsFilter::k_PolesArrayName_Key, std::make_any<DataPath>({k_PolesArrayName}));
-    args.insertOrAssign(FindSchmidsFilter::k_PhisArrayName_Key, std::make_any<DataPath>({k_PhisArrayName}));
-    args.insertOrAssign(FindSchmidsFilter::k_LambdasArrayName_Key, std::make_any<DataPath>({k_LambdasArrayName}));
+    args.insertOrAssign(FindSchmidsFilter::k_SchmidsArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_SchmidsArrayName));
+    args.insertOrAssign(FindSchmidsFilter::k_SlipSystemsArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_SlipSystemsArrayName));
+    args.insertOrAssign(FindSchmidsFilter::k_PolesArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_PolesArrayName));
+    args.insertOrAssign(FindSchmidsFilter::k_PhisArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_PhisArrayName));
+    args.insertOrAssign(FindSchmidsFilter::k_LambdasArrayName_Key, std::make_any<std::string>(k_CalculatedArrayPrefix + k_LambdasArrayName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -73,7 +74,7 @@ TEST_CASE("OrientationAnalysis::FindSchmidsFilter", "[OrientationAnalysis][FindS
     for(const auto& comparisonName : comparisonNames)
     {
       const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, comparisonName});
-      const DataPath calculatedPath({comparisonName});
+      const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_CalculatedArrayPrefix + comparisonName});
       const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
       const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
       UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData, 1);
@@ -83,7 +84,7 @@ TEST_CASE("OrientationAnalysis::FindSchmidsFilter", "[OrientationAnalysis][FindS
     for(const auto& comparisonName : comparisonNames)
     {
       const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, comparisonName});
-      const DataPath calculatedPath({comparisonName});
+      const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_CalculatedArrayPrefix + comparisonName});
       const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
       const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
       UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData, 1);

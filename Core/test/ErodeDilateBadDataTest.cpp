@@ -88,10 +88,8 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
     constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
     constexpr StringLiteral k_ImageGeom_Key = "image_geom";
     constexpr StringLiteral k_NewImageGeom_Key = "new_image_geom";
-    constexpr StringLiteral k_VoxelArrays_Key = "voxel_arrays";
     constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
     //    constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
-    constexpr StringLiteral k_CreatedCellData_Key = "new_features_group_name";
 
     Arguments args;
     // Create default Parameters for the filter.
@@ -103,10 +101,7 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
     args.insertOrAssign(k_MinVoxel_Key, std::make_any<VectorUInt64Parameter::ValueType>(minValues));
     args.insertOrAssign(k_MaxVoxel_Key, std::make_any<VectorUInt64Parameter::ValueType>(maxValues));
     args.insertOrAssign(k_UpdateOrigin_Key, std::make_any<BoolParameter::ValueType>(false));
-    args.insertOrAssign(k_VoxelArrays_Key,
-                        std::make_any<MultiArraySelectionParameter::ValueType>({k_OrigConfidenceIndexArrayPath, k_OrigEulersArrayPath, k_OrigImageQualityArrayPath, k_OrigPhasesArrayPath}));
     args.insertOrAssign(k_RenumberFeatures_Key, std::make_any<BoolParameter::ValueType>(false));
-    args.insertOrAssign(k_CreatedCellData_Key, std::make_any<std::string>(k_CellData));
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);

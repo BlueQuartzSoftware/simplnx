@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/Orientation.hpp"
@@ -38,7 +39,7 @@ int MergeTwins::getSeed(int32 newFid)
   Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   Int32Array& featureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayName);
-  DataGroup& cellFeaturesAttMatrix = m_DataStructure.getDataRefAs<DataGroup>(m_InputValues->NewCellFeatureAttributeMatrixName);
+  AttributeMatrix& cellFeaturesAttMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->NewCellFeatureAttributeMatrixName);
   BoolArray& active = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->ActiveArrayName);
 
   int32 numfeatures = static_cast<int32>(phases.getNumberOfTuples());
@@ -74,8 +75,7 @@ int MergeTwins::getSeed(int32 newFid)
   {
     featureParentIds[seed] = newFid;
     std::vector<size_t> tDims(1, newFid + 1);
-    // cellFeaturesAttMatrix.resizeAttributeArrays(tDims); //TODO: this instead of/on top of following line when we add in AttributeMatrix support
-    active.getDataStore()->reshapeTuples(tDims);
+    ResizeAttributeMatrix(cellFeaturesAttMatrix, tDims); // this will resize the active array as well
   }
   return seed;
 }

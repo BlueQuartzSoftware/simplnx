@@ -4,10 +4,12 @@
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
@@ -138,6 +140,7 @@ Parameters ITKImportImageStack::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "", DataPath({"ImageDataContainer"})));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "", DataPath({"ImageDataContainer", "ImageData"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "", ImageGeom::k_CellDataName));
 
   return params;
 }
@@ -157,6 +160,7 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   auto spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
+  auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
 
   std::vector<std::string> files = inputFileListInfo.generate();
 
@@ -188,12 +192,12 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
     throw std::runtime_error("ITKImportImageStack: Expected CreateImageGeometryAction at index 0");
   }
 
-  // The third action should be the array creation
-  const IDataAction* action1 = imageReaderResult.outputActions.value().actions.at(2).get();
+  // The second action should be the array creation
+  const IDataAction* action1 = imageReaderResult.outputActions.value().actions.at(1).get();
   const auto* createArrayAction = dynamic_cast<const CreateArrayAction*>(action1);
   if(createArrayAction == nullptr)
   {
-    throw std::runtime_error("ITKImportImageStack: Expected CreateArrayAction at index 2");
+    throw std::runtime_error("ITKImportImageStack: Expected CreateArrayAction at index 1");
   }
 
   // X Y Z
@@ -204,7 +208,7 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
 
   OutputActions outputActions;
-  outputActions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing)));
+  outputActions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing), cellDataName));
   outputActions.actions.push_back(std::make_unique<CreateArrayAction>(createArrayAction->type(), arrayDims, createArrayAction->componentDims(), imageDataPath));
 
   return {std::move(outputActions)};

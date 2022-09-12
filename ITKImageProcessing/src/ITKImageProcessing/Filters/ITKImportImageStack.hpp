@@ -29,6 +29,7 @@ public:
   static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
   static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "ImageDataArrayPath";
+  static inline constexpr StringLiteral k_CellDataName_Key = "CellDataName";
 
   /**
    * @brief Returns the name of the filter.

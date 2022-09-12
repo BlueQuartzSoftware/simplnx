@@ -22,8 +22,8 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Instantiation and Parameter Check", 
 
   args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdFilter_Key, std::make_any<H5EbsdReaderParameter::ValueType>(h5ebsdParamVal));
   args.insertOrAssign(ReadH5EbsdFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
+  args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(""));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -60,8 +60,8 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
 
     args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdFilter_Key, std::make_any<H5EbsdReaderParameter::ValueType>(h5ebsdParamVal));
     args.insertOrAssign(ReadH5EbsdFilter::k_DataContainerName_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(k_CellAttributeMatrix));
-    args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(k_CellEnsembleAttributeMatrixPath));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
+    args.insertOrAssign(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -74,8 +74,8 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
 
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
-    auto& cellDataGroup = dataStructure.getDataRefAs<DataGroup>(k_CellAttributeMatrix);
-    auto& cellEnsembleDataGroup = dataStructure.getDataRefAs<DataGroup>(k_CellEnsembleAttributeMatrixPath);
+    auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(k_CellAttributeMatrix);
+    auto& cellEnsembleDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(k_CellEnsembleAttributeMatrixPath);
     std::vector<DataPath> selectedArrays;
 
     // Create the vector of selected cell DataPaths

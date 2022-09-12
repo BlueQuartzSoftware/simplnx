@@ -2,11 +2,11 @@
 
 #include "Core/Filters/Algorithms/FillBadData.hpp"
 
-#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -55,9 +55,8 @@ Parameters FillBadDataFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreAsNewPhase_Key, "Store Defects as New Phase", "", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Group", "Data Group that contains *only* cell data", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Attribute Matrix", "Cell data Attribute Matrix", DataPath{}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
@@ -79,14 +78,7 @@ IFilter::UniquePointer FillBadDataFilter::clone() const
 IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                           const std::atomic_bool& shouldCancel) const
 {
-
   auto pMinAllowedDefectSizeValue = filterArgs.value<int32>(k_MinAllowedDefectSize_Key);
-  //  auto pStoreAsNewPhaseValue = filterArgs.value<bool>(k_StoreAsNewPhase_Key);
-  //  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  //  auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  //  auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-  //  auto selectedImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  //  const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(selectedImageGeomPath);
   auto cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
   PreflightResult preflightResult;
@@ -100,18 +92,10 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* cellDataGroup = dataStructure.getDataAs<DataGroup>(cellDataGroupPath);
-  std::vector<std::string> cellDataArrayNames = cellDataGroup->getDataMap().getNames();
-  std::vector<DataPath> cellDataPaths;
-  for(const auto& cellArrayPath : cellDataArrayNames)
+  const auto* cellDataGroup = dataStructure.getDataAs<AttributeMatrix>(cellDataGroupPath);
+  if(cellDataGroup == nullptr)
   {
-    const auto& cellArray = dataStructure.getDataRefAs<IDataArray>(cellDataGroupPath.createChildPath(cellArrayPath));
-    cellDataPaths.push_back(cellDataGroupPath.createChildPath(cellArrayPath));
-  }
-  // Validate that all the arrays in the DataGroup have the same number of tuples.
-  if(!dataStructure.validateNumberOfTuples(cellDataPaths))
-  {
-    return {MakeErrorResult<OutputActions>(-11501, "Tuple count not consistent between input arrays.")};
+    return {MakeErrorResult<OutputActions>(-11501, fmt::format("Could not find cell data Attribute Matrix at path '{}'", cellDataGroupPath.toString()))};
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

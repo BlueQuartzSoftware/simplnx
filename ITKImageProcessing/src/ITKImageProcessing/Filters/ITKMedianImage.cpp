@@ -75,7 +75,7 @@ Parameters ITKMedianImage::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "The image data that will be processed by this filter.", DataPath{}, complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});

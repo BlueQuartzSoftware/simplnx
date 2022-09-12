@@ -3,6 +3,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -68,10 +69,6 @@ Parameters ConvertColorToGrayScaleFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<StringParameter>(k_OutputArrayPrefix_Key, "Output Data Array Prefix", "", "Grayscale_"));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateNewAttributeMatrix_Key, "Create Attribute Matrix", "", false));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_OutputAttributeMatrixName_Key, "Output Data Group", "Cannot be empty even if not used.", DataPath({"GrayScale Data Arrays"})));
-  params.linkParameters(k_CreateNewAttributeMatrix_Key, k_OutputAttributeMatrixName_Key, true);
-
   return params;
 }
 
@@ -89,8 +86,6 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
   auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   auto pColorChannelValue = filterArgs.value<int32>(k_ColorChannel_Key);
   auto inputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputDataArrayVector_Key);
-  auto pCreateNewAttributeMatrixValue = filterArgs.value<bool>(k_CreateNewAttributeMatrix_Key);
-  auto outputDataGroupPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_OutputAttributeMatrixName_Key);
   auto outputArrayPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputArrayPrefix_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -135,10 +130,11 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
     }
   }
 
-  if(pCreateNewAttributeMatrixValue)
+  if(inputDataArrayPaths.empty())
   {
-    resultOutputActions.value().actions.push_back(std::make_unique<CreateDataGroupAction>(outputDataGroupPath));
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-10705, fmt::format("No input arrays selected for conversion.")}})};
   }
+
   DataPath outputDataArrayPath;
   for(const auto& inputDataArrayPath : inputDataArrayPaths)
   {
@@ -150,15 +146,8 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
     std::vector<std::string> inputPathVector = inputDataArrayPath.getPathVector();
     std::string inputArrayName = inputDataArrayPath.getTargetName();
     std::string outputArrayName = fmt::format("{}{}", outputArrayPrefix, inputArrayName);
-    if(pCreateNewAttributeMatrixValue)
-    {
-      outputDataArrayPath = outputDataGroupPath.createChildPath(outputArrayName);
-    }
-    else
-    {
-      inputPathVector.back() = outputArrayName;
-      outputDataArrayPath = DataPath(inputPathVector);
-    }
+    inputPathVector.back() = outputArrayName;
+    outputDataArrayPath = DataPath(inputPathVector);
     resultOutputActions.value().actions.push_back(
         std::make_unique<CreateArrayAction>(complex::DataType::uint8, inputArray->getIDataStoreRef().getTupleShape(), std::vector<usize>(1, 1), outputDataArrayPath));
   }
@@ -177,26 +166,16 @@ Result<> ConvertColorToGrayScaleFilter::executeImpl(DataStructure& dataStructure
   inputValues.ColorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   inputValues.ColorChannel = filterArgs.value<int32>(k_ColorChannel_Key);
   inputValues.InputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputDataArrayVector_Key);
-  inputValues.CreateNewAttributeMatrix = filterArgs.value<bool>(k_CreateNewAttributeMatrix_Key);
-  inputValues.OutputDataGroupPath = filterArgs.value<DataPath>(k_OutputAttributeMatrixName_Key);
   inputValues.OutputArrayPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputArrayPrefix_Key);
 
   for(const auto& inputDataArrayPath : inputValues.InputDataArrayPaths)
   {
     DataPath outputDataArrayPath;
-
     std::vector<std::string> inputPathVector = inputDataArrayPath.getPathVector();
     std::string inputArrayName = inputDataArrayPath.getTargetName();
     std::string outputArrayName = fmt::format("{}{}", inputValues.OutputArrayPrefix, inputArrayName);
-    if(inputValues.CreateNewAttributeMatrix)
-    {
-      outputDataArrayPath = inputValues.OutputDataGroupPath.createChildPath(outputArrayName);
-    }
-    else
-    {
-      inputPathVector.back() = outputArrayName;
-      outputDataArrayPath = DataPath(inputPathVector);
-    }
+    inputPathVector.back() = outputArrayName;
+    outputDataArrayPath = DataPath(inputPathVector);
     inputValues.OutputDataArrayPaths.push_back(outputDataArrayPath);
   }
 

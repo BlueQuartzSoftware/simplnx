@@ -30,6 +30,7 @@ public:
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
   static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
   static inline constexpr StringLiteral k_AvgEulerAnglesArrayPath_Key = "AvgEulerAnglesArrayPath";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrix_Key = "CellFeatureAttributeMatrix";
 
   /**
    * @brief Returns the name of the filter.

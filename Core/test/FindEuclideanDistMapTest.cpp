@@ -23,6 +23,7 @@ TEST_CASE("Core::FindEuclideanDistMap", "[Core][FindEuclideanDistMap]")
   DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
   const DataPath k_CellFeatureDataAM = k_DataContainerPath.createChildPath("CellFeatureData");
 
+  const std::string k_CalculatedPrefix("Calculated_");
   const std::string k_GBDistancesArrayName("GBManhattanDistances");
   const std::string k_TJDistancesArrayName("TJManhattanDistances");
   const std::string k_QPDistancesArrayName("QPManhattanDistances");
@@ -43,10 +44,10 @@ TEST_CASE("Core::FindEuclideanDistMap", "[Core][FindEuclideanDistMap]")
 
     args.insert(FindEuclideanDistMapFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAttributeMatrix.createChildPath(k_FeatureIds)));
     // Output Arrays
-    args.insert(FindEuclideanDistMapFilter::k_GBDistancesArrayName_Key, std::make_any<DataPath>({k_GBDistancesArrayName}));
-    args.insert(FindEuclideanDistMapFilter::k_TJDistancesArrayName_Key, std::make_any<DataPath>({k_TJDistancesArrayName}));
-    args.insert(FindEuclideanDistMapFilter::k_QPDistancesArrayName_Key, std::make_any<DataPath>({k_QPDistancesArrayName}));
-    args.insert(FindEuclideanDistMapFilter::k_NearestNeighborsArrayName_Key, std::make_any<DataPath>({k_NearestNeighborsArrayName}));
+    args.insert(FindEuclideanDistMapFilter::k_GBDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_GBDistancesArrayName));
+    args.insert(FindEuclideanDistMapFilter::k_TJDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_TJDistancesArrayName));
+    args.insert(FindEuclideanDistMapFilter::k_QPDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_QPDistancesArrayName));
+    args.insert(FindEuclideanDistMapFilter::k_NearestNeighborsArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_NearestNeighborsArrayName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -63,7 +64,7 @@ TEST_CASE("Core::FindEuclideanDistMap", "[Core][FindEuclideanDistMap]")
     for(const auto& comparisonName : comparisonNames)
     {
       const DataPath exemplarPath({k_DataContainer, k_CellData, comparisonName});
-      const DataPath calculatedPath({comparisonName});
+      const DataPath calculatedPath({k_DataContainer, k_CellData, k_CalculatedPrefix + comparisonName});
       const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
       const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
       CompareDataArrays<int32>(exemplarData, calculatedData);

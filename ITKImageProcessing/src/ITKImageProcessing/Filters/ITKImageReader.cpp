@@ -9,6 +9,7 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
@@ -215,7 +216,7 @@ Result<> ReadImageExecute(const std::string& fileName, ArgsT&&... args)
 }
 
 //------------------------------------------------------------------------------
-Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, DataPath cellDataPath, DataPath arrayPath)
+Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath imageGeomPath, std::string cellDataName, DataPath arrayPath)
 {
   OutputActions actions;
 
@@ -258,8 +259,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     std::vector<usize> cDims = {nComponents};
 
-    actions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing)));
-    actions.actions.push_back(std::make_unique<CreateDataGroupAction>(cellDataPath));
+    actions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing), cellDataName));
     actions.actions.push_back(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), std::move(arrayPath)));
 
   } catch(const itk::ExceptionObject& err)
@@ -317,8 +317,8 @@ Parameters ITKImageReader::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry Path", "The 'DataPath' within the 'DataStructure' to store the created Image Geometry",
                                                              complex::DataPath({"Image Geometry"})));
 
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CellDataPath_Key, "Created Cell Data Path", "The 'DataPath' within the 'DataStructure' to store the imported image data",
-                                                             DataPath({"Image Geometry", "Cell Data"})));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Created Cell Data Path", "The 'DataPath' within the 'DataStructure' to store the imported image data", ImageGeom::k_CellDataName));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The 'DataPath' within the 'DataStructure' to store the imported image",
                                                          DataPath({"Image Geometry", "Cell Data", "Image Data"})));
 
@@ -337,7 +337,7 @@ IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& data
 {
   auto fileName = filterArgs.value<fs::path>(k_FileName_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto cellDataGroupPath = filterArgs.value<DataPath>(k_CellDataPath_Key);
+  auto cellDataName = filterArgs.value<std::string>(k_CellDataName_Key);
   auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
   std::string fileNameString = fileName.string();
@@ -348,7 +348,7 @@ IFilter::PreflightResult ITKImageReader::preflightImpl(const DataStructure& data
     return {ConvertResultTo<OutputActions>(std::move(check), {})};
   }
 
-  return {cxItkImageReader::ReadImagePreflight(fileNameString, imageGeometryPath, cellDataGroupPath, imageDataArrayPath)};
+  return {cxItkImageReader::ReadImagePreflight(fileNameString, imageGeometryPath, cellDataName, imageDataArrayPath)};
 }
 
 //------------------------------------------------------------------------------
@@ -357,7 +357,6 @@ Result<> ITKImageReader::executeImpl(DataStructure& dataStructure, const Argumen
 {
   auto fileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_FileName_Key);
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto cellDataGroupPath = filterArgs.value<DataPath>(k_CellDataPath_Key);
   auto imageDataArrayPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
 
   std::string fileNameString = fileName.string();

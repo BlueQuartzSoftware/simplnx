@@ -2,12 +2,13 @@
 
 #include "Core/Filters/Algorithms/FindFeatureCentroids.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -50,10 +51,9 @@ Parameters FindFeatureCentroidsFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrix_Key, "Cell Feature AttributeMatrix", "", DataPath({"Data Container", "Feature Data"})));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Cell Feature AttributeMatrix", "", DataPath({"Data Container", "Feature Data"})));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CentroidsArrayPath_Key, "Centroids", "", DataPath({"Centroids"})));
@@ -92,33 +92,15 @@ IFilter::PreflightResult FindFeatureCentroidsFilter::preflightImpl(const DataStr
   // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  IDataStore::ShapeType tupleShape;
-
   // Feature Data:
   // Validating the Feature Attribute Matrix and trying to find a child of the Group
   // that is an IDataArray subclass, so we can get the proper tuple shape
-  const auto* featureAttrMatrix = dataStructure.getDataAs<DataGroup>(featureAttrMatrixPath);
+  const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12700, "Feature Attribute Matrix Path is NOT a DataGroup"}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-12700, fmt::format("Cannot find the selected feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString())}})};
   }
-  const auto& featureAttrMatrixChildren = featureAttrMatrix->getDataMap();
-  bool childDataArrayFound = false;
-  for(const auto& child : featureAttrMatrixChildren)
-  {
-    if(child.second->getDataObjectType() == DataObject::Type::DataArray)
-    {
-      const auto* childDataArray = dynamic_cast<IDataArray*>(child.second.get());
-      tupleShape = childDataArray->getIDataStore()->getTupleShape();
-      childDataArrayFound = true;
-      break;
-    }
-  }
-  // We must find a child IDataArray subclass to get the tuple shape correct.
-  if(!childDataArrayFound)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12701, "Feature Attribute Matrix does not have a child IDataArray"}})};
-  }
+  IDataStore::ShapeType tupleShape = featureAttrMatrix->getShape();
 
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {

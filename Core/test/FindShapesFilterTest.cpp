@@ -24,6 +24,11 @@ TEST_CASE("Core::FindShapesFilter", "[Core][FindShapesFilter]")
   const std::string k_AxisEulerAnglesArrayName("AxisEulerAngles");
   const std::string k_AspectRatiosArrayName("AspectRatios");
   const std::string k_VolumesArrayName("Shape Volumes");
+  const std::string k_Omega3sArrayNameNX("Omega3sNX");
+  const std::string k_AxisLengthsArrayNameNX("AxisLengthsNX");
+  const std::string k_AxisEulerAnglesArrayNameNX("AxisEulerAnglesNX");
+  const std::string k_AspectRatiosArrayNameNX("AspectRatiosNX");
+  const std::string k_VolumesArrayNameNX("Shape VolumesNX");
 
   // Instantiate FindShapesFilter
   {
@@ -34,22 +39,21 @@ TEST_CASE("Core::FindShapesFilter", "[Core][FindShapesFilter]")
     const DataPath k_CellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
     const DataPath k_CentroidsArrayPath({k_DataContainer, k_CellFeatureData, k_Centroids});
 
-    const DataPath k_Omega3sArrayPath({k_DataContainer, k_CellFeatureData, k_Omega3sArrayName + "NX"});
-    const DataPath k_AxisLengthsArrayPath({k_DataContainer, k_CellFeatureData, k_AxisLengthsArrayName + "NX"});
-    const DataPath k_AxisEulerAnglesArrayPath({k_DataContainer, k_CellFeatureData, k_AxisEulerAnglesArrayName + "NX"});
-    const DataPath k_AspectRatiosArrayPath({k_DataContainer, k_CellFeatureData, k_AspectRatiosArrayName + "NX"});
-    const DataPath k_VolumesArrayPath({k_DataContainer, k_CellFeatureData, k_VolumesArrayName + "NX"});
+    const DataPath k_Omega3sArrayPath({k_DataContainer, k_CellFeatureData, k_Omega3sArrayNameNX});
+    const DataPath k_AxisLengthsArrayPath({k_DataContainer, k_CellFeatureData, k_AxisLengthsArrayNameNX});
+    const DataPath k_AxisEulerAnglesArrayPath({k_DataContainer, k_CellFeatureData, k_AxisEulerAnglesArrayNameNX});
+    const DataPath k_AspectRatiosArrayPath({k_DataContainer, k_CellFeatureData, k_AspectRatiosArrayNameNX});
+    const DataPath k_VolumesArrayPath({k_DataContainer, k_CellFeatureData, k_VolumesArrayNameNX});
     const DataPath k_SelectedGeometryPath({k_DataContainer});
 
     // Create default Parameters for the filter.
     args.insertOrAssign(FindShapesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath2));
-    args.insertOrAssign(FindShapesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_CellFeatureAttributeMatrixPath));
     args.insertOrAssign(FindShapesFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CentroidsArrayPath));
-    args.insertOrAssign(FindShapesFilter::k_Omega3sArrayName_Key, std::make_any<DataPath>(k_Omega3sArrayPath));
-    args.insertOrAssign(FindShapesFilter::k_AxisLengthsArrayName_Key, std::make_any<DataPath>(k_AxisLengthsArrayPath));
-    args.insertOrAssign(FindShapesFilter::k_AxisEulerAnglesArrayName_Key, std::make_any<DataPath>(k_AxisEulerAnglesArrayPath));
-    args.insertOrAssign(FindShapesFilter::k_AspectRatiosArrayName_Key, std::make_any<DataPath>(k_AspectRatiosArrayPath));
-    args.insertOrAssign(FindShapesFilter::k_VolumesArrayName_Key, std::make_any<DataPath>(k_VolumesArrayPath));
+    args.insertOrAssign(FindShapesFilter::k_Omega3sArrayName_Key, std::make_any<std::string>(k_Omega3sArrayNameNX));
+    args.insertOrAssign(FindShapesFilter::k_AxisLengthsArrayName_Key, std::make_any<std::string>(k_AxisLengthsArrayNameNX));
+    args.insertOrAssign(FindShapesFilter::k_AxisEulerAnglesArrayName_Key, std::make_any<std::string>(k_AxisEulerAnglesArrayNameNX));
+    args.insertOrAssign(FindShapesFilter::k_AspectRatiosArrayName_Key, std::make_any<std::string>(k_AspectRatiosArrayNameNX));
+    args.insertOrAssign(FindShapesFilter::k_VolumesArrayName_Key, std::make_any<std::string>(k_VolumesArrayNameNX));
     args.insertOrAssign(FindShapesFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometryPath));
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

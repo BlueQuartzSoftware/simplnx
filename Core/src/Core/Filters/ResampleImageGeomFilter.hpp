@@ -31,7 +31,6 @@ public:
   static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "CellFeatureAttributeMatrixPath";
   static inline constexpr StringLiteral k_NewDataContainerPath_Key = "NewDataContainerPath";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
-  static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_group";
   static inline constexpr StringLiteral k_NewFeaturesName_Key = "new_features_group_name";
 
   /**

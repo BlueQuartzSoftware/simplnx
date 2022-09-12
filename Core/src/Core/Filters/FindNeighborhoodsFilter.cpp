@@ -54,7 +54,7 @@ Parameters FindNeighborhoodsFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_MultiplesOfAverage_Key, "Multiples of Average Diameter", "", 1.0F));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath({"Data Container"}),
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters", "", DataPath({"CellFeatureData", "EquivalentDiameters"}),

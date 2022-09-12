@@ -26,7 +26,6 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "CellFeatureAttributeMatrixName";
   static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "CentroidsArrayPath";
   static inline constexpr StringLiteral k_Omega3sArrayName_Key = "Omega3sArrayName";
   static inline constexpr StringLiteral k_AxisLengthsArrayName_Key = "AxisLengthsArrayName";

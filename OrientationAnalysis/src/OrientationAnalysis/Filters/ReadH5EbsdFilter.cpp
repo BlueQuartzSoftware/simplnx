@@ -5,10 +5,11 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 
 #include "EbsdLib/Core/EbsdMacros.h"
 #include "EbsdLib/IO/H5EbsdVolumeInfo.h"
@@ -61,9 +62,9 @@ Parameters ReadH5EbsdFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Created Image Geometry", "", DataPath({"DataContainer"})));
   // params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CellAttributeMatrixName_Key, "Created Cell Attribute Matrix", "", DataPath({"DataContainer", "CellData"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Created Cell Attribute Matrix", "", "CellData"));
   // params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CellEnsembleAttributeMatrixName_Key, "Created Cell Ensemble Attribute Matrix", "", DataPath({"DataContainer", "CellEnsembleData"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Created Cell Ensemble Attribute Matrix", "", "CellEnsembleData"));
 
   return params;
 }
@@ -89,8 +90,9 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
    */
   auto pReadH5EbsdFilterValue = filterArgs.value<H5EbsdReaderParameter::ValueType>(k_ReadH5EbsdFilter_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixName_Key);
+  auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  DataPath cellAttributeMatrixPath = imageGeomPath.createChildPath(pCellAttributeMatrixNameValue);
+  auto pCellEnsembleAttributeMatrixNameValue = imageGeomPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -130,17 +132,12 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
 
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
 
-  resultOutputActions.value().actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(imageGeomDims), std::move(origin), std::move(spacing)));
-
-  // Create the Cell AttributeMatrix
-  {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pCellAttributeMatrixNameValue);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
-  }
+  resultOutputActions.value().actions.push_back(
+      std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(imageGeomDims), std::move(origin), std::move(spacing), pCellAttributeMatrixNameValue));
 
   // Create the Ensemble AttributeMatrix
   {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pCellEnsembleAttributeMatrixNameValue);
+    auto createDataGroupAction = std::make_unique<CreateAttributeMatrixAction>(pCellEnsembleAttributeMatrixNameValue, std::vector<size_t>{2});
     resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
   }
 
@@ -190,13 +187,13 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     }
     if(reader->getPointerType(names[i]) == EbsdLib::NumericTypes::Type::Int32)
     {
-      DataPath dataArrayPath = pCellAttributeMatrixNameValue.createChildPath(names[i]);
+      DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
       auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().actions.push_back(std::move(action));
     }
     else if(reader->getPointerType(names[i]) == EbsdLib::NumericTypes::Type::Float)
     {
-      DataPath dataArrayPath = pCellAttributeMatrixNameValue.createChildPath(names[i]);
+      DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
       auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().actions.push_back(std::move(action));
     }
@@ -206,7 +203,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   if(m_SelectedArrayNames.find(EbsdLib::CellData::EulerAngles) != m_SelectedArrayNames.end())
   {
     cDims[0] = 3;
-    DataPath dataArrayPath = pCellAttributeMatrixNameValue.createChildPath(EbsdLib::CellData::EulerAngles);
+    DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().actions.push_back(std::move(action));
   }
@@ -215,7 +212,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   if(m_SelectedArrayNames.find(EbsdLib::H5Ebsd::Phases) != m_SelectedArrayNames.end())
   {
     cDims[0] = 1;
-    DataPath dataArrayPath = pCellAttributeMatrixNameValue.createChildPath(EbsdLib::H5Ebsd::Phases);
+    DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::H5Ebsd::Phases);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().actions.push_back(std::move(action));
   }
@@ -255,8 +252,8 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
    ***************************************************************************/
   auto pReadH5EbsdFilterValue = filterArgs.value<H5EbsdReaderParameter::ValueType>(k_ReadH5EbsdFilter_Key);
   auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixName_Key);
+  auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  auto pCellEnsembleAttributeMatrixNameValue = pDataContainerNameValue.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
 
   /****************************************************************************
    * Write your algorithm implementation in this function
@@ -270,7 +267,7 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.hdf5DataPaths = pReadH5EbsdFilterValue.hdf5DataPaths;
   inputValues.useRecommendedTransform = pReadH5EbsdFilterValue.useRecommendedTransform;
   inputValues.dataContainerPath = pDataContainerNameValue;
-  inputValues.cellAttributeMatrixPath = pCellAttributeMatrixNameValue;
+  inputValues.cellAttributeMatrixPath = pDataContainerNameValue.createChildPath(pCellAttributeMatrixNameValue);
   inputValues.cellEnsembleMatrixPath = pCellEnsembleAttributeMatrixNameValue;
 
   ReadH5Ebsd readH5Ebsd(dataStructure, messageHandler, shouldCancel, &inputValues);

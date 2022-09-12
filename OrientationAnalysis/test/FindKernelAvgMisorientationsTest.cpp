@@ -17,8 +17,9 @@ using namespace complex;
 
 namespace
 {
-const std::string k_KernelAverageMisorientationsArrayName("KernelAverageMisorientations");
-}
+const std::string k_KernelAverageMisorientationsArrayName_Exemplar("KernelAverageMisorientations");
+const std::string k_KernelAverageMisorientationsArrayName("CalculatedKernelAverageMisorientations");
+} // namespace
 
 TEST_CASE("OrientationAnalysis::FindKernelAvgMisorientationsFilter", "[OrientationAnalysis][FindKernelAvgMisorientationsFilter]")
 {
@@ -44,7 +45,7 @@ TEST_CASE("OrientationAnalysis::FindKernelAvgMisorientationsFilter", "[Orientati
     // Ensemble Arrays
     args.insertOrAssign(FindKernelAvgMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
     // Output Array
-    args.insertOrAssign(FindKernelAvgMisorientationsFilter::k_KernelAverageMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath({k_KernelAverageMisorientationsArrayName})));
+    args.insertOrAssign(FindKernelAvgMisorientationsFilter::k_KernelAverageMisorientationsArrayName_Key, std::make_any<std::string>(k_KernelAverageMisorientationsArrayName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -58,7 +59,7 @@ TEST_CASE("OrientationAnalysis::FindKernelAvgMisorientationsFilter", "[Orientati
   // Compare the Output Cell Data
   {
     const DataPath k_GeneratedDataPath({k_DataContainer, k_CellData, k_KernelAverageMisorientationsArrayName});
-    const DataPath k_ExemplarArrayPath({k_KernelAverageMisorientationsArrayName});
+    const DataPath k_ExemplarArrayPath({k_DataContainer, k_CellData, k_KernelAverageMisorientationsArrayName_Exemplar});
 
     UnitTest::CompareArrays<float>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }

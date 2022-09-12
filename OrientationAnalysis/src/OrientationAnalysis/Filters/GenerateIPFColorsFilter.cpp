@@ -5,9 +5,9 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
 using namespace complex;
@@ -77,7 +77,7 @@ Parameters GenerateIPFColorsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellIPFColorsArrayName_Key, "IPF Colors", "", DataPath({"IPFColors"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellIPFColorsArrayName_Key, "IPF Colors", "", "IPFColors"));
 
   return params;
 }
@@ -99,7 +99,7 @@ IFilter::PreflightResult GenerateIPFColorsFilter::preflightImpl(const DataStruct
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_GoodVoxelsPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pCellIPFColorsArrayNameValue = filterArgs.value<DataPath>(k_CellIPFColorsArrayName_Key);
+  auto pCellIPFColorsArrayNameValue = pCellEulerAnglesArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
 
   // Validate the Crystal Structures array
   const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
@@ -175,7 +175,7 @@ Result<> GenerateIPFColorsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.cellIpfColorsArrayPath = filterArgs.value<DataPath>(k_CellIPFColorsArrayName_Key);
+  inputValues.cellIpfColorsArrayPath = inputValues.cellEulerAnglesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
 
   // Let the Algorithm instance do the work
   return GenerateIPFColors(dataStructure, messageHandler, shouldCancel, &inputValues)();

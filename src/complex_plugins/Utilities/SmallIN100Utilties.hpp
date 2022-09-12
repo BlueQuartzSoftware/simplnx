@@ -71,7 +71,7 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
   args.insertOrAssign(k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(2));
   args.insertOrAssign(k_InputOrientationArrayPath_Key, std::make_any<DataPath>(k_EulersArrayPath));
-  args.insertOrAssign(k_OutputOrientationArrayName_Key, std::make_any<DataPath>(k_QuatsArrayPath));
+  args.insertOrAssign(k_OutputOrientationArrayName_Key, std::make_any<std::string>(k_Quats));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -138,9 +138,9 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
   args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
   args.insertOrAssign(k_GoodVoxelsPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
   args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-  args.insertOrAssign(k_FeatureIdsArrayName_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
-  args.insertOrAssign(k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_CellFeatureAttributeMatrix));
-  args.insertOrAssign(k_ActiveArrayName_Key, std::make_any<DataPath>(k_ActiveArrayPath));
+  args.insertOrAssign(k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_FeatureIds));
+  args.insertOrAssign(k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_GrainData));
+  args.insertOrAssign(k_ActiveArrayName_Key, std::make_any<std::string>(k_Active));
   args.insertOrAssign(k_RandomizeFeatures_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
@@ -173,7 +173,6 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
 
   constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometryPath";
-  constexpr StringLiteral k_SelectedCellDataGroup_Key = "SelectedCellDataPath";
 
   Arguments args;
 
@@ -192,7 +191,6 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
   args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
 
   args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
-  args.insertOrAssign(k_SelectedCellDataGroup_Key, std::make_any<DataPath>(k_CellAttributeMatrix));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);

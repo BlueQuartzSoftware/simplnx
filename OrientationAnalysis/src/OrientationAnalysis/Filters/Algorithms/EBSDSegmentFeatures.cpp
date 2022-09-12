@@ -1,7 +1,7 @@
 #include "EBSDSegmentFeatures.hpp"
 
 #include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 
 #include <chrono>
 
@@ -21,7 +21,7 @@ EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> EBSDSegmentFeatures::operator()()
 {
-  auto gridGeom = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_InputValues->gridGeomPath);
+  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->gridGeomPath);
 
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->quatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
@@ -102,9 +102,10 @@ int64_t EBSDSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   if(seed >= 0)
   {
     UInt8Array& activeArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->activeArrayPath);
+    AttributeMatrix& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cellFeatureAttributeMatrixPath);
     featureIds->setValue(static_cast<usize>(seed), gnum);
     std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
-    activeArray.getDataStore()->reshapeTuples(tDims); // This will resize the actives array
+    ResizeAttributeMatrix(cellFeatureAM, tDims); // This will resize the actives array
   }
   return seed;
 }

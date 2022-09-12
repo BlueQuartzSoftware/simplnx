@@ -257,7 +257,7 @@ Parameters ITKImageWriter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
-                                                             std::set<AbstractGeometry::Type>{AbstractGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
                                                           complex::ITK::GetScalarPixelAllowedTypes()));
 

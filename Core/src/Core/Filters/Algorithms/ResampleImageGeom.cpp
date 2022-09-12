@@ -22,7 +22,6 @@ using namespace complex;
 
 namespace
 {
-
 // -----------------------------------------------------------------------------
 class ChangeResolutionImpl
 {
@@ -80,6 +79,22 @@ private:
   SizeVec3 m_CopyDims;
 };
 
+template <typename T>
+void copyDataTuple(const IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
+{
+  const auto& oldArrayCast = static_cast<const DataArray<T>&>(oldArray);
+  auto& newArrayCast = static_cast<DataArray<T>&>(newArray);
+
+  auto numComponents = oldArrayCast.getNumberOfComponents();
+
+  for(usize i = 0; i < numComponents; i++)
+  {
+    usize newOffset = newIndex * numComponents;
+    usize oldOffset = oldIndex * numComponents;
+    newArrayCast[newOffset + i] = oldArrayCast[oldOffset + i];
+  }
+}
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -126,7 +141,7 @@ Result<> ResampleImageGeom::operator()()
   dataAlg.execute(ChangeResolutionImpl(this, newIndices, m_InputValues->spacing, origSpacing, sourceDims, destDims));
 
   auto cellDataGroupPath = m_InputValues->cellDataGroupPath;
-  auto& cellDataGroup = m_DataStructure.getDataRefAs<DataGroup>(cellDataGroupPath);
+  auto& cellDataGroup = m_DataStructure.getDataRefAs<AttributeMatrix>(cellDataGroupPath);
   std::vector<DataPath> selectedCellArrays;
 
   // Create the vector of selected cell DataPaths
@@ -224,13 +239,67 @@ Result<> ResampleImageGeom::operator()()
 
   if(m_InputValues->renumberFeatures)
   {
-    //      DataPath destCellFeaturesPath = destImagePath.createChildPath(newFeaturesName);
-    //      auto result = Sampling::RenumberFeatures(m_DataStructure, destImagePath, destCellFeaturesPath, featureIdsArrayPath, shouldCancel);
-    //      if(result.invalid())
-    //      {
-    //        return result;
-    //      }
-    return MakeErrorResult(-23500, "Renumber Features is NOT Implemented.");
+    const AttributeMatrix* srcCellFeaturData = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->cellFeatureAttributeMatrix);
+    DataPath destCellFeaturesPath = m_InputValues->newDataContainerPath.createChildPath(m_InputValues->cellFeatureAttributeMatrix.getTargetName());
+    AttributeMatrix& cellFeaturData = m_DataStructure.getDataRefAs<AttributeMatrix>(destCellFeaturesPath);
+    for(const auto& [id, object] : cellFeaturData)
+    {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+      auto& newDataArray = dynamic_cast<IDataArray&>(*object);
+      const auto& oldDataArray = m_DataStructure.getDataRefAs<const IDataArray>(m_InputValues->cellFeatureAttributeMatrix.createChildPath(newDataArray.getName()));
+
+      for(usize i = 0; i < oldDataArray.getNumberOfTuples(); ++i)
+      {
+        auto dataType = oldDataArray.getDataType();
+        switch(dataType)
+        {
+        case DataType::boolean:
+          copyDataTuple<bool>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::float32:
+          copyDataTuple<float32>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::float64:
+          copyDataTuple<float64>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::int8:
+          copyDataTuple<int8>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::int16:
+          copyDataTuple<int16>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::int32:
+          copyDataTuple<int32>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::int64:
+          copyDataTuple<int64>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::uint8:
+          copyDataTuple<uint8>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::uint16:
+          copyDataTuple<uint16>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::uint32:
+          copyDataTuple<uint32>(oldDataArray, newDataArray, i, i);
+          break;
+        case DataType::uint64:
+          copyDataTuple<uint64>(oldDataArray, newDataArray, i, i);
+          break;
+        default:
+          break;
+        }
+      }
+    }
+    DataPath destFeatureIdsPath = m_InputValues->newDataContainerPath.createChildPath(cellDataGroup.getName()).createChildPath(m_InputValues->featureIdsArrayPath.getTargetName());
+    auto result = Sampling::RenumberFeatures(m_DataStructure, m_InputValues->newDataContainerPath, destCellFeaturesPath, m_InputValues->featureIdsArrayPath, destFeatureIdsPath, m_ShouldCancel);
+    if(result.invalid())
+    {
+      return result;
+    }
   }
 
   if(m_InputValues->removeOriginalImageGeom)

@@ -5,9 +5,9 @@
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateNeighborListAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/FindMisorientations.hpp"
@@ -67,8 +67,8 @@ Parameters FindMisorientationsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_MisorientationListArrayName_Key, "Misorientation List", "", DataPath({"MisorientationList"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_AvgMisorientationsArrayName_Key, "Average Misorientations", "", DataPath({"AvgMisorientations"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationListArrayName_Key, "Misorientation List", "", "MisorientationList"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgMisorientationsArrayName_Key, "Average Misorientations", "", "AvgMisorientations"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FindAvgMisors_Key, k_AvgMisorientationsArrayName_Key, true);
 
@@ -99,8 +99,9 @@ IFilter::PreflightResult FindMisorientationsFilter::preflightImpl(const DataStru
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pMisorientationListArrayPath = filterArgs.value<DataPath>(k_MisorientationListArrayName_Key);
-  auto pAvgMisorientationsArrayPath = filterArgs.value<DataPath>(k_AvgMisorientationsArrayName_Key);
+  auto cellFeatDataPath = pAvgQuatsArrayPathValue.getParent();
+  auto pMisorientationListArrayPath = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_MisorientationListArrayName_Key));
+  auto pAvgMisorientationsArrayPath = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_AvgMisorientationsArrayName_Key));
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -164,8 +165,9 @@ Result<> FindMisorientationsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.MisorientationListArrayName = filterArgs.value<DataPath>(k_MisorientationListArrayName_Key);
-  inputValues.AvgMisorientationsArrayName = filterArgs.value<DataPath>(k_AvgMisorientationsArrayName_Key);
+  auto cellFeatDataPath = inputValues.AvgQuatsArrayPath.getParent();
+  inputValues.MisorientationListArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_MisorientationListArrayName_Key));
+  inputValues.AvgMisorientationsArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_AvgMisorientationsArrayName_Key));
 
   return FindMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

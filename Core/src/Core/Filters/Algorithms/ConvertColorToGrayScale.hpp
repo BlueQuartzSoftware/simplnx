@@ -20,8 +20,6 @@ struct CORE_EXPORT ConvertColorToGrayScaleInputValues
   int32 ColorChannel;
   MultiArraySelectionParameter::ValueType InputDataArrayPaths;
   std::vector<DataPath> OutputDataArrayPaths;
-  bool CreateNewAttributeMatrix;
-  DataPath OutputDataGroupPath;
   StringParameter::ValueType OutputArrayPrefix;
 };
 

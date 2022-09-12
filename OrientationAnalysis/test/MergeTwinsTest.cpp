@@ -56,21 +56,30 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
   const static DynamicTableData::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
 
   const std::string k_FeatureAttributeMatrix("CellFeatureData");
+  const std::string k_AvgQuatsName("AvgQuats");
+  const std::string k_NumNeighborsName("NumNeighbors2");
+  const std::string k_NeighborListName("NeighborList2");
+  const std::string k_SharedSurfaceAreaListName("SharedSurfaceAreaList2");
+
+  const std::string k_CellParentIdsName("ParentIds");
+  const std::string k_NewFeatureAttributeMatrixName("NewCellFeatureData");
+  const std::string k_FeatureParentIdsName("ParentIds");
+  const std::string k_NewFeatureActiveName("Active");
 
   const DataPath k_FeatureIdsPath = k_CellAttributeMatrix.createChildPath(k_FeatureIds);
-  const DataPath k_CellParentIdsPath = k_CellAttributeMatrix.createChildPath("ParentIds");
+  const DataPath k_CellParentIdsPath = k_CellAttributeMatrix.createChildPath(k_CellParentIdsName);
 
   const DataPath k_CellFeauteAttributeMatrix = k_DataContainerPath.createChildPath(k_FeatureAttributeMatrix);
   const DataPath k_CellFeaturePhasesPath = k_CellFeauteAttributeMatrix.createChildPath(k_Phases);
-  const DataPath k_AvgQuatsPath = k_CellFeauteAttributeMatrix.createChildPath("AvgQuats");
+  const DataPath k_AvgQuatsPath = k_CellFeauteAttributeMatrix.createChildPath(k_AvgQuatsName);
   const DataPath k_CellFeatureEulerAnglesPath = k_CellFeauteAttributeMatrix.createChildPath(EbsdLib::CellData::EulerAngles);
-  const DataPath k_NumNeighborsPath = k_CellFeauteAttributeMatrix.createChildPath("NumNeighbors2");
-  const DataPath k_NeighborListPath = k_CellFeauteAttributeMatrix.createChildPath("NeighborList2");
-  const DataPath k_SharedSurfaceAreaListPath = k_CellFeauteAttributeMatrix.createChildPath("SharedSurfaceAreaList2");
-  const DataPath k_FeatureParentIdsPath = k_CellFeauteAttributeMatrix.createChildPath("ParentIds");
+  const DataPath k_NumNeighborsPath = k_CellFeauteAttributeMatrix.createChildPath(k_NumNeighborsName);
+  const DataPath k_NeighborListPath = k_CellFeauteAttributeMatrix.createChildPath(k_NeighborListName);
+  const DataPath k_SharedSurfaceAreaListPath = k_CellFeauteAttributeMatrix.createChildPath(k_SharedSurfaceAreaListName);
+  const DataPath k_FeatureParentIdsPath = k_CellFeauteAttributeMatrix.createChildPath(k_FeatureParentIdsName);
 
-  const DataPath k_NewFeatureAttributeMatrix = k_DataContainerPath.createChildPath("NewCellFeatureData");
-  const DataPath k_NewFeatureActivePath = k_NewFeatureAttributeMatrix.createChildPath("Active");
+  const DataPath k_NewFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_NewFeatureAttributeMatrixName);
+  const DataPath k_NewFeatureActivePath = k_NewFeatureAttributeMatrix.createChildPath(k_NewFeatureActiveName);
 
   DataStructure ds;
 
@@ -109,9 +118,9 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_CellFeauteAttributeMatrix));
-    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<DataPath>(k_CellFeauteAttributeMatrix.createChildPath(k_Active)));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_FeatureIds));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_FeatureAttributeMatrix));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_Active));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
@@ -155,8 +164,9 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(FindAvgOrientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
     args.insertOrAssign(FindAvgOrientationsFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
     args.insertOrAssign(FindAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_AvgQuatsPath));
-    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_CellFeatureEulerAnglesPath));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeauteAttributeMatrix));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<std::string>(k_AvgQuatsName));
+    args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayPath_Key, std::make_any<std::string>(EbsdLib::CellData::EulerAngles));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
@@ -191,11 +201,11 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insert(k_ImageGeom_Key, std::make_any<DataPath>(k_DataContainerPath));
     args.insert(k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
     args.insert(k_CellFeatures_Key, std::make_any<DataPath>(k_CellFeauteAttributeMatrix));
-    args.insert(k_BoundaryCells_Key, std::make_any<DataPath>(boundaryCells));
-    args.insert(k_NumNeighbors_Key, std::make_any<DataPath>(k_NumNeighborsPath));
-    args.insert(k_NeighborList_Key, std::make_any<DataPath>(k_NeighborListPath));
-    args.insert(k_SharedSurfaceArea_Key, std::make_any<DataPath>(k_SharedSurfaceAreaListPath));
-    args.insert(k_SurfaceFeatures_Key, std::make_any<DataPath>(surfaceFeatures));
+    args.insert(k_BoundaryCells_Key, std::make_any<std::string>("BoundaryCells"));
+    args.insert(k_NumNeighbors_Key, std::make_any<std::string>(k_NumNeighborsName));
+    args.insert(k_NeighborList_Key, std::make_any<std::string>(k_NeighborListName));
+    args.insert(k_SharedSurfaceArea_Key, std::make_any<std::string>(k_SharedSurfaceAreaListName));
+    args.insert(k_SurfaceFeatures_Key, std::make_any<std::string>("SurfaceFeatures"));
 
     auto preflightResult = filter->preflight(ds, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -221,10 +231,10 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(MergeTwinsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_AvgQuatsPath));
     args.insertOrAssign(MergeTwinsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
     args.insertOrAssign(MergeTwinsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-    args.insertOrAssign(MergeTwinsFilter::k_CellParentIdsArrayName_Key, std::make_any<DataPath>(k_CellParentIdsPath));
-    args.insertOrAssign(MergeTwinsFilter::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(k_NewFeatureAttributeMatrix));
-    args.insertOrAssign(MergeTwinsFilter::k_FeatureParentIdsArrayName_Key, std::make_any<DataPath>(k_FeatureParentIdsPath));
-    args.insertOrAssign(MergeTwinsFilter::k_ActiveArrayName_Key, std::make_any<DataPath>(k_NewFeatureActivePath));
+    args.insertOrAssign(MergeTwinsFilter::k_CellParentIdsArrayName_Key, std::make_any<std::string>(k_CellParentIdsName));
+    args.insertOrAssign(MergeTwinsFilter::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_NewFeatureAttributeMatrixName));
+    args.insertOrAssign(MergeTwinsFilter::k_FeatureParentIdsArrayName_Key, std::make_any<std::string>(k_FeatureParentIdsName));
+    args.insertOrAssign(MergeTwinsFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_NewFeatureActiveName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);

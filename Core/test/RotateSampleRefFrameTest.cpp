@@ -153,7 +153,6 @@ TEST_CASE("Core::RotateSampleRefFrameFilter", "[Core][RotateSampleRefFrameFilter
     REQUIRE(expectedRotatedArray != nullptr);
 
     args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(testAxisAngleGeomPath));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedCellArrays_Key, std::make_any<std::vector<DataPath>>({k_OriginalCellArrayPath}));
 
     std::vector<std::string> parts = StringUtilities::split(name, '_');
     REQUIRE(parts.size() == 5);

@@ -1,6 +1,8 @@
 #include "FindAvgOrientations.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
@@ -35,30 +37,17 @@ Result<> FindAvgOrientations::operator()()
 
   size_t totalPoints = featureIds.getNumberOfTuples();
 
-  // Since we don't have the notion of an AttributeMatrix (Yet) we are going to run through the featureIds
-  // and find the unique set of values, this will tell us the how to size the output arrays.
-  // This also ASSUMES that the feature Ids are continuous from ZERO to some MAX value. That MAX value
-  // should also be the size. These are the prerequisite for the algorithm to work.
-  std::set<int32> uniqueFeatureIds;
-  for(const auto& featureId : featureIds)
+  auto numFeatResults = ValidateNumFeaturesInArray(m_DataStructure, m_InputValues->avgQuatsArrayPath, featureIds);
+  if(numFeatResults.invalid())
   {
-    uniqueFeatureIds.insert(featureId);
+    return numFeatResults;
   }
-  int32 maxFeatureId = 1 + *std::max_element(std::begin(uniqueFeatureIds), std::end(uniqueFeatureIds));
-  size_t totalFeatures = uniqueFeatureIds.size();
-
-  if(totalFeatures != maxFeatureId)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-87000, fmt::format("The total number of unique features is {} but the max featureID is {}.", totalFeatures, maxFeatureId)}})};
-  }
-
+  size_t totalFeatures = avgQuats.getNumberOfTuples();
   std::vector<float> counts(totalFeatures, 0.0f);
 
-  // Resize the output arrays and initialize
-  avgQuats.getDataStore()->reshapeTuples({totalFeatures});
+  // initialize the output arrays
   avgQuats.fill(0.0F);
   // Initialize all Euler Angles to Zero
-  avgEuler.getDataStore()->reshapeTuples({totalFeatures});
   avgEuler.fill(0.0F);
 
   // Get the DataStore for each output array
