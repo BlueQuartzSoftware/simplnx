@@ -50,4 +50,9 @@ DataPath ImportObjectAction::path() const
 {
   return getCreatedPath();
 }
+
+std::vector<DataPath> ImportObjectAction::getAllCreatedPaths() const
+{
+  return {getCreatedPath()};
+}
 } // namespace complex

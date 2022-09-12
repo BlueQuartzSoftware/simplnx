@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "ComplexCore/Filters/FindNeighbors.hpp"
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
@@ -21,11 +22,11 @@ TEST_CASE("ComplexCore::FindNeighbors", "[ComplexCore][FindNeighbors]")
   DataPath cellDataAttributeMatrix = smallIn100Group.createChildPath(k_CellData);
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath cellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
-  DataPath numNeighborPath = cellFeatureAttributeMatrixPath.createChildPath("NumNeighbors_computed");
-  DataPath neighborListPath = cellFeatureAttributeMatrixPath.createChildPath("NeighborList_computed");
-  DataPath sharedSurfaceAreaListPath = cellFeatureAttributeMatrixPath.createChildPath("SharedSurfaceAreaList_computed");
-  DataPath boundaryCellsPath = cellFeatureAttributeMatrixPath.createChildPath("BoundaryCells_computed");
-  DataPath surfaceFeaturesPath = cellFeatureAttributeMatrixPath.createChildPath("SurfaceFeatures_computed");
+  std::string numNeighborName = "NumNeighbors_computed";
+  std::string neighborListName = "NeighborList_computed";
+  std::string sharedSurfaceAreaListName = "SharedSurfaceAreaList_computed";
+  std::string boundaryCellsName = "BoundaryCells_computed";
+  std::string surfaceFeaturesName = "SurfaceFeatures_computed";
 
   {
     FindNeighbors filter;
@@ -36,14 +37,14 @@ TEST_CASE("ComplexCore::FindNeighbors", "[ComplexCore][FindNeighbors]")
     args.insertOrAssign(FindNeighbors::k_CellFeatures_Key, std::make_any<DataPath>(cellFeatureAttributeMatrixPath));
 
     args.insertOrAssign(FindNeighbors::k_StoreBoundary_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighbors::k_BoundaryCells_Key, std::make_any<DataPath>(boundaryCellsPath));
+    args.insertOrAssign(FindNeighbors::k_BoundaryCells_Key, std::make_any<std::string>(boundaryCellsName));
 
     args.insertOrAssign(FindNeighbors::k_StoreSurface_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindNeighbors::k_SurfaceFeatures_Key, std::make_any<DataPath>(surfaceFeaturesPath));
+    args.insertOrAssign(FindNeighbors::k_SurfaceFeatures_Key, std::make_any<std::string>(surfaceFeaturesName));
 
-    args.insertOrAssign(FindNeighbors::k_NumNeighbors_Key, std::make_any<DataPath>(numNeighborPath));
-    args.insertOrAssign(FindNeighbors::k_NeighborList_Key, std::make_any<DataPath>(neighborListPath));
-    args.insertOrAssign(FindNeighbors::k_SharedSurfaceArea_Key, std::make_any<DataPath>(sharedSurfaceAreaListPath));
+    args.insertOrAssign(FindNeighbors::k_NumNeighbors_Key, std::make_any<std::string>(numNeighborName));
+    args.insertOrAssign(FindNeighbors::k_NeighborList_Key, std::make_any<std::string>(neighborListName));
+    args.insertOrAssign(FindNeighbors::k_SharedSurfaceArea_Key, std::make_any<std::string>(sharedSurfaceAreaListName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -58,16 +59,16 @@ TEST_CASE("ComplexCore::FindNeighbors", "[ComplexCore][FindNeighbors]")
   {
     DataPath featureGroup = smallIn100Group.createChildPath(complex::Constants::k_CellFeatureData);
     DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
-    UnitTest::CompareArrays<bool>(dataStructure, exemplaryDataPath, surfaceFeaturesPath);
+    UnitTest::CompareArrays<bool>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(surfaceFeaturesName));
 
     exemplaryDataPath = featureGroup.createChildPath("NumNeighbors");
-    UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, numNeighborPath);
+    UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(numNeighborName));
 
     exemplaryDataPath = featureGroup.createChildPath("NeighborList");
-    UnitTest::CompareNeighborLists<int32>(dataStructure, exemplaryDataPath, neighborListPath);
+    UnitTest::CompareNeighborLists<int32>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(neighborListName));
 
     exemplaryDataPath = featureGroup.createChildPath("SharedSurfaceAreaList");
-    UnitTest::CompareNeighborLists<float32>(dataStructure, exemplaryDataPath, sharedSurfaceAreaListPath);
+    UnitTest::CompareNeighborLists<float32>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(sharedSurfaceAreaListName));
   }
 
   // Write the DataStructure out to the file system

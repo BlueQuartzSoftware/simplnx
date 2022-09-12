@@ -32,7 +32,8 @@ std::vector<DataPath> getImportPaths(const DataStructure& importStructure, const
 namespace complex
 {
 ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths)
-: m_H5FilePath(importFile)
+: IDataCreationAction({})
+, m_H5FilePath(importFile)
 , m_Paths(paths)
 {
   if(m_Paths.has_value())
@@ -77,4 +78,17 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 
   return {};
 }
+
+std::vector<DataPath> ImportH5ObjectPathsAction::getAllCreatedPaths() const
+{
+  if(m_Paths.has_value())
+  {
+    return m_Paths.value();
+  }
+  else
+  {
+    return {};
+  }
+}
+
 } // namespace complex

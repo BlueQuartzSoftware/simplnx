@@ -97,4 +97,9 @@ DataPath CopyArrayInstanceAction::createdDataPath() const
   return getCreatedPath();
 }
 
+std::vector<DataPath> CopyArrayInstanceAction::getAllCreatedPaths() const
+{
+  return {getCreatedPath()};
+}
+
 } // namespace complex

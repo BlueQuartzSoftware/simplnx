@@ -3,8 +3,8 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -305,8 +305,8 @@ Parameters MinNeighbors::parameters() const
   params.insert(std::make_unique<UInt64Parameter>(k_PhaseNumber_Key, "Phase Index", "", 0));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellDataAttributeMatrix_Key, "Cell AttributeMatrix", "", DataPath({"Data Container", "CellData"})));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellDataAttributeMatrix_Key, "Cell AttributeMatrix", "", DataPath({"Data Container", "CellData"})));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
 

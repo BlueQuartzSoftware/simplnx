@@ -72,4 +72,9 @@ DataPath CreateNeighborListAction::path() const
 {
   return getCreatedPath();
 }
+
+std::vector<DataPath> CreateNeighborListAction::getAllCreatedPaths() const
+{
+  return {getCreatedPath()};
+}
 } // namespace complex

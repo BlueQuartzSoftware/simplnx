@@ -123,11 +123,13 @@ set(CoreParameters
   ArrayThresholdsParameter
   ArrayCreationParameter
   ArraySelectionParameter
+  AttributeMatrixSelectionParameter
   NeighborListSelectionParameter
   BoolParameter
   ChoicesParameter
   DataGroupCreationParameter
   DataGroupSelectionParameter
+  DataObjectNameParameter
   DataPathSelectionParameter
   DynamicTableParameter
   FileSystemPathParameter
@@ -174,6 +176,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.hpp
 
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/AttributeMatrixFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.hpp
@@ -197,10 +200,6 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.hpp
@@ -210,6 +209,13 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/LinkedGeometryData.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry1D.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry2D.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry3D.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
@@ -223,6 +229,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/AbstractDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/AttributeMatrix.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.hpp
@@ -233,6 +240,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/INeighborList.hpp
@@ -263,7 +271,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry2DAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateTriangleGeomAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateVertexGeometryAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportH5ObjectPathsAction.hpp
@@ -272,6 +279,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/MoveDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableData.hpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.hpp
@@ -353,6 +361,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.cpp
 
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/AttributeMatrixFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.cpp
@@ -375,10 +384,12 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry2D.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry3D.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometryGrid.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry1D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry2D.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry3D.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/EdgeGeom.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/HexahedralGeom.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/ImageGeom.cpp
@@ -395,6 +406,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/AbstractDataStore.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/AttributeMatrix.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataMap.cpp
@@ -424,13 +436,13 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateTriangleGeomAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportH5ObjectPathsAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/ImportObjectAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/MoveDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.cpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.cpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableData.cpp

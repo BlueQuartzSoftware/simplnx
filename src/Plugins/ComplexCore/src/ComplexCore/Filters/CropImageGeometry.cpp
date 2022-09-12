@@ -2,10 +2,14 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -22,9 +26,9 @@ namespace complex
 namespace
 {
 template <typename T>
-void copyDataTuple(IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
+void copyDataTuple(const IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
 {
-  auto& oldArrayCast = static_cast<DataArray<T>&>(oldArray);
+  const auto& oldArrayCast = static_cast<const DataArray<T>&>(oldArray);
   auto& newArrayCast = static_cast<DataArray<T>&>(newArray);
 
   auto numComponents = oldArrayCast.getNumberOfComponents();
@@ -37,7 +41,7 @@ void copyDataTuple(IDataArray& oldArray, IDataArray& newArray, usize oldIndex, u
   }
 }
 
-void copyDataArrayTuple(IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
+void copyDataArrayTuple(const IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
 {
   auto dataType = oldArray.getDataType();
   switch(dataType)
@@ -176,6 +180,62 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
+void cropDataArray(ParallelTaskAlgorithm& taskRunner, const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds,
+                   const std::atomic_bool& shouldCancel)
+{
+  DataType type = oldCellArray.getDataType();
+  switch(type)
+  {
+  case DataType::boolean: {
+    taskRunner.execute(CropImageGeomDataArray<bool>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::int8: {
+    taskRunner.execute(CropImageGeomDataArray<int8>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::int16: {
+    taskRunner.execute(CropImageGeomDataArray<int16>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::int32: {
+    taskRunner.execute(CropImageGeomDataArray<int32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::int64: {
+    taskRunner.execute(CropImageGeomDataArray<int64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::uint8: {
+    taskRunner.execute(CropImageGeomDataArray<uint8>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::uint16: {
+    taskRunner.execute(CropImageGeomDataArray<uint16>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::uint32: {
+    taskRunner.execute(CropImageGeomDataArray<uint32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::uint64: {
+    taskRunner.execute(CropImageGeomDataArray<uint64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::float32: {
+    taskRunner.execute(CropImageGeomDataArray<float32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  case DataType::float64: {
+    taskRunner.execute(CropImageGeomDataArray<float64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
+    break;
+  }
+  default: {
+    throw std::runtime_error("Invalid DataType");
+  }
+  }
+}
+
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -212,7 +272,7 @@ std::vector<std::string> CropImageGeometry::defaultTags() const
 Parameters CropImageGeometry::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "DataPath to the target ImageGeom", DataPath(), std::set{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "DataPath to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeom_Key, "New Image Geom", "DataPath to create the new ImageGeom at", DataPath()));
 
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
@@ -220,13 +280,13 @@ Parameters CropImageGeometry::parameters() const
 
   params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
 
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_VoxelArrays_Key, "Voxel Arrays", "DataPaths to related DataArrays", std::vector<DataPath>(), complex::GetAllDataTypes()));
-
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the call feature Attribute Matrix",
+                                                                    DataPath({"CellFeatureData"})));
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureIds_Key, true);
+  params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrix_Key, true);
 
-  params.insert(std::make_unique<StringParameter>(k_NewFeaturesName_Key, "New Cell Features Group Name", "Name of the new DataGroup containing updated updated Voxel Arrays", "Cell Features"));
   return params;
 }
 
@@ -244,8 +304,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
-  auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
-  auto newCellFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
+  auto cellFeatureAMPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
 
   auto xMin = minVoxels[0];
   auto xMax = maxVoxels[0];
@@ -254,7 +313,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto zMax = maxVoxels[2];
   auto zMin = minVoxels[2];
 
-  OutputActions actions;
+  complex::Result<OutputActions> actions;
 
   if(xMax < xMin)
   {
@@ -358,41 +417,30 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     {
       spacingVec[i] = spacing[i];
     }
-    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec);
-    actions.actions.push_back(std::move(geomAction));
-
-    auto newCellFeaturesPath = destImagePath.createChildPath(newCellFeaturesName);
+    const AttributeMatrix* cellData = srcImageGeom->getCellData();
+    if(cellData == nullptr)
     {
-      auto groupAction = std::make_unique<CreateDataGroupAction>(newCellFeaturesPath);
-      actions.actions.push_back(std::move(groupAction));
+      return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
+    std::string cellDataName = cellData->getName();
+    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec, cellDataName);
+    actions.value().actions.push_back(std::move(geomAction));
 
-    for(const auto& srcArrayPath : voxelArrayPaths)
+    DataPath newCellFeaturesPath = destImagePath.createChildPath(cellDataName);
+
+    for(const auto& [id, object] : *cellData)
     {
-      const auto* srcArray = data.getDataAs<IDataArray>(srcArrayPath);
-      if(srcArray == nullptr)
-      {
-        std::string errMsg = fmt::format("Could not find the DataArray at path '{}'", srcArrayPath.toString());
-        return {MakeErrorResult<OutputActions>(-5551, errMsg)};
-      }
-      if(srcArray->getNumberOfTuples() != requiredTupleCount)
-      {
-        std::string errMsg = fmt::format("DataArray at path '{}' does not match the required tuple count of '{}'", srcArrayPath.toString(), requiredTupleCount);
-        return {MakeErrorResult<OutputActions>(-5551, errMsg)};
-      }
-
-      DataType dataType = srcArray->getDataType();
-      auto components = srcArray->getNumberOfComponents();
-      auto dataArrayPath = newCellFeaturesPath.createChildPath(srcArrayPath.getTargetName());
-      auto arrayAction = std::make_unique<CreateArrayAction>(dataType, tDims, std::vector<usize>{components}, dataArrayPath);
-      actions.actions.push_back(std::move(arrayAction));
+      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      DataType dataType = srcArray.getDataType();
+      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+      DataPath dataArrayPath = newCellFeaturesPath.createChildPath(srcArray.getName());
+      actions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
     }
   }
 
   if(shouldRenumberFeatures)
   {
-    std::vector<usize> cDims = {1};
-    const auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
+    auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
     if(nullptr == featureIdsPtr)
     {
       std::string errMsg = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
@@ -402,6 +450,35 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     {
       std::string errMsg = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
       return {MakeErrorResult<OutputActions>(-55501, errMsg)};
+    }
+    const AttributeMatrix* srcCellFeaturData = data.getDataAs<AttributeMatrix>(cellFeatureAMPath);
+    if(nullptr == srcCellFeaturData)
+    {
+      std::string errMsg = fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAMPath.toString());
+      return {MakeErrorResult<OutputActions>(-55502, errMsg)};
+    }
+    std::string warningMsg = "";
+    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
+    tDims = srcCellFeaturData->getShape();
+    actions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
+    for(const auto& [id, object] : *srcCellFeaturData)
+    {
+      if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
+      {
+        DataType dataType = srcArray->getDataType();
+        IDataStore::ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
+        DataPath dataArrayPath = destCellFeatureAMPath.createChildPath(srcArray->getName());
+        actions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
+      }
+      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
+      {
+        warningMsg += "\n" + cellFeatureAMPath.toString() + "/" + srcNeighborListArray->getName();
+      }
+    }
+    if(!warningMsg.empty())
+    {
+      actions.m_Warnings.push_back(Warning({-55503, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}",
+                                                                featureIdsArrayPath.toString(), warningMsg)}));
     }
   }
 
@@ -415,11 +492,9 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  // auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
-  auto newFeaturesName = args.value<std::string>(k_NewFeaturesName_Key);
-  auto voxelArrayPaths = args.value<std::vector<DataPath>>(k_VoxelArrays_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
+  auto cellFeatureAMPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
 
   uint64 xMin = minVoxels[0];
   uint64 xMax = maxVoxels[0];
@@ -430,8 +505,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 
   auto& srcImageGeom = data.getDataRefAs<ImageGeom>(srcImagePath);
   auto& destImageGeom = data.getDataRefAs<ImageGeom>(destImagePath);
-
-  DataPath newVoxelParentPath = destImagePath.createChildPath(newFeaturesName);
 
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
 
@@ -478,71 +551,25 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   std::array<uint64, 6> bounds = {xMin, ((xMax - xMin) + 1), yMin, ((yMax - yMin) + 1), zMin, ((zMax - zMin) + 1)};
 
   ParallelTaskAlgorithm taskRunner;
+  const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
+  auto& destCellDataAM = destImageGeom.getCellDataRef();
 
-  for(const auto& voxelPath : voxelArrayPaths)
+  for(const auto& [dataId, oldDataObject] : srcCellDataAM)
   {
     if(shouldCancel)
     {
       return {};
     }
 
-    std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", voxelPath.getTargetName());
+    const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
+    std::string srcName = oldDataArray.getName();
+
+    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+
+    std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", srcName);
     messageHandler(progMsg);
 
-    auto& oldDataArray = data.getDataRefAs<IDataArray>(voxelPath);
-    auto& newDataArray = data.getDataRefAs<IDataArray>(newVoxelParentPath.createChildPath(voxelPath.getTargetName()));
-    DataType type = oldDataArray.getDataType();
-
-    switch(type)
-    {
-    case DataType::boolean: {
-      taskRunner.execute(CropImageGeomDataArray<bool>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::int8: {
-      taskRunner.execute(CropImageGeomDataArray<int8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::int16: {
-      taskRunner.execute(CropImageGeomDataArray<int16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::int32: {
-      taskRunner.execute(CropImageGeomDataArray<int32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::int64: {
-      taskRunner.execute(CropImageGeomDataArray<int64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::uint8: {
-      taskRunner.execute(CropImageGeomDataArray<uint8>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::uint16: {
-      taskRunner.execute(CropImageGeomDataArray<uint16>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::uint32: {
-      taskRunner.execute(CropImageGeomDataArray<uint32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::uint64: {
-      taskRunner.execute(CropImageGeomDataArray<uint64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::float32: {
-      taskRunner.execute(CropImageGeomDataArray<float32>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    case DataType::float64: {
-      taskRunner.execute(CropImageGeomDataArray<float64>(oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Invalid DataType");
-    }
-    }
+    cropDataArray(taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
   }
 
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
@@ -560,12 +587,27 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 
   if(shouldRenumberFeatures)
   {
-    DataPath destCellFeaturesPath = destImagePath.createChildPath(newFeaturesName);
-    auto result = Sampling::RenumberFeatures(data, destImagePath, destCellFeaturesPath, featureIdsArrayPath, shouldCancel);
-    if(result.invalid())
+    const AttributeMatrix* srcCellFeaturData = data.getDataAs<AttributeMatrix>(cellFeatureAMPath);
+    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
+    AttributeMatrix* cellFeaturData = data.getDataAs<AttributeMatrix>(destCellFeatureAMPath);
+    for(const auto& [id, object] : *cellFeaturData)
     {
-      return result;
+      if(shouldCancel)
+      {
+        return {};
+      }
+      auto& newDataArray = dynamic_cast<IDataArray&>(*object);
+      const auto& oldDataArray = data.getDataRefAs<const IDataArray>(cellFeatureAMPath.createChildPath(newDataArray.getName()));
+
+      for(usize i = 0; i < oldDataArray.getNumberOfTuples(); ++i)
+      {
+        copyDataArrayTuple(oldDataArray, newDataArray, i, i);
+      }
     }
+    // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+    // taskRunner.wait();
+    DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
+    return Sampling::RenumberFeatures(data, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, shouldCancel);
   }
 
   return {};

@@ -134,14 +134,16 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
   {
     if(const auto* creationAction = dynamic_cast<const IDataCreationAction*>(action.get()); creationAction != nullptr)
     {
-      newCreatedPaths.push_back(creationAction->getCreatedPath());
+      auto allCreatedPaths = creationAction->getAllCreatedPaths();
+      newCreatedPaths.insert(newCreatedPaths.end(), allCreatedPaths.begin(), allCreatedPaths.end());
     }
   }
   for(const auto& action : result.outputActions.value().deferredActions)
   {
     if(const auto* creationAction = dynamic_cast<const IDataCreationAction*>(action.get()); creationAction != nullptr)
     {
-      newCreatedPaths.push_back(creationAction->getCreatedPath());
+      auto allCreatedPaths = creationAction->getAllCreatedPaths();
+      newCreatedPaths.insert(newCreatedPaths.end(), allCreatedPaths.begin(), allCreatedPaths.end());
     }
   }
 

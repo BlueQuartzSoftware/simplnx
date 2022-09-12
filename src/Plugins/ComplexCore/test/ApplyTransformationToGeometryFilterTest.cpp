@@ -68,8 +68,8 @@ const std::vector<float> s_TranslationVertices = {
 };
 
 const std::string triangleGeometryName = "[Triangle Geometry]";
-const std::string triangleFaceDataGroupName = "Face Data";
-const std::string normalsDataArrayName = "Normals";
+const std::string triangleFaceDataGroupName = "FaceData";
+const std::string normalsDataArrayName = "FaceNormals";
 
 } // namespace
 
@@ -88,8 +88,6 @@ void ReadSTLFile(DataStructure& dataGraph)
   // Create default Parameters for the filter.
   args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
   args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
-  args.insertOrAssign(StlFileReaderFilter::k_FaceGroupDataPath_Key, std::make_any<DataPath>(triangleFaceDataGroupDataPath));
-  args.insertOrAssign(StlFileReaderFilter::k_FaceNormalsDataPath_Key, std::make_any<DataPath>(normalsDataPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);

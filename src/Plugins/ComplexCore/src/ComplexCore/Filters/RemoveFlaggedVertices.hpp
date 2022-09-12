@@ -28,6 +28,7 @@ public:
   static inline constexpr StringLiteral k_MaskPath_Key = "mask";
   static inline constexpr StringLiteral k_ArraySelection_Key = "target_arrays";
   static inline constexpr StringLiteral k_ReducedVertexPath_Key = "reduced_vertex";
+  static inline constexpr StringLiteral k_VertexDataName_Key = "vertex_data_name";
 
   /**
    * @brief Returns the name of the filter.

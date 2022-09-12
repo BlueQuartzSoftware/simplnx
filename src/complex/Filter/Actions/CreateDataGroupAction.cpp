@@ -25,4 +25,9 @@ Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode mode) c
   // Assuming nothing went wrong, return an empty Result<> object
   return {};
 }
+
+std::vector<DataPath> CreateDataGroupAction::getAllCreatedPaths() const
+{
+  return {getCreatedPath()};
+}
 } // namespace complex

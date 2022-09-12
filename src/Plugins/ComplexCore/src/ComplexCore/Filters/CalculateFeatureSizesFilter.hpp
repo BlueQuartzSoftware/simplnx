@@ -29,6 +29,7 @@ public:
   static inline constexpr StringLiteral k_SaveElementSizes_Key = "save_element_sizes";
   static inline constexpr StringLiteral k_GeometryPath_Key = "geometry_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix";
   static inline constexpr StringLiteral k_VolumesPath_Key = "volumes_path";
   static inline constexpr StringLiteral k_EquivalentDiametersPath_Key = "equivalent_diameters_path";
   static inline constexpr StringLiteral k_NumElementsPath_Key = "num_elements_path";
@@ -100,7 +101,7 @@ protected:
    * @param igeom
    * @return Return<>
    */
-  Result<> findSizesUnstructured(DataStructure& data, const Arguments& args, AbstractGeometry* igeom) const;
+  Result<> findSizesUnstructured(DataStructure& data, const Arguments& args, IGeometry* igeom) const;
 
   /**
    * @brief

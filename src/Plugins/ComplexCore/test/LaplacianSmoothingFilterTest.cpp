@@ -1,7 +1,5 @@
-
 #include <catch2/catch.hpp>
 
-#include "complex/DataStructure/Geometry/AbstractGeometry2D.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -25,9 +23,9 @@ using namespace complex::Constants;
 TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSmoothingFilter]")
 {
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = "Face Data";
-  std::string normalsDataArrayName = "Normals";
-  std::string triangleVertexDataGroupName = "Vertex Data";
+  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceDataName;
+  std::string normalsDataArrayName = "FaceNormals";
+  std::string triangleVertexDataGroupName = INodeGeometry0D::k_VertexDataName;
   std::string nodeTypeArrayName = "Node Type";
 
   DataStructure dataGraph;
@@ -45,8 +43,6 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     // Create default Parameters for the filter.
     args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
     args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
-    args.insertOrAssign(StlFileReaderFilter::k_FaceGroupDataPath_Key, std::make_any<DataPath>(triangleFaceDataGroupDataPath));
-    args.insertOrAssign(StlFileReaderFilter::k_FaceNormalsDataPath_Key, std::make_any<DataPath>(normalsDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
@@ -66,7 +62,6 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
 
     DataObject::IdType triangleGeometryId = dataGraph.getId(triangleGeometryPath).value();
     DataPath vertexDataGroupPath = triangleGeometryPath.createChildPath(triangleVertexDataGroupName);
-    DataGroup::Create(dataGraph, triangleVertexDataGroupName, triangleGeometryId);
     DataObject::IdType vertexDataGroupId = dataGraph.getId(vertexDataGroupPath).value();
 
     // Instantiate the filter, a DataStructure object and an Arguments Object

@@ -2,6 +2,7 @@
 
 #include "nlohmann/json.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
@@ -22,6 +23,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
 
 using namespace complex;
 
@@ -71,7 +76,647 @@ constexpr StringLiteral TriangleGeom = "TriangleGeometry";
 constexpr StringLiteral VertexGeom = "VertexGeometry";
 } // namespace Type
 } // namespace Legacy
+
+std::pair<std::string, usize> GetXdmfTypeAndSize(DataType type)
+{
+  switch(type)
+  {
+  case DataType::int8: {
+    return {"Char", 1};
+  }
+  case DataType::int16: {
+    return {"Int", 2};
+  }
+  case DataType::int32: {
+    return {"Int", 4};
+  }
+  case DataType::int64: {
+    return {"Int", 8};
+  }
+  case DataType::uint8: {
+    return {"UChar", 1};
+  }
+  case DataType::uint16: {
+    return {"UInt", 2};
+  }
+  case DataType::uint32: {
+    return {"UInt", 4};
+  }
+  case DataType::uint64: {
+    return {"UInt", 8};
+  }
+  case DataType::float32: {
+    return {"Float", 4};
+  }
+  case DataType::float64: {
+    return {"Float", 8};
+  }
+  case DataType::boolean: {
+    return {"UChar", 1};
+  }
+  }
+  throw std::runtime_error("GetXdmfTypeAndSize: invalid DataType");
+}
+
+void WriteGeomXdmf(std::ostream& out, const ImageGeom& imageGeom, std::string_view hdf5FilePath)
+{
+  std::string name = imageGeom.getName();
+
+  SizeVec3 dims = imageGeom.getDimensions();
+  FloatVec3 spacing = imageGeom.getSpacing();
+  FloatVec3 origin = imageGeom.getOrigin();
+
+  std::array<int64, 3> volDims = {static_cast<int64>(dims.getX()), static_cast<int64>(dims.getY()), static_cast<int64>(dims.getZ())};
+
+  out << "  <!-- *************** START OF " << name << " *************** -->"
+      << "\n";
+  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)"
+      << "\n";
+  out << "    <Topology TopologyType=\"3DCoRectMesh\" Dimensions=\"" << volDims[2] + 1 << " " << volDims[1] + 1 << " " << volDims[0] + 1 << " \"></Topology>"
+      << "\n";
+  out << "    <Geometry Type=\"ORIGIN_DXDYDZ\">"
+      << "\n";
+  out << "      <!-- Origin  Z, Y, X -->"
+      << "\n";
+  out << R"(      <DataItem Format="XML" Dimensions="3">)" << origin[2] << " " << origin[1] << " " << origin[0] << "</DataItem>"
+      << "\n";
+  out << "      <!-- DxDyDz (Spacing/Spacing) Z, Y, X -->"
+      << "\n";
+  out << R"(      <DataItem Format="XML" Dimensions="3">)" << spacing[2] << " " << spacing[1] << " " << spacing[0] << "</DataItem>"
+      << "\n";
+  out << "    </Geometry>"
+      << "\n";
+}
+
+void WriteGeomXdmf(std::ostream& out, const RectGridGeom& rectGridGeom, std::string_view hdf5FilePath)
+{
+  std::string name = rectGridGeom.getName();
+
+  SizeVec3 dims = rectGridGeom.getDimensions();
+  const Float32Array* xBounds = rectGridGeom.getXBounds();
+  const Float32Array* yBounds = rectGridGeom.getYBounds();
+  const Float32Array* zBounds = rectGridGeom.getZBounds();
+  DataPath xBoundsPath = xBounds->getDataPaths().at(0);
+  DataPath yBoundsPath = yBounds->getDataPaths().at(0);
+  DataPath zBoundsPath = zBounds->getDataPaths().at(0);
+
+  std::array<int64, 3> volDims = {static_cast<int64>(dims.getX()), static_cast<int64>(dims.getY()), static_cast<int64>(dims.getZ())};
+
+  out << "  <!-- *************** START OF " << name << " *************** -->"
+      << "\n";
+  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)"
+      << "\n";
+  out << "    <Topology TopologyType=\"3DRectMesh\" Dimensions=\"" << volDims[2] + 1 << " " << volDims[1] + 1 << " " << volDims[0] + 1 << " \"></Topology>"
+      << "\n";
+  out << "    <Geometry Type=\"VxVyVz\">"
+      << "\n";
+  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << xBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">"
+      << "\n";
+  out << "      " << hdf5FilePath << ":/DataStructure/" << xBoundsPath.toString() << "\n";
+  out << "    </DataItem>"
+      << "\n";
+  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << yBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">"
+      << "\n";
+  out << "      " << hdf5FilePath << ":/DataStructure/" << yBoundsPath.toString() << "\n";
+  out << "    </DataItem>"
+      << "\n";
+  out << "    <DataItem Format=\"HDF\" Dimensions=\"" << zBounds->getNumberOfTuples() << "\" NumberType=\"Float\" Precision=\"4\">"
+      << "\n";
+  out << "      " << hdf5FilePath << ":/DataStructure/" << zBoundsPath.toString() << "\n";
+  out << "    </DataItem>"
+      << "\n";
+  out << "    </Geometry>"
+      << "\n";
+}
+
+void WriteGeomXdmf(std::ostream& out, const VertexGeom& vertexGeom, std::string_view hdf5FilePath)
+{
+  std::string name = vertexGeom.getName();
+  usize numVerts = vertexGeom.getNumberOfVertices();
+
+  DataPath verticesPath = vertexGeom.getVerticesRef().getDataPaths().at(0);
+
+  DataPath geomPath = vertexGeom.getDataPaths().at(0);
+
+  out << "  <!-- *************** START OF " << name << " *************** -->"
+      << "\n";
+  out << "  <Grid Name=\"" << name << R"(" GridType="Uniform">)"
+      << "\n";
+
+  out << R"(    <Topology TopologyType="Polyvertex" NumberOfElements=")" << numVerts << "\">"
+      << "\n";
+  out << R"(      <DataItem Format="HDF" NumberType="Int" Dimensions=")" << numVerts << "\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << geomPath.toString() << "/_VertexIndices"
+      << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Topology>"
+      << "\n";
+
+  out << "    <Geometry Type=\"XYZ\">"
+      << "\n";
+  out << R"(      <DataItem Format="HDF"  Dimensions=")" << numVerts << R"( 3" NumberType="Float" Precision="4">)"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Geometry>"
+      << "\n";
+  out << ""
+      << "\n";
+}
+
+void WriteGeomXdmf(std::ostream& out, const EdgeGeom& edgeGeom, std::string_view hdf5FilePath)
+{
+  std::string name = edgeGeom.getName();
+  usize numEdges = edgeGeom.getNumberOfEdges();
+  usize numVerts = edgeGeom.getNumberOfVertices();
+
+  DataPath edgesPath = edgeGeom.getEdgesRef().getDataPaths().at(0);
+  DataPath verticesPath = edgeGeom.getVerticesRef().getDataPaths().at(0);
+
+  out << "  <!-- *************** START OF " << name << " *************** -->"
+      << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
+      << "\n";
+  out << "    <Topology TopologyType=\"Polyline\" NodesPerElement=\"2\" NumberOfElements=\"" << numEdges << "\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numEdges << " 2\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << edgesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Topology>"
+      << "\n";
+  out << "    <Geometry Type=\"XYZ\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Geometry>"
+      << "\n";
+  out << ""
+      << "\n";
+}
+
+void WriteGeomXdmf(std::ostream& out, const TriangleGeom& triangleGeom, std::string_view hdf5FilePath)
+{
+  std::string name = triangleGeom.getName();
+  usize numFaces = triangleGeom.getNumberOfFaces();
+  usize numVerts = triangleGeom.getNumberOfVertices();
+
+  DataPath facesPath = triangleGeom.getFacesRef().getDataPaths().at(0);
+  DataPath verticesPath = triangleGeom.getVerticesRef().getDataPaths().at(0);
+
+  out << "  <!-- *************** START OF " << name << " *************** -->"
+      << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
+      << "\n";
+  out << "    <Topology TopologyType=\"Triangle\" NumberOfElements=\"" << numFaces << "\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numFaces << " 3\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << facesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Topology>"
+      << "\n";
+  out << "    <Geometry Type=\"XYZ\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Geometry>"
+      << "\n";
+  out << ""
+      << "\n";
+}
+
+void WriteGeomXdmf(std::ostream& out, const QuadGeom& quadGeom, std::string_view hdf5FilePath)
+{
+  std::string name = quadGeom.getName();
+  usize numFaces = quadGeom.getNumberOfFaces();
+  usize numVerts = quadGeom.getNumberOfVertices();
+
+  DataPath facesPath = quadGeom.getFacesRef().getDataPaths().at(0);
+  DataPath verticesPath = quadGeom.getVerticesRef().getDataPaths().at(0);
+
+  out << "  <!-- *************** START OF " << name << " *************** -->"
+      << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
+      << "\n";
+  out << "    <Topology TopologyType=\"Quadrilateral\" NumberOfElements=\"" << numFaces << "\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numFaces << " 4\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << facesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Topology>"
+      << "\n";
+  out << "    <Geometry Type=\"XYZ\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Geometry>"
+      << "\n";
+  out << ""
+      << "\n";
+}
+
+void WriteGeomXdmf(std::ostream& out, const TetrahedralGeom& tetrahedralGeom, std::string_view hdf5FilePath)
+{
+  std::string name = tetrahedralGeom.getName();
+  usize numPolyhedra = tetrahedralGeom.getNumberOfPolyhedra();
+  usize numVerts = tetrahedralGeom.getNumberOfVertices();
+
+  DataPath polyhedraPath = tetrahedralGeom.getPolyhedraRef().getDataPaths().at(0);
+  DataPath verticesPath = tetrahedralGeom.getVerticesRef().getDataPaths().at(0);
+
+  out << "  <!-- *************** START OF " << name << " *************** -->"
+      << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
+      << "\n";
+  out << "    <Topology TopologyType=\"Tetrahedron\" NumberOfElements=\"" << numPolyhedra << "\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numPolyhedra << " 4\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << polyhedraPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Topology>"
+      << "\n";
+  out << "    <Geometry Type=\"XYZ\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Geometry>"
+      << "\n";
+  out << ""
+      << "\n";
+}
+
+void WriteGeomXdmf(std::ostream& out, const HexahedralGeom& hexhedralGeom, std::string_view hdf5FilePath)
+{
+  std::string name = hexhedralGeom.getName();
+  usize numPolyhedra = hexhedralGeom.getNumberOfPolyhedra();
+  usize numVerts = hexhedralGeom.getNumberOfVertices();
+
+  DataPath polyhedraPath = hexhedralGeom.getPolyhedraRef().getDataPaths().at(0);
+  DataPath verticesPath = hexhedralGeom.getVerticesRef().getDataPaths().at(0);
+
+  out << "  <!-- *************** START OF " << name << " *************** -->"
+      << "\n";
+  out << "  <Grid Name=\"" << name << "\" GridType=\"Uniform\">"
+      << "\n";
+  out << "    <Topology TopologyType=\"Hexahedron\" NumberOfElements=\"" << numPolyhedra << "\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\" NumberType=\"Int\" Dimensions=\"" << numPolyhedra << " 8\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << polyhedraPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Topology>"
+      << "\n";
+  out << "    <Geometry Type=\"XYZ\">"
+      << "\n";
+  out << "      <DataItem Format=\"HDF\"  Dimensions=\"" << numVerts << " 3\" NumberType=\"Float\" Precision=\"4\">"
+      << "\n";
+  out << "        " << hdf5FilePath << ":/DataStructure/" << verticesPath.toString() << "\n";
+  out << "      </DataItem>"
+      << "\n";
+  out << "    </Geometry>"
+      << "\n";
+  out << ""
+      << "\n";
+}
+
+void WriteXdmfHeader(std::ostream& out)
+{
+  out << "<?xml version=\"1.0\"?>"
+      << "\n";
+  out << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\"[]>"
+      << "\n";
+  out << "<Xdmf xmlns:xi=\"http://www.w3.org/2003/XInclude\" Version=\"2.2\">"
+      << "\n";
+  out << " <Domain>"
+      << "\n";
+}
+
+void WriteXdmfFooter(std::ostream& xdmf)
+{
+  xdmf << " </Domain>"
+       << "\n";
+  xdmf << "</Xdmf>"
+       << "\n";
+}
+
+std::string GetXdmfArrayType(usize numComp)
+{
+  switch(numComp)
+  {
+  case 1: {
+    return "Scalar";
+  }
+    // we are assuming a component of 2 is for scalars on either side of a single object (ie faceIds)
+  case 2: {
+    return "Scalar";
+  }
+  case 3: {
+    return "Vector";
+  }
+  case 6: {
+    return "Vector";
+  }
+  case 9: {
+    return "Tensor";
+  }
+  }
+
+  return "";
+}
+
+void WriteXdmfAttributeDataHelper(std::ostream& out, usize numComp, std::string_view attrType, std::string_view dataContainerName, const IDataArray& array, std::string_view centering, usize precision,
+                                  std::string_view xdmfTypeName, std::string_view hdf5FilePath)
+{
+  IDataStore::ShapeType tupleDims = array.getTupleShape();
+
+  std::string tupleStr = fmt::format("{}", fmt::join(tupleDims.crbegin(), tupleDims.crend(), " "));
+
+  std::string dimStr = fmt::format("{} {}", tupleStr, numComp);
+  std::string dimStrHalf = fmt::format("{} {}", tupleStr, numComp / 2);
+
+  std::string arrayName = array.getName();
+
+  DataPath arrayPath = array.getDataPaths().at(0);
+
+  std::string hdf5DatasetPath = fmt::format("{}:/DataStructure/{}", hdf5FilePath, arrayPath.toString());
+
+  if(numComp == 1 || numComp == 3 || numComp == 9)
+  {
+    out << "    <Attribute Name=\"" << arrayName << "\" ";
+    out << "AttributeType=\"" << attrType << "\" ";
+    out << "Center=\"" << centering << "\">"
+        << "\n";
+    // Open the <DataItem> Tag
+    out << R"(      <DataItem Format="HDF" Dimensions=")" << dimStr << "\" ";
+    out << "NumberType=\"" << xdmfTypeName << "\" "
+        << "Precision=\"" << precision << "\" >"
+        << "\n";
+    out << "        " << hdf5DatasetPath << "\n";
+    out << "      </DataItem>"
+        << "\n";
+    out << "    </Attribute>"
+        << "\n";
+  }
+  else if(numComp == 2 || numComp == 6)
+  {
+    // First Slab
+    out << "    <Attribute Name=\"" << arrayName << " (Feature 0)\" ";
+    out << "AttributeType=\"" << attrType << "\" ";
+
+    out << "Center=\"" << centering << "\">"
+        << "\n";
+    // Open the <DataItem> Tag
+    out << R"(      <DataItem ItemType="HyperSlab" Dimensions=")" << dimStrHalf << "\" ";
+    out << "Type=\"HyperSlab\" "
+        << "Name=\"" << arrayName << " (Feature 0)\" >"
+        << "\n";
+    out << "        <DataItem Dimensions=\"3 2\" "
+        << "Format=\"XML\" >"
+        << "\n";
+    out << "          0        0"
+        << "\n";
+    out << "          1        1"
+        << "\n";
+    out << "          " << dimStrHalf << " </DataItem>"
+        << "\n";
+    out << "\n";
+    out << R"(        <DataItem Format="HDF" Dimensions=")" << dimStr << "\" "
+        << "NumberType=\"" << xdmfTypeName << "\" "
+        << "Precision=\"" << precision << "\" >"
+        << "\n";
+
+    out << "        " << hdf5DatasetPath << "\n";
+    out << "        </DataItem>"
+        << "\n";
+    out << "      </DataItem>"
+        << "\n";
+    out << "    </Attribute>"
+        << "\n"
+        << "\n";
+
+    // Second Slab
+    out << "    <Attribute Name=\"" << arrayName << " (Feature 1)\" ";
+    out << "AttributeType=\"" << attrType << "\" ";
+
+    out << "Center=\"" << centering << "\">"
+        << "\n";
+    // Open the <DataItem> Tag
+    out << R"(      <DataItem ItemType="HyperSlab" Dimensions=")" << dimStrHalf << "\" ";
+    out << "Type=\"HyperSlab\" "
+        << "Name=\"" << arrayName << " (Feature 1)\" >"
+        << "\n";
+    out << "        <DataItem Dimensions=\"3 2\" "
+        << "Format=\"XML\" >"
+        << "\n";
+    out << "          0        " << (numComp / 2) << "\n";
+    out << "          1        1"
+        << "\n";
+    out << "          " << dimStrHalf << " </DataItem>"
+        << "\n";
+    out << "\n";
+    out << R"(        <DataItem Format="HDF" Dimensions=")" << dimStr << "\" "
+        << "NumberType=\"" << xdmfTypeName << "\" "
+        << "Precision=\"" << precision << "\" >"
+        << "\n";
+    out << "        " << hdf5DatasetPath << "\n";
+    out << "        </DataItem>"
+        << "\n";
+    out << "      </DataItem>"
+        << "\n";
+    out << "    </Attribute>"
+        << "\n";
+  }
+}
+
+void WriteXdmfGeomFooter(std::ostream& xdmf, std::string_view geomName)
+{
+  xdmf << "  </Grid>"
+       << "\n";
+  xdmf << "  <!-- *************** END OF " << geomName << " *************** -->"
+       << "\n";
+}
+
+void WriteXdmfAttributeMatrix(std::ostream& out, const AttributeMatrix& attributeMatrix, std::string_view geomName, std::string_view hdf5FilePath, std::string_view centering)
+{
+  for(const auto& [arrayId, arrayObject] : attributeMatrix)
+  {
+    const auto* dataArray = dynamic_cast<const IDataArray*>(arrayObject.get());
+    if(dataArray == nullptr)
+    {
+      continue;
+    }
+    usize numComp = dataArray->getNumberOfComponents();
+    DataType dataType = dataArray->getDataType();
+    auto [xdmfTypeName, precision] = GetXdmfTypeAndSize(dataType);
+    std::string attrType = GetXdmfArrayType(numComp);
+    WriteXdmfAttributeDataHelper(out, numComp, attrType, geomName, *dataArray, centering, precision, xdmfTypeName, hdf5FilePath);
+  }
+}
+
+void WriteXdmfGridGeometry(std::ostream& out, const IGridGeometry& gridGeometry, std::string_view geomName, std::string_view hdf5FilePath)
+{
+  const AttributeMatrix* cellData = gridGeometry.getCellData();
+  if(cellData == nullptr)
+  {
+    return;
+  }
+  WriteXdmfAttributeMatrix(out, *cellData, geomName, hdf5FilePath, "Cell");
+}
+
+void WriteXdmfNodeGeometry0D(std::ostream& out, const INodeGeometry0D& nodeGeom0D, std::string_view geomName, std::string_view hdf5FilePath)
+{
+  const AttributeMatrix* vertexData = nodeGeom0D.getVertexData();
+  if(vertexData == nullptr)
+  {
+    return;
+  }
+  WriteXdmfAttributeMatrix(out, *vertexData, geomName, hdf5FilePath, "Node");
+}
+
+void WriteXdmfNodeGeometry1D(std::ostream& out, const INodeGeometry1D& nodeGeom1D, std::string_view geomName, std::string_view hdf5FilePath)
+{
+  WriteXdmfNodeGeometry0D(out, nodeGeom1D, hdf5FilePath, geomName);
+
+  const AttributeMatrix* edgeData = nodeGeom1D.getEdgeData();
+  if(edgeData == nullptr)
+  {
+    return;
+  }
+  WriteXdmfAttributeMatrix(out, *edgeData, geomName, hdf5FilePath, "Cell");
+}
+
+void WriteXdmfNodeGeometry2D(std::ostream& out, const INodeGeometry2D& nodeGeom2D, std::string_view geomName, std::string_view hdf5FilePath)
+{
+  WriteXdmfNodeGeometry1D(out, nodeGeom2D, hdf5FilePath, geomName);
+
+  const AttributeMatrix* faceData = nodeGeom2D.getFaceData();
+  if(faceData == nullptr)
+  {
+    return;
+  }
+  WriteXdmfAttributeMatrix(out, *faceData, geomName, hdf5FilePath, "Cell");
+}
+
+void WriteXdmfNodeGeometry3D(std::ostream& out, const INodeGeometry3D& nodeGeom3D, std::string_view geomName, std::string_view hdf5FilePath)
+{
+  WriteXdmfNodeGeometry2D(out, nodeGeom3D, hdf5FilePath, geomName);
+
+  const AttributeMatrix* polyhedraData = nodeGeom3D.getPolyhedronData();
+  if(polyhedraData == nullptr)
+  {
+    return;
+  }
+  WriteXdmfAttributeMatrix(out, *polyhedraData, geomName, hdf5FilePath, "Cell");
+}
+
+void WriteXdmf(std::ostream& out, const DataStructure& dataStructure, std::string_view hdf5FilePath)
+{
+  std::stringstream ss;
+
+  WriteXdmfHeader(ss);
+
+  for(const auto& [id, object] : dataStructure)
+  {
+    const auto* geometry = dynamic_cast<const IGeometry*>(object.get());
+    if(geometry == nullptr)
+    {
+      continue;
+    }
+
+    std::string geomName = geometry->getName();
+
+    IGeometry::Type geomType = geometry->getGeomType();
+
+    switch(geomType)
+    {
+    case IGeometry::Type::Image: {
+      const auto& imageGeom = dynamic_cast<const ImageGeom&>(*object);
+      WriteGeomXdmf(ss, imageGeom, hdf5FilePath);
+      WriteXdmfGridGeometry(ss, imageGeom, geomName, hdf5FilePath);
+      break;
+    }
+    case IGeometry::Type::RectGrid: {
+      const auto& rectGridGeom = dynamic_cast<const RectGridGeom&>(*object);
+      WriteGeomXdmf(ss, rectGridGeom, hdf5FilePath);
+      WriteXdmfGridGeometry(ss, rectGridGeom, geomName, hdf5FilePath);
+      break;
+    }
+    case IGeometry::Type::Vertex: {
+      const auto& vertexGeom = dynamic_cast<const VertexGeom&>(*object);
+      WriteGeomXdmf(ss, vertexGeom, hdf5FilePath);
+      WriteXdmfNodeGeometry0D(ss, vertexGeom, geomName, hdf5FilePath);
+      break;
+    }
+    case IGeometry::Type::Edge: {
+      const auto& edgeGeom = dynamic_cast<const EdgeGeom&>(*object);
+      WriteGeomXdmf(ss, edgeGeom, hdf5FilePath);
+      WriteXdmfNodeGeometry1D(ss, edgeGeom, geomName, hdf5FilePath);
+      break;
+    }
+    case IGeometry::Type::Triangle: {
+      const auto& triangleGeom = dynamic_cast<const TriangleGeom&>(*object);
+      WriteGeomXdmf(ss, triangleGeom, hdf5FilePath);
+      WriteXdmfNodeGeometry2D(ss, triangleGeom, geomName, hdf5FilePath);
+      break;
+    }
+    case IGeometry::Type::Quad: {
+      const auto& quadGeom = dynamic_cast<const QuadGeom&>(*object);
+      WriteGeomXdmf(ss, quadGeom, hdf5FilePath);
+      WriteXdmfNodeGeometry2D(ss, quadGeom, geomName, hdf5FilePath);
+      break;
+    }
+    case IGeometry::Type::Tetrahedral: {
+      const auto& tetrahedralGeom = dynamic_cast<const TetrahedralGeom&>(*object);
+      WriteGeomXdmf(ss, tetrahedralGeom, hdf5FilePath);
+      WriteXdmfNodeGeometry3D(ss, tetrahedralGeom, geomName, hdf5FilePath);
+      break;
+    }
+    case IGeometry::Type::Hexahedral: {
+      const auto& hexahedralGeom = dynamic_cast<const HexahedralGeom&>(*object);
+      WriteGeomXdmf(ss, hexahedralGeom, hdf5FilePath);
+      WriteXdmfNodeGeometry3D(ss, hexahedralGeom, geomName, hdf5FilePath);
+      break;
+    }
+    }
+
+    WriteXdmfGeomFooter(ss, geomName);
+  }
+
+  WriteXdmfFooter(ss);
+
+  out << ss.str();
+}
 } // namespace
+
+void complex::DREAM3D::WriteXdmf(const std::filesystem::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath)
+{
+  std::ofstream file(filePath);
+
+  ::WriteXdmf(file, dataStructure, hdf5FilePath);
+}
 
 complex::DREAM3D::FileVersionType complex::DREAM3D::GetFileVersion(const H5::FileReader& fileReader)
 {
@@ -335,10 +980,17 @@ bool isLegacyStringArray(const H5::DatasetReader& arrayReader)
   return objectType == "StringDataArray";
 }
 
-void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroupReader, DataObject::IdType parentId, bool preflight = false)
+void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroupReader, DataObject& parent, bool preflight = false)
 {
+  DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
-  auto attributeMatrix = DataGroup::Create(ds, amName, parentId);
+  auto* attributeMatrix = AttributeMatrix::Create(ds, amName, parentId);
+
+  auto tDimsReader = amGroupReader.getAttribute("TupleDimensions");
+  auto tDims = tDimsReader.readAsVector<uint64>();
+  auto reversedTDims = AttributeMatrix::ShapeType(tDims.crbegin(), tDims.crend());
+
+  attributeMatrix->setShape(reversedTDims);
 
   auto dataArrayNames = amGroupReader.getChildNames();
   for(const auto& daName : dataArrayNames)
@@ -358,10 +1010,49 @@ void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroup
       readLegacyDataArray(ds, dataArraySet, attributeMatrix->getId(), preflight);
     }
   }
+
+  auto amTypeReader = amGroupReader.getAttribute("AttributeMatrixType");
+
+  auto amType = amTypeReader.readAsValue<uint32>();
+  switch(amType)
+  {
+  case 0: {
+    auto* nodeGeom0D = dynamic_cast<INodeGeometry0D*>(&parent);
+    if(nodeGeom0D != nullptr)
+    {
+      nodeGeom0D->setVertexData(*attributeMatrix);
+    }
+    break;
+  }
+  case 1: {
+    auto* nodeGeom1D = dynamic_cast<INodeGeometry1D*>(&parent);
+    if(nodeGeom1D != nullptr)
+    {
+      nodeGeom1D->setEdgeData(*attributeMatrix);
+    }
+    break;
+  }
+  case 2: {
+    auto* nodeGeom2D = dynamic_cast<INodeGeometry2D*>(&parent);
+    if(nodeGeom2D != nullptr)
+    {
+      nodeGeom2D->setFaceData(*attributeMatrix);
+    }
+    break;
+  }
+  case 3: {
+    auto* gridGeom = dynamic_cast<IGridGeometry*>(&parent);
+    if(gridGeom != nullptr)
+    {
+      gridGeom->setCellData(*attributeMatrix);
+    }
+    break;
+  }
+  }
 }
 
 // Begin legacy geometry import methods
-void readGenericGeomDims(AbstractGeometry* geom, const H5::GroupReader& geomGroup)
+void readGenericGeomDims(IGeometry* geom, const H5::GroupReader& geomGroup)
 {
   auto sDimAttribute = geomGroup.getAttribute("SpatialDimensionality");
   auto sDims = sDimAttribute.readAsValue<int32>();
@@ -373,14 +1064,14 @@ void readGenericGeomDims(AbstractGeometry* geom, const H5::GroupReader& geomGrou
   geom->setUnitDimensionality(uDims);
 }
 
-IDataArray* readLegacyGeomArray(DataStructure& ds, AbstractGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
+IDataArray* readLegacyGeomArray(DataStructure& ds, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
 {
   auto dataArraySet = geomGroup.openDataset(arrayName);
   return readLegacyDataArray(ds, dataArraySet, geometry->getId());
 }
 
 template <typename T>
-T* readLegacyGeomArrayAs(DataStructure& ds, AbstractGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
+T* readLegacyGeomArrayAs(DataStructure& ds, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
 {
   return dynamic_cast<T*>(readLegacyGeomArray(ds, geometry, geomGroup, arrayName));
 }
@@ -392,7 +1083,7 @@ DataObject* readLegacyVertexGeom(DataStructure& ds, const H5::GroupReader& geomG
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* verts = readLegacyGeomArray(ds, geom, geomGroup, Legacy::VerticesName);
 
-  geom->setVertices(sharedVertexList);
+  geom->setVertices(*sharedVertexList);
   return geom;
 }
 
@@ -403,8 +1094,8 @@ DataObject* readLegacyTriangleGeom(DataStructure& ds, const H5::GroupReader& geo
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedTriList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TriListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setFaces(sharedTriList);
+  geom->setVertices(*sharedVertexList);
+  geom->setFaces(*sharedTriList);
 
   return geom;
 }
@@ -416,8 +1107,8 @@ DataObject* readLegacyTetrahedralGeom(DataStructure& ds, const H5::GroupReader& 
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedTetList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TetraListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setTetrahedra(sharedTetList);
+  geom->setVertices(*sharedVertexList);
+  geom->setPolyhedra(*sharedTetList);
 
   return geom;
 }
@@ -450,8 +1141,8 @@ DataObject* readLegacyQuadGeom(DataStructure& ds, const H5::GroupReader& geomGro
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedQuadList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::QuadListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setFaces(sharedQuadList);
+  geom->setVertices(*sharedVertexList);
+  geom->setFaces(*sharedQuadList);
 
   return geom;
 }
@@ -463,8 +1154,8 @@ DataObject* readLegacyHexGeom(DataStructure& ds, const H5::GroupReader& geomGrou
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedHexList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::HexListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setHexahedra(sharedHexList);
+  geom->setVertices(*sharedVertexList);
+  geom->setPolyhedra(*sharedHexList);
 
   return geom;
 }
@@ -477,8 +1168,8 @@ DataObject* readLegacyEdgeGeom(DataStructure& ds, const H5::GroupReader& geomGro
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
   auto* sharedEdgeList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::EdgeListName);
 
-  geom->setVertices(sharedVertexList);
-  geom->setEdges(sharedEdgeList);
+  geom->setVertices(*sharedVertexList);
+  geom->setEdges(*sharedEdgeList);
 
   return geom;
 }
@@ -575,7 +1266,7 @@ void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, 
     }
 
     auto attributeMatrixGroup = dcGroup.openGroup(amName);
-    readLegacyAttributeMatrix(ds, attributeMatrixGroup, container->getId(), preflight);
+    readLegacyAttributeMatrix(ds, attributeMatrixGroup, *container, preflight);
   }
 }
 
@@ -749,7 +1440,7 @@ H5::ErrorType complex::DREAM3D::WriteFile(H5::FileWriter& fileWriter, const Pipe
   return errorCode;
 }
 
-Result<> complex::DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline)
+Result<> complex::DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf)
 {
   Result<H5::FileWriter> fileWriterResult = H5::FileWriter::CreateFile(path);
   if(fileWriterResult.invalid())
@@ -763,6 +1454,12 @@ Result<> complex::DREAM3D::WriteFile(const std::filesystem::path& path, const Da
   if(error < 0)
   {
     return MakeErrorResult(-2, fmt::format("complex::DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error {}", error));
+  }
+
+  if(writeXdmf)
+  {
+    std::filesystem::path xdmfFilePath = std::filesystem::path(path).replace_extension(".xdmf");
+    WriteXdmf(xdmfFilePath, dataStructure, path.filename().string());
   }
 
   return {};

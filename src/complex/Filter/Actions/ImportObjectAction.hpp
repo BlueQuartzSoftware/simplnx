@@ -42,6 +42,12 @@ public:
    */
   DataPath path() const;
 
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllCreatedPaths() const override;
+
 private:
   std::shared_ptr<DataObject> m_ImportData;
 };

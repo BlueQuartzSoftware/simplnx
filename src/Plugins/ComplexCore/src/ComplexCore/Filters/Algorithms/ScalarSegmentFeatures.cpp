@@ -1,9 +1,10 @@
 #include "ScalarSegmentFeatures.hpp"
 
 #include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include <chrono>
 
@@ -142,7 +143,7 @@ Result<> ScalarSegmentFeatures::operator()()
     goodVoxels = m_GoodVoxelsArray->getDataStore();
   }
 
-  auto gridGeom = m_DataStructure.getDataAs<AbstractGeometryGrid>(m_InputValues->pGridGeomPath);
+  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->pGridGeomPath);
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->pFeatureIdsPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros
@@ -275,7 +276,8 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
     UInt8Array& activeArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->pActiveArrayPath);
     featureIds->setValue(static_cast<usize>(seed), gnum);
     std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
-    activeArray.getDataStore()->reshapeTuples(tDims); // This will resize the actives array
+    auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->pCellFeaturesPath);
+    ResizeAttributeMatrix(cellFeaturesAM, tDims); // This will resize the active array
   }
   return seed;
 }

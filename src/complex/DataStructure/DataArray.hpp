@@ -152,7 +152,7 @@ public:
    * @brief Move constructor moves the data from the provided DataArray.
    * @param other
    */
-  DataArray(DataArray<T>&& other) noexcept
+  DataArray(DataArray<T>&& other)
   : IDataArray(std::move(other))
   , m_DataStore(std::move(other.m_DataStore))
   {

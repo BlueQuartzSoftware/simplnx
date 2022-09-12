@@ -161,7 +161,6 @@ void NeighborList<T>::initializeWithZeros()
 template <typename T>
 int32 NeighborList<T>::resizeTotalElements(usize size)
 {
-  // std::cout << "NeighborList::resizeTotalElements(" << size << ")" << std::endl;
   usize old = m_Array.size();
   m_Array.resize(size);
   setNumberOfTuples(size);
@@ -172,11 +171,6 @@ int32 NeighborList<T>::resizeTotalElements(usize size)
   else
   {
     m_IsAllocated = true;
-  }
-  // Initialize with zero length Vectors
-  for(usize i = old; i < m_Array.size(); ++i)
-  {
-    m_Array[i] = SharedVectorType(new VectorType);
   }
   return 1;
 }
@@ -288,6 +282,13 @@ template <typename T>
 DataObject::Type NeighborList<T>::getDataObjectType() const
 {
   return Type::NeighborList;
+}
+
+template <typename T>
+void NeighborList<T>::reshapeTuples(const std::vector<usize>& tupleShape)
+{
+  auto numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+  resizeTotalElements(numTuples);
 }
 
 template <>

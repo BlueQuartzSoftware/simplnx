@@ -1,7 +1,6 @@
 #pragma once
 
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
-#include "complex/Utilities/TooltipGenerator.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -11,7 +10,7 @@ namespace complex
  * @class VertexGeom
  * @brief
  */
-class COMPLEX_EXPORT VertexGeom : public AbstractGeometry
+class COMPLEX_EXPORT VertexGeom : public INodeGeometry0D
 {
 public:
   friend class DataStructure;
@@ -47,9 +46,9 @@ public:
    * @brief
    * @param other
    */
-  VertexGeom(VertexGeom&& other) noexcept;
+  VertexGeom(VertexGeom&& other);
 
-  ~VertexGeom() override;
+  ~VertexGeom() noexcept override;
 
   VertexGeom& operator=(const VertexGeom&) = delete;
   VertexGeom& operator=(VertexGeom&&) noexcept = delete;
@@ -58,7 +57,7 @@ public:
    * @brief Returns the type of geometry.
    * @return
    */
-  AbstractGeometry::Type getGeomType() const override;
+  IGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
@@ -85,64 +84,18 @@ public:
   DataObject* deepCopy() override;
 
   /**
-   * @brief
-   * @return std::string
-   */
-  std::string getGeometryTypeAsString() const override;
-
-  /**
-   * @brief
-   */
-  void initializeWithZeros() override;
-
-  /**
-   * @brief Resizes the vertex list to the target getSize.
-   * @param newNumVertices
-   */
-  void resizeVertexList(usize newNumVertices);
-
-  /**
-   * @brief Sets the SharedVertexList
-   * @param vertices
-   */
-  void setVertices(const SharedVertexList* vertices);
-
-  /**
-   * @brief Returns the SharedVertexList.
-   * @return SharedVertexList*
-   */
-  SharedVertexList* getVertices();
-
-  /**
-   * @brief Returns the SharedVertexList.
-   * @return const SharedVertexList*
-   */
-  const SharedVertexList* getVertices() const;
-
-  /**
-   * @brief Returns the DataObject ID for the vertices array. Returns an empty optional if no vertex array has been set.
-   * @return std::optional<IdType>
-   */
-  std::optional<IdType> getVerticesId() const;
-
-  /**
    * @brief Gets the coordinates at the target vertex ID.
    * @param vertId
+   * @return
    */
-  Point3D<float32> getCoords(usize vertId) const;
+  Point3D<float32> getCoords(usize vertId) const override;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  void setCoords(usize vertId, const Point3D<float32>& coords);
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfVertices() const;
+  void setCoords(usize vertId, const Point3D<float32>& coords) override;
 
   /**
    * @brief
@@ -158,121 +111,16 @@ public:
 
   /**
    * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementSizes() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementSizes() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementsContainingVert() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementsContainingVert() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementsContainingVert() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementNeighbors() override;
-
-  /**
-   * @brief
-   * @return const ElementDynamicList*
-   */
-  const ElementDynamicList* getElementNeighbors() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementNeighbors() override;
-
-  /**
-   * @brief
-   * @return StatusCode
-   */
-  StatusCode findElementCentroids() override;
-
-  /**
-   * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementCentroids() const override;
-
-  /**
-   * @brief
-   */
-  void deleteElementCentroids() override;
-
-  /**
-   * @brief
    * @return complex::Point3D<float64>
    */
-  complex::Point3D<float64> getParametricCenter() const override;
+  Point3D<float64> getParametricCenter() const override;
 
   /**
    * @brief
    * @param pCoords
    * @param shape
    */
-  void getShapeFunctions(const complex::Point3D<float64>& pCoords, double* shape) const override;
-
-  /**
-   * @brief
-   * @param field
-   * @param derivatives
-   * @param observable
-   */
-  void findDerivatives(Float64Array* field, Float64Array* derivatives, Observable* observable) const override;
-
-  /**
-   * @brief
-   * @param format
-   * @return std::string
-   */
-  std::string getInfoString(complex::InfoStringFormat format) const override;
-
-  /**
-   * @brief
-   * @return complex::TooltipGenerator
-   */
-  complex::TooltipGenerator getTooltipGenerator() const override;
-
-  /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getXdmfGridType() const override;
-
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
 protected:
   /**
@@ -289,56 +137,5 @@ protected:
    * @param importId
    */
   VertexGeom(DataStructure& ds, std::string name, IdType importId);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
-   * @param numVertices
-   * @param allocate
-   */
-  // VertexGeom(DataStructure& ds, std::string name, usize numVertices, bool allocate);
-
-  /**
-   * @brief
-   * @param ds
-   * @param name
-   * @param vertices
-   */
-  // VertexGeom(DataStructure& ds, std::string name, const SharedVertexList* vertices);
-
-  /**
-   * @brief
-   * @param elementsContainingVert
-   */
-  void setElementsContainingVert(const ElementDynamicList* elementsContainingVert) override;
-
-  /**
-   * @brief
-   * @param elementNeighbors
-   */
-  void setElementNeighbors(const ElementDynamicList* elementNeighbors) override;
-
-  /**
-   * @brief
-   * @param elementCentroids
-   */
-  void setElementCentroids(const Float32Array* elementCentroids) override;
-
-  /**
-   * @brief
-   * @param elementSizes
-   */
-  void setElementSizes(const Float32Array* elementSizes) override;
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIds
-   */
-  void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
-
-private:
-  std::optional<IdType> m_VertexListId;
-  std::optional<IdType> m_VertexSizesId;
 };
 } // namespace complex

@@ -1,6 +1,6 @@
-
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Core/Application.hpp"
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataObject.hpp"
@@ -33,6 +33,8 @@
 #include <string>
 #include <type_traits>
 
+#include <random>
+
 #define TEST_LEGACY 1
 
 using namespace complex;
@@ -51,20 +53,20 @@ const StringLiteral k_LegacyFilepath = "LegacyData.dream3d";
 const fs::path k_ComplexH5File = "new.h5";
 } // namespace Constants
 
-fs::path GetDataDir(const Application& app)
+fs::path GetDataDir()
 {
   return COMPLEX_BUILD_DIR / Constants::k_DataDir;
 }
 
-fs::path GetLegacyFilepath(const Application& app)
+fs::path GetLegacyFilepath()
 {
   std::string path = fmt::format("{}/test/Data/{}", unit_test::k_SourceDir.view(), Constants::k_LegacyFilepath);
   return std::filesystem::path(path);
 }
 
-fs::path GetComplexH5File(const Application& app)
+fs::path GetComplexH5File()
 {
-  return GetDataDir(app) / Constants::k_ComplexH5File;
+  return GetDataDir() / Constants::k_ComplexH5File;
 }
 
 bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
@@ -85,7 +87,7 @@ bool equalsf(const FloatVec3& lhs, const FloatVec3& rhs)
 TEST_CASE("Read Legacy DREAM.3D Data")
 {
   Application app;
-  std::filesystem::path filepath = GetLegacyFilepath(app);
+  std::filesystem::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
   Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
   COMPLEX_RESULT_REQUIRE_VALID(result);
@@ -105,7 +107,7 @@ TEST_CASE("Read Legacy DREAM.3D Data")
     REQUIRE(testDC != nullptr);
 
     DataPath testAMPath = testDCPath.createChildPath("AttributeMatrix");
-    REQUIRE(ds.getDataAs<DataGroup>(DataPath({testAMPath})) != nullptr);
+    REQUIRE(ds.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
 
     REQUIRE(ds.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
     REQUIRE(ds.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
@@ -200,14 +202,14 @@ TEST_CASE("Image Geometry IO")
 {
   Application app;
 
-  fs::path dataDir = GetDataDir(app);
+  fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "image_geometry_io.h5";
+  fs::path filePath = GetDataDir() / "image_geometry_io.h5";
 
   // Write HDF5 file
   try
@@ -238,7 +240,7 @@ TEST_CASE("Image Geometry IO")
     auto ds = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
-    filePath = GetDataDir(app) / "image_geometry_io_2.h5";
+    filePath = GetDataDir() / "image_geometry_io_2.h5";
 
     // Write DataStructure to another file
     try
@@ -275,7 +277,7 @@ const std::string k_NeighborGroupName = "NEIGHBORLIST_GROUP";
 void CreateVertexGeometry(DataStructure& dataGraph)
 {
   DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_VertexGroupName);
-  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  using MeshIndexType = IGeometry::MeshIndexType;
   auto vertexGeometry = VertexGeom::Create(dataGraph, "[Geometry] Vertex", geometryGroup->getId());
 
   // DataGroup* scanData = DataGroup::Create(dataGraph, "AttributeMatrix", group->getId());
@@ -291,7 +293,7 @@ void CreateVertexGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
-  vertexGeometry->setVertices(vertexArray);
+  vertexGeometry->setVertices(*vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
 
   // Now create some "Cell" data for the Vertex Geometry
@@ -312,7 +314,7 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
 {
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_TriangleGroupName);
-  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  using MeshIndexType = IGeometry::MeshIndexType;
   auto triangleGeom = TriangleGeom::Create(dataGraph, "[Geometry] Triangle", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
@@ -328,7 +330,7 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
-  triangleGeom->setFaces(dataArray);
+  triangleGeom->setFaces(*dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_TriangleGroupName, k_VertexListName});
@@ -339,14 +341,14 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
-  triangleGeom->setVertices(vertexArray);
+  triangleGeom->setVertices(*vertexArray);
 }
 
 void CreateQuadGeometry(DataStructure& dataGraph)
 {
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_QuadGroupName);
-  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  using MeshIndexType = IGeometry::MeshIndexType;
   auto geometry = QuadGeom::Create(dataGraph, "[Geometry] Quad", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
@@ -362,7 +364,7 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
-  geometry->setFaces(dataArray);
+  geometry->setFaces(*dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_QuadGroupName, k_VertexListName});
@@ -373,14 +375,14 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
-  geometry->setVertices(vertexArray);
+  geometry->setVertices(*vertexArray);
 }
 
 void CreateEdgeGeometry(DataStructure& dataGraph)
 {
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_EdgeGroupName);
-  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  using MeshIndexType = IGeometry::MeshIndexType;
   auto geometry = EdgeGeom::Create(dataGraph, "[Geometry] Edge", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
@@ -396,7 +398,7 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
-  geometry->setEdges(dataArray);
+  geometry->setEdges(*dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_EdgeGroupName, k_VertexListName});
@@ -407,7 +409,7 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
-  geometry->setVertices(vertexArray);
+  geometry->setVertices(*vertexArray);
 }
 
 void CreateNeighborList(DataStructure& dataStructure)
@@ -535,27 +537,27 @@ NodeBasedGeomData getNodeGeomData(const DataStructure& dataStructure)
   DataPath vertexPath({k_VertexGroupName, "[Geometry] Vertex"});
   auto* vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexPath);
   REQUIRE(vertexGeom != nullptr);
-  nodeData.vertexData.verticesId = vertexGeom->getVerticesId();
+  nodeData.vertexData.verticesId = vertexGeom->getVertexListId();
 
   DataPath edgePath({k_EdgeGroupName, "[Geometry] Edge"});
   auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(edgePath);
   REQUIRE(edgeGeom != nullptr);
-  nodeData.edgeData.verticesId = edgeGeom->getVerticesId();
-  nodeData.edgeData.edgesId = edgeGeom->getEdgesId();
+  nodeData.edgeData.verticesId = edgeGeom->getVertexListId();
+  nodeData.edgeData.edgesId = edgeGeom->getEdgeListId();
 
   DataPath trianglePath({k_TriangleGroupName, "[Geometry] Triangle"});
   auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(trianglePath);
   REQUIRE(triangleGeom != nullptr);
-  nodeData.triangleData.verticesId = triangleGeom->getVerticesId();
-  nodeData.triangleData.edgesId = triangleGeom->getEdgesId();
-  nodeData.triangleData.trianglesId = triangleGeom->getFacesId();
+  nodeData.triangleData.verticesId = triangleGeom->getVertexListId();
+  nodeData.triangleData.edgesId = triangleGeom->getEdgeListId();
+  nodeData.triangleData.trianglesId = triangleGeom->getFaceListId();
 
   DataPath quadPath({k_QuadGroupName, "[Geometry] Quad"});
   auto* quadGeom = dataStructure.getDataAs<QuadGeom>(quadPath);
   REQUIRE(quadGeom != nullptr);
-  nodeData.quadData.verticesId = quadGeom->getVerticesId();
-  nodeData.quadData.edgesId = quadGeom->getEdgesId();
-  nodeData.quadData.quadsId = quadGeom->getFacesId();
+  nodeData.quadData.verticesId = quadGeom->getVertexListId();
+  nodeData.quadData.edgesId = quadGeom->getEdgeListId();
+  nodeData.quadData.quadsId = quadGeom->getFaceListId();
 
   return nodeData;
 }
@@ -570,14 +572,14 @@ TEST_CASE("Node Based Geometry IO")
 {
   Application app;
 
-  fs::path dataDir = GetDataDir(app);
+  fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "NodeGeometryTest.dream3d";
+  fs::path filePath = GetDataDir() / "NodeGeometryTest.dream3d";
 
   std::string filePathString = filePath.string();
 
@@ -622,14 +624,14 @@ TEST_CASE("NeighborList IO")
 {
   Application app;
 
-  fs::path dataDir = GetDataDir(app);
+  fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "NeighborListTest.dream3d";
+  fs::path filePath = GetDataDir() / "NeighborListTest.dream3d";
 
   std::string filePathString = filePath.string();
 
@@ -675,14 +677,14 @@ TEST_CASE("DataArray<bool> IO")
 {
   Application app;
 
-  fs::path dataDir = GetDataDir(app);
+  fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
   {
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir(app) / "BoolArrayTest.dream3d";
+  fs::path filePath = GetDataDir() / "BoolArrayTest.dream3d";
 
   std::string filePathString = filePath.string();
 
@@ -740,4 +742,34 @@ TEST_CASE("DataArray<bool> IO")
   {
     FAIL(e.what());
   }
+}
+
+TEST_CASE("xmdf")
+{
+  DataStructure ds;
+  auto* vertexGeom = VertexGeom::Create(ds, "VertexGeom");
+  DataObject::IdType geomId = vertexGeom->getId();
+  constexpr usize numVerts = 100;
+  std::random_device randomDevice;
+  std::mt19937 generator(randomDevice());
+  std::uniform_int_distribution<> intDistribution(0, 100);
+  std::uniform_real_distribution<> realDistribution(-10.0f, 10.0f);
+  auto vertsDataStore = std::make_unique<DataStore<float32>>(IDataStore::ShapeType{numVerts}, IDataStore::ShapeType{3}, 0.0f);
+  for(auto& item : vertsDataStore->createSpan())
+  {
+    item = realDistribution(generator);
+  }
+  auto* verts = DataArray<float32>::Create(ds, "Verts", std::move(vertsDataStore), geomId);
+  auto* vertexData = AttributeMatrix::Create(ds, "VertexData", geomId);
+  vertexData->setShape({numVerts});
+  vertexGeom->setVertexData(*vertexData);
+  vertexGeom->setVertices(*verts);
+  auto vertexAssociatedData = std::make_unique<DataStore<int32>>(numVerts, 0);
+  for(auto& item : vertexAssociatedData->createSpan())
+  {
+    item = intDistribution(generator);
+  }
+  auto* data = DataArray<int32>::Create(ds, "Data", std::move(vertexAssociatedData), vertexData->getId());
+  Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", ds, {}, true);
+  COMPLEX_RESULT_REQUIRE_VALID(result);
 }

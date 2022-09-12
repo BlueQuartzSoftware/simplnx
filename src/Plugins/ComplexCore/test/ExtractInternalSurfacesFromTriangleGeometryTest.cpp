@@ -16,12 +16,21 @@ namespace
 constexpr StringLiteral k_TriangleGeomName = "TriangleGeom";
 constexpr StringLiteral k_InternalTriangleGeomName = "Internal TriangleGeom";
 constexpr StringLiteral k_NodeTypesName = "Node Types";
+constexpr StringLiteral k_VertsListName = "Vert List";
+constexpr StringLiteral k_TriListName = "Tri List";
+const DataPath k_TriangleGeomPath({k_TriangleGeomName});
+const DataPath k_InternalTrianglePath({k_InternalTriangleGeomName});
+const DataPath k_NodeTypesPath = k_TriangleGeomPath.createChildPath(k_NodeTypesName);
+const std::vector<DataPath> k_CopyVertexPaths = {k_TriangleGeomPath.createChildPath(k_VertsListName)};
+const std::vector<DataPath> k_CopyTrianglePaths = {k_TriangleGeomPath.createChildPath(k_TriListName)};
 
 DataStructure createTestData(const std::string& triangleGeomName, const std::string& nodeTypesName)
 {
-  DataStructure ds = UnitTest::CreateDataStructure();
-  const DataPath vertexListPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConfidenceIndex});
-  auto* triangleList = UInt64Array::CreateWithStore<UInt64DataStore>(ds, "Tri List", {500}, {3});
+  DataStructure ds;
+  auto* triangleGeom = TriangleGeom::Create(ds, triangleGeomName);
+
+  Float32Array* vertListdata = UnitTest::CreateTestDataArray<float>(ds, k_VertsListName, {80, 60, 40}, {1}, triangleGeom->getId());
+  auto* triangleList = UInt64Array::CreateWithStore<UInt64DataStore>(ds, k_TriListName, {500}, {3}, triangleGeom->getId());
   auto& triangles = triangleList->getDataStoreRef();
   triangles.fill(0);
   triangles[3] = 2;
@@ -34,11 +43,10 @@ DataStructure createTestData(const std::string& triangleGeomName, const std::str
   triangles[10] = 7;
   triangles[11] = 3;
 
-  auto* triangleGeom = TriangleGeom::Create(ds, triangleGeomName);
-  triangleGeom->setVertices(ds.getDataAs<AbstractGeometry::SharedVertexList>(vertexListPath));
-  triangleGeom->setFaces(triangleList);
+  triangleGeom->setVertices(*vertListdata);
+  triangleGeom->setFaces(*triangleList);
 
-  auto* nodeArray = Int8Array::CreateWithStore<Int8DataStore>(ds, nodeTypesName, {triangleGeom->getNumberOfFaces()}, {1});
+  auto* nodeArray = Int8Array::CreateWithStore<Int8DataStore>(ds, nodeTypesName, {triangleGeom->getNumberOfFaces()}, {1}, triangleGeom->getId());
   auto& nodeData = nodeArray->getDataStoreRef();
   nodeData.fill(2);
   nodeData[0] = 12;
@@ -49,12 +57,6 @@ DataStructure createTestData(const std::string& triangleGeomName, const std::str
 
 TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Instantiate)", "[ComplexCore][ExtractInternalSurfacesFromTriangleGeometry]")
 {
-  const DataPath k_TriangleGeomPath({k_TriangleGeomName});
-  const DataPath k_InternalTrianglePath({k_InternalTriangleGeomName});
-  const DataPath k_NodeTypesPath({k_NodeTypesName});
-  const std::vector<DataPath> k_CopyVertexPaths({DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConfidenceIndex})});
-  const std::vector<DataPath> k_CopyTrianglePaths({DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"})});
-
   ExtractInternalSurfacesFromTriangleGeometry filter;
   DataStructure ds = createTestData(k_TriangleGeomName, k_NodeTypesName);
   Arguments args;
@@ -64,6 +66,8 @@ TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Instantiate)
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_NodeTypesPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_CopyVertexPaths));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_CopyTrianglePaths));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_VertexDataName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_FaceDataName_Key, std::make_any<std::string>("Face Data"));
 
   auto preflight = filter.preflight(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -71,12 +75,6 @@ TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Instantiate)
 
 TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Data)", "[ComplexCore][ExtractInternalSurfacesFromTriangleGeometry]")
 {
-  const DataPath k_TriangleGeomPath({k_TriangleGeomName});
-  const DataPath k_InternalTrianglePath({k_InternalTriangleGeomName});
-  const DataPath k_NodeTypesPath({k_NodeTypesName});
-  const std::vector<DataPath> k_CopyVertexPaths({DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConfidenceIndex})});
-  const std::vector<DataPath> k_CopyTrianglePaths({DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"})});
-
   ExtractInternalSurfacesFromTriangleGeometry filter;
   DataStructure ds = createTestData(k_TriangleGeomName, k_NodeTypesName);
   Arguments args;
@@ -86,6 +84,8 @@ TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Data)", "[Co
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_NodeTypesPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CopyVertexPaths_Key, std::make_any<std::vector<DataPath>>(k_CopyVertexPaths));
   args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_CopyTrianglePaths_Key, std::make_any<std::vector<DataPath>>(k_CopyTrianglePaths));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_VertexDataName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insert(ExtractInternalSurfacesFromTriangleGeometry::k_FaceDataName_Key, std::make_any<std::string>("Face Data"));
 
   auto preflight = filter.preflight(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -110,8 +110,8 @@ TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Data)", "[Co
   }
 
   {
-    auto* newTrianglesArray = ds.getDataAs<IDataArray>(newTrianglesGeom->getTriangleArrayId());
-    auto* oldTrianglesArray = ds.getDataAs<IDataArray>(oldTrianglesGeom->getTriangleArrayId());
+    auto* newTrianglesArray = ds.getDataAs<IDataArray>(newTrianglesGeom->getFaceListId());
+    auto* oldTrianglesArray = ds.getDataAs<IDataArray>(oldTrianglesGeom->getFaceListId());
 
     REQUIRE(newTrianglesArray != nullptr);
     REQUIRE(oldTrianglesArray != nullptr);

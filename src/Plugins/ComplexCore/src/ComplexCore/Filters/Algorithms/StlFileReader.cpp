@@ -6,6 +6,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <cstdio>
@@ -23,7 +24,7 @@ namespace
 class FindUniqueIdsImpl
 {
 public:
-  FindUniqueIdsImpl(AbstractGeometry::SharedVertexList& vertex, const std::vector<std::vector<size_t>>& nodesInBin, complex::Int64DataStore& uniqueIds)
+  FindUniqueIdsImpl(IGeometry::SharedVertexList& vertex, const std::vector<std::vector<size_t>>& nodesInBin, complex::Int64DataStore& uniqueIds)
   : m_Vertex(vertex)
   , m_NodesInBin(nodesInBin)
   , m_UniqueIds(uniqueIds)
@@ -60,7 +61,7 @@ public:
   }
 
 private:
-  const AbstractGeometry::SharedVertexList& m_Vertex;
+  const IGeometry::SharedVertexList& m_Vertex;
   const std::vector<std::vector<size_t>>& m_NodesInBin;
   complex::Int64DataStore& m_UniqueIds;
 };
@@ -149,20 +150,17 @@ Result<> StlFileReader::operator()()
   }
 
   TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
-  LinkedGeometryData& linkedGeometryData = triangleGeom.getLinkedGeometryData();
 
   triangleGeom.resizeFaceList(triCount);
   triangleGeom.resizeVertexList(triCount * 3);
 
-  using SharedTriList = AbstractGeometry::MeshIndexArrayType;
-  using SharedVertList = AbstractGeometry::SharedVertexList;
+  using SharedTriList = IGeometry::MeshIndexArrayType;
+  using SharedVertList = IGeometry::SharedVertexList;
 
   SharedTriList& triangles = *(triangleGeom.getFaces());
   SharedVertList& nodes = *(triangleGeom.getVertices());
 
   Float64Array& faceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_FaceNormalsDataPath);
-  // Associate the Face Normals with the Face Data in the Triangle Geometry
-  linkedGeometryData.addFaceData(m_FaceNormalsDataPath);
 
   // Read the triangles
   constexpr size_t k_StlElementCount = 12;
@@ -289,14 +287,14 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
 {
   TriangleGeom& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_GeometryDataPath);
 
-  using SharedTriList = AbstractGeometry::MeshIndexArrayType;
-  using SharedVertList = AbstractGeometry::SharedVertexList;
+  using SharedTriList = IGeometry::MeshIndexArrayType;
+  using SharedVertList = IGeometry::SharedVertexList;
 
   SharedTriList& triangles = *(triangleGeom.getFaces());
   SharedVertList& vertices = *(triangleGeom.getVertices());
 
-  AbstractGeometry::MeshIndexType nNodesAll = triangleGeom.getNumberOfVertices();
-  AbstractGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
+  IGeometry::MeshIndexType nNodesAll = triangleGeom.getNumberOfVertices();
+  IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
   size_t nNodes = 0;
   if(nNodesAll > 0)
   {
@@ -333,7 +331,7 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
 
   // Create array to hold unique node numbers
   Int64DataStore uniqueIds(IDataStore::ShapeType{nNodes}, IDataStore::ShapeType{1}, {});
-  for(AbstractGeometry::MeshIndexType i = 0; i < nNodesAll; i++)
+  for(IGeometry::MeshIndexType i = 0; i < nNodesAll; i++)
   {
     uniqueIds[i] = static_cast<int64_t>(i);
   }
@@ -379,6 +377,9 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
     triangles[i * 3 + 1] = uniqueIds[node2];
     triangles[i * 3 + 2] = uniqueIds[node3];
   }
+
+  ResizeAttributeMatrix(*triangleGeom.getFaceData(), {triangleGeom.getNumberOfFaces()});
+  ResizeAttributeMatrix(*triangleGeom.getVertexData(), {triangleGeom.getNumberOfVertices()});
 
   return {};
 }

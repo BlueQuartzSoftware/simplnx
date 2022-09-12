@@ -14,7 +14,7 @@
 namespace complex
 {
 
-class AbstractGeometryGrid;
+class IGridGeometry;
 
 class COMPLEX_EXPORT SegmentFeatures
 {
@@ -37,7 +37,7 @@ public:
    * @param gridGeom
    * @return
    */
-  Result<> execute(complex::AbstractGeometryGrid* gridGeom);
+  Result<> execute(IGridGeometry* gridGeom);
 
   /**
    * @brief Returns the seed for the specified values.

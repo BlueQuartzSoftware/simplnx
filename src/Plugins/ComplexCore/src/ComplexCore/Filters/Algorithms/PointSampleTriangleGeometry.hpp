@@ -41,7 +41,7 @@
 #include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -86,7 +86,7 @@ public:
   PointSampleTriangleGeometry& operator=(const PointSampleTriangleGeometry&) = delete;
   PointSampleTriangleGeometry& operator=(PointSampleTriangleGeometry&&) noexcept = delete;
 
-  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  using MeshIndexType = IGeometry::MeshIndexType;
 
   Result<> operator()();
 

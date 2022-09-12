@@ -68,13 +68,19 @@ public:
   IDataCreationAction& operator=(IDataCreationAction&&) noexcept = delete;
 
   /**
-   * @brief Returns the DataPath to be created.
+   * @brief Returns the DataPath of the top level object to be created.
    * @return DataPath
    */
   DataPath getCreatedPath() const
   {
     return m_CreatedPath;
   }
+
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  virtual std::vector<DataPath> getAllCreatedPaths() const = 0;
 
 private:
   DataPath m_CreatedPath;

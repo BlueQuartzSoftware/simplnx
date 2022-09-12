@@ -3,7 +3,7 @@
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
@@ -22,11 +22,14 @@ namespace complex
 class CreateVertexGeometryAction : public IDataCreationAction
 {
 public:
+  static constexpr StringLiteral k_SharedVertexListName = "SharedVertexList";
+
   CreateVertexGeometryAction() = delete;
 
-  CreateVertexGeometryAction(const DataPath& geometryPath, AbstractGeometry::MeshIndexType numVertices)
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName)
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
+  , m_VertexDataName(vertexAttributeMatrixName)
   {
   }
 
@@ -45,19 +48,17 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    const std::string k_VertexDataName("SharedVertexList");
-
     // Check for empty Geometry DataPath
     if(getCreatedPath().empty())
     {
-      return MakeErrorResult(-220, "CreateGeometry2DAction: Geometry Path cannot be empty");
+      return MakeErrorResult(-220, "CreateVertexGeometryAction: Geometry Path cannot be empty");
     }
 
     // Check if the Geometry Path already exists
     BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
     if(parentObject != nullptr)
     {
-      return MakeErrorResult(-222, fmt::format("CreateGeometry2DAction: DataObject already exists at path '{}'", getCreatedPath().toString()));
+      return MakeErrorResult(-222, fmt::format("CreateVertexGeometryAction: DataObject already exists at path '{}'", getCreatedPath().toString()));
     }
 
     DataPath parentPath = getCreatedPath().getParent();
@@ -66,22 +67,22 @@ public:
       Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
       if(geomPath.invalid())
       {
-        return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Geometry could not be created at path:'{}'", getCreatedPath().toString()));
+        return MakeErrorResult(-223, fmt::format("CreateVertexGeometryAction: Geometry could not be created at path:'{}'", getCreatedPath().toString()));
       }
     }
     // Get the Parent ID
     if(!dataStructure.getId(parentPath).has_value())
     {
-      return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
+      return MakeErrorResult(-224, fmt::format("CreateVertexGeometryAction: Parent Id was not available for path:'{}'", parentPath.toString()));
     }
 
     // Create the VertexGeom
     VertexGeom* geometry2d = VertexGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
 
-    using MeshIndexType = AbstractGeometry::MeshIndexType;
+    using MeshIndexType = IGeometry::MeshIndexType;
 
     // Create the Vertex Array with a component size of 3
-    DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);
+    DataPath vertexPath = getCreatedPath().createChildPath(k_SharedVertexListName);
     std::vector<usize> tupleShape = {m_NumVertices}; // We don't probably know how many Vertices there are but take what ever the developer sends us
     std::vector<usize> componentShape = {3};
 
@@ -91,7 +92,15 @@ public:
       return result;
     }
     Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
-    geometry2d->setVertices(vertexArray);
+    geometry2d->setVertices(*vertexArray);
+
+    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry2d->getId());
+    if(vertexAttributeMatrix == nullptr)
+    {
+      return MakeErrorResult(-225, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", getVertexDataPath().toString()));
+    }
+    vertexAttributeMatrix->setShape(tupleShape);
+    geometry2d->setVertexData(*vertexAttributeMatrix);
 
     return {};
   }
@@ -107,15 +116,35 @@ public:
 
   /**
    * @brief Returns the number of vertices (estimated in some circumstances)
-   * @return AbstractGeometry::MeshIndexType
+   * @return IGeometry::MeshIndexType
    */
-  AbstractGeometry::MeshIndexType numVertices() const
+  IGeometry::MeshIndexType numVertices() const
   {
     return m_NumVertices;
   }
 
+  /**
+   * @brief Returns the path of the vertex data in the created geometry.
+   * @return
+   */
+  DataPath getVertexDataPath() const
+  {
+    return getCreatedPath().createChildPath(m_VertexDataName);
+  }
+
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllCreatedPaths() const override
+  {
+    auto topLevelCreatedPath = getCreatedPath();
+    return {topLevelCreatedPath, getVertexDataPath(), topLevelCreatedPath.createChildPath(k_SharedVertexListName)};
+  }
+
 private:
-  AbstractGeometry::MeshIndexType m_NumVertices;
+  IGeometry::MeshIndexType m_NumVertices;
+  std::string m_VertexDataName;
 };
 
 } // namespace complex

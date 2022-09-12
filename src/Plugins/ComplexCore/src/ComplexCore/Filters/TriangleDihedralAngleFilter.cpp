@@ -1,13 +1,15 @@
 #include "TriangleDihedralAngleFilter.hpp"
 
 #include "complex/Common/ComplexRange.hpp"
+#include "complex/Common/Constants.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -17,7 +19,7 @@ using namespace complex;
 
 namespace
 {
-constexpr float64 k_radToDeg = 180.0; // used for translating radians to degrees
+constexpr float64 k_radToDeg = Constants::k_180OverPiD; // used for translating radians to degrees
 /**
  * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
  * triangle for a set of triangles
@@ -25,17 +27,18 @@ constexpr float64 k_radToDeg = 180.0; // used for translating radians to degrees
 class CalculateDihedralAnglesImpl
 {
 public:
-  CalculateDihedralAnglesImpl(const AbstractGeometry::SharedVertexList& nodes, const AbstractGeometry::SharedTriList& triangles, Float64Array& dihedralAngles)
+  CalculateDihedralAnglesImpl(const IGeometry::SharedVertexList& nodes, const IGeometry::SharedTriList& triangles, Float64Array& dihedralAngles, const std::atomic_bool& shouldCancel)
   : m_Nodes(nodes)
   , m_Triangles(triangles)
   , m_DihedralAngles(dihedralAngles)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   virtual ~CalculateDihedralAnglesImpl() = default;
 
   void generate(size_t start, size_t end) const
   {
-    AbstractGeometry::MeshIndexType nIdx0 = 0, nIdx1 = 0, nIdx2 = 0;
+    IGeometry::MeshIndexType nIdx0 = 0, nIdx1 = 0, nIdx2 = 0;
     // std::array<float64, 3> vectorEx = {x, y, z};  // coordintate example
     std::array<float64, 3> vecAB = {0.0f, 0.0f, 0.0f};
     std::array<float64, 3> vecAC = {0.0f, 0.0f, 0.0f};
@@ -53,17 +56,29 @@ public:
       MatrixMath::Subtract3x1s(node0.data(), node2.data(), vecAC.data());
       MatrixMath::Subtract3x1s(node1.data(), node2.data(), vecBC.data());
 
-      auto magAB = sqrtf(sumOfMultiplyCoords(vecAB, vecAB));
-      auto magAC = sqrtf(sumOfMultiplyCoords(vecAC, vecAC));
-      auto magBC = sqrtf(sumOfMultiplyCoords(vecBC, vecBC));
+      float64 magAB = sqrtf(sumOfMultiplyCoords(vecAB, vecAB));
+      float64 magAC = sqrtf(sumOfMultiplyCoords(vecAC, vecAC));
+      float64 magBC = sqrtf(sumOfMultiplyCoords(vecBC, vecBC));
 
-      std::vector<float64> dihedralAnglesVec;
-      dihedralAnglesVec.push_back(k_radToDeg * acos((sumOfMultiplyCoords(vecAB, vecAC) / (magAB * magAC))));
-      // 180 - angle because AB points out of vertex and BC points into vertex, so angle is actually angle outside of triangle
-      dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((sumOfMultiplyCoords(vecAB, vecBC) / (magAB * magBC)))));
-      dihedralAnglesVec.push_back(k_radToDeg * acos((sumOfMultiplyCoords(vecBC, vecAC) / (magBC * magAC))));
+      if(magAB == 0.0f || magAC == 0.0f || magBC == 0.0f)
+      {
+        m_DihedralAngles[i] = std::nan("0");
+      }
+      else
+      {
+        std::vector<float64> dihedralAnglesVec;
+        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(sumOfMultiplyCoords(vecAB, vecAC)) / (magAB * magAC))));
+        // 180 - angle because AB points out of vertex and BC points into vertex, so angle is actually angle outside of triangle
+        dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((std::fabs(sumOfMultiplyCoords(vecAB, vecBC)) / (magAB * magBC)))));
+        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(sumOfMultiplyCoords(vecBC, vecAC)) / (magBC * magAC))));
 
-      m_DihedralAngles[i] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
+        m_DihedralAngles[i] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
+      }
+
+      if(m_ShouldCancel)
+      {
+        return;
+      }
     }
   }
 
@@ -73,9 +88,10 @@ public:
   }
 
 private:
-  const AbstractGeometry::SharedVertexList& m_Nodes;
-  const AbstractGeometry::SharedTriList& m_Triangles;
+  const IGeometry::SharedVertexList& m_Nodes;
+  const IGeometry::SharedTriList& m_Triangles;
   Float64Array& m_DihedralAngles;
+  const std::atomic_bool& m_ShouldCancel;
 
   float64 sumOfMultiplyCoords(std::array<float64, 3> vec1, std::array<float64, 3> vec2) const
   {
@@ -128,9 +144,9 @@ Parameters TriangleDihedralAngleFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the dihedral angles", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key, "Face Dihedral Angles",
-                                                         "The complete path to the array storing the calculated dihedral angles", DataPath{}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+  params.insert(
+      std::make_unique<StringParameter>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key, "Face Dihedral Angles", "The name of the array storing the calculated dihedral angles", "Dihedral Angles"));
 
   return params;
 }
@@ -146,19 +162,26 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
-  auto pSurfaceMeshTriangleDihedralAnglesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key);
+  auto pSurfaceMeshTriangleDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
 
   complex::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  if(triangleGeom != nullptr)
+  if(triangleGeom == nullptr)
   {
-    auto createArrayAction =
-        std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    return {MakeErrorResult<OutputActions>(-9860, fmt::format("Cannot find the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
   }
+  const AttributeMatrix* faceData = triangleGeom->getFaceData();
+  if(faceData == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
+  }
+
+  DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceData->getName()).createChildPath(pSurfaceMeshTriangleDihedralAnglesName);
+  auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, faceData->getShape(), std::vector<usize>{1}, dihedralAnglesArrayPath);
+  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -168,17 +191,17 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
-  auto pSurfaceMeshTriangleDihedralAnglesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshTriangleDihedralAnglesArrayPath_Key);
+  auto pSurfaceMeshTriangleDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
 
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  Float64Array& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
-  // Associate the calculated normals with the Face Data in the Triangle Geometry
-  triangleGeom.getLinkedGeometryData().addFaceData(pSurfaceMeshTriangleDihedralAnglesArrayPathValue);
+  AttributeMatrix* faceData = triangleGeom.getFaceData();
+  DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceData->getName()).createChildPath(pSurfaceMeshTriangleDihedralAnglesName);
+  Float64Array& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(false);
   dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom.getNumberOfFaces()));
-  dataAlg.execute(::CalculateDihedralAnglesImpl(*(triangleGeom.getVertices()), *(triangleGeom.getFaces()), dihedralAngles));
+  dataAlg.execute(::CalculateDihedralAnglesImpl(*(triangleGeom.getVertices()), *(triangleGeom.getFaces()), dihedralAngles, shouldCancel));
 
   return {};
 }

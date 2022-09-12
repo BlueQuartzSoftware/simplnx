@@ -12,6 +12,7 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
@@ -228,6 +229,7 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies if a mask array should be used", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to the target mask array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to the Voxel Indices array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::uint64}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "", ImageGeom::k_CellDataName));
 
   params.linkParameters(k_UseMask_Key, k_MaskPath_Key, std::make_any<bool>(true));
   params.linkParameters(k_SamplingGridType_Key, k_GridDimensions_Key, std::make_any<ChoicesParameter::ValueType>(0));
@@ -252,6 +254,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   auto useMask = args.value<bool>(k_UseMask_Key);
   auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
   auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
+  auto cellDataName = args.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
 
   OutputActions actions;
 
@@ -282,7 +285,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
     CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(gridDimensions[0]), static_cast<usize>(gridDimensions[1]), static_cast<usize>(gridDimensions[2])};
     CreateImageGeometryAction::OriginType origin = {0, 0, 0};
     CreateImageGeometryAction::SpacingType spacing = {1, 1, 1};
-    auto imageAction = std::make_unique<CreateImageGeometryAction>(newImageGeomPath, dims, origin, spacing);
+    auto imageAction = std::make_unique<CreateImageGeometryAction>(newImageGeomPath, dims, origin, spacing, cellDataName);
     actions.actions.push_back(std::move(imageAction));
   }
 

@@ -62,7 +62,7 @@ public:
    * @brief Constructs a DataGroup and moves values from the specified target.
    * @param other
    */
-  DataGroup(DataGroup&& other) noexcept;
+  DataGroup(DataGroup&& other);
 
   ~DataGroup() override;
 

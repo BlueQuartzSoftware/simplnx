@@ -50,7 +50,7 @@ Parameters LaplacianSmoothingFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry",
                                                              "The complete path to the surface mesh Geometry for which to apply Laplacian smoothing", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Triangle, AbstractGeometry::Type::Tetrahedral}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle, IGeometry::Type::Tetrahedral}));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "The complete path to the array specifying the type of node in the Geometry", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int8}));
