@@ -89,4 +89,10 @@ const CreateImageGeometryAction::SpacingType& CreateImageGeometryAction::spacing
 {
   return m_Spacing;
 }
+
+std::vector<DataPath> CreateImageGeometryAction::getAllCreatedPaths() const
+{
+  auto topLevelCreatedPath = getCreatedPath();
+  return {topLevelCreatedPath, topLevelCreatedPath.createChildPath(m_CellDataName)};
+}
 } // namespace complex

@@ -31,6 +31,12 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllCreatedPaths() const override;
+
 private:
 };
 } // namespace complex

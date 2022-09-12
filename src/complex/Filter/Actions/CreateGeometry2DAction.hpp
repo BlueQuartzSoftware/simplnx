@@ -181,6 +181,16 @@ public:
     return m_NumVertices;
   }
 
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllCreatedPaths() const override
+  {
+    auto topLevelCreatedPath = getCreatedPath();
+    return {topLevelCreatedPath, getFaceDataPath(), getVertexDataPath(), topLevelCreatedPath.createChildPath(k_DefaultFacesName), topLevelCreatedPath.createChildPath(k_DefaultVerticesName)};
+  }
+
 private:
   IGeometry::MeshIndexType m_NumFaces;
   IGeometry::MeshIndexType m_NumVertices;

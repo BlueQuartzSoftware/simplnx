@@ -12,7 +12,7 @@ namespace complex
 /**
  * @brief Action for importing DataObjects from an HDF5 file.
  */
-class COMPLEX_EXPORT ImportH5ObjectPathsAction : public IDataAction
+class COMPLEX_EXPORT ImportH5ObjectPathsAction : public IDataCreationAction
 {
 public:
   using PathsType = std::optional<std::vector<DataPath>>;
@@ -36,6 +36,12 @@ public:
    * @return Result<>
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
+
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllCreatedPaths() const override;
 
 private:
   std::filesystem::path m_H5FilePath;

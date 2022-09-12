@@ -54,4 +54,9 @@ Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode m
 
   return {};
 }
+
+std::vector<DataPath> CreateAttributeMatrixAction::getAllCreatedPaths() const
+{
+  return {getCreatedPath()};
+}
 } // namespace complex

@@ -42,6 +42,12 @@ public:
    */
   DataPath createdDataPath() const;
 
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllCreatedPaths() const override;
+
 private:
   DataPath m_SelectedDataPath;
 };

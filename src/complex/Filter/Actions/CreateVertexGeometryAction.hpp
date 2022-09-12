@@ -22,6 +22,8 @@ namespace complex
 class CreateVertexGeometryAction : public IDataCreationAction
 {
 public:
+  static constexpr StringLiteral k_SharedVertexListName = "SharedVertexList";
+
   CreateVertexGeometryAction() = delete;
 
   CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName)
@@ -46,8 +48,6 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    const std::string k_SharedVertexListName("SharedVertexList");
-
     // Check for empty Geometry DataPath
     if(getCreatedPath().empty())
     {
@@ -130,6 +130,16 @@ public:
   DataPath getVertexDataPath() const
   {
     return getCreatedPath().createChildPath(m_VertexDataName);
+  }
+
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllCreatedPaths() const override
+  {
+    auto topLevelCreatedPath = getCreatedPath();
+    return {topLevelCreatedPath, getVertexDataPath(), topLevelCreatedPath.createChildPath(k_SharedVertexListName)};
   }
 
 private:
