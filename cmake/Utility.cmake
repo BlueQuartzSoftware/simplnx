@@ -94,7 +94,7 @@ function(dowload_test_data)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  message(STATUS "====> ARGS_DREAM3D_DATA_DIR: ${ARGS_DREAM3D_DATA_DIR}")
+  message(STATUS "DREAM3D_DATA_DIR: ${ARGS_DREAM3D_DATA_DIR}")
   # If the data directory does not exist then bail out now.
   if(NOT EXISTS "${ARGS_DREAM3D_DATA_DIR}")
     message(STATUS "DREAM3D_Data directory does not exist. *NOT* downloading test files.")
@@ -122,6 +122,7 @@ function(create_data_copy_rules)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  message(STATUS "DREAM3D_DATA_DIR: ${ARGS_DREAM3D_DATA_DIR}")
   # If the data directory does not exist then bail out now.
   if(NOT EXISTS "${ARGS_DREAM3D_DATA_DIR}")
     message(STATUS "DREAM3D_Data directory does not exist. Not creating copy and install rules.")
