@@ -96,11 +96,11 @@ function(dowload_test_data)
 
   # If the data directory does not exist then bail out now.
   if(NOT EXISTS "${ARGS_DREAM3D_DATA_DIR}")
+    message(STATUS "DREAM3D_Data directory does not exist. *NOT* downloading test files.")
     return()
   endif()
 
   message(STATUS "DREAM3D_Data: Found at '${ARGS_DREAM3D_DATA_DIR}'")
-  
   message(STATUS "Downloading DREAM3D_Data/TestFiles")
   FetchContent_Declare(download_DREAM3D_Data
     URL "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_8/TestFiles_6_8.tar.gz"
@@ -120,6 +120,12 @@ function(create_data_copy_rules)
   set(oneValueArgs DREAM3D_DATA_DIR)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  # If the data directory does not exist then bail out now.
+  if(NOT EXISTS "${ARGS_DREAM3D_DATA_DIR}")
+    message(STATUS "DREAM3D_Data directory does not exist. Not creating copy and install rules.")
+    return()
+  endif()
 
 
   set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
