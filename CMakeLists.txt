@@ -546,14 +546,22 @@ target_include_directories(complex
 # -----------------------------------------------------------------------
 
 # If DREAM3D_DATA_DIR is NOT defined/set then take a look at the same level as complex
-if("${DREAM3D_DATA_DIR}" STREQUAL "") 
+if("${DREAM3D_DATA_DIR}" STREQUAL "")
+  message(STATUS "DREAM3D_DATA_DIR is empty. Attempting to locate DREAM3D_Data at same level as complex directory.")
   get_filename_component(complex_PARENT ${complex_SOURCE_DIR} DIRECTORY CACHE)
-  set(DREAM3D_DATA_DIR "${complex_PARENT}/DREAM3D_Data" CACHE PATH "The directory where to find test data files")
+  if(EXISTS "${complex_PARENT}/DREAM3D_Data")
+    message(STATUS "DREAM3D_Data directory was *found* at same level as `complex`")
+    set(DREAM3D_DATA_DIR "${complex_PARENT}/DREAM3D_Data" CACHE PATH "The directory where to find test data files")
+  else()
+    message(WARNING "DREAM3D_Data directory was *not* found at the same level as `complex`.")
+  endif()
 endif()
 
 if(EXISTS "${DREAM3D_DATA_DIR}") 
   dowload_test_data(${DREAM3D_DATA_DIR})
   create_data_copy_rules(${DREAM3D_DATA_DIR})
+else()
+  message(WARNING "DREAM3D_DATA_DIR is not set. Any unit test that depends on an external data file will fail.")
 endif()
 
 #------------------------------------------------------------------------------
