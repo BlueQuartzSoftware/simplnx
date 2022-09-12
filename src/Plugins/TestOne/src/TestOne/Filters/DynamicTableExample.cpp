@@ -68,7 +68,7 @@ Parameters DynamicTableExample::parameters() const
   {
     DynamicTableInfo tableInfo;
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));
-    tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(0, "Row {}"));
+    tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Row {}"));
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
     params.insert(std::make_unique<DynamicTableParameter>(k_Param4, "Dynamic Coumn | Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
