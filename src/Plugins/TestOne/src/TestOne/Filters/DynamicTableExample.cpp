@@ -52,7 +52,7 @@ Parameters DynamicTableExample::parameters() const
     tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"Col 1", "Col 2"}));
     tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Row {}"));
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
-    params.insert(std::make_unique<DynamicTableParameter>(k_Param2, "Fixed Coumn | Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_Param2, "Fixed Columns | Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
 
   params.insertSeparator({"Dynamic Column | Fixed Row"});
@@ -61,7 +61,7 @@ Parameters DynamicTableExample::parameters() const
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Row 1", "Row 2"}));
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
-    params.insert(std::make_unique<DynamicTableParameter>(k_Param3, "Dynamic Coumn | Fixed Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_Param3, "Dynamic Columns | Fixed Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
 
   params.insertSeparator({"Dynamic Column | Dynamic Row"});
@@ -70,7 +70,7 @@ Parameters DynamicTableExample::parameters() const
     tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Col {}"));
     tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(2, "Row {}"));
     DynamicTableInfo::TableDataType defaultTable{{{10, 20}, {30, 40}}};
-    params.insert(std::make_unique<DynamicTableParameter>(k_Param4, "Dynamic Coumn | Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
+    params.insert(std::make_unique<DynamicTableParameter>(k_Param4, "Dynamic Columns | Dynamic Row", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
   }
   return params;
 }
