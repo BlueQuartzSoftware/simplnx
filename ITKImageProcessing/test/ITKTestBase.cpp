@@ -173,7 +173,7 @@ Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& 
   Arguments args;
   args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
   args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geometryPath);
-  args.insertOrAssign(ITKImageReader::k_CellDataPath_Key, cellDataPath);
+  args.insertOrAssign(ITKImageReader::k_CellDataName_Key, cellDataPath.getTargetName());
   args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imagePath);
   auto executeResult = filter.execute(ds, args);
   return executeResult.result;

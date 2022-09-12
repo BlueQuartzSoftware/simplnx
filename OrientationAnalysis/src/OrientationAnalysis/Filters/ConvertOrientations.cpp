@@ -3,9 +3,9 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
@@ -206,7 +206,7 @@ Parameters ConvertOrientations::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "", 0, OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
   params.insert(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Orientation Type", "", 1, OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputOrientationArrayName_Key, "Output Orientations", "", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputOrientationArrayName_Key, "Output Orientations", "", ""));
 
   return params;
 }
@@ -249,7 +249,7 @@ IFilter::PreflightResult ConvertOrientations::preflightImpl(const DataStructure&
             << ::RepresentationElementCount[static_cast<size_t>(inputType)] << " components but the selected input array has " << inputCompShape[0];
     return {MakeErrorResult<OutputActions>(::k_InputComponentCountError, message.str())};
   }
-  auto pOutputArrayPath = filterArgs.value<DataPath>(k_OutputOrientationArrayName_Key);
+  auto pOutputArrayPath = pInputArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
   auto numericType = static_cast<DataType>(inputArray->getDataType());
   std::vector<size_t> componentDims = {::RepresentationElementCount[static_cast<size_t>(outputType)]};
@@ -272,7 +272,7 @@ Result<> ConvertOrientations::executeImpl(DataStructure& dataStructure, const Ar
   auto inputType = static_cast<OrientationRepresentation::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto outputType = static_cast<OrientationRepresentation::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
   auto pInputOrientationArrayPathValue = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
-  auto pOutputOrientationArrayNameValue = filterArgs.value<DataPath>(k_OutputOrientationArrayName_Key);
+  auto pOutputOrientationArrayNameValue = pInputOrientationArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
   // Quaternion<float>::Order qLayout = Quaternion<float>::Order::VectorScalar;
 

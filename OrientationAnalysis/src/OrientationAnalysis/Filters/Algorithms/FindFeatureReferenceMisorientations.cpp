@@ -3,6 +3,7 @@
 #include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
@@ -43,6 +44,12 @@ Result<> FindFeatureReferenceMisorientations::operator()()
   // Output Arrays
   auto& featureReferenceMisorientations = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureReferenceMisorientationsArrayName);
   auto& avgReferenceMisorientation = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureAvgMisorientationsArrayName);
+
+  auto validateNumFeatResult = ValidateNumFeaturesInArray(m_DataStructure, m_InputValues->FeatureAvgMisorientationsArrayName, featureIds);
+  if(validateNumFeatResult.invalid())
+  {
+    return validateNumFeatResult;
+  }
 
   std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
 

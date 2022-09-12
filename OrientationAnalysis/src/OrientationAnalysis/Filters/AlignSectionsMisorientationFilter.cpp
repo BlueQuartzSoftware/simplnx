@@ -5,8 +5,8 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -78,8 +78,7 @@ Parameters AlignSectionsMisorientationFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath({"Data Container"}),
-                                                             GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Group", "Data Group that contains *only* cell data", DataPath{}));
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath({"Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
@@ -115,7 +114,6 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   auto pGoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
   auto pCrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  auto cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -154,6 +152,17 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   {
     return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "All input arrays must have the same number of tuples")};
   }
+
+  const auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputImageGeometry);
+  if(inputGeom == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(k_InputRepresentationTypeError, fmt::format("Cannot find selected input Image geometry at path '{}'", inputImageGeometry.toString()))};
+  }
+
+  if(inputGeom->getCellData() == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(k_InputRepresentationTypeError, fmt::format("Cannot find cell data Attribute Matrix in the selected Image geometry '{}'", inputImageGeometry.toString()))};
+  }
   // Ensure the file path is not blank if they user wants to write the alignment shifts.
   if(pWriteAlignmentShifts && pAlignmentShiftFileName.empty())
   {
@@ -170,7 +179,8 @@ Result<> AlignSectionsMisorientationFilter::executeImpl(DataStructure& dataStruc
 {
   AlignSectionsMisorientationInputValues inputValues;
   inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  inputValues.cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
+  auto* inputGeom = dataStructure.getDataAs<ImageGeom>(inputValues.inputImageGeometry);
+  inputValues.cellDataGroupPath = inputGeom->getCellDataPath();
   inputValues.writeAlignmentShifts = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
   inputValues.alignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
   inputValues.misorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key);

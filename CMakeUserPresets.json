@@ -1,0 +1,522 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default-all",
+      "displayName": "default-all",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        },
+        "CMAKE_MAKE_PROGRAM": {
+          "type": "FILEPATH",
+          "value": "/opt/local/bin/ninja"
+        },
+        "CMAKE_OSX_DEPLOYMENT_TARGET": {
+          "type": "STRING",
+          "value": "11.0"
+        },
+        "VCPKG_MANIFEST_DIR": {
+          "type": "STRING",
+          "value": "${sourceDir}/../simplnx"
+        },
+        "VCPKG_INSTALLED_DIR": {
+          "type": "STRING",
+          "value": "${sourceDir}/../vcpkg-installed"
+        },
+        "VCPKG_MANIFEST_INSTALL": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "VCPKG_OVERLAY_TRIPLETS": {
+          "type": "PATH",
+          "value": "${sourceDir}/../simplnx/cmake/triplets"
+        },
+        "VCPKG_APPLOCAL_DEPS": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "VCPKG_MANIFEST_FEATURES": {
+          "type": "STRING",
+          "value": "python;tests;parallel;itk;ebsd"
+        },
+        "SIMPLNX_BUILD_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_BUILD_DOCS": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "SIMPLNX_BUILD_PYTHON": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_BUILD_PYTHON_DOCS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_BUILD_PYTHON_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_EMBED_PYTHON": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SPHINX_BUILD_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/sphinx-build"
+        },
+        "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "SimplnxReview"
+        },
+        "SIMPLNX_ENABLE_COMPRESSORS": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "DATA_ARCHIVE_WEB_SITE": {
+          "type": "STRING",
+          "value": "https://www.dream3d.io/Data_Archive/"
+        },
+        "DREAM3D_DATA_DIR": {
+          "type": "STRING",
+          "value": "${sourceDir}/../DREAM3D_Data"
+        },
+        "DREAM3D_ENABLE_DOCUMENTATION": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "DREAM3D_ENABLE_STYLE_SHEET_EDITOR": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "DREAM3D_ENABLE_VISUALIZATION": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "DREAM3D_ENABLE_DEVELOPER_BUILD": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "DREAM3D_ENABLE_UPDATE_CHECK": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "DREAM3D_RELATIVE_PATH_CHECK": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "Python3_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/python"
+        },
+        "PYTHON_EXECUTABLE": {
+          "type": "PATH",
+          "value": "/opt/local/anaconda3/envs/dream3d/bin/python"
+        },
+        "BUILD_EXAMPLES": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "Qt6_DIR": {
+          "type": "PATH",
+          "value": "/Users/Shared/NX_SDK/Qt/6.6.3/macos/lib/cmake/Qt6"
+        },
+        "VTK_DIR": {
+          "type": "PATH",
+          "value": "/Users/Shared/NX_SDK/VTK-9.3.1-Release/lib/cmake/vtk-9.3"
+        }
+      },
+      "environment": {
+        "VCPKG_INSTALLATION_ROOT": "/opt/local/vcpkg"
+      }
+    },
+    {
+      "name": "x64",
+      "inherits": "default-all",
+      "displayName": "x64",
+      "description": "x64 Arch",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-default-x64",
+      "hidden": true,
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-osx-v11"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-osx-v11"
+        },
+        "VCPKG_INSTALLED_DIR": {
+          "type": "STRING",
+          "value": "${sourceDir}/../vcpkg-installed-x64"
+        }
+      }
+    },
+    {
+      "name": "NX-x64-Debug",
+      "inherits": "x64",
+      "displayName": "NX x64 Debug",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-NX-x64-Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        },
+        "ITKIMAGEPROCESSING_LEAN_AND_MEAN": {
+          "type": "BOOL",
+          "value": "OFF"
+        }
+      }
+    },
+    {
+      "name": "NX-x64-Debug-ASAN",
+      "inherits": "x64",
+      "displayName": "NX x64 Debug",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-NX-x64-Debug-ASAN",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        },
+        "ITKIMAGEPROCESSING_LEAN_AND_MEAN": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "-O1 -fsanitize=address -fno-omit-frame-pointer"
+        }
+      }
+    },
+    {
+      "name": "NX-x64-Release",
+      "inherits": "x64",
+      "displayName": "NX x64 Release",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-NX-x64-Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },
+        "ITKIMAGEPROCESSING_LEAN_AND_MEAN": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "DREAM3DNX_OPTIONAL_SUFFIX": {
+          "type": "STRING",
+          "value": ""
+        }
+      }
+    },
+    {
+      "name": "Open-x64-Release",
+      "inherits": "x64",
+      "displayName": "Open x64 Release",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-Open-Release-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },
+        "DREAM3D_ENABLE_DEVELOPER_BUILD": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "DREAM3D_ENABLE_UPDATE_CHECK": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "DREAM3D_RELATIVE_PATH_CHECK": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "DREAM3D_ENABLE_VISUALIZATION": {
+          "type": "BOOL",
+          "value": "OFF"
+        }
+      }
+    },
+    {
+      "name": "arm64",
+      "inherits": "default-all",
+      "displayName": "arm64",
+      "description": "arm64 Arch",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-DREAM3DNX-arm64",
+      "hidden": true,
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "arm64-osx-v11"
+        },
+        "VCPKG_INSTALLED_DIR": {
+          "type": "STRING",
+          "value": "${sourceDir}/../vcpkg-installed-arm64"
+        }
+      }
+    },
+    {
+      "name": "NX-arm64-Debug",
+      "inherits": "arm64",
+      "displayName": "NX-arm64-Debug",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-NX-arm64-Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        }
+      }
+    },
+    {
+      "name": "NX-arm64-Release",
+      "inherits": "arm64",
+      "displayName": "NX-arm64-Release",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-NX-arm64-Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },
+        "SIMPLNX_PY_GENERATE_PYI": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "NX-arm64-ooc-Release",
+      "inherits": "arm64",
+      "displayName": "NX-arm64-ooc-Release",
+      "description": "Build configuration for macOS/ARM64/Out-Of-Core/Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-NX-arm64-ooc-Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },        
+        "VCPKG_MANIFEST_FEATURES": {
+          "type": "STRING",
+          "value": "python;tests;parallel;itk;ebsd;compressors"
+        },
+        "SIMPLNX_ENABLE_COMPRESSORS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "FileStore;SimplnxReview"
+        },
+        "SIMPLNX_FORCE_OUT_OF_CORE_DATA": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "NX-arm64-ooc-Debug",
+      "inherits": "arm64",
+      "displayName": "NX-arm64-ooc-Debug",
+      "description": "Build configuration for macOS/ARM64/Out-Of-Core/Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-NX-arm64-ooc-Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        },        
+        "VCPKG_MANIFEST_FEATURES": {
+          "type": "STRING",
+          "value": "python;tests;parallel;itk;ebsd;compressors"
+        },
+        "SIMPLNX_ENABLE_COMPRESSORS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "FileStore;SimplnxReview"
+        },
+        "SIMPLNX_FORCE_OUT_OF_CORE_DATA": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "AFRL-x64-Debug",
+      "inherits": "NX-x64-Debug",
+      "displayName": "AFRL NX-x64 Debug",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-AFRL-x64-Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "AFRLDistributionC;CRADA3DSystems;FileStore;SimplnxReview"
+        }
+      }
+    },
+    {
+      "name": "AFRL-x64-Release",
+      "inherits": "NX-x64-Release",
+      "displayName": "AFRL NX-x64 Release",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-AFRL-x64-Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "AFRLDistributionC;CRADA3DSystems;FileStore;SimplnxReview"
+        },
+        "DREAM3D_ENABLE_VISUALIZATION": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "AFRL-arm64-Debug",
+      "inherits": "arm64",
+      "displayName": "AFRL-arm64-Debug",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-AFRL-arm64-Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "AFRLDistributionC;CRADA3DSystems;SimplnxReview"
+        }
+      }
+    },
+    {
+      "name": "AFRL-arm64-Release",
+      "inherits": "arm64",
+      "displayName": "AFRL-arm64-Release",
+      "description": "Build configuration for macOS",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/simplnx-AFRL-arm64-Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "AFRLDistributionC;CRADA3DSystems;SimplnxReview"
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "NX-x64-Debug [BUILD]",
+      "displayName": "NX-x64-Debug",
+      "description": "NX-x64-Debug",
+      "configurePreset": "NX-x64-Debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "NX-x64-Release [BUILD]",
+      "displayName": "NX-x64-Release",
+      "description": "NX-x64-Release",
+      "configurePreset": "NX-x64-Release",
+      "configuration": "Release"
+    },
+    {
+      "name": "NX-arm64-Debug [BUILD]",
+      "displayName": "NX-arm64-Debug",
+      "description": "NX-arm64-Debug",
+      "configurePreset": "NX-arm64-Debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "NX-arm64-Release [BUILD]",
+      "displayName": "NX-arm64-Release",
+      "description": "NX-arm64-Release",
+      "configurePreset": "NX-arm64-Release",
+      "configuration": "Release"
+    },
+    {
+      "name": "AFRL-arm64-Debug [BUILD]",
+      "displayName": "AFRL-arm64-Debug",
+      "description": "AFRL-arm64-Debug",
+      "configurePreset": "AFRL-arm64-Debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "AFRL-arm64-Release [BUILD]",
+      "displayName": "AFRL-arm64-Release",
+      "description": "AFRL-arm64-Release",
+      "configurePreset": "AFRL-arm64-Release",
+      "configuration": "Release"
+    },
+    {
+      "name": "NX-arm64-ooc-Release [BUILD]",
+      "displayName": "NX-arm64-ooc-Release",
+      "description": "NX-arm64-ooc-Release",
+      "configurePreset": "NX-arm64-ooc-Release",
+      "configuration": "Release"
+    },
+    {
+      "name": "NX-arm64-ooc-Debug [BUILD]",
+      "displayName": "NX-arm64-ooc-Debug",
+      "description": "NX-arm64-ooc-Debug",
+      "configurePreset": "NX-arm64-ooc-Debug",
+      "configuration": "Debug"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "NX-x64-Release-test",
+      "displayName": "NX-x64-Release",
+      "description": "CTest configuration for NX-x64-Release",
+      "configurePreset": "NX-x64-Release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

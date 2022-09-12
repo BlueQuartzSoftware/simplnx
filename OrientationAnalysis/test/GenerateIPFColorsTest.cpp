@@ -80,7 +80,7 @@ TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][Gener
     args.insertOrAssign(GenerateIPFColorsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellPhasesArrayPath));
     args.insertOrAssign(GenerateIPFColorsFilter::k_GoodVoxelsPath_Key, std::make_any<DataPath>(goodVoxelsPath));
     args.insertOrAssign(GenerateIPFColorsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresArrayPath));
-    args.insertOrAssign(GenerateIPFColorsFilter::k_CellIPFColorsArrayName_Key, std::make_any<DataPath>(cellIPFColorsArrayName));
+    args.insertOrAssign(GenerateIPFColorsFilter::k_CellIPFColorsArrayName_Key, std::make_any<std::string>(Constants::k_OutputIPFColors));
 
     REQUIRE(dataStructure.getData(goodVoxelsPath) != nullptr);
     REQUIRE(dataStructure.getData(cellEulerAnglesPath) != nullptr);

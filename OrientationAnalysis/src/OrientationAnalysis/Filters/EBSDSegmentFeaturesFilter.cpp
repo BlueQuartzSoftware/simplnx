@@ -2,12 +2,12 @@
 
 #include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/AbstractGeometryGrid.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
@@ -79,10 +79,10 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{complex::DataType::uint32}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "", "FeatureIds"));
   params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellFeatureAttributeMatrixName_Key, "Cell Feature Attribute Matrix", "", DataPath({"CellFeatureData"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ActiveArrayName_Key, "Active", "", DataPath({"Active"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellFeatureAttributeMatrixName_Key, "Cell Feature Attribute Matrix", "", "CellFeatureData"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayName_Key, "Active", "", "Active"));
 
   return params;
 }
@@ -97,13 +97,9 @@ IFilter::UniquePointer EBSDSegmentFeaturesFilter::clone() const
 IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel) const
 {
-  //  auto pMisorientationToleranceValue = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   auto pQuatsArrayPathValue = args.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = args.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = args.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  //  auto pFeatureIdsArrayNameValue = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
-  auto pCellFeatureAttributeMatrixNameValue = args.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
-  //  auto pActiveArrayNameValue = filterArgs.value<DataPath>(k_ActiveArrayName_Key);
 
   // Validate the tolerance != 0
   auto tolerance = args.value<float32>(k_MisorientationTolerance_Key);
@@ -119,15 +115,17 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_IncorrectInputArray, "Crystal Structures Input Array must be a 1 component Int32 array"}})};
   }
 
-  auto featureIdsPath = args.value<DataPath>(k_FeatureIdsArrayName_Key);
-  auto activeArrayPath = args.value<DataPath>(k_ActiveArrayName_Key);
-
   // Validate the Grid Geometry
   auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
-  if(dataStructure.getDataAs<AbstractGeometryGrid>(gridGeomPath) == nullptr)
+  const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
+  if(inputGridGeom == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, fmt::format("A Grid Geometry is required for {}", humanName())}})};
   }
+  DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
+  auto featureIdsPath = inputCellDataPath.createChildPath(args.value<std::string>(k_FeatureIdsArrayName_Key));
+  auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(args.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
+  auto activeArrayPath = pCellFeatureAttributeMatrixNameValue.createChildPath(args.value<std::string>(k_ActiveArrayName_Key));
 
   std::vector<DataPath> dataPaths;
 
@@ -173,7 +171,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   }
 
   // Create output DataStructure Items
-  auto createFeatureGroupAction = std::make_unique<CreateDataGroupAction>(pCellFeatureAttributeMatrixNameValue);
+  auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(pCellFeatureAttributeMatrixNameValue, std::vector<usize>{1});
   auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activeArrayPath);
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, quats.getIDataStore()->getTupleShape(), std::vector<usize>{1}, featureIdsPath);
 
@@ -200,9 +198,10 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
-  inputValues.cellFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
-  inputValues.activeArrayPath = filterArgs.value<DataPath>(k_ActiveArrayName_Key);
+  auto cellDataAMPath = dataStructure.getDataAs<IGridGeometry>(inputValues.gridGeomPath)->getCellDataPath();
+  inputValues.featureIdsArrayPath = cellDataAMPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  inputValues.cellFeatureAttributeMatrixPath = inputValues.gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
+  inputValues.activeArrayPath = inputValues.cellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
 
   // Let the Algorithm instance do the work
   return EBSDSegmentFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();

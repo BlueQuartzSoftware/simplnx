@@ -16,7 +16,8 @@ using namespace complex;
 
 namespace
 {
-const std::string k_MisorientationListArrayName("MisorientationList");
+const std::string k_MisorientationListArrayName_Exemplar("MisorientationList");
+const std::string k_MisorientationListArrayName("CalculatedMisorientationList");
 const std::string k_NeighborListArrayName("NeighborList");
 } // namespace
 
@@ -42,10 +43,10 @@ TEST_CASE("OrientationAnalysis::FindMisorientationsFilter", "[OrientationAnalysi
     args.insertOrAssign(FindMisorientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsDataPath));
     args.insertOrAssign(FindMisorientationsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesDataPath));
     args.insertOrAssign(FindMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-    args.insertOrAssign(FindMisorientationsFilter::k_MisorientationListArrayName_Key, std::make_any<DataPath>({k_MisorientationListArrayName}));
+    args.insertOrAssign(FindMisorientationsFilter::k_MisorientationListArrayName_Key, std::make_any<std::string>(k_MisorientationListArrayName));
 
     args.insertOrAssign(FindMisorientationsFilter::k_FindAvgMisors_Key, std::make_any<bool>(false));
-    args.insertOrAssign(FindMisorientationsFilter::k_AvgMisorientationsArrayName_Key, std::make_any<DataPath>(DataPath{}));
+    // args.insertOrAssign(FindMisorientationsFilter::k_AvgMisorientationsArrayName_Key, std::make_any<std::string>("")); //use default value
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -58,13 +59,13 @@ TEST_CASE("OrientationAnalysis::FindMisorientationsFilter", "[OrientationAnalysi
 
   // Compare the k_MisorientationList output with those precalculated from the file
   {
-    const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, k_MisorientationListArrayName});
-    const DataPath calculatedPath({k_MisorientationListArrayName});
+    const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, k_MisorientationListArrayName_Exemplar});
+    const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_MisorientationListArrayName});
     UnitTest::CompareNeighborLists<float>(dataStructure, exemplarPath, calculatedPath);
   }
 
   // Write the DataStructure out to the file system
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
 }
 
 // TODO: needs to be implemented. This will need the input .dream3d file to be regenerated with the missing data generated using DREAM3D 6.6

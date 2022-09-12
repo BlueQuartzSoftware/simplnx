@@ -19,11 +19,9 @@
 using namespace complex;
 using namespace complex::types;
 
-const bool m_createNewAM = false;
 const std::string m_GeomName = "VertexGeom";
 const std::string m_DataArrayName = "DataArray";
 const std::string m_outputArrayPrefix = "grayTestImage";
-const std::string m_outputAMName = "grayTestAM";
 const size_t numTuples = 16;
 const std::vector<std::vector<uint8_t>> testColors{
     {0, 0, 0},       // black
@@ -250,7 +248,7 @@ static VertexGeom* createVertexGeometry(DataStructure& dataStructure, const std:
 {
   VertexGeom* vertexGeo = VertexGeom::Create(dataStructure, "VertexGeom");
   auto* vertexArray = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", tDims, cDims, vertexGeo->getId());
-  vertexGeo->setVertices(vertexArray);
+  vertexGeo->setVertices(*vertexArray);
   auto& vertices = vertexArray->getDataStoreRef();
   for(usize i = 0; i < numTuples; ++i)
   {
@@ -265,10 +263,6 @@ static VertexGeom* createVertexGeometry(DataStructure& dataStructure, const std:
 void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructure)
 {
   DataPath arrayName({m_GeomName});
-  if(m_createNewAM)
-  {
-    arrayName = arrayName.createChildPath(m_outputAMName);
-  }
   arrayName = arrayName.createChildPath(m_outputArrayPrefix + m_DataArrayName);
   auto* testArray = dataStructure.getDataAs<UInt8Array>(arrayName);
   REQUIRE(testArray != nullptr);
@@ -306,8 +300,6 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(colorWeights));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorChannel_Key, std::make_any<int32>(colorChannel));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_InputDataArrayVector_Key, std::make_any<MultiArraySelectionParameter::ValueType>(daps));
-  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_CreateNewAttributeMatrix_Key, std::make_any<bool>(m_createNewAM));
-  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_OutputAttributeMatrixName_Key, std::make_any<DataGroupCreationParameter::ValueType>(DataPath({m_GeomName, m_outputAMName})));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>(m_outputArrayPrefix));
 
   // Preflight the filter and check result

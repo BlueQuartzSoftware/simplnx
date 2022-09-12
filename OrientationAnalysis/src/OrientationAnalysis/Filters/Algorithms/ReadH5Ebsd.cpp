@@ -463,7 +463,7 @@ Result<> ReadH5Ebsd::operator()()
       executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {
-        return {MakeErrorResult(-50013, fmt::format("Error executing {}", filter->humanName()))};
+        return {{nonstd::make_unexpected(executeResult.result.errors())}};
       }
 
       /*************************************************************************

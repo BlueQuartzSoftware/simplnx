@@ -3,9 +3,9 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/FindSchmids.hpp"
@@ -68,11 +68,11 @@ Parameters FindSchmidsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{complex::DataType::uint32}));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SchmidsArrayName_Key, "Schmids", "", DataPath({"CellFeatureData", "Schmids"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SlipSystemsArrayName_Key, "Slip Systems", "", DataPath({"CellFeatureData", "SlipSystems"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PolesArrayName_Key, "Poles", "", DataPath({"CellFeatureData", "Poles"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_PhisArrayName_Key, "Phis", "", DataPath({"CellFeatureData", "Schmid_Phis"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_LambdasArrayName_Key, "Lambdas", "", DataPath({"CellFeatureData", "Schmid_Lambdas"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SchmidsArrayName_Key, "Schmids", "", "Schmids"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SlipSystemsArrayName_Key, "Slip Systems", "", "SlipSystems"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_PolesArrayName_Key, "Poles", "", "Poles"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_PhisArrayName_Key, "Phis", "", "Schmid_Phis"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_LambdasArrayName_Key, "Lambdas", "", "Schmid_Lambdas"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_StoreAngleComponents_Key, k_PhisArrayName_Key, true);
   params.linkParameters(k_StoreAngleComponents_Key, k_LambdasArrayName_Key, true);
@@ -100,11 +100,12 @@ IFilter::PreflightResult FindSchmidsFilter::preflightImpl(const DataStructure& d
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pSchmidsArrayNameValue = filterArgs.value<DataPath>(k_SchmidsArrayName_Key);
-  auto pSlipSystemsArrayNameValue = filterArgs.value<DataPath>(k_SlipSystemsArrayName_Key);
-  auto pPolesArrayNameValue = filterArgs.value<DataPath>(k_PolesArrayName_Key);
-  auto pPhisArrayNameValue = filterArgs.value<DataPath>(k_PhisArrayName_Key);
-  auto pLambdasArrayNameValue = filterArgs.value<DataPath>(k_LambdasArrayName_Key);
+  DataPath cellFeatDataPath = pFeaturePhasesArrayPathValue.getParent();
+  auto pSchmidsArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_SchmidsArrayName_Key));
+  auto pSlipSystemsArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_SlipSystemsArrayName_Key));
+  auto pPolesArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_PolesArrayName_Key));
+  auto pPhisArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_PhisArrayName_Key));
+  auto pLambdasArrayNameValue = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_LambdasArrayName_Key));
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -120,32 +121,33 @@ IFilter::PreflightResult FindSchmidsFilter::preflightImpl(const DataStructure& d
   DataPath featureDataGroup = pFeaturePhasesArrayPathValue.getParent();
 
   const Int32Array& phases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
+  auto tupleShape = phases.getIDataStore()->getTupleShape();
 
   // Create output Schmids Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, phases.getIDataStore()->getTupleShape(), std::vector<usize>{1}, pSchmidsArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pSchmidsArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
   // Create output SlipSystems Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, phases.getIDataStore()->getTupleShape(), std::vector<usize>{1}, pSlipSystemsArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{1}, pSlipSystemsArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
   // Create output SlipSystems Array
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, phases.getIDataStore()->getTupleShape(), std::vector<usize>{3}, pPolesArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{3}, pPolesArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
   // Create output SlipSystems Array
   if(pStoreAngleComponentsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, phases.getIDataStore()->getTupleShape(), std::vector<usize>{1}, pPhisArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pPhisArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
   // Create output Lambdas Array
   if(pStoreAngleComponentsValue)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, phases.getIDataStore()->getTupleShape(), std::vector<usize>{1}, pLambdasArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, pLambdasArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
@@ -187,11 +189,12 @@ Result<> FindSchmidsFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.SchmidsArrayName = filterArgs.value<DataPath>(k_SchmidsArrayName_Key);
-  inputValues.SlipSystemsArrayName = filterArgs.value<DataPath>(k_SlipSystemsArrayName_Key);
-  inputValues.PolesArrayName = filterArgs.value<DataPath>(k_PolesArrayName_Key);
-  inputValues.PhisArrayName = filterArgs.value<DataPath>(k_PhisArrayName_Key);
-  inputValues.LambdasArrayName = filterArgs.value<DataPath>(k_LambdasArrayName_Key);
+  DataPath cellFeatDataPath = inputValues.FeaturePhasesArrayPath.getParent();
+  inputValues.SchmidsArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_SchmidsArrayName_Key));
+  inputValues.SlipSystemsArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_SlipSystemsArrayName_Key));
+  inputValues.PolesArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_PolesArrayName_Key));
+  inputValues.PhisArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_PhisArrayName_Key));
+  inputValues.LambdasArrayName = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_LambdasArrayName_Key));
 
   return FindSchmids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

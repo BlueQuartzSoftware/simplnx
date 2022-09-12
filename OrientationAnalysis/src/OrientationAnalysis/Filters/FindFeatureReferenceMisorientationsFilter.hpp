@@ -33,6 +33,7 @@ public:
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
   static inline constexpr StringLiteral k_FeatureReferenceMisorientationsArrayName_Key = "FeatureReferenceMisorientationsArrayName";
   static inline constexpr StringLiteral k_FeatureAvgMisorientationsArrayName_Key = "FeatureAvgMisorientationsArrayName";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "CellFeatureAttributeMatrixPath";
 
   /**
    * @brief Returns the name of the filter.

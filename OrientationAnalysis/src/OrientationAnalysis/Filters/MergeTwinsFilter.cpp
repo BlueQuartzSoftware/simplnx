@@ -6,11 +6,11 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
@@ -79,12 +79,12 @@ Parameters MergeTwinsFilter::parameters() const
       std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32}));
 
   params.insertSeparator(Parameters::Separator{"Created Element Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellParentIdsArrayName_Key, "Parent Ids", "", DataPath({"ParentIds"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellParentIdsArrayName_Key, "Parent Ids", "", "ParentIds"));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewCellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "", DataPath({"NewGrain Data"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureParentIdsArrayName_Key, "Parent Ids", "", DataPath({"ParentIds"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ActiveArrayName_Key, "Active", "", DataPath({"Active"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NewCellFeatureAttributeMatrixName_Key, "Feature Attribute Matrix", "", "NewGrain Data"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureParentIdsArrayName_Key, "Parent Ids", "", "ParentIds"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ActiveArrayName_Key, "Active", "", "Active"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
 
   return params;
@@ -107,10 +107,11 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pCellParentIdsArrayNameValue = filterArgs.value<DataPath>(k_CellParentIdsArrayName_Key);
-  auto pNewCellFeatureAttributeMatrixNameValue = filterArgs.value<DataPath>(k_NewCellFeatureAttributeMatrixName_Key);
-  auto pFeatureParentIdsArrayNameValue = filterArgs.value<DataPath>(k_FeatureParentIdsArrayName_Key);
-  auto pActiveArrayNameValue = filterArgs.value<DataPath>(k_ActiveArrayName_Key);
+  DataPath cellFeatureDataPath = pFeaturePhasesArrayPathValue.getParent();
+  auto pCellParentIdsArrayNameValue = pFeatureIdsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
+  auto pNewCellFeatureAttributeMatrixNameValue = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewCellFeatureAttributeMatrixName_Key));
+  auto pFeatureParentIdsArrayNameValue = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
+  auto pActiveArrayNameValue = pNewCellFeatureAttributeMatrixNameValue.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
@@ -133,8 +134,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   }
 
   std::vector<size_t> tDims(1, 0);
-  auto newCellFeatureAction =
-      std::make_unique<CreateDataGroupAction>(pNewCellFeatureAttributeMatrixNameValue); // TODO: this should probably eventually be an AttributeMatrix with tDims as the tuplse shape
+  auto newCellFeatureAction = std::make_unique<CreateAttributeMatrixAction>(pNewCellFeatureAttributeMatrixNameValue, tDims);
   resultOutputActions.value().actions.push_back(std::move(newCellFeatureAction));
 
   std::vector<DataPath> dataArrayPaths;
@@ -200,10 +200,11 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.CellParentIdsArrayName = filterArgs.value<DataPath>(k_CellParentIdsArrayName_Key);
-  inputValues.NewCellFeatureAttributeMatrixName = filterArgs.value<DataPath>(k_NewCellFeatureAttributeMatrixName_Key);
-  inputValues.FeatureParentIdsArrayName = filterArgs.value<DataPath>(k_FeatureParentIdsArrayName_Key);
-  inputValues.ActiveArrayName = filterArgs.value<DataPath>(k_ActiveArrayName_Key);
+  DataPath cellFeatureDataPath = inputValues.FeaturePhasesArrayPath.getParent();
+  inputValues.CellParentIdsArrayName = inputValues.FeatureIdsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_CellParentIdsArrayName_Key));
+  inputValues.NewCellFeatureAttributeMatrixName = cellFeatureDataPath.getParent().createChildPath(filterArgs.value<std::string>(k_NewCellFeatureAttributeMatrixName_Key));
+  inputValues.FeatureParentIdsArrayName = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
+  inputValues.ActiveArrayName = inputValues.NewCellFeatureAttributeMatrixName.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
 
   return MergeTwins(dataStructure, messageHandler, shouldCancel, &inputValues, &groupInputValues)();
 }

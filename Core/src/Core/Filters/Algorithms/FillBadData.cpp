@@ -3,6 +3,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #ifdef COMPLEX_ENABLE_MULTICORE
@@ -227,13 +228,11 @@ Result<> FillBadData::operator()()
   int32_t most = 0;
   std::vector<int32_t> featureCount(numfeatures + 1, 0);
 
-  auto cellDataGroupPath = m_InputValues->cellDataGroupPath;
-  auto& cellDataGroup = m_DataStructure.getDataRefAs<DataGroup>(cellDataGroupPath);
+  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, m_InputValues->cellDataGroupPath, DataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
   std::vector<DataPath> selectedCellArrays;
-  // Create the vector of selected cell DataPaths
-  for(DataGroup::Iterator child = cellDataGroup.begin(); child != cellDataGroup.end(); ++child)
+  if(allChildArrays.has_value())
   {
-    selectedCellArrays.push_back(m_InputValues->cellDataGroupPath.createChildPath(child->second->getName()));
+    selectedCellArrays = allChildArrays.value();
   }
 
 #ifdef COMPLEX_ENABLE_MULTICORE

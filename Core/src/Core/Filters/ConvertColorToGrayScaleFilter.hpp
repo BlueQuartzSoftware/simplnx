@@ -28,8 +28,6 @@ public:
   static inline constexpr StringLiteral k_ColorWeights_Key = "ColorWeights";
   static inline constexpr StringLiteral k_ColorChannel_Key = "ColorChannel";
   static inline constexpr StringLiteral k_InputDataArrayVector_Key = "InputDataArrayVector";
-  static inline constexpr StringLiteral k_CreateNewAttributeMatrix_Key = "CreateNewAttributeMatrix";
-  static inline constexpr StringLiteral k_OutputAttributeMatrixName_Key = "OutputAttributeMatrixName";
   static inline constexpr StringLiteral k_OutputArrayPrefix_Key = "OutputArrayPrefix";
 
   /**

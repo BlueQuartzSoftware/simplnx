@@ -41,8 +41,8 @@ TEST_CASE("Core::ResampleImageGeom: Instantiation and Parameter Check", "[Sampli
   // Create default Parameters for the filter.
   args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedCellDataGroup_Key, std::make_any<DataPath>(DataPath{}));
+  // args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ResampleImageGeomFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ResampleImageGeomFilter::k_NewDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));

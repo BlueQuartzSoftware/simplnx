@@ -4,9 +4,9 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -60,15 +60,14 @@ Parameters ErodeDilateBadDataFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_ZDirOn_Key, "Z Direction", "", false));
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "",
                                                                MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}, MultiArraySelectionParameter::AllowedTypes{}));
 
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedFeatureDataGroup_Key, "Feature Data Group", "Data Group that contains *only* Feature data", DataPath{}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedFeatureDataGroup_Key, "Feature Data Attribute Matrix", "Feature data Attribute Matrix", DataPath{}));
 
   return params;
 }

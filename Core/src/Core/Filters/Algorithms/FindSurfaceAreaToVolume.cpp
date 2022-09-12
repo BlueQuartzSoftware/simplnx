@@ -61,9 +61,8 @@ Result<> FindSurfaceAreaToVolume::operator()()
       if(largestFeature >= numFeatures)
       {
         mismatchedFeatures = true;
-        errorMessage = fmt::format("The given FeatureIds Array '{}' has a value that is larger than allowed by the given Feature Attribute Matrix '{}'.\n {} >= {}", m_InputValues->FeatureIdsArrayPath.toString(),
-                    m_InputValues->NumCellsArrayPath.toString(), largestFeature, numFeatures);
-
+        errorMessage = fmt::format("The given FeatureIds Array '{}' has a value that is larger than allowed by the given Feature Attribute Matrix '{}'.\n {} >= {}",
+                                   m_InputValues->FeatureIdsArrayPath.toString(), m_InputValues->NumCellsArrayPath.toString(), largestFeature, numFeatures);
       }
     }
   }

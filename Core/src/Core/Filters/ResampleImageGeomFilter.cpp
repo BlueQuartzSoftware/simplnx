@@ -3,14 +3,15 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -77,20 +78,16 @@ Parameters ResampleImageGeomFilter::parameters() const
   //  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Remove Original Image Geometry Group", "", true));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedCellDataGroup_Key, "Cell Data Group", "Data Group that contains *only* cell data", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
-#if 0
   params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Renumber feature Ids to ensure continuous values starting at 0.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Data Group", "", DataPath({"Cell Feature Data"})));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "", DataPath({"Cell Feature Data"})));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrixPath_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureIdsArrayPath_Key, true);
-#endif
 
   params.insertSeparator(Parameters::Separator{"Created Image Geometry"});
   params.insert(
@@ -120,19 +117,12 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
 
   auto selectedImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(selectedImageGeomPath);
-  auto cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
+  const auto* cellDataGroup = selectedImageGeom.getCellData();
+  auto cellDataGroupPath = selectedImageGeomPath.createChildPath(cellDataGroup->getName());
 
   if(pSpacingValue[0] < 0.0F || pSpacingValue[1] < 0.0F || pSpacingValue[2] < 0.0F)
   {
     return {MakeErrorResult<OutputActions>(-11500, fmt::format("Input Spacing has a negative value. {}, {}, {}", pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
-  }
-  if(pRenumberFeaturesValue)
-  {
-    const auto* featureIdsArray = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
-    if(featureIdsArray == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-11502, fmt::format("FeatureIds array is not of type Int32"))};
-    }
   }
 
   // Declare the preflightResult variable that will be populated with the results
@@ -171,9 +161,9 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   }
 
   auto createdImageGeomPath = filterArgs.value<DataPath>(k_NewDataContainerPath_Key);
-  resultOutputActions.value().actions.push_back(std::make_unique<CreateImageGeometryAction>(createdImageGeomPath, CreateImageGeometryAction::DimensionType{m_XP, m_YP, m_ZP},
-                                                                                            CreateImageGeometryAction::SpacingType{oldOrigin[0], oldOrigin[1], oldOrigin[2]},
-                                                                                            CreateImageGeometryAction::OriginType{pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]}));
+  resultOutputActions.value().actions.push_back(std::make_unique<CreateImageGeometryAction>(
+      createdImageGeomPath, CreateImageGeometryAction::DimensionType{m_XP, m_YP, m_ZP}, CreateImageGeometryAction::SpacingType{oldOrigin[0], oldOrigin[1], oldOrigin[2]},
+      CreateImageGeometryAction::OriginType{pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]}, ImageGeom::k_CellDataName));
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
@@ -181,13 +171,9 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   preflightUpdatedValues.push_back({"Input Geometry Info", ::GenerateGeometryInfo(oldDims, oldSpacing, oldOrigin)});
   preflightUpdatedValues.push_back(
       {"Created Image Geometry Info", ::GenerateGeometryInfo(complex::SizeVec3(m_XP, m_YP, m_ZP), complex::FloatVec3(pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]), oldOrigin)});
-  const auto* cellDataGroup = dataStructure.getDataAs<DataGroup>(cellDataGroupPath);
   std::vector<std::string> cellDataArrayNames = cellDataGroup->getDataMap().getNames();
 
   usize originalImageSize = std::accumulate(oldDims.begin(), oldDims.end(), static_cast<usize>(1), std::multiplies<>{});
-  std::vector<DataPath> cellDataPaths;
-  bool createGroup = true;
-
   for(const auto& cellArrayPath : cellDataArrayNames)
   {
     const auto& cellArray = dataStructure.getDataRefAs<IDataArray>(cellDataGroupPath.createChildPath(cellArrayPath));
@@ -197,23 +183,49 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
       return {MakeErrorResult<OutputActions>(
           -1, fmt::format("Selected Array '{}' was size {}, but Image Geometry '{}' expects size {}", cellArray.getName(), arraySize, selectedImageGeom.getName(), originalImageSize))};
     }
-    DataPath createdArrayPath = createdImageGeomPath.createChildPath(cellDataGroupPath.getTargetName()).createChildPath(cellArray.getName());
-
-    if(createGroup)
-    {
-      resultOutputActions.value().actions.push_back(std::make_unique<CreateDataGroupAction>(createdArrayPath.getParent()));
-      createGroup = false;
-    }
+    DataPath createdArrayPath = createdImageGeomPath.createChildPath(ImageGeom::k_CellDataName).createChildPath(cellArray.getName());
 
     resultOutputActions.value().actions.push_back(
         std::make_unique<CreateArrayAction>(cellArray.getDataType(), std::vector<usize>{m_ZP, m_YP, m_XP}, cellArray.getIDataStoreRef().getComponentShape(), createdArrayPath));
-    cellDataPaths.push_back(cellDataGroupPath.createChildPath(cellArrayPath));
   }
 
-  // Validate that all the arrays in the DataGroup have the same number of tuples.
-  if(!dataStructure.validateNumberOfTuples(cellDataPaths))
+  if(pRenumberFeaturesValue)
   {
-    return {MakeErrorResult<OutputActions>(-11501, "Tuple count not consistent between input arrays.")};
+    const auto* featureIdsArray = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+    if(featureIdsArray == nullptr)
+    {
+      return {MakeErrorResult<OutputActions>(-11502, fmt::format("FeatureIds array is not of type Int32"))};
+    }
+
+    const auto* cellFeatureAM = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
+    if(cellFeatureAM == nullptr)
+    {
+      return {MakeErrorResult<OutputActions>(-11503, fmt::format("Cannot find selected cell feature Attribute Matrix at path '{}'", pCellFeatureAttributeMatrixPathValue.toString()))};
+    }
+    std::string warningMsg = "";
+    DataPath destCellFeatureAMPath = createdImageGeomPath.createChildPath(pCellFeatureAttributeMatrixPathValue.getTargetName());
+    AttributeMatrix::ShapeType tDims = cellFeatureAM->getShape();
+    resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
+    for(const auto& [id, object] : *cellFeatureAM)
+    {
+      if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
+      {
+        DataType dataType = srcArray->getDataType();
+        IDataStore::ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
+        DataPath dataArrayPath = destCellFeatureAMPath.createChildPath(srcArray->getName());
+        resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
+      }
+      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
+      {
+        warningMsg += "\n" + pCellFeatureAttributeMatrixPathValue.toString() + "/" + srcNeighborListArray->getName();
+      }
+    }
+    if(!warningMsg.empty())
+    {
+      resultOutputActions.m_Warnings.push_back(
+          Warning({-11505, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}",
+                                       pFeatureIdsArrayPathValue.toString(), warningMsg)}));
+    }
   }
 
   if(pRemoveOriginalGeometry)
@@ -234,7 +246,8 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
 
   inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  inputValues.cellDataGroupPath = filterArgs.value<DataPath>(k_SelectedCellDataGroup_Key);
+  const auto* cellDataGroup = dataStructure.getDataRefAs<ImageGeom>(inputValues.inputImageGeometry).getCellData();
+  inputValues.cellDataGroupPath = inputValues.inputImageGeometry.createChildPath(cellDataGroup->getName());
 
   inputValues.renumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
   inputValues.featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);

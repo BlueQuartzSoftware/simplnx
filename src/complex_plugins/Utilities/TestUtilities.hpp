@@ -175,7 +175,7 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
 
 inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath attributeMatrix, const std::string& exemplarDataContainerName)
 {
-  auto& cellDataGroup = dataStructure.getDataRefAs<DataGroup>(attributeMatrix);
+  auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
   std::vector<DataPath> selectedCellArrays;
 
   // Create the vector of selected cell DataPaths

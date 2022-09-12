@@ -2,11 +2,13 @@
 
 #include "Core/Filters/Algorithms/FindShapes.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -49,20 +51,18 @@ Parameters FindShapesFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{AbstractGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatureAttributeMatrixName_Key, "Cell Feature Attribute Matrix", "", DataPath({"Feature Data"})));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Feature Centroids", "", DataPath({"Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Omega3sArrayName_Key, "Omega3s", "", DataPath({"Omega3s"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_AxisLengthsArrayName_Key, "Axis Lengths", "", DataPath({"AxisLengths"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_AxisEulerAnglesArrayName_Key, "Axis Euler Angles", "", DataPath({"AxisEulerAngles"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_AspectRatiosArrayName_Key, "Aspect Ratios", "", DataPath({"AspectRatios"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_VolumesArrayName_Key, "Volumes", "", DataPath({"Shape Volumes"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_Omega3sArrayName_Key, "Omega3s", "", "Omega3s"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AxisLengthsArrayName_Key, "Axis Lengths", "", "AxisLengths"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AxisEulerAnglesArrayName_Key, "Axis Euler Angles", "", "AxisEulerAngles"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AspectRatiosArrayName_Key, "Aspect Ratios", "", "AspectRatios"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesArrayName_Key, "Volumes", "", "Shape Volumes"));
 
   return params;
 }
@@ -78,13 +78,18 @@ IFilter::PreflightResult FindShapesFilter::preflightImpl(const DataStructure& da
                                                          const std::atomic_bool& shouldCancel) const
 {
   auto pFeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
   auto pCentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  auto pOmega3sArrayPath = filterArgs.value<DataPath>(k_Omega3sArrayName_Key);
-  auto pAxisLengthsArrayPath = filterArgs.value<DataPath>(k_AxisLengthsArrayName_Key);
-  auto pAxisEulerAnglesArrayPath = filterArgs.value<DataPath>(k_AxisEulerAnglesArrayName_Key);
-  auto pAspectRatiosArrayPath = filterArgs.value<DataPath>(k_AspectRatiosArrayName_Key);
-  auto pVolumesArrayPath = filterArgs.value<DataPath>(k_VolumesArrayName_Key);
+  auto pOmega3sArrayName = filterArgs.value<std::string>(k_Omega3sArrayName_Key);
+  auto pAxisLengthsArrayName = filterArgs.value<std::string>(k_AxisLengthsArrayName_Key);
+  auto pAxisEulerAnglesArrayName = filterArgs.value<std::string>(k_AxisEulerAnglesArrayName_Key);
+  auto pAspectRatiosArrayName = filterArgs.value<std::string>(k_AspectRatiosArrayName_Key);
+  auto pVolumesArrayName = filterArgs.value<std::string>(k_VolumesArrayName_Key);
+  auto featureAttrMatrixPath = pCentroidsArrayPath.getParent();
+  auto pOmega3sArrayPath = featureAttrMatrixPath.createChildPath(pOmega3sArrayName);
+  auto pAxisLengthsArrayPath = featureAttrMatrixPath.createChildPath(pAxisLengthsArrayName);
+  auto pAxisEulerAnglesArrayPath = featureAttrMatrixPath.createChildPath(pAxisEulerAnglesArrayName);
+  auto pAspectRatiosArrayPath = featureAttrMatrixPath.createChildPath(pAspectRatiosArrayName);
+  auto pVolumesArrayPath = featureAttrMatrixPath.createChildPath(pVolumesArrayName);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -103,14 +108,20 @@ IFilter::PreflightResult FindShapesFilter::preflightImpl(const DataStructure& da
   // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  const AttributeMatrix* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
+  if(featureAttrMatrix == nullptr)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-12801, fmt::format("Could not find selected cell feature Attibute Matrix at path '{}'", featureAttrMatrixPath.toString())}})};
+  }
+
   // Get the Centroids Feature Array and get its TupleShape
   const auto* centroids = dataStructure.getDataAs<Float32Array>(pCentroidsArrayPath);
   if(nullptr == centroids)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12801, "Centroids Feature Data Array is not of the correct type"}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-12802, "Centroids Feature Data Array is not of the correct type"}})};
   }
 
-  IDataStore::ShapeType tupleShape = centroids->getIDataStore()->getTupleShape();
+  IDataStore::ShapeType tupleShape = featureAttrMatrix->getShape();
 
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {
@@ -149,13 +160,18 @@ Result<> FindShapesFilter::executeImpl(DataStructure& dataStructure, const Argum
   FindShapesInputValues inputValues;
 
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.Omega3sArrayPath = filterArgs.value<DataPath>(k_Omega3sArrayName_Key);
-  inputValues.AxisLengthsArrayPath = filterArgs.value<DataPath>(k_AxisLengthsArrayName_Key);
-  inputValues.AxisEulerAnglesArrayPath = filterArgs.value<DataPath>(k_AxisEulerAnglesArrayName_Key);
-  inputValues.AspectRatiosArrayPath = filterArgs.value<DataPath>(k_AspectRatiosArrayName_Key);
-  inputValues.VolumesArrayPath = filterArgs.value<DataPath>(k_VolumesArrayName_Key);
+  inputValues.FeatureAttributeMatrixPath = inputValues.CentroidsArrayPath.getParent();
+  auto pOmega3sArrayName = filterArgs.value<std::string>(k_Omega3sArrayName_Key);
+  auto pAxisLengthsArrayName = filterArgs.value<std::string>(k_AxisLengthsArrayName_Key);
+  auto pAxisEulerAnglesArrayName = filterArgs.value<std::string>(k_AxisEulerAnglesArrayName_Key);
+  auto pAspectRatiosArrayName = filterArgs.value<std::string>(k_AspectRatiosArrayName_Key);
+  auto pVolumesArrayName = filterArgs.value<std::string>(k_VolumesArrayName_Key);
+  inputValues.Omega3sArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pOmega3sArrayName);
+  inputValues.AxisLengthsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAxisLengthsArrayName);
+  inputValues.AxisEulerAnglesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAxisEulerAnglesArrayName);
+  inputValues.AspectRatiosArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pAspectRatiosArrayName);
+  inputValues.VolumesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pVolumesArrayName);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   return FindShapes(dataStructure, messageHandler, shouldCancel, &inputValues)();

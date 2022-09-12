@@ -66,7 +66,7 @@ TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[Comp
 
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
-    auto& cellDataGroup = dataStructure.getDataRefAs<DataGroup>(k_CellFeatureAttributeMatrix);
+    auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(k_CellFeatureAttributeMatrix);
     std::vector<DataPath> selectedCellArrays;
 
     // Create the vector of selected cell DataPaths
