@@ -67,11 +67,11 @@ Parameters RawBinaryReaderFilter::parameters() const
                                                           FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Scalar Type", "Data type of the binary data", NumericType::int8));
 
-  DynamicTableParameter::ValueType dynamicTable{{{1}}, {"Dim 0"}, {"Value"}};
-  dynamicTable.setMinCols(1);
-  dynamicTable.setDynamicCols(true);
-  dynamicTable.setDynamicRows(false);
-  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions", "Slowest to Fastest Dimensions (ZYX for example)", dynamicTable));
+  DynamicTableInfo tableInfo;
+  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo{1, "Value {}"});
+  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Dim 0"}));
+  params.insert(
+      std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions", "Slowest to Fastest Dimensions (ZYX for example)", DynamicTableInfo::TableDataType{{{1.0}}}, tableInfo));
   params.insert(std::make_unique<UInt64Parameter>(k_NumberOfComponents_Key, "Number of Components", "The number of values at each tuple", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_Endian_Key, "Endian", "The endianness of the data", 0, ChoicesParameter::Choices{"Little", "Big"}));
   params.insert(std::make_unique<UInt64Parameter>(k_SkipHeaderBytes_Key, "Skip Header Bytes", "Number of bytes to skip before reading data", 0));
@@ -96,23 +96,18 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
   auto pNumberOfComponentsValue = filterArgs.value<uint64>(k_NumberOfComponents_Key);
   auto pSkipHeaderBytesValue = filterArgs.value<uint64>(k_SkipHeaderBytes_Key);
   auto pCreatedAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
-  auto pTupleDimsValue = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
+  auto pTupleDimsValue = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
   if(pNumberOfComponentsValue < 1)
   {
     return {MakeErrorResult<OutputActions>(k_RbrZeroComponentsError, "The number of components must be positive.")};
   }
 
-  DynamicTableData::TableDataType tableData = pTupleDimsValue.getTableData();
-  if(tableData.size() != 1)
+  const auto& rowData = pTupleDimsValue.at(0);
+  std::vector<usize> tupleDims;
+  for(auto floatValue : rowData)
   {
-    return {MakeErrorResult<OutputActions>(k_RbrTupleDimsError, fmt::format("Tuple Dimensions should be a single row of data. {} Rows were passed.", tableData.size()))};
-  }
-  std::vector<DynamicTableData::DataType> rowData = tableData[0];
-  std::vector<size_t> tupleDims;
-  for(const auto& floatValue : rowData)
-  {
-    tupleDims.emplace_back(static_cast<size_t>(floatValue));
+    tupleDims.push_back(static_cast<usize>(floatValue));
   }
 
   Result<OutputActions> resultOutputActions;

@@ -58,11 +58,12 @@ Parameters CreateDataArray::parameters() const
   Parameters params;
   params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Numeric Type", "Numeric Type of data to create", NumericType::int32));
   params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Number of Components", "Number of components", 1));
-  DynamicTableParameter::ValueType dynamicTable(1, 1, {"DIM"}, {""});
-  dynamicTable.setMinCols(1);
-  dynamicTable.setDynamicCols(true);
-  dynamicTable.setDynamicRows(false);
-  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Dimensions", dynamicTable));
+
+  DynamicTableInfo tableInfo;
+  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
+  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "DIM {}"));
+
+  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Dimensions", tableInfo));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));
   params.insert(std::make_unique<StringParameter>(k_InitilizationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
   return params;
@@ -78,10 +79,9 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
 {
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
   auto numComponents = filterArgs.value<uint64>(k_NumComps_Key);
-  // auto numTuples = filterArgs.value<uint64>(k_NumTuples_Key);
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
   auto initValue = filterArgs.value<std::string>(k_InitilizationValue_Key);
-  auto pTupleDimsValue = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
+  auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
   if(initValue.empty())
   {
@@ -94,18 +94,12 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
     return {ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
-  // Sanity check the values from the Dynamic Table Data
-  DynamicTableData::TableDataType tableData = pTupleDimsValue.getTableData();
-  if(tableData.size() != 1)
+  const auto& rowData = tableData.at(0);
+  std::vector<usize> tupleDims;
+  tupleDims.reserve(rowData.size());
+  for(auto floatValue : rowData)
   {
-    return {MakeErrorResult<OutputActions>(k_RbrTupleDimsError, fmt::format("Tuple Dimensions should be a single row of data. {} Rows were passed.", tableData.size()))};
-  }
-  const std::vector<DynamicTableData::DataType>& rowData = tableData[0];
-  std::vector<size_t> tupleDims;
-  tupleDims.reserve(rowData.size()); // Reserve (NOT RESIZE) the proper number of values in the vector
-  for(const auto& floatValue : rowData)
-  {
-    tupleDims.push_back(static_cast<size_t>(floatValue));
+    tupleDims.push_back(static_cast<usize>(floatValue));
   }
 
   OutputActions actions;

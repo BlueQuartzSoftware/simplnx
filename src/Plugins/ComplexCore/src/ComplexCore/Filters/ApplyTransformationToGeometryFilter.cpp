@@ -137,12 +137,11 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
-  DynamicTableParameter::ValueType dynamicTable{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, {"R0", "R1", "R2", "R3"}, {"C0", "C1", "C2", "C3"}};
-  dynamicTable.setMinCols(4);
-  dynamicTable.setMinRows(4);
-  dynamicTable.setDynamicCols(false);
-  dynamicTable.setDynamicRows(false);
-  params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "DynamicTableParameter", "DynamicTableParameter Example Help Text", dynamicTable));
+  DynamicTableInfo tableInfo;
+  tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo{{"C0", "C1", "C2", "C3"}});
+  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo{{"R0", "R1", "R2", "R3"}});
+
+  params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "DynamicTableParameter", "DynamicTableParameter Example Help Text", tableInfo));
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxisAngle_Key, "Rotation Axis-Angle (Degrees)", "", std::vector<float>{0.0F, 0.0F, 1.0F, 90.0F},
                                                          std::vector<std::string>{"X", "Y", "Z", "Angle"}));
@@ -226,13 +225,6 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     }
     break;
   }
-  case TransformType::ManualTransformMatrix: {
-    if(pManualTransformationMatrixValue.getNumberOfColumns() != 4 || pManualTransformationMatrixValue.getNumberOfRows() != 4)
-    {
-      return {MakeErrorResult<OutputActions>(-702, "Manually specified Transform Matrix is not 4x4. The Transform Matrix must be a 4x4 where the values are stored in ROW Major format")};
-    }
-    break;
-  }
   case TransformType::Rotation:
   case TransformType::Translation:
   case TransformType::Scale:
@@ -271,8 +263,12 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
     break;
   }
   case TransformType::ManualTransformMatrix: {
-    auto flattenedData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key).getFlattenedData();
-    m_TransformationMatrix = std::vector<float>(flattenedData.begin(), flattenedData.end());
+    auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key);
+    auto flattenedData = DynamicTableInfo::FlattenData(tableData);
+    for(usize i = 0; i < m_TransformationMatrix.size(); i++)
+    {
+      m_TransformationMatrix[i] = static_cast<float32>(flattenedData[i]);
+    }
     break;
   }
   case TransformType::Rotation: {
