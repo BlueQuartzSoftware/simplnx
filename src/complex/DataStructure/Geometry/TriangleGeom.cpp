@@ -82,6 +82,10 @@ void TriangleGeom::setVertexIdsForFace(usize faceId, usize verts[3])
 {
   auto& faces = getFacesRef();
   const usize offset = faceId * k_NumVerts;
+  if(offset + k_NumVerts >= faces.getSize())
+  {
+    return;
+  }
   for(usize i = 0; i < k_NumVerts; i++)
   {
     faces[offset + i] = verts[i];
@@ -90,11 +94,15 @@ void TriangleGeom::setVertexIdsForFace(usize faceId, usize verts[3])
 
 void TriangleGeom::getVertexIdsForFace(usize faceId, usize verts[3]) const
 {
-  auto& faces = getFacesRef();
+  auto& cells = getFacesRef();
   const usize offset = faceId * k_NumVerts;
+  if(offset + k_NumVerts >= cells.getSize())
+  {
+    return;
+  }
   for(usize i = 0; i < k_NumVerts; i++)
   {
-    verts[i] = faces.at(offset + i);
+    verts[i] = cells.at(offset + i);
   }
 }
 

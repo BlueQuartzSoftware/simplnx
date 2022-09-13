@@ -94,49 +94,37 @@ Point3D<float32> EdgeGeom::getCoords(usize vertId) const
 void EdgeGeom::setVertsAtEdge(usize edgeId, const usize verts[2])
 {
   auto& edges = getEdgesRef();
-  usize numEdges = edges.getNumberOfTuples();
-  if(edgeId >= numEdges)
+  const usize offset = edgeId * k_NumVerts;
+  if(offset + k_NumVerts >= edges.getSize())
   {
     return;
   }
-
-  for(usize i = 0; i < 2; i++)
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    edges[edgeId + i] = verts[i];
+    edges[offset + i] = verts[i];
   }
 }
 
 void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2]) const
 {
-  auto& edges = getEdgesRef();
-  usize numEdges = edges.getNumberOfTuples();
-  if(edgeId >= numEdges)
+  auto& cells = getEdgesRef();
+  const usize offset = edgeId * k_NumVerts;
+  if(offset + k_NumVerts >= cells.getSize())
   {
     return;
   }
-
-  for(usize i = 0; i < 2; i++)
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    verts[i] = edges[edgeId + i];
+    verts[i] = cells.at(offset + i);
   }
 }
 
 void EdgeGeom::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
 {
-  auto& edges = getEdgesRef();
-  usize numEdges = edges.getNumberOfTuples();
-  if(edgeId >= numEdges)
-  {
-    return;
-  }
-
-  auto& vertices = getVerticesRef();
-
-  MeshIndexType vert1Id = edges[edgeId];
-  MeshIndexType vert2Id = edges[edgeId + 1];
-
-  vert1 = &vertices[vert1Id];
-  vert2 = &vertices[vert2Id];
+  usize verts[k_NumVerts];
+  getVertsAtEdge(edgeId, verts);
+  vert1 = getCoords(verts[0]);
+  vert2 = getCoords(verts[1]);
 }
 
 usize EdgeGeom::getNumberOfElements() const
