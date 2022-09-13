@@ -190,13 +190,11 @@ TEST_CASE("Core::RotateSampleRefFrameFilter", "[Core][RotateSampleRefFrameFilter
 
     std::vector<std::vector<float64>> table = ConvertMatrixToTable(rotationMatrix);
 
-    DynamicTableData tableData(table, {}, {});
-
     DataPath testRotationMatrixGeomPath({fmt::format("{}_Test_RotationMatrix", name)});
 
     args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
                         std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix)));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(tableData));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(table));
     args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(testRotationMatrixGeomPath));
 
     auto preflightRotationMatrixResult = filter.preflight(dataStructure, args);
