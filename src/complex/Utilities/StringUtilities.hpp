@@ -209,16 +209,12 @@ inline std::string chopr(std::string_view str, usize numElements)
 }
 
 template <typename T>
-inline std::string number(typename const T& arg)
+inline std::string number(T arg)
 {
   std::stringstream ss;
-  if (std::is_same<T, float32>::value)
+  if (std::is_floating_point_v<T>)
   {
-      ss.precision(std::numeric_limits<float>::digits10);
-  }
-  if (std::is_same<T, float64>::value)
-  {
-      ss.precision(std::numeric_limits<double>::digits10);
+      ss.precision(std::numeric_limits<T>::digits10);
   }
   ss << arg;
   return ss.str();
