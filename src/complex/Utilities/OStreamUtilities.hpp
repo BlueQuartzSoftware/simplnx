@@ -146,7 +146,7 @@ public:
 template <typename T>
 struct LoadDataArrayToMatrixImpl
 {
-  LoadDataArrayToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const DataArray<T>& inputArray, const size_t& columnToWrite, bool hasHeaders = false)
+  LoadDataArrayToMatrixImpl(PrintMatrix2D& outputMatrix, const DataArray<T>& inputArray, const size_t& columnToWrite, bool hasHeaders = false)
   : m_OutputMatrix(outputMatrix)
   , m_ColumnToWrite(columnToWrite)
   , m_InputArray(inputArray)
@@ -163,14 +163,14 @@ struct LoadDataArrayToMatrixImpl
       for(size_t i = start; i < end; i++)
       {
         row = i + 1;
-        m_OutputMatrix->getValue(row, m_ColumnToWrite) = StringUtilities::number(m_InputArray[i]);
+        m_OutputMatrix.getValue(row, m_ColumnToWrite) = StringUtilities::number(m_InputArray[i]);
       }
     }
     else
     {
       for(size_t i = start; i < end; i++)
       {
-        m_OutputMatrix->getValue(i, m_ColumnToWrite) = StringUtilities::number(m_InputArray[i]);
+        m_OutputMatrix.getValue(i, m_ColumnToWrite) = StringUtilities::number(m_InputArray[i]);
       }
     }
   }
@@ -180,7 +180,7 @@ struct LoadDataArrayToMatrixImpl
   }
 
 private:
-  std::shared_ptr<PrintMatrix2D> m_OutputMatrix;
+  PrintMatrix2D& m_OutputMatrix;
   const size_t& m_ColumnToWrite;
   const DataArray<T>& m_InputArray;
   bool m_HasHeaders = false;
@@ -189,7 +189,7 @@ private:
 template <typename T>
 struct LoadNeighborListToMatrixImpl // adds component count implicitly
 {
-  LoadNeighborListToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const NeighborList<T>& inputArray, bool hasIndex = false, bool hasHeader = false)
+  LoadNeighborListToMatrixImpl(PrintMatrix2D& outputMatrix, const NeighborList<T>& inputArray, bool hasIndex = false, bool hasHeader = false)
   : m_OutputMatrix(outputMatrix)
   , m_InputArray(inputArray)
   , m_HasIndex(hasIndex)
@@ -209,11 +209,11 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
         {
           row = i + 1;
           auto grain = m_InputArray.getListReference(i);
-          m_OutputMatrix->getValue(row, 1) = StringUtilities::number(grain.size()); // add comp count
+          m_OutputMatrix.getValue(row, 1) = StringUtilities::number(grain.size()); // add comp count
           for(size_t index = 0; index < grain.size(); index++)
           {
             column = index + 2;
-            m_OutputMatrix->getValue(row, column) = StringUtilities::number(grain[index]);
+            m_OutputMatrix.getValue(row, column) = StringUtilities::number(grain[index]);
           }
         }
       }
@@ -223,11 +223,11 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
         {
           row = i + 1;
           auto grain = m_InputArray.getListReference(i);
-          m_OutputMatrix->getValue(row, 1) = StringUtilities::number(grain.size()); // add comp count
+          m_OutputMatrix.getValue(row, 1) = StringUtilities::number(grain.size()); // add comp count
           for(size_t index = 0; index < grain.size(); index++)
           {
             column = index + 1;
-            m_OutputMatrix->getValue(row, index) = StringUtilities::number(grain[index]);
+            m_OutputMatrix.getValue(row, index) = StringUtilities::number(grain[index]);
           }
         }
       }
@@ -239,11 +239,11 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
         for(size_t i = start; i < m_InputArray.getNumberOfLists(); i++)
         {
           auto grain = m_InputArray.getListReference(i);
-          m_OutputMatrix->getValue(i, 1) = StringUtilities::number(grain.size()); // add comp count
+          m_OutputMatrix.getValue(i, 1) = StringUtilities::number(grain.size()); // add comp count
           for(size_t index = 0; index < grain.size(); index++)
           {
             column = index + 2;
-            m_OutputMatrix->getValue(i, column) = StringUtilities::number(grain[index]);
+            m_OutputMatrix.getValue(i, column) = StringUtilities::number(grain[index]);
           }
         }
       }
@@ -252,11 +252,11 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
         for(size_t i = start; i < m_InputArray.getNumberOfLists(); i++)
         {
           auto grain = m_InputArray.getListReference(i);
-          m_OutputMatrix->getValue(i, 1) = StringUtilities::number(grain.size()); // add comp count
+          m_OutputMatrix.getValue(i, 1) = StringUtilities::number(grain.size()); // add comp count
           for(size_t index = 0; index < grain.size(); index++)
           {
             column = index + 1;
-            m_OutputMatrix->getValue(i, index) = StringUtilities::number(grain[index]);
+            m_OutputMatrix.getValue(i, index) = StringUtilities::number(grain[index]);
           }
         }
       }
@@ -269,7 +269,7 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
   // }
 
 private:
-  std::shared_ptr<PrintMatrix2D> m_OutputMatrix;
+  PrintMatrix2D& m_OutputMatrix;
   const NeighborList<T>& m_InputArray;
   bool m_HasIndex = false;
   bool m_HasHeader = false;
@@ -278,7 +278,7 @@ private:
 struct LoadStringArrayToMatrixImpl
 {
 public:
-  LoadStringArrayToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const StringArray& inputArray, const size_t& columnToWrite, bool hasHeaders = false)
+  LoadStringArrayToMatrixImpl(PrintMatrix2D& outputMatrix, const StringArray& inputArray, const size_t& columnToWrite, bool hasHeaders = false)
   : m_OutputMatrix(outputMatrix)
   , m_ColumnToWrite(columnToWrite)
   , m_InputArray(inputArray)
@@ -294,14 +294,14 @@ public:
       for(size_t i = start; i < end; i++)
       {
         row = i + 1;
-        m_OutputMatrix->getValue(row, m_ColumnToWrite) = m_InputArray[i];
+        m_OutputMatrix.getValue(row, m_ColumnToWrite) = m_InputArray[i];
       }
     }
     else
     {
       for(size_t i = start; i < end; i++)
       {
-        m_OutputMatrix->getValue(i, m_ColumnToWrite) = m_InputArray[i];
+        m_OutputMatrix.getValue(i, m_ColumnToWrite) = m_InputArray[i];
       }
     }
   }
@@ -311,13 +311,13 @@ public:
   }
 
 private:
-  std::shared_ptr<PrintMatrix2D> m_OutputMatrix;
+  PrintMatrix2D& m_OutputMatrix;
   const size_t& m_ColumnToWrite;
   const StringArray& m_InputArray;
   bool m_HasHeaders = false;
 };
 
-void neighborListImplWrapper(DataStructure& dataStructure, std::shared_ptr<PrintMatrix2D> matrixPtr, DataObject::Type type, const DataPath& path, bool hasIndex = false, bool hasHeaders = false)
+void neighborListImplWrapper(DataStructure& dataStructure, PrintMatrix2D& matrixRef, DataObject::Type type, const DataPath& path, bool hasIndex = false, bool hasHeaders = false)
 {
   if(type == DataObject::Type::NeighborList) // unique because its loaded horizontally no dataAlg use
   {
@@ -325,51 +325,51 @@ void neighborListImplWrapper(DataStructure& dataStructure, std::shared_ptr<Print
     switch(dataType)
     {
     case DataType::int8: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<int8>>(path), hasIndex, hasHeaders).loadToMatrix(0, dataStructure.getDataAs<NeighborList<int8>>(path)->getSize());
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<int8>>(path), hasIndex, hasHeaders).loadToMatrix(0, dataStructure.getDataAs<NeighborList<int8>>(path)->getSize());
       break;
     }
     case DataType::int16: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<int16>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<int16>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<int16>>(path)->getSize());
       break;
     }
     case DataType::int32: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<int32>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<int32>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<int32>>(path)->getSize());
       break;
     }
     case DataType::int64: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<int64>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<int64>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<int64>>(path)->getSize());
       break;
     }
     case DataType::uint8: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<uint8>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<uint8>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<uint8>>(path)->getSize());
       break;
     }
     case DataType::uint16: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<uint16>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<uint16>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<uint16>>(path)->getSize());
       break;
     }
     case DataType::uint32: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<uint32>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<uint32>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<uint32>>(path)->getSize());
       break;
     }
     case DataType::uint64: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<uint64>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<uint64>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<uint64>>(path)->getSize());
       break;
     }
     case DataType::float32: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<float32>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<float32>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<float32>>(path)->getSize());
       break;
     }
     case DataType::float64: {
-      LoadNeighborListToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<NeighborList<float64>>(path), hasIndex, hasHeaders)
+      LoadNeighborListToMatrixImpl(matrixRef, dataStructure.getDataRefAs<NeighborList<float64>>(path), hasIndex, hasHeaders)
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<float64>>(path)->getSize());
       break;
     }
@@ -381,66 +381,66 @@ void neighborListImplWrapper(DataStructure& dataStructure, std::shared_ptr<Print
   }
 }
 
-void dataAlgParallelWrapper(DataStructure& dataStructure, std::shared_ptr<PrintMatrix2D> matrixPtr, DataObject::Type type, const DataPath& path, const size_t& column, bool hasHeaders = false)
+void dataAlgParallelWrapper(DataStructure& dataStructure, PrintMatrix2D& matrixRef, DataObject::Type type, const DataPath& path, const size_t& column, bool hasHeaders = false)
 {
   ParallelDataAlgorithm dataAlg;
   if(type == DataObject::Type::StringArray)
   {
     if(hasHeaders)
     {
-      matrixPtr->getValue(0, column) = dataStructure.getDataAs<StringArray>(path)->getName();
+      matrixRef.getValue(0, column) = dataStructure.getDataAs<StringArray>(path)->getName();
     }
     dataAlg.setRange(0, dataStructure.getDataAs<StringArray>(path)->getSize());
-    dataAlg.execute(LoadStringArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<StringArray>(path), column, hasHeaders));
+    dataAlg.execute(LoadStringArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<StringArray>(path), column, hasHeaders));
   }
   else if(type == DataObject::Type::DataArray) // Data array of unknown typing
   {
     if(hasHeaders)
     {
-      matrixPtr->getValue(0, column) = dataStructure.getDataAs<IDataArray>(path)->getName();
+      matrixRef.getValue(0, column) = dataStructure.getDataAs<IDataArray>(path)->getName();
     }
     dataAlg.setRange(0, dataStructure.getDataAs<IDataArray>(path)->getSize());
     auto dataType = dataStructure.getDataAs<IDataArray>(path)->getDataType();
     switch(dataType)
     {
     case DataType::int8: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<int8>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<int8>>(path), column, hasHeaders));
       break;
     }
     case DataType::int16: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<int16>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<int16>>(path), column, hasHeaders));
       break;
     }
     case DataType::int32: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<int32>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<int32>>(path), column, hasHeaders));
       break;
     }
     case DataType::int64: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<int64>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<int64>>(path), column, hasHeaders));
       break;
     }
     case DataType::uint8: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<uint8>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<uint8>>(path), column, hasHeaders));
       break;
     }
     case DataType::uint16: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<uint16>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<uint16>>(path), column, hasHeaders));
       break;
     }
     case DataType::uint32: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<uint32>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<uint32>>(path), column, hasHeaders));
       break;
     }
     case DataType::uint64: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<uint64>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<uint64>>(path), column, hasHeaders));
       break;
     }
     case DataType::float32: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<float32>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<float32>>(path), column, hasHeaders));
       break;
     }
     case DataType::float64: {
-      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixPtr, dataStructure.getDataRefAs<DataArray<float64>>(path), column, hasHeaders));
+      dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<float64>>(path), column, hasHeaders));
       break;
     }
     }
@@ -516,7 +516,7 @@ std::vector<std::shared_ptr<PrintMatrix2D>> createNeighborListPrintStringMatrice
     {
       matrixPtr->getValue(i) = headers[i];
     }
-    neighborListImplWrapper(dataStructure, matrixPtr, DataObject::Type::INeighborList, path, addIndexValue, includeHeaders);
+    neighborListImplWrapper(dataStructure, *matrixPtr, DataObject::Type::INeighborList, path, addIndexValue, includeHeaders);
     outputPtrs.push_back(matrixPtr);
   }
   return outputPtrs;
@@ -598,14 +598,14 @@ std::shared_ptr<PrintMatrix2D> createSingleTypePrintStringMatrix(DataStructure& 
     }
     for(size_t i = 0; i < paths.size(); i++)
     {
-      dataAlgParallelWrapper(dataStructure, matrixPtr, typing, paths[i], (i + 1), includeHeaders);
+      dataAlgParallelWrapper(dataStructure, *matrixPtr, typing, paths[i], (i + 1), includeHeaders);
     }
   }
   else
   {
     for(size_t i = 0; i < paths.size(); i++)
     {
-      dataAlgParallelWrapper(dataStructure, matrixPtr, typing, paths[i], i, includeHeaders);
+      dataAlgParallelWrapper(dataStructure, *matrixPtr, typing, paths[i], i, includeHeaders);
     }
   }
   if(checkBalance)
@@ -689,14 +689,14 @@ std::shared_ptr<PrintMatrix2D> createMultipleTypePrintStringMatrix(DataStructure
     }
     for(size_t i = 0; i < printMapping.size(); i++)
     {
-      dataAlgParallelWrapper(dataStructure, matrixPtr, types[i], paths[i], (i + 1), includeHeaders);
+      dataAlgParallelWrapper(dataStructure, *matrixPtr, types[i], paths[i], (i + 1), includeHeaders);
     }
   }
   else
   {
     for(size_t i = 0; i < printMapping.size(); i++)
     {
-      dataAlgParallelWrapper(dataStructure, matrixPtr, types[i], paths[i], i, includeHeaders);
+      dataAlgParallelWrapper(dataStructure, *matrixPtr, types[i], paths[i], i, includeHeaders);
     }
   }
   return matrixPtr;
