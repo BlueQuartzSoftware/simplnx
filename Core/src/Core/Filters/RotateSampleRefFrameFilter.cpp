@@ -369,8 +369,7 @@ Result<Matrix3fR> ComputeRotationMatrix(const Arguments& args)
     return ConvertAxisAngleToRotationMatrix(rotationAxisVec, rotationAngle);
   }
   case RotationRepresentation::RotationMatrix: {
-    auto rotationMatrixTableData = args.value<DynamicTableData>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
-    auto rotationMatrixTable = rotationMatrixTableData.getTableData();
+    auto rotationMatrixTable = args.value<DynamicTableParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
 
     return ConvertRotationTableToRotationMatrix(rotationMatrixTable);
   }
@@ -415,7 +414,10 @@ Parameters RotateSampleRefFrameFilter::parameters() const
                                                                     ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
   params.insert(std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "", 0.0f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 0.0f}));
-  params.insert(std::make_unique<DynamicTableParameter>(k_RotationMatrix_Key, "Rotation Matrix", "", DynamicTableParameter::ValueType{}));
+  DynamicTableInfo tableInfo;
+  tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo(3));
+  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(3));
+  params.insert(std::make_unique<DynamicTableParameter>(k_RotationMatrix_Key, "Rotation Matrix", "", tableInfo));
   params.linkParameters(k_RotationRepresentation_Key, k_RotationAngle_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
   params.linkParameters(k_RotationRepresentation_Key, k_RotationAxis_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
   params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));

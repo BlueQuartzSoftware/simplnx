@@ -26,7 +26,6 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
-#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
@@ -53,7 +52,6 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableData::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
 
   const std::string k_FeatureAttributeMatrix("CellFeatureData");
   const std::string k_AvgQuatsName("AvgQuats");
