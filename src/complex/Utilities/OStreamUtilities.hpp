@@ -1085,7 +1085,6 @@ void multiFileWriteOutWrapper(std::map<std::string, std::map<size_t, std::string
       writeOut(it->second, outputStrm, isBinary);
     }
   }
-  outputStrm.close();
 }
 
 DataObject::Type getDataType(const DataPath& objectPath, DataStructure& dataStructure)
@@ -1280,7 +1279,6 @@ void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
       printMap.emplace(path, std::map<size_t, std::string>(std::move(stringStore))); // try to make as resource efficient as possible
     }
   }
-  fout.close();
   if(hasNeighborLists)
   {
     multiFileWriteOutWrapper(printMap, false);
@@ -1379,7 +1377,6 @@ void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStruct
     writeOutWrapper(stringStore, outputStrm, exportToBinary);
   }
 
-  outputStrm.close();
 }
 
 // custom OStream [NO BINARY SUPPORT]
@@ -1450,7 +1447,6 @@ void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStr
     writeOutWrapper(stringStore, outputStrm);
   }
 
-  outputStrm.close();
 }
 
 } // namespace OutputFunctions
