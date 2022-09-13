@@ -1,6 +1,7 @@
 #include "ExportDREAM3DFilter.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
@@ -43,6 +44,7 @@ Parameters ExportDREAM3DFilter::parameters() const
   Parameters params;
   params.insert(std::make_unique<FileSystemPathParameter>(k_ExportFilePath, "Export File Path", "The file path the DataStructure should be written to as an HDF5 file.", "",
                                                           FileSystemPathParameter::ExtensionsType{".dream3d"}, FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<BoolParameter>(k_WriteXdmf, "Write Xdmf File", "", true));
   return params;
 }
 
@@ -65,6 +67,7 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
                                           const std::atomic_bool& shouldCancel) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
+  auto writeXdmf = args.value<bool>(k_WriteXdmf);
 
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(exportFilePath);
 
@@ -85,6 +88,12 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   if(errorCode < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to write .dream3d file."}})};
+  }
+
+  if(writeXdmf)
+  {
+    std::filesystem::path xdmfFilePath = std::filesystem::path(exportFilePath).replace_extension(".xdmf");
+    DREAM3D::WriteXdmf(xdmfFilePath, dataStructure, exportFilePath.filename().string());
   }
 
   return {};
