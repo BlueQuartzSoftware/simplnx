@@ -69,14 +69,6 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
   auto writeXdmf = args.value<bool>(k_WriteXdmf);
 
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(exportFilePath);
-
-  if(result.invalid())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFileWriterError, "Failed to initialize H5:FileWriter."}})};
-  }
-  H5::FileWriter fileWriter = std::move(result.value());
-
   auto pipelinePtr = pipelineNode->getPrecedingPipeline();
   if(pipelinePtr == nullptr)
   {
@@ -84,16 +76,10 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   }
   Pipeline pipeline = *pipelinePtr;
 
-  auto errorCode = DREAM3D::WriteFile(fileWriter, {pipeline, dataStructure});
-  if(errorCode < 0)
+  auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
+  if(results.invalid())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to write .dream3d file."}})};
-  }
-
-  if(writeXdmf)
-  {
-    std::filesystem::path xdmfFilePath = std::filesystem::path(exportFilePath).replace_extension(".xdmf");
-    DREAM3D::WriteXdmf(xdmfFilePath, dataStructure, exportFilePath.filename().string());
+    return results;
   }
 
   return {};
