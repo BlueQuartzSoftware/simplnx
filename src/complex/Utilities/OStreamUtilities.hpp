@@ -278,7 +278,7 @@ private:
 struct LoadStringArrayToMatrixImpl
 {
 public:
-  LoadStringArrayToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const StringArray& inputArray, const size_t& columnToWrite,  bool hasHeaders = false)
+  LoadStringArrayToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const StringArray& inputArray, const size_t& columnToWrite, bool hasHeaders = false)
   : m_OutputMatrix(outputMatrix)
   , m_ColumnToWrite(columnToWrite)
   , m_InputArray(inputArray)
@@ -317,8 +317,7 @@ private:
   bool m_HasHeaders = false;
 };
 
-void neighborListImplWrapper(DataStructure& dataStructure, std::shared_ptr<PrintMatrix2D> matrixPtr, DataObject::Type type, const DataPath& path, bool hasIndex = false,
-                             bool hasHeaders = false)
+void neighborListImplWrapper(DataStructure& dataStructure, std::shared_ptr<PrintMatrix2D> matrixPtr, DataObject::Type type, const DataPath& path, bool hasIndex = false, bool hasHeaders = false)
 {
   if(type == DataObject::Type::NeighborList) // unique because its loaded horizontally no dataAlg use
   {
@@ -452,8 +451,7 @@ void dataAlgParallelWrapper(DataStructure& dataStructure, std::shared_ptr<PrintM
   }
 }
 
-std::vector<std::shared_ptr<PrintMatrix2D>> createNeighborListPrintStringMatrices(DataStructure& dataStructure, const std::vector<DataPath>& paths, bool addIndexValue,
-                                                                                   bool includeHeaders = false)
+std::vector<std::shared_ptr<PrintMatrix2D>> createNeighborListPrintStringMatrices(DataStructure& dataStructure, const std::vector<DataPath>& paths, bool addIndexValue, bool includeHeaders = false)
 {
   std::vector<std::shared_ptr<PrintMatrix2D>> outputPtrs;
   for(const auto& path : paths)
@@ -617,8 +615,7 @@ std::shared_ptr<PrintMatrix2D> createSingleTypePrintStringMatrix(DataStructure& 
   return matrixPtr;
 }
 
-std::shared_ptr<PrintMatrix2D> createMultipleTypePrintStringMatrix(DataStructure& dataStructure, std::map<DataPath, DataObject::Type>& printMapping, bool addIndexValue,
-                                                                    bool includeHeaders = false)
+std::shared_ptr<PrintMatrix2D> createMultipleTypePrintStringMatrix(DataStructure& dataStructure, std::map<DataPath, DataObject::Type>& printMapping, bool addIndexValue, bool includeHeaders = false)
 {
   bool checkBalance = false;
   size_t rows = 0;
@@ -634,21 +631,21 @@ std::shared_ptr<PrintMatrix2D> createMultipleTypePrintStringMatrix(DataStructure
   std::vector<DataPath> paths;
   std::vector<DataObject::Type> types;
   std::vector<size_t> compCounts;
-  for(std::map<DataPath, DataObject::Type>::iterator it = printMapping.begin(); it != printMapping.end(); ++it)
+  for(auto& [key, value] : printMapping)
   {
-    switch(it->second)
+    switch(value)
     {
     case DataObject::Type::StringArray: {
-      compCounts.push_back(dataStructure.getDataAs<StringArray>(it->first)->getSize());
+      compCounts.push_back(dataStructure.getDataAs<StringArray>(key)->getSize());
       break;
     }
     case DataObject::Type::DataArray: {
-      compCounts.push_back(dataStructure.getDataAs<IDataArray>(it->first)->getSize());
+      compCounts.push_back(dataStructure.getDataAs<IDataArray>(key)->getSize());
       break;
     }
     }
-    paths.push_back(it->first);
-    types.push_back(it->second);
+    paths.push_back(key);
+    types.push_back(value);
   }
 
   /* find rows */
@@ -1059,9 +1056,9 @@ template <typename T>
 void writeOutWrapper(std::map<size_t, std::string>& stringStore, T& outputStrm, bool isBinary = false)
 // requires unique stringStore for each Print2DMatrix to function properly
 {
-  for(std::map<size_t, std::string>::iterator it = stringStore.begin(); it != stringStore.end(); ++it) // take advantage of maps automatic descending order sort
+  for(auto& [key, value] : stringStore) // take advantage of maps automatic descending order sort
   {
-    writeOut(it->second, outputStrm, isBinary);
+    writeOut(value, outputStrm, isBinary);
   }
 }
 
@@ -1069,9 +1066,9 @@ void multiFileWriteOutWrapper(std::map<std::string, std::map<size_t, std::string
 // requires unique stringStore for each Print2DMatrix to function properly
 {
   std::ofstream outputStrm;
-  for(std::map<std::string, std::map<size_t, std::string>>::iterator itr = printMap.begin(); itr != printMap.end(); ++itr)
+  for(auto& [pathKey, nestedMap] : printMap)
   {
-    const auto& path = itr->first;
+    const auto& path = pathKey;
     if(isBinary)
     {
       outputStrm = std::ofstream(path, std::ios_base::app | std::ios_base::binary);
@@ -1080,9 +1077,9 @@ void multiFileWriteOutWrapper(std::map<std::string, std::map<size_t, std::string
     {
       outputStrm = std::ofstream(path, std::ios_base::app);
     }
-    for(std::map<size_t, std::string>::iterator it = itr->second.begin(); it != itr->second.end(); ++it) // take advantage of maps automatic descending order sort
+    for(auto& [key, value] : nestedMap) // take advantage of maps automatic descending order sort
     {
-      writeOut(it->second, outputStrm, isBinary);
+      writeOut(value, outputStrm, isBinary);
     }
   }
 }
@@ -1156,25 +1153,25 @@ std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::ma
   std::map<DataPath, DataObject::Type> arrayMap = {};
   std::vector<DataPath> neighborLists = {};
   // concatenate similar maps
-  for(std::map<DataObject::Type, std::vector<DataPath>>::iterator it = sortedMap.begin(); it != sortedMap.end(); ++it)
+  for(auto& [type, paths] : sortedMap)
   {
-    if((sortedMap.size() == 1) && (it->first != DataObject::Type::NeighborList))
+    if((sortedMap.size() == 1) && (type != DataObject::Type::NeighborList))
     {
-      outputPtrs.emplace_back(createSingleTypePrintStringMatrix(dataStructure, it->second, it->first, includeIndex, includeHeaders));
+      outputPtrs.emplace_back(createSingleTypePrintStringMatrix(dataStructure, paths, type, includeIndex, includeHeaders));
       return outputPtrs;
     }
-    switch(it->first)
+    switch(type)
     {
     case DataObject::Type::DataArray: {
-      arrayMap.merge(createHomogeneousMapfromVector(it->second, it->first));
+      arrayMap.merge(createHomogeneousMapfromVector(paths, type));
       break;
     }
     case DataObject::Type::StringArray: {
-      arrayMap.merge(createHomogeneousMapfromVector(it->second, it->first));
+      arrayMap.merge(createHomogeneousMapfromVector(paths, type));
       break;
     }
     case DataObject::Type::NeighborList: {
-      neighborLists = it->second;
+      neighborLists = paths;
       break;
     }
     }
@@ -1256,11 +1253,11 @@ void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
   if(hasNeighborLists) // cant be binary
   {
     std::vector<std::string> neighborNames;
-    for(std::map<DataObject::Type, std::vector<DataPath>>::iterator it = sortedMap.begin(); it != sortedMap.end(); ++it) // this gets parse order correct for naming scheme
+    for(auto& [type, paths] : sortedMap) // this gets parse order correct for naming scheme
     {
-      if(it->first == DataObject::Type::NeighborList)
+      if(type == DataObject::Type::NeighborList)
       {
-        for(const auto& path : it->second)
+        for(const auto& path : paths)
         {
           neighborNames.emplace_back(dataStructure.getDataAs<INeighborList>(path)->getName());
         }
@@ -1376,12 +1373,11 @@ void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStruct
   {
     writeOutWrapper(stringStore, outputStrm, exportToBinary);
   }
-
 }
 
 // custom OStream [NO BINARY SUPPORT]
 void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", bool includeIndex = false,
-                                size_t componentsPerLine = 0, bool includeHeaders = false)
+                               size_t componentsPerLine = 0, bool includeHeaders = false)
 {
   bool hasNeighborLists = false;
   auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
@@ -1411,8 +1407,8 @@ void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
 }
 
 // Creates OFStream from filepath [NO BINARY SUPPORT]
-void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string& delimiter = "",
-                               bool includeIndex = false, size_t componentsPerLine = 0, bool includeHeaders = false)
+void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string& delimiter = "", bool includeIndex = false,
+                               size_t componentsPerLine = 0, bool includeHeaders = false)
 {
   bool hasNeighborLists = false;
   auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
@@ -1446,7 +1442,6 @@ void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStr
   {
     writeOutWrapper(stringStore, outputStrm);
   }
-
 }
 
 } // namespace OutputFunctions
