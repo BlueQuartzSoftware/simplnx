@@ -146,7 +146,7 @@ public:
 template <typename T>
 struct LoadDataArrayToMatrixImpl
 {
-  LoadDataArrayToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const DataArray<T>& inputArray, const size_t& columnToWrite, const bool& hasHeaders = false)
+  LoadDataArrayToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const DataArray<T>& inputArray, const size_t& columnToWrite, bool hasHeaders = false)
   : m_OutputMatrix(outputMatrix)
   , m_ColumnToWrite(columnToWrite)
   , m_InputArray(inputArray)
@@ -183,13 +183,13 @@ private:
   std::shared_ptr<PrintMatrix2D> m_OutputMatrix;
   const size_t& m_ColumnToWrite;
   const DataArray<T>& m_InputArray;
-  const bool& m_HasHeaders = false;
+  bool m_HasHeaders = false;
 };
 
 template <typename T>
 struct LoadNeighborListToMatrixImpl // adds component count implicitly
 {
-  LoadNeighborListToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const NeighborList<T>& inputArray, const bool& hasIndex = false, const bool& hasHeader = false)
+  LoadNeighborListToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const NeighborList<T>& inputArray, bool hasIndex = false, bool hasHeader = false)
   : m_OutputMatrix(outputMatrix)
   , m_InputArray(inputArray)
   , m_HasIndex(hasIndex)
@@ -271,14 +271,14 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
 private:
   std::shared_ptr<PrintMatrix2D> m_OutputMatrix;
   const NeighborList<T>& m_InputArray;
-  const bool& m_HasIndex = false;
-  const bool& m_HasHeader = false;
+  bool m_HasIndex = false;
+  bool m_HasHeader = false;
 };
 
 struct LoadStringArrayToMatrixImpl
 {
 public:
-  LoadStringArrayToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const StringArray& inputArray, const size_t& columnToWrite, const bool& hasHeaders = false)
+  LoadStringArrayToMatrixImpl(std::shared_ptr<PrintMatrix2D> outputMatrix, const StringArray& inputArray, const size_t& columnToWrite,  bool hasHeaders = false)
   : m_OutputMatrix(outputMatrix)
   , m_ColumnToWrite(columnToWrite)
   , m_InputArray(inputArray)
@@ -314,11 +314,11 @@ private:
   std::shared_ptr<PrintMatrix2D> m_OutputMatrix;
   const size_t& m_ColumnToWrite;
   const StringArray& m_InputArray;
-  const bool& m_HasHeaders = false;
+  bool m_HasHeaders = false;
 };
 
-void neighborListImplWrapper(DataStructure& dataStructure, std::shared_ptr<PrintMatrix2D> matrixPtr, DataObject::Type type, const DataPath& path, const bool& hasIndex = false,
-                             const bool& hasHeaders = false)
+void neighborListImplWrapper(DataStructure& dataStructure, std::shared_ptr<PrintMatrix2D> matrixPtr, DataObject::Type type, const DataPath& path, bool hasIndex = false,
+                             bool hasHeaders = false)
 {
   if(type == DataObject::Type::NeighborList) // unique because its loaded horizontally no dataAlg use
   {
@@ -382,7 +382,7 @@ void neighborListImplWrapper(DataStructure& dataStructure, std::shared_ptr<Print
   }
 }
 
-void dataAlgParallelWrapper(DataStructure& dataStructure, std::shared_ptr<PrintMatrix2D> matrixPtr, DataObject::Type type, const DataPath& path, const size_t& column, const bool& hasHeaders = false)
+void dataAlgParallelWrapper(DataStructure& dataStructure, std::shared_ptr<PrintMatrix2D> matrixPtr, DataObject::Type type, const DataPath& path, const size_t& column, bool hasHeaders = false)
 {
   ParallelDataAlgorithm dataAlg;
   if(type == DataObject::Type::StringArray)
@@ -452,8 +452,8 @@ void dataAlgParallelWrapper(DataStructure& dataStructure, std::shared_ptr<PrintM
   }
 }
 
-std::vector<std::shared_ptr<PrintMatrix2D>> createNeighborListPrintStringMatrices(DataStructure& dataStructure, const std::vector<DataPath>& paths, const bool& addIndexValue,
-                                                                                  const bool& includeHeaders = false)
+std::vector<std::shared_ptr<PrintMatrix2D>> createNeighborListPrintStringMatrices(DataStructure& dataStructure, const std::vector<DataPath>& paths, bool addIndexValue,
+                                                                                   bool includeHeaders = false)
 {
   std::vector<std::shared_ptr<PrintMatrix2D>> outputPtrs;
   for(const auto& path : paths)
@@ -524,8 +524,8 @@ std::vector<std::shared_ptr<PrintMatrix2D>> createNeighborListPrintStringMatrice
   return outputPtrs;
 }
 
-std::shared_ptr<PrintMatrix2D> createSingleTypePrintStringMatrix(DataStructure& dataStructure, const std::vector<DataPath>& paths, const DataObject::Type& typing, const bool& addIndexValue,
-                                                                 const bool& includeHeaders = false)
+std::shared_ptr<PrintMatrix2D> createSingleTypePrintStringMatrix(DataStructure& dataStructure, const std::vector<DataPath>& paths, const DataObject::Type& typing, bool addIndexValue,
+                                                                 bool includeHeaders = false)
 // implicitly runs checkBalance [except on neighborLists]
 { // double check that virtual typing is not neccessary
   bool checkBalance = false;
@@ -617,8 +617,8 @@ std::shared_ptr<PrintMatrix2D> createSingleTypePrintStringMatrix(DataStructure& 
   return matrixPtr;
 }
 
-std::shared_ptr<PrintMatrix2D> createMultipleTypePrintStringMatrix(DataStructure& dataStructure, std::map<DataPath, DataObject::Type>& printMapping, const bool& addIndexValue,
-                                                                   const bool& includeHeaders = false)
+std::shared_ptr<PrintMatrix2D> createMultipleTypePrintStringMatrix(DataStructure& dataStructure, std::map<DataPath, DataObject::Type>& printMapping, bool addIndexValue,
+                                                                    bool includeHeaders = false)
 {
   bool checkBalance = false;
   size_t rows = 0;
@@ -1043,7 +1043,7 @@ private:
 };
 
 template <typename T>
-void writeOut(const std::string& outStr, T& outputStrm, const bool isBinary = false)
+void writeOut(const std::string& outStr, T& outputStrm, bool isBinary = false)
 {
   if((isBinary) && ((std::is_same<T, std::ofstream>::value) || (std::is_same<T, std::ostringstream>::value))) // endianess should be considered before this point
   {
@@ -1056,7 +1056,7 @@ void writeOut(const std::string& outStr, T& outputStrm, const bool isBinary = fa
 }
 
 template <typename T>
-void writeOutWrapper(std::map<size_t, std::string>& stringStore, T& outputStrm, const bool& isBinary = false)
+void writeOutWrapper(std::map<size_t, std::string>& stringStore, T& outputStrm, bool isBinary = false)
 // requires unique stringStore for each Print2DMatrix to function properly
 {
   for(std::map<size_t, std::string>::iterator it = stringStore.begin(); it != stringStore.end(); ++it) // take advantage of maps automatic descending order sort
@@ -1065,7 +1065,7 @@ void writeOutWrapper(std::map<size_t, std::string>& stringStore, T& outputStrm, 
   }
 }
 
-void multiFileWriteOutWrapper(std::map<std::string, std::map<size_t, std::string>>& printMap, const bool& isBinary = false)
+void multiFileWriteOutWrapper(std::map<std::string, std::map<size_t, std::string>>& printMap, bool isBinary = false)
 // requires unique stringStore for each Print2DMatrix to function properly
 {
   std::ofstream outputStrm;
@@ -1149,8 +1149,8 @@ std::map<U, std::vector<T>> createSortedMapbyType(const std::vector<T>& uniqueVa
   return sortedMap;
 }
 
-std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap, DataStructure& dataStructure, const bool& includeIndex = false,
-                                                                         const bool& includeHeaders = false)
+std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap, DataStructure& dataStructure, bool includeIndex = false,
+                                                                         bool includeHeaders = false)
 {
   std::vector<std::shared_ptr<PrintMatrix2D>> outputPtrs;
   std::map<DataPath, DataObject::Type> arrayMap = {};
@@ -1195,7 +1195,7 @@ namespace OutputFunctions
 {
 // multiple datapaths, Creates OFStream from filepath [BINARY CAPABLE, unless neighborlist] // endianess must be determined in calling class
 void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::directory_entry& directoryPath, std::string fileExtension = ".txt",
-                                  const bool& exportToBinary = false, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0)
+                                  bool exportToBinary = false, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0)
 // binary bool must come after fileExtension to force caller to input a fileExtension that could support binary
 {
   if(!directoryPath.is_directory())
@@ -1290,7 +1290,7 @@ void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
 }
 
 // single path, custom OStream [BINARY CAPABLE] // endianess must be determined in calling class
-void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const std::string delimiter = "", const bool exportToBinary = false,
+void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const std::string delimiter = "", bool exportToBinary = false,
                            size_t componentsPerLine = 0)
 {
   bool hasNeighborLists = false;
@@ -1328,7 +1328,7 @@ void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath,
 }
 
 // single path, Creates OFStream from filepath [BINARY CAPABLE] // endianess must be determined in calling class
-void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string delimiter = "", const bool exportToBinary = false,
+void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string delimiter = "", bool exportToBinary = false,
                            size_t componentsPerLine = 0)
 {
   bool hasNeighborLists = false;
@@ -1380,8 +1380,8 @@ void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStruct
 }
 
 // custom OStream [NO BINARY SUPPORT]
-void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", const bool& includeIndex = false,
-                               const size_t componentsPerLine = 0, const bool& includeHeaders = false)
+void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", bool includeIndex = false,
+                                size_t componentsPerLine = 0, bool includeHeaders = false)
 {
   bool hasNeighborLists = false;
   auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
@@ -1412,7 +1412,7 @@ void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
 
 // Creates OFStream from filepath [NO BINARY SUPPORT]
 void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string& delimiter = "",
-                               const bool& includeIndex = false, const size_t componentsPerLine = 0, const bool& includeHeaders = false)
+                               bool includeIndex = false, size_t componentsPerLine = 0, bool includeHeaders = false)
 {
   bool hasNeighborLists = false;
   auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
