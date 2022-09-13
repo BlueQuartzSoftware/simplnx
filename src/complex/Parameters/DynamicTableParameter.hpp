@@ -2,7 +2,7 @@
 
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
-#include "complex/Parameters/util/DynamicTableData.hpp"
+#include "complex/Parameters/util/DynamicTableInfo.hpp"
 #include "complex/complex_export.hpp"
 
 #include <string>
@@ -16,10 +16,11 @@ namespace complex
 class COMPLEX_EXPORT DynamicTableParameter : public ValueParameter
 {
 public:
-  using ValueType = DynamicTableData;
+  using ValueType = DynamicTableInfo::TableDataType;
 
   DynamicTableParameter() = delete;
-  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const DynamicTableInfo& tableInfo);
+  DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const DynamicTableInfo& tableInfo);
   ~DynamicTableParameter() override = default;
 
   DynamicTableParameter(const DynamicTableParameter&) = delete;
@@ -74,6 +75,12 @@ public:
   ValueType defaultTable() const;
 
   /**
+   * @brief Returns the table info.
+   * @return
+   */
+  const DynamicTableInfo& tableInfo() const;
+
+  /**
    * @brief Validates the given value. Returns warnings/errors.
    * @param value
    * @return Result<>
@@ -82,6 +89,7 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+  DynamicTableInfo m_TableInfo;
 };
 } // namespace complex
 

@@ -70,7 +70,7 @@ Result<OutputActions> validateInputFilePath(const std::string& inputFilePath)
 // -----------------------------------------------------------------------------
 Result<OutputActions> validateTupleDimensions(const std::vector<usize>& tDims, usize totalLines)
 {
-  usize tupleTotal = std::accumulate(tDims.begin(), tDims.end(), 1, std::multiplies<usize>());
+  usize tupleTotal = std::accumulate(tDims.begin(), tDims.end(), static_cast<usize>(1), std::multiplies<usize>());
   if(tupleTotal != totalLines)
   {
     return {MakeErrorResult<OutputActions>(to_underlying(IssueCodes::INCORRECT_TUPLES),
@@ -318,11 +318,11 @@ Parameters ImportCSVDataFilter::parameters() const
 
   params.insert(std::make_unique<ImportCSVDataParameter>(k_WizardData_Key, "CSV Wizard Data", "", CSVWizardData()));
 
-  DynamicTableParameter::ValueType dynamicTable{{{1}}, {"Dim 0"}, {"Value"}};
-  dynamicTable.setMinCols(1);
-  dynamicTable.setDynamicCols(true);
-  dynamicTable.setDynamicRows(false);
-  params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "CSV Tuple Dimensions", "The tuple dimensions for the imported CSV data arrays", dynamicTable));
+  DynamicTableInfo tableInfo;
+  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "Value {}"));
+  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Dim 0"}));
+  params.insert(
+      std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "CSV Tuple Dimensions", "The tuple dimensions for the imported CSV data arrays", DynamicTableInfo::TableDataType{{{1.0}}}, tableInfo));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Group", "Store the imported CSV data arrays in an existing group.", false));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedDataGroup_Key, "Existing Data Group", "Store the imported CSV data arrays in this existing group.", DataPath{}));
@@ -346,7 +346,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
                                                             const std::atomic_bool& shouldCancel) const
 {
   CSVWizardData wizardData = filterArgs.value<CSVWizardData>(k_WizardData_Key);
-  DynamicTableData tupleDims = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
+  auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
   bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
   DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedDataGroup_Key);
   DataPath createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);
@@ -365,8 +365,13 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   }
 
   // Validate the tuple dimensions
-  auto tableData = tupleDims.getTableData();
-  std::vector<usize> tDims(tableData[0].begin(), tableData[0].end());
+  const auto& row = tableData.at(0);
+  std::vector<usize> tDims;
+  tDims.reserve(row.size());
+  for(auto value : row)
+  {
+    tDims.push_back(static_cast<usize>(value));
+  }
   usize totalLines = wizardData.numberOfLines - wizardData.beginIndex + 1;
   result = validateTupleDimensions(tDims, totalLines);
   if(result.invalid())
@@ -427,7 +432,6 @@ Result<> ImportCSVDataFilter::executeImpl(DataStructure& dataStructure, const Ar
                                           const std::atomic_bool& shouldCancel) const
 {
   CSVWizardData wizardData = filterArgs.value<CSVWizardData>(k_WizardData_Key);
-  DynamicTableData tupleDims = filterArgs.value<DynamicTableData>(k_TupleDims_Key);
   bool useExistingGroup = filterArgs.value<bool>(k_UseExistingGroup_Key);
   DataPath selectedDataGroup = filterArgs.value<DataPath>(k_SelectedDataGroup_Key);
   DataPath createdDataGroup = filterArgs.value<DataPath>(k_CreatedDataGroup_Key);

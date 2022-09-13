@@ -279,7 +279,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformType_Key, std::make_any<complex::ChoicesParameter::ValueType>(2));
 
     // This should reflect the geometry across the x-axis.
-    DynamicTableParameter::ValueType dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}}, {"R0", "R1", "R2", "R3"}, {"C0", "C1", "C2", "C3"}};
+    DynamicTableParameter::ValueType dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}}};
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key, std::make_any<complex::DynamicTableParameter::ValueType>(dynamicTable));
 
     // Preflight the filter and check result

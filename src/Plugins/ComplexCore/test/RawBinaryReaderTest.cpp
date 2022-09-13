@@ -25,10 +25,10 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
-#include "complex/Parameters/util/DynamicTableData.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -57,9 +57,7 @@ Arguments CreateFilterArguments(NumericType scalarType, usize N, usize file_size
   args.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_TestOutput));
   args.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, std::make_any<NumericType>(scalarType));
 
-  DynamicTableData tableData;
-  tableData.setTableData(DynamicTableData::TableDataType{{static_cast<double>(file_size)}});
-  args.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, std::make_any<DynamicTableData>(tableData));
+  args.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{static_cast<float64>(file_size)}}));
 
   args.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(N));
   args.insertOrAssign(RawBinaryReaderFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
