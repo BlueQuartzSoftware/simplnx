@@ -82,12 +82,32 @@ public:
     return matrix[index];
   }
 
+  const std::string& getValue(size_t row, size_t column) const // no error checking for walking off edge
+  {
+    return matrix[row * columns + column];
+  }
+
+  const std::string& getValue(size_t index) const // no error checking for walking off edge
+  {
+    return matrix[index];
+  }
+
   std::string& operator()(size_t row, size_t column) // no error checking for walking off edge
   {
     return matrix[row * columns + column];
   }
 
   std::string& operator()(size_t index) // no error checking for walking off edge
+  {
+    return matrix[index];
+  }
+
+  const std::string& operator()(size_t row, size_t column) const // no error checking for walking off edge
+  {
+    return matrix[row * columns + column];
+  }
+
+  const std::string& operator()(size_t index) const // no error checking for walking off edge
   {
     return matrix[index];
   }
@@ -712,7 +732,7 @@ struct AssembleVerticalStringFromIndex
     }
     if((start != 0) && (m_MaxComp != 0)) // if start not index 0, then figure out position relative to current column
     {
-      count = static_cast<size_t>(round(((start + 1) % length) * length)); // plus one converts index to component count
+      count = static_cast<size_t>(std::round(((start + 1) % length) * length)); // plus one converts index to component count
     }
     else // printing full array so it doesnt matter if start is zero or not for newline char
     {
@@ -883,7 +903,7 @@ struct AssembleHorizontalStringFromIndex
     }
     if(start != 0) // if start not index 0, then figure out position relative to current row for newline char
     {
-      count = static_cast<size_t>(round(((start + 1) % length) * length)); // plus one converts index to component count
+      count = static_cast<size_t>(std::round(((start + 1) % length) * length)); // plus one converts index to component count
     }
     if(m_Matrix->getBalance()) // faster (all arrays are same length)
     {
