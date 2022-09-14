@@ -544,7 +544,7 @@ target_include_directories(complex
 # -----------------------------------------------------------------------
 # Download the Test Data. This needs to be done BEFORE the Plugins and test
 # -----------------------------------------------------------------------
-file(TO_CMAKE_PATH ${DREAM3D_DATA_DIR} DREAM3D_DATA_DIR)
+file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR)
 # If DREAM3D_DATA_DIR is NOT defined/set then take a look at the same level as complex
 if("${DREAM3D_DATA_DIR}" STREQUAL "")
   message(STATUS "DREAM3D_DATA_DIR is empty. Attempting to locate DREAM3D_Data at same level as complex directory.")
