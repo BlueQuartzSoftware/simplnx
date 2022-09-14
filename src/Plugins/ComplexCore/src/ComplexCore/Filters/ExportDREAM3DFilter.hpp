@@ -28,6 +28,7 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_ExportFilePath = "Export_File_Path";
+  static inline constexpr StringLiteral k_WriteXdmf = "Write_Xdmf_File";
 
   /**
    * @brief Returns the name of the filter class.
