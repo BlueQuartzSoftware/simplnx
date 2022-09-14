@@ -17,6 +17,13 @@ namespace complex
 {
 namespace OStreamUtilities
 {
+
+/**
+ * @brief This is the primary datastructure used in print string assembly. It is a wrapper struct for
+ * adding additionaly functionality/readability (underlying datastructure is a std::vector)
+ * @param numrows The number of rows for the matrix
+ * @param numcols The number of columns for the matrix
+ */
 struct PrintMatrix2D
 {
   // visual representation of string matrix
@@ -121,6 +128,9 @@ public:
   {
     return isBalanced;
   }
+  /*
+   * This function is used to set balance to true if all values are initialized.
+   */
   void checkBalanceType() // processor heavy, avoid running if you know its unbalanced
   {
     bool balanced = true;
@@ -135,6 +145,14 @@ public:
   }
 };
 
+/**
+ * @brief Parallel enabled | implicit loading of **DataArray**'s elements to PrintMatrix2D vertically
+ * @tparam T The primitive type attacthed to **DataArray**
+ * @param outputMatrix The PrintMatrix2D that will store string values from *inputArray*
+ * @param inputArray The **DataArray** that will have its values translated into strings
+ * @param columnToWrite The column that the **DataArray** should be stored in
+ * @param hasHeaders bool to determine if index must be advanced 1 to avoid overwrite
+ */
 template <typename T>
 struct LoadDataArrayToMatrixImpl
 {
@@ -178,6 +196,14 @@ private:
   bool m_HasHeaders = false;
 };
 
+/**
+ * @brief implicit loading of **NeighborList**'s elements to PrintMatrix2D
+ * @tparam T The primitive type attacthed to **NeighborList**
+ * @param outputMatrix The PrintMatrix2D that will store string values from *inputArray*
+ * @param inputArray The **NeighborList** that will have its values translated into strings
+ * @param hasIndex bool to determine if index must be advanced 1 to avoid row overwrite
+ * @param hasHeaders bool to determine if index must be advanced 1 to avoid column overwrite
+ */
 template <typename T>
 struct LoadNeighborListToMatrixImpl // adds component count implicitly
 {
@@ -267,6 +293,13 @@ private:
   bool m_HasHeader = false;
 };
 
+/**
+ * @brief Parallel enabled | implicit loading of **StringArray**'s elements to PrintMatrix2D vertically
+ * @param outputMatrix The PrintMatrix2D that will store string values from *inputArray*
+ * @param inputArray The **StringArray** that will have its values translated into strings
+ * @param columnToWrite The column that the **StringArray** should be stored in
+ * @param hasHeaders bool to determine if index must be advanced 1 to avoid overwrite
+ */
 struct LoadStringArrayToMatrixImpl
 {
 public:
@@ -309,9 +342,17 @@ private:
   bool m_HasHeaders = false;
 };
 
+/**
+ * @brief Parallel enabled | parse PrintMatrix2D vertically to assemble strings according to params
+ * @param outputMatrix The PrintMatrix2D that will be parsed
+ * @param
+ * @param verticalColumnToPrint The index of column to be parsed
+ * @param delimiter The delimiter to be inserted into string (leave blank if binary is end output)
+ * @param componentsPerLine The amount of elements to be inserted before newline character
+ */
 struct AssembleVerticalStringFromIndex
 {
-  AssembleVerticalStringFromIndex(std::shared_ptr<PrintMatrix2D> matrix, std::map<size_t, std::string>& stringStore, const int32 verticalColumnToPrint, const std::string delimiter = "",
+  AssembleVerticalStringFromIndex(PrintMatrix2D& matrix, std::map<size_t, std::string>& stringStore, const int32 verticalColumnToPrint, const std::string delimiter = "",
                                   const size_t componentsPerLine = 0)
   : m_Matrix(matrix)
   , m_StringStore(stringStore)
@@ -325,7 +366,7 @@ struct AssembleVerticalStringFromIndex
   void verticalPrint(const size_t start, const size_t end) const
   {
     std::stringstream sstrm;
-    size_t length = m_Matrix->getRows(); // will print entire array on one line if no componentsPerLine provided
+    size_t length = m_Matrix.getRows(); // will print entire array on one line if no componentsPerLine provided
     size_t count = 0;
     size_t elementCount = 0;
     size_t totalCount = 0;
@@ -342,13 +383,13 @@ struct AssembleVerticalStringFromIndex
     {
       count = start;
     }
-    if(m_Matrix->getBalance()) // faster (all arrays are same length)
+    if(m_Matrix.getBalance()) // faster (all arrays are same length)
     {
       if(!m_Delim.empty())
       {
         for(size_t i = start; i < end; i++)
         {
-          sstrm << m_Matrix->getValue(i, m_VertColumn) << m_Delim;
+          sstrm << m_Matrix.getValue(i, m_VertColumn) << m_Delim;
           count++;
           elementCount++;
           totalCount += 2;
@@ -370,7 +411,7 @@ struct AssembleVerticalStringFromIndex
       {
         for(size_t i = start; i < end; i++)
         {
-          sstrm << m_Matrix->getValue(i, m_VertColumn);
+          sstrm << m_Matrix.getValue(i, m_VertColumn);
           count++;
           elementCount++;
           totalCount++;
@@ -395,7 +436,7 @@ struct AssembleVerticalStringFromIndex
       {
         for(size_t i = start; i < end; i++)
         {
-          const auto& selected = m_Matrix->getValue(i, m_VertColumn);
+          const auto& selected = m_Matrix.getValue(i, m_VertColumn);
           if(selected.find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
           {
             sstrm << "\n";
@@ -433,7 +474,7 @@ struct AssembleVerticalStringFromIndex
       {
         for(size_t i = start; i < end; i++)
         {
-          const auto& selected = m_Matrix->getValue(i, m_VertColumn);
+          const auto& selected = m_Matrix.getValue(i, m_VertColumn);
           if(selected.find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
           {
             sstrm << "\n";
@@ -469,22 +510,30 @@ struct AssembleVerticalStringFromIndex
       }
     }
   }
+
   void operator()(ComplexRange range) const // for this parallelization range should go to size of largest data array to avoid hitting possible neighborlists for default printing
   {
     verticalPrint(range.min(), range.max());
   }
 
 private:
-  std::shared_ptr<PrintMatrix2D> m_Matrix;
+  PrintMatrix2D& m_Matrix;
   std::map<size_t, std::string>& m_StringStore;
   const size_t m_MaxComp;
   const std::string m_Delim = "";
   const int32 m_VertColumn = 0;
 };
 
+/**
+ * @brief Parallel enabled | parse PrintMatrix2D horizontally to assemble strings according to params
+ * @param outputMatrix The PrintMatrix2D that will be parsed
+ * @param
+ * @param delimiter The delimiter to be inserted into string (leave blank if binary is end output)
+ * @param componentsPerLine The amount of elements to be inserted before newline character
+ */
 struct AssembleHorizontalStringFromIndex
 {
-  AssembleHorizontalStringFromIndex(std::shared_ptr<PrintMatrix2D> matrix, std::map<size_t, std::string>& stringStore, const std::string delimiter = "", const size_t componentsPerLine = 0)
+  AssembleHorizontalStringFromIndex(PrintMatrix2D& matrix, std::map<size_t, std::string>& stringStore, const std::string delimiter = "", const size_t componentsPerLine = 0)
   : m_Matrix(matrix)
   , m_StringStore(stringStore)
   , m_MaxComp(componentsPerLine)
@@ -496,7 +545,7 @@ struct AssembleHorizontalStringFromIndex
   void horizontalPrint(const size_t start, const size_t end) const // mostly single file use
   {
     std::stringstream sstrm;
-    size_t length = m_Matrix->getColumns(); // default is one tuple per line
+    size_t length = m_Matrix.getColumns(); // default is one tuple per line
     size_t count = 0;
     size_t elementCount = 0;
     size_t totalCount = 0;
@@ -509,13 +558,13 @@ struct AssembleHorizontalStringFromIndex
     {
       count = static_cast<size_t>(std::round(((start + 1) % length) * length)); // plus one converts index to component count
     }
-    if(m_Matrix->getBalance()) // faster (all arrays are same length)
+    if(m_Matrix.getBalance()) // faster (all arrays are same length)
     {
       if(!m_Delim.empty())
       {
         for(size_t i = start; i < end; i++)
         {
-          sstrm << m_Matrix->getValue(i) << m_Delim;
+          sstrm << m_Matrix.getValue(i) << m_Delim;
           count++;
           elementCount++;
           totalCount += 2;
@@ -537,7 +586,7 @@ struct AssembleHorizontalStringFromIndex
       {
         for(size_t i = start; i < end; i++)
         {
-          sstrm << m_Matrix->getValue(i);
+          sstrm << m_Matrix.getValue(i);
           count++;
           elementCount++;
           totalCount++;
@@ -562,7 +611,7 @@ struct AssembleHorizontalStringFromIndex
       {
         for(size_t i = start; i < end; i++)
         {
-          if(m_Matrix->getValue(i).find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
+          if(m_Matrix.getValue(i).find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
           {
             sstrm << "\n";
             count = 0;
@@ -576,7 +625,7 @@ struct AssembleHorizontalStringFromIndex
           }
           else // not empty matrix slot
           {
-            sstrm << m_Matrix->getValue(i) << m_Delim;
+            sstrm << m_Matrix.getValue(i) << m_Delim;
             count++;
             elementCount++;
             totalCount += 2;
@@ -599,7 +648,7 @@ struct AssembleHorizontalStringFromIndex
       {
         for(size_t i = start; i < end; i++)
         {
-          if(m_Matrix->getValue(i).find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
+          if(m_Matrix.getValue(i).find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
           {
             sstrm << "\n";
             count = 0;
@@ -612,7 +661,7 @@ struct AssembleHorizontalStringFromIndex
           }
           else // not empty matrix slot
           {
-            sstrm << m_Matrix->getValue(i);
+            sstrm << m_Matrix.getValue(i);
             count++;
             elementCount++;
             totalCount++;
@@ -640,12 +689,15 @@ struct AssembleHorizontalStringFromIndex
   }
 
 private:
-  std::shared_ptr<PrintMatrix2D> m_Matrix;
+  PrintMatrix2D& m_Matrix;
   std::map<size_t, std::string>& m_StringStore;
   const size_t m_MaxComp;
   const std::string m_Delim = "";
 };
 
+/**
+ * @brief Wrapper class for the print functions
+ */
 class COMPLEX_EXPORT OutputFunctions
 {
 public:
@@ -654,25 +706,77 @@ public:
   }
   ~OutputFunctions() = default;
 
-  // multiple datapaths, Creates OFStream from filepath [BINARY CAPABLE, unless neighborlist] // endianess must be determined in calling class
+  /**
+   * @brief [BINARY CAPABLE, unless neighborlist][Multiple File Output] | writes out to multiple files | !!!!endianess must be addressed in calling class!!!!
+   * @param objectPaths The vector of datapaths for respective dataObjects to be written out
+   * @param dataStructure The complex datastructure where *objectPaths* datacontainers are stored
+   * @param directoryPath The path to directory to write files to | used to create file paths for ofstream
+   * //params with defaults
+   * @param fileExtension The extension to create and write to files with
+   * @param exportToBinary The boolean that determines if it writes out binary
+   * @param delimiter The delimiter to be inserted into string | leave blank if binary is end output
+   * @param includeIndex The boolean that determines if "Feature_IDs" are printed | leave blank if binary is end output
+   * @param includeHeaders The boolean that determines if headers are printed | leave blank if binary is end output
+   * @param componentsPerLine The amount of elements to be inserted before newline character
+   */
   void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::directory_entry& directoryPath, std::string fileExtension = ".txt",
                                     bool exportToBinary = false, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0);
 
-  // single path, custom OStream [BINARY CAPABLE] // endianess must be determined in calling class
-  void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const std::string delimiter = "", bool exportToBinary = false,
+  /**
+   * @brief [BINARY CAPABLE, unless neighborlist][Single Output][Custom OStream] | writes one IArray child to some ostream | !!!!endianess must be addressed in calling class!!!!
+   * @param outputStrm The already opened output string to write to | binary only supported with ofstream and ostringstream
+   * @param objectPath The datapath for respective dataObject to be written out
+   * @param dataStructure The complex datastructure where *objectPath* datacontainer is stored
+   * //params with defaults
+   * @param exportToBinary The boolean that determines if it writes out binary
+   * @param delimiter The delimiter to be inserted into string | leave blank if binary is end output
+   * @param componentsPerLine The amount of elements to be inserted before newline character
+   */
+  void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, bool exportToBinary = false, const std::string delimiter = "",
                              size_t componentsPerLine = 0);
 
-  // single path, Creates OFStream from filepath [BINARY CAPABLE] // endianess must be determined in calling class
-  void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string delimiter = "", bool exportToBinary = false,
+  /**
+   * @brief [BINARY CAPABLE, unless neighborlist][Single File Output] | writes one IArray child to ofstream | !!!!endianess must be addressed in calling class!!!!
+   * @param objectPath The datapath for respective dataObject to be written out
+   * @param dataStructure The complex datastructure where *objectPath* datacontainer is stored
+   * @param filePath The path to file to write to | used to create file paths for ofstream | will overwrite existing contents
+   * //params with defaults
+   * @param exportToBinary The boolean that determines if it writes out binary
+   * @param delimiter The delimiter to be inserted into string | leave blank if binary is end output
+   * @param componentsPerLine The amount of elements to be inserted before newline character
+   */
+  void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, bool exportToBinary = false, const std::string delimiter = "",
                              size_t componentsPerLine = 0);
 
-  // custom OStream [NO BINARY SUPPORT]
+  /**
+   * @brief [Single Output][Custom OStream] | writes out multiple arrays to ostream
+   * @param outputStrm The already opened output string to write to
+   * @param objectPaths The vector of datapaths for respective dataObjects to be written out
+   * @param dataStructure The complex datastructure where *objectPaths* datacontainers are stored
+   * //params with defaults
+   * @param delimiter The delimiter to be inserted into string
+   * @param includeIndex The boolean that determines if "Feature_IDs" are printed
+   * @param componentsPerLine The amount of elements to be inserted before newline character
+   * @param includeHeaders The boolean that determines if headers are printed
+   * @param IncludeNeighborLists The boolean that determines if NeighborLists are printed at the bottom of file
+   */
   void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", bool includeIndex = false,
-                                 size_t componentsPerLine = 0, bool includeHeaders = false);
+                                 size_t componentsPerLine = 0, bool includeHeaders = false, bool includeNeighborLists = false);
 
-  // Creates OFStream from filepath [NO BINARY SUPPORT]
+  /**
+   * @brief [Single File Output] | writes out multiple arrays to single file
+   * @param objectPaths The vector of datapaths for respective dataObjects to be written out
+   * @param dataStructure The complex datastructure where *objectPaths* datacontainers are stored
+   * @param filePath The path to file to write to | used to create file paths for ofstream | will overwrite existing contents
+   * //params with defaults
+   * @param delimiter The delimiter to be inserted into string
+   * @param includeIndex The boolean that determines if "Feature_IDs" are printed
+   * @param componentsPerLine The amount of elements to be inserted before newline character
+   * @param includeHeaders The boolean that determines if headers are printed
+   * @param IncludeNeighborLists The boolean that determines if NeighborLists are printed at the bottom of file
+   */
   void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string& delimiter = "", bool includeIndex = false,
-                                 size_t componentsPerLine = 0, bool includeHeaders = false);
+                                 size_t componentsPerLine = 0, bool includeHeaders = false, bool includeNeighborLists = false);
 
 private:
   void neighborListImplWrapper(DataStructure& dataStructure, PrintMatrix2D& matrixRef, DataObject::Type type, const DataPath& path, bool hasIndex = false, bool hasHeaders = false);
@@ -712,7 +816,7 @@ private:
   std::map<U, std::vector<T>> createSortedMapbyType(const std::vector<T>& uniqueValuesVec, const std::vector<U>& parallelSortingVec);
 
   std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap, DataStructure& dataStructure, bool includeIndex = false,
-                                                                           bool includeHeaders = false);
+                                                                           bool includeHeaders = false, bool includeNeighborLists = false);
 };
 
 } // namespace OStreamUtilities
