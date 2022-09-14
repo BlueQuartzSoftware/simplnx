@@ -345,14 +345,14 @@ private:
 /**
  * @brief Parallel enabled | parse PrintMatrix2D vertically to assemble strings according to params
  * @param outputMatrix The PrintMatrix2D that will be parsed
- * @param
+ * @param stringStore A vector of strings preinitialized to update by index
  * @param verticalColumnToPrint The index of column to be parsed
  * @param delimiter The delimiter to be inserted into string (leave blank if binary is end output)
  * @param componentsPerLine The amount of elements to be inserted before newline character
  */
 struct AssembleVerticalStringFromIndex
 {
-  AssembleVerticalStringFromIndex(PrintMatrix2D& matrix, std::map<size_t, std::string>& stringStore, const int32 verticalColumnToPrint, const std::string delimiter = "",
+  AssembleVerticalStringFromIndex(const PrintMatrix2D& matrix, std::vector<std::string>& stringStore, const int32 verticalColumnToPrint, const std::string delimiter = "",
                                   const size_t componentsPerLine = 0)
   : m_Matrix(matrix)
   , m_StringStore(stringStore)
@@ -401,7 +401,7 @@ struct AssembleVerticalStringFromIndex
           }
           if(totalCount >= stringDumpCount)
           {
-            m_StringStore.emplace((i - elementCount), sstrm.str());
+            m_StringStore[i] = std::move(sstrm.str());
             sstrm.flush();
             totalCount = elementCount = 0;
           }
@@ -423,7 +423,7 @@ struct AssembleVerticalStringFromIndex
           }
           if(totalCount >= stringDumpCount)
           {
-            m_StringStore.emplace((i - elementCount), sstrm.str());
+            m_StringStore[i] = std::move(sstrm.str());
             sstrm.flush();
             totalCount = elementCount = 0;
           }
@@ -444,7 +444,7 @@ struct AssembleVerticalStringFromIndex
             totalCount++;
             if(totalCount >= stringDumpCount)
             {
-              m_StringStore.emplace((i - elementCount), sstrm.str());
+              m_StringStore[i] = std::move(sstrm.str());
               sstrm.flush();
               totalCount = elementCount = 0;
             }
@@ -463,7 +463,7 @@ struct AssembleVerticalStringFromIndex
             }
             if(totalCount >= stringDumpCount)
             {
-              m_StringStore.emplace((i - elementCount), sstrm.str());
+              m_StringStore[i] = std::move(sstrm.str());
               sstrm.flush();
               totalCount = elementCount = 0;
             }
@@ -482,7 +482,7 @@ struct AssembleVerticalStringFromIndex
             totalCount++;
             if(totalCount >= stringDumpCount)
             {
-              m_StringStore.emplace((i - elementCount), sstrm.str());
+              m_StringStore[i] = std::move(sstrm.str());
               sstrm.flush();
               totalCount = elementCount = 0;
             }
@@ -501,7 +501,7 @@ struct AssembleVerticalStringFromIndex
             }
             if(totalCount >= stringDumpCount)
             {
-              m_StringStore.emplace((i - elementCount), sstrm.str());
+              m_StringStore[i] = std::move(sstrm.str());
               sstrm.flush();
               totalCount = elementCount = 0;
             }
@@ -517,8 +517,8 @@ struct AssembleVerticalStringFromIndex
   }
 
 private:
-  PrintMatrix2D& m_Matrix;
-  std::map<size_t, std::string>& m_StringStore;
+  const PrintMatrix2D& m_Matrix;
+  std::vector<std::string>& m_StringStore;
   const size_t m_MaxComp;
   const std::string m_Delim = "";
   const int32 m_VertColumn = 0;
@@ -527,13 +527,13 @@ private:
 /**
  * @brief Parallel enabled | parse PrintMatrix2D horizontally to assemble strings according to params
  * @param outputMatrix The PrintMatrix2D that will be parsed
- * @param
+ * @param stringStore A vector of strings preinitialized to update by index
  * @param delimiter The delimiter to be inserted into string (leave blank if binary is end output)
  * @param componentsPerLine The amount of elements to be inserted before newline character
  */
 struct AssembleHorizontalStringFromIndex
 {
-  AssembleHorizontalStringFromIndex(PrintMatrix2D& matrix, std::map<size_t, std::string>& stringStore, const std::string delimiter = "", const size_t componentsPerLine = 0)
+  AssembleHorizontalStringFromIndex(const PrintMatrix2D& matrix, std::vector<std::string>& stringStore, const std::string delimiter = "", const size_t componentsPerLine = 0)
   : m_Matrix(matrix)
   , m_StringStore(stringStore)
   , m_MaxComp(componentsPerLine)
@@ -576,7 +576,7 @@ struct AssembleHorizontalStringFromIndex
           }
           if(totalCount >= stringDumpCount)
           {
-            m_StringStore.emplace((i - elementCount), sstrm.str());
+            m_StringStore[i] = std::move(sstrm.str());
             sstrm.flush();
             totalCount = elementCount = 0;
           }
@@ -598,7 +598,7 @@ struct AssembleHorizontalStringFromIndex
           }
           if(totalCount >= stringDumpCount)
           {
-            m_StringStore.emplace((i - elementCount), sstrm.str());
+            m_StringStore[i] = std::move(sstrm.str());
             sstrm.flush();
             totalCount = elementCount = 0;
           }
@@ -618,7 +618,7 @@ struct AssembleHorizontalStringFromIndex
             totalCount++;
             if(totalCount >= stringDumpCount)
             {
-              m_StringStore.emplace((i - elementCount), sstrm.str());
+              m_StringStore[i] = std::move(sstrm.str());
               sstrm.flush();
               totalCount = elementCount = 0;
             }
@@ -637,7 +637,7 @@ struct AssembleHorizontalStringFromIndex
             }
             if(totalCount >= stringDumpCount)
             {
-              m_StringStore.emplace((i - elementCount), sstrm.str());
+              m_StringStore[i] = std::move(sstrm.str());
               sstrm.flush();
               totalCount = elementCount = 0;
             }
@@ -655,7 +655,7 @@ struct AssembleHorizontalStringFromIndex
             totalCount++;
             if(totalCount >= stringDumpCount)
             {
-              m_StringStore.emplace((i - elementCount), sstrm.str());
+              m_StringStore[i] = std::move(sstrm.str());
               totalCount = elementCount = 0;
             }
           }
@@ -673,7 +673,7 @@ struct AssembleHorizontalStringFromIndex
             }
             if(totalCount >= stringDumpCount)
             {
-              m_StringStore.emplace((i - elementCount), sstrm.str());
+              m_StringStore[i] = std::move(sstrm.str());
               sstrm.flush();
               totalCount = elementCount = 0;
             }
@@ -689,8 +689,8 @@ struct AssembleHorizontalStringFromIndex
   }
 
 private:
-  PrintMatrix2D& m_Matrix;
-  std::map<size_t, std::string>& m_StringStore;
+  const PrintMatrix2D& m_Matrix;
+  std::vector<std::string>& m_StringStore;
   const size_t m_MaxComp;
   const std::string m_Delim = "";
 };
@@ -817,6 +817,8 @@ private:
 
   std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap, DataStructure& dataStructure, bool includeIndex = false,
                                                                            bool includeHeaders = false, bool includeNeighborLists = false);
+
+  std::map<size_t, std::string> createStringMapFromVector(const std::vector<std::string>& strings);
 };
 
 } // namespace OStreamUtilities

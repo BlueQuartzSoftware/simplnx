@@ -517,7 +517,8 @@ std::map<U, std::vector<T>> OStreamUtilities::OutputFunctions::createSortedMapby
 }
 
 std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::OutputFunctions::unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap,
-                                                                                                                              DataStructure& dataStructure, bool includeIndex, bool includeHeaders, bool includeNeighborLists)
+                                                                                                                              DataStructure& dataStructure, bool includeIndex, bool includeHeaders,
+                                                                                                                              bool includeNeighborLists)
 {
   std::vector<std::shared_ptr<PrintMatrix2D>> outputPtrs;
   std::map<DataPath, DataObject::Type> arrayMap = {};
@@ -556,6 +557,19 @@ std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::
   }
 
   return outputPtrs;
+}
+
+std::map<size_t, std::string> OStreamUtilities::OutputFunctions::createStringMapFromVector(const std::vector<std::string>& strings)
+{
+  std::map<size_t, std::string> outputMap;
+  for(size_t i = 0; i < strings.size(); i++)
+  {
+    if(strings[i].find("UNINITIALIZED") == std::string::npos) // if unintialized not found
+    {
+      outputMap.emplace(i, strings[i]);
+    }
+  }
+  return outputMap;
 }
 
 // multiple datapaths, Creates OFStream from filepath [BINARY CAPABLE, unless neighborlist] // endianess must be determined in calling class
@@ -601,7 +615,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
   std::ofstream fout;
   while(arrayIndex < matrix->getColumns())
   {
-    std::map<size_t, std::string> stringStore; // 1 per array
+    std::vector<std::string> stringStore(matrix->getColumns(), "UNINITIALIZED"); // 1 per array
     dataAlg.execute(OStreamUtilities::AssembleVerticalStringFromIndex(*matrix, stringStore, arrayIndex, delimiter, componentsPerLine));
     auto path = directoryPath.path().string() + "/" + matrix->getValue(arrayIndex) + fileExtension;
     if(exportToBinary)
@@ -616,7 +630,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
     {
       throw std::runtime_error("Error creating the file");
     }
-    printMap.emplace(path, std::map<size_t, std::string>(std::move(stringStore))); // try to make as resource efficient as possible
+    printMap.emplace(path, std::map<size_t, std::string>(std::move(createStringMapFromVector(stringStore)))); // try to make as resource efficient as possible
     arrayIndex++;
   }
   if(hasNeighborLists) // cant be binary
@@ -634,15 +648,15 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
     }
     for(size_t i = 1; i < matrices.size(); i++) // neighborLists automatically stored at the end
     {
-      std::map<size_t, std::string> stringStore; // 1 per matrix
-      dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrix, stringStore, delimiter, componentsPerLine));
+      std::vector<std::string> stringStore(matrices[i]->getSize(), "UNINITIALIZED"); // 1 per matrix
+      dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrices[i], stringStore, delimiter, componentsPerLine));
       auto path = directoryPath.path().string() + "/" + neighborNames[(i - 1)] + fileExtension;
       fout = std::ofstream(path, std::ofstream::out);
       if(!fout.is_open())
       {
         throw std::runtime_error("Error creating the file");
       }
-      printMap.emplace(path, std::map<size_t, std::string>(std::move(stringStore))); // try to make as resource efficient as possible
+      printMap.emplace(path, std::map<size_t, std::string>(std::move(createStringMapFromVector(stringStore)))); // try to make as resource efficient as possible
     }
   }
 
@@ -680,17 +694,17 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outp
   auto matrix = matrices[0];
 
   ParallelDataAlgorithm dataAlg;
-  std::map<size_t, std::string> stringStore; // 1 per matrix
+  std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
   dataAlg.setRange(0, matrix->getRows());
   dataAlg.execute(OStreamUtilities::AssembleVerticalStringFromIndex(*matrix, stringStore, 0, delimiter, componentsPerLine));
 
   if(hasNeighborLists)
   {
-    writeOutWrapper(stringStore, outputStrm, false);
+    writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, false);
   }
   else
   {
-    writeOutWrapper(stringStore, outputStrm, exportToBinary);
+    writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, exportToBinary);
   }
 }
 
@@ -718,7 +732,7 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& ob
   auto matrix = matrices[0];
 
   ParallelDataAlgorithm dataAlg;
-  std::map<size_t, std::string> stringStore; // 1 per matrix
+  std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
   dataAlg.setRange(0, matrix->getSize());
   dataAlg.execute(OStreamUtilities::AssembleVerticalStringFromIndex(*matrix, stringStore, 0, delimiter, componentsPerLine));
 
@@ -737,11 +751,11 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& ob
   }
   if(hasNeighborLists)
   {
-    writeOutWrapper(stringStore, outputStrm, false);
+    writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, false);
   }
   else
   {
-    writeOutWrapper(stringStore, outputStrm, exportToBinary);
+    writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, exportToBinary);
   }
 }
 
@@ -764,10 +778,10 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& 
   std::vector<std::map<size_t, std::string>> stringStoreList;
   for(auto& matrix : matrices) // neighborLists automatically stored at the end
   {
-    std::map<size_t, std::string> stringStore; // 1 per matrix
+    std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
     dataAlg.setRange(0, matrix->getSize());
     dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrix, stringStore, delimiter, componentsPerLine));
-    stringStoreList.push_back(stringStore);
+    stringStoreList.push_back(createStringMapFromVector(stringStore));
   }
 
   for(auto& stringStore : stringStoreList)
@@ -797,10 +811,10 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vec
   std::vector<std::map<size_t, std::string>> stringStoreList;
   for(auto& matrix : matrices) // neighborLists automatically stored at the end
   {
-    std::map<size_t, std::string> stringStore; // 1 per matrix
+    std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
     dataAlg.setRange(0, matrix->getSize());
     dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrix, stringStore, delimiter, componentsPerLine));
-    stringStoreList.push_back(stringStore);
+    stringStoreList.push_back(createStringMapFromVector(stringStore));
   }
 
   std::ofstream outputStrm(filePath.string(), std::ofstream::out); // overwrite old file just in case
