@@ -1,6 +1,7 @@
 #include "ExportDREAM3DFilter.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
@@ -43,6 +44,7 @@ Parameters ExportDREAM3DFilter::parameters() const
   Parameters params;
   params.insert(std::make_unique<FileSystemPathParameter>(k_ExportFilePath, "Export File Path", "The file path the DataStructure should be written to as an HDF5 file.", "",
                                                           FileSystemPathParameter::ExtensionsType{".dream3d"}, FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<BoolParameter>(k_WriteXdmf, "Write Xdmf File", "", true));
   return params;
 }
 
@@ -65,14 +67,7 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
                                           const std::atomic_bool& shouldCancel) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
-
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(exportFilePath);
-
-  if(result.invalid())
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedFileWriterError, "Failed to initialize H5:FileWriter."}})};
-  }
-  H5::FileWriter fileWriter = std::move(result.value());
+  auto writeXdmf = args.value<bool>(k_WriteXdmf);
 
   auto pipelinePtr = pipelineNode->getPrecedingPipeline();
   if(pipelinePtr == nullptr)
@@ -81,12 +76,7 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   }
   Pipeline pipeline = *pipelinePtr;
 
-  auto errorCode = DREAM3D::WriteFile(fileWriter, {pipeline, dataStructure});
-  if(errorCode < 0)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, "Failed to write .dream3d file."}})};
-  }
-
-  return {};
+  auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
+  return results;
 }
 } // namespace complex
