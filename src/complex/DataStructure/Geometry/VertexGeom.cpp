@@ -73,7 +73,7 @@ DataObject* VertexGeom::deepCopy()
   return new VertexGeom(*this);
 }
 
-Point3D<float32> VertexGeom::getCoords(usize vertId) const
+Point3D<float32> VertexGeom::getVertexCoordinate(usize vertId) const
 {
   const auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
@@ -85,7 +85,7 @@ Point3D<float32> VertexGeom::getCoords(usize vertId) const
   return coords;
 }
 
-void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
+void VertexGeom::setVertexCoordinate(usize vertId, const Point3D<float32>& coords)
 {
   auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
@@ -95,7 +95,7 @@ void VertexGeom::setCoords(usize vertId, const Point3D<float32>& coords)
   }
 }
 
-usize VertexGeom::getNumberOfElements() const
+usize VertexGeom::getNumberOfCells() const
 {
   return getNumberOfVertices();
 }
@@ -104,7 +104,7 @@ IGeometry::StatusCode VertexGeom::findElementSizes()
 {
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
 
   Float32Array* vertexSizes = DataArray<float32>::Create(getDataStructureRef(), "Voxel Sizes", std::move(dataStore), getId());
   if(vertexSizes == nullptr)

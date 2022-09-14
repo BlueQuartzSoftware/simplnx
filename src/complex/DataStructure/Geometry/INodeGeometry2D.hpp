@@ -20,6 +20,13 @@ class COMPLEX_EXPORT INodeGeometry2D : public INodeGeometry1D
 public:
   static inline constexpr StringLiteral k_FaceDataName = "Face Data";
 
+  INodeGeometry2D() = delete;
+  INodeGeometry2D(const INodeGeometry2D&) = default;
+  INodeGeometry2D(INodeGeometry2D&&) = default;
+
+  INodeGeometry2D& operator=(const INodeGeometry2D&) = delete;
+  INodeGeometry2D& operator=(INodeGeometry2D&&) noexcept = delete;
+
   ~INodeGeometry2D() noexcept override = default;
 
   const std::optional<IdType>& getFaceListId() const;
@@ -45,6 +52,33 @@ public:
    * @return usize
    */
   usize getNumberOfFaces() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  virtual usize getVertsPerFace() const = 0;
+
+  /**
+   * @brief
+   * @param triId
+   * @param vertexIds The index into the shared vertex list of each vertex
+   */
+  virtual void setFacePointIds(usize triId, nonstd::span<usize> vertexIds);
+
+  /**
+   * @brief
+   * @param faceId
+   * @param vertexIds The index into the shared vertex list of each vertex
+   */
+  virtual void getFacePointIds(usize faceId, nonstd::span<usize> vertexIds) const;
+
+  /**
+   * @brief
+   * @param faceId
+   * @param coords The coordinates of each vertex
+   */
+  virtual void getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const;
 
   /**
    * @brief
@@ -80,22 +114,6 @@ public:
    * @brief Deletes the unshared edge list and removes it from the DataStructure.
    */
   void deleteUnsharedEdges();
-
-  /**
-   * @brief Sets the vertex IDs making up the specified edge. This method does
-   * nothing if the edge list could not be found.
-   * @param edgeId
-   * @param verts
-   */
-  void setVertsAtEdge(usize edgeId, const usize verts[2]) override;
-
-  /**
-   * @brief Returns the vertices that make up the specified edge by reference.
-   * This method does nothing if the edge list could not be found.
-   * @param edgeId
-   * @param verts
-   */
-  void getVertsAtEdge(usize edgeId, usize verts[2]) const override;
 
   /**
    * @brief
@@ -156,17 +174,9 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-  INodeGeometry2D() = delete;
-
   INodeGeometry2D(DataStructure& ds, std::string name);
 
   INodeGeometry2D(DataStructure& ds, std::string name, IdType importId);
-
-  INodeGeometry2D(const INodeGeometry2D&) = default;
-  INodeGeometry2D(INodeGeometry2D&&) = default;
-
-  INodeGeometry2D& operator=(const INodeGeometry2D&) = delete;
-  INodeGeometry2D& operator=(INodeGeometry2D&&) noexcept = delete;
 
   /**
    * @brief

@@ -132,14 +132,14 @@ const Float32Array* RectGridGeom::getZBounds() const
   return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_zBoundsId));
 }
 
-usize RectGridGeom::getNumberOfElements() const
+usize RectGridGeom::getNumberOfCells() const
 {
   return m_Dimensions.getX() * m_Dimensions.getY() * m_Dimensions.getZ();
 }
 
 IGeometry::StatusCode RectGridGeom::findElementSizes()
 {
-  auto sizes = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1}, 0.0f);
+  auto sizes = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
   auto xBnds = getXBounds();
   auto yBnds = getYBounds();
   auto zBnds = getZBounds();

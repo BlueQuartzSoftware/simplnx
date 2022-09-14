@@ -88,20 +88,20 @@ public:
    * @param vertId
    * @return
    */
-  Point3D<float32> getCoords(usize vertId) const override;
+  Point3D<float32> getVertexCoordinate(usize vertId) const override;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  void setCoords(usize vertId, const Point3D<float32>& coords) override;
+  void setVertexCoordinate(usize vertId, const Point3D<float32>& coords) override;
 
   /**
    * @brief
    * @return usize
    */
-  usize getNumberOfElements() const override;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief

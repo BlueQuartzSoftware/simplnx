@@ -78,42 +78,6 @@ void INodeGeometry3D::deleteUnsharedFaces()
   m_UnsharedFaceListId.reset();
 }
 
-void INodeGeometry3D::setCoords(usize vertId, const Point3D<float32>& coords)
-{
-  auto& vertices = getVerticesRef();
-
-  usize index = vertId * 3;
-  for(usize i = 0; i < 3; i++)
-  {
-    vertices[index + i] = coords[i];
-  }
-}
-
-Point3D<float32> INodeGeometry3D::getCoords(usize vertId) const
-{
-  auto& vertices = getVerticesRef();
-
-  usize index = vertId * 3;
-  auto x = vertices[index];
-  auto y = vertices[index + 1];
-  auto z = vertices[index + 2];
-  return Point3D<float32>(x, y, z);
-}
-
-void INodeGeometry3D::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
-{
-  auto& vertices = getVerticesRef();
-
-  usize verts[2];
-  getVertsAtEdge(edgeId, verts);
-
-  for(usize i = 0; i < 3; i++)
-  {
-    vert1[i] = vertices[verts[0] * 3 + i];
-    vert2[i] = vertices[verts[1] * 3 + i];
-  }
-}
-
 const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraDataId() const
 {
   return m_PolyhedronDataId;

@@ -81,10 +81,10 @@ public:
   virtual IGeometry::Type getGeomType() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the number of Cells (NOT POINTS) of a Geometry
    * @return usize
    */
-  virtual usize getNumberOfElements() const = 0;
+  virtual usize getNumberOfCells() const = 0;
 
   /**
    * @brief

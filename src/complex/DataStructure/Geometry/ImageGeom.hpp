@@ -153,7 +153,7 @@ public:
    * @brief
    * @return usize
    */
-  usize getNumberOfElements() const override;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief

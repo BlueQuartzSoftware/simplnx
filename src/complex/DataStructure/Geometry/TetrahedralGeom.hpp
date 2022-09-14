@@ -15,6 +15,8 @@ class COMPLEX_EXPORT TetrahedralGeom : public INodeGeometry3D
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumEdgeVerts = 2;
+  static inline constexpr usize k_NumFaceVerts = 3;
   static inline constexpr usize k_NumVerts = 4;
 
   /**
@@ -85,59 +87,36 @@ public:
 
   /**
    * @brief
-   * @param triId
-   * @param verts
+   * @return
    */
-  void setVertsAtTri(usize triId, usize verts[3]);
-
-  /**
-   * @brief
-   * @param triId
-   * @param verts
-   */
-  void getVertsAtTri(usize triId, usize verts[3]) const;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfTris() const;
+  usize getVertsPerFace() const override;
 
   /**
    * @brief
    * @param tetId
-   * @param verts
+   * @param vertexIds The index into the shared vertex list of each vertex
    */
-  void setVertsAtTet(usize tetId, usize verts[4]);
+  void setCellPointIds(usize tetId, nonstd::span<usize> vertexIds) override;
 
   /**
    * @brief
    * @param tetId
-   * @param verts
+   * @param vertexIds The index into the shared vertex list of each vertex
    */
-  void getVertsAtTet(usize tetId, usize verts[4]) const;
+  void getCellPointIds(usize tetId, nonstd::span<usize> vertexIds) const override;
 
   /**
    * @brief
    * @param tetId
-   * @param vert1
-   * @param vert2
-   * @param vert3
-   * @param vert4
+   * @param coords The coordinates of each vertex
    */
-  void getVertCoordsAtTet(usize tetId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4) const;
+  void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const override;
 
   /**
-   * @brief
+   * @brief Returns the number of tetrahedrons in this geometry
    * @return usize
    */
-  usize getNumberOfTets() const;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfElements() const override;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief

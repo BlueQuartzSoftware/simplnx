@@ -198,8 +198,8 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
 
   for(size_t i = 0; i < trueCount; i++)
   {
-    Point3D<float> coords = std::move(vertex.getCoords(trueIndices[i]));
-    reducedVertex.setCoords(i, coords);
+    Point3D<float> coords = std::move(vertex.getVertexCoordinate(trueIndices[i]));
+    reducedVertex.setVertexCoordinate(i, coords);
   }
 
   for(const auto& targetArrayPath : targetArrayPaths)

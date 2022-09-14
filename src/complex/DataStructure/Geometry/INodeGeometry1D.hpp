@@ -9,6 +9,15 @@ class COMPLEX_EXPORT INodeGeometry1D : public INodeGeometry0D
 public:
   static inline constexpr StringLiteral k_EdgeDataName = "Edge Data";
 
+  static inline constexpr usize k_NumEdgeVerts = 2;
+
+  INodeGeometry1D() = delete;
+  INodeGeometry1D(const INodeGeometry1D&) = default;
+  INodeGeometry1D(INodeGeometry1D&&) = default;
+
+  INodeGeometry1D& operator=(const INodeGeometry1D&) = delete;
+  INodeGeometry1D& operator=(INodeGeometry1D&&) noexcept = delete;
+
   ~INodeGeometry1D() noexcept override = default;
 
   const std::optional<IdType>& getEdgeListId() const;
@@ -33,7 +42,23 @@ public:
    * @brief Returns the number of edges in the geometry.
    * @return usize
    */
-  usize getNumberOfEdges() const;
+  virtual usize getNumberOfCells() const override;
+
+  /**
+   * @brief Sets the vertex IDs making up the specified edge. This method does
+   * nothing if the edge list could not be found.
+   * @param edgeId
+   * @param vertexIds The index into the shared vertex list of each vertex
+   */
+  virtual void setEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds);
+
+  /**
+   * @brief Returns the vertices that make up the specified edge by reference.
+   * This method does nothing if the edge list could not be found.
+   * @param edgeId
+   * @param vertexIds The index into the shared vertex list of each vertex
+   */
+  virtual void getEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds) const;
 
   /**
    * @brief Returns the vertex coordinates for a specified edge by reference.
@@ -42,7 +67,7 @@ public:
    * @param vert1
    * @param vert2
    */
-  virtual void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const = 0;
+  virtual void getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const;
 
   /**
    * @brief
@@ -94,22 +119,6 @@ public:
    * @brief
    */
   void deleteElementCentroids();
-
-  /**
-   * @brief Sets the vertex IDs making up the specified edge. This method does
-   * nothing if the edge list could not be found.
-   * @param edgeId
-   * @param verts
-   */
-  virtual void setVertsAtEdge(usize edgeId, const usize verts[2]) = 0;
-
-  /**
-   * @brief Returns the vertices that make up the specified edge by reference.
-   * This method does nothing if the edge list could not be found.
-   * @param edgeId
-   * @param verts
-   */
-  virtual void getVertsAtEdge(usize edgeId, usize verts[2]) const = 0;
 
   /**
    * @brief
@@ -170,17 +179,9 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-  INodeGeometry1D() = delete;
-
   INodeGeometry1D(DataStructure& ds, std::string name);
 
   INodeGeometry1D(DataStructure& ds, std::string name, IdType importId);
-
-  INodeGeometry1D(const INodeGeometry1D&) = default;
-  INodeGeometry1D(INodeGeometry1D&&) = default;
-
-  INodeGeometry1D& operator=(const INodeGeometry1D&) = delete;
-  INodeGeometry1D& operator=(INodeGeometry1D&&) noexcept = delete;
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

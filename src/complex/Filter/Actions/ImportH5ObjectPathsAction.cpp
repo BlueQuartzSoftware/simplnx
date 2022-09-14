@@ -63,6 +63,10 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   for(const auto& targetPath : importPaths)
   {
     auto importObject = importStructure.getSharedData(targetPath);
+    if(nullptr == importObject)
+    {
+      continue;
+    }
     auto importData = std::shared_ptr<DataObject>(importObject->deepCopy());
     // Clear all children before inserting into the DataStructure
     if(auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData); importGroup != nullptr)

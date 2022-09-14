@@ -226,7 +226,7 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
   }
 
   bool good = false;
-  usize totalPoints = data.getDataRefAs<ImageGeom>(imageGeomPath).getNumberOfElements();
+  usize totalPoints = data.getDataRefAs<ImageGeom>(imageGeomPath).getNumberOfCells();
   usize totalFeatures = numNeighborsArray.getNumberOfTuples();
 
   std::vector<bool> activeObjects(totalFeatures, true);

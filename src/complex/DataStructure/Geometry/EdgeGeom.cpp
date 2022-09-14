@@ -71,71 +71,9 @@ DataObject* EdgeGeom::deepCopy()
   return new EdgeGeom(*this);
 }
 
-void EdgeGeom::setCoords(usize vertId, const Point3D<float32>& coords)
-{
-  auto& vertices = getVerticesRef();
-  for(usize i = 0; i < 3; i++)
-  {
-    vertices[vertId * 3 + i] = coords[i];
-  }
-}
-
-Point3D<float32> EdgeGeom::getCoords(usize vertId) const
-{
-  auto& vertices = getVerticesRef();
-  Point3D<float32> coord;
-  for(usize i = 0; i < 3; i++)
-  {
-    coord[i] = vertices[vertId * 3 + i];
-  }
-  return coord;
-}
-
-void EdgeGeom::setVertsAtEdge(usize edgeId, const usize verts[2])
-{
-  auto& edges = getEdgesRef();
-  const usize offset = edgeId * k_NumVerts;
-  if(offset + k_NumVerts >= edges.getSize())
-  {
-    return;
-  }
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    edges[offset + i] = verts[i];
-  }
-}
-
-void EdgeGeom::getVertsAtEdge(usize edgeId, usize verts[2]) const
-{
-  auto& cells = getEdgesRef();
-  const usize offset = edgeId * k_NumVerts;
-  if(offset + k_NumVerts >= cells.getSize())
-  {
-    return;
-  }
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    verts[i] = cells.at(offset + i);
-  }
-}
-
-void EdgeGeom::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
-{
-  usize verts[k_NumVerts];
-  getVertsAtEdge(edgeId, verts);
-  vert1 = getCoords(verts[0]);
-  vert2 = getCoords(verts[1]);
-}
-
-usize EdgeGeom::getNumberOfElements() const
-{
-  auto& edges = getEdgesRef();
-  return edges.getNumberOfTuples();
-}
-
 IGeometry::StatusCode EdgeGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfElements(), 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
   auto* sizes = DataArray<float32>::Create(*getDataStructure(), "Edge Lengths", std::move(dataStore), getId());
   if(sizes == nullptr)
   {
@@ -143,16 +81,15 @@ IGeometry::StatusCode EdgeGeom::findElementSizes()
   }
   m_ElementSizesId = sizes->getId();
 
-  Point3D<float32> vert0 = {0.0f, 0.0f, 0.0f};
-  Point3D<float32> vert1 = {0.0f, 0.0f, 0.0f};
+  std::array<Point3Df, 2> verts = {Point3Df(0.0f, 0.0f, 0.0f), Point3Df(0.0f, 0.0f, 0.0f)};
 
-  for(usize i = 0; i < getNumberOfEdges(); i++)
+  for(usize i = 0; i < INodeGeometry1D::getNumberOfCells(); i++)
   {
-    getVertCoordsAtEdge(i, vert0, vert1);
+    getEdgeCoordinates(i, verts);
     float32 length = 0.0f;
     for(usize j = 0; j < 3; j++)
     {
-      length += (vert0[j] - vert1[j]) * (vert0[j] - vert1[j]);
+      length += (verts[0][j] - verts[1][j]) * (verts[0][j] - verts[1][j]);
     }
     (*sizes)[i] = std::sqrt(length);
   }
@@ -205,7 +142,7 @@ IGeometry::StatusCode EdgeGeom::findElementNeighbors()
 
 IGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{3}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
   auto* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)

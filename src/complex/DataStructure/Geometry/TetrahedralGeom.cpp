@@ -71,73 +71,48 @@ DataObject* TetrahedralGeom::deepCopy()
   return new TetrahedralGeom(*this);
 }
 
-void TetrahedralGeom::setVertsAtTri(usize triId, usize verts[3])
+usize TetrahedralGeom::getVertsPerFace() const
 {
-  auto& triangles = getFacesRef();
+  return k_NumFaceVerts;
+}
 
-  for(usize i = 0; i < 3; i++)
+void TetrahedralGeom::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)
+{
+  auto& polyhedra = getPolyhedraRef();
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    triangles[triId * 3 + i] = verts[i];
+    polyhedra[polyhedraId * k_NumVerts + i] = vertexIds[i];
   }
 }
 
-void TetrahedralGeom::getVertsAtTri(usize triId, usize verts[3]) const
+void TetrahedralGeom::getCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds) const
 {
-  auto& triangles = getFacesRef();
-
-  for(usize i = 0; i < 3; i++)
+  auto& polyhedra = getPolyhedraRef();
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    verts[i] = triangles.at(triId * 3 + i);
+    vertexIds[i] = polyhedra[polyhedraId * k_NumVerts + i];
   }
 }
 
-usize TetrahedralGeom::getNumberOfTris() const
+void TetrahedralGeom::getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const
 {
-  return getFacesRef().getNumberOfTuples();
-}
-
-void TetrahedralGeom::setVertsAtTet(usize tetId, usize verts[4])
-{
-  auto& tets = getPolyhedraRef();
-  for(usize i = 0; i < 4; i++)
+  std::array<usize, k_NumVerts> vertIds = {0, 0, 0, 0};
+  getCellPointIds(tetId, vertIds);
+  for(usize index = 0; index < k_NumVerts; index++)
   {
-    tets[tetId * 4 + i] = verts[i];
+    coords[index] = getVertexCoordinate(vertIds[index]);
   }
 }
 
-void TetrahedralGeom::getVertsAtTet(usize tetId, usize verts[4]) const
-{
-  auto& tets = getPolyhedraRef();
-  for(usize i = 0; i < 4; i++)
-  {
-    verts[i] = tets[tetId * 4 + i];
-  }
-}
-
-void TetrahedralGeom::getVertCoordsAtTet(usize tetId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
-{
-  std::array<usize, 4> vertIds = {0};
-  getVertsAtTet(tetId, vertIds.data());
-  vert1 = getCoords(vertIds[0]);
-  vert2 = getCoords(vertIds[1]);
-  vert3 = getCoords(vertIds[2]);
-  vert4 = getCoords(vertIds[3]);
-}
-
-usize TetrahedralGeom::getNumberOfTets() const
+usize TetrahedralGeom::getNumberOfCells() const
 {
   auto& tets = getPolyhedraRef();
   return tets.getNumberOfTuples();
 }
 
-usize TetrahedralGeom::getNumberOfElements() const
-{
-  return getNumberOfTets();
-}
-
 IGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfTets()}, std::vector<usize>{1}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
   Float32Array* tetSizes = DataArray<float32>::Create(*getDataStructure(), "Tet Volumes", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindTetVolumes(getPolyhedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)
@@ -186,7 +161,7 @@ IGeometry::StatusCode TetrahedralGeom::findElementNeighbors()
 
 IGeometry::StatusCode TetrahedralGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfTets()}, std::vector<usize>{3}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
   DataArray<float>* tetCentroids = DataArray<float32>::Create(*getDataStructure(), "Tet Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getPolyhedra(), getVertices(), tetCentroids);
   if(tetCentroids == nullptr)

@@ -50,10 +50,46 @@ void INodeGeometry1D::resizeEdgeList(usize size)
   getEdgesRef().getIDataStoreRef().reshapeTuples({size});
 }
 
-usize INodeGeometry1D::getNumberOfEdges() const
+usize INodeGeometry1D::getNumberOfCells() const
 {
-  const auto& edges = getEdgesRef();
+  auto& edges = getEdgesRef();
   return edges.getNumberOfTuples();
+}
+
+void INodeGeometry1D::setEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds)
+{
+  auto& edges = getEdgesRef();
+  const usize offset = edgeId * k_NumEdgeVerts;
+  if(offset + k_NumEdgeVerts >= edges.getSize())
+  {
+    return;
+  }
+  for(usize i = 0; i < k_NumEdgeVerts; i++)
+  {
+    edges[offset + i] = vertexIds[i];
+  }
+}
+
+void INodeGeometry1D::getEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds) const
+{
+  auto& cells = getEdgesRef();
+  const usize offset = edgeId * k_NumEdgeVerts;
+  if(offset + k_NumEdgeVerts >= cells.getSize())
+  {
+    return;
+  }
+  for(usize i = 0; i < k_NumEdgeVerts; i++)
+  {
+    vertexIds[i] = cells.at(offset + i);
+  }
+}
+
+void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const
+{
+  std::array<usize, k_NumEdgeVerts> verts = {0, 0};
+  getEdgePointIds(edgeId, verts);
+  coords[0] = getVertexCoordinate(verts[0]);
+  coords[1] = getVertexCoordinate(verts[1]);
 }
 
 const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementsContainingVert() const

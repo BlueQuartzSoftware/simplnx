@@ -15,6 +15,10 @@ class COMPLEX_EXPORT HexahedralGeom : public INodeGeometry3D
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumEdgeVerts = 2;
+  static inline constexpr usize k_NumFaceVerts = 4;
+  static inline constexpr usize k_NumVerts = 8;
+
   /**
    * @brief
    * @param ds
@@ -44,7 +48,7 @@ public:
    * @brief
    * @param other
    */
-  HexahedralGeom(HexahedralGeom&& other);
+  HexahedralGeom(HexahedralGeom&& other) noexcept;
 
   ~HexahedralGeom() noexcept override;
 
@@ -82,76 +86,37 @@ public:
   DataObject* deepCopy() override;
 
   /**
-   * @brief Returns the number of quads in the geometry. Returns 0 if there is
-   * no quads array stored in the geometry.
+   * @brief
+   * @return
+   */
+  usize getVertsPerFace() const override;
+
+  /**
+   * @brief
+   * @param tetId
+   * @param vertexIds The index into the shared vertex list of each vertex
+   */
+  void setCellPointIds(usize tetId, nonstd::span<usize> vertexIds) override;
+
+  /**
+   * @brief
+   * @param tetId
+   * @param vertexIds The index into the shared vertex list of each vertex
+   */
+  void getCellPointIds(usize tetId, nonstd::span<usize> vertexIds) const override;
+
+  /**
+   * @brief
+   * @param tetId
+   * @param coords The coordinates of each vertex
+   */
+  void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const override;
+
+  /**
+   * @brief Returns the number of hexahedrons in this geometry
    * @return usize
    */
-  usize getNumberOfQuads() const;
-
-  /**
-   * @brief
-   * @param quadId
-   * @param verts
-   */
-  void setVertsAtQuad(usize quadId, usize verts[4]);
-
-  /**
-   * @brief
-   * @param quadId
-   * @param verts
-   */
-  void getVertsAtQuad(usize quadId, usize verts[4]) const;
-
-  /**
-   * @brief
-   * @param quadId
-   * @param vert1
-   * @param vert2
-   * @param vert3
-   * @param vert4
-   */
-  void getVertCoordsAtQuad(usize quadId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const;
-
-  /**
-   * @brief
-   * @param hexId
-   * @param verts
-   */
-  void setVertsAtHex(usize hexId, usize verts[8]);
-
-  /**
-   * @brief
-   * @param hexId
-   * @param verts
-   */
-  void getVertsAtHex(usize hexId, usize verts[8]) const;
-
-  /**
-   * @brief
-   * @param hexId
-   * @param vert1
-   * @param vert2
-   * @param vert3
-   * @param vert4
-   * @param vert5
-   * @param vert6
-   * @param vert7
-   * @param vert8
-   */
-  void getVertCoordsAtHex(usize hexId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4, Point3D<float32>& vert5, Point3D<float32>& vert6,
-                          Point3D<float32>& vert7, Point3D<float32>& vert8) const;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfHexas() const;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfElements() const override;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief

@@ -22,7 +22,7 @@ HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, IdType impor
 
 HexahedralGeom::HexahedralGeom(const HexahedralGeom&) = default;
 
-HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) = default;
+HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept = default;
 
 HexahedralGeom::~HexahedralGeom() noexcept = default;
 
@@ -71,49 +71,40 @@ DataObject* HexahedralGeom::deepCopy()
   return new HexahedralGeom(*this);
 }
 
-void HexahedralGeom::setVertsAtHex(usize hexId, usize verts[8])
+usize HexahedralGeom::getVertsPerFace() const
 {
-  auto& hex = getPolyhedraRef();
-  usize index = hexId * 8;
-  for(usize i = 0; i < 8; i++)
+  return k_NumFaceVerts;
+}
+
+void HexahedralGeom::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)
+{
+  auto& polyhedra = getPolyhedraRef();
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    hex[index + i] = verts[i];
+    polyhedra[polyhedraId * k_NumVerts + i] = vertexIds[i];
   }
 }
 
-void HexahedralGeom::getVertsAtHex(usize hexId, usize verts[8]) const
+void HexahedralGeom::getCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds) const
 {
-  auto& hex = getPolyhedraRef();
-  usize index = hexId * 8;
-  for(usize i = 0; i < 8; i++)
+  auto& polyhedra = getPolyhedraRef();
+  for(usize i = 0; i < k_NumVerts; i++)
   {
-    verts[i] = hex[index + i];
+    vertexIds[i] = polyhedra[polyhedraId * k_NumVerts + i];
   }
 }
 
-void HexahedralGeom::getVertCoordsAtHex(usize hexId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4, Point3D<float32>& vert5,
-                                        Point3D<float32>& vert6, Point3D<float32>& vert7, Point3D<float32>& vert8) const
+void HexahedralGeom::getCellCoordinates(usize hexId, nonstd::span<Point3Df> coords) const
 {
-  std::array<usize, 8> vertIds = {0};
-  getVertsAtHex(hexId, vertIds.data());
-
-  vert1 = getCoords(vertIds[0]);
-  vert2 = getCoords(vertIds[1]);
-  vert3 = getCoords(vertIds[2]);
-  vert4 = getCoords(vertIds[3]);
-  vert5 = getCoords(vertIds[4]);
-  vert6 = getCoords(vertIds[5]);
-  vert7 = getCoords(vertIds[6]);
-  vert8 = getCoords(vertIds[7]);
+  std::array<usize, 8> vertIds = {0, 0, 0, 0, 0, 0, 0, 0};
+  getCellPointIds(hexId, vertIds);
+  for(usize index = 0; index < k_NumVerts; index++)
+  {
+    coords[index] = getVertexCoordinate(vertIds[index]);
+  }
 }
 
-usize HexahedralGeom::getNumberOfHexas() const
-{
-  auto& hexList = getPolyhedraRef();
-  return hexList.getNumberOfTuples();
-}
-
-usize HexahedralGeom::getNumberOfElements() const
+usize HexahedralGeom::getNumberOfCells() const
 {
   auto& elements = getPolyhedraRef();
   return elements.getNumberOfTuples();
@@ -121,7 +112,7 @@ usize HexahedralGeom::getNumberOfElements() const
 
 IGeometry::StatusCode HexahedralGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfHexas()}, std::vector<usize>{1}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
   Float32Array* hexSizes = DataArray<float32>::Create(*getDataStructure(), "Hex Volumes", std::move(dataStore), getId());
   m_ElementSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getPolyhedra(), getVertices(), hexSizes);
@@ -170,7 +161,7 @@ IGeometry::StatusCode HexahedralGeom::findElementNeighbors()
 
 IGeometry::StatusCode HexahedralGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfHexas()}, std::vector<usize>{3}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
   auto* hexCentroids = DataArray<float32>::Create(*getDataStructure(), "Hex Centroids", std::move(dataStore), getId());
   m_ElementCentroidsId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getPolyhedra(), getVertices(), hexCentroids);
@@ -276,49 +267,4 @@ IGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
   }
   m_UnsharedFaceListId = unsharedQuadList->getId();
   return 1;
-}
-
-void HexahedralGeom::setVertsAtQuad(usize quadId, usize verts[4])
-{
-  auto& quads = getFacesRef();
-  auto numQuads = quads.getNumberOfTuples();
-  if(quadId >= numQuads)
-  {
-    return;
-  }
-
-  for(usize i = 0; i < 4; i++)
-  {
-    verts[i] = quads[quadId + i];
-  }
-}
-
-void HexahedralGeom::getVertsAtQuad(usize quadId, usize verts[4]) const
-{
-  auto& quads = getFacesRef();
-  usize index = quadId * 4;
-  for(usize i = 0; i < 4; i++)
-  {
-    verts[i] = quads.at(index + i);
-  }
-}
-
-void HexahedralGeom::getVertCoordsAtQuad(usize quadId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4) const
-{
-  const auto& vertices = getVerticesRef();
-
-  usize verts[4];
-  getVertsAtQuad(quadId, verts);
-  for(usize i = 0; i < 3; i++)
-  {
-    vert1[i] = vertices.at(verts[0] * 3 + i);
-    vert2[i] = vertices.at(verts[1] * 3 + i);
-    vert3[i] = vertices.at(verts[2] * 3 + i);
-    vert4[i] = vertices.at(verts[3] * 3 + i);
-  }
-}
-
-usize HexahedralGeom::getNumberOfQuads() const
-{
-  return getFacesRef().getNumberOfTuples();
 }

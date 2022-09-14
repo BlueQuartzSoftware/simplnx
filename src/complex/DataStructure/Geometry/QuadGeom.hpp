@@ -16,8 +16,9 @@ class COMPLEX_EXPORT QuadGeom : public INodeGeometry2D
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumEdgeVerts = 2;
+  static inline constexpr usize k_NumFaceVerts = 4;
   static inline constexpr usize k_NumVerts = 4;
-
   /**
    * @brief
    * @param ds
@@ -86,40 +87,15 @@ public:
 
   /**
    * @brief
-   * @param quadId
-   * @param verts
-   */
-  void setVertexIdsForFace(usize quadId, usize verts[4]);
-
-  /**
-   * @brief
-   * @param faceId
-   * @param verts
-   */
-  void getVertexIdsForFace(usize faceId, usize verts[4]) const;
-
-  /**
-   * @brief
-   * @param faceId
-   * @param vert1
-   * @param vert2
-   * @param vert3
-   * @param vert4
-   */
-  void getVertexCoordsForFace(usize faceId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4) const;
-
-  /**
-   * @brief Returns the number of quads in the geometry. If the quad list has
-   * not been set, this method returns 0.
    * @return usize
    */
-  usize getNumberOfQuads() const;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief
-   * @return usize
+   * @return
    */
-  usize getNumberOfElements() const override;
+  usize getVertsPerFace() const override;
 
   /**
    * @brief
@@ -157,28 +133,6 @@ public:
    * @param shape
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
-
-  /**
-   * @brief
-   * @param vertId
-   * @param Point3D<float32>
-   */
-  void setCoords(usize vertId, const Point3D<float32>& coord) override;
-
-  /**
-   * @brief
-   * @param vertId
-   * @return Point3D<float32>
-   */
-  Point3D<float32> getCoords(usize vertId) const override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param vert1
-   * @param vert2
-   */
-  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
 
   /**
    * @brief

@@ -11,6 +11,13 @@ class COMPLEX_EXPORT INodeGeometry0D : public IGeometry
 public:
   static inline constexpr StringLiteral k_VertexDataName = "Vertex Data";
 
+  INodeGeometry0D() = delete;
+  INodeGeometry0D(const INodeGeometry0D&) = default;
+  INodeGeometry0D(INodeGeometry0D&&) = default;
+
+  INodeGeometry0D& operator=(const INodeGeometry0D&) = delete;
+  INodeGeometry0D& operator=(INodeGeometry0D&&) noexcept = delete;
+
   ~INodeGeometry0D() noexcept override = default;
 
   const std::optional<IdType>& getVertexListId() const;
@@ -42,14 +49,14 @@ public:
    * @param vertId
    * @return
    */
-  virtual Point3D<float32> getCoords(usize vertId) const = 0;
+  virtual Point3D<float32> getVertexCoordinate(usize vertId) const;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  virtual void setCoords(usize vertId, const Point3D<float32>& coords) = 0;
+  virtual void setVertexCoordinate(usize vertId, const Point3D<float32>& coords);
 
   /**
    * @brief
@@ -110,17 +117,9 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-  INodeGeometry0D() = delete;
-
   INodeGeometry0D(DataStructure& ds, std::string name);
 
   INodeGeometry0D(DataStructure& ds, std::string name, IdType importId);
-
-  INodeGeometry0D(const INodeGeometry0D&) = default;
-  INodeGeometry0D(INodeGeometry0D&&) = default;
-
-  INodeGeometry0D& operator=(const INodeGeometry0D&) = delete;
-  INodeGeometry0D& operator=(INodeGeometry0D&&) noexcept = delete;
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

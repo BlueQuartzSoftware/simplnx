@@ -830,7 +830,10 @@ void DataStructure::resetIds(DataObject::IdType startingId)
   for(auto& dataObjectIter : m_DataObjects)
   {
     auto dataObjectPtr = dataObjectIter.second.lock();
-    dataObjectPtr->checkUpdatedIds(updatedIds);
+    if(dataObjectPtr != nullptr)
+    {
+      dataObjectPtr->checkUpdatedIds(updatedIds);
+    }
   }
 }
 
