@@ -38,7 +38,7 @@ Parameters MoveData::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<DataPathSelectionParameter>(k_Data_Key, "Data to Move", "", DataPath()));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_NewParent_Key, "New Parent", "", DataPath()));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_NewParent_Key, "New Parent", "", DataPath()));
   return params;
 }
 
@@ -51,6 +51,13 @@ IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, cons
 {
   auto dataPath = args.value<DataPath>(k_Data_Key);
   auto newParentPath = args.value<DataPath>(k_NewParent_Key);
+
+  const auto* parentPathGroup = data.getDataAs<BaseGroup>(newParentPath);
+  if(parentPathGroup == nullptr)
+  {
+    std::string ss = fmt::format("New parent path {} is not of the correct type.  Must select an attribute matrix, data group, or geometry as the new parent", newParentPath.toString());
+    return {nonstd::make_unexpected(std::vector<Error>{Error{-6540, ss}})};
+  }
 
   auto moveDataAction = std::make_unique<MoveDataAction>(dataPath, newParentPath);
 
