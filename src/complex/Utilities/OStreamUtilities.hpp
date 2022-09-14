@@ -1276,6 +1276,7 @@ void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
       printMap.emplace(path, std::map<size_t, std::string>(std::move(stringStore))); // try to make as resource efficient as possible
     }
   }
+
   if(hasNeighborLists)
   {
     multiFileWriteOutWrapper(printMap, false);
@@ -1442,6 +1443,7 @@ void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStr
   {
     writeOutWrapper(stringStore, outputStrm);
   }
+
 }
 
 } // namespace OutputFunctions
