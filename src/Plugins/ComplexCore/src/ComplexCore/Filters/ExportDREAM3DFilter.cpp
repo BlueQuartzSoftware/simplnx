@@ -77,11 +77,6 @@ Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Ar
   Pipeline pipeline = *pipelinePtr;
 
   auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
-  if(results.invalid())
-  {
-    return results;
-  }
-
-  return {};
+  return results;
 }
 } // namespace complex
