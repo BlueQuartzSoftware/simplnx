@@ -127,6 +127,6 @@ Result<> ITKIsoContourDistanceImage::executeImpl(DataStructure& dataStructure, c
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKIsoContourDistanceImage::ArrayOptionsT, cxITKIsoContourDistanceImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKIsoContourDistanceImage::ArrayOptionsT, cxITKIsoContourDistanceImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

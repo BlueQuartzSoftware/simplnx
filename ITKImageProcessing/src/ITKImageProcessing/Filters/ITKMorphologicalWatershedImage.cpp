@@ -133,6 +133,7 @@ Result<> ITKMorphologicalWatershedImage::executeImpl(DataStructure& dataStructur
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKMorphologicalWatershedImage::ArrayOptionsT, cxITKMorphologicalWatershedImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKMorphologicalWatershedImage::ArrayOptionsT, cxITKMorphologicalWatershedImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
+                                                                                                                        shouldCancel);
 }
 } // namespace complex

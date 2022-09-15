@@ -107,6 +107,6 @@ Result<> ITKNormalizeImage::executeImpl(DataStructure& dataStructure, const Argu
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<cxITKNormalizeImage::ArrayOptionsT, cxITKNormalizeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKNormalizeImage::ArrayOptionsT, cxITKNormalizeImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex

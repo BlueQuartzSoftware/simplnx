@@ -114,6 +114,6 @@ Result<> ITKBoundedReciprocalImage::executeImpl(DataStructure& dataStructure, co
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKBoundedReciprocalImage::ArrayOptionsT, cxITKBoundedReciprocalImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKBoundedReciprocalImage::ArrayOptionsT, cxITKBoundedReciprocalImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

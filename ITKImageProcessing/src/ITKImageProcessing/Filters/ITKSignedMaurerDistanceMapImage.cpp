@@ -138,7 +138,7 @@ Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& dataStructu
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKSignedMaurerDistanceMapImage::ArrayOptionsT, cxITKSignedMaurerDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
-                                                                                                                          itkFunctor);
+  return ITK::Execute<cxITKSignedMaurerDistanceMapImage::ArrayOptionsT, cxITKSignedMaurerDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
+                                                                                                                          shouldCancel);
 }
 } // namespace complex

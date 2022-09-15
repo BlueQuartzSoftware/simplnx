@@ -118,6 +118,8 @@ Result<> ITKMedianImage::executeImpl(DataStructure& dataStructure, const Argumen
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<cxITKMedianImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  itk::ProgressObserver::Pointer progressObs = itk::ProgressObserver::New(messageHandler);
+  progressObs->setMessagePrefix("Processing Median Image");
+  return ITK::Execute<cxITKMedianImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel, progressObs);
 }
 } // namespace complex
