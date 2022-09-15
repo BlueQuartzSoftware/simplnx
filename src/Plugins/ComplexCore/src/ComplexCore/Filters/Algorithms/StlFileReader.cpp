@@ -95,12 +95,14 @@ std::array<float, 6> CreateMinMaxCoords()
 } // End anonymous namespace
 
 StlFileReader::StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath,
-                             const std::atomic_bool& shouldCancel)
+                             bool scaleOutput, float32 scaleFactor, const std::atomic_bool& shouldCancel)
 : m_DataStructure(data)
 , m_FilePath(std::move(stlFilePath))
 , m_GeometryDataPath(geometryPath)
 , m_FaceGroupPath(faceGroupPath)
 , m_FaceNormalsDataPath(faceNormalsDataPath)
+, m_ScaleOutput(scaleOutput)
+, m_ScaleFactor(scaleFactor)
 , m_ShouldCancel(shouldCancel)
 {
 }
@@ -356,12 +358,18 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
     }
   }
 
-  // Move nodes to unique Id and then resize nodes array
+  float scaleFactor = 1.0F;
+  if(m_ScaleOutput)
+  {
+    scaleFactor = m_ScaleFactor;
+  }
+
+  // Move nodes to unique Id and then resize nodes array and apply optional scaling
   for(size_t i = 0; i < nNodes; i++)
   {
-    vertices[uniqueIds[i] * 3] = vertices[i * 3];
-    vertices[uniqueIds[i] * 3 + 1] = vertices[i * 3 + 1];
-    vertices[uniqueIds[i] * 3 + 2] = vertices[i * 3 + 2];
+    vertices[uniqueIds[i] * 3] = vertices[i * 3] * m_ScaleFactor;
+    vertices[uniqueIds[i] * 3 + 1] = vertices[i * 3 + 1] * m_ScaleFactor;
+    vertices[uniqueIds[i] * 3 + 2] = vertices[i * 3 + 2] * m_ScaleFactor;
   }
   triangleGeom.resizeVertexList(uniqueCount);
 
