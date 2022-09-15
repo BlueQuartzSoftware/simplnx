@@ -64,7 +64,7 @@ public:
     m_Filter.sendThreadSafeProgressMessage(progCounter);
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     convert(range.min(), range.max());
   }
