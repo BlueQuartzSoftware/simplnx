@@ -22,7 +22,10 @@ TetrahedralGeom::TetrahedralGeom(DataStructure& ds, std::string name, IdType imp
 
 TetrahedralGeom::TetrahedralGeom(const TetrahedralGeom&) = default;
 
-TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&&) = default;
+TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&& other) noexcept
+: INodeGeometry3D(std::move(other))
+{
+}
 
 TetrahedralGeom::~TetrahedralGeom() noexcept = default;
 
@@ -71,9 +74,14 @@ DataObject* TetrahedralGeom::deepCopy()
   return new TetrahedralGeom(*this);
 }
 
-usize TetrahedralGeom::getVertsPerFace() const
+usize TetrahedralGeom::getNumberOfVerticesPerFace() const
 {
   return k_NumFaceVerts;
+}
+
+usize TetrahedralGeom::getNumberOfVerticesPerCell() const
+{
+  return k_NumVerts;
 }
 
 void TetrahedralGeom::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)

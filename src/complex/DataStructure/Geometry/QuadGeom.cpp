@@ -83,7 +83,7 @@ usize QuadGeom::getNumberOfCells() const
   return quads.getNumberOfTuples();
 }
 
-usize QuadGeom::getVertsPerFace() const
+usize QuadGeom::getNumberOfVerticesPerFace() const
 {
   return k_NumFaceVerts;
 }

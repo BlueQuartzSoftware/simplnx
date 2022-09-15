@@ -59,12 +59,12 @@ usize INodeGeometry2D::getNumberOfFaces() const
 void INodeGeometry2D::setFacePointIds(usize faceId, nonstd::span<usize> vertexIds)
 {
   auto& faces = getFacesRef();
-  const usize offset = faceId * getVertsPerFace();
-  if(offset + getVertsPerFace() >= faces.getSize())
+  const usize offset = faceId * getNumberOfVerticesPerFace();
+  if(offset + getNumberOfVerticesPerFace() >= faces.getSize())
   {
     return;
   }
-  for(usize i = 0; i < getVertsPerFace(); i++)
+  for(usize i = 0; i < getNumberOfVerticesPerFace(); i++)
   {
     faces[offset + i] = vertexIds[i];
   }
@@ -73,12 +73,12 @@ void INodeGeometry2D::setFacePointIds(usize faceId, nonstd::span<usize> vertexId
 void INodeGeometry2D::getFacePointIds(usize faceId, nonstd::span<usize> vertexIds) const
 {
   auto& cells = getFacesRef();
-  const usize offset = faceId * getVertsPerFace();
-  if(offset + getVertsPerFace() >= cells.getSize())
+  const usize offset = faceId * getNumberOfVerticesPerFace();
+  if(offset + getNumberOfVerticesPerFace() >= cells.getSize())
   {
     return;
   }
-  for(usize i = 0; i < getVertsPerFace(); i++)
+  for(usize i = 0; i < getNumberOfVerticesPerFace(); i++)
   {
     vertexIds[i] = cells.at(offset + i);
   }
@@ -86,7 +86,7 @@ void INodeGeometry2D::getFacePointIds(usize faceId, nonstd::span<usize> vertexId
 
 void INodeGeometry2D::getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const
 {
-  std::vector<usize> verts(getVertsPerFace());
+  std::vector<usize> verts(getNumberOfVerticesPerFace());
   getFacePointIds(faceId, verts);
   for(usize index = 0; index < verts.size(); index++)
   {

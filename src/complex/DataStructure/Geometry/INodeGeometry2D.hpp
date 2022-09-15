@@ -57,7 +57,7 @@ public:
    * @brief
    * @return
    */
-  virtual usize getVertsPerFace() const = 0;
+  virtual usize getNumberOfVerticesPerFace() const = 0;
 
   /**
    * @brief

@@ -76,6 +76,12 @@ public:
   void deleteUnsharedFaces();
 
   /**
+   * @brief Returns the number of vertices in the cell.
+   * @return
+   */
+  virtual usize getNumberOfVerticesPerCell() const = 0;
+
+  /**
    * @brief
    * @param tetId
    * @param vertexIds The index into the shared vertex list of each vertex

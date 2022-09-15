@@ -22,7 +22,10 @@ HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, IdType impor
 
 HexahedralGeom::HexahedralGeom(const HexahedralGeom&) = default;
 
-HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept = default;
+HexahedralGeom::HexahedralGeom(HexahedralGeom&& other) noexcept
+: INodeGeometry3D(std::move(other))
+{
+}
 
 HexahedralGeom::~HexahedralGeom() noexcept = default;
 
@@ -71,9 +74,14 @@ DataObject* HexahedralGeom::deepCopy()
   return new HexahedralGeom(*this);
 }
 
-usize HexahedralGeom::getVertsPerFace() const
+usize HexahedralGeom::getNumberOfVerticesPerFace() const
 {
   return k_NumFaceVerts;
+}
+
+usize HexahedralGeom::getNumberOfVerticesPerCell() const
+{
+  return k_NumVerts;
 }
 
 void HexahedralGeom::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)

@@ -48,7 +48,7 @@ public:
    * @brief
    * @param other
    */
-  TetrahedralGeom(TetrahedralGeom&& other);
+  TetrahedralGeom(TetrahedralGeom&& other) noexcept;
 
   ~TetrahedralGeom() noexcept override;
 
@@ -89,7 +89,13 @@ public:
    * @brief
    * @return
    */
-  usize getVertsPerFace() const override;
+  usize getNumberOfVerticesPerFace() const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  usize getNumberOfVerticesPerCell() const override;
 
   /**
    * @brief

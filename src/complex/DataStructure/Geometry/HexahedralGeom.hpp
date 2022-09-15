@@ -89,7 +89,13 @@ public:
    * @brief
    * @return
    */
-  usize getVertsPerFace() const override;
+  usize getNumberOfVerticesPerFace() const override;
+
+  /**
+   * @brief
+   * @return
+   */
+  usize getNumberOfVerticesPerCell() const override;
 
   /**
    * @brief

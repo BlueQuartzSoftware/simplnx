@@ -83,7 +83,7 @@ usize TriangleGeom::getNumberOfCells() const
   return getFacesRef().getNumberOfTuples();
 }
 
-usize TriangleGeom::getVertsPerFace() const
+usize TriangleGeom::getNumberOfVerticesPerFace() const
 {
   return k_NumFaceVerts;
 }
