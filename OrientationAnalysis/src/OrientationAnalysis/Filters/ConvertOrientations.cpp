@@ -48,7 +48,7 @@ public:
   {
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     auto& inDataStore = m_inputArray.getDataStoreRef();
     auto& outDataStore = m_outputArray.getDataStoreRef();
@@ -90,7 +90,7 @@ public:
   {
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     using QuaterionType = Quaternion<float>;
     size_t numTuples = m_inputArray.getNumberOfTuples();
@@ -134,7 +134,7 @@ public:
   {
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     using QuaterionType = Quaternion<T>;
     auto& inDataStore = m_inputArray.getDataStoreRef();

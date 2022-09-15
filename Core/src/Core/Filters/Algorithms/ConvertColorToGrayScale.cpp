@@ -1,6 +1,6 @@
 #include "ConvertColorToGrayScale.hpp"
 
-#include "complex/Common/ComplexRange.hpp"
+#include "complex/Common/Range.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
@@ -39,7 +39,7 @@ public:
     }
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     convert(range.min(), range.max());
   }
@@ -75,7 +75,7 @@ public:
     }
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     convert(range.min(), range.max());
   }
@@ -111,7 +111,7 @@ public:
     }
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     convert(range.min(), range.max());
   }

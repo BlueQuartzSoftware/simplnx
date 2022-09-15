@@ -65,7 +65,7 @@ public:
     }
   }
 
-  void operator()(const ComplexRange3D& r) const
+  void operator()(const Range3D& r) const
   {
     compute(r[0], r[1], r[2], r[3], r[4], r[5]);
   }
@@ -127,16 +127,9 @@ Result<> ResampleImageGeom::operator()()
   const auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->newDataContainerPath);
   SizeVec3 destDims = destImageGeom.getDimensions();
 
-  // Allow data-based parallelization
-  size_t grain = destDims[2] == 1 ? 1 : destDims[2] / std::thread::hardware_concurrency();
-  if(grain == 0) // This can happen if dims[2] > number of processors
-  {
-    grain = 1;
-  }
   std::vector<int64> newIndices(destDims[2] * destDims[1] * destDims[0]);
   ParallelData3DAlgorithm dataAlg;
   dataAlg.setRange(destDims[0], destDims[1], destDims[2]);
-  dataAlg.setGrain(grain);
   dataAlg.setParallelizationEnabled(true);
   dataAlg.execute(ChangeResolutionImpl(this, newIndices, m_InputValues->spacing, origSpacing, sourceDims, destDims));
 
