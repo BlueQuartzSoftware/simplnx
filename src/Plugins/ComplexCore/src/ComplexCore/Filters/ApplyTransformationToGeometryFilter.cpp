@@ -7,6 +7,7 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/Math/MatrixMath.hpp"
 
 #include "ComplexCore/Filters/Algorithms/ApplyTransformationToGeometry.hpp"
 
@@ -272,20 +273,44 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
     break;
   }
   case TransformType::Rotation: {
-    auto pRotationAxisAngleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
-    // Convert Degrees to Radians for the last element
-    pRotationAxisAngleValue[3] = pRotationAxisAngleValue[3] * static_cast<float>(complex::numbers::pi / 180.0f);
-    using OrientationF = std::vector<float>;
-    OrientationF om = OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(pRotationAxisAngleValue));
+    auto aa = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
 
-    for(size_t i = 0; i < 3; i++)
-    {
-      m_TransformationMatrix[4 * i + 0] = om[3 * i + 0];
-      m_TransformationMatrix[4 * i + 1] = om[3 * i + 1];
-      m_TransformationMatrix[4 * i + 2] = om[3 * i + 2];
-      m_TransformationMatrix[4 * i + 3] = 0.0f;
-    }
-    m_TransformationMatrix[4 * 3 + 3] = 1.0f;
+    // Ensure the axis part is normalized
+    MatrixMath::Normalize3x1(aa.data());
+    // Convert Degrees to Radians for the last element
+    aa[3] = aa[3] * static_cast<float>(complex::numbers::pi / 180.0f);
+
+    float cosTheta = cos(aa[3]);
+    float oneMinusCosTheta = 1 - cosTheta;
+    float sinTheta = sin(aa[3]);
+    float l = aa[0];
+    float m = aa[1];
+    float n = aa[2];
+
+    // First Row:
+    m_TransformationMatrix[0] = l * l * (oneMinusCosTheta) + cosTheta;
+    m_TransformationMatrix[1] = m * l * (oneMinusCosTheta) - n * sinTheta;
+    m_TransformationMatrix[2] = n * l * (oneMinusCosTheta) + m * sinTheta;
+    m_TransformationMatrix[3] = 0.0F;
+
+    // Second Row:
+    m_TransformationMatrix[4] = l * m * (oneMinusCosTheta) + n * sinTheta;
+    m_TransformationMatrix[5] = m * m * (oneMinusCosTheta) + cosTheta;
+    m_TransformationMatrix[6] = n * m * (oneMinusCosTheta) - l * sinTheta;
+    m_TransformationMatrix[7] = 0.0F;
+
+    // Third Row:
+    m_TransformationMatrix[8] = l * n * (oneMinusCosTheta) - m * sinTheta;
+    m_TransformationMatrix[9] = m * n * (oneMinusCosTheta) + l * sinTheta;
+    m_TransformationMatrix[10] = n * n * (oneMinusCosTheta) + cosTheta;
+    m_TransformationMatrix[11] = 0.0F;
+
+    // Fourth Row:
+    m_TransformationMatrix[12] = 0.0F;
+    m_TransformationMatrix[13] = 0.0F;
+    m_TransformationMatrix[14] = 0.0F;
+    m_TransformationMatrix[15] = 1.0F;
+
     break;
   }
   case TransformType::Translation: {
