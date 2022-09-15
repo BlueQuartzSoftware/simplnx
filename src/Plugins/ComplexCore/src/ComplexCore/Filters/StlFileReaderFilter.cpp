@@ -11,6 +11,8 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 
 #include <cstdio>
 #include <filesystem>
@@ -62,6 +64,11 @@ Parameters StlFileReaderFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
+
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ScaleOutput, "Scale Output Geometry", "Scale the output Triangle Geometry by the Scaling Factor", false));
+  params.insert(std::make_unique<Float32Parameter>(k_ScaleFactor, "Scale Factor", "", 1.0F));
+  params.linkParameters(k_ScaleOutput, k_ScaleFactor, true);
+
   params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilePath_Key, "STL File", "Input STL File", fs::path("*.stl"), FileSystemPathParameter::ExtensionsType{".stl"},
                                                           FileSystemPathParameter::PathType::InputFile));
 
@@ -176,8 +183,11 @@ Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& 
   auto pFaceDataGroupPath = pTriangleGeometryPath.createChildPath(INodeGeometry2D::k_FaceDataName);
   auto pFaceNormalsPath = pFaceDataGroupPath.createChildPath(k_FaceNormals);
 
+
+  auto scaleOutput = filterArgs.value<bool>(k_ScaleOutput);
+  auto scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
   // The actual STL File Reading is placed in a separate class `StlFileReader`
-  Result<> result = StlFileReader(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, shouldCancel)();
+  Result<> result = StlFileReader(data, pStlFilePathValue, pTriangleGeometryPath, pFaceDataGroupPath, pFaceNormalsPath, scaleOutput, scaleFactor, shouldCancel)();
   return result;
 }
 
