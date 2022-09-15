@@ -1,47 +1,10 @@
-/* ============================================================================
- * Copyright (c) 2019 BlueQuartz Software, LLC
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice, this
- * list of conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.
- *
- * Neither the names of any of the BlueQuartz Software contributors
- * may be used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * The code contained herein was partially funded by the following contracts:
- *    United States Air Force Prime Contract FA8650-15-D-5231
- *
- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
 #pragma once
 
-#include "complex/Common/ComplexRange3D.hpp"
+#include "complex/Common/Range3D.hpp"
 #include "complex/complex_export.hpp"
 
-// SIMPLib.h MUST be included before this or the guard will block the include but not its uses below.
-// This is consistent with previous behavior, only earlier parallelization split the includes between
-// the corresponding .h and .cpp files.
 #ifdef COMPLEX_ENABLE_MULTICORE
-#include <tbb/blocked_range.h>
+#include <tbb/blocked_range3d.h>
 #include <tbb/parallel_for.h>
 #include <tbb/partitioner.h>
 #endif
@@ -60,8 +23,15 @@ namespace complex
 class COMPLEX_EXPORT ParallelData3DAlgorithm
 {
 public:
+  using RangeType = Range3D;
+
   ParallelData3DAlgorithm();
-  virtual ~ParallelData3DAlgorithm();
+  ~ParallelData3DAlgorithm();
+
+  ParallelData3DAlgorithm(const ParallelData3DAlgorithm&) = default;
+  ParallelData3DAlgorithm(ParallelData3DAlgorithm&&) noexcept = default;
+  ParallelData3DAlgorithm& operator=(const ParallelData3DAlgorithm&) = default;
+  ParallelData3DAlgorithm& operator=(ParallelData3DAlgorithm&&) noexcept = default;
 
   /**
    * @brief Returns true if parallelization is enabled.  Returns false otherwise.
@@ -79,13 +49,13 @@ public:
    * @brief Returns the range to operate over.
    * @return
    */
-  ComplexRange3D getRange() const;
+  RangeType getRange() const;
 
   /**
    * @brief Sets the range to operate over.
    * @param range3D
    */
-  void setRange(const ComplexRange3D& range);
+  void setRange(const RangeType& range);
 
   /**
    * @brief Sets the range to operate over.
@@ -94,55 +64,33 @@ public:
   void setRange(size_t xMax, size_t yMax, size_t zMax);
 
   /**
-   * @brief Returns the grain size.
-   * @return
-   */
-  size_t getGrain() const;
-
-  /**
-   * @brief Sets the grain size.
-   * @param grain
-   */
-  void setGrain(size_t grain);
-
-#ifdef COMPLEX_ENABLE_MULTICORE
-  /**
-   * @brief Sets the partitioner for parallelization.
-   * @param partitioner
-   */
-  void setPartitioner(const tbb::auto_partitioner& partitioner);
-#endif
-
-  /**
    * @brief Runs the data algorithm.  Parallelization is used if appropriate.
    * @param body
    */
   template <typename Body>
   void execute(const Body& body)
   {
-    bool doParallel = false;
 #ifdef COMPLEX_ENABLE_MULTICORE
-    doParallel = m_RunParallel;
-    if(doParallel)
+    if(m_RunParallel)
     {
-      tbb::blocked_range3d<size_t, size_t, size_t> tbbRange(m_Range[0], m_Range[1], m_Grain, m_Range[2], m_Range[3], m_Range[3], m_Range[4], m_Range[5], m_Range[5]);
-      tbb::parallel_for(tbbRange, body, m_Partitioner);
+      tbb::auto_partitioner partitioner;
+      tbb::blocked_range3d<size_t, size_t, size_t> tbbRange(m_Range[4], m_Range[5], m_Range[2], m_Range[3], m_Range[0], m_Range[1]);
+      tbb::parallel_for(tbbRange, body, partitioner);
     }
+    else
 #endif
-
     // Run non-parallel operation
-    if(!doParallel)
     {
       body(m_Range);
     }
   }
 
 private:
-  ComplexRange3D m_Range;
-  size_t m_Grain = 1;
-  bool m_RunParallel = false;
+  RangeType m_Range;
 #ifdef COMPLEX_ENABLE_MULTICORE
-  tbb::auto_partitioner m_Partitioner;
+  bool m_RunParallel = true;
+#else
+  bool m_RunParallel = false;
 #endif
 };
 } // namespace complex

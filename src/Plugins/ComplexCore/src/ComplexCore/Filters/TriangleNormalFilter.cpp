@@ -1,6 +1,6 @@
 #include "TriangleNormalFilter.hpp"
 
-#include "complex/Common/ComplexRange.hpp"
+#include "complex/Common/Range.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -55,7 +55,7 @@ public:
     }
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     generate(range.min(), range.max());
   }
