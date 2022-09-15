@@ -45,6 +45,12 @@ public:
   virtual usize getNumberOfCells() const override;
 
   /**
+   * @brief returns the number of edges in the geometry
+   * @return
+   */
+  virtual usize getNumberOfEdges() const;
+
+  /**
    * @brief Sets the vertex IDs making up the specified edge. This method does
    * nothing if the edge list could not be found.
    * @param edgeId

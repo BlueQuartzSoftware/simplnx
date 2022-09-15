@@ -69,7 +69,7 @@ void testGeom2D(INodeGeometry2D* geom)
       REQUIRE(geom->getEdges() == edges);
       const usize numEdges = 5;
       geom->resizeEdgeList(numEdges);
-      REQUIRE(geom->getNumberOfCells() == numEdges);
+      REQUIRE(geom->getNumberOfEdges() == numEdges);
       const usize edgeId = 3;
       std::array<usize, 2> verts = {vertId, vertId + 1};
       geom->setEdgePointIds(edgeId, verts);
@@ -113,7 +113,7 @@ void testGeom3D(INodeGeometry3D* geom)
       REQUIRE(geom->getEdges() == edges);
       const usize numEdges = 5;
       geom->resizeEdgeList(numEdges);
-      REQUIRE(geom->getNumberOfCells() == numEdges);
+      REQUIRE(geom->getNumberOfEdges() == numEdges);
       const usize edgeId = 3;
       std::array<usize, 2> verts = {vertId, vertId + 1};
       geom->setEdgePointIds(edgeId, verts);
