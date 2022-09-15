@@ -2,9 +2,9 @@
 
 #include "Core/Utilities/CoreUtilities.hpp"
 
-#include "complex/Common/ComplexRange.hpp"
-#include "complex/Common/ComplexRange3D.hpp"
 #include "complex/Common/Numbers.hpp"
+#include "complex/Common/Range.hpp"
+#include "complex/Common/Range3D.hpp"
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
@@ -144,7 +144,7 @@ public:
     }
   }
 
-  void operator()(const ComplexRange3D& range) const
+  void operator()(const Range3D& range) const
   {
     convert(range[4], range[5], range[2], range[3], range[0], range[1]);
   }
@@ -520,7 +520,7 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
   std::vector<int64> newIndices(newNumCellTuples, -1);
 
   ParallelData3DAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(ComplexRange3D(0, rotateArgs.xpNew, 0, rotateArgs.ypNew, 0, rotateArgs.zpNew));
+  parallelAlgorithm.setRange(Range3D(0, rotateArgs.xpNew, 0, rotateArgs.ypNew, 0, rotateArgs.zpNew));
   parallelAlgorithm.setParallelizationEnabled(true);
   parallelAlgorithm.execute(SampleRefFrameRotator(newIndices, rotateArgs, rotationMatrix, sliceBySlice));
 

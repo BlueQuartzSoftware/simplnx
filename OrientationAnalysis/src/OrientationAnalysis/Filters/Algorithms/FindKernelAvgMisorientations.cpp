@@ -127,7 +127,7 @@ public:
     }
   }
 
-  void operator()(const ComplexRange3D& range) const
+  void operator()(const Range3D& range) const
   {
     convert(range[4], range[5], range[2], range[3], range[0], range[1]);
   }
@@ -166,7 +166,7 @@ Result<> FindKernelAvgMisorientations::operator()()
   SizeVec3 udims = gridGeom->getDimensions();
 
   ParallelData3DAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(ComplexRange3D(0, udims[0], 0, udims[1], 0, udims[2]));
+  parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
   parallelAlgorithm.setParallelizationEnabled(true);
   parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(m_DataStructure, m_InputValues, m_ShouldCancel));
 

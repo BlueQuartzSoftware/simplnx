@@ -75,7 +75,7 @@ public:
     }
   }
 
-  void operator()(const ComplexRange& range) const
+  void operator()(const Range& range) const
   {
     convert(range[0], range[1]);
   }
@@ -186,7 +186,7 @@ Result<> FindNeighborhoods::operator()()
   }
 
   ParallelDataAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(ComplexRange(0, totalFeatures));
+  parallelAlgorithm.setRange(Range(0, totalFeatures));
   parallelAlgorithm.setParallelizationEnabled(false);
   parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, centroids, bins, criticalDistance));
 
