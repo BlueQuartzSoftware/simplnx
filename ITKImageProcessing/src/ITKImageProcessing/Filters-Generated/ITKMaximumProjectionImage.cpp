@@ -120,6 +120,6 @@ Result<> ITKMaximumProjectionImage::executeImpl(DataStructure& dataStructure, co
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKMaximumProjectionImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKMaximumProjectionImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

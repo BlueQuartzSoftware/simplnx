@@ -123,6 +123,6 @@ Result<> ITKNormalizeToConstantImage::executeImpl(DataStructure& dataStructure, 
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKNormalizeToConstantImage::ArrayOptionsT, cxITKNormalizeToConstantImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKNormalizeToConstantImage::ArrayOptionsT, cxITKNormalizeToConstantImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

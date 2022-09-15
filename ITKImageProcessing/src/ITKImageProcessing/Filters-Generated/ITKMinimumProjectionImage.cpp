@@ -120,6 +120,6 @@ Result<> ITKMinimumProjectionImage::executeImpl(DataStructure& dataStructure, co
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKMinimumProjectionImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKMinimumProjectionImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

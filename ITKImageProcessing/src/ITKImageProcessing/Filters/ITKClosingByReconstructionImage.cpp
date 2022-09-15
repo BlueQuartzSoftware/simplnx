@@ -136,6 +136,6 @@ Result<> ITKClosingByReconstructionImage::executeImpl(DataStructure& dataStructu
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKClosingByReconstructionImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKClosingByReconstructionImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex

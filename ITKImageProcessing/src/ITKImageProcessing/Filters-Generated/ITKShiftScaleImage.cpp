@@ -132,6 +132,6 @@ Result<> ITKShiftScaleImage::executeImpl(DataStructure& dataStructure, const Arg
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKShiftScaleImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKShiftScaleImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

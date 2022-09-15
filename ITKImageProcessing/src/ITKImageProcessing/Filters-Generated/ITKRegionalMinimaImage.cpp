@@ -138,6 +138,6 @@ Result<> ITKRegionalMinimaImage::executeImpl(DataStructure& dataStructure, const
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKRegionalMinimaImage::ArrayOptionsT, cxITKRegionalMinimaImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKRegionalMinimaImage::ArrayOptionsT, cxITKRegionalMinimaImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

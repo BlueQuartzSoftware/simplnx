@@ -1,5 +1,8 @@
 #pragma once
 
+#include "ITKImageProcessing/Common/ITKDream3DFilterInterruption.hpp"
+#include "ITKImageProcessing/Common/ITKProgressObserver.hpp"
+
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/Common/TypesUtility.hpp"
@@ -520,8 +523,8 @@ template <class InputT, class OutputT, uint32 Dimension>
 struct ITKFilterFunctor
 {
   template <class FilterCreationFunctorT>
-  Result<ITKFilterFunctorResult_t<FilterCreationFunctorT>> operator()(IDataStore& inputDataStore, const ImageGeom& imageGeom, IDataStore& outputDataStore,
-                                                                      const FilterCreationFunctorT& filterCreationFunctor) const
+  Result<ITKFilterFunctorResult_t<FilterCreationFunctorT>> operator()(IDataStore& inputDataStore, const ImageGeom& imageGeom, IDataStore& outputDataStore, const std::atomic_bool& shouldCancel,
+                                                                      const itk::ProgressObserver::Pointer progressObserver, const FilterCreationFunctorT& filterCreationFunctor) const
   {
     using InputImageType = itk::Image<InputT, Dimension>;
     using OutputImageType = itk::Image<OutputT, Dimension>;
@@ -529,6 +532,12 @@ struct ITKFilterFunctor
     auto& typedInputDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<InputT>>&>(inputDataStore);
     typename InputImageType::Pointer inputImage = ITK::WrapDataStoreInImage<InputT, Dimension>(typedInputDataStore, imageGeom);
     auto filter = filterCreationFunctor.template createFilter<InputImageType, OutputImageType, Dimension>();
+    if(progressObserver != nullptr)
+    {
+      filter->AddObserver(itk::ProgressEvent(), progressObserver);
+    }
+    itk::Dream3DFilterInterruption::Pointer interruption = itk::Dream3DFilterInterruption::New(shouldCancel);
+    filter->AddObserver(itk::ProgressEvent(), interruption);
     filter->SetInput(inputImage);
     filter->Update();
 
@@ -651,7 +660,8 @@ Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPa
 
 template <class ArrayOptionsT, template <class> class OutputT = detail::DefaultOutput_t, class FilterCreationFunctorT>
 Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath,
-                                                                         FilterCreationFunctorT&& filterCreationFunctor)
+                                                                         FilterCreationFunctorT&& filterCreationFunctor, const std::atomic_bool& shouldCancel,
+                                                                         const itk::ProgressObserver::Pointer progressObserver = nullptr)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
@@ -663,7 +673,8 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
 
   try
   {
-    return ArraySwitchFunc<detail::ITKFilterFunctor, ArrayOptionsT, ResultT, OutputT>(inputDataStore, imageGeom, -1, inputDataStore, imageGeom, outputDataStore, filterCreationFunctor);
+    return ArraySwitchFunc<detail::ITKFilterFunctor, ArrayOptionsT, ResultT, OutputT>(inputDataStore, imageGeom, -1, inputDataStore, imageGeom, outputDataStore, shouldCancel, progressObserver,
+                                                                                      filterCreationFunctor);
   } catch(const itk::ExceptionObject& exception)
   {
     return MakeErrorResult<ResultT>(-222, exception.GetDescription());

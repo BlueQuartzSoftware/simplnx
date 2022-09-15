@@ -123,6 +123,6 @@ Result<> ITKStandardDeviationProjectionImage::executeImpl(DataStructure& dataStr
   // LINK GEOMETRY OUTPUT STOP
 
   return ITK::Execute<cxITKStandardDeviationProjectionImage::ArrayOptionsT, cxITKStandardDeviationProjectionImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
-                                                                                                                                  itkFunctor);
+                                                                                                                                  itkFunctor, messageHandler);
 }
 } // namespace complex

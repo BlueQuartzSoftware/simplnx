@@ -127,7 +127,6 @@ Result<> ITKApproximateSignedDistanceMapImage::executeImpl(DataStructure& dataSt
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKApproximateSignedDistanceMapImage::ArrayOptionsT, cxITKApproximateSignedDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
-                                                                                                                                    itkFunctor);
+  return ITK::Execute<cxITKApproximateSignedDistanceMapImage::ArrayOptionsT, cxITKApproximateSignedDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

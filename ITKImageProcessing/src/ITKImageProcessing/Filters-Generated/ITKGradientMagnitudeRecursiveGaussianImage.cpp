@@ -129,6 +129,6 @@ Result<> ITKGradientMagnitudeRecursiveGaussianImage::executeImpl(DataStructure& 
   // LINK GEOMETRY OUTPUT STOP
 
   return ITK::Execute<cxITKGradientMagnitudeRecursiveGaussianImage::ArrayOptionsT, cxITKGradientMagnitudeRecursiveGaussianImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath,
-                                                                                                                                                outputArrayPath, itkFunctor);
+                                                                                                                                                outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

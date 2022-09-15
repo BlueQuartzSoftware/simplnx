@@ -132,6 +132,6 @@ Result<> ITKDanielssonDistanceMapImage::executeImpl(DataStructure& dataStructure
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKDanielssonDistanceMapImage::ArrayOptionsT, cxITKDanielssonDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKDanielssonDistanceMapImage::ArrayOptionsT, cxITKDanielssonDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

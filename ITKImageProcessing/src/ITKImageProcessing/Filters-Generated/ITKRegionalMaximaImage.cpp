@@ -138,6 +138,6 @@ Result<> ITKRegionalMaximaImage::executeImpl(DataStructure& dataStructure, const
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKRegionalMaximaImage::ArrayOptionsT, cxITKRegionalMaximaImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKRegionalMaximaImage::ArrayOptionsT, cxITKRegionalMaximaImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

@@ -26,7 +26,7 @@ namespace cxITKImportImageStack
 {
 template <class T>
 Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& imageDataPath, const std::vector<std::string>& files,
-                        const IFilter::MessageHandler& messageHandler)
+                        const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
@@ -86,10 +86,10 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     slice++;
 
     // Check to see if the filter got canceled.
-    // if(filter->getCancel())
-    //{
-    //  return;
-    //}
+    if(shouldCancel)
+    {
+      return {};
+    }
   }
 
   return {};
@@ -243,34 +243,34 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
   switch(*numericType)
   {
   case NumericType::uint8: {
-    return cxITKImportImageStack::ReadImageStack<uint8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<uint8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::int8: {
-    return cxITKImportImageStack::ReadImageStack<int8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<int8>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::uint16: {
-    return cxITKImportImageStack::ReadImageStack<uint16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<uint16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::int16: {
-    return cxITKImportImageStack::ReadImageStack<int16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<int16>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::uint32: {
-    return cxITKImportImageStack::ReadImageStack<uint32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<uint32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::int32: {
-    return cxITKImportImageStack::ReadImageStack<int32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<int32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::uint64: {
-    return cxITKImportImageStack::ReadImageStack<uint64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<uint64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::int64: {
-    return cxITKImportImageStack::ReadImageStack<int64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<int64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::float32: {
-    return cxITKImportImageStack::ReadImageStack<float32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<float32>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   case NumericType::float64: {
-    return cxITKImportImageStack::ReadImageStack<float64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler);
+    return cxITKImportImageStack::ReadImageStack<float64>(dataStructure, imageGeomPath, imageDataPath, files, messageHandler, shouldCancel);
   }
   default: {
     throw std::runtime_error("Unsupported array type");

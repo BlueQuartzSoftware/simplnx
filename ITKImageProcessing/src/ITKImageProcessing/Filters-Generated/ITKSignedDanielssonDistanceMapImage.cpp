@@ -133,6 +133,6 @@ Result<> ITKSignedDanielssonDistanceMapImage::executeImpl(DataStructure& dataStr
   // LINK GEOMETRY OUTPUT STOP
 
   return ITK::Execute<cxITKSignedDanielssonDistanceMapImage::ArrayOptionsT, cxITKSignedDanielssonDistanceMapImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
-                                                                                                                                  itkFunctor);
+                                                                                                                                  itkFunctor, messageHandler);
 }
 } // namespace complex

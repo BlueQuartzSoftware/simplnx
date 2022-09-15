@@ -136,6 +136,7 @@ Result<> ITKOtsuMultipleThresholdsImage::executeImpl(DataStructure& dataStructur
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<cxITKOtsuMultipleThresholdsImage::ArrayOptionsT, cxITKOtsuMultipleThresholdsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKOtsuMultipleThresholdsImage::ArrayOptionsT, cxITKOtsuMultipleThresholdsImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
+                                                                                                                        shouldCancel);
 }
 } // namespace complex

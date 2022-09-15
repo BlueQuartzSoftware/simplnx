@@ -127,6 +127,6 @@ Result<> ITKZeroCrossingImage::executeImpl(DataStructure& dataStructure, const A
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKZeroCrossingImage::ArrayOptionsT, cxITKZeroCrossingImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKZeroCrossingImage::ArrayOptionsT, cxITKZeroCrossingImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
 }
 } // namespace complex

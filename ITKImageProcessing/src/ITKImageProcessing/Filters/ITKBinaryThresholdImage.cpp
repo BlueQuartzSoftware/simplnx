@@ -130,6 +130,6 @@ Result<> ITKBinaryThresholdImage::executeImpl(DataStructure& dataStructure, cons
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<cxITKBinaryThresholdImage::ArrayOptionsT, cxITKBinaryThresholdImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  return ITK::Execute<cxITKBinaryThresholdImage::ArrayOptionsT, cxITKBinaryThresholdImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex

@@ -110,6 +110,9 @@ Result<> ITKGrayscaleFillholeImage::executeImpl(DataStructure& dataStructure, co
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
 
-  return ITK::Execute<cxITKGrayscaleFillholeImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor);
+  itk::ProgressObserver::Pointer progressObs = itk::ProgressObserver::New(messageHandler);
+  progressObs->setMessagePrefix("Processing Grayscale Fill Hole Image");
+
+  return ITK::Execute<cxITKGrayscaleFillholeImage::ArrayOptionsT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel, progressObs);
 }
 } // namespace complex
