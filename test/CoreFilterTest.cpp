@@ -65,7 +65,7 @@ TEST_CASE("Create Core Filter")
 
 TEST_CASE("RunCoreFilter")
 {
-  static const fs::path k_FileName = "ascii_data.txt";
+  static const fs::path k_FileName = fmt::format("{}/test/data/ascii_data.txt", complex::unit_test::k_BuildDir);
   static constexpr uint64 k_NLines = 25;
 
   SECTION("Create ASCII File")
