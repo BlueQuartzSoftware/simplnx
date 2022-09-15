@@ -133,7 +133,6 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arg
 Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const Arguments& args, ImageGeom* image) const
 {
   auto saveElementSizes = args.value<bool>(k_SaveElementSizes_Key);
-
   auto featureIdsPath = args.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
 
   auto featureAttributeMatrixPath = args.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
@@ -152,23 +151,22 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   usize totalPoints = featureIds.getNumberOfTuples();
   usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
   usize maxValue = featureIds[featureIdsMaxIdx];
-  usize numfeatures = maxValue + 1;
+  usize numFeatures = maxValue + 1;
 
-  std::vector<uint64> featureCountsStore(numfeatures, 0);
-
-  float res_scalar = 0.0f;
-
+  std::vector<uint64> featureCounts(numFeatures, 0);
+  
   for(size_t j = 0; j < totalPoints; j++)
   {
     int32_t gnum = featureIds[j];
-    auto temp = featureCountsStore[gnum] + 1;
-    featureCountsStore[gnum] = temp;
+    auto temp = featureCounts[gnum] + 1;
+    featureCounts[gnum] = temp;
   }
 
   FloatVec3 spacing = image->getSpacing();
 
   if(image->getNumXPoints() == 1 || image->getNumYPoints() == 1 || image->getNumZPoints() == 1)
   {
+    float res_scalar = 0.0f;
     if(image->getNumXPoints() == 1)
     {
       res_scalar = spacing[1] * spacing[2];
@@ -182,45 +180,45 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
       res_scalar = spacing[0] * spacing[1];
     }
 
-    for(size_t i = 1; i < numfeatures; i++)
+    for(size_t i = 1; i < numFeatures; i++)
     {
-      numElements[i] = static_cast<int32_t>(featureCountsStore[i]);
-      if(featureCountsStore[i] > 9007199254740992ULL)
+      numElements[i] = static_cast<int32_t>(featureCounts[i]);
+      if(featureCounts[i] > 9007199254740992ULL)
       {
-        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCountsStore[i]);
+        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
         return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
       }
-      volumes[i] = static_cast<double>(featureCountsStore[i]) * static_cast<double>(res_scalar);
+      volumes[i] = static_cast<double>(featureCounts[i]) * static_cast<double>(res_scalar);
 
-      float rad = volumes[i] / k_PI;
-      float diameter = (2 * sqrtf(rad));
+      float32 rad = volumes[i] / k_PI;
+      float32 diameter = (2 * sqrtf(rad));
       equivalentDiameters[i] = diameter;
     }
   }
   else
   {
-    res_scalar = spacing[0] * spacing[1] * spacing[2];
+    float32 res_scalar = spacing[0] * spacing[1] * spacing[2];
     float vol_term = (4.0f / 3.0f) * k_PI;
-    for(usize i = 1; i < numfeatures; i++)
+    for(usize i = 1; i < numFeatures; i++)
     {
-      numElements[i] = static_cast<int32>(featureCountsStore[i]);
-      if(featureCountsStore[i] > 9007199254740992ULL)
+      numElements[i] = static_cast<int32>(featureCounts[i]);
+      if(featureCounts[i] > 9007199254740992ULL)
       {
-        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCountsStore[i]);
+        std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
         return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadFeatureCount, ss}})};
       }
 
-      volumes[i] = static_cast<double>(featureCountsStore[i]) * static_cast<double>(res_scalar);
+      volumes[i] = static_cast<double>(featureCounts[i]) * static_cast<double>(res_scalar);
 
-      float rad = volumes[i] / vol_term;
-      float diameter = 2.0f * powf(rad, 0.3333333333f);
+      float32 rad = volumes[i] / vol_term;
+      float32 diameter = 2.0f * powf(rad, 0.3333333333f);
       equivalentDiameters[i] = diameter;
     }
   }
 
   if(saveElementSizes)
   {
-    if(nullptr != image->getElementSizes())
+    if(!image->getElementSizes())
     {
       int32 err = image->findElementSizes();
       if(err < 0)
