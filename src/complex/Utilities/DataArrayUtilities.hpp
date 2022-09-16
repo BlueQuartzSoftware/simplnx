@@ -322,7 +322,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
     parentObject = dataStructure.getData(parentPath);
     if(parentObject == nullptr)
     {
-      return MakeErrorResult(-262, fmt::format("CreateArrayAction: Parent object '{}' does not exist", parentPath.toString()));
+      return MakeErrorResult(-262, fmt::format("CreateArray: Parent object '{}' does not exist", parentPath.toString()));
     }
 
     dataObjectId = parentObject->getId();
@@ -330,7 +330,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   if(tupleShape.empty())
   {
-    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Tuple Shape was empty. Please set the number of tuples."));
+    return MakeErrorResult(-261, fmt::format("CreateArray: Tuple Shape was empty. Please set the number of tuples."));
   }
   //  size_t numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   //  if(numTuples == 0 && mode == IDataAction::Mode::Execute)
@@ -341,12 +341,12 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   // Validate Number of Components
   if(compShape.empty())
   {
-    return MakeErrorResult(-261, fmt::format("CreateArrayAction: Component Shape was empty. Please set the number of components."));
+    return MakeErrorResult(-261, fmt::format("CreateArray: Component Shape was empty. Please set the number of components."));
   }
   size_t numComponents = std::accumulate(compShape.cbegin(), compShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   if(numComponents == 0 && mode == IDataAction::Mode::Execute)
   {
-    return MakeErrorResult(-263, fmt::format("CreateArrayAction: Number of components is ZERO. Please set the number of components."));
+    return MakeErrorResult(-263, fmt::format("CreateArray: Number of components is ZERO. Please set the number of components."));
   }
 
   usize last = path.getLength() - 1;
@@ -359,7 +359,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   {
     if(dataStructure.getId(path).has_value())
     {
-      return MakeErrorResult(-264, fmt::format("CreateArrayAction: Cannot create Data Array at path '{}' because it already exists. Choose a different name.", path.toString()));
+      return MakeErrorResult(-264, fmt::format("CreateArray: Cannot create Data Array at path '{}' because it already exists. Choose a different name.", path.toString()));
     }
     else if(parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
@@ -367,13 +367,13 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
       std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(tupleShape, " x "));
       return MakeErrorResult(
-          -264, fmt::format("CreateArrayAction: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
+          -264, fmt::format("CreateArray: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
                             "dimensions or the same total number of tuples.\n{}\n{}",
                             name, dataStructure.getDataPathsForId(parentObject->getId()).front().toString(), amShape, arrayShape));
     }
     else
     {
-      return MakeErrorResult(-264, fmt::format("CreateArrayAction: Unable to create DataArray at '{}'", path.toString()));
+      return MakeErrorResult(-264, fmt::format("CreateArray: Unable to create DataArray at '{}'", path.toString()));
     }
   }
 
