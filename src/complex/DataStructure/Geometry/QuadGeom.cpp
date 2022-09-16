@@ -25,7 +25,7 @@ QuadGeom::QuadGeom(const QuadGeom& other)
 {
 }
 
-QuadGeom::QuadGeom(QuadGeom&& other) noexcept
+QuadGeom::QuadGeom(QuadGeom&& other)
 : INodeGeometry2D(std::move(other))
 {
 }

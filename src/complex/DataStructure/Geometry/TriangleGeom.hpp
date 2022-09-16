@@ -50,7 +50,7 @@ public:
    * @brief
    * @param other
    */
-  TriangleGeom(TriangleGeom&& other) noexcept;
+  TriangleGeom(TriangleGeom&& other);
 
   ~TriangleGeom() noexcept override;
 

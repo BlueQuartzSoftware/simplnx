@@ -45,18 +45,24 @@ public:
   usize getNumberOfVertices() const;
 
   /**
+   * @brief Returns the number of vertices for this geometry
+   * @return
+   */
+  usize getNumberOfCells() const override;
+
+  /**
    * @brief Gets the coordinates at the target vertex ID.
    * @param vertId
    * @return
    */
-  virtual Point3D<float32> getVertexCoordinate(usize vertId) const;
+  Point3D<float32> getVertexCoordinate(usize vertId) const;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  virtual void setVertexCoordinate(usize vertId, const Point3D<float32>& coords);
+  void setVertexCoordinate(usize vertId, const Point3D<float32>& coords);
 
   /**
    * @brief

@@ -48,7 +48,7 @@ public:
    * @brief
    * @param other
    */
-  HexahedralGeom(HexahedralGeom&& other) noexcept;
+  HexahedralGeom(HexahedralGeom&& other);
 
   ~HexahedralGeom() noexcept override;
 

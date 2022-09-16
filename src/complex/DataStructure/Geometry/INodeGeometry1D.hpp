@@ -42,7 +42,7 @@ public:
    * @brief Returns the number of edges in the geometry.
    * @return usize
    */
-  virtual usize getNumberOfCells() const override;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief returns the number of edges in the geometry

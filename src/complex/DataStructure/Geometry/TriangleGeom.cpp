@@ -26,7 +26,7 @@ TriangleGeom::TriangleGeom(const TriangleGeom& other)
 {
 }
 
-TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
+TriangleGeom::TriangleGeom(TriangleGeom&& other)
 : INodeGeometry2D(std::move(other))
 {
 }

@@ -72,6 +72,14 @@ public:
     Unknown = 101U
   };
 
+  IGeometry() = delete;
+
+  IGeometry(const IGeometry&) = default;
+  IGeometry(IGeometry&&) = default;
+
+  IGeometry& operator=(const IGeometry&) = delete;
+  IGeometry& operator=(IGeometry&&) noexcept = delete;
+
   ~IGeometry() noexcept override = default;
 
   /**
@@ -194,17 +202,11 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-  IGeometry() = delete;
 
   IGeometry(DataStructure& ds, std::string name);
 
   IGeometry(DataStructure& ds, std::string name, IdType importId);
 
-  IGeometry(const IGeometry&) = default;
-  IGeometry(IGeometry&&) = default;
-
-  IGeometry& operator=(const IGeometry&) = delete;
-  IGeometry& operator=(IGeometry&&) noexcept = delete;
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

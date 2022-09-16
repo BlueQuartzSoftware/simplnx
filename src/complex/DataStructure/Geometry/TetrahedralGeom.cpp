@@ -22,7 +22,7 @@ TetrahedralGeom::TetrahedralGeom(DataStructure& ds, std::string name, IdType imp
 
 TetrahedralGeom::TetrahedralGeom(const TetrahedralGeom&) = default;
 
-TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&& other) noexcept
+TetrahedralGeom::TetrahedralGeom(TetrahedralGeom&& other)
 : INodeGeometry3D(std::move(other))
 {
 }

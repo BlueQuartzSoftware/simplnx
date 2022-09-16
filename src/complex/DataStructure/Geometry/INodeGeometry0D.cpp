@@ -57,6 +57,12 @@ usize INodeGeometry0D::getNumberOfVertices() const
   return vertices.getNumberOfTuples();
 }
 
+usize INodeGeometry0D::getNumberOfCells() const
+{
+  const auto& vertices = getVerticesRef();
+  return vertices.getNumberOfTuples();
+}
+
 void INodeGeometry0D::setVertexCoordinate(usize vertId, const Point3D<float32>& coordinate)
 {
   auto& vertices = getVerticesRef();

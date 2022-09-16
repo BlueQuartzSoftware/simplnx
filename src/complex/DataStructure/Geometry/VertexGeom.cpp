@@ -73,33 +73,6 @@ DataObject* VertexGeom::deepCopy()
   return new VertexGeom(*this);
 }
 
-Point3D<float32> VertexGeom::getVertexCoordinate(usize vertId) const
-{
-  const auto& vertices = getVerticesRef();
-  const usize offset = vertId * 3;
-  Point3D<float32> coords;
-  for(usize i = 0; i < 3; i++)
-  {
-    coords[i] = vertices[offset + i];
-  }
-  return coords;
-}
-
-void VertexGeom::setVertexCoordinate(usize vertId, const Point3D<float32>& coords)
-{
-  auto& vertices = getVerticesRef();
-  const usize offset = vertId * 3;
-  for(usize i = 0; i < 3; i++)
-  {
-    vertices[offset + i] = coords[i];
-  }
-}
-
-usize VertexGeom::getNumberOfCells() const
-{
-  return getNumberOfVertices();
-}
-
 IGeometry::StatusCode VertexGeom::findElementSizes()
 {
   // Vertices are 0-dimensional (they have no getSize),

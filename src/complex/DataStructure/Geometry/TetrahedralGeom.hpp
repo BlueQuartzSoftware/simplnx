@@ -48,7 +48,7 @@ public:
    * @brief
    * @param other
    */
-  TetrahedralGeom(TetrahedralGeom&& other) noexcept;
+  TetrahedralGeom(TetrahedralGeom&& other);
 
   ~TetrahedralGeom() noexcept override;
 

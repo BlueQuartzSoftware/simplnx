@@ -48,7 +48,7 @@ public:
    * @brief
    * @param other
    */
-  QuadGeom(QuadGeom&& other) noexcept;
+  QuadGeom(QuadGeom&& other);
 
   ~QuadGeom() noexcept override;
 
