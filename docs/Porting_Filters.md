@@ -21,7 +21,9 @@ then you can optionally return the `result` variable if needed
 
 ## QString operations ##
 
- There are some substitions for the QString operations. See [https://en.cppreference.com/w/cpp/string/basic_string](https://en.cppreference.com/w/cpp/string/basic_string) for more information about std::string
+ There are some substitutions for the QString operations. See [https://en.cppreference.com/w/cpp/string/basic_string](https://en.cppreference.com/w/cpp/string/basic_string) for more information about std::string
+
+There is a file `complex/Utilities/StringUtilities.hpp` that has some QString functionality that is needed.
 
 ## Getting a Geometry from the DataStructure ##
 
@@ -136,3 +138,16 @@ and use it this way:
   double foo = complex::numbers::k_180OverPi * 232.0;
 ```
 
+## MessageHandler ##
+
+All filters give you access to the MessageHandler class that sends status, progress, error and warning messages back to the user.
+
+This example uses the `fmt` library to format a message of type `Info` and send it back to the user interface.
+```c++
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
+```
+This example shows how to send back progress. The integer argument is a value between 0 and 100 where 0 is just starting and
+100 is fully complete.
+```c++
+    m_MessageHandler(IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt));
+```
