@@ -289,18 +289,18 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
 
     // First Row:
     m_TransformationMatrix[0] = l * l * (oneMinusCosTheta) + cosTheta;
-    m_TransformationMatrix[1] = m * l * (oneMinusCosTheta) - n * sinTheta;
+    m_TransformationMatrix[1] = m * l * (oneMinusCosTheta)-n * sinTheta;
     m_TransformationMatrix[2] = n * l * (oneMinusCosTheta) + m * sinTheta;
     m_TransformationMatrix[3] = 0.0F;
 
     // Second Row:
     m_TransformationMatrix[4] = l * m * (oneMinusCosTheta) + n * sinTheta;
     m_TransformationMatrix[5] = m * m * (oneMinusCosTheta) + cosTheta;
-    m_TransformationMatrix[6] = n * m * (oneMinusCosTheta) - l * sinTheta;
+    m_TransformationMatrix[6] = n * m * (oneMinusCosTheta)-l * sinTheta;
     m_TransformationMatrix[7] = 0.0F;
 
     // Third Row:
-    m_TransformationMatrix[8] = l * n * (oneMinusCosTheta) - m * sinTheta;
+    m_TransformationMatrix[8] = l * n * (oneMinusCosTheta)-m * sinTheta;
     m_TransformationMatrix[9] = m * n * (oneMinusCosTheta) + l * sinTheta;
     m_TransformationMatrix[10] = n * n * (oneMinusCosTheta) + cosTheta;
     m_TransformationMatrix[11] = 0.0F;
