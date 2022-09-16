@@ -81,7 +81,7 @@ public:
   }
 
 protected:
-  ProgressObserver() = default;
+  ProgressObserver() = delete;
   ProgressObserver(const complex::IFilter::MessageHandler& m)
   : m_MessageHandler(m)
   , m_StartTime(std::chrono::steady_clock::now())

@@ -63,7 +63,7 @@ Result<> EBSDSegmentFeatures::operator()()
   // By default we randomize grains
   if(m_InputValues->shouldRandomizeFeatureIds)
   {
-    totalPoints = gridGeom->getNumberOfElements();
+    totalPoints = gridGeom->getNumberOfCells();
     randomizeFeatureIds(m_FeatureIdsArray, totalPoints, totalFeatures, distribution);
   }
 
