@@ -47,25 +47,23 @@ function(complex_add_plugin)
   set(oneValueArgs PLUGIN_NAME)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  set(COMPLEX_PLUGIN_SEARCH_DIRS_2 ${COMPLEX_PLUGIN_SEARCH_DIRS} 
+                                      ${complex_SOURCE_DIR}/../complex_plugins 
+                                      ${complex_SOURCE_DIR}/../DREAM3D_Plugins
+                                      )
+
   #message(STATUS "complex_add_plugin: ${ARGS_PLUGIN_NAME}")
   #message(STATUS "COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR: ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
   if(NOT DEFINED COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR OR NOT EXISTS "${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
-    #message(STATUS "COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR was NOT Defined. Searching for Plugins in 'COMPLEX_PLUGIN_SEARCH_DIRS'")
-    foreach(pluginSearchDir ${COMPLEX_PLUGIN_SEARCH_DIRS})
-      #message(STATUS "|-Searching:${pluginSearchDir} ")
+    #message(STATUS "COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR was NOT Defined. Searching for Plugins in 'COMPLEX_PLUGIN_SEARCH_DIRS_2'")
+    foreach(pluginSearchDir ${COMPLEX_PLUGIN_SEARCH_DIRS_2})
+      # message(STATUS "|-Searching:${pluginSearchDir} ")
       if(EXISTS ${pluginSearchDir}/${ARGS_PLUGIN_NAME}/CMakeLists.txt)
         set(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir}/${ARGS_PLUGIN_NAME} CACHE PATH "")
         #message(STATUS "  |-Plugin: Defining COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR to ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
         break()
       endif()
     endforeach()
-
-    #message(STATUS "${complex_SOURCE_DIR}/../complex_plugins/${ARGS_PLUGIN_NAME}/CMakeLists.txt")
-    if(EXISTS ${complex_SOURCE_DIR}/../complex_plugins/${ARGS_PLUGIN_NAME}/CMakeLists.txt)
-      set(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/../complex_plugins/${ARGS_PLUGIN_NAME} CACHE PATH "")
-      #message(STATUS "  |-Plugin: Defining COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR to ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
-    endif()
-
   endif()
 
   # Mark these variables as advanced
