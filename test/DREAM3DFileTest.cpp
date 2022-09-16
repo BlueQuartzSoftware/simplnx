@@ -170,6 +170,7 @@ Pipeline CreateExportPipeline()
   {
     Arguments args;
     args.insert("Export_File_Path", GetExportDataPath());
+    args.insert("Write_Xdmf_File", true);
     pipeline.push_back(k_ExportD3DHandle, args);
   }
   return pipeline;
@@ -189,6 +190,7 @@ Pipeline CreateImportPipeline()
   {
     Arguments args;
     args.insert("Export_File_Path", GetReExportDataPath());
+    args.insert("Write_Xdmf_File", true);
     pipeline.push_back(k_ExportD3DHandle, args);
   }
   return pipeline;
@@ -207,6 +209,7 @@ void CreateMultiExportFiles()
     {
       Arguments args;
       args.insert("Export_File_Path", GetMultiExportDataPath1());
+      args.insert("Write_Xdmf_File", true);
       pipeline.push_back(k_ExportD3DHandle, args);
     }
     REQUIRE(pipeline.execute());
@@ -222,6 +225,7 @@ void CreateMultiExportFiles()
     {
       Arguments args;
       args.insert("Export_File_Path", GetMultiExportDataPath2());
+      args.insert("Write_Xdmf_File", true);
       pipeline.push_back(k_ExportD3DHandle, args);
     }
     REQUIRE(pipeline.execute());
