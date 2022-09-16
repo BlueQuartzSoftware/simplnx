@@ -202,11 +202,9 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-
   IGeometry(DataStructure& ds, std::string name);
 
   IGeometry(DataStructure& ds, std::string name, IdType importId);
-
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

@@ -151,6 +151,11 @@ bool DataStructure::containsData(DataObject::IdType id) const
   return getData(id) != nullptr;
 }
 
+bool DataStructure::containsData(const DataPath& path) const
+{
+  return getData(path) != nullptr;
+}
+
 Result<LinkedPath> DataStructure::makePath(const DataPath& path)
 {
   try
