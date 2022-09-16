@@ -44,15 +44,15 @@ public:
    * @brief
    * @param other
    */
-  TriangleGeom(const TriangleGeom& other);
+  TriangleGeom(const TriangleGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  TriangleGeom(TriangleGeom&& other);
+  TriangleGeom(TriangleGeom&& other) = default;
 
-  ~TriangleGeom() noexcept override;
+  ~TriangleGeom() noexcept override = default;
 
   TriangleGeom& operator=(const TriangleGeom&) = delete;
   TriangleGeom& operator=(TriangleGeom&&) noexcept = delete;

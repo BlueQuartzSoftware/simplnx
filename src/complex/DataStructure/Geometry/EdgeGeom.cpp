@@ -20,15 +20,6 @@ EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-EdgeGeom::EdgeGeom(const EdgeGeom&) = default;
-
-EdgeGeom::EdgeGeom(EdgeGeom&& other)
-: INodeGeometry1D(other)
-{
-}
-
-EdgeGeom::~EdgeGeom() noexcept = default;
-
 DataObject::Type EdgeGeom::getDataObjectType() const
 {
   return DataObject::Type::EdgeGeom;

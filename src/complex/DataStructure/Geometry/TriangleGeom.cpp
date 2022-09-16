@@ -21,18 +21,6 @@ TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-TriangleGeom::TriangleGeom(const TriangleGeom& other)
-: INodeGeometry2D(other)
-{
-}
-
-TriangleGeom::TriangleGeom(TriangleGeom&& other)
-: INodeGeometry2D(std::move(other))
-{
-}
-
-TriangleGeom::~TriangleGeom() noexcept = default;
-
 IGeometry::Type TriangleGeom::getGeomType() const
 {
   return IGeometry::Type::Triangle;

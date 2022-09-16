@@ -42,15 +42,15 @@ public:
    * @brief
    * @param other
    */
-  QuadGeom(const QuadGeom& other);
+  QuadGeom(const QuadGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  QuadGeom(QuadGeom&& other);
+  QuadGeom(QuadGeom&& other) = default;
 
-  ~QuadGeom() noexcept override;
+  ~QuadGeom() noexcept override = default;
 
   QuadGeom& operator=(const QuadGeom&) = delete;
   QuadGeom& operator=(QuadGeom&&) noexcept = delete;

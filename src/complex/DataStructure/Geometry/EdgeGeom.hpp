@@ -41,15 +41,15 @@ public:
    * @brief
    * @param other
    */
-  EdgeGeom(const EdgeGeom& other);
+  EdgeGeom(const EdgeGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  EdgeGeom(EdgeGeom&& other);
+  EdgeGeom(EdgeGeom&& other) = default;
 
-  ~EdgeGeom() noexcept override;
+  ~EdgeGeom() noexcept override = default;
 
   EdgeGeom& operator=(const EdgeGeom&) = delete;
   EdgeGeom& operator=(EdgeGeom&&) noexcept = delete;

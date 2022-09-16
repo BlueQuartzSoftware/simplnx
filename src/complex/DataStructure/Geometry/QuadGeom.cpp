@@ -20,18 +20,6 @@ QuadGeom::QuadGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-QuadGeom::QuadGeom(const QuadGeom& other)
-: INodeGeometry2D(other)
-{
-}
-
-QuadGeom::QuadGeom(QuadGeom&& other)
-: INodeGeometry2D(std::move(other))
-{
-}
-
-QuadGeom::~QuadGeom() noexcept = default;
-
 IGeometry::Type QuadGeom::getGeomType() const
 {
   return IGeometry::Type::Quad;

@@ -21,12 +21,6 @@ RectGridGeom::RectGridGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-RectGridGeom::RectGridGeom(const RectGridGeom& other) = default;
-
-RectGridGeom::RectGridGeom(RectGridGeom&& other) = default;
-
-RectGridGeom::~RectGridGeom() noexcept = default;
-
 IGeometry::Type RectGridGeom::getGeomType() const
 {
   return IGeometry::Type::RectGrid;

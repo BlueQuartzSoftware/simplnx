@@ -10,6 +10,13 @@ class COMPLEX_EXPORT IGridGeometry : public IGeometry
 public:
   static inline constexpr StringLiteral k_CellDataName = "Cell Data";
 
+  IGridGeometry() = delete;
+  IGridGeometry(const IGridGeometry&) = default;
+  IGridGeometry(IGridGeometry&&) = default;
+
+  IGridGeometry& operator=(const IGridGeometry&) = delete;
+  IGridGeometry& operator=(IGridGeometry&&) noexcept = delete;
+
   ~IGridGeometry() noexcept override = default;
 
   /**
@@ -211,17 +218,9 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-  IGridGeometry() = delete;
-
   IGridGeometry(DataStructure& ds, std::string name);
 
   IGridGeometry(DataStructure& ds, std::string name, IdType importId);
-
-  IGridGeometry(const IGridGeometry&) = default;
-  IGridGeometry(IGridGeometry&&) = default;
-
-  IGridGeometry& operator=(const IGridGeometry&) = delete;
-  IGridGeometry& operator=(IGridGeometry&&) noexcept = delete;
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

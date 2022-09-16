@@ -20,15 +20,6 @@ HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, IdType impor
 {
 }
 
-HexahedralGeom::HexahedralGeom(const HexahedralGeom&) = default;
-
-HexahedralGeom::HexahedralGeom(HexahedralGeom&& other)
-: INodeGeometry3D(std::move(other))
-{
-}
-
-HexahedralGeom::~HexahedralGeom() noexcept = default;
-
 DataObject::Type HexahedralGeom::getDataObjectType() const
 {
   return DataObject::Type::HexahedralGeom;

@@ -42,15 +42,15 @@ public:
    * @brief
    * @param other
    */
-  TetrahedralGeom(const TetrahedralGeom& other);
+  TetrahedralGeom(const TetrahedralGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  TetrahedralGeom(TetrahedralGeom&& other);
+  TetrahedralGeom(TetrahedralGeom&& other) = default;
 
-  ~TetrahedralGeom() noexcept override;
+  ~TetrahedralGeom() noexcept override = default;
 
   TetrahedralGeom& operator=(const TetrahedralGeom&) = delete;
   TetrahedralGeom& operator=(TetrahedralGeom&&) noexcept = delete;

@@ -39,15 +39,15 @@ public:
    * @brief
    * @param other
    */
-  RectGridGeom(const RectGridGeom& other);
+  RectGridGeom(const RectGridGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  RectGridGeom(RectGridGeom&& other);
+  RectGridGeom(RectGridGeom&& other) = default;
 
-  ~RectGridGeom() noexcept override;
+  ~RectGridGeom() noexcept override = default;
 
   RectGridGeom& operator=(const RectGridGeom&) = delete;
   RectGridGeom& operator=(RectGridGeom&&) noexcept = delete;

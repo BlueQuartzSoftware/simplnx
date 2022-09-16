@@ -42,15 +42,15 @@ public:
    * @brief
    * @param other
    */
-  HexahedralGeom(const HexahedralGeom& other);
+  HexahedralGeom(const HexahedralGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  HexahedralGeom(HexahedralGeom&& other);
+  HexahedralGeom(HexahedralGeom&& other) = default;
 
-  ~HexahedralGeom() noexcept override;
+  ~HexahedralGeom() noexcept override = default;
 
   HexahedralGeom& operator=(const HexahedralGeom&) = delete;
   HexahedralGeom& operator=(HexahedralGeom&&) noexcept = delete;
