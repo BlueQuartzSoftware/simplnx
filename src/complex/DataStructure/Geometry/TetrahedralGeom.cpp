@@ -84,34 +84,6 @@ usize TetrahedralGeom::getNumberOfVerticesPerCell() const
   return k_NumVerts;
 }
 
-void TetrahedralGeom::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)
-{
-  auto& polyhedra = getPolyhedraRef();
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    polyhedra[polyhedraId * k_NumVerts + i] = vertexIds[i];
-  }
-}
-
-void TetrahedralGeom::getCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds) const
-{
-  auto& polyhedra = getPolyhedraRef();
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    vertexIds[i] = polyhedra[polyhedraId * k_NumVerts + i];
-  }
-}
-
-void TetrahedralGeom::getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const
-{
-  std::array<usize, k_NumVerts> vertIds = {0, 0, 0, 0};
-  getCellPointIds(tetId, vertIds);
-  for(usize index = 0; index < k_NumVerts; index++)
-  {
-    coords[index] = getVertexCoordinate(vertIds[index]);
-  }
-}
-
 usize TetrahedralGeom::getNumberOfCells() const
 {
   auto& tets = getPolyhedraRef();
@@ -138,10 +110,10 @@ IGeometry::StatusCode TetrahedralGeom::findElementsContainingVert()
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), tetsContainingVert, getNumberOfVertices());
   if(tetsContainingVert == nullptr)
   {
-    m_ElementContainingVertId.reset();
+    m_CellContainingVertId.reset();
     return -1;
   }
-  m_ElementContainingVertId = tetsContainingVert->getId();
+  m_CellContainingVertId = tetsContainingVert->getId();
   return 1;
 }
 
@@ -160,10 +132,10 @@ IGeometry::StatusCode TetrahedralGeom::findElementNeighbors()
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), tetNeighbors, IGeometry::Type::Tetrahedral);
   if(tetNeighbors == nullptr)
   {
-    m_ElementNeighborsId.reset();
+    m_CellNeighborsId.reset();
     return -1;
   }
-  m_ElementNeighborsId = tetNeighbors->getId();
+  m_CellNeighborsId = tetNeighbors->getId();
   return err;
 }
 
@@ -174,10 +146,10 @@ IGeometry::StatusCode TetrahedralGeom::findElementCentroids()
   GeometryHelpers::Topology::FindElementCentroids(getPolyhedra(), getVertices(), tetCentroids);
   if(tetCentroids == nullptr)
   {
-    m_ElementCentroidsId.reset();
+    m_CellCentroidsId.reset();
     return -1;
   }
-  m_ElementCentroidsId = tetCentroids->getId();
+  m_CellCentroidsId = tetCentroids->getId();
   return 1;
 }
 

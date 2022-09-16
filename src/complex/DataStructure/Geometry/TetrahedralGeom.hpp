@@ -98,27 +98,6 @@ public:
   usize getNumberOfVerticesPerCell() const override;
 
   /**
-   * @brief
-   * @param tetId
-   * @param vertexIds The index into the shared vertex list of each vertex
-   */
-  void setCellPointIds(usize tetId, nonstd::span<usize> vertexIds) override;
-
-  /**
-   * @brief
-   * @param tetId
-   * @param vertexIds The index into the shared vertex list of each vertex
-   */
-  void getCellPointIds(usize tetId, nonstd::span<usize> vertexIds) const override;
-
-  /**
-   * @brief
-   * @param tetId
-   * @param coords The coordinates of each vertex
-   */
-  void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const override;
-
-  /**
    * @brief Returns the number of tetrahedrons in this geometry
    * @return usize
    */

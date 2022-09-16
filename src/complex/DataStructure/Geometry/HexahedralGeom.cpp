@@ -84,34 +84,6 @@ usize HexahedralGeom::getNumberOfVerticesPerCell() const
   return k_NumVerts;
 }
 
-void HexahedralGeom::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)
-{
-  auto& polyhedra = getPolyhedraRef();
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    polyhedra[polyhedraId * k_NumVerts + i] = vertexIds[i];
-  }
-}
-
-void HexahedralGeom::getCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds) const
-{
-  auto& polyhedra = getPolyhedraRef();
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    vertexIds[i] = polyhedra[polyhedraId * k_NumVerts + i];
-  }
-}
-
-void HexahedralGeom::getCellCoordinates(usize hexId, nonstd::span<Point3Df> coords) const
-{
-  std::array<usize, 8> vertIds = {0, 0, 0, 0, 0, 0, 0, 0};
-  getCellPointIds(hexId, vertIds);
-  for(usize index = 0; index < k_NumVerts; index++)
-  {
-    coords[index] = getVertexCoordinate(vertIds[index]);
-  }
-}
-
 usize HexahedralGeom::getNumberOfCells() const
 {
   auto& elements = getPolyhedraRef();
@@ -135,11 +107,11 @@ IGeometry::StatusCode HexahedralGeom::findElementSizes()
 IGeometry::StatusCode HexahedralGeom::findElementsContainingVert()
 {
   auto* hexasControllingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Containing Vertices", getId());
-  m_ElementContainingVertId = hexasControllingVert->getId();
+  m_CellContainingVertId = hexasControllingVert->getId();
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
   {
-    m_ElementContainingVertId.reset();
+    m_CellContainingVertId.reset();
     return -1;
   }
   return 1;
@@ -157,11 +129,11 @@ IGeometry::StatusCode HexahedralGeom::findElementNeighbors()
     }
   }
   auto* hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Neighbors", getId());
-  m_ElementNeighborsId = hexNeighbors->getId();
+  m_CellNeighborsId = hexNeighbors->getId();
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighbors, IGeometry::Type::Hexahedral);
   if(getElementNeighbors() == nullptr)
   {
-    m_ElementNeighborsId.reset();
+    m_CellNeighborsId.reset();
     return -1;
   }
   return err;
@@ -171,11 +143,11 @@ IGeometry::StatusCode HexahedralGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
   auto* hexCentroids = DataArray<float32>::Create(*getDataStructure(), "Hex Centroids", std::move(dataStore), getId());
-  m_ElementCentroidsId = hexCentroids->getId();
+  m_CellCentroidsId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getPolyhedra(), getVertices(), hexCentroids);
   if(getElementCentroids() == nullptr)
   {
-    m_ElementCentroidsId.reset();
+    m_CellCentroidsId.reset();
     return -1;
   }
   return 1;

@@ -64,21 +64,21 @@ public:
    * @param triId
    * @param vertexIds The index into the shared vertex list of each vertex
    */
-  virtual void setFacePointIds(usize triId, nonstd::span<usize> vertexIds);
+  void setFacePointIds(usize triId, nonstd::span<usize> vertexIds);
 
   /**
    * @brief
    * @param faceId
    * @param vertexIds The index into the shared vertex list of each vertex
    */
-  virtual void getFacePointIds(usize faceId, nonstd::span<usize> vertexIds) const;
+  void getFacePointIds(usize faceId, nonstd::span<usize> vertexIds) const;
 
   /**
    * @brief
    * @param faceId
    * @param coords The coordinates of each vertex
    */
-  virtual void getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const;
+  void getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const;
 
   /**
    * @brief
@@ -191,6 +191,9 @@ protected:
    */
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
+  /* ***************************************************************************
+   * These variables are the Ids of the arrays from the complex::DataStructure object.
+   */
   std::optional<IdType> m_FaceListId;
   std::optional<IdType> m_FaceDataId;
   std::optional<IdType> m_UnsharedEdgeListId;

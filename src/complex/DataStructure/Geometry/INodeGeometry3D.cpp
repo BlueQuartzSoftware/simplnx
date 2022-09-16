@@ -56,6 +56,37 @@ usize INodeGeometry3D::getNumberOfPolyhedra() const
   return polyhedra.getNumberOfTuples();
 }
 
+void INodeGeometry3D::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)
+{
+  auto& polyhedra = getPolyhedraRef();
+  usize numVerts = getNumberOfVerticesPerCell();
+  for(usize i = 0; i < numVerts; i++)
+  {
+    polyhedra[polyhedraId * numVerts + i] = vertexIds[i];
+  }
+}
+
+void INodeGeometry3D::getCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds) const
+{
+  auto& polyhedra = getPolyhedraRef();
+  usize numVerts = getNumberOfVerticesPerCell();
+  for(usize i = 0; i < numVerts; i++)
+  {
+    vertexIds[i] = polyhedra[polyhedraId * numVerts + i];
+  }
+}
+
+void INodeGeometry3D::getCellCoordinates(usize hexId, nonstd::span<Point3Df> coords) const
+{
+  usize numVerts = getNumberOfVerticesPerCell();
+  std::vector<usize> vertIds(numVerts, 0);
+  getCellPointIds(hexId, vertIds);
+  for(usize index = 0; index < numVerts; index++)
+  {
+    coords[index] = getVertexCoordinate(vertIds[index]);
+  }
+}
+
 void INodeGeometry3D::deleteFaces()
 {
   getDataStructureRef().removeData(m_FaceListId);

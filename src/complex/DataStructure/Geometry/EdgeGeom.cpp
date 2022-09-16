@@ -112,7 +112,7 @@ IGeometry::StatusCode EdgeGeom::findElementsContainingVert()
   {
     return -1;
   }
-  m_ElementContainingVertId = containsVert->getId();
+  m_CellContainingVertId = containsVert->getId();
   return 1;
 }
 
@@ -133,11 +133,11 @@ IGeometry::StatusCode EdgeGeom::findElementNeighbors()
     err = -1;
     return err;
   }
-  m_ElementNeighborsId = edgeNeighbors->getId();
+  m_CellNeighborsId = edgeNeighbors->getId();
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, IGeometry::Type::Edge);
   if(getElementNeighbors() == nullptr)
   {
-    m_ElementNeighborsId.reset();
+    m_CellNeighborsId.reset();
     err = -1;
   }
   return err;
@@ -152,7 +152,7 @@ IGeometry::StatusCode EdgeGeom::findElementCentroids()
   {
     return -1;
   }
-  m_ElementCentroidsId = edgeCentroids->getId();
+  m_CellCentroidsId = edgeCentroids->getId();
   return 1;
 }
 

@@ -100,35 +100,35 @@ void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> co
 
 const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementsContainingVert() const
 {
-  return getDataStructureRef().getDataAs<ElementDynamicList>(m_ElementContainingVertId);
+  return getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertId);
 }
 
 void INodeGeometry1D::deleteElementsContainingVert()
 {
-  getDataStructureRef().removeData(m_ElementContainingVertId);
-  m_ElementContainingVertId.reset();
+  getDataStructureRef().removeData(m_CellContainingVertId);
+  m_CellContainingVertId.reset();
 }
 
 const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementNeighbors() const
 {
-  return getDataStructureRef().getDataAs<ElementDynamicList>(m_ElementNeighborsId);
+  return getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsId);
 }
 
 void INodeGeometry1D::deleteElementNeighbors()
 {
-  getDataStructureRef().removeData(m_ElementNeighborsId);
-  m_ElementNeighborsId.reset();
+  getDataStructureRef().removeData(m_CellNeighborsId);
+  m_CellNeighborsId.reset();
 }
 
 const Float32Array* INodeGeometry1D::getElementCentroids() const
 {
-  return getDataStructureRef().getDataAs<Float32Array>(m_ElementCentroidsId);
+  return getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsId);
 }
 
 void INodeGeometry1D::deleteElementCentroids()
 {
-  getDataStructureRef().removeData(m_ElementCentroidsId);
-  m_ElementCentroidsId.reset();
+  getDataStructureRef().removeData(m_CellCentroidsId);
+  m_CellCentroidsId.reset();
 }
 
 const std::optional<INodeGeometry1D::IdType>& INodeGeometry1D::getEdgeDataId() const
@@ -176,9 +176,9 @@ H5::ErrorType INodeGeometry1D::readHdf5(H5::DataStructureReader& dataStructureRe
 
   m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
   m_EdgeDataId = ReadH5DataId(groupReader, H5Constants::k_EdgeDataTag);
-  m_ElementContainingVertId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
-  m_ElementNeighborsId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
-  m_ElementCentroidsId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
+  m_CellContainingVertId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
+  m_CellNeighborsId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
+  m_CellCentroidsId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
 
   return error;
 }
@@ -204,19 +204,19 @@ H5::ErrorType INodeGeometry1D::writeHdf5(H5::DataStructureWriter& dataStructureW
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_ElementContainingVertId, H5Constants::k_ElementContainingVertTag);
+  error = WriteH5DataId(groupWriter, m_CellContainingVertId, H5Constants::k_ElementContainingVertTag);
   if(error < 0)
   {
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_ElementNeighborsId, H5Constants::k_ElementNeighborsTag);
+  error = WriteH5DataId(groupWriter, m_CellNeighborsId, H5Constants::k_ElementNeighborsTag);
   if(error < 0)
   {
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_ElementCentroidsId, H5Constants::k_ElementCentroidTag);
+  error = WriteH5DataId(groupWriter, m_CellCentroidsId, H5Constants::k_ElementCentroidTag);
   if(error < 0)
   {
     return error;
@@ -246,19 +246,19 @@ void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
       m_EdgeListId = updatedId.second;
     }
 
-    if(m_ElementContainingVertId == updatedId.first)
+    if(m_CellContainingVertId == updatedId.first)
     {
-      m_ElementContainingVertId = updatedId.second;
+      m_CellContainingVertId = updatedId.second;
     }
 
-    if(m_ElementNeighborsId == updatedId.first)
+    if(m_CellNeighborsId == updatedId.first)
     {
-      m_ElementNeighborsId = updatedId.second;
+      m_CellNeighborsId = updatedId.second;
     }
 
-    if(m_ElementCentroidsId == updatedId.first)
+    if(m_CellCentroidsId == updatedId.first)
     {
-      m_ElementCentroidsId = updatedId.second;
+      m_CellCentroidsId = updatedId.second;
     }
 
     if(m_ElementSizesId == updatedId.first)

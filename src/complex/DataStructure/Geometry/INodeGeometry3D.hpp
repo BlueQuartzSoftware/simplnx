@@ -86,21 +86,21 @@ public:
    * @param tetId
    * @param vertexIds The index into the shared vertex list of each vertex
    */
-  virtual void setCellPointIds(usize tetId, nonstd::span<usize> vertexIds) = 0;
+  void setCellPointIds(usize tetId, nonstd::span<usize> vertexIds);
 
   /**
    * @brief
    * @param tetId
    * @param vertexIds The index into the shared vertex list of each vertex
    */
-  virtual void getCellPointIds(usize tetId, nonstd::span<usize> vertexIds) const = 0;
+  void getCellPointIds(usize tetId, nonstd::span<usize> vertexIds) const;
 
   /**
    * @brief
    * @param tetId
    * @param coords The coordinates of each vertex
    */
-  virtual void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const = 0;
+  void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const;
 
   /**
    * @brief
@@ -175,6 +175,9 @@ protected:
    */
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
+  /* ***************************************************************************
+   * These variables are the Ids of the arrays from the complex::DataStructure object.
+   */
   std::optional<IdType> m_PolyhedronListId;
   std::optional<IdType> m_PolyhedronDataId;
   std::optional<IdType> m_UnsharedFaceListId;

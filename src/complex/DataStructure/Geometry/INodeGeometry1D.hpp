@@ -48,7 +48,7 @@ public:
    * @brief returns the number of edges in the geometry
    * @return
    */
-  virtual usize getNumberOfEdges() const;
+  usize getNumberOfEdges() const;
 
   /**
    * @brief Sets the vertex IDs making up the specified edge. This method does
@@ -56,7 +56,7 @@ public:
    * @param edgeId
    * @param vertexIds The index into the shared vertex list of each vertex
    */
-  virtual void setEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds);
+  void setEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds);
 
   /**
    * @brief Returns the vertices that make up the specified edge by reference.
@@ -64,7 +64,7 @@ public:
    * @param edgeId
    * @param vertexIds The index into the shared vertex list of each vertex
    */
-  virtual void getEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds) const;
+  void getEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds) const;
 
   /**
    * @brief Returns the vertex coordinates for a specified edge by reference.
@@ -73,7 +73,7 @@ public:
    * @param vert1
    * @param vert2
    */
-  virtual void getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const;
+  void getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const;
 
   /**
    * @brief
@@ -195,10 +195,13 @@ protected:
    */
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
+  /* ***************************************************************************
+   * These variables are the Ids of the arrays from the complex::DataStructure object.
+   */
   std::optional<IdType> m_EdgeListId;
   std::optional<IdType> m_EdgeDataId;
-  std::optional<IdType> m_ElementContainingVertId;
-  std::optional<IdType> m_ElementNeighborsId;
-  std::optional<IdType> m_ElementCentroidsId;
+  std::optional<IdType> m_CellContainingVertId;
+  std::optional<IdType> m_CellNeighborsId;
+  std::optional<IdType> m_CellCentroidsId;
 };
 } // namespace complex

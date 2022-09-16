@@ -127,6 +127,9 @@ protected:
    */
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
+  /* ***************************************************************************
+   * These variables are the Ids of the arrays from the complex::DataStructure object.
+   */
   std::optional<IdType> m_VertexListId;
   std::optional<IdType> m_VertexDataId;
 };
