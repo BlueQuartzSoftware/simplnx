@@ -63,7 +63,7 @@ public:
   }
 
 protected:
-  Dream3DFilterInterruption() = default;
+  Dream3DFilterInterruption() = delete;
   Dream3DFilterInterruption(const std::atomic_bool& shouldCancel)
   : m_ShouldCancel(shouldCancel)
   {

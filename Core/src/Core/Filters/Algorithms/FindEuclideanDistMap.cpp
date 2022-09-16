@@ -38,7 +38,7 @@ public:
 
     SizeVec3 udims = selectedImageGeom.getDimensions();
 
-    size_t totalPoints = selectedImageGeom.getNumberOfElements();
+    size_t totalPoints = selectedImageGeom.getNumberOfCells();
     double Distance = 0.0;
     size_t count = 1;
     size_t changed = 1;
