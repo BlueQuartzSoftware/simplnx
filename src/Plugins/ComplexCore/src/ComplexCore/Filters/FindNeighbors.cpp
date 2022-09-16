@@ -184,9 +184,9 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
 
   auto& imageGeom = data.getDataRefAs<ImageGeom>(imageGeomPath);
   SizeVec3 udims = imageGeom.getDimensions();
-  const auto imageGeomNumX = imageGeom.getNumXPoints();
-  const auto imageGeomNumY = imageGeom.getNumYPoints();
-  const auto imageGeomNumZ = imageGeom.getNumZPoints();
+  const auto imageGeomNumX = imageGeom.getNumXCells();
+  const auto imageGeomNumY = imageGeom.getNumYCells();
+  const auto imageGeomNumZ = imageGeom.getNumZCells();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),

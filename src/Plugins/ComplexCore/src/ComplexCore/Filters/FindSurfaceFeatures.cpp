@@ -107,9 +107,9 @@ void findSurfaceFeatures3D(DataStructure& ds, const DataPath& featureGeometryPat
   const Int32Array& featureIds = ds.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
   BoolArray& surfaceFeatures = ds.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
 
-  usize xPoints = featureGeometry.getNumXPoints();
-  usize yPoints = featureGeometry.getNumYPoints();
-  usize zPoints = featureGeometry.getNumZPoints();
+  usize xPoints = featureGeometry.getNumXCells();
+  usize yPoints = featureGeometry.getNumYCells();
+  usize zPoints = featureGeometry.getNumZCells();
 
   for(usize z = 0; z < zPoints; z++)
   {
@@ -147,20 +147,20 @@ void findSurfaceFeatures2D(DataStructure& ds, const DataPath& featureGeometryPat
   usize xPoints = 0;
   usize yPoints = 0;
 
-  if(featureGeometry.getNumXPoints() == 1)
+  if(featureGeometry.getNumXCells() == 1)
   {
-    xPoints = featureGeometry.getNumYPoints();
-    yPoints = featureGeometry.getNumZPoints();
+    xPoints = featureGeometry.getNumYCells();
+    yPoints = featureGeometry.getNumZCells();
   }
-  if(featureGeometry.getNumYPoints() == 1)
+  if(featureGeometry.getNumYCells() == 1)
   {
-    xPoints = featureGeometry.getNumXPoints();
-    yPoints = featureGeometry.getNumZPoints();
+    xPoints = featureGeometry.getNumXCells();
+    yPoints = featureGeometry.getNumZCells();
   }
-  if(featureGeometry.getNumZPoints() == 1)
+  if(featureGeometry.getNumZCells() == 1)
   {
-    xPoints = featureGeometry.getNumXPoints();
-    yPoints = featureGeometry.getNumYPoints();
+    xPoints = featureGeometry.getNumXCells();
+    yPoints = featureGeometry.getNumYCells();
   }
 
   for(usize y = 0; y < yPoints; y++)

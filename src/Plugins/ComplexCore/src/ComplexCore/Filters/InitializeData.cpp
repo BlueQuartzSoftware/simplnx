@@ -226,17 +226,17 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
 
   const ImageGeom& imageGeom = data.getDataRefAs<ImageGeom>(imageGeomPath);
 
-  if(xMax > (static_cast<int64>(imageGeom.getNumXPoints()) - 1))
+  if(xMax > (static_cast<int64>(imageGeom.getNumXCells()) - 1))
   {
-    errors.push_back(Error{-5557, fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXPoints()) - 1)});
+    errors.push_back(Error{-5557, fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXCells()) - 1)});
   }
-  if(yMax > (static_cast<int64>(imageGeom.getNumYPoints()) - 1))
+  if(yMax > (static_cast<int64>(imageGeom.getNumYCells()) - 1))
   {
-    errors.push_back(Error{-5558, fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYPoints()) - 1)});
+    errors.push_back(Error{-5558, fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYCells()) - 1)});
   }
-  if(zMax > (static_cast<int64>(imageGeom.getNumZPoints()) - 1))
+  if(zMax > (static_cast<int64>(imageGeom.getNumZCells()) - 1))
   {
-    errors.push_back(Error{-5559, fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZPoints()) - 1)});
+    errors.push_back(Error{-5559, fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
   }
 
   SizeVec3 imageDims = imageGeom.getDimensions();

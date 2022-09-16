@@ -300,15 +300,15 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
     auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
     auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
     auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
-    for(size_t i = 0; i < rectGrid.getNumXPoints(); i++)
+    for(size_t i = 0; i < rectGrid.getNumXCells(); i++)
     {
       xBounds[i] += translation[0];
     }
-    for(size_t i = 0; i < rectGrid.getNumYPoints(); i++)
+    for(size_t i = 0; i < rectGrid.getNumYCells(); i++)
     {
       yBounds[i] += translation[1];
     }
-    for(size_t i = 0; i < rectGrid.getNumZPoints(); i++)
+    for(size_t i = 0; i < rectGrid.getNumZCells(); i++)
     {
       zBounds[i] += translation[2];
     }
