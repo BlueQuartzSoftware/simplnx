@@ -230,7 +230,7 @@ void WriteGeomXdmf(std::ostream& out, const VertexGeom& vertexGeom, std::string_
 void WriteGeomXdmf(std::ostream& out, const EdgeGeom& edgeGeom, std::string_view hdf5FilePath)
 {
   std::string name = edgeGeom.getName();
-  usize numEdges = edgeGeom.getNumberOfEdges();
+  usize numEdges = edgeGeom.getNumberOfCells();
   usize numVerts = edgeGeom.getNumberOfVertices();
 
   DataPath edgesPath = edgeGeom.getEdgesRef().getDataPaths().at(0);

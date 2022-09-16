@@ -94,9 +94,7 @@ Result<> PointSampleTriangleGeometry::operator()()
   int64_t progressInt = 0;
   int64_t counter = 0;
 
-  Point3Df a(0.0F, 0.0F, 0.0F);
-  Point3Df b(0.0F, 0.0F, 0.0F);
-  Point3Df c(0.0F, 0.0F, 0.0F);
+  std::vector<Point3Df> faceVerts = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
 
   // We get the pointer to the Array instead of a reference because it might not have been set because
   // the bool "use_mask" might have been false, but we do NOT want to try to get the array
@@ -154,7 +152,7 @@ Result<> PointSampleTriangleGeometry::operator()()
       }
     }
 
-    triangle.getVertexCoordsForFace(randomTri, a, b, c);
+    triangle.getFaceCoordinates(randomTri, faceVerts);
 
     float r1 = static_cast<float>(distribution(generator));
     float r2 = static_cast<float>(distribution(generator));
@@ -163,9 +161,9 @@ Result<> PointSampleTriangleGeometry::operator()()
     float prefactorB = sqrtf(r1) * (1 - r2);
     float prefactorC = sqrtf(r1) * r2;
 
-    (*vertices)[curVertex * 3 + 0] = (prefactorA * a[0]) + (prefactorB * b[0]) + (prefactorC * c[0]);
-    (*vertices)[curVertex * 3 + 1] = (prefactorA * a[1]) + (prefactorB * b[1]) + (prefactorC * c[1]);
-    (*vertices)[curVertex * 3 + 2] = (prefactorA * a[2]) + (prefactorB * b[2]) + (prefactorC * c[2]);
+    (*vertices)[curVertex * 3 + 0] = (prefactorA * faceVerts[0][0]) + (prefactorB * faceVerts[1][0]) + (prefactorC * faceVerts[2][0]);
+    (*vertices)[curVertex * 3 + 1] = (prefactorA * faceVerts[0][1]) + (prefactorB * faceVerts[1][1]) + (prefactorC * faceVerts[2][1]);
+    (*vertices)[curVertex * 3 + 2] = (prefactorA * faceVerts[0][2]) + (prefactorB * faceVerts[1][2]) + (prefactorC * faceVerts[2][2]);
 
     // Transfer the face data to the vertex data
     for(size_t dataVectorIndex = 0; dataVectorIndex < m_Inputs->pSelectedDataArrayPaths.size(); dataVectorIndex++)

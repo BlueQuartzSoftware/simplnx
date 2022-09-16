@@ -147,7 +147,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   {
     return {MakeErrorResult<OutputActions>(-76530, fmt::format("Could not find find selected grid geometry at path '{}'", pGridGeomDataPath.toString()))};
   }
-  auto numElements = gridGeom->getNumberOfElements();
+  auto numElements = gridGeom->getNumberOfCells();
 
   // Create the Triangle Geometry action and store it
   {

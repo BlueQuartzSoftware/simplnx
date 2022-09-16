@@ -151,6 +151,11 @@ bool DataStructure::containsData(DataObject::IdType id) const
   return getData(id) != nullptr;
 }
 
+bool DataStructure::containsData(const DataPath& path) const
+{
+  return getData(path) != nullptr;
+}
+
 Result<LinkedPath> DataStructure::makePath(const DataPath& path)
 {
   try
@@ -830,7 +835,10 @@ void DataStructure::resetIds(DataObject::IdType startingId)
   for(auto& dataObjectIter : m_DataObjects)
   {
     auto dataObjectPtr = dataObjectIter.second.lock();
-    dataObjectPtr->checkUpdatedIds(updatedIds);
+    if(dataObjectPtr != nullptr)
+    {
+      dataObjectPtr->checkUpdatedIds(updatedIds);
+    }
   }
 }
 

@@ -20,18 +20,6 @@ QuadGeom::QuadGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-QuadGeom::QuadGeom(const QuadGeom& other)
-: INodeGeometry2D(other)
-{
-}
-
-QuadGeom::QuadGeom(QuadGeom&& other) noexcept
-: INodeGeometry2D(std::move(other))
-{
-}
-
-QuadGeom::~QuadGeom() noexcept = default;
-
 IGeometry::Type QuadGeom::getGeomType() const
 {
   return IGeometry::Type::Quad;
@@ -77,51 +65,20 @@ DataObject* QuadGeom::deepCopy()
   return new QuadGeom(*this);
 }
 
-void QuadGeom::setVertexIdsForFace(usize faceId, usize verts[4])
-{
-  auto& faces = getFacesRef();
-  const usize offset = faceId * k_NumVerts;
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    faces[offset + i] = verts[i];
-  }
-}
-
-void QuadGeom::getVertexIdsForFace(usize faceId, usize verts[k_NumVerts]) const
-{
-  auto& faces = getFacesRef();
-  const usize offset = faceId * k_NumVerts;
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    verts[i] = faces.at(offset + i);
-  }
-}
-
-void QuadGeom::getVertexCoordsForFace(usize faceId, complex::Point3D<float32>& vert1, complex::Point3D<float32>& vert2, complex::Point3D<float32>& vert3, complex::Point3D<float32>& vert4) const
-{
-  auto& faces = getFacesRef();
-  usize verts[4];
-  getVertexIdsForFace(faceId, verts);
-  vert1 = getCoords(verts[0]);
-  vert2 = getCoords(verts[1]);
-  vert3 = getCoords(verts[2]);
-  vert4 = getCoords(verts[3]);
-}
-
-usize QuadGeom::getNumberOfQuads() const
+usize QuadGeom::getNumberOfCells() const
 {
   auto& quads = getFacesRef();
   return quads.getNumberOfTuples();
 }
 
-usize QuadGeom::getNumberOfElements() const
+usize QuadGeom::getNumberOfVerticesPerFace() const
 {
-  return getNumberOfQuads();
+  return k_NumFaceVerts;
 }
 
 IGeometry::StatusCode QuadGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfQuads(), 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
   Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", std::move(dataStore), getId());
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
@@ -139,46 +96,45 @@ IGeometry::StatusCode QuadGeom::findElementsContainingVert()
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), quadsContainingVert, getNumberOfVertices());
   if(quadsContainingVert == nullptr)
   {
-    m_ElementContainingVertId.reset();
+    m_CellContainingVertId.reset();
     return -1;
   }
-  m_ElementContainingVertId = quadsContainingVert->getId();
+  m_CellContainingVertId = quadsContainingVert->getId();
   return 1;
 }
 
 IGeometry::StatusCode QuadGeom::findElementNeighbors()
 {
-  StatusCode err = 0;
   if(getElementsContainingVert() == nullptr)
   {
-    err = findElementsContainingVert();
+    StatusCode err = findElementsContainingVert();
     if(err < 0)
     {
       return err;
     }
   }
   auto quadNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Quad Neighbors", getId());
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), quadNeighbors, IGeometry::Type::Quad);
+  StatusCode err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), quadNeighbors, IGeometry::Type::Quad);
   if(quadNeighbors == nullptr)
   {
-    m_ElementNeighborsId.reset();
+    m_CellNeighborsId.reset();
     return -1;
   }
-  m_ElementNeighborsId = quadNeighbors->getId();
+  m_CellNeighborsId = quadNeighbors->getId();
   return err;
 }
 
 IGeometry::StatusCode QuadGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfQuads()}, std::vector<usize>{3}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
   auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
   {
-    m_ElementCentroidsId.reset();
+    m_CellCentroidsId.reset();
     return -1;
   }
-  m_ElementCentroidsId = quadCentroids->getId();
+  m_CellCentroidsId = quadCentroids->getId();
   return 1;
 }
 
@@ -189,11 +145,8 @@ Point3D<float64> QuadGeom::getParametricCenter() const
 
 void QuadGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const
 {
-  float64 rm = 0.0;
-  float64 sm = 0.0;
-
-  rm = 1.0 - pCoords[0];
-  sm = 1.0 - pCoords[1];
+  float64 rm = 1.0 - pCoords[0];
+  float64 sm = 1.0 - pCoords[1];
 
   shape[0] = -sm;
   shape[1] = sm;
@@ -203,37 +156,6 @@ void QuadGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shape
   shape[5] = -pCoords[0];
   shape[6] = pCoords[0];
   shape[7] = rm;
-}
-
-void QuadGeom::setCoords(usize vertId, const Point3D<float32>& coord)
-{
-  auto& verts = getVerticesRef();
-  usize index = vertId * 4;
-  for(usize i = 0; i < 3; i++)
-  {
-    verts[index + i] = coord[i];
-  }
-}
-
-Point3D<float32> QuadGeom::getCoords(usize vertId) const
-{
-  auto& verts = getVerticesRef();
-  usize index = vertId * 4;
-  return {verts.at(index), verts.at(index + 1), verts.at(index + 2)};
-}
-
-void QuadGeom::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
-{
-  auto& vertices = getVerticesRef();
-
-  usize verts[2];
-  getVertsAtEdge(edgeId, verts);
-
-  for(usize i = 0; i < 3; i++)
-  {
-    vert1[i] = vertices.at(verts[0] * 4 + i);
-    vert2[i] = vertices.at(verts[1] * 4 + i);
-  }
 }
 
 IGeometry::StatusCode QuadGeom::findEdges()

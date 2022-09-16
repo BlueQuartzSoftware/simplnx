@@ -1,12 +1,9 @@
 #include <catch2/catch.hpp>
 
 #include <filesystem>
-#include <iostream>
 #include <mutex>
 #include <string>
 #include <vector>
-
-#include "nlohmann/json.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -162,7 +159,7 @@ Pipeline CreateExportPipeline()
     args.insert("numeric_type", std::make_any<NumericType>(NumericType::int8));
     args.insert("component_count", std::make_any<uint64>(3));
 
-    args.insert("tuple_dimensions", DynamicTableInfo::TableDataType{{{1.0}}});
+    args.insert("tuple_dimensions", DynamicTableInfo::TableDataType{{1.0}});
     args.insert("initialization_value", std::make_any<std::string>("7"));
     args.insert("output_data_array", DataPath({DataNames::k_ArrayName}));
     pipeline.push_back(k_CreateDataArrayHandle, args);

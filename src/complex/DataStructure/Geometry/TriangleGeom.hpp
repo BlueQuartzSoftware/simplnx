@@ -4,6 +4,8 @@
 
 #include "complex/complex_export.hpp"
 
+#include <nonstd/span.hpp>
+
 namespace complex
 {
 /**
@@ -15,6 +17,8 @@ class COMPLEX_EXPORT TriangleGeom : public INodeGeometry2D
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumEdgeVerts = 2;
+  static inline constexpr usize k_NumFaceVerts = 3;
   static inline constexpr usize k_NumVerts = 3;
 
   /**
@@ -40,15 +44,15 @@ public:
    * @brief
    * @param other
    */
-  TriangleGeom(const TriangleGeom& other);
+  TriangleGeom(const TriangleGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  TriangleGeom(TriangleGeom&& other) noexcept;
+  TriangleGeom(TriangleGeom&& other) = default;
 
-  ~TriangleGeom() noexcept override;
+  ~TriangleGeom() noexcept override = default;
 
   TriangleGeom& operator=(const TriangleGeom&) = delete;
   TriangleGeom& operator=(TriangleGeom&&) noexcept = delete;
@@ -85,38 +89,15 @@ public:
 
   /**
    * @brief
-   * @param triId
-   * @param verts
-   */
-  void setVertexIdsForFace(usize triId, usize verts[3]);
-
-  /**
-   * @brief
-   * @param faceId
-   * @param verts
-   */
-  void getVertexIdsForFace(usize faceId, usize verts[3]) const;
-
-  /**
-   * @brief
-   * @param faceId
-   * @param vert1
-   * @param vert2
-   * @param vert3
-   */
-  void getVertexCoordsForFace(usize faceId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const;
-
-  /**
-   * @brief
    * @return usize
    */
-  usize getNumberOfFaces() const;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief
-   * @return usize
+   * @return
    */
-  usize getNumberOfElements() const override;
+  usize getNumberOfVerticesPerFace() const override;
 
   /**
    * @brief
@@ -157,30 +138,9 @@ public:
 
   /**
    * @brief
-   * @param vertId
-   * @param coords
-   */
-  void setCoords(usize vertId, const Point3D<float32>& coords) override;
-
-  /**
-   * @brief
-   * @param vertId
-   */
-  Point3D<float32> getCoords(usize vertId) const override;
-
-  /**
-   * @brief
    * @return StatusCode
    */
   StatusCode findEdges() override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param vert1
-   * @param vert2
-   */
-  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
 
   /**
    * @brief

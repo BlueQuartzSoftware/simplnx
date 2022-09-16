@@ -16,6 +16,7 @@ public:
   friend class DataStructure;
 
   static inline constexpr usize k_NumVerts = 2;
+  static inline constexpr usize k_NumEdgeVerts = 2;
 
   /**
    * @brief
@@ -40,15 +41,15 @@ public:
    * @brief
    * @param other
    */
-  EdgeGeom(const EdgeGeom& other);
+  EdgeGeom(const EdgeGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  EdgeGeom(EdgeGeom&& other);
+  EdgeGeom(EdgeGeom&& other) = default;
 
-  ~EdgeGeom() noexcept override;
+  ~EdgeGeom() noexcept override = default;
 
   EdgeGeom& operator=(const EdgeGeom&) = delete;
   EdgeGeom& operator=(EdgeGeom&&) noexcept = delete;
@@ -82,48 +83,6 @@ public:
    * @return DataObject*
    */
   DataObject* deepCopy() override;
-
-  /**
-   * @brief
-   * @param vertId
-   * @param coords
-   */
-  void setCoords(usize vertId, const Point3D<float32>& coords) override;
-
-  /**
-   * @brief
-   * @param vertId
-   * @return Point3D<float32>
-   */
-  Point3D<float32> getCoords(usize vertId) const override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param verts
-   */
-  void setVertsAtEdge(usize edgeId, const usize verts[2]) override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param verts
-   */
-  void getVertsAtEdge(usize edgeId, usize verts[2]) const override;
-
-  /**
-   * @brief
-   * @param edgeId
-   * @param vert1
-   * @param vert2
-   */
-  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfElements() const override;
 
   /**
    * @brief

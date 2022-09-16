@@ -21,12 +21,6 @@ ImageGeom::ImageGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-ImageGeom::ImageGeom(const ImageGeom& other) = default;
-
-ImageGeom::ImageGeom(ImageGeom&& other) = default;
-
-ImageGeom::~ImageGeom() noexcept = default;
-
 IGeometry::Type ImageGeom::getGeomType() const
 {
   return IGeometry::Type::Image;
@@ -116,7 +110,7 @@ BoundingBox<float64> ImageGeom::getBoundingBox() const
   return BoundingBox<float64>(arr);
 }
 
-usize ImageGeom::getNumberOfElements() const
+usize ImageGeom::getNumberOfCells() const
 {
   return (m_Dimensions[0] * m_Dimensions[1] * m_Dimensions[2]);
 }
@@ -130,7 +124,7 @@ IGeometry::StatusCode ImageGeom::findElementSizes()
     return -1;
   }
   float32 initValue = res[0] * res[1] * res[2];
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfElements()}, std::vector<usize>{1}, initValue);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, initValue);
   auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(dataStore), getId());
   m_ElementSizesId = voxelSizes->getId();
   return 1;

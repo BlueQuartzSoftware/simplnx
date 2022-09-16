@@ -56,6 +56,44 @@ usize INodeGeometry2D::getNumberOfFaces() const
   return faces.getNumberOfTuples();
 }
 
+void INodeGeometry2D::setFacePointIds(usize faceId, nonstd::span<usize> vertexIds)
+{
+  auto& faces = getFacesRef();
+  const usize offset = faceId * getNumberOfVerticesPerFace();
+  if(offset + getNumberOfVerticesPerFace() >= faces.getSize())
+  {
+    return;
+  }
+  for(usize i = 0; i < getNumberOfVerticesPerFace(); i++)
+  {
+    faces[offset + i] = vertexIds[i];
+  }
+}
+
+void INodeGeometry2D::getFacePointIds(usize faceId, nonstd::span<usize> vertexIds) const
+{
+  auto& cells = getFacesRef();
+  const usize offset = faceId * getNumberOfVerticesPerFace();
+  if(offset + getNumberOfVerticesPerFace() >= cells.getSize())
+  {
+    return;
+  }
+  for(usize i = 0; i < getNumberOfVerticesPerFace(); i++)
+  {
+    vertexIds[i] = cells.at(offset + i);
+  }
+}
+
+void INodeGeometry2D::getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const
+{
+  std::vector<usize> verts(getNumberOfVerticesPerFace());
+  getFacePointIds(faceId, verts);
+  for(usize index = 0; index < verts.size(); index++)
+  {
+    coords[index] = getVertexCoordinate(verts[index]);
+  }
+}
+
 void INodeGeometry2D::deleteEdges()
 {
   getDataStructureRef().removeData(m_EdgeListId);
@@ -76,20 +114,6 @@ void INodeGeometry2D::deleteUnsharedEdges()
 {
   getDataStructureRef().removeData(m_UnsharedEdgeListId);
   m_UnsharedEdgeListId.reset();
-}
-
-void INodeGeometry2D::setVertsAtEdge(usize edgeId, const usize verts[2])
-{
-  auto& edges = getEdgesRef();
-  edges[edgeId * 2] = verts[0];
-  edges[edgeId * 2 + 1] = verts[1];
-}
-
-void INodeGeometry2D::getVertsAtEdge(usize edgeId, usize verts[2]) const
-{
-  auto& edges = getEdgesRef();
-  verts[0] = edges.at(edgeId * 2);
-  verts[1] = edges.at(edgeId * 2 + 1);
 }
 
 const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceDataId() const

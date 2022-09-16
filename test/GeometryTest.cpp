@@ -58,8 +58,8 @@ void testGeom2D(INodeGeometry2D* geom)
       geom->resizeVertexList(numVertices);
       REQUIRE(geom->getNumberOfVertices() == numVertices);
 
-      geom->setCoords(vertId, coord);
-      REQUIRE(geom->getCoords(vertId) == coord);
+      geom->setVertexCoordinate(vertId, coord);
+      REQUIRE(geom->getVertexCoordinate(vertId) == coord);
     }
 
     // edges
@@ -71,17 +71,18 @@ void testGeom2D(INodeGeometry2D* geom)
       geom->resizeEdgeList(numEdges);
       REQUIRE(geom->getNumberOfEdges() == numEdges);
       const usize edgeId = 3;
-      const usize verts[2] = {vertId, vertId + 1};
-      geom->setVertsAtEdge(edgeId, verts);
-      Point3D<float32> vert1, vert2;
-      usize vertsOut[2];
-      geom->getVertsAtEdge(edgeId, vertsOut);
+      std::array<usize, 2> verts = {vertId, vertId + 1};
+      geom->setEdgePointIds(edgeId, verts);
+
+      std::array<Point3Df, 2> edge_verts;
+      std::array<usize, 2> vertsOut = {0, 0};
+      geom->getEdgePointIds(edgeId, vertsOut);
       for(usize i = 0; i < 2; i++)
       {
         REQUIRE(verts[i] == vertsOut[i]);
       }
-      geom->getVertCoordsAtEdge(edgeId, vert1, vert2);
-      REQUIRE(vert1 == coord);
+      geom->getEdgeCoordinates(edgeId, edge_verts);
+      REQUIRE(edge_verts[0] == coord);
     }
   }
 }
@@ -102,8 +103,8 @@ void testGeom3D(INodeGeometry3D* geom)
       geom->resizeVertexList(numVertices);
       REQUIRE(geom->getNumberOfVertices() == numVertices);
 
-      geom->setCoords(vertId, coord);
-      REQUIRE(geom->getCoords(vertId) == coord);
+      geom->setVertexCoordinate(vertId, coord);
+      REQUIRE(geom->getVertexCoordinate(vertId) == coord);
     }
     // edges
     {
@@ -114,17 +115,18 @@ void testGeom3D(INodeGeometry3D* geom)
       geom->resizeEdgeList(numEdges);
       REQUIRE(geom->getNumberOfEdges() == numEdges);
       const usize edgeId = 3;
-      const usize verts[2] = {vertId, vertId + 1};
-      geom->setVertsAtEdge(edgeId, verts);
-      Point3D<float32> vert1, vert2;
+      std::array<usize, 2> verts = {vertId, vertId + 1};
+      geom->setEdgePointIds(edgeId, verts);
       usize vertsOut[2];
-      geom->getVertsAtEdge(edgeId, vertsOut);
+      geom->getEdgePointIds(edgeId, vertsOut);
       for(usize i = 0; i < 2; i++)
       {
         REQUIRE(verts[i] == vertsOut[i]);
       }
-      geom->getVertCoordsAtEdge(edgeId, vert1, vert2);
-      REQUIRE(vert1 == coord);
+      std::array<Point3Df, 2> edge_verts;
+
+      geom->getEdgeCoordinates(edgeId, edge_verts);
+      REQUIRE(edge_verts[0] == coord);
     }
     // faces
     {

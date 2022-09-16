@@ -62,6 +62,10 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   auto importPaths = getImportPaths(importStructure, m_Paths);
   for(const auto& targetPath : importPaths)
   {
+    if(!importStructure.containsData(targetPath))
+    {
+      return MakeErrorResult(-5900, fmt::format("DataStructure Object Path '{}' does not exist for importing.", targetPath.toString()));
+    }
     auto importObject = importStructure.getSharedData(targetPath);
     auto importData = std::shared_ptr<DataObject>(importObject->deepCopy());
     // Clear all children before inserting into the DataStructure

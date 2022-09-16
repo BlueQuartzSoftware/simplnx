@@ -21,18 +21,6 @@ TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, IdType importId)
 {
 }
 
-TriangleGeom::TriangleGeom(const TriangleGeom& other)
-: INodeGeometry2D(other)
-{
-}
-
-TriangleGeom::TriangleGeom(TriangleGeom&& other) noexcept
-: INodeGeometry2D(std::move(other))
-{
-}
-
-TriangleGeom::~TriangleGeom() noexcept = default;
-
 IGeometry::Type TriangleGeom::getGeomType() const
 {
   return IGeometry::Type::Triangle;
@@ -78,44 +66,14 @@ DataObject* TriangleGeom::deepCopy()
   return new TriangleGeom(*this);
 }
 
-void TriangleGeom::setVertexIdsForFace(usize faceId, usize verts[3])
-{
-  auto& faces = getFacesRef();
-  const usize offset = faceId * k_NumVerts;
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    faces[offset + i] = verts[i];
-  }
-}
-
-void TriangleGeom::getVertexIdsForFace(usize faceId, usize verts[3]) const
-{
-  auto& faces = getFacesRef();
-  const usize offset = faceId * k_NumVerts;
-  for(usize i = 0; i < k_NumVerts; i++)
-  {
-    verts[i] = faces.at(offset + i);
-  }
-}
-
-void TriangleGeom::getVertexCoordsForFace(usize faceId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3) const
-{
-  usize verts[k_NumVerts];
-  getVertexIdsForFace(faceId, verts);
-  vert1 = getCoords(verts[0]);
-  vert2 = getCoords(verts[1]);
-  vert3 = getCoords(verts[2]);
-}
-
-usize TriangleGeom::getNumberOfFaces() const
-{
-  auto& faces = getFacesRef();
-  return faces.getNumberOfTuples();
-}
-
-usize TriangleGeom::getNumberOfElements() const
+usize TriangleGeom::getNumberOfCells() const
 {
   return getFacesRef().getNumberOfTuples();
+}
+
+usize TriangleGeom::getNumberOfVerticesPerFace() const
+{
+  return k_NumFaceVerts;
 }
 
 IGeometry::StatusCode TriangleGeom::findElementSizes()
@@ -138,10 +96,10 @@ IGeometry::StatusCode TriangleGeom::findElementsContainingVert()
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
   if(trianglesContainingVert == nullptr)
   {
-    m_ElementContainingVertId.reset();
+    m_CellContainingVertId.reset();
     return -1;
   }
-  m_ElementContainingVertId = trianglesContainingVert->getId();
+  m_CellContainingVertId = trianglesContainingVert->getId();
   return 1;
 }
 
@@ -160,10 +118,10 @@ IGeometry::StatusCode TriangleGeom::findElementNeighbors()
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, IGeometry::Type::Triangle);
   if(triangleNeighbors == nullptr)
   {
-    m_ElementNeighborsId.reset();
+    m_CellNeighborsId.reset();
     return -1;
   }
-  m_ElementNeighborsId = triangleNeighbors->getId();
+  m_CellNeighborsId = triangleNeighbors->getId();
   return err;
 }
 
@@ -174,10 +132,10 @@ IGeometry::StatusCode TriangleGeom::findElementCentroids()
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
   if(triangleCentroids == nullptr)
   {
-    m_ElementCentroidsId.reset();
+    m_CellCentroidsId.reset();
     return -1;
   }
-  m_ElementCentroidsId = triangleCentroids->getId();
+  m_CellCentroidsId = triangleCentroids->getId();
   return 1;
 }
 
@@ -199,28 +157,6 @@ void TriangleGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pC
   shape[5] = 1.0;
 }
 
-void TriangleGeom::setCoords(usize vertId, const Point3D<float32>& coords)
-{
-  auto& vertices = getVerticesRef();
-  const usize offset = vertId * 3;
-  for(usize i = 0; i < 3; i++)
-  {
-    vertices[offset + i] = coords[i];
-  }
-}
-
-Point3D<float32> TriangleGeom::getCoords(usize vertId) const
-{
-  auto& vertices = getVerticesRef();
-  const usize offset = vertId * 3;
-  Point3D<float32> coords;
-  for(usize i = 0; i < 3; i++)
-  {
-    coords[i] = vertices.at(offset + i);
-  }
-  return coords;
-}
-
 IGeometry::StatusCode TriangleGeom::findEdges()
 {
   auto dataStore = std::make_unique<DataStore<uint64>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
@@ -233,14 +169,6 @@ IGeometry::StatusCode TriangleGeom::findEdges()
   }
   m_EdgeListId = edgeList->getId();
   return 1;
-}
-
-void TriangleGeom::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
-{
-  usize verts[2];
-  getVertsAtEdge(edgeId, verts);
-  vert1 = getCoords(verts[0]);
-  vert2 = getCoords(verts[1]);
 }
 
 IGeometry::StatusCode TriangleGeom::findUnsharedEdges()

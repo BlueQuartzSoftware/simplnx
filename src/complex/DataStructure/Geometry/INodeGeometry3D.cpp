@@ -56,6 +56,37 @@ usize INodeGeometry3D::getNumberOfPolyhedra() const
   return polyhedra.getNumberOfTuples();
 }
 
+void INodeGeometry3D::setCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds)
+{
+  auto& polyhedra = getPolyhedraRef();
+  usize numVerts = getNumberOfVerticesPerCell();
+  for(usize i = 0; i < numVerts; i++)
+  {
+    polyhedra[polyhedraId * numVerts + i] = vertexIds[i];
+  }
+}
+
+void INodeGeometry3D::getCellPointIds(usize polyhedraId, nonstd::span<usize> vertexIds) const
+{
+  auto& polyhedra = getPolyhedraRef();
+  usize numVerts = getNumberOfVerticesPerCell();
+  for(usize i = 0; i < numVerts; i++)
+  {
+    vertexIds[i] = polyhedra[polyhedraId * numVerts + i];
+  }
+}
+
+void INodeGeometry3D::getCellCoordinates(usize hexId, nonstd::span<Point3Df> coords) const
+{
+  usize numVerts = getNumberOfVerticesPerCell();
+  std::vector<usize> vertIds(numVerts, 0);
+  getCellPointIds(hexId, vertIds);
+  for(usize index = 0; index < numVerts; index++)
+  {
+    coords[index] = getVertexCoordinate(vertIds[index]);
+  }
+}
+
 void INodeGeometry3D::deleteFaces()
 {
   getDataStructureRef().removeData(m_FaceListId);
@@ -76,42 +107,6 @@ void INodeGeometry3D::deleteUnsharedFaces()
 {
   getDataStructureRef().removeData(m_UnsharedFaceListId);
   m_UnsharedFaceListId.reset();
-}
-
-void INodeGeometry3D::setCoords(usize vertId, const Point3D<float32>& coords)
-{
-  auto& vertices = getVerticesRef();
-
-  usize index = vertId * 3;
-  for(usize i = 0; i < 3; i++)
-  {
-    vertices[index + i] = coords[i];
-  }
-}
-
-Point3D<float32> INodeGeometry3D::getCoords(usize vertId) const
-{
-  auto& vertices = getVerticesRef();
-
-  usize index = vertId * 3;
-  auto x = vertices[index];
-  auto y = vertices[index + 1];
-  auto z = vertices[index + 2];
-  return Point3D<float32>(x, y, z);
-}
-
-void INodeGeometry3D::getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const
-{
-  auto& vertices = getVerticesRef();
-
-  usize verts[2];
-  getVertsAtEdge(edgeId, verts);
-
-  for(usize i = 0; i < 3; i++)
-  {
-    vert1[i] = vertices[verts[0] * 3 + i];
-    vert2[i] = vertices[verts[1] * 3 + i];
-  }
 }
 
 const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraDataId() const

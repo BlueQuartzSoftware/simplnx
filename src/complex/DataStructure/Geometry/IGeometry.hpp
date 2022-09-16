@@ -72,6 +72,14 @@ public:
     Unknown = 101U
   };
 
+  IGeometry() = delete;
+
+  IGeometry(const IGeometry&) = default;
+  IGeometry(IGeometry&&) = default;
+
+  IGeometry& operator=(const IGeometry&) = delete;
+  IGeometry& operator=(IGeometry&&) noexcept = delete;
+
   ~IGeometry() noexcept override = default;
 
   /**
@@ -81,10 +89,10 @@ public:
   virtual IGeometry::Type getGeomType() const = 0;
 
   /**
-   * @brief
+   * @brief Returns the number of Cells (NOT POINTS) of a Geometry
    * @return usize
    */
-  virtual usize getNumberOfElements() const = 0;
+  virtual usize getNumberOfCells() const = 0;
 
   /**
    * @brief
@@ -194,17 +202,9 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-  IGeometry() = delete;
-
   IGeometry(DataStructure& ds, std::string name);
 
   IGeometry(DataStructure& ds, std::string name, IdType importId);
-
-  IGeometry(const IGeometry&) = default;
-  IGeometry(IGeometry&&) = default;
-
-  IGeometry& operator=(const IGeometry&) = delete;
-  IGeometry& operator=(IGeometry&&) noexcept = delete;
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

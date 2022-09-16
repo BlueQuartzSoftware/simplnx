@@ -84,26 +84,6 @@ public:
   DataObject* deepCopy() override;
 
   /**
-   * @brief Gets the coordinates at the target vertex ID.
-   * @param vertId
-   * @return
-   */
-  Point3D<float32> getCoords(usize vertId) const override;
-
-  /**
-   * @brief Sets the coordinates for the specified vertex ID.
-   * @param vertId
-   * @param coords
-   */
-  void setCoords(usize vertId, const Point3D<float32>& coords) override;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfElements() const override;
-
-  /**
    * @brief
    * @return StatusCode
    */
