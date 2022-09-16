@@ -42,9 +42,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
     return MakeErrorResult(-381, fmt::format("CreateStringArrayAction: Tuple Shape was empty. Please set the number of tuples."));
   }
 
-  usize last = path().getLength() - 1;
-
-  std::string name = path()[last];
+  std::string name = path().getTargetName();
 
   usize totalTuples = std::accumulate(m_Dims.cbegin(), m_Dims.cend(), static_cast<usize>(1), std::multiplies<>());
 
