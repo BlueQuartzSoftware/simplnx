@@ -19,11 +19,11 @@ StringArray* StringArray::Create(DataStructure& ds, const std::string_view& name
 StringArray* StringArray::CreateWithValues(DataStructure& ds, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<StringArray>(new StringArray(ds, name.data()));
+  data->m_Strings = std::move(strings);
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
   }
-  data->m_Strings = std::move(strings);
   return data.get();
 }
 
