@@ -3,9 +3,8 @@
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/DataStructure/Geometry/QuadGeom.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/complex_export.hpp"
@@ -17,9 +16,9 @@
 namespace complex
 {
 /**
- * @brief Action for creating a Triangle or QuadGeometry in a DataStructure
+ * @brief Action for creating an Edge or QuadGeometry in a DataStructure
  */
-template <typename Geometry2DType>
+template <typename Geometry1DType>
 class CreateGeometry1DAction : public IDataCreationAction
 {
 public:
@@ -39,7 +38,7 @@ public:
   {
   }
 
-  ~CreateGeometry1DAction() noexcept = default;
+  ~CreateGeometry1DAction() noexcept override = default;
 
   CreateGeometry1DAction(const CreateGeometry1DAction&) = delete;
   CreateGeometry1DAction(CreateGeometry1DAction&&) noexcept = delete;
@@ -54,9 +53,9 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    const std::string k_TriangleDataName(k_DefaultEdgesName);
+    const std::string k_EdgeGeometryName(k_DefaultEdgesName);
     const std::string k_VertexDataName(k_DefaultVerticesName);
-    DataPath faceDataPath = getEdgeDataPath();
+    DataPath edgeDataPath = getEdgeDataPath();
     DataPath vertexDataPath = getVertexDataPath();
 
     // Check for empty Geometry DataPath
@@ -87,40 +86,40 @@ public:
       return MakeErrorResult(-223, fmt::format("CreateGeometry1DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
     }
 
-    // Create the TriangleGeometry
-    auto geometry2d = Geometry2DType::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
+    // Create the EdgeGeometry
+    auto geometry1d = Geometry1DType::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
 
-    auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, m_EdgeDataName, geometry2d->getId());
-    if(faceAttributeMatrix == nullptr)
+    auto* edgeAttributeMatrix = AttributeMatrix::Create(dataStructure, m_EdgeDataName, geometry1d->getId());
+    if(edgeAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-224, fmt::format("CreateGeometry1DAction: Failed to create attribute matrix: '{}'", faceDataPath.toString()));
+      return MakeErrorResult(-224, fmt::format("CreateGeometry1DAction: Failed to create attribute matrix: '{}'", edgeDataPath.toString()));
     }
-    DimensionType faceTupleShape = {m_NumEdges};
-    faceAttributeMatrix->setShape(faceTupleShape);
-    geometry2d->setEdgeData(*faceAttributeMatrix);
+    DimensionType edgeTupleShape = {m_NumEdges};
+    edgeAttributeMatrix->setShape(edgeTupleShape);
+    geometry1d->setEdgeData(*edgeAttributeMatrix);
 
-    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry2d->getId());
+    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry1d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-225, fmt::format("CreateGeometry1DAction: Failed to create attribute matrix: '{}'", vertexDataPath.toString()));
     }
     DimensionType vertexTupleShape = {m_NumVertices}; // We probably don't know how many Vertices there are but take what ever the developer sends us
     vertexAttributeMatrix->setShape(vertexTupleShape);
-    geometry2d->setVertexData(*vertexAttributeMatrix);
+    geometry1d->setVertexData(*vertexAttributeMatrix);
 
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedEdgeList = IGeometry::SharedEdgeList;
 
-    DataPath edgesPath = getCreatedPath().createChildPath(k_TriangleDataName);
+    DataPath edgesPath = getCreatedPath().createChildPath(k_EdgeGeometryName);
     // Create the default DataArray that will hold the EdgeList and Vertices. We
     // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-    complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {2}, edgesPath, mode);
+    complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode);
     if(result.invalid())
     {
       return MakeErrorResult(-226, fmt::format("CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", edgesPath.toString()));
     }
     SharedEdgeList* edges = complex::ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
-    geometry2d->setEdges(*edges);
+    geometry1d->setEdges(*edges);
 
     // Create the Vertex Array with a component size of 3
     DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);
@@ -131,7 +130,7 @@ public:
       return MakeErrorResult(-227, fmt::format("CreateGeometry1DAction: Could not allocate SharedVertList '{}'", vertexPath.toString()));
     }
     Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
-    geometry2d->setVertices(*vertexArray);
+    geometry1d->setVertices(*vertexArray);
 
     return {};
   }
@@ -164,7 +163,7 @@ public:
   }
 
   /**
-   * @brief Returns the number of faces
+   * @brief Returns the number of edges
    * @return
    */
   IGeometry::MeshIndexType numEdges() const
