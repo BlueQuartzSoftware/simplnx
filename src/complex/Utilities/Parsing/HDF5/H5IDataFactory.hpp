@@ -42,7 +42,7 @@ public:
    * @return H5::ErrorType
    */
   virtual H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
-                                    const std::optional<complex::DataObject::IdType>& parentId = {}, bool preflight = false) = 0;
+                                    const std::optional<complex::DataObject::IdType>& parentId, bool preflight) = 0;
 
   /**
    * @brief Creates and adds a DataObject to the provided DataStructure from
@@ -55,7 +55,7 @@ public:
    * @return H5::ErrorType
    */
   virtual H5::ErrorType readH5Dataset(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
-                                      const std::optional<complex::DataObject::IdType>& parentId = {}, bool preflight = false) = 0;
+                                      const std::optional<complex::DataObject::IdType>& parentId, bool preflight) = 0;
 
   // Copy and move constuctors / operators deleted
   IDataFactory(const IDataFactory& other) = delete;

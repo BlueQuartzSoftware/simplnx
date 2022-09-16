@@ -25,7 +25,7 @@ H5::ErrorType EdgeGeomFactory::readH5Group(H5::DataStructureReader& dataStructur
   std::string name = groupReader.getName();
   auto importId = ReadObjectId(groupReader);
   auto geom = EdgeGeom::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
-  return geom->readHdf5(dataStructureReader, groupReader);
+  return geom->readHdf5(dataStructureReader, groupReader, false);
 }
 
 //------------------------------------------------------------------------------
