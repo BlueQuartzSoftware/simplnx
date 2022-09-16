@@ -10,7 +10,6 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
-#include "complex/Utilities/DataGroupUtilities.cpp"
 
 #include <filesystem>
 #include <iostream>
