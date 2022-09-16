@@ -22,7 +22,8 @@ namespace complex
 class COMPLEXCORE_EXPORT StlFileReader
 {
 public:
-  StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput, float32 scaleFactor, const std::atomic_bool& shouldCancel);
+  StlFileReader(DataStructure& data, fs::path stlFilePath, const DataPath& geometryPath, const DataPath& faceGroupPath, const DataPath& faceNormalsDataPath, bool scaleOutput, float32 scaleFactor,
+                const std::atomic_bool& shouldCancel);
   ~StlFileReader() noexcept;
 
   StlFileReader(const StlFileReader&) = delete;

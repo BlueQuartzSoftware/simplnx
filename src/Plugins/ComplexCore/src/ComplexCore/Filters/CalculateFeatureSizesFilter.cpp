@@ -154,7 +154,7 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
   usize numFeatures = maxValue + 1;
 
   std::vector<uint64> featureCounts(numFeatures, 0);
-  
+
   for(size_t j = 0; j < totalPoints; j++)
   {
     int32_t gnum = featureIds[j];

@@ -265,10 +265,12 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.hpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyGroupAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry1DAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry2DAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateVertexGeometryAction.hpp
@@ -431,6 +433,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/ValueParameter.cpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyGroupAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp

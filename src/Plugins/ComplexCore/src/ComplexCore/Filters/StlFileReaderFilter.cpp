@@ -8,11 +8,11 @@
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 
 #include <cstdio>
 #include <filesystem>
@@ -182,7 +182,6 @@ Result<> StlFileReaderFilter::executeImpl(DataStructure& data, const Arguments& 
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
   auto pFaceDataGroupPath = pTriangleGeometryPath.createChildPath(INodeGeometry2D::k_FaceDataName);
   auto pFaceNormalsPath = pFaceDataGroupPath.createChildPath(k_FaceNormals);
-
 
   auto scaleOutput = filterArgs.value<bool>(k_ScaleOutput);
   auto scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
