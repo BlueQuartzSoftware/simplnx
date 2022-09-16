@@ -29,8 +29,8 @@ public:
    * to create the generated DataObject under.
    * @return H5::ErrorType
    */
-  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader,
-                            const std::optional<DataObject::IdType>& parentId, bool preflight) override;
+  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& parentReader, const H5::GroupReader& groupReader, const std::optional<DataObject::IdType>& parentId,
+                            bool preflight) override;
 
   /**
    * @brief Reads an HDF5 Dataset that makes up a DataStructure node.
