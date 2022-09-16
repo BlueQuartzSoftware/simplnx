@@ -204,8 +204,8 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
     {
       return {};
     }
-    auto coords = vertices.getCoords(croppedPoints[i]);
-    crop.setCoords(i, coords);
+    auto coords = vertices.getVertexCoordinate(croppedPoints[i]);
+    crop.setVertexCoordinate(i, coords);
   }
 
   for(auto&& targetArrayPath : targetArrays)

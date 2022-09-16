@@ -18,7 +18,7 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
   // This just sanity checks to make sure there were existing features before the cropping
   auto& destCellFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(destCellFeatAttributeMatrixPath);
 
-  usize totalPoints = destImageGeom.getNumberOfElements();
+  usize totalPoints = destImageGeom.getNumberOfCells();
 
   auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(featureIdsArrayPath);
   usize totalFeatures = destCellFeatureAM.getNumTuples();

@@ -123,6 +123,14 @@ public:
   bool containsData(DataObject::IdType id) const;
 
   /**
+   * @brief Returns true if the DataStructure contains a DataObject with the
+   * given path. Returns false otherwise.
+   * @param path The DataPath to the DataObject
+   * @return bool
+   */
+  bool containsData(const DataPath& path) const;
+
+  /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
    * @param id

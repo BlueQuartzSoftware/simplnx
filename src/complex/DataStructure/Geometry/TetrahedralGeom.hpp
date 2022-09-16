@@ -15,6 +15,8 @@ class COMPLEX_EXPORT TetrahedralGeom : public INodeGeometry3D
 public:
   friend class DataStructure;
 
+  static inline constexpr usize k_NumEdgeVerts = 2;
+  static inline constexpr usize k_NumFaceVerts = 3;
   static inline constexpr usize k_NumVerts = 4;
 
   /**
@@ -40,15 +42,15 @@ public:
    * @brief
    * @param other
    */
-  TetrahedralGeom(const TetrahedralGeom& other);
+  TetrahedralGeom(const TetrahedralGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  TetrahedralGeom(TetrahedralGeom&& other);
+  TetrahedralGeom(TetrahedralGeom&& other) = default;
 
-  ~TetrahedralGeom() noexcept override;
+  ~TetrahedralGeom() noexcept override = default;
 
   TetrahedralGeom& operator=(const TetrahedralGeom&) = delete;
   TetrahedralGeom& operator=(TetrahedralGeom&&) noexcept = delete;
@@ -85,59 +87,21 @@ public:
 
   /**
    * @brief
-   * @param triId
-   * @param verts
+   * @return
    */
-  void setVertsAtTri(usize triId, usize verts[3]);
+  usize getNumberOfVerticesPerFace() const override;
 
   /**
    * @brief
-   * @param triId
-   * @param verts
+   * @return
    */
-  void getVertsAtTri(usize triId, usize verts[3]) const;
+  usize getNumberOfVerticesPerCell() const override;
 
   /**
-   * @brief
+   * @brief Returns the number of tetrahedrons in this geometry
    * @return usize
    */
-  usize getNumberOfTris() const;
-
-  /**
-   * @brief
-   * @param tetId
-   * @param verts
-   */
-  void setVertsAtTet(usize tetId, usize verts[4]);
-
-  /**
-   * @brief
-   * @param tetId
-   * @param verts
-   */
-  void getVertsAtTet(usize tetId, usize verts[4]) const;
-
-  /**
-   * @brief
-   * @param tetId
-   * @param vert1
-   * @param vert2
-   * @param vert3
-   * @param vert4
-   */
-  void getVertCoordsAtTet(usize tetId, Point3D<float32>& vert1, Point3D<float32>& vert2, Point3D<float32>& vert3, Point3D<float32>& vert4) const;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfTets() const;
-
-  /**
-   * @brief
-   * @return usize
-   */
-  usize getNumberOfElements() const override;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief

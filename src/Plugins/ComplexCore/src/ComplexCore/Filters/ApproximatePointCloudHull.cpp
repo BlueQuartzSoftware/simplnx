@@ -170,7 +170,7 @@ Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Argum
   samplingGrid->setDimensions(dims);
 
   int64 multiplier[3] = {1, static_cast<int64>(samplingGrid->getNumXPoints()), static_cast<int64>(samplingGrid->getNumXPoints() * samplingGrid->getNumYPoints())};
-  std::vector<std::vector<int64>> vertsInVoxels(samplingGrid->getNumberOfElements());
+  std::vector<std::vector<int64>> vertsInVoxels(samplingGrid->getNumberOfCells());
 
   int64 progIncrement = numVerts / 100;
   int64 prog = 1;

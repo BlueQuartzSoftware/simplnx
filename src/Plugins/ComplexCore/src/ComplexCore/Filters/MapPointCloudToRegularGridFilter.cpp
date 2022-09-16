@@ -373,7 +373,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   {
     if(!useMask || (useMask && (*maskPtr)[i]))
     {
-      auto coords = vertices->getCoords(i);
+      auto coords = vertices->getVertexCoordinate(i);
 
       for(usize j = 0; j < 3; j++)
       {

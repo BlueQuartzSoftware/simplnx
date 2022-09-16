@@ -57,15 +57,15 @@ public:
    * @brief
    * @param other
    */
-  ImageGeom(const ImageGeom& other);
+  ImageGeom(const ImageGeom& other) = default;
 
   /**
    * @brief
    * @param other
    */
-  ImageGeom(ImageGeom&& other);
+  ImageGeom(ImageGeom&& other) = default;
 
-  ~ImageGeom() noexcept override;
+  ~ImageGeom() noexcept override = default;
 
   /**
    * @brief Returns the type of geometry.
@@ -153,7 +153,7 @@ public:
    * @brief
    * @return usize
    */
-  usize getNumberOfElements() const override;
+  usize getNumberOfCells() const override;
 
   /**
    * @brief

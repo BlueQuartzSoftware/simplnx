@@ -9,6 +9,13 @@ class COMPLEX_EXPORT INodeGeometry3D : public INodeGeometry2D
 public:
   static inline constexpr StringLiteral k_PolyhedronDataName = "Polyhedron Data";
 
+  INodeGeometry3D() = delete;
+  INodeGeometry3D(const INodeGeometry3D&) = default;
+  INodeGeometry3D(INodeGeometry3D&&) = default;
+
+  INodeGeometry3D& operator=(const INodeGeometry3D&) = delete;
+  INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = delete;
+
   ~INodeGeometry3D() noexcept override = default;
 
   const std::optional<IdType>& getPolyhedronListId() const;
@@ -69,30 +76,31 @@ public:
   void deleteUnsharedFaces();
 
   /**
-   * @brief Assigns a new coordinate to the target vertex.
-   *
-   * If the SharedVertexList has not been assigned or cannot be found, this
-   * method does nothing. If the vertex index extends beyond the bounds of the
-   * array, this method falls into undefined behavior.
-   * @param vertId
-   * @param coords
+   * @brief Returns the number of vertices in the cell.
+   * @return
    */
-  void setCoords(usize vertId, const Point3D<float32>& coords) override;
+  virtual usize getNumberOfVerticesPerCell() const = 0;
 
   /**
-   * @brief Returns the 3D coordinates of the specified vertex as a Point3D<float32>.
-   * @param vertId
-   * @return Point3D<float32>
+   * @brief
+   * @param tetId
+   * @param vertexIds The index into the shared vertex list of each vertex
    */
-  Point3D<float32> getCoords(usize vertId) const override;
+  void setCellPointIds(usize tetId, nonstd::span<usize> vertexIds);
 
   /**
-   * @brief Gets the vertex coordinates for the specified edge.
-   * @param edgeId
-   * @param vert1
-   * @param vert2
+   * @brief
+   * @param tetId
+   * @param vertexIds The index into the shared vertex list of each vertex
    */
-  void getVertCoordsAtEdge(usize edgeId, Point3D<float32>& vert1, Point3D<float32>& vert2) const override;
+  void getCellPointIds(usize tetId, nonstd::span<usize> vertexIds) const;
+
+  /**
+   * @brief
+   * @param tetId
+   * @param coords The coordinates of each vertex
+   */
+  void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const;
 
   /**
    * @brief
@@ -153,17 +161,9 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-  INodeGeometry3D() = delete;
-
   INodeGeometry3D(DataStructure& ds, std::string name);
 
   INodeGeometry3D(DataStructure& ds, std::string name, IdType importId);
-
-  INodeGeometry3D(const INodeGeometry3D&) = default;
-  INodeGeometry3D(INodeGeometry3D&&) = default;
-
-  INodeGeometry3D& operator=(const INodeGeometry3D&) = delete;
-  INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = delete;
 
   SharedQuadList* createSharedQuadList(usize numQuads);
 
@@ -175,6 +175,9 @@ protected:
    */
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
+  /* ***************************************************************************
+   * These variables are the Ids of the arrays from the complex::DataStructure object.
+   */
   std::optional<IdType> m_PolyhedronListId;
   std::optional<IdType> m_PolyhedronDataId;
   std::optional<IdType> m_UnsharedFaceListId;

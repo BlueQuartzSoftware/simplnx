@@ -97,7 +97,7 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
 
   for(size_t i = 0; i < reducedTupleCount; i++)
   {
-    Point3D<float> coord = reducedVertexGeom->getCoords(i);
+    Point3D<float> coord = reducedVertexGeom->getVertexCoordinate(i);
     float compValue = static_cast<float>(i) + 25.0F;
     REQUIRE(((coord[0] == compValue) && (coord[1] == compValue) && (coord[2] == compValue)));
 
