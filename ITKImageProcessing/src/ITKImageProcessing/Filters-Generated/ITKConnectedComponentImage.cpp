@@ -122,6 +122,7 @@ Result<> ITKConnectedComponentImage::executeImpl(DataStructure& dataStructure, c
   imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
   // LINK GEOMETRY OUTPUT STOP
 
-  return ITK::Execute<cxITKConnectedComponentImage::ArrayOptionsT, cxITKConnectedComponentImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, messageHandler);
+  return ITK::Execute<cxITKConnectedComponentImage::ArrayOptionsT, cxITKConnectedComponentImage::FilterOutputT>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor,
+                                                                                                                messageHandler);
 }
 } // namespace complex
