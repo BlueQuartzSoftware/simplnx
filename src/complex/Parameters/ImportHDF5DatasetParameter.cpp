@@ -99,7 +99,10 @@ Result<std::any> ImportHDF5DatasetParameter::fromJson(const nlohmann::json& json
 
   ValueType importData;
   importData.inputFile = json[k_InputFileKey.str()];
-  importData.parent = DataPath::FromString(json[k_ParentGroupKey.str()].get<std::string>());
+  if(json.contains(k_ParentGroupKey.view()))
+  {
+    importData.parent = DataPath::FromString(json[k_ParentGroupKey.str()].get<std::string>());
+  }
   const auto& jsonDataPaths = json[k_DataPathsKey.str()];
   if(!jsonDataPaths.is_null())
   {
