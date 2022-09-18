@@ -6,8 +6,7 @@
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
@@ -20,6 +19,8 @@ using namespace complex;
 namespace
 {
 constexpr float64 k_radToDeg = Constants::k_180OverPiD; // used for translating radians to degrees
+constexpr complex::int32 k_MissingFeatureAttributeMatrix = -76970;
+
 /**
  * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
  * triangle for a set of triangles
@@ -134,7 +135,7 @@ std::string TriangleDihedralAngleFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> TriangleDihedralAngleFilter::defaultTags() const
 {
-  return {"#Surface Meshing", "#Misc"};
+  return {"#Surface Meshing", "#Misc", "#Statistics", "#Triangle"};
 }
 
 //------------------------------------------------------------------------------
@@ -142,11 +143,11 @@ Parameters TriangleDihedralAngleFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the dihedral angles", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insert(
-      std::make_unique<StringParameter>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key, "Face Dihedral Angles", "The name of the array storing the calculated dihedral angles", "Dihedral Angles"));
+  params.insertSeparator(Parameters::Separator{"Created Face Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key, "Face Dihedral Angles", "The name of the array storing the calculated dihedral angles",
+                                                          "Dihedral Angles"));
 
   return params;
 }
@@ -162,27 +163,30 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
-  auto pSurfaceMeshTriangleDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
+  auto pMinDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
 
   complex::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  if(triangleGeom == nullptr)
+  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
+  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceData();
+  if(faceAttributeMatrix == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-9860, fmt::format("Cannot find the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
-  }
-  const AttributeMatrix* faceData = triangleGeom->getFaceData();
-  if(faceData == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
+    return {nonstd::make_unexpected(std::vector<Error>{
+        Error{k_MissingFeatureAttributeMatrix, fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString())}})};
   }
 
-  DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceData->getName()).createChildPath(pSurfaceMeshTriangleDihedralAnglesName);
-  auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, faceData->getShape(), std::vector<usize>{1}, dihedralAnglesArrayPath);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  // Instantiate and move the action that will create the output array
+  {
+    DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pMinDihedralAnglesName);
+    // Create the face areas DataArray Action and store it into the resultOutputActions
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
+    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  }
 
+  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -191,12 +195,13 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
-  auto pSurfaceMeshTriangleDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
+  auto pMinDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
 
-  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  AttributeMatrix* faceData = triangleGeom.getFaceData();
-  DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceData->getName()).createChildPath(pSurfaceMeshTriangleDihedralAnglesName);
-  Float64Array& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
+  const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const AttributeMatrix& faceAttributeMatrix = triangleGeom.getFaceDataRef();
+
+  DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(pMinDihedralAnglesName);
+  auto& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(false);
