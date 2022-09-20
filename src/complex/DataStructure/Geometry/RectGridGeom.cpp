@@ -227,17 +227,17 @@ SizeVec3 RectGridGeom::getDimensions() const
   return m_Dimensions;
 }
 
-usize RectGridGeom::getNumXPoints() const
+usize RectGridGeom::getNumXCells() const
 {
   return m_Dimensions.getX();
 }
 
-usize RectGridGeom::getNumYPoints() const
+usize RectGridGeom::getNumYCells() const
 {
   return m_Dimensions.getY();
 }
 
-usize RectGridGeom::getNumZPoints() const
+usize RectGridGeom::getNumZCells() const
 {
   return m_Dimensions.getZ();
 }

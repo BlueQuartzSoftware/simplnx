@@ -6,6 +6,25 @@
 
 `complex` is a rewrite of the [SIMPL](https://www.github.com/bluequartzsoftware/simpl) library upon which [DREAM3D](https://www.github.com/bluequartzsoftware/dream3d) is written. This library aims to be fully C++17 compliant, removes the need for Qt5 at the library level and brings more flexible data organization and grouping options.
 
+## Dependent Libraries ##
+
+| Library Name | GitHub Source | Version |
+|--------------|---------------|---------|
+| boost-mp11  | https://github.com/boostorg/mp11  | 1.77.0 |
+| catch2  | https://github.com/catchorg/Catch2  | 2.13.6 |
+| eigen3  |  https://gitlab.com/libeigen/eigen.git | 3.3.9 |
+| expected-lite  | https://github.com/martinmoene/expected-lite  | 0.5.0 |
+| fmt  | https://github.com/fmtlib/fmt  | 7.1.3 |
+| hdf5  | https://github.com/HDFGroup/hdf5/  | 1.12.1 |
+| itk  | https://github.com/InsightSoftwareConsortium/ITK.git  | 5.2.1 |
+| nlohmann-json  | https://github.com/nlohmann/json/  | 3.9.1 |
+| pybind11  | https://github.com/pybind/pybind11.git  | 2.6.2 |
+| span-lite  | https://github.com/martinmoene/span-lite  | 0.10.3 |
+| tbb  | https://github.com/oneapi-src/onetbb  | 2021.5.0 |
+| ebsdlib  | https://www.github.com/bluequartzsoftware/EBSDLib   | 1.0.16 |
+| h5support  | https://www.github.com/bluequartzsoftware/H5Support  | 1.0.8 |
+
+
 ## Prerequisites ##
 
 In order to compile `complex` you will need a C++17 compiler suite installed on your computer.

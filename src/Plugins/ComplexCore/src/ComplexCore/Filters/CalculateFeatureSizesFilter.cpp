@@ -164,18 +164,18 @@ Result<> CalculateFeatureSizesFilter::findSizesImage(DataStructure& data, const 
 
   FloatVec3 spacing = image->getSpacing();
 
-  if(image->getNumXPoints() == 1 || image->getNumYPoints() == 1 || image->getNumZPoints() == 1)
+  if(image->getNumXCells() == 1 || image->getNumYCells() == 1 || image->getNumZCells() == 1)
   {
     float res_scalar = 0.0f;
-    if(image->getNumXPoints() == 1)
+    if(image->getNumXCells() == 1)
     {
       res_scalar = spacing[1] * spacing[2];
     }
-    else if(image->getNumYPoints() == 1)
+    else if(image->getNumYCells() == 1)
     {
       res_scalar = spacing[0] * spacing[2];
     }
-    else if(image->getNumZPoints() == 1)
+    else if(image->getNumZCells() == 1)
     {
       res_scalar = spacing[0] * spacing[1];
     }

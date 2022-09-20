@@ -167,19 +167,19 @@ public:
    * @brief
    * @return usize
    */
-  usize getNumXPoints() const override;
+  usize getNumXCells() const override;
 
   /**
    * @brief
    * @return usize
    */
-  usize getNumYPoints() const override;
+  usize getNumYCells() const override;
 
   /**
    * @brief
    * @return usize
    */
-  usize getNumZPoints() const override;
+  usize getNumZCells() const override;
 
   /**
    * @brief
@@ -295,7 +295,7 @@ public:
    * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
 
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
