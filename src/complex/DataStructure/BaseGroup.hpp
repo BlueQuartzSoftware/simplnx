@@ -342,6 +342,7 @@ protected:
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
+#if 0
   /**
    * @brief Reads the DataStructure group from a target Zarr data.
    * @param dataStructureReader
@@ -349,7 +350,7 @@ protected:
    * @return Zarr::Error
    */
   virtual Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight = false);
-
+  
   /**
    * @brief Writes the contained DataObjects to the target HDF5 group.
    * @param parentGroupWriter
@@ -357,6 +358,7 @@ protected:
    * @return H5::ErrorType
    */
   Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override;
+#endif
 
 private:
   DataMap m_DataMap;

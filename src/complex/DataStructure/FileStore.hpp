@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
@@ -372,14 +373,14 @@ public:
     }
 
     // Write shape attributes to the dataset
-    auto tupleAttribute = datasetWriter.createAttribute(IDataStore::k_TupleShape);
+    auto tupleAttribute = datasetWriter.createAttribute(complex::H5::k_TupleShapeTag);
     err = tupleAttribute.writeVector({m_TupleShape.size()}, m_TupleShape);
     if(err < 0)
     {
       return err;
     }
 
-    auto componentAttribute = datasetWriter.createAttribute(IDataStore::k_ComponentShape);
+    auto componentAttribute = datasetWriter.createAttribute(complex::H5::k_ComponentShapeTag);
     err = componentAttribute.writeVector({m_ComponentShape.size()}, m_ComponentShape);
 
     return err;
@@ -401,6 +402,7 @@ public:
     return dataStore;
   }
 
+#if 0
   /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
    * one be encountered. Otherwise, returns 0.
@@ -425,11 +427,12 @@ public:
     std::copy(this->begin(), this->end(), fileArray.begin());
 
     // Write shape attributes to the dataset
-    fileArray.attributes()[IDataStore::k_TupleShape] = m_TupleShape;
-    fileArray.attributes()[IDataStore::k_ComponentShape] = m_ComponentShape;
+    fileArray.attributes()[complex::H5::k_TupleShapeTag] = m_TupleShape;
+    fileArray.attributes()[complex::H5::k_ComponentShapeTag] = m_ComponentShape;
 
     return 0;
   }
+#endif
 
 private:
   ShapeType m_ComponentShape;

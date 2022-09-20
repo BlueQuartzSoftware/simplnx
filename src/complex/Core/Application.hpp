@@ -15,10 +15,12 @@ namespace complex
 class AbstractPlugin;
 class JsonPipelineBuilder;
 
+#if 0
 namespace Zarr
 {
 class DataFactoryManager;
 }
+#endif
 
 /**
  * @class Application
@@ -111,7 +113,9 @@ public:
    */
   H5::DataFactoryManager* getH5FactoryManager() const;
 
+#if 0
   Zarr::DataFactoryManager* getZarrFactoryManager() const;
+#endif
 
   /**
    * @brief Returns a filepath pointing to the current executable.
@@ -148,6 +152,6 @@ private:
   std::unique_ptr<complex::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
   std::unique_ptr<H5::DataFactoryManager> m_DataReader;
-  std::unique_ptr<Zarr::DataFactoryManager> m_ZarrFactoryManager;
+  // std::unique_ptr<Zarr::DataFactoryManager> m_ZarrFactoryManager;
 };
 } // namespace complex

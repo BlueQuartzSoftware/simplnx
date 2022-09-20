@@ -230,6 +230,12 @@ protected:
    */
   static H5::ErrorType WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName);
 
+#if 0
+  static std::optional<IGeometry::IdType> ReadZarrDataId(const FileVec::BaseCollection& objectReader, const std::string& attributeName);
+
+  static void WriteZarrDataId(FileVec::BaseCollection& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName);
+#endif
+
   std::optional<IdType> m_ElementSizesId;
 
   LengthUnit m_Units = LengthUnit::Meter;

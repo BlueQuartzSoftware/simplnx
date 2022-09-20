@@ -7,6 +7,7 @@
 
 #include "FileVec/Zarr/Group.hpp"
 
+#if 0
 namespace complex
 {
 DataStructure createDataStructure()
@@ -50,3 +51,4 @@ TEST_CASE("Round-trip test", "Out-of-Core")
   }
 }
 } // namespace complex
+#endif

@@ -195,20 +195,19 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataArrayFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataGroupFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/EdgeGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/GridMontageFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/HexahedralGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ImageGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/NeighborListFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/QuadGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/RectGridGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ScalarDataFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TetrahedralGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TriangleGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/VertexGeomFactory.hpp
-
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataArrayFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataGroupFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/EdgeGeomFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/GridMontageFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/HexahedralGeomFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ImageGeomFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/NeighborListFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/QuadGeomFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/RectGridGeomFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ScalarDataFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TetrahedralGeomFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TriangleGeomFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/VertexGeomFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
@@ -257,7 +256,8 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataStructure.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/FileStore.hpp
+
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/FileStore.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IDataStore.hpp
@@ -366,11 +366,11 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/Zarr.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrDataFactoryManager.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrIDataFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/Zarr.hpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrDataFactoryManager.hpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrIDataFactory.hpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureReader.hpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp
 )
 
 set(COMPLEX_GENERATED_HEADERS
@@ -402,19 +402,18 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataGroupFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/EdgeGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/GridMontageFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/HexahedralGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ImageGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/NeighborListFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/QuadGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/RectGridGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ScalarDataFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TetrahedralGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TriangleGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/VertexGeomFactory.cpp
-
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/DataGroupFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/EdgeGeomFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/GridMontageFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/HexahedralGeomFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ImageGeomFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/NeighborListFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/QuadGeomFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/RectGridGeomFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/ScalarDataFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TetrahedralGeomFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TriangleGeomFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/VertexGeomFactory.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
@@ -543,10 +542,10 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
 
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrDataFactoryManager.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrIDataFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureWriter.cpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrDataFactoryManager.cpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrIDataFactory.cpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureReader.cpp
+  # ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Zarr/ZarrStructureWriter.cpp
 )
 
 # Add Core FilterParameters

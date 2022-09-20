@@ -10,8 +10,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
-#include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
-#include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
+//#include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
+//#include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
 
 #include "FileVec/collection/IGroup.hpp"
 
@@ -350,6 +350,7 @@ H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter
   return 0;
 }
 
+#if 0
 Zarr::ErrorType DataMap::readZarGroup(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& group, const std::optional<IdType>& dsParentId, bool preflight)
 {
   auto childrenNames = group.childNames();
@@ -377,6 +378,7 @@ Zarr::ErrorType DataMap::writeZarrGroup(Zarr::DataStructureWriter& dataStructure
   }
   return 0;
 }
+#endif
 
 void DataMap::updateIds(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

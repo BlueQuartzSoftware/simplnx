@@ -618,6 +618,7 @@ public:
     return getValue(index);
   }
 
+#if 0
   /**
    * @brief Writes the data store to Zarr. Returns an error code should
    * one be encountered. Otherwise, returns 0.
@@ -637,6 +638,7 @@ public:
     auto& iArray = static_cast<FileVec::IArray<T>&>(fileArray);
     return writeZarrImpl(iArray);
   }
+#endif
 
 protected:
   /**

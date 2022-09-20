@@ -187,6 +187,7 @@ IGeometry::StatusCode QuadGeom::findUnsharedEdges()
   return 1;
 }
 
+#if 0
 Zarr::ErrorType QuadGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
 {
   m_QuadListId = ReadZarrDataId(collection, H5Constants::k_QuadListTag);
@@ -212,3 +213,4 @@ Zarr::ErrorType QuadGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWrit
 
   return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif

@@ -102,6 +102,7 @@ void VertexGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoo
   shape[2] = 0.0;
 }
 
+#if 0
 Zarr::ErrorType VertexGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   m_VertexListId = ReadZarrDataId(collection, H5Constants::k_VertexListTag);
@@ -121,3 +122,4 @@ Zarr::ErrorType VertexGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWr
 
   return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif

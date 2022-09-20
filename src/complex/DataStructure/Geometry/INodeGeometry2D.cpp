@@ -196,6 +196,53 @@ H5::ErrorType INodeGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructureW
   return error;
 }
 
+#if 0
+Zarr::ErrorType INodeGeometry2D::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
+{
+  Zarr::ErrorType error = INodeGeometry1D::readZarr(dataStructureReader, collection, preflight);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  m_FaceListId = ReadZarrDataId(collection, H5Constants::k_FaceListTag);
+  m_FaceDataId = ReadZarrDataId(collection, H5Constants::k_FaceDataTag);
+  m_UnsharedEdgeListId = ReadZarrDataId(collection, H5Constants::k_UnsharedEdgeListTag);
+
+  return error;
+}
+
+Zarr::ErrorType INodeGeometry2D::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
+{
+  Zarr::ErrorType error = INodeGeometry1D::writeZarr(dataStructureWriter, parentGroupWriter, importable);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  auto groupWriter = parentGroupWriter.createOrFindGroup(getName());
+  error = WriteZarrDataId(groupWriter, m_FaceListId, H5Constants::k_FaceListTag);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  error = WriteZarrDataId(groupWriter, m_FaceDataId, H5Constants::k_FaceDataTag);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  error = WriteZarrDataId(groupWriter, m_UnsharedEdgeListId, H5Constants::k_UnsharedEdgeListTag);
+  if(error < 0)
+  {
+    return error;
+  }
+
+  return error;
+}
+#endif
+
 INodeGeometry2D::SharedEdgeList* INodeGeometry2D::createSharedEdgeList(usize numEdges)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numEdges}, std::vector<usize>{2}, 0);

@@ -543,6 +543,7 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
   return error;
 }
 
+#if 0
 Zarr::ErrorType RectGridGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   // Read Dimensions
@@ -559,7 +560,6 @@ Zarr::ErrorType RectGridGeom::readZarr(Zarr::DataStructureReader& dataStructureR
   m_xBoundsId = ReadZarrDataId(collection, H5Constants::k_XBoundsTag);
   m_yBoundsId = ReadZarrDataId(collection, H5Constants::k_YBoundsTag);
   m_zBoundsId = ReadZarrDataId(collection, H5Constants::k_ZBoundsTag);
-  m_VoxelSizesId = ReadZarrDataId(collection, H5Constants::k_VoxelSizesTag);
 
   return BaseGroup::readZarr(dataStructureReader, collection, preflight);
 }
@@ -583,10 +583,10 @@ Zarr::ErrorType RectGridGeom::writeZarr(Zarr::DataStructureWriter& dataStructure
   WriteZarrDataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
   WriteZarrDataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
   WriteZarrDataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
-  WriteZarrDataId(groupWriter, m_VoxelSizesId, H5Constants::k_VoxelSizesTag);
 
   return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif
 
 void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

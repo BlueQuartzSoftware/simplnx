@@ -394,6 +394,7 @@ public:
     return dataStore;
   }
 
+#if 0
   /**
    * @brief Writes the data store to Zarr. Returns an error code should
    * the array be invalid. Otherwise, returns 0.
@@ -413,11 +414,12 @@ public:
     std::copy(this->begin(), this->end(), fileArray.begin());
 
     // Write shape attributes to the dataset
-    fileArray.attributes()[IDataStore::k_TupleShape] = m_TupleShape;
-    fileArray.attributes()[IDataStore::k_ComponentShape] = m_ComponentShape;
+    fileArray.attributes()[complex::H5::k_TupleShapeTag] = m_TupleShape;
+    fileArray.attributes()[complex::H5::k_ComponentShapeTag] = m_ComponentShape;
 
     return 0;
   }
+#endif
 
 private:
   ShapeType m_ComponentShape;

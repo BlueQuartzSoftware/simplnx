@@ -161,6 +161,7 @@ void EdgeGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoord
   shape[1] = 1.0;
 }
 
+#if 0
 Zarr::ErrorType EdgeGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   m_VertexListId = ReadZarrDataId(collection, H5Constants::k_VertexListTag);
@@ -189,3 +190,4 @@ Zarr::ErrorType EdgeGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWrit
 
   return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif

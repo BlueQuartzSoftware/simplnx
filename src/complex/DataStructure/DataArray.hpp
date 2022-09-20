@@ -625,6 +625,7 @@ public:
     return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
   }
 
+#if 0
   Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override
   {
     auto size = m_DataStore->getSize();
@@ -638,6 +639,7 @@ public:
     writeZarrObjectAttributes(dataStructureWriter, datasetWriter, importable);
     return 0;
   }
+#endif
 
 protected:
   /**

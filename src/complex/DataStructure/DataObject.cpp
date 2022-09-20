@@ -4,7 +4,7 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
-#include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
+//#include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
 
 #include "FileVec/collection/IGroup.hpp"
 
@@ -278,6 +278,7 @@ H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataS
   return error;
 }
 
+#if 0
 void DataObject::writeZarrObjectAttributes(Zarr::DataStructureWriter& dataStructureWriter, FileVec::BaseCollection& objectWriter, bool importable) const
 {
   // Add to DataStructureWriter for use in linking
@@ -287,4 +288,5 @@ void DataObject::writeZarrObjectAttributes(Zarr::DataStructureWriter& dataStruct
   objectWriter.attributes()[complex::Constants::k_ObjectIdTag] = getId();
   objectWriter.attributes()[complex::Constants::k_ImportableTag] = importable ? 1 : 0;
 }
+#endif
 } // namespace complex

@@ -311,6 +311,7 @@ public:
 
   static std::vector<SharedVectorType> ReadZarrData(const FileVec::IGroup& parentGroup, const FileVec::BaseGenericArray& fileArray);
 
+#if 0
   /**
    * @brief Writes the DataArray to Zarr using the provided group.
    *
@@ -321,6 +322,7 @@ public:
    * @return Zarr::ErrorType
    */
   Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override;
+#endif
 
 protected:
   /**

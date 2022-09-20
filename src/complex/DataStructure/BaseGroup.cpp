@@ -199,6 +199,7 @@ H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   return m_DataMap.writeH5Group(dataStructureWriter, groupWriter);
 }
 
+#if 0
 Zarr::ErrorType BaseGroup::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   return m_DataMap.readZarGroup(dataStructureReader, collection, getId(), preflight);
@@ -212,6 +213,7 @@ Zarr::ErrorType BaseGroup::writeZarr(Zarr::DataStructureWriter& dataStructureWri
 
   return m_DataMap.writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif
 
 void BaseGroup::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

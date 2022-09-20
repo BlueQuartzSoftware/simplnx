@@ -235,6 +235,7 @@ public:
     return error;
   }
 
+#if 0
   /**
    * @brief Writes the ScalarData to HDF5 using the provided parent ID.
    * @param parentId
@@ -256,6 +257,7 @@ public:
     writeZarrObjectAttributes(dataStructureWriter, datasetWriter, importable);
     return 0;
   }
+#endif
 
 protected:
   /**

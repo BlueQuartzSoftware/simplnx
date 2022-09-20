@@ -240,6 +240,7 @@ public:
     return dataStore;
   }
 
+#if 0
   static std::unique_ptr<EmptyDataStore> ReadZarr(const FileVec::BaseGenericArray& fileArray)
   {
     auto tupleShape = IDataStore::ReadTupleShape(fileArray);
@@ -257,6 +258,7 @@ public:
   {
     throw std::runtime_error("");
   }
+#endif
 
 private:
   ShapeType m_ComponentShape;

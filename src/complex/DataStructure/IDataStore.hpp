@@ -123,6 +123,7 @@ public:
    */
   virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
 
+#if 0
   /**
    * @brief Writes the data store to HDF5. Returns the HDF5 error code should
    * one be encountered. Otherwise, returns 0.
@@ -130,6 +131,7 @@ public:
    * @return Zarr::ErrorType
    */
   virtual Zarr::ErrorType writeZarr(FileVec::BaseGenericArray& datasetWriter) const = 0;
+#endif
 
   static ShapeType ReadTupleShape(const H5::DatasetReader& datasetReader)
   {
@@ -150,6 +152,28 @@ public:
     }
     return componentShapeAttribute.readAsVector<usize>();
   }
+
+#if 0
+  static ShapeType ReadTupleShape(const FileVec::BaseGenericArray& datasetReader)
+  {
+    const nlohmann::json tupleShapeAttribute = datasetReader.attributes()[complex::H5::k_TupleShapeTag];
+    if(tupleShapeAttribute.empty())
+    {
+      throw std::runtime_error(fmt::format("Error reading Tuple Shape from Zarr at {}", datasetReader.path()));
+    }
+    return tupleShapeAttribute.get<std::vector<usize>>();
+  }
+
+  static ShapeType ReadComponentShape(const FileVec::BaseGenericArray& datasetReader)
+  {
+    const nlohmann::json componentShapeAttribute = datasetReader.attributes()[complex::H5::k_ComponentShapeTag];
+    if(componentShapeAttribute.empty())
+    {
+      throw std::runtime_error(fmt::format("Error reading Component Shape from Zarr at {}", datasetReader.path()));
+    }
+    return componentShapeAttribute.get<std::vector<usize>>();
+  }
+#endif
 
 protected:
   /**

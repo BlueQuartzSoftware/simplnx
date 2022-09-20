@@ -456,6 +456,7 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
   return dataVector;
 }
 
+#if 0
 template <typename T>
 std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadZarrData(const FileVec::IGroup& parentGroup, const FileVec::BaseGenericArray& iArray)
 {
@@ -548,6 +549,7 @@ Zarr::ErrorType NeighborList<T>::writeZarr(Zarr::DataStructureWriter& dataStruct
   writeZarrObjectAttributes(dataStructureWriter, datasetWriter, importable);
   return 0;
 }
+#endif }
 
 #if !defined(__APPLE__) && !defined(_MSC_VER)
 #undef COMPLEX_EXPORT

@@ -226,6 +226,7 @@ IGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
   return 1;
 }
 
+#if 0
 Zarr::ErrorType TetrahedralGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
 {
   m_TriListId = ReadZarrDataId(collection, H5Constants::k_TriListTag);
@@ -254,3 +255,4 @@ Zarr::ErrorType TetrahedralGeom::writeZarr(Zarr::DataStructureWriter& dataStruct
 
   return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif

@@ -349,6 +349,7 @@ public:
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
+#if 0
   /**
    * @brief Reads the DataStructure group from a target Zarr data.
    * @param dataStructureReader
@@ -356,7 +357,7 @@ public:
    * @return Zarr::Error
    */
   Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight = false) override;
-
+  
   /**
    * @brief Writes the geometry to HDF5 using the provided parent group ID.
    * @param dataStructureWriter
@@ -365,6 +366,7 @@ public:
    * @return Zarr::ErrorType
    */
   Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override;
+#endif
 
 protected:
   /**

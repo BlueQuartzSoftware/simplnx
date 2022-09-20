@@ -254,4 +254,26 @@ H5::ErrorType IGeometry::WriteH5DataId(H5::ObjectWriter& objectWriter, const std
   }
   return attribute.writeValue<IdType>(0);
 }
+
+#if 0
+std::optional<IGeometry::IdType> IGeometry::ReadZarrDataId(const FileVec::BaseCollection& objectReader, const std::string& attributeName)
+{
+  const auto attribute = objectReader.attributes()[attributeName];
+  auto id = attribute.get<IdType>();
+  if(id == 0)
+  {
+    return {};
+  }
+  return id;
+}
+
+void IGeometry::WriteZarrDataId(FileVec::BaseCollection& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName)
+{
+  if(dataId.has_value())
+  {
+    objectWriter.attributes()[attributeName] = dataId.value();
+  }
+  objectWriter.attributes()[attributeName] = static_cast<IdType>(0);
+}
+#endif
 } // namespace complex

@@ -308,6 +308,7 @@ H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWrite
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
 
+#if 0
 Zarr::ErrorType GridMontage::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& groupReader, bool preflight)
 {
   auto rowCountAttribute = groupReader.attributes()[H5Constants::k_RowCountTag];
@@ -334,3 +335,4 @@ Zarr::ErrorType GridMontage::writeZarr(Zarr::DataStructureWriter& dataStructureW
 
   return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif

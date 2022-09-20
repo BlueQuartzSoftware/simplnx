@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/Utilities/Parsing/Zarr/Zarr.hpp"
+//#include "complex/Utilities/Parsing/Zarr/Zarr.hpp"
 #include "complex/complex_export.hpp"
 
 namespace FileVec
@@ -28,11 +28,13 @@ class GroupReader;
 class GroupWriter;
 } // namespace H5
 
+#if 0
 namespace Zarr
 {
 class DataStructureReader;
 class DataStructureWriter;
 } // namespace Zarr
+#endif
 
 /**
  * @class DataMap
@@ -320,6 +322,7 @@ public:
    */
   H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const;
 
+#if 0
   Zarr::ErrorType readZarGroup(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& group, const std::optional<IdType>& dsParentId = {}, bool preflight = false);
 
   /**
@@ -328,6 +331,7 @@ public:
    * @return H5::ErrorType
    */
   Zarr::ErrorType writeZarrGroup(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& groupWriter) const;
+#endif
 
   /**
    * @brief Updates the map IDs using a vector of updated IDs and their new values.

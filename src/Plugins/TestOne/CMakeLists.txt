@@ -1,14 +1,16 @@
 include("${complex_SOURCE_DIR}/cmake/Plugin.cmake")
 
 set(PLUGIN_NAME "TestOne")
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
   ErrorWarningFilter
   ExampleFilter1
   ExampleFilter2
-  CreateOutOfCoreArray
+
+  # CreateOutOfCoreArray
   TestFilter
   DynamicTableExample
 )

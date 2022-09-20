@@ -187,6 +187,7 @@ IGeometry::StatusCode TriangleGeom::findUnsharedEdges()
   return 1;
 }
 
+#if 0
 Zarr::ErrorType TriangleGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
 {
   m_TriListId = ReadZarrDataId(collection, H5Constants::k_TriangleListTag);
@@ -213,3 +214,4 @@ Zarr::ErrorType TriangleGeom::writeZarr(Zarr::DataStructureWriter& dataStructure
 
   return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif

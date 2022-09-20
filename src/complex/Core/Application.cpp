@@ -20,7 +20,7 @@
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
-#include "complex/Utilities/Parsing/Zarr/ZarrDataFactoryManager.hpp"
+//#include "complex/Utilities/Parsing/Zarr/ZarrDataFactoryManager.hpp"
 
 using namespace complex;
 
@@ -73,7 +73,7 @@ Application* Application::s_Instance = nullptr;
 Application::Application()
 : m_FilterList(std::make_unique<FilterList>())
 , m_DataReader(std::make_unique<H5::DataFactoryManager>())
-, m_ZarrFactoryManager(std::make_unique<Zarr::DataFactoryManager>())
+//, m_ZarrFactoryManager(std::make_unique<Zarr::DataFactoryManager>())
 {
   assignInstance();
 }
@@ -163,10 +163,12 @@ H5::DataFactoryManager* Application::getH5FactoryManager() const
   return m_DataReader.get();
 }
 
+#if 0
 Zarr::DataFactoryManager* Application::getZarrFactoryManager() const
 {
   return m_ZarrFactoryManager.get();
 }
+#endif
 
 void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
 {

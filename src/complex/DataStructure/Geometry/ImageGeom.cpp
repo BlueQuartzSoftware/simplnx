@@ -522,6 +522,7 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   return error;
 }
 
+#if 0
 Zarr::ErrorType ImageGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   const auto& attributes = collection.attributes();
@@ -550,10 +551,7 @@ Zarr::ErrorType ImageGeom::readZarr(Zarr::DataStructureReader& dataStructureRead
   setDimensions(volDims);
   setSpacing(spacing);
   setOrigin(origin);
-
-  // Read DataObject ID
-  m_VoxelSizesId = ReadZarrDataId(collection, H5Constants::k_VoxelSizesTag);
-
+  
   return BaseGroup::readZarr(dataStructureReader, collection, preflight);
 }
 
@@ -579,9 +577,7 @@ Zarr::ErrorType ImageGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWri
   groupWriter.attributes()[H5Constants::k_H5_DIMENSIONS] = volDimsVector;
   groupWriter.attributes()[H5Constants::k_H5_ORIGIN] = originVector;
   groupWriter.attributes()[H5Constants::k_H5_SPACING] = spacingVector;
-
-  // Write DataObject ID
-  WriteZarrDataId(groupWriter, m_VoxelSizesId, H5Constants::k_VoxelSizesTag);
-
+  
   return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
 }
+#endif

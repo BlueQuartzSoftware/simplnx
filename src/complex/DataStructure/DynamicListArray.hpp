@@ -375,6 +375,7 @@ protected:
     throw std::runtime_error("");
   }
 
+#if 0
   /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    * @param parentGroupWriter
@@ -385,6 +386,7 @@ protected:
   {
     throw std::runtime_error("");
   }
+#endif
 
 private:
   ElementList* m_Array = nullptr; // pointer to data

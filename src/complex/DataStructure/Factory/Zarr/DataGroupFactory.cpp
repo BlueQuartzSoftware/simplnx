@@ -28,5 +28,6 @@ IDataFactory::error_type DataGroupFactory::read(Zarr::DataStructureReader& dataS
   auto name = group.name();
   auto importId = ReadObjectId(baseReader);
   auto dataGroup = DataGroup::Import(dataStructureReader.getDataStructure(), name, importId, parentId);
-  return dataGroup->readZarr(dataStructureReader, group, preflight);
+  return -1;
+  // return dataGroup->readZarr(dataStructureReader, group, preflight);
 }

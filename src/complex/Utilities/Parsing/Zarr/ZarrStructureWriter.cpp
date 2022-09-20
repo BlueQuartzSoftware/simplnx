@@ -14,7 +14,8 @@ Zarr::DataStructureWriter::~DataStructureWriter() = default;
 
 Zarr::ErrorType Zarr::DataStructureWriter::writeDataObject(const DataObject* dataObject, FileVec::IGroup& parentGroup)
 {
-  return dataObject->writeZarr(*this, parentGroup);
+  return -1;
+  // return dataObject->writeZarr(*this, parentGroup);
 }
 
 bool Zarr::DataStructureWriter::hasDataBeenWritten(const DataObject* targetObject) const
