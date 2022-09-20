@@ -138,13 +138,13 @@ Result<> FindShapes::operator()()
   // this is a temp array that is used during the calculations
   m_EFVec.resize(numfeatures * 9);
 
-  if(imageGeom.getNumXPoints() > 1 && imageGeom.getNumYPoints() > 1 && imageGeom.getNumZPoints() > 1)
+  if(imageGeom.getNumXCells() > 1 && imageGeom.getNumYCells() > 1 && imageGeom.getNumZCells() > 1)
   {
     find_moments();
     find_axes();
     find_axiseulers();
   }
-  if(imageGeom.getNumXPoints() == 1 || imageGeom.getNumYPoints() == 1 || imageGeom.getNumZPoints() == 1)
+  if(imageGeom.getNumXCells() == 1 || imageGeom.getNumYCells() == 1 || imageGeom.getNumZCells() == 1)
   {
     find_moments2D();
     find_axes2D();
@@ -172,9 +172,9 @@ void FindShapes::find_moments()
   float u101 = 0.0f;
   float xx = 0.0f, yy = 0.0f, zz = 0.0f, xy = 0.0f, xz = 0.0f, yz = 0.0f;
 
-  size_t xPoints = imageGeom.getNumXPoints();
-  size_t yPoints = imageGeom.getNumYPoints();
-  size_t zPoints = imageGeom.getNumZPoints();
+  size_t xPoints = imageGeom.getNumXCells();
+  size_t yPoints = imageGeom.getNumYCells();
+  size_t zPoints = imageGeom.getNumZCells();
   FloatVec3 spacing = imageGeom.getSpacing();
   FloatVec3 origin = imageGeom.getOrigin();
 
@@ -356,22 +356,22 @@ void FindShapes::find_moments2D()
   size_t xPoints = 0, yPoints = 0;
   FloatVec3 spacing = imageGeom.getSpacing();
 
-  if(imageGeom.getNumXPoints() == 1)
+  if(imageGeom.getNumXCells() == 1)
   {
-    xPoints = imageGeom.getNumYPoints();
-    yPoints = imageGeom.getNumZPoints();
+    xPoints = imageGeom.getNumYCells();
+    yPoints = imageGeom.getNumZCells();
     spacing = imageGeom.getSpacing();
   }
-  if(imageGeom.getNumYPoints() == 1)
+  if(imageGeom.getNumYCells() == 1)
   {
-    xPoints = imageGeom.getNumXPoints();
-    yPoints = imageGeom.getNumZPoints();
+    xPoints = imageGeom.getNumXCells();
+    yPoints = imageGeom.getNumZCells();
     spacing = imageGeom.getSpacing();
   }
-  if(imageGeom.getNumZPoints() == 1)
+  if(imageGeom.getNumZCells() == 1)
   {
-    xPoints = imageGeom.getNumXPoints();
-    yPoints = imageGeom.getNumYPoints();
+    xPoints = imageGeom.getNumXCells();
+    yPoints = imageGeom.getNumYCells();
     spacing = imageGeom.getSpacing();
   }
 
@@ -494,15 +494,15 @@ void FindShapes::find_axes2D()
 
   FloatVec3 spacing;
 
-  if(imageGeom.getNumXPoints() == 1)
+  if(imageGeom.getNumXCells() == 1)
   {
     spacing = imageGeom.getSpacing();
   }
-  if(imageGeom.getNumYPoints() == 1)
+  if(imageGeom.getNumYCells() == 1)
   {
     spacing = imageGeom.getSpacing();
   }
-  if(imageGeom.getNumZPoints() == 1)
+  if(imageGeom.getNumZCells() == 1)
   {
     spacing = imageGeom.getSpacing();
   }
