@@ -233,7 +233,7 @@ public:
    * @param groupReader
    * @return H5::ErrorType
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
 
   /**
    * @brief Writes the montage to HDF5 using the provided parent group ID.

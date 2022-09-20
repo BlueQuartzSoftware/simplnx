@@ -200,19 +200,19 @@ public:
    * @brief
    * @return usize
    */
-  usize getNumXPoints() const override;
+  usize getNumXCells() const override;
 
   /**
    * @brief
    * @return usize
    */
-  usize getNumYPoints() const override;
+  usize getNumYCells() const override;
 
   /**
    * @brief
    * @return usize
    */
-  usize getNumZPoints() const override;
+  usize getNumZCells() const override;
 
   /**
    * @brief

@@ -105,7 +105,7 @@ public:
    * @param groupReader
    * @return H5::Error
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
 
   /**
    * @brief Returns the tuple shape.

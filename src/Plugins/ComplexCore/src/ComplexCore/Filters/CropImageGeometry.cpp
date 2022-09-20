@@ -90,9 +90,9 @@ USizeVec3 getCurrentVolumeDataContainerDimensions(const DataStructure& dataStruc
   const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
   if(image != nullptr)
   {
-    data[0] = image->getNumXPoints();
-    data[1] = image->getNumYPoints();
-    data[2] = image->getNumZPoints();
+    data[0] = image->getNumXCells();
+    data[1] = image->getNumYCells();
+    data[2] = image->getNumZCells();
   }
   return data;
 }
@@ -149,11 +149,11 @@ protected:
         return;
       }
 
-      planeold = (i + m_Bounds[4]) * (m_SrcImageGeom.getNumXPoints() * m_SrcImageGeom.getNumYPoints());
+      planeold = (i + m_Bounds[4]) * (m_SrcImageGeom.getNumXCells() * m_SrcImageGeom.getNumYCells());
       plane = (i * m_Bounds[1] * m_Bounds[3]);
       for(int64 j = 0; j < m_Bounds[3]; j++)
       {
-        rowold = (j + m_Bounds[2]) * m_SrcImageGeom.getNumXPoints();
+        rowold = (j + m_Bounds[2]) * m_SrcImageGeom.getNumXCells();
         row = (j * m_Bounds[1]);
         for(int64 k = 0; k < m_Bounds[1]; k++)
         {
@@ -353,21 +353,21 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   const auto* srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
   auto srcOrigin = srcImageGeom->getOrigin();
 
-  if(xMax > srcImageGeom->getNumXPoints() - 1)
+  if(xMax > srcImageGeom->getNumXCells() - 1)
   {
-    std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXPoints() - 1);
+    std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXCells() - 1);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
-  if(yMax > srcImageGeom->getNumYPoints() - 1)
+  if(yMax > srcImageGeom->getNumYCells() - 1)
   {
-    std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYPoints() - 1);
+    std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYCells() - 1);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
-  if(zMax > srcImageGeom->getNumZPoints() - 1)
+  if(zMax > srcImageGeom->getNumZCells() - 1)
   {
-    std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZPoints() - 1);
+    std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZCells() - 1);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 

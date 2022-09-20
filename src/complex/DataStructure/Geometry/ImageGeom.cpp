@@ -204,17 +204,17 @@ void ImageGeom::setDimensions(const SizeVec3& dims)
   m_Dimensions = dims;
 }
 
-usize ImageGeom::getNumXPoints() const
+usize ImageGeom::getNumXCells() const
 {
   return m_Dimensions.getX();
 }
 
-usize ImageGeom::getNumYPoints() const
+usize ImageGeom::getNumYCells() const
 {
   return m_Dimensions.getY();
 }
 
-usize ImageGeom::getNumZPoints() const
+usize ImageGeom::getNumZCells() const
 {
   return m_Dimensions.getZ();
 }

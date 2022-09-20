@@ -145,9 +145,9 @@ void testGeomGrid(IGridGeometry* geom)
     geom->setDimensions(dims);
     REQUIRE(geom->getDimensions() == dims);
 
-    REQUIRE(geom->getNumXPoints() == xDim);
-    REQUIRE(geom->getNumYPoints() == yDim);
-    REQUIRE(geom->getNumZPoints() == zDim);
+    REQUIRE(geom->getNumXCells() == xDim);
+    REQUIRE(geom->getNumYCells() == yDim);
+    REQUIRE(geom->getNumZCells() == zDim);
   }
 }
 
