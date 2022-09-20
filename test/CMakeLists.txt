@@ -34,7 +34,7 @@ add_executable(complex_test
   FilePathGeneratorTest.cpp
   FileVecTest.cpp
   DataArrayTest.cpp
-  FileStoreTest.cpp
+  OutOfCorePipeline.cpp
   DREAM3DFileTest.cpp
   GeometryTestUtilities.hpp
   ParametersTest.cpp

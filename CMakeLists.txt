@@ -208,6 +208,32 @@ set(COMPLEX_HDRS
   # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TetrahedralGeomFactory.hpp
   # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/TriangleGeomFactory.hpp
   # ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/Zarr/VertexGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataStructureReader.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataStructureWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactoryManager.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataArrayIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ScalarDataIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.hpp
+
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.hpp
@@ -421,6 +447,20 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.cpp
