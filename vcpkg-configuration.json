@@ -21,7 +21,7 @@
         "vcpkg-cmake",
         "vcpkg-cmake-config"
       ],
-      "baseline": "afd391e039b164649c844c6925190dcc210afeac"
+      "baseline": "2d09b04b79d9783e70c7ac189d90436d97cc2065"
     }
   ]
 }
