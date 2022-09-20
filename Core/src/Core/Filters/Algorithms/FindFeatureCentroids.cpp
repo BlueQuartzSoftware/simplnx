@@ -119,9 +119,9 @@ Result<> FindFeatureCentroids::operator()()
 
   size_t totalFeatures = centroids.getNumberOfTuples();
 
-  size_t xPoints = imageGeom.getNumXPoints();
-  size_t yPoints = imageGeom.getNumYPoints();
-  size_t zPoints = imageGeom.getNumZPoints();
+  size_t xPoints = imageGeom.getNumXCells();
+  size_t yPoints = imageGeom.getNumYCells();
+  size_t zPoints = imageGeom.getNumZCells();
 
   std::vector<double> sum(totalFeatures * 3, 0.0);
   std::vector<double> center(totalFeatures * 3, 0.0);
