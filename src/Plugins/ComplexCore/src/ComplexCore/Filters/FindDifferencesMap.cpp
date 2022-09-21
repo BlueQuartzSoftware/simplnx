@@ -107,7 +107,10 @@ public:
     {
       for(int32 j = 0; j < numComps; j++)
       {
-        differenceMap->setValue(numComps * i + j, firstArray->getValue(numComps * i + j) - secondArray->getValue(numComps * i + j));
+        auto firstVal = firstArray->getValue(numComps * i + j);
+        auto secondVal = secondArray->getValue(numComps * i + j);
+        auto diffVal = firstVal > secondVal ? firstVal - secondVal : secondVal - firstVal;
+        differenceMap->setValue(numComps * i + j, diffVal);
       }
     }
   }
