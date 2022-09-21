@@ -23,11 +23,6 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std
   std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
-    if(data.getDataAs<BoolArray>(dataPath) != nullptr)
-    {
-      std::string ss = fmt::format("Selected Attribute Arrays cannot be of type bool");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_InputArrayTypeError, ss}})};
-    }
     if(auto dataArray = data.getDataAs<IDataArray>(dataPath))
     {
       if(!dataType.has_value())
