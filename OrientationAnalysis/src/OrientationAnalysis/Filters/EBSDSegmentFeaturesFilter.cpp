@@ -8,7 +8,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/EBSDSegmentFeatures.hpp"
@@ -71,7 +71,8 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
   params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsPath_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_GridGeomPath_Key, "Grid Geometry", "DataPath to target Grid Geometry", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeomPath_Key, "Grid Geometry", "DataPath to target Grid Geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath{}, ArraySelectionParameter::AllowedTypes{complex::DataType::float32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Required Input Cell Ensemble Data"});
@@ -118,10 +119,6 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   // Validate the Grid Geometry
   auto gridGeomPath = args.value<DataPath>(k_GridGeomPath_Key);
   const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
-  if(inputGridGeom == nullptr)
-  {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, fmt::format("A Grid Geometry is required for {}", humanName())}})};
-  }
   DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
   auto featureIdsPath = inputCellDataPath.createChildPath(args.value<std::string>(k_FeatureIdsArrayName_Key));
   auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(args.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
