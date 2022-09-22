@@ -66,9 +66,8 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
     DataPath geometryPath = DataPath({triangleGeometryName});
 
     // Create default Parameters for the filter.
-    DataPath triangleNormalsDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleNormalsName);
     args.insertOrAssign(TriangleNormalFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
-    args.insertOrAssign(TriangleNormalFilter::k_SurfaceMeshTriangleNormalsArrayPath_Key, std::make_any<DataPath>(triangleNormalsDataPath));
+    args.insertOrAssign(TriangleNormalFilter::k_SurfaceMeshTriangleNormalsArrayPath_Key, std::make_any<std::string>(triangleNormalsName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
@@ -77,6 +76,8 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
     REQUIRE(executeResult.result.valid());
+
+    DataPath triangleNormalsDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleNormalsName);
 
     // Let's compare the normals.
     DataPath normalsDataPath({triangleGeometryName, triangleFaceDataGroupName, normalsDataArrayName});
