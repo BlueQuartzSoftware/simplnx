@@ -113,10 +113,10 @@ float findStdDeviation(const C<T, Ts...>& source)
   }
   std::vector<double> difference(source.size());
   float sum = static_cast<float>(computeSum(source));
-  float mean = static_cast<double>(sum / source.size());
-  std::transform(std::cbegin(source), std::cend(source), std::begin(difference), [mean](float a) { return a - mean; });
-  float squaredSum = std::inner_product(std::cbegin(difference), std::cend(difference), std::cbegin(difference), 0.0f);
-  return std::sqrt(squaredSum / source.size());
+  float mean = static_cast<float>(sum / source.size());
+  std::transform(std::cbegin(source), std::cend(source), std::begin(difference), [mean](T a) { return static_cast<double>(a - mean); });
+  double squaredSum = std::inner_product(std::cbegin(difference), std::cend(difference), std::cbegin(difference), 0.0);
+  return std::sqrt(squaredSum / static_cast<float>(source.size()));
 }
 
 // -----------------------------------------------------------------------------
