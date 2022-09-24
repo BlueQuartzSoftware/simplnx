@@ -129,7 +129,7 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAngle_Key, std::make_any<float32>(30));
+    args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAngle_Key, std::make_any<float32>(30.0F));
     args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0F, 1.0F, 1.0F}));
     args.insertOrAssign(RotateEulerRefFrameFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_EulerAnglesDataPath));
 
