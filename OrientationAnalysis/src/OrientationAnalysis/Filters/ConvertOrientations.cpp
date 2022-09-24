@@ -16,8 +16,10 @@
 
 #include <fmt/format.h>
 
+#ifndef _MSC_VER
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "UnusedValue"
+#endif
 using namespace complex;
 
 namespace
@@ -549,4 +551,7 @@ Result<> ConvertOrientations::executeImpl(DataStructure& dataStructure, const Ar
 }
 } // namespace complex
 
+#ifndef _MSC_VER
 #pragma clang diagnostic pop
+#endif // !_MSVC_
+
