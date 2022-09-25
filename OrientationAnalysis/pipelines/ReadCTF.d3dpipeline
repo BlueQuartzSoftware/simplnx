@@ -1,0 +1,43 @@
+{
+  "isDisabled": false,
+  "name": "ReadCTF.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "CellAttributeMatrixName": "Cell Data",
+        "CellEnsembleAttributeMatrixName": "CellEnsembleData",
+        "DataContainerName": "DataContainer",
+        "DegreesToRadians": true,
+        "EdaxHexagonalAlignment": false,
+        "InputFile": "/Users/mjackson/Workspace1/DREAM3D-Build/CLion-NX-Debug/Bin/Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
+      },
+      "filter": {
+        "name": "complex::ReadCtfDataFilter",
+        "uuid": "7751923c-afb9-4032-8372-8078325c69a4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "CellEulerAnglesArrayPath": "DataContainer/Cell Data/EulerAngles",
+        "CellIPFColorsArrayName": "IPFColors",
+        "CellPhasesArrayPath": "DataContainer/Cell Data/Phases",
+        "CrystalStructuresArrayPath": "DataContainer/CellEnsembleData/CrystalStructures",
+        "GoodVoxelsArrayPath": "",
+        "ReferenceDir": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "UseGoodVoxels": false
+      },
+      "filter": {
+        "name": "complex::GenerateIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

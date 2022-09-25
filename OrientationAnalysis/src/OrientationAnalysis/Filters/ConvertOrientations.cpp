@@ -554,4 +554,3 @@ Result<> ConvertOrientations::executeImpl(DataStructure& dataStructure, const Ar
 #ifndef _MSC_VER
 #pragma clang diagnostic pop
 #endif // !_MSVC_
-

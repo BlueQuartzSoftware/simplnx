@@ -21,6 +21,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindKernelAvgMisorientationsTest.cpp
   FindMisorientationsTest.cpp
   FindSchmidsTest.cpp
+  ReadAngDataTest.cpp
+  ReadCtfDataTest.cpp
 )
 set(DISABLED_TESTS
 
@@ -55,8 +57,6 @@ set(DISABLED_TESTS
   # ImportH5EspritDataTest.cpp    # MISSING 1 or more Parameter Implementations
   # ImportH5OimDataTest.cpp    # MISSING 1 or more Parameter Implementations
   # OrientationUtilityTest.cpp    # MISSING 1 or more Parameter Implementations
-  ReadAngDataTest.cpp
-  ReadCtfDataTest.cpp
 
   ReplaceElementAttributesWithNeighborValuesTest.cpp
   RodriguesConvertorTest.cpp

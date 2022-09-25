@@ -1,13 +1,11 @@
 #include "GenerateIPFColors.hpp"
 
-#include "complex/Common/Numbers.hpp"
 #include "complex/Common/RgbColor.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
