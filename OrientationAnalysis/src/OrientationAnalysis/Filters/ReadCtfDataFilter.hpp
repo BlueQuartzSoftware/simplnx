@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class ReadCtfData
+ * @class ReadCtfDataFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT ReadCtfData : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ReadCtfDataFilter : public IFilter
 {
 public:
-  ReadCtfData() = default;
-  ~ReadCtfData() noexcept override = default;
+  ReadCtfDataFilter() = default;
+  ~ReadCtfDataFilter() noexcept override = default;
 
-  ReadCtfData(const ReadCtfData&) = delete;
-  ReadCtfData(ReadCtfData&&) noexcept = delete;
+  ReadCtfDataFilter(const ReadCtfDataFilter&) = delete;
+  ReadCtfDataFilter(ReadCtfDataFilter&&) noexcept = delete;
 
-  ReadCtfData& operator=(const ReadCtfData&) = delete;
-  ReadCtfData& operator=(ReadCtfData&&) noexcept = delete;
+  ReadCtfDataFilter& operator=(const ReadCtfDataFilter&) = delete;
+  ReadCtfDataFilter& operator=(ReadCtfDataFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
@@ -97,4 +97,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ReadCtfData, "7751923c-afb9-4032-8372-8078325c69a4");
+COMPLEX_DEF_FILTER_TRAITS(complex, ReadCtfDataFilter, "7751923c-afb9-4032-8372-8078325c69a4");

@@ -1,0 +1,41 @@
+{
+  "isDisabled": false,
+  "name": "ReadAng.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "CellAttributeMatrixName": "Cell Data",
+        "CellEnsembleAttributeMatrixName": "Cell Ensemble Data",
+        "DataContainerName": "DataContainer",
+        "InputFile": "/Users/mjackson/Workspace1/DREAM3D-Build/CLion-NX-Debug/Bin/Data/SmallIN100/Slice_1.ang"
+      },
+      "filter": {
+        "name": "complex::ReadAngDataFilter",
+        "uuid": "b8e128a8-c2a3-5e6c-a7ad-e4fb864e5d40"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "CellEulerAnglesArrayPath": "DataContainer/Cell Data/EulerAngles",
+        "CellIPFColorsArrayName": "IPFColors",
+        "CellPhasesArrayPath": "DataContainer/Cell Data/Phases",
+        "CrystalStructuresArrayPath": "DataContainer/Cell Ensemble Data/CrystalStructures",
+        "GoodVoxelsArrayPath": "",
+        "ReferenceDir": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "UseGoodVoxels": false
+      },
+      "filter": {
+        "name": "complex::GenerateIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

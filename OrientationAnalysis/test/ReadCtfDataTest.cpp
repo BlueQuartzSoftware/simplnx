@@ -30,7 +30,7 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include "OrientationAnalysis/Filters/ReadCtfData.hpp"
+#include "OrientationAnalysis/Filters/ReadCtfDataFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace complex;
@@ -38,17 +38,17 @@ using namespace complex;
 TEST_CASE("OrientationAnalysis::ReadCtfData: Instantiation and Parameter Check", "[OrientationAnalysis][ReadCtfData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ReadCtfData filter;
+  ReadCtfDataFilter filter;
   DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ReadCtfData::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insertOrAssign(ReadCtfData::k_DegreesToRadians_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ReadCtfData::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ReadCtfData::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ReadCtfData::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ReadCtfData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadCtfDataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
+  args.insertOrAssign(ReadCtfDataFilter::k_DegreesToRadians_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadCtfDataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadCtfDataFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadCtfDataFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadCtfDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

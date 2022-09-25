@@ -121,7 +121,7 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
   dataStructure.removeParent(ensembleGroupId, origDataContainerId);
 
   // Write the DataStructure to an output file
-  WriteTestDataStructure(dataStructure, fmt::format("{}/Test_Output/erode_dilate_bad_data.dream3d", unit_test::k_BinaryTestOutputDir));
+  WriteTestDataStructure(dataStructure, fmt::format("{}/test/data/erode_dilate_bad_data.dream3d", unit_test::k_BinaryTestOutputDir));
 
   // Delete Data
 
