@@ -229,6 +229,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   case TransformType::Rotation:
   case TransformType::Translation:
   case TransformType::Scale:
+  case TransformType::ManualTransformMatrix:
     break;
   }
 
