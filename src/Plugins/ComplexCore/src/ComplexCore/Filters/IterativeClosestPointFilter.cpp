@@ -1,6 +1,5 @@
 #include "IterativeClosestPointFilter.hpp"
 
-#include <Eigen/Dense>
 #include <Eigen/Geometry>
 
 #include "complex/DataStructure/DataArray.hpp"
@@ -34,7 +33,7 @@ struct VertexGeomAdaptor
   VertexGeomAdaptor(const Derived& obj_)
   : obj(obj_)
   {
-    // These values never change for the life time of this object so cache them now.
+    // These values never change for the lifetime of this object so cache them now.
     verts = derived()->getVertices();
     m_NumComponents = verts->getNumberOfComponents();
     m_NumTuples = verts->getNumberOfTuples();
@@ -87,14 +86,16 @@ std::string IterativeClosestPointFilter::humanName() const
 Parameters IterativeClosestPointFilter::parameters() const
 {
   Parameters params;
-
+  params.insertSeparator(Parameters::Separator{"Parameters"});
   params.insert(std::make_unique<UInt64Parameter>(k_NumIterations_Key, "Number of Iterations", "Number of components", 1));
   params.insert(std::make_unique<BoolParameter>(k_ApplyTransformation_Key, "Apply Transformation to Moving Geometry", "Number of components", false));
 
+  params.insertSeparator(Parameters::Separator{"Input Geometries"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_MovingVertexPath_Key, "Moving Vertex Geometry", "Numeric Type of data to create", DataPath()));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_TargetVertexPath_Key, "Target Vertex Geometry", "Number of components", DataPath()));
 
-  params.insert(std::make_unique<ArrayCreationParameter>(k_TransformArrayPath_Key, "Output Transform Array", "Number of tuples", DataPath()));
+  params.insertSeparator(Parameters::Separator{"Created Objects"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_TransformArrayPath_Key, "Created Transform Array", "Created 4x4 Matrix that is row major.", DataPath()));
   return params;
 }
 
@@ -128,8 +129,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_BadNumIterations, ss}})};
   }
 
-  usize numTuples = 1;
-  auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{numTuples}, std::vector<usize>{16}, transformArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4,4}, std::vector<usize>{1}, transformArrayPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
