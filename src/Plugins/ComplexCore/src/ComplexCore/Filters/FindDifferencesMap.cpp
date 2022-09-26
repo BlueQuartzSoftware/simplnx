@@ -23,11 +23,6 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std
   std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
-    if(data.getDataAs<BoolArray>(dataPath) != nullptr)
-    {
-      std::string ss = fmt::format("Selected Attribute Arrays cannot be of type bool");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{k_InputArrayTypeError, ss}})};
-    }
     if(auto dataArray = data.getDataAs<IDataArray>(dataPath))
     {
       if(!dataType.has_value())
@@ -49,32 +44,33 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& data, const std
   return {};
 }
 
-IFilter::PreflightResult warnOnUnsignedTypes(const DataStructure& data, const std::vector<DataPath>& paths)
+WarningCollection warnOnUnsignedTypes(const DataStructure& data, const std::vector<DataPath>& paths)
 {
+  WarningCollection results;
   for(const auto& dataPath : paths)
   {
     if(data.getDataAs<UInt8Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint8_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-90004, ss}})};
+      results.push_back(Warning{-90004, ss});
     }
     if(data.getDataAs<UInt16Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint16_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-90005, ss}})};
+      results.push_back(Warning{-90005, ss});
     }
     if(data.getDataAs<UInt32Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint32_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-90006, ss}})};
+      results.push_back(Warning{-90006, ss});
     }
     if(data.getDataAs<UInt64Array>(dataPath))
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint64_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-90007, ss}})};
+      results.push_back(Warning{-90007, ss});
     }
   }
-  return {};
+  return results;
 }
 
 /**
@@ -107,7 +103,10 @@ public:
     {
       for(int32 j = 0; j < numComps; j++)
       {
-        differenceMap->setValue(numComps * i + j, firstArray->getValue(numComps * i + j) - secondArray->getValue(numComps * i + j));
+        auto firstVal = firstArray->getValue(numComps * i + j);
+        auto secondVal = secondArray->getValue(numComps * i + j);
+        auto diffVal = firstVal > secondVal ? firstVal - secondVal : secondVal - firstVal;
+        differenceMap->setValue(numComps * i + j, diffVal);
       }
     }
   }
@@ -198,13 +197,10 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
     }
   }
 
+  WarningCollection warnings;
   if(!dataArrayPaths.empty())
   {
-    auto result = warnOnUnsignedTypes(data, dataArrayPaths);
-    if(result.outputActions.invalid())
-    {
-      return result;
-    }
+    warnings = warnOnUnsignedTypes(data, dataArrayPaths);
   }
 
   // Safe to check array component dimensions since we won't get here if the pointers are null
@@ -226,8 +222,9 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
   auto action = std::make_unique<CreateArrayAction>(dataType, firstInputArray->getIDataStore()->getTupleShape(), firstInputArray->getIDataStore()->getComponentShape(), differenceMapArrayPath);
 
   //
-  OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  complex::Result<OutputActions> actions;
+  actions.value().actions.push_back(std::move(action));
+  actions.m_Warnings = warnings;
 
   return {std::move(actions)};
 }
