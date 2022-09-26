@@ -31,7 +31,7 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Instantiate Filter", "
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(vertexGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(imageGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ExistingImageGeometry_Key, std::make_any<DataPath>(imageGeomPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
+  //args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(useMask));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<DataPath>(voxelIndicesPath));
@@ -59,17 +59,17 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 1", "[M
   std::vector<DataPath> arraysToMap = std::vector<DataPath>{DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConfidenceIndex})};
   bool useMask = false;
   DataPath maskPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_ConditionalArray});
-  DataPath voxelIndicesPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Voxel Indices"});
+  std::string voxelIndicesName("Voxel Indices");
 
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key, std::make_any<uint64>(samplingGridType));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(vertexGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(newImageGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ExistingImageGeometry_Key, std::make_any<DataPath>(existingImageGeomPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
+  //args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(useMask));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<DataPath>(voxelIndicesPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<std::string>(voxelIndicesName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);
@@ -94,17 +94,17 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 2", "[M
   std::vector<DataPath> arraysToMap = std::vector<DataPath>{DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ConfidenceIndex})};
   bool useMask = false;
   DataPath maskPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_ConditionalArray});
-  DataPath voxelIndicesPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Voxel Indices"});
+  std::string voxelIndicesName("Voxel Indices");
 
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key, std::make_any<uint64>(samplingGridType));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_GridDimensions_Key, std::make_any<std::vector<int32>>(gridDimensions));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(vertexGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(newImageGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ExistingImageGeometry_Key, std::make_any<DataPath>(existingImageGeomPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
+  //args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(useMask));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
-  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<DataPath>(voxelIndicesPath));
+  args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<std::string>(voxelIndicesName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataGraph, args);

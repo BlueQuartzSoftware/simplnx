@@ -34,7 +34,7 @@ void createRegularGrid(DataStructure& data, const Arguments& args)
   auto vertexGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key);
   auto newImageGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key);
   auto existingImageGeomPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_ExistingImageGeometry_Key);
-  auto arraysToMap = args.value<std::vector<DataPath>>(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key);
+  // auto arraysToMap = args.value<std::vector<DataPath>>(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key);
   auto useMask = args.value<bool>(MapPointCloudToRegularGridFilter::k_UseMask_Key);
   auto maskArrayPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_MaskPath_Key);
   auto voxelIndicesPath = args.value<DataPath>(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key);
@@ -216,23 +216,34 @@ std::string MapPointCloudToRegularGridFilter::humanName() const
 Parameters MapPointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Parameters"});
+
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplingGridType_Key, "Sampling Grid Type", "Specifies how data is saved or accessed", 0,
                                                                     std::vector<std::string>{"Manual", "Use Existing Image Geometry"}));
   params.insert(std::make_unique<VectorInt32Parameter>(k_GridDimensions_Key, "Grid Dimensions", "Target grid size", std::vector<int32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_ExistingImageGeometry_Key, "Image Geometry", "Path to the target Image Geometry", DataPath()));
+  params.insert(
+      std::make_unique<DataPathSelectionParameter>(k_ExistingImageGeometry_Key, "Existing Image Geometry", "Path to existing Image Geometry that will serve as the 'Regular Grid'", DataPath()));
 
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeometry_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath()));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Image Geometry", "Path to create the Image Geometry", DataPath()));
-
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Paths to map to the grid geometry", std::vector<DataPath>(), complex::GetAllDataTypes()));
-
+  params.insertSeparator(Parameters::Separator{"Optional Input Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies if a mask array should be used", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to the target mask array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to the Voxel Indices array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::uint64}));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "", ImageGeom::k_CellDataName));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask Array", "Path to the target mask array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean}));
+
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeometry_Key, "Input Vertex Geometry", "The Vertices to be mapped into the regular grid", DataPath()));
+
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Created Regular Grid (Image Geometry)", "Path to create the Image Geometry that acts as the Regular Grid", DataPath()));
+
+  // params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Paths to map to the grid geometry", std::vector<DataPath>(), complex::GetAllDataTypes()));
+
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VoxelIndices_Key, "Voxel Indices", "Name of Created Voxel Indices array", "Voxel Indices"));
+  // params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "", ImageGeom::k_CellDataName));
 
   params.linkParameters(k_UseMask_Key, k_MaskPath_Key, std::make_any<bool>(true));
   params.linkParameters(k_SamplingGridType_Key, k_GridDimensions_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  params.linkParameters(k_SamplingGridType_Key, k_NewImageGeometry_Key, std::make_any<ChoicesParameter::ValueType>(0));
+
   params.linkParameters(k_SamplingGridType_Key, k_ExistingImageGeometry_Key, std::make_any<ChoicesParameter::ValueType>(1));
   return params;
 }
@@ -250,26 +261,28 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeometry_Key);
   auto newImageGeomPath = args.value<DataPath>(k_NewImageGeometry_Key);
   auto existingImageGeomPath = args.value<DataPath>(k_ExistingImageGeometry_Key);
-  auto arraysToMap = args.value<std::vector<DataPath>>(k_ArraysToMap_Key);
+  // auto arraysToMap = args.value<std::vector<DataPath>>(k_ArraysToMap_Key);
   auto useMask = args.value<bool>(k_UseMask_Key);
   auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
-  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
-  auto cellDataName = args.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
+  auto voxelIndicesName = args.value<std::string>(k_VoxelIndices_Key);
+  // auto cellDataName = args.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
 
   OutputActions actions;
 
   std::vector<DataPath> dataArrays;
 
   // VertexGeom::Pointer vertex = getDataContainerArray()->getPrereqGeometryFromDataContainer<VertexGeom>(this, getDataContainerName());
-  auto* vertexGeom = data.getDataAs<VertexGeom>(vertexGeomPath);
+  auto* vertexGeom = data.getDataAs<INodeGeometry0D>(vertexGeomPath);
   if(vertexGeom == nullptr)
   {
-    std::string ss = fmt::format("Could not find Vertex geometry at {}", vertexGeomPath.toString());
+    std::string ss = fmt::format("Could not find node based geometry at {}", vertexGeomPath.toString());
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertexGeom, ss}})};
   }
-  else
+
   {
-    // dataArrays.push_back(vertex->getVertices());
+    DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertexGeom->getVertexData()->getName()).createChildPath(voxelIndicesName);
+    auto action = std::make_unique<CreateArrayAction>(DataType::uint64, vertexGeom->getVertexData()->getShape(), std::vector<usize>{1}, voxelIndicesPath);
+    actions.actions.push_back(std::move(action));
   }
 
   if(samplingGridType == 0)
@@ -285,7 +298,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
     CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(gridDimensions[0]), static_cast<usize>(gridDimensions[1]), static_cast<usize>(gridDimensions[2])};
     CreateImageGeometryAction::OriginType origin = {0, 0, 0};
     CreateImageGeometryAction::SpacingType spacing = {1, 1, 1};
-    auto imageAction = std::make_unique<CreateImageGeometryAction>(newImageGeomPath, dims, origin, spacing, cellDataName);
+    auto imageAction = std::make_unique<CreateImageGeometryAction>(newImageGeomPath, dims, origin, spacing, "Cell Data");
     actions.actions.push_back(std::move(imageAction));
   }
 
@@ -297,17 +310,6 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
       std::string ss = fmt::format("Could not find Image geometry at {}", existingImageGeomPath.toString());
       return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVertexGeom, ss}})};
     }
-  }
-
-  auto* voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
-  if(nullptr == voxelIndicesPtr)
-  {
-    std::string ss = fmt::format("Could not find Voxel Indices array at {}", voxelIndicesPath.toString());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingVoxelIndicesArray, ss}})};
-  }
-  else
-  {
-    dataArrays.push_back(voxelIndicesPath);
   }
 
   if(useMask)
@@ -337,10 +339,10 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeometry_Key);
   auto newImageGeomPath = args.value<DataPath>(k_NewImageGeometry_Key);
   auto existingImageGeomPath = args.value<DataPath>(k_ExistingImageGeometry_Key);
-  auto arraysToMap = args.value<std::vector<DataPath>>(k_ArraysToMap_Key);
+  // auto arraysToMap = args.value<std::vector<DataPath>>(k_ArraysToMap_Key);
   auto useMask = args.value<bool>(k_UseMask_Key);
   auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
-  auto voxelIndicesPath = args.value<DataPath>(k_VoxelIndices_Key);
+  auto voxelIndicesName = args.value<std::string>(k_VoxelIndices_Key);
 
   ImageGeom* image = nullptr;
   if(samplingGridType == 0)
@@ -354,9 +356,10 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
     image = data.getDataAs<ImageGeom>(existingImageGeomPath);
   }
 
-  auto* vertices = data.getDataAs<VertexGeom>(vertexGeomPath);
+  auto* vertexGeom = data.getDataAs<VertexGeom>(vertexGeomPath);
+  DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertexGeom->getVertexData()->getName()).createChildPath(voxelIndicesName);
 
-  int64 numVerts = vertices->getNumberOfVertices();
+  int64 numVerts = vertexGeom->getNumberOfVertices();
   SizeVec3 dims = image->getDimensions();
   FloatVec3 res = image->getSpacing();
   FloatVec3 origin = image->getOrigin();
@@ -367,13 +370,13 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   int64 counter = 0;
 
   auto maskPtr = data.getDataAs<BoolArray>(maskArrayPath);
-  auto* voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
+  auto* voxelIndicesPtr = data.getDataAs<UInt64Array>(voxelIndicesPath);
 
   for(int64 i = 0; i < numVerts; i++)
   {
     if(!useMask || (useMask && (*maskPtr)[i]))
     {
-      auto coords = vertices->getVertexCoordinate(i);
+      auto coords = vertexGeom->getVertexCoordinate(i);
 
       for(usize j = 0; j < 3; j++)
       {
