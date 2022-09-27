@@ -365,6 +365,10 @@ DataType COMPLEX_EXPORT NeighborList<float32>::getDataType() const;
 template <>
 DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const;
 
+/**
+ * Boolean NeighborLists are uncompilable
+ */
+
 // -----------------------------------------------------------------------------
 // Declare our extern templates
 extern template class NeighborList<int8>;
@@ -396,8 +400,6 @@ using USizeNeighborList = NeighborList<usize>;
 
 using Float32NeighborList = NeighborList<float32>;
 using Float64NeighborList = NeighborList<float64>;
-
-using BoolNeighborList = NeighborList<bool>;
 
 using VectorOfFloat32NeighborList = std::vector<std::shared_ptr<Float32NeighborList>>;
 } // namespace complex

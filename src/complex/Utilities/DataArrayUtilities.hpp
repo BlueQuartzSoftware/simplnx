@@ -569,6 +569,13 @@ COMPLEX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStruc
 
 COMPLEX_EXPORT void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape);
 
+/**
+ * @brief Validates that
+ * @param dataStructure
+ * @param arrayPath
+ * @param featureIds
+ * @return
+ */
 COMPLEX_EXPORT Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds);
 
 /**
