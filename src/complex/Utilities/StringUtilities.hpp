@@ -212,6 +212,10 @@ template <typename T>
 inline std::string number(T arg)
 {
   std::stringstream ss;
+  if (std::is_floating_point_v<T>)
+  {
+      ss.precision(std::numeric_limits<T>::digits10);
+  }
   ss << arg;
   return ss.str();
 }
