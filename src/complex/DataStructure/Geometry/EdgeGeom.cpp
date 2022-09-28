@@ -99,8 +99,9 @@ IGeometry::StatusCode EdgeGeom::findElementsContainingVert()
     return -1;
   }
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), containsVert, getNumberOfVertices());
-  if(getElementsContainingVert() == nullptr)
+  if(containsVert == nullptr)
   {
+    m_CellContainingVertId.reset();
     return -1;
   }
   m_CellContainingVertId = containsVert->getId();
