@@ -824,7 +824,13 @@ void readLegacyStringArray(DataStructure& ds, const H5::DatasetReader& dataArray
 
   if(preflight)
   {
-    StringArray::Create(ds, daName, parentId);
+    std::vector<usize> tDims;
+    std::vector<usize> cDims;
+    readLegacyDataArrayDims(dataArrayReader, tDims, cDims);
+    auto numElements =
+        std::accumulate(tDims.cbegin(), tDims.cend(), static_cast<usize>(1), std::multiplies<>()) * std::accumulate(cDims.cbegin(), cDims.cend(), static_cast<usize>(1), std::multiplies<>());
+    const std::vector<std::string> strings(numElements);
+    StringArray::CreateWithValues(ds, daName, strings, parentId);
   }
   else
   {
