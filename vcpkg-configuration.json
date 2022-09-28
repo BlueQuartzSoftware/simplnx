@@ -15,13 +15,14 @@
         "hdf5",
         "itk",
         "nlohmann-json",
+        "nod",
         "pybind11",
         "span-lite",
         "tbb",
         "vcpkg-cmake",
         "vcpkg-cmake-config"
       ],
-      "baseline": "2d09b04b79d9783e70c7ac189d90436d97cc2065"
+      "baseline": "d31bbc80580a9e73a8d2128cf7af1c5ca2e0688b"
     }
   ]
 }
