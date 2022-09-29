@@ -80,7 +80,7 @@ void INodeGeometry1D::getEdgePointIds(usize edgeId, nonstd::span<usize> vertexId
 {
   auto& cells = getEdgesRef();
   const usize offset = edgeId * k_NumEdgeVerts;
-  if(offset + k_NumEdgeVerts >= cells.getSize())
+  if(offset + k_NumEdgeVerts > cells.getSize())
   {
     return;
   }
