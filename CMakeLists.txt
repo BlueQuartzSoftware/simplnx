@@ -43,6 +43,7 @@ find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(HDF5 REQUIRED)
 find_package(boost_mp11 CONFIG REQUIRED)
+find_package(nod CONFIG REQUIRED)
 
 if(COMPLEX_ENABLE_MULTICORE)
   find_package(TBB CONFIG REQUIRED)
@@ -87,6 +88,7 @@ target_link_libraries(complex
     Eigen3::Eigen
     HDF5::HDF5
     Boost::mp11
+    nod::nod
 )
 
 if(UNIX)
@@ -539,7 +541,6 @@ target_include_directories(complex
   PUBLIC
     $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
-    $<BUILD_INTERFACE:${complex_SOURCE_DIR}/3rdparty/nod/include>
     $<INSTALL_INTERFACE:include>
 )
 
