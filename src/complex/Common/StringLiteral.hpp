@@ -132,27 +132,75 @@ private:
 };
 
 template <class T>
-constexpr bool operator==(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
+bool operator==(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
 {
   return lhs == rhs.view();
 }
 
 template <class T>
-constexpr bool operator==(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
+bool operator==(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
 {
   return rhs == lhs;
 }
 
 template <class T>
-constexpr bool operator!=(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
+bool operator!=(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
 {
   return lhs != rhs.view();
 }
 
 template <class T>
-constexpr bool operator!=(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
+bool operator!=(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
 {
   return rhs != lhs;
+}
+
+template <class T>
+bool operator<(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
+{
+  return lhs < rhs.view();
+}
+
+template <class T>
+bool operator<(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
+{
+  return lhs.view() < rhs;
+}
+
+template <class T>
+bool operator>(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
+{
+  return lhs > rhs.view();
+}
+
+template <class T>
+bool operator>(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
+{
+  return lhs.view() > rhs;
+}
+
+template <class T>
+bool operator<=(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
+{
+  return lhs <= rhs.view();
+}
+
+template <class T>
+bool operator<=(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
+{
+  return lhs.view() <= rhs;
+}
+
+template <class T>
+bool operator>=(const std::basic_string<T>& lhs, BasicStringLiteral<T> rhs)
+{
+  return lhs >= rhs.view();
+}
+
+template <class T>
+bool operator>=(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
+{
+  return lhs.view() >= rhs;
 }
 
 using StringLiteral = BasicStringLiteral<char>;
