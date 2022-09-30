@@ -29,6 +29,9 @@
     },
     {
       "name": "boost-mp11"
+    },
+    {
+      "name": "nod"
     }
   ],
   "features": {
