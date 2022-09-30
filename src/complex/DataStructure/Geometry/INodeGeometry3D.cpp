@@ -60,6 +60,11 @@ void INodeGeometry3D::setCellPointIds(usize polyhedraId, nonstd::span<usize> ver
 {
   auto& polyhedra = getPolyhedraRef();
   usize numVerts = getNumberOfVerticesPerCell();
+  const usize offset = polyhedraId * numVerts;
+  if(offset + numVerts > polyhedra.getSize())
+  {
+    return;
+  }
   for(usize i = 0; i < numVerts; i++)
   {
     polyhedra[polyhedraId * numVerts + i] = vertexIds[i];
@@ -70,9 +75,14 @@ void INodeGeometry3D::getCellPointIds(usize polyhedraId, nonstd::span<usize> ver
 {
   auto& polyhedra = getPolyhedraRef();
   usize numVerts = getNumberOfVerticesPerCell();
+  const usize offset = polyhedraId * numVerts;
+  if(offset + numVerts > polyhedra.getSize())
+  {
+    return;
+  }
   for(usize i = 0; i < numVerts; i++)
   {
-    vertexIds[i] = polyhedra[polyhedraId * numVerts + i];
+    vertexIds[i] = polyhedra[offset + i];
   }
 }
 

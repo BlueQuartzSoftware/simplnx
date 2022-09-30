@@ -60,7 +60,7 @@ void INodeGeometry2D::setFacePointIds(usize faceId, nonstd::span<usize> vertexId
 {
   auto& faces = getFacesRef();
   const usize offset = faceId * getNumberOfVerticesPerFace();
-  if(offset + getNumberOfVerticesPerFace() >= faces.getSize())
+  if(offset + getNumberOfVerticesPerFace() > faces.getSize())
   {
     return;
   }
@@ -74,7 +74,7 @@ void INodeGeometry2D::getFacePointIds(usize faceId, nonstd::span<usize> vertexId
 {
   auto& cells = getFacesRef();
   const usize offset = faceId * getNumberOfVerticesPerFace();
-  if(offset + getNumberOfVerticesPerFace() >= cells.getSize())
+  if(offset + getNumberOfVerticesPerFace() > cells.getSize())
   {
     return;
   }
