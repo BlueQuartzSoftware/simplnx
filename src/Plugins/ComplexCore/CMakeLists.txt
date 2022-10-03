@@ -17,6 +17,7 @@ set(FilterList
   ConditionalSetValue
   CopyDataGroup
   CopyFeatureArrayToElementArray
+  CreateAttributeMatrixFilter
   CreateDataArray
   CreateDataGroup
   CreateImageGeometry
