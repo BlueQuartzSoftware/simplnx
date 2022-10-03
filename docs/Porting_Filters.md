@@ -151,3 +151,12 @@ This example shows how to send back progress. The integer argument is a value be
 ```c++
     m_MessageHandler(IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt));
 ```
+
+## Creating Array within an Attribute Matrix ##
+
+If you have a filter that needs to create an array in something like a cell attribute matrix or
+a feature attribute matrix then the following filters have examples.
+
+* TriangleNormalFilter
+* CalculateFeatureSizesFilter
+
