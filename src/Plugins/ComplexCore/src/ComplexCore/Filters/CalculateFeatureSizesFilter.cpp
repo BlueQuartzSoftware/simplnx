@@ -5,7 +5,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -102,7 +101,7 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingFeatureIds, "Could not find Feature IDs array."}})};
   }
 
-  const AttributeMatrix* featAttributeMatrix = data.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
+  const auto* featAttributeMatrix = data.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
   if(featAttributeMatrix == nullptr)
   {
     return {nonstd::make_unexpected(

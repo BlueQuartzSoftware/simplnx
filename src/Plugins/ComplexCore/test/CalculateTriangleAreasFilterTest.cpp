@@ -59,9 +59,8 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
     DataPath geometryPath = DataPath({triangleGeometryName});
 
     // Create default Parameters for the filter.
-    DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
     args.insertOrAssign(CalculateTriangleAreasFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
-    args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataPath_Key, std::make_any<DataPath>(triangleAreasDataPath));
+    args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataPath_Key, std::make_any<std::string>(triangleAreasName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataGraph, args);
@@ -70,6 +69,9 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataGraph, args);
     REQUIRE(executeResult.result.valid());
+
+    auto& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleGeom.getFaceData()->getName()).createChildPath(triangleAreasName);
 
     // Let's sum up all the areas.
     Float64Array& faceAreas = dataGraph.getDataRefAs<Float64Array>(triangleAreasDataPath);
