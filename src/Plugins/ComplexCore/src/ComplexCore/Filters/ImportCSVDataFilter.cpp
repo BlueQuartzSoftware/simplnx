@@ -322,7 +322,7 @@ Parameters ImportCSVDataFilter::parameters() const
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "Value {}"));
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Dim 0"}));
   params.insert(
-      std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "CSV Tuple Dimensions", "The tuple dimensions for the imported CSV data arrays", DynamicTableInfo::TableDataType{{{1.0}}}, tableInfo));
+      std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "CSV Tuple Dimensions", "The tuple dimensions for the imported CSV data arrays", DynamicTableInfo::TableDataType{{1.0}}, tableInfo));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Group", "Store the imported CSV data arrays in an existing group.", false));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedDataGroup_Key, "Existing Data Group", "Store the imported CSV data arrays in this existing group.", DataPath{}));
