@@ -18,23 +18,41 @@ public:
 
   ~INodeGeometry3D() noexcept override = default;
 
-  const std::optional<IdType>& getPolyhedronListId() const;
-
+  /**
+   * @brief
+   * @return
+   */
   SharedFaceList* getPolyhedra();
 
+  /**
+   * @brief
+   * @return
+   */
   const SharedFaceList* getPolyhedra() const;
 
+  /**
+   * @brief
+   * @return
+   */
   SharedFaceList& getPolyhedraRef();
 
+  /**
+   * @brief
+   * @return
+   */
   const SharedFaceList& getPolyhedraRef() const;
 
-  void setPolyhedra(const SharedFaceList& polyhedra);
+  /**
+   * @brief
+   * @param polyhedra
+   */
+  void setPolyhedraList(const SharedFaceList& polyhedra);
 
   /**
    * @brief Resizes the polyhedra list to the target size.
    * @param size
    */
-  void resizePolyhedronList(usize size);
+  void resizePolyhedraList(usize size);
 
   /**
    * @brief Returns the number of polyhedra in the geometry.
@@ -102,47 +120,58 @@ public:
    */
   void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const;
 
-  /**
-   * @brief
-   * @return
+  /****************************************************************************
+   * These functions get values related to where the Vertex Coordinates are
+   * stored in the DataStructure
    */
-  const std::optional<IdType>& getPolyhedraDataId() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix* getPolyhedronData();
+  const std::optional<IdType>& getPolyhedronListId() const;
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix* getPolyhedronData() const;
+  const std::optional<IdType>& getPolyhedraAttributeMatrixId() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix& getPolyhedronDataRef();
+  AttributeMatrix* getPolyhedraAttributeMatrix();
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix& getPolyhedronDataRef() const;
+  const AttributeMatrix* getPolyhedraAttributeMatrix() const;
 
   /**
    * @brief
    * @return
    */
-  DataPath getPolyhedronDataPath() const;
+  AttributeMatrix& getPolyhedraAttributeMatrixRef();
+
+  /**
+   * @brief
+   * @return
+   */
+  const AttributeMatrix& getPolyhedraAttributeMatrixRef() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  DataPath getPolyhedronAttributeMatrixDataPath() const;
 
   /**
    * @brief
    * @param attributeMatrix
    */
-  void setPolyhedronData(const AttributeMatrix& attributeMatrix);
+  void setPolyhedraAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
   /**
    * @brief Reads values from HDF5

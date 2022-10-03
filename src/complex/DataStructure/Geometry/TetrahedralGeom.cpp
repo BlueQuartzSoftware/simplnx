@@ -101,10 +101,10 @@ IGeometry::StatusCode TetrahedralGeom::findElementsContainingVert()
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), tetsContainingVert, getNumberOfVertices());
   if(tetsContainingVert == nullptr)
   {
-    m_CellContainingVertId.reset();
+    m_CellContainingVertDataArrayId.reset();
     return -1;
   }
-  m_CellContainingVertId = tetsContainingVert->getId();
+  m_CellContainingVertDataArrayId = tetsContainingVert->getId();
   return 1;
 }
 
@@ -123,10 +123,10 @@ IGeometry::StatusCode TetrahedralGeom::findElementNeighbors()
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), tetNeighbors, IGeometry::Type::Tetrahedral);
   if(tetNeighbors == nullptr)
   {
-    m_CellNeighborsId.reset();
+    m_CellNeighborsDataArrayId.reset();
     return -1;
   }
-  m_CellNeighborsId = tetNeighbors->getId();
+  m_CellNeighborsDataArrayId = tetNeighbors->getId();
   return err;
 }
 
@@ -137,10 +137,10 @@ IGeometry::StatusCode TetrahedralGeom::findElementCentroids()
   GeometryHelpers::Topology::FindElementCentroids(getPolyhedra(), getVertices(), tetCentroids);
   if(tetCentroids == nullptr)
   {
-    m_CellCentroidsId.reset();
+    m_CellCentroidsDataArrayId.reset();
     return -1;
   }
-  m_CellCentroidsId = tetCentroids->getId();
+  m_CellCentroidsDataArrayId = tetCentroids->getId();
   return 1;
 }
 
@@ -176,10 +176,10 @@ IGeometry::StatusCode TetrahedralGeom::findEdges()
   GeometryHelpers::Connectivity::FindTetEdges(getPolyhedra(), edgeList);
   if(edgeList == nullptr)
   {
-    m_EdgeListId.reset();
+    m_EdgeDataArrayId.reset();
     return -1;
   }
-  m_EdgeListId = edgeList->getId();
+  m_EdgeDataArrayId = edgeList->getId();
   return 1;
 }
 

@@ -253,7 +253,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   internalTriangleGeom.setVertices(*data.getDataAs<Float32Array>(internalVerticesPath));
 
   auto internalFacesPath = internalTrianglesPath.createChildPath(CreateTriangleGeometryAction::k_DefaultFacesName);
-  internalTriangleGeom.setFaces(*data.getDataAs<UInt64Array>(internalFacesPath));
+  internalTriangleGeom.setFaceList(*data.getDataAs<UInt64Array>(internalFacesPath));
 
   // int64 progIncrement = numTris / 100;
   // int64 prog = 1;
@@ -307,8 +307,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   // Resize the vertex and triangle arrays
   internalTriangleGeom.resizeVertexList(currentNewVertIndex);
   internalTriangleGeom.resizeFaceList(currentNewTriIndex);
-  ResizeAttributeMatrix(*internalTriangleGeom.getVertexData(), {currentNewVertIndex});
-  ResizeAttributeMatrix(*internalTriangleGeom.getFaceData(), {currentNewTriIndex});
+  ResizeAttributeMatrix(*internalTriangleGeom.getVertexAttributeMatrix(), {currentNewVertIndex});
+  ResizeAttributeMatrix(*internalTriangleGeom.getFaceAttributeMatrix(), {currentNewTriIndex});
 
   IGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
   IGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();

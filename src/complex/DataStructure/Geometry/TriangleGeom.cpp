@@ -96,10 +96,10 @@ IGeometry::StatusCode TriangleGeom::findElementsContainingVert()
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
   if(trianglesContainingVert == nullptr)
   {
-    m_CellContainingVertId.reset();
+    m_CellContainingVertDataArrayId.reset();
     return -1;
   }
-  m_CellContainingVertId = trianglesContainingVert->getId();
+  m_CellContainingVertDataArrayId = trianglesContainingVert->getId();
   return 1;
 }
 
@@ -118,10 +118,10 @@ IGeometry::StatusCode TriangleGeom::findElementNeighbors()
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, IGeometry::Type::Triangle);
   if(triangleNeighbors == nullptr)
   {
-    m_CellNeighborsId.reset();
+    m_CellNeighborsDataArrayId.reset();
     return -1;
   }
-  m_CellNeighborsId = triangleNeighbors->getId();
+  m_CellNeighborsDataArrayId = triangleNeighbors->getId();
   return err;
 }
 
@@ -132,10 +132,10 @@ IGeometry::StatusCode TriangleGeom::findElementCentroids()
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
   if(triangleCentroids == nullptr)
   {
-    m_CellCentroidsId.reset();
+    m_CellCentroidsDataArrayId.reset();
     return -1;
   }
-  m_CellCentroidsId = triangleCentroids->getId();
+  m_CellCentroidsDataArrayId = triangleCentroids->getId();
   return 1;
 }
 
@@ -164,10 +164,10 @@ IGeometry::StatusCode TriangleGeom::findEdges()
   GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   if(edgeList == nullptr)
   {
-    m_EdgeListId.reset();
+    m_EdgeDataArrayId.reset();
     return -1;
   }
-  m_EdgeListId = edgeList->getId();
+  m_EdgeDataArrayId = edgeList->getId();
   return 1;
 }
 

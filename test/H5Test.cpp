@@ -330,7 +330,7 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
-  triangleGeom->setFaces(*dataArray);
+  triangleGeom->setFaceList(*dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_TriangleGroupName, k_VertexListName});
@@ -364,7 +364,7 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
-  geometry->setFaces(*dataArray);
+  geometry->setFaceList(*dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_QuadGroupName, k_VertexListName});
@@ -398,7 +398,7 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   REQUIRE(result.valid());
   auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
-  geometry->setEdges(*dataArray);
+  geometry->setEdgeList(*dataArray);
 
   // Create the Vertex Array with a component size of 3
   path = DataPath({k_EdgeGroupName, k_VertexListName});
@@ -537,27 +537,27 @@ NodeBasedGeomData getNodeGeomData(const DataStructure& dataStructure)
   DataPath vertexPath({k_VertexGroupName, "[Geometry] Vertex"});
   auto* vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexPath);
   REQUIRE(vertexGeom != nullptr);
-  nodeData.vertexData.verticesId = vertexGeom->getVertexListId();
+  nodeData.vertexData.verticesId = vertexGeom->getSharedVertexDataArrayId();
 
   DataPath edgePath({k_EdgeGroupName, "[Geometry] Edge"});
   auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(edgePath);
   REQUIRE(edgeGeom != nullptr);
-  nodeData.edgeData.verticesId = edgeGeom->getVertexListId();
-  nodeData.edgeData.edgesId = edgeGeom->getEdgeListId();
+  nodeData.edgeData.verticesId = edgeGeom->getSharedVertexDataArrayId();
+  nodeData.edgeData.edgesId = edgeGeom->getEdgeListDataArrayId();
 
   DataPath trianglePath({k_TriangleGroupName, "[Geometry] Triangle"});
   auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(trianglePath);
   REQUIRE(triangleGeom != nullptr);
-  nodeData.triangleData.verticesId = triangleGeom->getVertexListId();
-  nodeData.triangleData.edgesId = triangleGeom->getEdgeListId();
-  nodeData.triangleData.trianglesId = triangleGeom->getFaceListId();
+  nodeData.triangleData.verticesId = triangleGeom->getSharedVertexDataArrayId();
+  nodeData.triangleData.edgesId = triangleGeom->getEdgeListDataArrayId();
+  nodeData.triangleData.trianglesId = triangleGeom->getFaceListDataArrayId();
 
   DataPath quadPath({k_QuadGroupName, "[Geometry] Quad"});
   auto* quadGeom = dataStructure.getDataAs<QuadGeom>(quadPath);
   REQUIRE(quadGeom != nullptr);
-  nodeData.quadData.verticesId = quadGeom->getVertexListId();
-  nodeData.quadData.edgesId = quadGeom->getEdgeListId();
-  nodeData.quadData.quadsId = quadGeom->getFaceListId();
+  nodeData.quadData.verticesId = quadGeom->getSharedVertexDataArrayId();
+  nodeData.quadData.edgesId = quadGeom->getEdgeListDataArrayId();
+  nodeData.quadData.quadsId = quadGeom->getFaceListDataArrayId();
 
   return nodeData;
 }
@@ -762,7 +762,7 @@ TEST_CASE("xmdf")
   auto* verts = DataArray<float32>::Create(ds, "Verts", std::move(vertsDataStore), geomId);
   auto* vertexData = AttributeMatrix::Create(ds, "VertexData", geomId);
   vertexData->setShape({numVerts});
-  vertexGeom->setVertexData(*vertexData);
+  vertexGeom->setVertexAttributeMatrix(*vertexData);
   vertexGeom->setVertices(*verts);
   auto vertexAssociatedData = std::make_unique<DataStore<int32>>(numVerts, 0);
   for(auto& item : vertexAssociatedData->createSpan())

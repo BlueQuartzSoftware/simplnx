@@ -100,7 +100,7 @@ public:
       return MakeErrorResult(-225, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", getVertexDataPath().toString()));
     }
     vertexAttributeMatrix->setShape(tupleShape);
-    geometry2d->setVertexData(*vertexAttributeMatrix);
+    geometry2d->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
     return {};
   }
