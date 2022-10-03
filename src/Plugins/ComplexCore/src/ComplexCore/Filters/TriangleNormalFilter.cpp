@@ -136,7 +136,7 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
 
   const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
   // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceData();
+  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{
@@ -162,7 +162,7 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
   auto pSurfaceMeshTriangleNormalsName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayPath_Key);
 
   const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix& faceAttributeMatrix = triangleGeom.getFaceDataRef();
+  const AttributeMatrix& faceAttributeMatrix = triangleGeom.getFaceAttributeMatrixRef();
 
   DataPath pSurfaceMeshTriangleNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(pSurfaceMeshTriangleNormalsName);
   auto& normals = dataStructure.getDataRefAs<Float64Array>(pSurfaceMeshTriangleNormalsArrayPath);
