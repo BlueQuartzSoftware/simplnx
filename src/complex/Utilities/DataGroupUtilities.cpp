@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
 {
@@ -180,7 +181,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
           break;
         }
       }
-      if(!ignore && dataObject->getDataObjectType() == dataObjectType)
+      if(!ignore && (dataObjectType == DataObject::Type::DataObject || dataObject->getDataObjectType() == dataObjectType))
       {
         childDataObjects.push_back(childPath);
       }
@@ -216,6 +217,47 @@ std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructu
       if(!ignore && dynamic_cast<const IArray*>(dataObject) != nullptr)
       {
         childDataObjects.push_back(childPath);
+      }
+    }
+  } catch(std::exception& e)
+  {
+    return {};
+  }
+  return {childDataObjects};
+}
+
+std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths)
+{
+  std::vector<DataPath> childDataObjects;
+  try
+  {
+    const auto* parent = dataStructure.getDataAs<BaseGroup>(parentGroup);
+    if(parent == nullptr)
+    {
+      return {};
+    }
+    std::vector<std::string> childrenNames = parent->getDataMap().getNames();
+
+    for(const auto& childName : childrenNames)
+    {
+      bool ignore = false;
+      DataPath childPath = parentGroup.createChildPath(childName);
+      for(const auto& ignoredPath : ignoredDataPaths)
+      {
+        if(childPath == ignoredPath)
+        {
+          ignore = true;
+          break;
+        }
+      }
+      if(!ignore)
+      {
+        childDataObjects.push_back(childPath);
+        auto childPathChildren = GetAllChildDataPathsRecursive(dataStructure, childPath, ignoredDataPaths);
+        if(childPathChildren.has_value())
+        {
+          childDataObjects.insert(childDataObjects.end(), childPathChildren.value().begin(), childPathChildren.value().end());
+        }
       }
     }
   } catch(std::exception& e)

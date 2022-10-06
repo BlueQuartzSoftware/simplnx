@@ -4,6 +4,8 @@
 #include "complex/Filter/Actions/CopyGroupAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
 {
@@ -49,7 +51,17 @@ IFilter::PreflightResult CopyDataGroup::preflightImpl(const DataStructure& data,
   auto dataArrayPath = args.value<DataPath>(k_DataPath_Key);
   auto newDataPath = args.value<DataPath>(k_NewPath_Key);
 
-  auto action = std::make_unique<CopyGroupAction>(dataArrayPath, newDataPath);
+  std::vector<DataPath> allCreatedPaths = {newDataPath};
+  auto pathsToBeCopied = GetAllChildDataPathsRecursive(data, dataArrayPath);
+  if(pathsToBeCopied.has_value())
+  {
+    for(const auto& sourcePath : pathsToBeCopied.value())
+    {
+      std::string createdPathName = complex::StringUtilities::replace(sourcePath.toString(), dataArrayPath.getTargetName(), newDataPath.getTargetName());
+      allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+    }
+  }
+  auto action = std::make_unique<CopyGroupAction>(dataArrayPath, newDataPath, allCreatedPaths);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));

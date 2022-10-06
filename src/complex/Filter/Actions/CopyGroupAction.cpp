@@ -5,14 +5,18 @@
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 
 namespace complex
 {
-CopyGroupAction::CopyGroupAction(const DataPath& path, const DataPath& newPath)
-: m_Path(path)
+CopyGroupAction::CopyGroupAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths)
+: IDataCreationAction(newPath)
+, m_Path(path)
 , m_NewPath(newPath)
+, m_AllCreatedPaths(allCreatedPaths)
 {
 }
 
@@ -22,9 +26,11 @@ std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructu
 {
   auto* data = dataStructure.getData(targetPath);
 
-  auto copy = std::shared_ptr<DataObject>(data->deepCopy());
-  copy->rename(newPath().getTargetName());
-  dataStructure.insert(copy, newPath());
+  std::shared_ptr<DataObject> copy = std::shared_ptr<DataObject>(data->deepCopy());
+  // copy->rename(newPath().getTargetName());
+  // dataStructure.insert(copy, newPath());
+  copy->rename(copyPath.getTargetName());
+  dataStructure.insert(copy, copyPath.getParent());
 
   if(auto* groupData = dynamic_cast<BaseGroup*>(data))
   {
@@ -55,7 +61,6 @@ Result<> CopyGroupAction::apply(DataStructure& dataStructure, Mode mode) const
     std::string ss = fmt::format("Cannot find group at path '{}'", path().toString());
     return MakeErrorResult(-5, ss);
   }
-
   auto* newTargetData = dataStructure.getData(newPath());
   if(newTargetData != nullptr)
   {
@@ -81,5 +86,10 @@ const DataPath& CopyGroupAction::path() const
 const DataPath& CopyGroupAction::newPath() const
 {
   return m_NewPath;
+}
+
+std::vector<DataPath> CopyGroupAction::getAllCreatedPaths() const
+{
+  return m_AllCreatedPaths;
 }
 } // namespace complex
