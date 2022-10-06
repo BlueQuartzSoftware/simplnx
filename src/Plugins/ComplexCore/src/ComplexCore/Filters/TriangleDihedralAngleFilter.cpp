@@ -170,14 +170,13 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
-  if(faceAttributeMatrix == nullptr)
+  if(triangleGeom == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-9860, fmt::format("Cannot find the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
   }
-  const AttributeMatrix* faceData = triangleGeom->getFaceAttributeMatrix();
-  if(faceData == nullptr)
+  // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
+  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
+  if(faceAttributeMatrix == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
   }
