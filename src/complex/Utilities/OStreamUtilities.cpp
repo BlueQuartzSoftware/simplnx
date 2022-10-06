@@ -615,12 +615,33 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
   {
     arrayIndex++;
   }
+
+  std::vector<size_t> componentCountOrder;
+  if(componentsPerLine == 0)
+  {
+    for(auto& [type, paths] : sortedMap) // this gets parse order correct for naming scheme
+    {
+      for(const auto& path : paths)
+      {
+        componentCountOrder.emplace_back(dataStructure.getDataAs<IDataArray>(path)->getNumberOfComponents());
+      }
+    }
+  }
+  else
+  {
+    for(size_t i = 0; i < objectPaths.size(); i++)
+    {
+      componentCountOrder.emplace_back(componentsPerLine);
+    }
+  }
+
   std::map<std::string, std::map<size_t, std::string>> printMap;
   std::ofstream fout;
+  auto index = 0;
   while(arrayIndex < matrix->getColumns())
   {
     std::vector<std::string> stringStore(matrix->getRows(), "UNINITIALIZED"); // 1 per array
-    dataAlg.execute(OStreamUtilities::AssembleVerticalStringFromIndex(*matrix, stringStore, arrayIndex, delimiter, componentsPerLine));
+    dataAlg.execute(OStreamUtilities::AssembleVerticalStringFromIndex(*matrix, stringStore, arrayIndex, delimiter, componentCountOrder[index], exportToBinary));
     auto path = directoryPath.path().string() + "/" + matrix->getValue(arrayIndex) + fileExtension;
     if(exportToBinary)
     {

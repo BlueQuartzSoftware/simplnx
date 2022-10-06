@@ -352,12 +352,13 @@ private:
 struct AssembleVerticalStringFromIndex
 {
   AssembleVerticalStringFromIndex(const PrintMatrix2D& matrix, std::vector<std::string>& stringStore, const int32 verticalColumnToPrint, const std::string delimiter = "",
-                                  const size_t componentsPerLine = 0)
+                                  const size_t componentsPerLine = 0, const bool isBinary = false)
   : m_Matrix(matrix)
   , m_StringStore(stringStore)
   , m_MaxComp(componentsPerLine)
   , m_Delim(delimiter)
   , m_VertColumn(verticalColumnToPrint)
+  , m_IsBinary(isBinary)
   {
   }
   ~AssembleVerticalStringFromIndex() = default;
@@ -367,20 +368,9 @@ struct AssembleVerticalStringFromIndex
     std::stringstream sstrm;
     size_t length = m_Matrix.getRows(); // will print entire array on one line if no componentsPerLine provided
     size_t count = 0;
-    size_t elementCount = 0;
-    size_t totalCount = 0;
-    size_t stringDumpCount = end - start; // get estimated buffer length based on parallelization calculations
     if(m_MaxComp != 0)                    // if a custom print length provided
     {
       length = m_MaxComp;
-    }
-    if((start != 0) && (m_MaxComp != 0)) // if start not index 0, then figure out position relative to current column
-    {
-      count = static_cast<size_t>(std::round(start % length)); // plus one converts index to component count
-    }
-    else // printing full array so it doesnt matter if start is zero or not for newline char
-    {
-      count = start;
     }
     if(m_Matrix.getBalance()) // faster (all arrays are same length)
     {
@@ -389,48 +379,44 @@ struct AssembleVerticalStringFromIndex
         for(size_t i = start; i < end; i++)
         {
           sstrm << m_Matrix.getValue(i, m_VertColumn) << m_Delim;
-          count++;
-          elementCount++;
-          totalCount += 2;
-          if(count == length)
+          if(i != 0 && i % length == 0)
           {
             sstrm << "\n";
-            count = 0;
-            totalCount++;
-          }
-          if(totalCount >= stringDumpCount)
-          {
-            m_StringStore[i] = std::move(sstrm.str());
-            sstrm.flush();
-            totalCount = elementCount = 0;
           }
         }
       }
-      else // no delimiter
+      else // no delimiter / check binary as binary should NEVER uses delimiter
       {
-        for(size_t i = start; i < end; i++)
+        if(m_IsBinary)
         {
-          sstrm << m_Matrix.getValue(i, m_VertColumn);
-          count++;
-          elementCount++;
-          totalCount++;
-          if(count == length)
+          for(size_t i = start; i < end; i++)
           {
-            sstrm << "\n";
-            count = 0;
-            totalCount++;
+            sstrm << m_Matrix.getValue(i, m_VertColumn);
           }
-          if(totalCount >= stringDumpCount)
+        }
+        else
+        {
+          for(size_t i = start; i < end; i++)
           {
-            m_StringStore[i] = std::move(sstrm.str());
-            sstrm.flush();
-            totalCount = elementCount = 0;
+            sstrm << m_Matrix.getValue(i, m_VertColumn);
+            if(i != 0 && i % length == 0)
+            {
+              sstrm << "\n";
+            }
           }
         }
       }
     }
     else // unbalanced data arrays (must search for uninitialized)
     {
+      if(start > length) // figure out position relative to current column
+      {
+        count = static_cast<size_t>(start % length);
+      }
+      else
+      {
+        count = start;
+      }
       if(!m_Delim.empty())
       {
         for(size_t i = start; i < end; i++)
@@ -440,74 +426,59 @@ struct AssembleVerticalStringFromIndex
           {
             sstrm << "\n";
             count = 0;
-            totalCount++;
-            if(totalCount >= stringDumpCount)
-            {
-              m_StringStore[i] = std::move(sstrm.str());
-              sstrm.flush();
-              totalCount = elementCount = 0;
-            }
           }
           else // not empty matrix slot
           {
             sstrm << selected << m_Delim;
             count++;
-            elementCount++;
-            totalCount += 2;
             if(count == length)
             {
               sstrm << "\n";
               count = 0;
-              totalCount++;
-            }
-            if(totalCount >= stringDumpCount)
-            {
-              m_StringStore[i] = std::move(sstrm.str());
-              sstrm.flush();
-              totalCount = elementCount = 0;
             }
           }
         }
       }
-      else // empty delimiter
+      else // empty delimiter / check binary as binary should NEVER uses delimiter
       {
-        for(size_t i = start; i < end; i++)
+        if(m_IsBinary)
         {
-          const auto& selected = m_Matrix.getValue(i, m_VertColumn);
-          if(selected.find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
+          for(size_t i = start; i < end; i++)
           {
-            sstrm << "\n";
-            count = 0;
-            totalCount++;
-            if(totalCount >= stringDumpCount)
+            const auto& selected = m_Matrix.getValue(i, m_VertColumn);
+            if(selected.find("UNINITIALIZED") == std::string::npos) // if is not empty insert new line in string and reset count
             {
-              m_StringStore[i] = std::move(sstrm.str());
-              sstrm.flush();
-              totalCount = elementCount = 0;
+              sstrm << selected;
+              count++;
             }
           }
-          else // not empty matrix slot
+        }
+        else
+        {
+          for(size_t i = start; i < end; i++)
           {
-            sstrm << selected;
-            count++;
-            elementCount++;
-            totalCount++;
-            if(count == length)
+            const auto& selected = m_Matrix.getValue(i, m_VertColumn);
+            if(selected.find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
             {
               sstrm << "\n";
               count = 0;
-              totalCount++;
             }
-            if(totalCount >= stringDumpCount)
+            else // not empty matrix slot
             {
-              m_StringStore[i] = std::move(sstrm.str());
-              sstrm.flush();
-              totalCount = elementCount = 0;
+              sstrm << selected;
+              count++;
+              if(count == length)
+              {
+                sstrm << "\n";
+                count = 0;
+              }
             }
           }
         }
       }
     }
+    m_StringStore[start] = std::move(sstrm.str());
+    sstrm.flush();
   }
 
   void operator()(Range range) const // for this parallelization range should go to size of largest data array to avoid hitting possible neighborlists for default printing
@@ -521,6 +492,7 @@ private:
   const size_t m_MaxComp;
   const std::string m_Delim = "";
   const int32 m_VertColumn = 0;
+  const bool m_IsBinary = false;
 };
 
 /**
@@ -547,15 +519,17 @@ struct AssembleHorizontalStringFromIndex
     size_t length = m_Matrix.getColumns(); // default is one tuple per line
     size_t count = 0;
     size_t elementCount = 0;
-    size_t totalCount = 0;
-    size_t stringDumpCount = end - start; // get estimated buffer length based on parallelization calculations
     if(m_MaxComp != 0)                    // if a custom print length provided
     {
       length = m_MaxComp;
     }
-    if(start != 0) // if start not index 0, then figure out position relative to current row for newline char
+    if(start > length) // if start not index 0, then figure out position relative to current row for newline char
     {
       count = static_cast<size_t>(std::round(start % length)); // plus one converts index to component count
+    }
+    else
+    {
+      count = start;
     }
     if(m_Matrix.getBalance()) // faster (all arrays are same length)
     {
@@ -565,19 +539,10 @@ struct AssembleHorizontalStringFromIndex
         {
           sstrm << m_Matrix.getValue(i) << m_Delim;
           count++;
-          elementCount++;
-          totalCount += 2;
           if(count == length)
           {
             sstrm << "\n";
             count = 0;
-            totalCount++;
-          }
-          if(totalCount >= stringDumpCount)
-          {
-            m_StringStore[i] = std::move(sstrm.str());
-            sstrm.flush();
-            totalCount = elementCount = 0;
           }
         }
       }
@@ -587,19 +552,10 @@ struct AssembleHorizontalStringFromIndex
         {
           sstrm << m_Matrix.getValue(i);
           count++;
-          elementCount++;
-          totalCount++;
           if(count == length)
           {
             sstrm << "\n";
             count = 0;
-            totalCount++;
-          }
-          if(totalCount >= stringDumpCount)
-          {
-            m_StringStore[i] = std::move(sstrm.str());
-            sstrm.flush();
-            totalCount = elementCount = 0;
           }
         }
       }
@@ -614,31 +570,15 @@ struct AssembleHorizontalStringFromIndex
           {
             sstrm << "\n";
             count = 0;
-            totalCount++;
-            if(totalCount >= stringDumpCount)
-            {
-              m_StringStore[i] = std::move(sstrm.str());
-              sstrm.flush();
-              totalCount = elementCount = 0;
-            }
           }
           else // not empty matrix slot
           {
             sstrm << m_Matrix.getValue(i) << m_Delim;
             count++;
-            elementCount++;
-            totalCount += 2;
             if(count == length)
             {
               sstrm << "\n";
               count = 0;
-              totalCount++;
-            }
-            if(totalCount >= stringDumpCount)
-            {
-              m_StringStore[i] = std::move(sstrm.str());
-              sstrm.flush();
-              totalCount = elementCount = 0;
             }
           }
         }
@@ -651,35 +591,22 @@ struct AssembleHorizontalStringFromIndex
           {
             sstrm << "\n";
             count = 0;
-            totalCount++;
-            if(totalCount >= stringDumpCount)
-            {
-              m_StringStore[i] = std::move(sstrm.str());
-              totalCount = elementCount = 0;
-            }
           }
           else // not empty matrix slot
           {
             sstrm << m_Matrix.getValue(i);
             count++;
-            elementCount++;
-            totalCount++;
             if(count == length)
             {
               sstrm << "\n";
               count = 0;
-              totalCount++;
-            }
-            if(totalCount >= stringDumpCount)
-            {
-              m_StringStore[i] = std::move(sstrm.str());
-              sstrm.flush();
-              totalCount = elementCount = 0;
             }
           }
         }
       }
     }
+    m_StringStore[start] = std::move(sstrm.str());
+    sstrm.flush();
   }
 
   void operator()(Range range) const // this parallelization should feed the size of the entire matrix into the upper range limit for default printing
