@@ -1,5 +1,7 @@
 #include "QuadGeomIO.hpp"
 
+#include "DataStructureReader.hpp"
+#include "complex/DataStructure/Geometry/QuadGeom.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 namespace complex::HDF5
@@ -7,11 +9,36 @@ namespace complex::HDF5
 QuadGeomIO::QuadGeomIO() = default;
 QuadGeomIO::~QuadGeomIO() noexcept = default;
 
-Result<> QuadGeomIO::readData(DataStructureReader& structureReader, const parent_group_type& parentGroup, const std::string_view& objectName, DataObject::IdType importId,
+DataObject::Type QuadGeomIO::getDataType() const
+{
+  return DataObject::Type::QuadGeom;
+}
+
+std::string QuadGeomIO::getTypeName() const
+{
+  return data_type::GetTypeName();
+}
+
+Result<> QuadGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                               const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
+  auto* geometry = QuadGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  return INodeGeom2dIO::ReadNodeGeom2dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
-Result<> QuadGeomIO::writeData(DataStructureWriter& structureReader, const parent_group_type& parentGroup, bool importable) const
+Result<> QuadGeomIO::writeData(DataStructureWriter& structureReader, const QuadGeom& geom, group_writer_type& parentGroup, bool importable) const
 {
+  return INodeGeom2dIO::WriteNodeGeom2dData(structureReader, geom, parentGroup, importable);
+}
+
+Result<> QuadGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+{
+  auto* targetData = dynamic_cast<const data_type*>(dataObject);
+  if(targetData == nullptr)
+  {
+    std::string ss = "Provided DataObject could not be cast to the target type";
+    return MakeErrorResult(-800, ss);
+  }
+
+  return writeData(dataStructureWriter, *targetData, parentWriter, true);
 }
 } // namespace complex::HDF5

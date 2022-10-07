@@ -87,8 +87,8 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/TriangleAreas.dream3d", unit_test::k_BinaryDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataGraph.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto resultH5 = dataGraph.writeHdf5(fileWriter);
+  REQUIRE(resultH5.valid());
 }
 
 // TEST_CASE("ImportExport::ReadStlFile: Valid filter execution")

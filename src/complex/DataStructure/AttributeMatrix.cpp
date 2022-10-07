@@ -65,6 +65,11 @@ DataObject* AttributeMatrix::shallowCopy()
 
 std::string AttributeMatrix::getTypeName() const
 {
+  return GetTypeName();
+}
+
+std::string AttributeMatrix::GetTypeName()
+{
   return "AttributeMatrix";
 }
 
@@ -90,6 +95,7 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
   return (totalTuples == incomingTupleCount);
 }
 
+#if 0
 H5::ErrorType AttributeMatrix::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   auto attribute = groupReader.getAttribute(H5Constants::k_TupleDims);
@@ -127,6 +133,7 @@ H5::ErrorType AttributeMatrix::writeHdf5(H5::DataStructureWriter& dataStructureW
 
   return error;
 }
+#endif
 
 const AttributeMatrix::ShapeType& AttributeMatrix::getShape() const
 {

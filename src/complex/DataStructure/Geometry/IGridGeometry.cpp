@@ -50,6 +50,7 @@ void IGridGeometry::setCellData(const AttributeMatrix& attributeMatrix)
   m_CellDataId = attributeMatrix.getId();
 }
 
+#if 0
 H5::ErrorType IGridGeometry::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   H5::ErrorType error = IGeometry::readHdf5(dataStructureReader, groupReader, preflight);
@@ -80,6 +81,7 @@ H5::ErrorType IGridGeometry::writeHdf5(H5::DataStructureWriter& dataStructureWri
 
   return error;
 }
+#endif
 
 void IGridGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

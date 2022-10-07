@@ -4,6 +4,8 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
 #include "complex/DataStructure/Messaging/DataAddedMessage.hpp"
 #include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
@@ -11,14 +13,8 @@
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 #include "complex/Filter/DataParameter.hpp"
 #include "complex/Filter/ValueParameter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-//#include "complex/Utilities/Parsing/Zarr/ZarrStructureReader.hpp"
-//#include "complex/Utilities/Parsing/Zarr/ZarrStructureWriter.hpp"
-
-#include "FileVec/collection/IGroup.hpp"
 
 #include <numeric>
 #include <stdexcept>
@@ -738,25 +734,32 @@ void DataStructure::applyAllDataStructure()
   m_RootGroup.setDataStructure(this);
 }
 
-H5::ErrorType DataStructure::writeHdf5(H5::GroupWriter& parentGroupWriter) const
+Result<> DataStructure::writeHdf5(H5::GroupWriter& parentGroupWriter) const
 {
-  H5::DataStructureWriter dataStructureWriter;
+  HDF5::DataStructureWriter dataStructureWriter;
   auto groupWriter = parentGroupWriter.createGroupWriter(Constants::k_DataStructureTag);
   auto idAttribute = groupWriter.createAttribute(Constants::k_NextIdTag);
   H5::ErrorType err = idAttribute.writeValue(m_NextId);
   if(err < 0)
   {
-    return err;
+    std::string ss = "Failed to write DataStructure to HDF5 group";
+    return MakeErrorResult(err, ss);
   }
 
-  err = m_RootGroup.writeH5Group(dataStructureWriter, groupWriter);
-  return err;
+  return dataStructureWriter.writeDataMap(m_RootGroup, groupWriter);
 }
 
 DataStructure DataStructure::readFromHdf5(const H5::GroupReader& groupReader, H5::ErrorType& err)
 {
-  H5::DataStructureReader dataStructureReader;
-  return dataStructureReader.readH5Group(groupReader, err);
+  err = 0;
+  HDF5::DataStructureReader dataStructureReader;
+  Result<DataStructure> result = dataStructureReader.readGroup(groupReader, false);
+  if(result.invalid())
+  {
+    err = result.errors()[0].code;
+    return {};
+  }
+  return std::move(result.value());
 }
 
 #if 0

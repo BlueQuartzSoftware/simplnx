@@ -6,8 +6,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
-#include "FileVec/collection/IArray.hpp"
-
 #include <fmt/core.h>
 
 #include <nonstd/span.hpp>
@@ -382,6 +380,7 @@ public:
     return dataStore;
   }
 
+#if 0
   static std::unique_ptr<DataStore> ReadZarr(const FileVec::IArray<T>& fArray)
   {
     auto tupleShape = IDataStore::ReadTupleShape(fArray);
@@ -393,8 +392,7 @@ public:
 
     return dataStore;
   }
-
-#if 0
+  
   /**
    * @brief Writes the data store to Zarr. Returns an error code should
    * the array be invalid. Otherwise, returns 0.

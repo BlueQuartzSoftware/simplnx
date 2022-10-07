@@ -71,6 +71,12 @@ public:
   std::string getTypeName() const override;
 
   /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  static std::string GetTypeName();
+
+  /**
    * @brief
    * @return DataObject*
    */
@@ -125,6 +131,14 @@ public:
    * @return const Float32Array*
    */
   const Float32Array* getZBounds() const;
+
+  OptionalId getXBoundsId() const;
+  OptionalId getYBoundsId() const;
+  OptionalId getZBoundsId() const;
+
+  void setXBoundsId(const OptionalId& xBoundsId);
+  void setYBoundsId(const OptionalId& yBoundsId);
+  void setZBoundsId(const OptionalId& zBoundsId);
 
   /**
    * @brief
@@ -289,6 +303,7 @@ public:
    */
   std::optional<usize> getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
 
+#if 0
   /**
    * @brief Reads values from HDF5
    * @param dataStructureReader
@@ -305,8 +320,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
-#if 0
+  
   /**
    * @brief Reads the DataStructure group from a target Zarr data.
    * @param dataStructureReader

@@ -2,8 +2,6 @@
 
 #include "complex/DataStructure/INeighborList.hpp"
 
-#include "complex/Utilities/Parsing/Zarr/Zarr.hpp"
-
 namespace complex
 {
 namespace H5
@@ -14,10 +12,12 @@ class GroupReader;
 template <typename T>
 class NeighborListFactory;
 
+#if 0
 namespace Constants
 {
 constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
 }
+#endif
 } // namespace H5
 
 /**
@@ -290,6 +290,9 @@ public:
    */
   void reshapeTuples(const std::vector<usize>& tupleShape) override;
 
+  const std::vector<SharedVectorType>& getValues() const;
+
+#if 0
   /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    *
@@ -310,8 +313,7 @@ public:
   static std::vector<SharedVectorType> ReadHdf5Data(const H5::GroupReader& parentGroup, const H5::DatasetReader& dataReader);
 
   static std::vector<SharedVectorType> ReadZarrData(const FileVec::IGroup& parentGroup, const FileVec::BaseGenericArray& fileArray);
-
-#if 0
+  
   /**
    * @brief Writes the DataArray to Zarr using the provided group.
    *

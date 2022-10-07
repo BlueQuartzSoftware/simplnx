@@ -201,6 +201,7 @@ public:
    */
   void setCellData(const AttributeMatrix& attributeMatrix);
 
+#if 0
   /**
    * @brief Reads values from HDF5
    * @param groupReader
@@ -216,6 +217,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+#endif
 
 protected:
   IGridGeometry(DataStructure& ds, std::string name);

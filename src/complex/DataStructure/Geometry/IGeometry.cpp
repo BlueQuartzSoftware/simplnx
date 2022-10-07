@@ -20,6 +20,16 @@ const Float32Array* IGeometry::getElementSizes() const
   return getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
 }
 
+DataObject::OptionalId IGeometry::getElementSizesId() const
+{
+  return m_ElementSizesId;
+}
+
+void IGeometry::setElementSizesId(const OptionalId& sizesId)
+{
+  m_ElementSizesId = sizesId;
+}
+
 void IGeometry::deleteElementSizes()
 {
   getDataStructureRef().removeData(m_ElementSizesId);
@@ -180,6 +190,7 @@ std::string IGeometry::LengthUnitToString(LengthUnit unit)
   return "Unknown";
 }
 
+#if 0
 H5::ErrorType IGeometry::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   H5::ErrorType error = BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
@@ -210,6 +221,7 @@ H5::ErrorType IGeometry::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
 
   return error;
 }
+#endif
 
 void IGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

@@ -32,6 +32,8 @@ public:
 
   void setVertices(const SharedVertexList& vertices);
 
+  void setVertexListId(const std::optional<IdType>& vertices);
+
   /**
    * @brief Resizes the vertex list to the target size.
    * @param size
@@ -70,6 +72,8 @@ public:
    */
   const std::optional<IdType>& getVertexDataId() const;
 
+  void setVertexDataId(const OptionalId& vertexDataId);
+
   /**
    * @brief
    * @return
@@ -106,6 +110,7 @@ public:
    */
   void setVertexData(const AttributeMatrix& attributeMatrix);
 
+#if 0
   /**
    * @brief Reads values from HDF5
    * @param groupReader
@@ -121,6 +126,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+#endif
 
 protected:
   INodeGeometry0D(DataStructure& ds, std::string name);

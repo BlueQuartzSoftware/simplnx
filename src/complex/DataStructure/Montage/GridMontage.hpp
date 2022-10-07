@@ -80,6 +80,12 @@ public:
   std::string getTypeName() const override;
 
   /**
+   * @brief Returns the typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  static std::string GetTypeName();
+
+  /**
    * @brief Returns a shallow copy of the current DataObject but does not add
    * it to the DataStructure. It is up to the caller to delete the returned
    * value.
@@ -227,6 +233,7 @@ public:
    */
   BoundsType getBounds() const;
 
+#if 0
   /**
    * @brief Reads values from HDF5
    * @param dataStructureReader
@@ -243,8 +250,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
-#if 0
+  
   Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& groupReader, bool preflight = false) override;
 
   Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override;

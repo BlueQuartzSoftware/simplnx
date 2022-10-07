@@ -6,11 +6,7 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-
-#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -61,6 +57,11 @@ IGeometry::Type VertexGeom::getGeomType() const
 }
 
 std::string VertexGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string VertexGeom::GetTypeName()
 {
   return "VertexGeom";
 }

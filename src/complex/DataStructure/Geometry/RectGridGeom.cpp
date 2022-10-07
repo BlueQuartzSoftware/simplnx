@@ -6,10 +6,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
-#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -54,6 +50,11 @@ RectGridGeom* RectGridGeom::Import(DataStructure& ds, std::string name, IdType i
 }
 
 std::string RectGridGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string RectGridGeom::GetTypeName()
 {
   return "RectGridGeom";
 }
@@ -126,6 +127,32 @@ const Float32Array* RectGridGeom::getYBounds() const
 const Float32Array* RectGridGeom::getZBounds() const
 {
   return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_zBoundsId));
+}
+
+DataObject::OptionalId RectGridGeom::getXBoundsId() const
+{
+  return m_xBoundsId;
+}
+DataObject::OptionalId RectGridGeom::getYBoundsId() const
+{
+  return m_yBoundsId;
+}
+DataObject::OptionalId RectGridGeom::getZBoundsId() const
+{
+  return m_zBoundsId;
+}
+
+void RectGridGeom::setXBoundsId(const OptionalId& xBoundsId)
+{
+  m_xBoundsId = xBoundsId;
+}
+void RectGridGeom::setYBoundsId(const OptionalId& yBoundsId)
+{
+  m_yBoundsId = yBoundsId;
+}
+void RectGridGeom::setZBoundsId(const OptionalId& zBoundsId)
+{
+  m_zBoundsId = zBoundsId;
 }
 
 usize RectGridGeom::getNumberOfCells() const
@@ -477,6 +504,7 @@ std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, floa
   return (ySize * xSize * z) + (xSize * y) + x;
 }
 
+#if 0
 H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   // Read Dimensions
@@ -543,7 +571,6 @@ H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWrit
   return error;
 }
 
-#if 0
 Zarr::ErrorType RectGridGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   // Read Dimensions

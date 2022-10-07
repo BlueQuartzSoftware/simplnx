@@ -126,6 +126,11 @@ public:
    */
   std::string getTypeName() const override
   {
+    return GetTypeName();
+  }
+
+  static std::string GetTypeName()
+  {
     return "DynamicListArray";
   }
 
@@ -364,6 +369,7 @@ protected:
     }
   }
 
+#if 0
   /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    * @param parentGroupWriter
@@ -374,8 +380,7 @@ protected:
   {
     throw std::runtime_error("");
   }
-
-#if 0
+  
   /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    * @param parentGroupWriter

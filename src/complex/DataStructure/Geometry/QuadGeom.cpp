@@ -5,10 +5,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
-#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -54,6 +50,11 @@ QuadGeom* QuadGeom::Import(DataStructure& ds, std::string name, IdType importId,
 
 std::string QuadGeom::getTypeName() const
 {
+  return GetTypeName();
+}
+
+std::string QuadGeom::GetTypeName()
+{
   return "QuadGeom";
 }
 
@@ -80,7 +81,7 @@ usize QuadGeom::getNumberOfVerticesPerFace() const
 
 IGeometry::StatusCode QuadGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfQuads(), 0.0f);
   Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", std::move(dataStore), getId());
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
@@ -128,7 +129,7 @@ IGeometry::StatusCode QuadGeom::findElementNeighbors()
 
 IGeometry::StatusCode QuadGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfQuads()}, std::vector<usize>{3}, 0.0f);
   auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
@@ -175,7 +176,7 @@ IGeometry::StatusCode QuadGeom::findEdges()
 
 IGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
-  auto dataStore = std::make_unique<FileStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)

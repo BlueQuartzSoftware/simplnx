@@ -4,8 +4,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
-#include "FileVec/collection/IArray.hpp"
-
 #include <fmt/format.h>
 
 #include <numeric>

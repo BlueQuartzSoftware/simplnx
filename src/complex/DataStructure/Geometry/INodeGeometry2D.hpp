@@ -41,6 +41,8 @@ public:
 
   void setFaces(const SharedFaceList& faces);
 
+  void setFaceListId(const OptionalId& facesId);
+
   /**
    * @brief Resizes the face list to the target size.
    * @param size
@@ -97,6 +99,8 @@ public:
    */
   const std::optional<IdType>& getUnsharedEdgesId() const;
 
+  void setUnsharedEdgesId(const OptionalId& unsharedEdgesId);
+
   /**
    * @brief
    * @return StatusCode
@@ -120,6 +124,8 @@ public:
    * @return
    */
   const std::optional<IdType>& getFaceDataId() const;
+
+  void setFaceDataId(const OptionalId& faceDataId);
 
   /**
    * @brief
@@ -157,6 +163,7 @@ public:
    */
   void setFaceData(const AttributeMatrix& attributeMatrix);
 
+#if 0
   /**
    * @brief Reads values from HDF5
    * @param groupReader
@@ -172,8 +179,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
-#if 0
+  
   Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight) override;
 
   Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override;

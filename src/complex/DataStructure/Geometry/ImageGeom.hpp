@@ -86,6 +86,12 @@ public:
   std::string getTypeName() const override;
 
   /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  static std::string GetTypeName();
+
+  /**
    * @brief
    * @return DataObject*
    */
@@ -332,6 +338,7 @@ public:
    */
   ErrorType computeCellIndex(const Point3D<float32>& coords, SizeVec3& index) const;
 
+#if 0
   /**
    * @brief Reads values from HDF5
    * @param dataStructureReader
@@ -348,8 +355,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
-#if 0
+  
   /**
    * @brief Reads the DataStructure group from a target Zarr data.
    * @param dataStructureReader

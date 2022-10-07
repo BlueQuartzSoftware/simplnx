@@ -20,6 +20,11 @@ const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedronList
   return m_PolyhedronListId;
 }
 
+void INodeGeometry3D::setPolyhedronListId(const OptionalId& polyListId)
+{
+  m_PolyhedronListId = polyListId;
+}
+
 INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra()
 {
   return getDataStructureRef().getDataAs<SharedFaceList>(m_PolyhedronListId);
@@ -124,6 +129,11 @@ const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraDataI
   return m_PolyhedronDataId;
 }
 
+void INodeGeometry3D::setPolyhedraDataId(const OptionalId& polyDataId)
+{
+  m_PolyhedronDataId = polyDataId;
+}
+
 AttributeMatrix* INodeGeometry3D::getPolyhedronData()
 {
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
@@ -154,6 +164,7 @@ void INodeGeometry3D::setPolyhedronData(const AttributeMatrix& attributeMatrix)
   m_PolyhedronDataId = attributeMatrix.getId();
 }
 
+#if 0
 H5::ErrorType INodeGeometry3D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   H5::ErrorType error = INodeGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
@@ -198,6 +209,7 @@ H5::ErrorType INodeGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureW
 
   return error;
 }
+#endif
 
 INodeGeometry3D::SharedQuadList* INodeGeometry3D::createSharedQuadList(usize numQuads)
 {

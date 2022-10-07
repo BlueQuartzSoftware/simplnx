@@ -105,7 +105,8 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   }
 
   OutputActions actions;
-  auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath, inMemory);
+  auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath);
+  // auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath, inMemory);
   actions.actions.push_back(std::move(action));
 
   return {std::move(actions)};

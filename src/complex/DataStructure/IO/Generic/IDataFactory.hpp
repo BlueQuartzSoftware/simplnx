@@ -16,14 +16,15 @@ class IDataStructureReader;
 class COMPLEX_EXPORT IDataFactory
 {
 public:
-  virtual ~IDataFactory();
+  virtual ~IDataFactory() noexcept = default;
 
   /**
-   * @brief Returns the name of the DataObject subclass that the factory is designed for.
+   * @brief Returns the Type of the DataObject subclass that the factory is designed for.
    * @return std::string
    */
-  virtual std::string getDataTypeName() const = 0;
+  virtual DataObject::Type getDataType() const = 0;
 
+#if 0
   /**
    * @brief Creates and adds a DataObject using the provided DataStructure,
    * parent reader, and object reader.
@@ -38,6 +39,7 @@ public:
    */
   virtual Result<> readDataObject(IDataStructureReader& dataStructureReader, const std::any& parentReader, const std::any& objectReader,
                                   const std::optional<complex::DataObject::IdType>& parentId = {}, bool useEmptyDataStores = false) = 0;
+#endif
 
   // Copy and move constuctors / operators deleted
   IDataFactory(const IDataFactory& other) = delete;
@@ -49,6 +51,6 @@ protected:
   /**
    * @brief Default constructor
    */
-  IDataFactory();
+  IDataFactory() = default;
 };
 } // namespace complex

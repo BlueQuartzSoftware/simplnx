@@ -46,6 +46,11 @@ void INodeGeometry0D::setVertices(const INodeGeometry0D::SharedVertexList& verti
   m_VertexListId = vertices.getId();
 }
 
+void INodeGeometry0D::setVertexListId(const std::optional<IdType>& vertices)
+{
+  m_VertexListId = vertices;
+}
+
 void INodeGeometry0D::resizeVertexList(usize size)
 {
   getVerticesRef().getIDataStoreRef().reshapeTuples({size});
@@ -90,6 +95,11 @@ const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getVertexDataId()
   return m_VertexDataId;
 }
 
+void INodeGeometry0D::setVertexDataId(const OptionalId& vertexDataId)
+{
+  m_VertexDataId = vertexDataId;
+}
+
 AttributeMatrix* INodeGeometry0D::getVertexData()
 {
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexDataId);
@@ -120,6 +130,7 @@ void INodeGeometry0D::setVertexData(const AttributeMatrix& attributeMatrix)
   m_VertexDataId = attributeMatrix.getId();
 }
 
+#if 0
 H5::ErrorType INodeGeometry0D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   H5::ErrorType error = IGeometry::readHdf5(dataStructureReader, groupReader, preflight);
@@ -174,6 +185,7 @@ H5::ErrorType INodeGeometry0D::writeHdf5(H5::DataStructureWriter& dataStructureW
 
   return error;
 }
+#endif
 
 void INodeGeometry0D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

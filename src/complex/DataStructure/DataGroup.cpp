@@ -65,6 +65,11 @@ DataObject* DataGroup::shallowCopy()
 
 std::string DataGroup::getTypeName() const
 {
+  return GetTypeName();
+}
+
+std::string DataGroup::GetTypeName()
+{
   return "DataGroup";
 }
 
@@ -73,6 +78,7 @@ bool DataGroup::canInsert(const DataObject* obj) const
   return BaseGroup::canInsert(obj);
 }
 
+#if 0
 H5::ErrorType DataGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
@@ -83,7 +89,6 @@ H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
 }
 
-#if 0
 Zarr::ErrorType DataGroup::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   return BaseGroup::readZarr(dataStructureReader, collection, preflight);

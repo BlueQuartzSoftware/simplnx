@@ -4,8 +4,6 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
-#include "FileVec/collection/IArray.hpp"
-
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -616,6 +614,11 @@ public:
 
     index_type index = tupleIndex * getNumberOfComponents() + componentIndex;
     return getValue(index);
+  }
+
+  std::optional<ShapeType> getChunkShape() const override
+  {
+    return {};
   }
 
 #if 0

@@ -20,6 +20,11 @@ const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceListId() c
   return m_FaceListId;
 }
 
+void INodeGeometry2D::setFaceListId(const OptionalId& facesId)
+{
+  m_FaceListId = facesId;
+}
+
 INodeGeometry2D::SharedFaceList* INodeGeometry2D::getFaces()
 {
   return getDataStructureRef().getDataAs<SharedFaceList>(m_FaceListId);
@@ -105,6 +110,11 @@ const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getUnsharedEdgesI
   return m_UnsharedEdgeListId;
 }
 
+void INodeGeometry2D::setUnsharedEdgesId(const OptionalId& unsharedEdgesId)
+{
+  m_UnsharedEdgeListId = unsharedEdgesId;
+}
+
 const INodeGeometry2D::SharedEdgeList* INodeGeometry2D::getUnsharedEdges() const
 {
   return getDataStructureRef().getDataAs<SharedEdgeList>(m_UnsharedEdgeListId);
@@ -119,6 +129,11 @@ void INodeGeometry2D::deleteUnsharedEdges()
 const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceDataId() const
 {
   return m_FaceDataId;
+}
+
+void INodeGeometry2D::setFaceDataId(const OptionalId& faceDataId)
+{
+  m_FaceDataId = faceDataId;
 }
 
 AttributeMatrix* INodeGeometry2D::getFaceData()
@@ -151,6 +166,7 @@ void INodeGeometry2D::setFaceData(const AttributeMatrix& attributeMatrix)
   m_FaceDataId = attributeMatrix.getId();
 }
 
+#if 0
 H5::ErrorType INodeGeometry2D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   H5::ErrorType error = INodeGeometry1D::readHdf5(dataStructureReader, groupReader, preflight);
@@ -196,7 +212,6 @@ H5::ErrorType INodeGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructureW
   return error;
 }
 
-#if 0
 Zarr::ErrorType INodeGeometry2D::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   Zarr::ErrorType error = INodeGeometry1D::readZarr(dataStructureReader, collection, preflight);

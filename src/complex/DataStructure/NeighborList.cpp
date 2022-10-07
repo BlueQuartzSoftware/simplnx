@@ -7,9 +7,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
-#include "FileVec/collection/IArray.hpp"
-#include "FileVec/collection/IGroup.hpp"
-
 namespace complex
 {
 template <typename T>
@@ -45,6 +42,7 @@ NeighborList<T>* NeighborList<T>::Import(DataStructure& ds, const std::string& n
 {
 
   auto data = std::shared_ptr<NeighborList>(new NeighborList(ds, name, dataVector, importId));
+  auto* parentObj = ds.getData(parentId);
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -294,6 +292,12 @@ void NeighborList<T>::reshapeTuples(const std::vector<usize>& tupleShape)
   resizeTotalElements(numTuples);
 }
 
+template <typename T>
+const std::vector<typename NeighborList<T>::SharedVectorType>& NeighborList<T>::getValues() const
+{
+  return m_Array;
+}
+
 template <>
 DataType COMPLEX_EXPORT NeighborList<int8>::getDataType() const
 {
@@ -362,6 +366,7 @@ DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const
   return DataType::float64;
 }
 
+#if 0
 template <typename T>
 H5::ErrorType NeighborList<T>::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
@@ -456,7 +461,6 @@ std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf
   return dataVector;
 }
 
-#if 0
 template <typename T>
 std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadZarrData(const FileVec::IGroup& parentGroup, const FileVec::BaseGenericArray& iArray)
 {

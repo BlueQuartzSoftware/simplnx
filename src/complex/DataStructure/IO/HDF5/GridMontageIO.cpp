@@ -1,5 +1,7 @@
 #include "GridMontageIO.hpp"
 
+#include "DataStructureReader.hpp"
+#include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 namespace complex::HDF5
@@ -7,19 +9,37 @@ namespace complex::HDF5
 GridMontageIO::GridMontageIO() = default;
 GridMontageIO::~GridMontageIO() noexcept = default;
 
-Result<> GridMontageIO::readData(DataStructureReader& structureReader, const parent_group_type& parentGroup, const std::string_view& objectName, DataObject::IdType importId,
+DataObject::Type GridMontageIO::getDataType() const
+{
+  return DataObject::Type::AbstractMontage;
+}
+
+std::string GridMontageIO::getTypeName() const
+{
+  return data_type::GetTypeName();
+}
+
+Result<> GridMontageIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                  const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
+  auto* montage = GridMontage::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  return BaseGroupIO::ReadBaseGroupData(structureReader, *montage, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
-Result<> GridMontageIO::writeData(DataStructureWriter& structureReader, const parent_group_type& parentGroup, bool importable) const
+Result<> GridMontageIO::writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable) const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto error = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(error < 0)
+  auto groupWriter = parentGroup.createGroupWriter(montage.getName());
+  return BaseGroupIO::WriteBaseGroupData(dataStructureWriter, montage, parentGroup, importable);
+}
+
+Result<> GridMontageIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+{
+  auto* targetData = dynamic_cast<const data_type*>(dataObject);
+  if(targetData == nullptr)
   {
-    return error;
+    std::string ss = "Provided DataObject could not be cast to the target type";
+    return MakeErrorResult(-800, ss);
   }
 
-  return m_DataMap.writeH5Group(dataStructureWriter, groupWriter);
+  return writeData(dataStructureWriter, *targetData, parentWriter, true);
 }
 } // namespace complex::HDF5

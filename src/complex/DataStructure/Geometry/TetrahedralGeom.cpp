@@ -5,10 +5,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
-#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -53,6 +49,11 @@ TetrahedralGeom* TetrahedralGeom::Import(DataStructure& ds, std::string name, Id
 }
 
 std::string TetrahedralGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string TetrahedralGeom::GetTypeName()
 {
   return "TetrahedralGeom";
 }
@@ -200,7 +201,7 @@ IGeometry::StatusCode TetrahedralGeom::findFaces()
 
 IGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 {
-  auto dataStore = std::make_unique<FileStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
   auto* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedTetEdges(getPolyhedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
@@ -214,7 +215,7 @@ IGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 
 IGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
 {
-  auto dataStore = std::make_unique<FileStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{3}, 0);
+  auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{3}, 0);
   auto* unsharedTriList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Face List", std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedTetFaces(getPolyhedra(), unsharedTriList);
   if(unsharedTriList == nullptr)

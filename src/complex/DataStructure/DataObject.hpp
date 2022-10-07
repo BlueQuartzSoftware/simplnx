@@ -7,9 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/Metadata.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-//#include "complex/Utilities/Parsing/Zarr/Zarr.hpp"
 
 #include "complex/complex_export.hpp"
 
@@ -18,20 +17,6 @@ namespace complex
 class BaseGroup;
 class DataPath;
 class DataStructure;
-
-namespace H5
-{
-class DataStructureWriter;
-class GroupWriter;
-class ObjectWriter;
-} // namespace H5
-
-#if 0
-namespace Zarr
-{
- class DataStructureWriter;
-}
-#endif
 
 /**
  * @class DataObject
@@ -103,6 +88,10 @@ public:
    * respective DataStructure.
    */
   using IdType = uint64;
+  /**
+   * @brief The OptionalId alias specifies that the target DataObject is not required.
+   */
+  using OptionalId = std::optional<IdType>;
 
   /**
    * @brief The ParentCollectionType alias describes the format by which parent
@@ -247,15 +236,6 @@ public:
    */
   const Metadata& getMetadata() const;
 
-  /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable = true
-   * @return H5::ErrorType
-   */
-  virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable = true) const = 0;
-
 #if 0
   /**
    * @brief Writes the DataObject to the target HDF5 group.
@@ -317,7 +297,7 @@ protected:
    * @param parentId
    * @return bool
    */
-  static bool AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId);
+  static bool AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const OptionalId& parentId);
 
   /**
    * @brief Marks the specified BaseGroup as a parent.
@@ -344,16 +324,6 @@ protected:
    * @param ds
    */
   virtual void setDataStructure(DataStructure* ds);
-
-  /**
-   * @brief Writes the dataType as a string attribute for the target HDF5 object.
-   * Returns the HDF5 error should one occur.
-   * @param dataStructureWriter
-   * @param objectWriter
-   * @param importable = true
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter, bool importable = true) const;
 
 #if 0
   /**

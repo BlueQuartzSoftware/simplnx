@@ -5,8 +5,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
-#include "FileVec/collection/IGroup.hpp"
-
 using namespace complex;
 
 BaseGroup::BaseGroup(DataStructure& ds, std::string name)
@@ -182,6 +180,7 @@ BaseGroup::ConstIterator BaseGroup::end() const
   return m_DataMap.end();
 }
 
+#if 0
 H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   return m_DataMap.readH5Group(dataStructureReader, groupReader, getId(), preflight);
@@ -199,7 +198,6 @@ H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   return m_DataMap.writeH5Group(dataStructureWriter, groupWriter);
 }
 
-#if 0
 Zarr::ErrorType BaseGroup::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   return m_DataMap.readZarGroup(dataStructureReader, collection, getId(), preflight);

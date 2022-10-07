@@ -298,7 +298,7 @@ std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
     }
     else
     {
-      return std::make_unique<FileStore<T>>(tupleShape, componentShape, static_cast<T>(0));
+      return std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
     }
   }
   default: {

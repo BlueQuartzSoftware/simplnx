@@ -32,9 +32,8 @@ add_executable(complex_test
   PipelineTest.cpp
   PluginTest.cpp
   FilePathGeneratorTest.cpp
-  FileVecTest.cpp
   DataArrayTest.cpp
-  OutOfCorePipeline.cpp
+  IOFormat.cpp
   DREAM3DFileTest.cpp
   GeometryTestUtilities.hpp
   ParametersTest.cpp

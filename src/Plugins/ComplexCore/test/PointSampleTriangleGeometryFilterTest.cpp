@@ -202,8 +202,8 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(outputFilePath);
     H5::FileWriter fileWriter = std::move(result.value());
 
-    herr_t err = dataGraph.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    auto resultH5 = dataGraph.writeHdf5(fileWriter);
+    REQUIRE(resultH5.valid());
     //    for(size_t i = 0; i < 6; i++)
     //    {
     //      printf("%0.8f    %0.8f\n", minMaxTriVerts[i], minMaxVerts[i]);

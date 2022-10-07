@@ -6,10 +6,6 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
-#include "FileVec/collection/IGroup.hpp"
 
 using namespace complex;
 
@@ -55,6 +51,11 @@ TriangleGeom* TriangleGeom::Import(DataStructure& ds, std::string name, IdType i
 
 std::string TriangleGeom::getTypeName() const
 {
+  return GetTypeName();
+}
+
+std::string TriangleGeom::GetTypeName()
+{
   return "TriangleGeom";
 }
 
@@ -80,7 +81,7 @@ usize TriangleGeom::getNumberOfVerticesPerFace() const
 
 IGeometry::StatusCode TriangleGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<FileStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
   Float32Array* triangleSizes = DataArray<float32>::Create(*getDataStructure(), "Triangle Areas", std::move(dataStore), getId());
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizes);
   if(triangleSizes == nullptr)
@@ -129,7 +130,7 @@ IGeometry::StatusCode TriangleGeom::findElementNeighbors()
 
 IGeometry::StatusCode TriangleGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<FileStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
   auto triangleCentroids = DataArray<float32>::Create(*getDataStructure(), "Triangle Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
   if(triangleCentroids == nullptr)

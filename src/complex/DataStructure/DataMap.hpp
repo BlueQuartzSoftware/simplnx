@@ -22,8 +22,6 @@ class DataObject;
 
 namespace H5
 {
-class DataStructureReader;
-class DataStructureWriter;
 class GroupReader;
 class GroupWriter;
 } // namespace H5
@@ -305,6 +303,7 @@ public:
    */
   DataMap& operator=(DataMap&& rhs) noexcept;
 
+#if 0
   /**
    * @brief Fills the DataMap with values taken from the specified HDF5 group ID.
    * @param dataStructureReader
@@ -321,8 +320,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const;
-
-#if 0
+  
   Zarr::ErrorType readZarGroup(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& group, const std::optional<IdType>& dsParentId = {}, bool preflight = false);
 
   /**

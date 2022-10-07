@@ -7,17 +7,6 @@ namespace complex
 class COMPLEX_EXPORT INodeGeometry1D : public INodeGeometry0D
 {
 public:
-  static inline constexpr StringLiteral k_EdgeDataName = "Edge Data";
-
-  static inline constexpr usize k_NumEdgeVerts = 2;
-
-  INodeGeometry1D() = delete;
-  INodeGeometry1D(const INodeGeometry1D&) = default;
-  INodeGeometry1D(INodeGeometry1D&&) = default;
-
-  INodeGeometry1D& operator=(const INodeGeometry1D&) = delete;
-  INodeGeometry1D& operator=(INodeGeometry1D&&) noexcept = delete;
-
   ~INodeGeometry1D() noexcept override = default;
 
   const std::optional<IdType>& getEdgeListId() const;
@@ -31,6 +20,8 @@ public:
   const SharedEdgeList& getEdgesRef() const;
 
   void setEdges(const SharedEdgeList& edges);
+
+  void setEdgeListId(const std::optional<IdType>& edgeList);
 
   /**
    * @brief Resizes the edge list to the target size.
@@ -168,6 +159,19 @@ public:
    */
   void setEdgeData(const AttributeMatrix& attributeMatrix);
 
+  void setEdgeDataId(const std::optional<IdType>& edgeDataId);
+
+  std::optional<IdType> getElementContainingVertId() const;
+  std::optional<IdType> getElementNeighborsId() const;
+  std::optional<IdType> getElementCentroidsId() const;
+  std::optional<IdType> getElementSizesId() const;
+
+  void setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId);
+  void setElementNeighborsId(const std::optional<IdType>& elementNeighborsId);
+  void setElementCentroidsId(const std::optional<IdType>& centroidsId);
+  void setElementSizesId(const std::optional<IdType>& sizesId);
+
+#if 0
   /**
    * @brief Reads values from HDF5
    * @param groupReader
@@ -183,6 +187,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+#endif
 
 protected:
   INodeGeometry1D(DataStructure& ds, std::string name);

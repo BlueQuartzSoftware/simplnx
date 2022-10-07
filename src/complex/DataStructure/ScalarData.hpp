@@ -3,12 +3,6 @@
 #include <stdexcept>
 
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-
-#include "FileVec/collection/IGroup.hpp"
-
-#include <array>
 
 namespace complex
 {
@@ -117,6 +111,15 @@ public:
    */
   std::string getTypeName() const override
   {
+    return GetTypeName();
+  }
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  static std::string GetTypeName()
+  {
     return "ScalarData";
   }
 
@@ -214,6 +217,7 @@ public:
     return m_Data != rhs;
   }
 
+#if 0
   /**
    * @brief Writes the ScalarData to HDF5 using the provided parent ID.
    * @param parentId
@@ -234,8 +238,7 @@ public:
     }
     return error;
   }
-
-#if 0
+  
   /**
    * @brief Writes the ScalarData to HDF5 using the provided parent ID.
    * @param parentId

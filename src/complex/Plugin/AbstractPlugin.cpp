@@ -84,3 +84,13 @@ void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
   m_FilterHandles.insert(FilterHandle(*filter, getId()));
   m_InitializerMap[uuid] = filterFunc;
 }
+
+AbstractPlugin::IOManagersContainerType AbstractPlugin::getDataIOManagers() const
+{
+  return m_IOManagers;
+}
+
+void AbstractPlugin::addDataIOManager(const IOManagerPointer& ioManager)
+{
+  m_IOManagers.push_back(ioManager);
+}

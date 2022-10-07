@@ -1,42 +1,46 @@
 #include "TetrahedralGeomIO.hpp"
 
+#include "DataStructureReader.hpp"
+#include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "complex/DataStructure/IO/Generic/IOConstants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex::HDF5
 {
 TetrahedralGeomIO::TetrahedralGeomIO() = default;
 TetrahedralGeomIO::~TetrahedralGeomIO() noexcept = default;
 
-Result<> TetrahedralGeomIO::readData(DataStructureReader& structureReader, const parent_group_type& parentGroup, const std::string_view& objectName, DataObject::IdType importId,
+DataObject::Type TetrahedralGeomIO::getDataType() const
+{
+  return DataObject::Type::TetrahedralGeom;
+}
+
+std::string TetrahedralGeomIO::getTypeName() const
+{
+  return data_type::GetTypeName();
+}
+
+Result<> TetrahedralGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                      const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  m_TriListId = ReadH5DataId(groupReader, H5Constants::k_TriListTag);
-  m_UnsharedTriListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedTriListTag);
-  m_TetListId = ReadH5DataId(groupReader, H5Constants::k_TetListTag);
-  m_TetsContainingVertId = ReadH5DataId(groupReader, H5Constants::k_TetsContainingVertTag);
-  m_TetNeighborsId = ReadH5DataId(groupReader, H5Constants::k_TetNeighborsTag);
-  m_TetCentroidsId = ReadH5DataId(groupReader, H5Constants::k_TetCentroidsTag);
-  m_TetSizesId = ReadH5DataId(groupReader, H5Constants::k_TetSizesTag);
-
-  return AbstractGeometry3D::readHdf5(dataStructureReader, groupReader, preflight);
+  auto* geometry = TetrahedralGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  return INodeGeom3dIO::ReadNodeGeom3dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
-Result<> TetrahedralGeomIO::writeData(DataStructureWriter& structureReader, const parent_group_type& parentGroup, bool importable) const
+Result<> TetrahedralGeomIO::writeData(DataStructureWriter& dataStructureWriter, const TetrahedralGeom& geometry, group_writer_type& parentGroup, bool importable) const
 {
-  // Read Dimensions
-  auto volumeAttribute = groupReader.getAttribute("Dimensions");
-  if(!volumeAttribute.isValid())
+  return INodeGeom3dIO::WriteNodeGeom3dData(dataStructureWriter, geometry, parentGroup, importable);
+}
+
+Result<> TetrahedralGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+{
+  auto* targetData = dynamic_cast<const data_type*>(dataObject);
+  if(targetData == nullptr)
   {
-    return -1;
+    std::string ss = "Provided DataObject could not be cast to the target type";
+    return MakeErrorResult(-800, ss);
   }
-  std::vector<size_t> volumeDimensions = volumeAttribute.readAsVector<size_t>();
-  setDimensions(volumeDimensions);
 
-  // Read DataObject IDs
-  m_xBoundsId = ReadH5DataId(groupReader, H5Constants::k_XBoundsTag);
-  m_yBoundsId = ReadH5DataId(groupReader, H5Constants::k_YBoundsTag);
-  m_zBoundsId = ReadH5DataId(groupReader, H5Constants::k_ZBoundsTag);
-  m_VoxelSizesId = ReadH5DataId(groupReader, H5Constants::k_VoxelSizesTag);
-
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
+  return writeData(dataStructureWriter, *targetData, parentWriter, true);
 }
 } // namespace complex::HDF5

@@ -106,6 +106,10 @@ public:
    */
   const Float32Array* getElementSizes() const;
 
+  OptionalId getElementSizesId() const;
+
+  void setElementSizesId(const OptionalId& sizesId);
+
   /**
    * @brief
    */
@@ -185,6 +189,7 @@ public:
    */
   static std::string LengthUnitToString(LengthUnit unit);
 
+#if 0
   /**
    * @brief Reads values from HDF5
    * @param groupReader
@@ -200,6 +205,7 @@ public:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+#endif
 
 protected:
   IGeometry(DataStructure& ds, std::string name);

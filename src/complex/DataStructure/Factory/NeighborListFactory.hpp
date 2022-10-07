@@ -39,6 +39,7 @@ public:
     return NeighborList<T>::GetTypeName();
   }
 
+#if 0
   /**
    * @brief Creates and imports a NeighborList based on the provided DatasetReader
    * @param dataStructure
@@ -133,6 +134,7 @@ public:
 
     return err;
   }
+#endif
 };
 
 // Declare aliases

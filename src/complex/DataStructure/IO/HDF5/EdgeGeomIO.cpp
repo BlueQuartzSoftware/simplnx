@@ -1,70 +1,105 @@
-#include "DataGroupIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
+#include "EdgeGeomIO.hpp"
+#include "DataStructureReader.hpp"
 
+#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
+#include "complex/DataStructure/IO/Generic/IOConstants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 namespace complex::HDF5
 {
-DataGroupIO::DataGroupIO() = default;
-DataGroupIO::~DataGroupIO() noexcept = default;
+EdgeGeomIO::EdgeGeomIO() = default;
+EdgeGeomIO::~EdgeGeomIO() noexcept = default;
 
-Result<> DataGroupIO::readData(DataStructureReader& structureReader, const parent_group_type& parentGroup, const std::string_view& objectName, DataObject::IdType importId,
-                               const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+DataObject::Type EdgeGeomIO::getDataType() const
 {
-  m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
-  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
-  m_EdgesContainingVertId = ReadH5DataId(groupReader, H5Constants::k_EdgesContainingVertTag);
-  m_EdgeNeighborsId = ReadH5DataId(groupReader, H5Constants::k_EdgeNeighborsTag);
-  m_EdgeCentroidsId = ReadH5DataId(groupReader, H5Constants::k_EdgeCentroidTag);
-  m_EdgeSizesId = ReadH5DataId(groupReader, H5Constants::k_EdgeSizesTag);
-
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, useEmptyDataStore);
+  return DataObject::Type::EdgeGeom;
 }
-Result<> DataGroupIO::writeData(DataStructureWriter& structureReader, const parent_group_type& parentGroup, bool importable) const
+
+std::string EdgeGeomIO::getTypeName() const
 {
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto err = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(err < 0)
+  return data_type::GetTypeName();
+}
+
+Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+                              const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+{
+  auto* geometry = EdgeGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
+  Result<> result = INodeGeom1dIO::ReadNodeGeom1dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  if(result.invalid())
   {
-    return err;
+    return result;
   }
 
-  auto errorCode = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
-  if(errorCode < 0)
+  const group_reader_type groupReader = parentGroup.openGroup(objectName);
+  geometry->setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
+  geometry->setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
+  geometry->setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
+  geometry->setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
+  geometry->setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+  geometry->setElementSizesId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
+
+  // return BaseGroup::readHdf5(dataStructureReader, groupReader, useEmptyDataStore);
+  return {};
+}
+Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
+{
+  auto groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
+  Result<> result = WriteObjectAttributes(dataStructureWriter, geometry, groupWriter, importable);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
-  if(errorCode < 0)
+  INodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);
+
+  result = WriteDataId(groupWriter, geometry.getVertexListId(), IOConstants::k_VertexListTag);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgesContainingVertId, H5Constants::k_EdgesContainingVertTag);
-  if(errorCode < 0)
+  result = WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeNeighborsId, H5Constants::k_EdgeNeighborsTag);
-  if(errorCode < 0)
+  result = WriteDataId(groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeCentroidsId, H5Constants::k_EdgeCentroidTag);
-  if(errorCode < 0)
+  result = WriteDataId(groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
-  errorCode = WriteH5DataId(groupWriter, m_EdgeSizesId, H5Constants::k_EdgeSizesTag);
-  if(errorCode < 0)
+  result = WriteDataId(groupWriter, geometry.getElementCentroidsId(), IOConstants::k_ElementCentroidTag);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
-  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
+  result = WriteDataId(groupWriter, geometry.getElementSizesId(), IOConstants::k_ElementSizesTag);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  return WriteDataMap(dataStructureWriter, geometry.getDataMap(), groupWriter, importable);
+}
+
+Result<> EdgeGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+{
+  auto* targetData = dynamic_cast<const data_type*>(dataObject);
+  if(targetData == nullptr)
+  {
+    std::string ss = "Provided DataObject could not be cast to the target type";
+    return MakeErrorResult(-800, ss);
+  }
+
+  return writeData(dataStructureWriter, *targetData, parentWriter, true);
 }
 } // namespace complex::HDF5

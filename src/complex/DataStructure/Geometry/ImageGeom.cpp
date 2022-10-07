@@ -9,8 +9,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
-#include "FileVec/collection/IGroup.hpp"
-
 using namespace complex;
 
 ImageGeom::ImageGeom(DataStructure& ds, std::string name)
@@ -54,6 +52,11 @@ ImageGeom* ImageGeom::Import(DataStructure& ds, std::string name, IdType importI
 }
 
 std::string ImageGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string ImageGeom::GetTypeName()
 {
   return "ImageGeom";
 }
@@ -443,6 +446,7 @@ ImageGeom::ErrorType ImageGeom::computeCellIndex(const Point3D<float32>& coords,
   return err;
 }
 
+#if 0
 H5::ErrorType ImageGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   auto volumeAttribute = groupReader.getAttribute(H5Constants::k_H5_DIMENSIONS);
@@ -522,7 +526,6 @@ H5::ErrorType ImageGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter,
   return error;
 }
 
-#if 0
 Zarr::ErrorType ImageGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
 {
   const auto& attributes = collection.attributes();

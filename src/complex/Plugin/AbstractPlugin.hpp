@@ -17,6 +17,8 @@ namespace H5
 class IDataFactory;
 }
 
+class IDataIOManager;
+
 /**
  * @class AbstractPlugin
  * @brief The AbstractPlugin class is the base class for all C++ plugins for
@@ -29,6 +31,8 @@ class COMPLEX_EXPORT AbstractPlugin
 public:
   using IdType = Uuid;
   using FilterContainerType = std::unordered_set<FilterHandle>;
+  using IOManagerPointer = std::shared_ptr<complex::IDataIOManager>;
+  using IOManagersContainerType = typename std::vector<IOManagerPointer>;
 
   virtual ~AbstractPlugin();
 
@@ -93,6 +97,14 @@ public:
    */
   virtual std::vector<H5::IDataFactory*> getDataFactories() const = 0;
 
+  /**
+   * @brief Returns a collection of DataStructure IO managers available
+   * through the plugin for use in reading or writing the DataStructure
+   * to a specific format.
+   * @return IOManagersContainerType
+   */
+  IOManagersContainerType getDataIOManagers() const;
+
 protected:
   /**
    * @brief Constructs a new AbstractPlugin. Takes an ID, name, description,
@@ -112,6 +124,12 @@ protected:
    */
   void addFilter(FilterCreationFunc filterFunc);
 
+  /**
+   * @brief Inserts an IOManager into the plugin for use throughout complex once the plugin has been loaded.
+   * @param ioManager
+   */
+  void addDataIOManager(const IOManagerPointer& ioManager);
+
 private:
   IdType m_Id;
   std::string m_Name;
@@ -119,6 +137,7 @@ private:
   std::string m_Vendor;
   std::unordered_set<FilterHandle> m_FilterHandles;
   std::unordered_map<FilterHandle::FilterIdType, FilterCreationFunc> m_InitializerMap;
+  IOManagersContainerType m_IOManagers;
 };
 
 using CreatePluginFunc = AbstractPlugin* (*)();

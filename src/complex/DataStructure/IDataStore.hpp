@@ -5,17 +5,12 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
-#include "FileVec/collection/BaseGenericArray.hpp"
+//#include "FileVec/collection/BaseGenericArray.hpp"
 
 #include <algorithm>
 #include <iterator>
 
 #include "fmt/format.h"
-
-namespace FileVec
-{
-class BaseGenericArray;
-}
 
 namespace complex
 {
@@ -69,6 +64,8 @@ public:
    * @return
    */
   virtual const ShapeType& getComponentShape() const = 0;
+
+  virtual std::optional<ShapeType> getChunkShape() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.

@@ -3,12 +3,7 @@
 #include "complex/Common/Bit.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
-#include "complex/DataStructure/FileStore.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-
-#include "FileVec/collection/IArray.hpp"
-#include "FileVec/collection/IGroup.hpp"
 
 namespace complex
 {
@@ -606,6 +601,7 @@ public:
     return GetTypeName();
   }
 
+#if 0
   /**
    * @brief Writes the DataArray to HDF5 using the provided group ID.
    *
@@ -624,8 +620,7 @@ public:
     }
     return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
   }
-
-#if 0
+  
   Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override
   {
     auto size = m_DataStore->getSize();

@@ -5,8 +5,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
-#include "FileVec/collection/IGroup.hpp"
-
 #include <stdexcept>
 
 using namespace complex;
@@ -54,6 +52,11 @@ GridMontage* GridMontage::Import(DataStructure& ds, std::string name, IdType imp
 }
 
 std::string GridMontage::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string GridMontage::GetTypeName()
 {
   return "GridMontage";
 }
@@ -261,6 +264,7 @@ usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimension
   return tilePos[0] + tilePos[1] * numCols + tilePos[2] * numCols * numRows;
 }
 
+#if 0
 H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   auto rowCountAttribute = groupReader.getAttribute(H5Constants::k_RowCountTag);
@@ -308,7 +312,6 @@ H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWrite
   return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }
 
-#if 0
 Zarr::ErrorType GridMontage::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& groupReader, bool preflight)
 {
   auto rowCountAttribute = groupReader.attributes()[H5Constants::k_RowCountTag];

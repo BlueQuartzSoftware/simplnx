@@ -45,6 +45,11 @@ void INodeGeometry1D::setEdges(const SharedEdgeList& edges)
   m_EdgeListId = edges.getId();
 }
 
+void INodeGeometry1D::setEdgeListId(const std::optional<IdType>& edgeList)
+{
+  m_EdgeListId = edgeList;
+}
+
 void INodeGeometry1D::resizeEdgeList(usize size)
 {
   getEdgesRef().getIDataStoreRef().reshapeTuples({size});
@@ -166,6 +171,12 @@ void INodeGeometry1D::setEdgeData(const AttributeMatrix& attributeMatrix)
   m_EdgeDataId = attributeMatrix.getId();
 }
 
+void INodeGeometry1D::setEdgeDataId(const std::optional<IdType>& edgeDataId)
+{
+  m_EdgeDataId = edgeDataId;
+}
+
+#if 0
 H5::ErrorType INodeGeometry1D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   H5::ErrorType error = INodeGeometry0D::readHdf5(dataStructureReader, groupReader, preflight);
@@ -182,7 +193,49 @@ H5::ErrorType INodeGeometry1D::readHdf5(H5::DataStructureReader& dataStructureRe
 
   return error;
 }
+#endif
 
+std::optional<DataObject::IdType> INodeGeometry1D::getElementContainingVertId() const
+{
+  return m_ElementContainingVertId;
+}
+
+std::optional<DataObject::IdType> INodeGeometry1D::getElementNeighborsId() const
+{
+  return m_ElementNeighborsId;
+}
+
+std::optional<DataObject::IdType> INodeGeometry1D::getElementCentroidsId() const
+{
+  return m_ElementCentroidsId;
+}
+
+std::optional<DataObject::IdType> INodeGeometry1D::getElementSizesId() const
+{
+  return m_ElementSizesId;
+}
+
+void INodeGeometry1D::setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId)
+{
+  m_ElementContainingVertId = elementsContainingVertId;
+}
+
+void INodeGeometry1D::setElementNeighborsId(const std::optional<IdType>& elementNeighborsId)
+{
+  m_ElementNeighborsId = elementNeighborsId;
+}
+
+void INodeGeometry1D::setElementCentroidsId(const std::optional<IdType>& centroidsId)
+{
+  m_ElementCentroidsId = centroidsId;
+}
+
+void INodeGeometry1D::setElementSizesId(const std::optional<IdType>& sizesId)
+{
+  m_ElementSizesId = sizesId;
+}
+
+#if 0
 H5::ErrorType INodeGeometry1D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
   H5::ErrorType error = INodeGeometry0D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
@@ -224,6 +277,7 @@ H5::ErrorType INodeGeometry1D::writeHdf5(H5::DataStructureWriter& dataStructureW
 
   return error;
 }
+#endif
 
 void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

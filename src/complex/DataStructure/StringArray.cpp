@@ -187,6 +187,7 @@ void StringArray::reshapeTuples(const std::vector<usize>& tupleShape)
   }
 }
 
+#if 0
 H5::ErrorType StringArray::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
 {
   auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
@@ -200,4 +201,5 @@ H5::ErrorType StringArray::writeHdf5(H5::DataStructureWriter& dataStructureWrite
   }
   return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
 }
+#endif
 } // namespace complex

@@ -95,6 +95,12 @@ public:
   const DataMap& getDataMap() const;
 
   /**
+   * @brief Returns the underlying DataMap by reference.
+   * @return DataMap&
+   */
+  DataMap& getDataMap();
+
+  /**
    * @brief Returns true if a child with the specified name exists in the
    * container. Returns false otherwise. This operation does not expand any
    * BaseGroups found among its children.
@@ -320,12 +326,7 @@ protected:
    */
   void setDataStructure(DataStructure* ds) override;
 
-  /**
-   * @brief Returns the underlying DataMap by reference.
-   * @return DataMap&
-   */
-  DataMap& getDataMap();
-
+#if 0
   /**
    * @brief Reads the DataStructure group from a target HDF5 group.
    * @param dataStructureReader
@@ -341,8 +342,7 @@ protected:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
-#if 0
+  
   /**
    * @brief Reads the DataStructure group from a target Zarr data.
    * @param dataStructureReader

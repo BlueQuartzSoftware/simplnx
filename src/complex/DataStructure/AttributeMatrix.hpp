@@ -100,12 +100,20 @@ public:
   std::string getTypeName() const override;
 
   /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  static std::string GetTypeName();
+
+#if 0
+  /**
    * @brief Reads the DataStructure group from a target HDF5 group.
    * @param dataStructureReader
    * @param groupReader
    * @return H5::Error
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
+  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
+#endif
 
   /**
    * @brief Returns the tuple shape.
@@ -152,6 +160,7 @@ protected:
    */
   bool canInsert(const DataObject* obj) const override;
 
+#if 0
   /**
    * @brief Writes the DataObject to the target HDF5 group.
    * @param parentGroupWriter
@@ -159,6 +168,7 @@ protected:
    * @return H5::ErrorType
    */
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+#endif
 
 private:
   ShapeType m_TupleShape;
