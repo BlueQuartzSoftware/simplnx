@@ -142,7 +142,7 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
   const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
 
   // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceData();
+  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{
@@ -168,7 +168,7 @@ Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure,
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
   const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix& faceAttributeMatrix = triangleGeom.getFaceDataRef();
+  const AttributeMatrix& faceAttributeMatrix = triangleGeom.getFaceAttributeMatrixRef();
 
   DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(pCalculatedAreasName);
   auto& faceAreas = dataStructure.getDataRefAs<Float64Array>(pCalculatedAreasDataPath);

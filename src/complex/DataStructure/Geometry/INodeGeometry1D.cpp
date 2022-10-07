@@ -15,34 +15,34 @@ INodeGeometry1D::INodeGeometry1D(DataStructure& ds, std::string name, IdType imp
 {
 }
 
-const std::optional<INodeGeometry1D::IdType>& INodeGeometry1D::getEdgeListId() const
+const std::optional<INodeGeometry1D::IdType>& INodeGeometry1D::getEdgeListDataArrayId() const
 {
-  return m_EdgeListId;
+  return m_EdgeDataArrayId;
 }
 
 INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges()
 {
-  return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeListId);
+  return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
 }
 
 const INodeGeometry1D::SharedEdgeList* INodeGeometry1D::getEdges() const
 {
-  return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeListId);
+  return getDataStructureRef().getDataAs<SharedEdgeList>(m_EdgeDataArrayId);
 }
 
 INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef()
 {
-  return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeListId.value());
+  return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
 }
 
 const INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef() const
 {
-  return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeListId.value());
+  return getDataStructureRef().getDataRefAs<SharedEdgeList>(m_EdgeDataArrayId.value());
 }
 
-void INodeGeometry1D::setEdges(const SharedEdgeList& edges)
+void INodeGeometry1D::setEdgeList(const SharedEdgeList& edges)
 {
-  m_EdgeListId = edges.getId();
+  m_EdgeDataArrayId = edges.getId();
 }
 
 void INodeGeometry1D::resizeEdgeList(usize size)
@@ -100,70 +100,70 @@ void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> co
 
 const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementsContainingVert() const
 {
-  return getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertId);
+  return getDataStructureRef().getDataAs<ElementDynamicList>(m_CellContainingVertDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementsContainingVert()
 {
-  getDataStructureRef().removeData(m_CellContainingVertId);
-  m_CellContainingVertId.reset();
+  getDataStructureRef().removeData(m_CellContainingVertDataArrayId);
+  m_CellContainingVertDataArrayId.reset();
 }
 
 const INodeGeometry1D::ElementDynamicList* INodeGeometry1D::getElementNeighbors() const
 {
-  return getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsId);
+  return getDataStructureRef().getDataAs<ElementDynamicList>(m_CellNeighborsDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementNeighbors()
 {
-  getDataStructureRef().removeData(m_CellNeighborsId);
-  m_CellNeighborsId.reset();
+  getDataStructureRef().removeData(m_CellNeighborsDataArrayId);
+  m_CellNeighborsDataArrayId.reset();
 }
 
 const Float32Array* INodeGeometry1D::getElementCentroids() const
 {
-  return getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsId);
+  return getDataStructureRef().getDataAs<Float32Array>(m_CellCentroidsDataArrayId);
 }
 
 void INodeGeometry1D::deleteElementCentroids()
 {
-  getDataStructureRef().removeData(m_CellCentroidsId);
-  m_CellCentroidsId.reset();
+  getDataStructureRef().removeData(m_CellCentroidsDataArrayId);
+  m_CellCentroidsDataArrayId.reset();
 }
 
-const std::optional<INodeGeometry1D::IdType>& INodeGeometry1D::getEdgeDataId() const
+const std::optional<INodeGeometry1D::IdType>& INodeGeometry1D::getEdgeAttributeMatrixId() const
 {
-  return m_EdgeDataId;
+  return m_EdgeAttributeMatrixId;
 }
 
-AttributeMatrix* INodeGeometry1D::getEdgeData()
+AttributeMatrix* INodeGeometry1D::getEdgeAttributeMatrix()
 {
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeDataId);
+  return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeAttributeMatrixId);
 }
 
-const AttributeMatrix* INodeGeometry1D::getEdgeData() const
+const AttributeMatrix* INodeGeometry1D::getEdgeAttributeMatrix() const
 {
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeDataId);
+  return getDataStructureRef().getDataAs<AttributeMatrix>(m_EdgeAttributeMatrixId);
 }
 
-AttributeMatrix& INodeGeometry1D::getEdgeDataRef()
+AttributeMatrix& INodeGeometry1D::getEdgeAttributeMatrixRef()
 {
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeDataId.value());
+  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeAttributeMatrixId.value());
 }
 
-const AttributeMatrix& INodeGeometry1D::getEdgeDataRef() const
+const AttributeMatrix& INodeGeometry1D::getEdgeAttributeMatrixRef() const
 {
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeDataId.value());
+  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_EdgeAttributeMatrixId.value());
 }
 
-DataPath INodeGeometry1D::getEdgeDataPath() const
+DataPath INodeGeometry1D::getEdgeAttributeMatrixDataPath() const
 {
-  return getEdgeDataRef().getDataPaths().at(0);
+  return getEdgeAttributeMatrixRef().getDataPaths().at(0);
 }
 
-void INodeGeometry1D::setEdgeData(const AttributeMatrix& attributeMatrix)
+void INodeGeometry1D::setEdgeAttributeMatrix(const AttributeMatrix& attributeMatrix)
 {
-  m_EdgeDataId = attributeMatrix.getId();
+  m_EdgeAttributeMatrixId = attributeMatrix.getId();
 }
 
 H5::ErrorType INodeGeometry1D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
@@ -174,11 +174,11 @@ H5::ErrorType INodeGeometry1D::readHdf5(H5::DataStructureReader& dataStructureRe
     return error;
   }
 
-  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
-  m_EdgeDataId = ReadH5DataId(groupReader, H5Constants::k_EdgeDataTag);
-  m_CellContainingVertId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
-  m_CellNeighborsId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
-  m_CellCentroidsId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
+  m_EdgeDataArrayId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
+  m_EdgeAttributeMatrixId = ReadH5DataId(groupReader, H5Constants::k_EdgeDataTag);
+  m_CellContainingVertDataArrayId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
+  m_CellNeighborsDataArrayId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
+  m_CellCentroidsDataArrayId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
 
   return error;
 }
@@ -192,31 +192,31 @@ H5::ErrorType INodeGeometry1D::writeHdf5(H5::DataStructureWriter& dataStructureW
   }
 
   H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
+  error = WriteH5DataId(groupWriter, m_EdgeDataArrayId, H5Constants::k_EdgeListTag);
   if(error < 0)
   {
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_EdgeDataId, H5Constants::k_EdgeDataTag);
+  error = WriteH5DataId(groupWriter, m_EdgeAttributeMatrixId, H5Constants::k_EdgeDataTag);
   if(error < 0)
   {
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_CellContainingVertId, H5Constants::k_ElementContainingVertTag);
+  error = WriteH5DataId(groupWriter, m_CellContainingVertDataArrayId, H5Constants::k_ElementContainingVertTag);
   if(error < 0)
   {
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_CellNeighborsId, H5Constants::k_ElementNeighborsTag);
+  error = WriteH5DataId(groupWriter, m_CellNeighborsDataArrayId, H5Constants::k_ElementNeighborsTag);
   if(error < 0)
   {
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_CellCentroidsId, H5Constants::k_ElementCentroidTag);
+  error = WriteH5DataId(groupWriter, m_CellCentroidsDataArrayId, H5Constants::k_ElementCentroidTag);
   if(error < 0)
   {
     return error;
@@ -231,34 +231,34 @@ void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
 
   for(const auto& updatedId : updatedIds)
   {
-    if(m_VertexListId == updatedId.first)
+    if(m_VertexDataArrayId == updatedId.first)
     {
-      m_VertexListId = updatedId.second;
+      m_VertexDataArrayId = updatedId.second;
     }
 
-    if(m_EdgeDataId == updatedId.first)
+    if(m_EdgeAttributeMatrixId == updatedId.first)
     {
-      m_EdgeDataId = updatedId.second;
+      m_EdgeAttributeMatrixId = updatedId.second;
     }
 
-    if(m_EdgeListId == updatedId.first)
+    if(m_EdgeDataArrayId == updatedId.first)
     {
-      m_EdgeListId = updatedId.second;
+      m_EdgeDataArrayId = updatedId.second;
     }
 
-    if(m_CellContainingVertId == updatedId.first)
+    if(m_CellContainingVertDataArrayId == updatedId.first)
     {
-      m_CellContainingVertId = updatedId.second;
+      m_CellContainingVertDataArrayId = updatedId.second;
     }
 
-    if(m_CellNeighborsId == updatedId.first)
+    if(m_CellNeighborsDataArrayId == updatedId.first)
     {
-      m_CellNeighborsId = updatedId.second;
+      m_CellNeighborsDataArrayId = updatedId.second;
     }
 
-    if(m_CellCentroidsId == updatedId.first)
+    if(m_CellCentroidsDataArrayId == updatedId.first)
     {
-      m_CellCentroidsId = updatedId.second;
+      m_CellCentroidsDataArrayId = updatedId.second;
     }
 
     if(m_ElementSizesId == updatedId.first)

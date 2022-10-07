@@ -56,10 +56,10 @@ TEST_CASE("ComplexCore::TriangleDihedralAngleFilter[valid results]", "[ComplexCo
   TriangleGeom& acuteTriangle = *TriangleGeom::Create(dataStructure, triangleGeometryName);
   AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceDataName, acuteTriangle.getId());
   faceData->setShape({k_FaceTupleCount});
-  acuteTriangle.setFaceData(*faceData);
+  acuteTriangle.setFaceAttributeMatrix(*faceData);
   AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexDataName, acuteTriangle.getId());
   vertData->setShape({k_VertexTupleCount});
-  acuteTriangle.setVertexData(*vertData);
+  acuteTriangle.setVertexAttributeMatrix(*vertData);
   auto vertexList = createVertexList(acuteTriangle, vertData->getId());
   auto facesList = createFaceList(acuteTriangle, faceData->getId());
   auto underlyingStoreV = vertexList->getDataStorePtr().lock();
@@ -80,7 +80,7 @@ TEST_CASE("ComplexCore::TriangleDihedralAngleFilter[valid results]", "[ComplexCo
   {
     underlyingStoreF->setValue(count++, element);
   }
-  acuteTriangle.setFaces(*facesList);
+  acuteTriangle.setFaceList(*facesList);
   acuteTriangle.setVertices(*vertexList);
 
   TriangleDihedralAngleFilter filter;

@@ -65,7 +65,7 @@ void testGeom2D(INodeGeometry2D* geom)
     // edges
     {
       auto edges = createEdgeList(geom);
-      geom->setEdges(*edges);
+      geom->setEdgeList(*edges);
       REQUIRE(geom->getEdges() == edges);
       const usize numEdges = 5;
       geom->resizeEdgeList(numEdges);
@@ -109,7 +109,7 @@ void testGeom3D(INodeGeometry3D* geom)
     // edges
     {
       auto edges = createEdgeList(geom);
-      geom->setEdges(*edges);
+      geom->setEdgeList(*edges);
       REQUIRE(geom->getEdges() == edges);
       const usize numEdges = 5;
       geom->resizeEdgeList(numEdges);

@@ -44,7 +44,7 @@ DataStructure createTestData(const std::string& triangleGeomName, const std::str
   triangles[11] = 3;
 
   triangleGeom->setVertices(*vertListdata);
-  triangleGeom->setFaces(*triangleList);
+  triangleGeom->setFaceList(*triangleList);
 
   auto* nodeArray = Int8Array::CreateWithStore<Int8DataStore>(ds, nodeTypesName, {triangleGeom->getNumberOfFaces()}, {1}, triangleGeom->getId());
   auto& nodeData = nodeArray->getDataStoreRef();
@@ -110,8 +110,8 @@ TEST_CASE("ComplexCore::ExtractInternalSurfacesFromTriangleGeometry(Data)", "[Co
   }
 
   {
-    auto* newTrianglesArray = ds.getDataAs<IDataArray>(newTrianglesGeom->getFaceListId());
-    auto* oldTrianglesArray = ds.getDataAs<IDataArray>(oldTrianglesGeom->getFaceListId());
+    auto* newTrianglesArray = ds.getDataAs<IDataArray>(newTrianglesGeom->getFaceListDataArrayId());
+    auto* oldTrianglesArray = ds.getDataAs<IDataArray>(oldTrianglesGeom->getFaceListDataArrayId());
 
     REQUIRE(newTrianglesArray != nullptr);
     REQUIRE(oldTrianglesArray != nullptr);

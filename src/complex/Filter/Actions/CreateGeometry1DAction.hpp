@@ -96,7 +96,7 @@ public:
     }
     DimensionType edgeTupleShape = {m_NumEdges};
     edgeAttributeMatrix->setShape(edgeTupleShape);
-    geometry1d->setEdgeData(*edgeAttributeMatrix);
+    geometry1d->setEdgeAttributeMatrix(*edgeAttributeMatrix);
 
     auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry1d->getId());
     if(vertexAttributeMatrix == nullptr)
@@ -105,7 +105,7 @@ public:
     }
     DimensionType vertexTupleShape = {m_NumVertices}; // We probably don't know how many Vertices there are but take what ever the developer sends us
     vertexAttributeMatrix->setShape(vertexTupleShape);
-    geometry1d->setVertexData(*vertexAttributeMatrix);
+    geometry1d->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedEdgeList = IGeometry::SharedEdgeList;
@@ -119,7 +119,7 @@ public:
       return MakeErrorResult(-226, fmt::format("CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", edgesPath.toString()));
     }
     SharedEdgeList* edges = complex::ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
-    geometry1d->setEdges(*edges);
+    geometry1d->setEdgeList(*edges);
 
     // Create the Vertex Array with a component size of 3
     DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);

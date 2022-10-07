@@ -170,12 +170,15 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  if(triangleGeom == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(-9860, fmt::format("Cannot find the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
+  }
   // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceData();
+  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{
-        Error{k_MissingFeatureAttributeMatrix, fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString())}})};
+    return {MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
   }
 
   // Instantiate and move the action that will create the output array
@@ -197,11 +200,10 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
   auto pMinDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
 
-  const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix& faceAttributeMatrix = triangleGeom.getFaceDataRef();
-
-  DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(pMinDihedralAnglesName);
-  auto& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
+  AttributeMatrix* faceData = triangleGeom.getFaceAttributeMatrix();
+  DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceData->getName()).createChildPath(pMinDihedralAnglesName);
+  Float64Array& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(false);

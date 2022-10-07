@@ -20,17 +20,35 @@ public:
 
   ~INodeGeometry1D() noexcept override = default;
 
-  const std::optional<IdType>& getEdgeListId() const;
-
+  /**
+   * @brief
+   * @return
+   */
   SharedEdgeList* getEdges();
 
+  /**
+   * @brief
+   * @return
+   */
   const SharedEdgeList* getEdges() const;
 
+  /**
+   * @brief
+   * @return
+   */
   SharedEdgeList& getEdgesRef();
 
+  /**
+   * @brief
+   * @return
+   */
   const SharedEdgeList& getEdgesRef() const;
 
-  void setEdges(const SharedEdgeList& edges);
+  /**
+   * @brief
+   * @return
+   */
+  void setEdgeList(const SharedEdgeList& edges);
 
   /**
    * @brief Resizes the edge list to the target size.
@@ -126,47 +144,54 @@ public:
    */
   void deleteElementCentroids();
 
-  /**
-   * @brief
-   * @return
+  /****************************************************************************
+   * These functions get values related to where the Vertex Coordinates are
+   * stored in the DataStructure
    */
-  const std::optional<IdType>& getEdgeDataId() const;
+
+  const std::optional<IdType>& getEdgeListDataArrayId() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix* getEdgeData();
+  const std::optional<IdType>& getEdgeAttributeMatrixId() const;
 
   /**
-   * @brief
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each edge
    * @return
    */
-  const AttributeMatrix* getEdgeData() const;
+  AttributeMatrix* getEdgeAttributeMatrix();
 
   /**
-   * @brief
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each edge
    * @return
    */
-  AttributeMatrix& getEdgeDataRef();
+  const AttributeMatrix* getEdgeAttributeMatrix() const;
 
   /**
-   * @brief
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each edge
    * @return
    */
-  const AttributeMatrix& getEdgeDataRef() const;
+  AttributeMatrix& getEdgeAttributeMatrixRef();
 
   /**
-   * @brief
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each edge
    * @return
    */
-  DataPath getEdgeDataPath() const;
+  const AttributeMatrix& getEdgeAttributeMatrixRef() const;
 
   /**
-   * @brief
+   * @brief Returns the DataPath to the AttributeMatrix for the edge data
+   * @return
+   */
+  DataPath getEdgeAttributeMatrixDataPath() const;
+
+  /**
+   * @brief Sets the Attribute Matrix for the data assigned to the edges
    * @param attributeMatrix
    */
-  void setEdgeData(const AttributeMatrix& attributeMatrix);
+  void setEdgeAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
   /**
    * @brief Reads values from HDF5
@@ -198,10 +223,10 @@ protected:
   /* ***************************************************************************
    * These variables are the Ids of the arrays from the complex::DataStructure object.
    */
-  std::optional<IdType> m_EdgeListId;
-  std::optional<IdType> m_EdgeDataId;
-  std::optional<IdType> m_CellContainingVertId;
-  std::optional<IdType> m_CellNeighborsId;
-  std::optional<IdType> m_CellCentroidsId;
+  std::optional<IdType> m_EdgeDataArrayId;
+  std::optional<IdType> m_EdgeAttributeMatrixId;
+  std::optional<IdType> m_CellContainingVertDataArrayId;
+  std::optional<IdType> m_CellNeighborsDataArrayId;
+  std::optional<IdType> m_CellCentroidsDataArrayId;
 };
 } // namespace complex

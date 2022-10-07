@@ -97,7 +97,7 @@ public:
     }
     DimensionType faceTupleShape = {m_NumFaces};
     faceAttributeMatrix->setShape(faceTupleShape);
-    geometry2d->setFaceData(*faceAttributeMatrix);
+    geometry2d->setFaceAttributeMatrix(*faceAttributeMatrix);
 
     auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry2d->getId());
     if(vertexAttributeMatrix == nullptr)
@@ -106,7 +106,7 @@ public:
     }
     DimensionType vertexTupleShape = {m_NumVertices}; // We probably don't know how many Vertices there are but take what ever the developer sends us
     vertexAttributeMatrix->setShape(vertexTupleShape);
-    geometry2d->setVertexData(*vertexAttributeMatrix);
+    geometry2d->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedTriList = IGeometry::SharedTriList;
@@ -120,7 +120,7 @@ public:
       return MakeErrorResult(-226, fmt::format("CreateGeometry2DAction: Could not allocate SharedTriList '{}'", trianglesPath.toString()));
     }
     SharedTriList* triangles = complex::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
-    geometry2d->setFaces(*triangles);
+    geometry2d->setFaceList(*triangles);
 
     // Create the Vertex Array with a component size of 3
     DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);

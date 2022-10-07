@@ -588,7 +588,7 @@ void WriteXdmfGridGeometry(std::ostream& out, const IGridGeometry& gridGeometry,
 
 void WriteXdmfNodeGeometry0D(std::ostream& out, const INodeGeometry0D& nodeGeom0D, std::string_view geomName, std::string_view hdf5FilePath)
 {
-  const AttributeMatrix* vertexData = nodeGeom0D.getVertexData();
+  const AttributeMatrix* vertexData = nodeGeom0D.getVertexAttributeMatrix();
   if(vertexData == nullptr)
   {
     return;
@@ -600,7 +600,7 @@ void WriteXdmfNodeGeometry1D(std::ostream& out, const INodeGeometry1D& nodeGeom1
 {
   WriteXdmfNodeGeometry0D(out, nodeGeom1D, hdf5FilePath, geomName);
 
-  const AttributeMatrix* edgeData = nodeGeom1D.getEdgeData();
+  const AttributeMatrix* edgeData = nodeGeom1D.getEdgeAttributeMatrix();
   if(edgeData == nullptr)
   {
     return;
@@ -612,7 +612,7 @@ void WriteXdmfNodeGeometry2D(std::ostream& out, const INodeGeometry2D& nodeGeom2
 {
   WriteXdmfNodeGeometry1D(out, nodeGeom2D, hdf5FilePath, geomName);
 
-  const AttributeMatrix* faceData = nodeGeom2D.getFaceData();
+  const AttributeMatrix* faceData = nodeGeom2D.getFaceAttributeMatrix();
   if(faceData == nullptr)
   {
     return;
@@ -624,7 +624,7 @@ void WriteXdmfNodeGeometry3D(std::ostream& out, const INodeGeometry3D& nodeGeom3
 {
   WriteXdmfNodeGeometry2D(out, nodeGeom3D, hdf5FilePath, geomName);
 
-  const AttributeMatrix* polyhedraData = nodeGeom3D.getPolyhedronData();
+  const AttributeMatrix* polyhedraData = nodeGeom3D.getPolyhedraAttributeMatrix();
   if(polyhedraData == nullptr)
   {
     return;
@@ -1026,7 +1026,7 @@ void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroup
     auto* nodeGeom0D = dynamic_cast<INodeGeometry0D*>(&parent);
     if(nodeGeom0D != nullptr)
     {
-      nodeGeom0D->setVertexData(*attributeMatrix);
+      nodeGeom0D->setVertexAttributeMatrix(*attributeMatrix);
     }
     break;
   }
@@ -1034,7 +1034,7 @@ void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroup
     auto* nodeGeom1D = dynamic_cast<INodeGeometry1D*>(&parent);
     if(nodeGeom1D != nullptr)
     {
-      nodeGeom1D->setEdgeData(*attributeMatrix);
+      nodeGeom1D->setEdgeAttributeMatrix(*attributeMatrix);
     }
     break;
   }
@@ -1042,7 +1042,7 @@ void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroup
     auto* nodeGeom2D = dynamic_cast<INodeGeometry2D*>(&parent);
     if(nodeGeom2D != nullptr)
     {
-      nodeGeom2D->setFaceData(*attributeMatrix);
+      nodeGeom2D->setFaceAttributeMatrix(*attributeMatrix);
     }
     break;
   }
@@ -1101,7 +1101,7 @@ DataObject* readLegacyTriangleGeom(DataStructure& ds, const H5::GroupReader& geo
   auto* sharedTriList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TriListName);
 
   geom->setVertices(*sharedVertexList);
-  geom->setFaces(*sharedTriList);
+  geom->setFaceList(*sharedTriList);
 
   return geom;
 }
@@ -1114,7 +1114,7 @@ DataObject* readLegacyTetrahedralGeom(DataStructure& ds, const H5::GroupReader& 
   auto* sharedTetList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TetraListName);
 
   geom->setVertices(*sharedVertexList);
-  geom->setPolyhedra(*sharedTetList);
+  geom->setPolyhedraList(*sharedTetList);
 
   return geom;
 }
@@ -1148,7 +1148,7 @@ DataObject* readLegacyQuadGeom(DataStructure& ds, const H5::GroupReader& geomGro
   auto* sharedQuadList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::QuadListName);
 
   geom->setVertices(*sharedVertexList);
-  geom->setFaces(*sharedQuadList);
+  geom->setFaceList(*sharedQuadList);
 
   return geom;
 }
@@ -1161,7 +1161,7 @@ DataObject* readLegacyHexGeom(DataStructure& ds, const H5::GroupReader& geomGrou
   auto* sharedHexList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::HexListName);
 
   geom->setVertices(*sharedVertexList);
-  geom->setPolyhedra(*sharedHexList);
+  geom->setPolyhedraList(*sharedHexList);
 
   return geom;
 }
@@ -1175,7 +1175,7 @@ DataObject* readLegacyEdgeGeom(DataStructure& ds, const H5::GroupReader& geomGro
   auto* sharedEdgeList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::EdgeListName);
 
   geom->setVertices(*sharedVertexList);
-  geom->setEdges(*sharedEdgeList);
+  geom->setEdgeList(*sharedEdgeList);
 
   return geom;
 }

@@ -96,10 +96,10 @@ IGeometry::StatusCode QuadGeom::findElementsContainingVert()
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), quadsContainingVert, getNumberOfVertices());
   if(quadsContainingVert == nullptr)
   {
-    m_CellContainingVertId.reset();
+    m_CellContainingVertDataArrayId.reset();
     return -1;
   }
-  m_CellContainingVertId = quadsContainingVert->getId();
+  m_CellContainingVertDataArrayId = quadsContainingVert->getId();
   return 1;
 }
 
@@ -117,10 +117,10 @@ IGeometry::StatusCode QuadGeom::findElementNeighbors()
   StatusCode err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), quadNeighbors, IGeometry::Type::Quad);
   if(quadNeighbors == nullptr)
   {
-    m_CellNeighborsId.reset();
+    m_CellNeighborsDataArrayId.reset();
     return -1;
   }
-  m_CellNeighborsId = quadNeighbors->getId();
+  m_CellNeighborsDataArrayId = quadNeighbors->getId();
   return err;
 }
 
@@ -131,10 +131,10 @@ IGeometry::StatusCode QuadGeom::findElementCentroids()
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
   {
-    m_CellCentroidsId.reset();
+    m_CellCentroidsDataArrayId.reset();
     return -1;
   }
-  m_CellCentroidsId = quadCentroids->getId();
+  m_CellCentroidsDataArrayId = quadCentroids->getId();
   return 1;
 }
 
@@ -164,10 +164,10 @@ IGeometry::StatusCode QuadGeom::findEdges()
   GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   if(edgeList == nullptr)
   {
-    m_EdgeListId.reset();
+    m_EdgeDataArrayId.reset();
     return -1;
   }
-  m_EdgeListId = edgeList->getId();
+  m_EdgeDataArrayId = edgeList->getId();
   return 1;
 }
 
