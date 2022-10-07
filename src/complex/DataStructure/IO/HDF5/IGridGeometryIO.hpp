@@ -21,9 +21,30 @@ public:
   IGridGeometryIO& operator=(IGridGeometryIO&& rhs) = delete;
 
 protected:
-  static Result<> ReadGridGeometryData(DataStructureReader& structureReader, IGridGeometry& geometry, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                                   const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
-  static Result<> WriteGridGeometryData(DataStructureWriter& structureReader, const IGridGeometry& geometry, group_writer_type& parentGroup, bool importable);
+  /**
+   * @brief Attempts to read the GridGeometry data from HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param dataStructureReader
+   * @param geometry
+   * @param parentGroup
+   * @param geometryName
+   * @param importId
+   * @param parentId
+   * @param useEmptyDataStore = false
+   * @return Result<>
+   */
+  static Result<> ReadGridGeometryData(DataStructureReader& dataStructureReader, IGridGeometry& geometry, const group_reader_type& parentGroup, const std::string& geometryName,
+                                       DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
+
+  /**
+   * @brief Attempts to write the IGridGeometry data to HDF5.
+   * @param dataStructureWriter
+   * @param geometry
+   * @param parentGroup
+   * @param importable
+   * @return Result<>
+   */
+  static Result<> WriteGridGeometryData(DataStructureWriter& dataStructureWriter, const IGridGeometry& geometry, group_writer_type& parentGroup, bool importable);
 };
 } // namespace HDF5
 } // namespace complex

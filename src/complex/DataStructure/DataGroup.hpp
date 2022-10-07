@@ -100,24 +100,6 @@ public:
    */
   static std::string GetTypeName();
 
-#if 0
-  /**
-   * @brief Reads the DataStructure group from a target HDF5 group.
-   * @param dataStructureReader
-   * @param groupReader
-   * @return H5::Error
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false) override;
-  
-  /**
-   * @brief Reads the DataStructure group from a target Zarr data.
-   * @param dataStructureReader
-   * @param collection
-   * @return Zarr::Error
-   */
-  Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight = false) override;
-#endif
-
 protected:
   /**
    * @brief Creates the DataGroup for the target DataStructure and with the
@@ -144,23 +126,5 @@ protected:
    * @return bool
    */
   bool canInsert(const DataObject* obj) const override;
-
-#if 0
-  /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-  
-  /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param parentGroupWriter
-   * @param importable
-   * @return Zarr::ErrorType
-   */
-  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override;
-#endif
 };
 } // namespace complex

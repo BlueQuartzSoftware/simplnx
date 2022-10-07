@@ -1,7 +1,5 @@
 #include "TriangleGeom.hpp"
 
-#include <stdexcept>
-
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
@@ -187,32 +185,3 @@ IGeometry::StatusCode TriangleGeom::findUnsharedEdges()
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
   return 1;
 }
-
-#if 0
-Zarr::ErrorType TriangleGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
-{
-  m_TriListId = ReadZarrDataId(collection, H5Constants::k_TriangleListTag);
-  m_TrianglesContainingVertId = ReadZarrDataId(collection, H5Constants::k_TrianglesContainingVertTag);
-  m_TriangleNeighborsId = ReadZarrDataId(collection, H5Constants::k_TriangleNeighborsTag);
-  m_TriangleCentroidsId = ReadZarrDataId(collection, H5Constants::k_TriangleCentroidsTag);
-  m_TriangleSizesId = ReadZarrDataId(collection, H5Constants::k_TriangleSizesTag);
-
-  return AbstractGeometry2D::readZarr(dataStructureReader, collection, preflight);
-}
-
-Zarr::ErrorType TriangleGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
-{
-  auto groupWriterPtr = parentGroupWriter.createOrFindGroup(getName());
-  auto& groupWriter = *groupWriterPtr.get();
-  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
-
-  // Write DataObject IDs
-  WriteZarrDataId(groupWriter, m_TriListId, H5Constants::k_TriangleListTag);
-  WriteZarrDataId(groupWriter, m_TrianglesContainingVertId, H5Constants::k_TrianglesContainingVertTag);
-  WriteZarrDataId(groupWriter, m_TriangleNeighborsId, H5Constants::k_TriangleNeighborsTag);
-  WriteZarrDataId(groupWriter, m_TriangleCentroidsId, H5Constants::k_TriangleCentroidsTag);
-  WriteZarrDataId(groupWriter, m_TriangleSizesId, H5Constants::k_TriangleSizesTag);
-
-  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
-}
-#endif

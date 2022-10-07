@@ -1,8 +1,5 @@
 #include "INodeGeometry3D.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 INodeGeometry3D::INodeGeometry3D(DataStructure& ds, std::string name)
@@ -163,53 +160,6 @@ void INodeGeometry3D::setPolyhedronData(const AttributeMatrix& attributeMatrix)
 {
   m_PolyhedronDataId = attributeMatrix.getId();
 }
-
-#if 0
-H5::ErrorType INodeGeometry3D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  H5::ErrorType error = INodeGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_PolyhedronListId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronListTag);
-  m_PolyhedronDataId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronDataTag);
-  m_UnsharedFaceListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedFaceListTag);
-
-  return error;
-}
-
-H5::ErrorType INodeGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = INodeGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_PolyhedronListId, H5Constants::k_PolyhedronListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_PolyhedronDataId, H5Constants::k_PolyhedronDataTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_UnsharedFaceListId, H5Constants::k_UnsharedFaceListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-#endif
 
 INodeGeometry3D::SharedQuadList* INodeGeometry3D::createSharedQuadList(usize numQuads)
 {

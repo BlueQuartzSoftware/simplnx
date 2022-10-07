@@ -23,10 +23,28 @@ public:
 
   virtual ~IDataIO() noexcept;
 
-  virtual Result<> readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  /**
+   * @brief Attempts to read the DataObject from HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param dataStructureReader
+   * @param parentGroup
+   * @param objectName
+   * @param importId
+   * @param parentId
+   * @param useEmptyDataStore = false
+   * @return Result<>
+   */
+  virtual Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                             const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const = 0;
 
-  virtual Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const = 0;
+  /**
+   * @brief Attempts to write a DataObject to HDF5.
+   * @param dataStructureWriter
+   * @param dataObject
+   * @param parentGroupWriter
+   * @return Result<>
+   */
+  virtual Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentGroupWriter) const = 0;
 
   virtual std::string getTypeName() const = 0;
 

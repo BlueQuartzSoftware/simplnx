@@ -8,7 +8,6 @@
 
 namespace complex
 {
-
 /**
  * @class Metadata
  * @brief The Metadata class stores additional information related to a

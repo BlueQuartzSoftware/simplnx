@@ -1,8 +1,5 @@
 #include "IGridGeometry.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 IGridGeometry::IGridGeometry(DataStructure& ds, std::string name)
@@ -49,39 +46,6 @@ void IGridGeometry::setCellData(const AttributeMatrix& attributeMatrix)
 {
   m_CellDataId = attributeMatrix.getId();
 }
-
-#if 0
-H5::ErrorType IGridGeometry::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  H5::ErrorType error = IGeometry::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_CellDataId = ReadH5DataId(groupReader, H5Constants::k_CellDataTag);
-
-  return error;
-}
-
-H5::ErrorType IGridGeometry::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = IGeometry::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_CellDataId, H5Constants::k_CellDataTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-#endif
 
 void IGridGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

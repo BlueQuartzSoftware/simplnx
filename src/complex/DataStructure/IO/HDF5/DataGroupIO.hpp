@@ -8,6 +8,9 @@ class DataGroup;
 
 namespace HDF5
 {
+/**
+ * @brief The DataGroupIO class serves as the basis for writing DataGroups to HDF5.
+ */
 class COMPLEX_EXPORT DataGroupIO : public BaseGroupIO
 {
 public:
@@ -21,10 +24,39 @@ public:
   DataGroupIO& operator=(const DataGroupIO& rhs) = delete;
   DataGroupIO& operator=(DataGroupIO&& rhs) = delete;
 
-  Result<> readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  /**
+   * @brief Attempts to read the target DataGroup from HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param dataStructureReader
+   * @param parentGroup
+   * @param dataGroupName
+   * @param importId
+   * @param parentId
+   * @param useEmptyDataStore = false
+   * @return Result<>
+   */
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataGroupName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
-  Result<> writeData(DataStructureWriter& structureReader, const DataGroup& dataGroup, group_writer_type& parentGroup, bool importable) const;
 
+  /**
+   * @brief Attempts to write a DataGroup to HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param dataStructureWriter
+   * @param dataGroup
+   * @param parentGroup
+   * @param importable
+   * @return Result<>
+   */
+  Result<> writeData(DataStructureWriter& dataStructureWriter, const DataGroup& dataGroup, group_writer_type& parentGroup, bool importable) const;
+
+  /**
+   * @brief Attempts to write the target DataObject to HDF5.
+   * Returns an error if the DataObject cannot be cast to a DataGroup.
+   * Otherwise, this method returns the result of writeData(...)
+   * @param dataStructureWriter
+   * @param dataObject
+   * @param parentWriter
+   */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
 
   DataObject::Type getDataType() const override;

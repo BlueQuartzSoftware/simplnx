@@ -4,6 +4,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/IO/HDF5/DataArrayIO.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStoreIO.hpp"
 #include "complex/DataStructure/IO/HDF5/IDataIO.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 
@@ -23,7 +24,13 @@ public:
   NeighborListIO() = default;
   virtual ~NeighborListIO() noexcept = default;
 
-  // template <typename T>
+  /**
+   * @brief Attempts to read the NeighborList<T> data from HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param parentGroup
+   * @param dataReader
+   * @return Result<>
+   */
   static std::vector<shared_vector_type> ReadHdf5Data(const H5::GroupReader& parentGroup, const H5::DatasetReader& dataReader)
   {
     auto numNeighborsAttributeName = dataReader.getAttribute("Linked NumNeighbors Dataset");
@@ -31,7 +38,7 @@ public:
 
     auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
 
-    auto numNeighborsPtr = Int32DataStore::ReadHdf5(numNeighborsReader);
+    auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
     auto& numNeighborsStore = *numNeighborsPtr.get();
 
     std::vector<T> flatDataStore = dataReader.template readAsVector<T>();
@@ -59,12 +66,23 @@ public:
     return dataVector;
   }
 
-  Result<> readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  /**
+   * @brief Attempts to read the NeighborList<T> from HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param dataStructureReader
+   * @param parentGroup
+   * @param objectName
+   * @param importId
+   * @param parentId
+   * @param useEmptyDataStore = false
+   * @return Result<>
+   */
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(objectName);
     auto dataVector = ReadHdf5Data(parentGroup, datasetReader);
-    auto* dataObject = data_type::Import(structureReader.getDataStructure(), objectName, importId, dataVector, parentId);
+    auto* dataObject = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, dataVector, parentId);
     if(dataObject == nullptr)
     {
       std::string ss = "Failed to import NeighborList from HDF5";
@@ -72,6 +90,15 @@ public:
     }
     return {};
   }
+
+  /**
+   * @brief Attempts to write the NeighborList<T> to HDF5.
+   * @param dataStructureWriter
+   * @param neighborList
+   * @param parentGroupWriter
+   * @param importable
+   * @return Result<>
+   */
   Result<> writeData(DataStructureWriter& dataStructureWriter, const NeighborList<T>& neighborList, group_writer_type& parentGroupWriter, bool importable) const
   {
     DataStructure tmp;
@@ -133,6 +160,12 @@ public:
     return WriteObjectAttributes(dataStructureWriter, neighborList, datasetWriter, importable);
   }
 
+  /**
+   * @brief Attempts to write the DataObject to HDF5.
+   * Returns an error if the DataObject cannot be cast to a NeighborList<T>.
+   * Otherwise, this method returns writeData(...)
+   * Return Result<>
+   */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
   {
     auto* targetData = dynamic_cast<const data_type*>(dataObject);

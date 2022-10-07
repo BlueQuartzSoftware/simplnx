@@ -236,17 +236,6 @@ public:
    */
   const Metadata& getMetadata() const;
 
-#if 0
-  /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable = true
-   * @return H5::ErrorType
-   */
-  virtual Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable = true) const = 0;
-#endif
-
 protected:
   /**
    * @brief DataObject constructor takes a reference to the DataStructure and
@@ -324,16 +313,6 @@ protected:
    * @param ds
    */
   virtual void setDataStructure(DataStructure* ds);
-
-#if 0
-  /**
-   * @brief Writes the dataType as a string attribute for the target Zarr object.
-   * @param dataStructureWriter
-   * @param objectWriter
-   * @param importable = true
-   */
-  void writeZarrObjectAttributes(Zarr::DataStructureWriter& dataStructureWriter, FileVec::BaseCollection& objectWriter, bool importable = true) const;
-#endif
 
 private:
   DataStructure* m_DataStructure = nullptr;

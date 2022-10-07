@@ -1,10 +1,5 @@
 #include "BaseGroup.hpp"
 
-#include <exception>
-
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-
 using namespace complex;
 
 BaseGroup::BaseGroup(DataStructure& ds, std::string name)
@@ -179,39 +174,6 @@ BaseGroup::ConstIterator BaseGroup::end() const
 {
   return m_DataMap.end();
 }
-
-#if 0
-H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  return m_DataMap.readH5Group(dataStructureReader, groupReader, getId(), preflight);
-}
-
-H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto error = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return m_DataMap.writeH5Group(dataStructureWriter, groupWriter);
-}
-
-Zarr::ErrorType BaseGroup::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
-{
-  return m_DataMap.readZarGroup(dataStructureReader, collection, getId(), preflight);
-}
-
-Zarr::ErrorType BaseGroup::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
-{
-  auto groupWriterPtr = parentGroupWriter.createOrFindGroup(getName());
-  auto& groupWriter = *groupWriterPtr.get();
-  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
-
-  return m_DataMap.writeZarrGroup(dataStructureWriter, groupWriter);
-}
-#endif
 
 void BaseGroup::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

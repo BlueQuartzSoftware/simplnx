@@ -21,9 +21,30 @@ public:
   INodeGeom3dIO& operator=(INodeGeom3dIO&& rhs) = delete;
 
 protected:
-  static Result<> ReadNodeGeom3dData(DataStructureReader& structureReader, INodeGeometry3D& geom3d, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
-  static Result<> WriteNodeGeom3dData(DataStructureWriter& structureReader, const INodeGeometry3D& geom3d, group_writer_type& parentGroup, bool importable);
+  /**
+   * @brief Attempts to read the INodeGeometry3D data from HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param dataStructureReader
+   * @param geometry
+   * @param parentGroup
+   * @param geomName
+   * @param importId
+   * @param parentId
+   * @param useEmptyDataStore = false
+   * @return Result<>
+   */
+  static Result<> ReadNodeGeom3dData(DataStructureReader& dataStructureReader, INodeGeometry3D& geometry, const group_reader_type& parentGroup, const std::string& geomName,
+                                     DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
+
+  /**
+   * @brief Attempts to write the INodeGeometry3D data to HDF5.
+   * @param dataStructureWriter
+   * @param geometry
+   * @param parentGroup
+   * @param importable
+   * @return Result<>
+   */
+  static Result<> WriteNodeGeom3dData(DataStructureWriter& dataStructureWriter, const INodeGeometry3D& geometry, group_writer_type& parentGroup, bool importable);
 };
 } // namespace HDF5
 } // namespace complex

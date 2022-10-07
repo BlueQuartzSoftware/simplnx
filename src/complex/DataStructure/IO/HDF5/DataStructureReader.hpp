@@ -14,13 +14,27 @@ class GroupReader;
 class IDataIO;
 class DataIOManager;
 
+/**
+ * @brief The DataStructureReader class exists to read DataStructures from an HDF5 file or group.
+ */
 class COMPLEX_EXPORT DataStructureReader
 {
 public:
   DataStructureReader(DataIOManager* ioManager = nullptr);
   ~DataStructureReader() noexcept;
 
+  /**
+   * @brief Attempts to read a DataStructure from the corresponding file path.
+   * @param path
+   * @return Result<DataStructure>
+   */
   Result<DataStructure> readFile(const std::filesystem::path& path);
+
+  /**
+   * @brief Attempts to read a DataStructure from the corresponding HDF5 file.
+   * @param fileReader
+   * @return Result<DataStructure>
+   */
   Result<DataStructure> readFile(const H5::FileReader& fileReader);
 
   /**
@@ -28,9 +42,8 @@ public:
    * Returns any HDF5 error code that occur by reference. Otherwise, this value
    * is set to 0.
    * @param groupReader Target HDF5 group reader
-   * @param errorCode HDF5 error code from reading the file.
-   * @param useEmptyDataStores
-   * @return complex::DataStructure
+   * @param useEmptyDataStores = false
+   * @return Result<complex::DataStructure>
    */
   Result<DataStructure> readGroup(const H5::GroupReader& groupReader, bool useEmptyDataStores = false);
 

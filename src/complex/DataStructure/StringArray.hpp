@@ -1,7 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/IArray.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
@@ -88,17 +87,6 @@ public:
    * @brief Resizes the internal array to accomondate
    */
   void reshapeTuples(const std::vector<usize>& tupleShape) override;
-
-#if 0
-  /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable = true
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable = true) const override;
-#endif
 
 protected:
   StringArray(DataStructure& dataStructure, std::string name);

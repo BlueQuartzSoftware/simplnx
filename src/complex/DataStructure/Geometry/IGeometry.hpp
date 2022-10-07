@@ -189,24 +189,6 @@ public:
    */
   static std::string LengthUnitToString(LengthUnit unit);
 
-#if 0
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-#endif
-
 protected:
   IGeometry(DataStructure& ds, std::string name);
 
@@ -217,30 +199,6 @@ protected:
    * @param updatedIds
    */
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
-
-  /**
-   * @brief Reads an optional DataObject ID from HDF5.
-   * @param objectReader
-   * @param attributeName
-   * @return std::optional<DataObject::IdType>
-   */
-  static std::optional<IdType> ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName);
-
-  /**
-   * @brief Writes an optional DataObject ID to HDF5. Returns an error code if
-   * a problem occurred. Returns 0 otherwise.
-   * @param objectWriter
-   * @param dataId
-   * @param attributeName
-   * @return H5::ErrorType
-   */
-  static H5::ErrorType WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName);
-
-#if 0
-  static std::optional<IGeometry::IdType> ReadZarrDataId(const FileVec::BaseCollection& objectReader, const std::string& attributeName);
-
-  static void WriteZarrDataId(FileVec::BaseCollection& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName);
-#endif
 
   std::optional<IdType> m_ElementSizesId;
 

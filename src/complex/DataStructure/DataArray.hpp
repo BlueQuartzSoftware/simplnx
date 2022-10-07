@@ -601,41 +601,6 @@ public:
     return GetTypeName();
   }
 
-#if 0
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   *
-   * This method will fail if no DataStore has been set.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-    auto err = m_DataStore->writeHdf5(datasetWriter);
-    if(err < 0)
-    {
-      return err;
-    }
-    return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
-  }
-  
-  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override
-  {
-    auto size = m_DataStore->getSize();
-    auto datasetWriterPtr = parentGroupWriter.createOrFindArray<T>(getName(), {size}, {size});
-    auto& datasetWriter = *datasetWriterPtr.get();
-    auto err = m_DataStore->writeZarr(datasetWriter);
-    if(err < 0)
-    {
-      return err;
-    }
-    writeZarrObjectAttributes(dataStructureWriter, datasetWriter, importable);
-    return 0;
-  }
-#endif
-
 protected:
   /**
    * @brief Constructs a DataArray with the specified name and DataStore.

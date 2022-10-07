@@ -2,8 +2,6 @@
 
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 #include <stdexcept>
 
@@ -263,79 +261,3 @@ usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimension
 
   return tilePos[0] + tilePos[1] * numCols + tilePos[2] * numCols * numRows;
 }
-
-#if 0
-H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  auto rowCountAttribute = groupReader.getAttribute(H5Constants::k_RowCountTag);
-  m_RowCount = rowCountAttribute.readAsValue<uint64_t>();
-
-  auto colCountAttribute = groupReader.getAttribute(H5Constants::k_ColCountTag);
-  m_ColumnCount = colCountAttribute.readAsValue<uint64_t>();
-
-  auto depthCountAttribute = groupReader.getAttribute(H5Constants::k_DepthCountTag);
-  m_DepthCount = depthCountAttribute.readAsValue<uint64_t>();
-
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
-}
-
-H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  auto rowCountAttribute = groupWriter.createAttribute(H5Constants::k_RowCountTag);
-  errorCode = rowCountAttribute.writeValue<uint64_t>(m_RowCount);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  auto colCountAttribute = groupWriter.createAttribute(H5Constants::k_ColCountTag);
-  errorCode = colCountAttribute.writeValue<uint64_t>(m_ColumnCount);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  auto depthCountAttribute = groupWriter.createAttribute(H5Constants::k_DepthCountTag);
-  errorCode = depthCountAttribute.writeValue<uint64_t>(m_DepthCount);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
-}
-
-Zarr::ErrorType GridMontage::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& groupReader, bool preflight)
-{
-  auto rowCountAttribute = groupReader.attributes()[H5Constants::k_RowCountTag];
-  m_RowCount = rowCountAttribute.get<uint64_t>();
-
-  auto colCountAttribute = groupReader.attributes()[H5Constants::k_ColCountTag];
-  m_ColumnCount = colCountAttribute.get<uint64_t>();
-
-  auto depthCountAttribute = groupReader.attributes()[H5Constants::k_DepthCountTag];
-  m_DepthCount = depthCountAttribute.get<uint64_t>();
-
-  return BaseGroup::readZarr(dataStructureReader, groupReader, preflight);
-}
-
-Zarr::ErrorType GridMontage::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
-{
-  auto groupWriterPtr = parentGroupWriter.createOrFindGroup(getName());
-  auto& groupWriter = *groupWriterPtr.get();
-  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
-
-  groupWriter.attributes()[H5Constants::k_RowCountTag] = m_RowCount;
-  groupWriter.attributes()[H5Constants::k_ColCountTag] = m_ColumnCount;
-  groupWriter.attributes()[H5Constants::k_DepthCountTag] = m_DepthCount;
-
-  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
-}
-#endif

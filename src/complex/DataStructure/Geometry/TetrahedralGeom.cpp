@@ -1,7 +1,5 @@
 #include "TetrahedralGeom.hpp"
 
-#include <stdexcept>
-
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
@@ -226,34 +224,3 @@ IGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
   m_UnsharedFaceListId = unsharedTriList->getId();
   return 1;
 }
-
-#if 0
-Zarr::ErrorType TetrahedralGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::Group& collection, bool preflight)
-{
-  m_TriListId = ReadZarrDataId(collection, H5Constants::k_TriListTag);
-  m_UnsharedTriListId = ReadZarrDataId(collection, H5Constants::k_UnsharedTriListTag);
-  m_TetListId = ReadZarrDataId(collection, H5Constants::k_TetListTag);
-  m_TetsContainingVertId = ReadZarrDataId(collection, H5Constants::k_TetsContainingVertTag);
-  m_TetNeighborsId = ReadZarrDataId(collection, H5Constants::k_TetNeighborsTag);
-  m_TetCentroidsId = ReadZarrDataId(collection, H5Constants::k_TetCentroidsTag);
-  m_TetSizesId = ReadZarrDataId(collection, H5Constants::k_TetSizesTag);
-
-  return AbstractGeometry3D::readZarr(dataStructureReader, collection, preflight);
-}
-
-Zarr::ErrorType TetrahedralGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
-{
-  auto& groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
-
-  // Write DataObject IDs
-  WriteZarrDataId(groupWriter, m_TriListId, H5Constants::k_TriListTag);
-  WriteZarrDataId(groupWriter, m_UnsharedTriListId, H5Constants::k_UnsharedTriListTag);
-  WriteZarrDataId(groupWriter, m_TetListId, H5Constants::k_TetListTag);
-  WriteZarrDataId(groupWriter, m_TetsContainingVertId, H5Constants::k_TetsContainingVertTag);
-  WriteZarrDataId(groupWriter, m_TetNeighborsId, H5Constants::k_TetNeighborsTag);
-  WriteZarrDataId(groupWriter, m_TetCentroidsId, H5Constants::k_TetCentroidsTag);
-  WriteZarrDataId(groupWriter, m_TetSizesId, H5Constants::k_TetSizesTag);
-
-  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
-}
-#endif

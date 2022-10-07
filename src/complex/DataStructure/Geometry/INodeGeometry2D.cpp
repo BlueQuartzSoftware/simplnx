@@ -1,8 +1,5 @@
 #include "INodeGeometry2D.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 INodeGeometry2D::INodeGeometry2D(DataStructure& ds, std::string name)
@@ -165,98 +162,6 @@ void INodeGeometry2D::setFaceData(const AttributeMatrix& attributeMatrix)
 {
   m_FaceDataId = attributeMatrix.getId();
 }
-
-#if 0
-H5::ErrorType INodeGeometry2D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  H5::ErrorType error = INodeGeometry1D::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_FaceListId = ReadH5DataId(groupReader, H5Constants::k_FaceListTag);
-  m_FaceDataId = ReadH5DataId(groupReader, H5Constants::k_FaceDataTag);
-  m_UnsharedEdgeListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedEdgeListTag);
-
-  return error;
-}
-
-H5::ErrorType INodeGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = INodeGeometry1D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_FaceListId, H5Constants::k_FaceListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_FaceDataId, H5Constants::k_FaceDataTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_UnsharedEdgeListId, H5Constants::k_UnsharedEdgeListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-
-Zarr::ErrorType INodeGeometry2D::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
-{
-  Zarr::ErrorType error = INodeGeometry1D::readZarr(dataStructureReader, collection, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_FaceListId = ReadZarrDataId(collection, H5Constants::k_FaceListTag);
-  m_FaceDataId = ReadZarrDataId(collection, H5Constants::k_FaceDataTag);
-  m_UnsharedEdgeListId = ReadZarrDataId(collection, H5Constants::k_UnsharedEdgeListTag);
-
-  return error;
-}
-
-Zarr::ErrorType INodeGeometry2D::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
-{
-  Zarr::ErrorType error = INodeGeometry1D::writeZarr(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  auto groupWriter = parentGroupWriter.createOrFindGroup(getName());
-  error = WriteZarrDataId(groupWriter, m_FaceListId, H5Constants::k_FaceListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteZarrDataId(groupWriter, m_FaceDataId, H5Constants::k_FaceDataTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteZarrDataId(groupWriter, m_UnsharedEdgeListId, H5Constants::k_UnsharedEdgeListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-#endif
 
 INodeGeometry2D::SharedEdgeList* INodeGeometry2D::createSharedEdgeList(usize numEdges)
 {

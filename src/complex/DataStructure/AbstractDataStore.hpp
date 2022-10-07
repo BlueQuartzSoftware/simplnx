@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -12,11 +11,6 @@
 
 namespace complex
 {
-namespace H5
-{
-class DatasetWriter;
-} // namespace H5
-
 /**
  * @class AbstractDataStore
  * @brief The AbstractDataStore class serves as an interface class for the
@@ -620,28 +614,6 @@ public:
   {
     return {};
   }
-
-#if 0
-  /**
-   * @brief Writes the data store to Zarr. Returns an error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param datasetWriter
-   * @return Zarr::ErrorType
-   */
-  virtual Zarr::ErrorType writeZarrImpl(FileVec::IArray<T>& fileArray) const = 0;
-
-  /**
-   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param datasetWriter
-   * @return Zarr::ErrorType
-   */
-  Zarr::ErrorType writeZarr(FileVec::BaseGenericArray& fileArray) const override
-  {
-    auto& iArray = static_cast<FileVec::IArray<T>&>(fileArray);
-    return writeZarrImpl(iArray);
-  }
-#endif
 
 protected:
   /**

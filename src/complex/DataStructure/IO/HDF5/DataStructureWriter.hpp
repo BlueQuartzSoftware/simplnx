@@ -14,6 +14,9 @@ class IDataFactory;
 class DataIOManager;
 class IDataIO;
 
+/**
+ * @brief The DataStructureWriter class serves to write DataStructures to HDF5 file or groups.
+ */
 class COMPLEX_EXPORT DataStructureWriter
 {
   friend class complex::DataObject;
@@ -38,6 +41,12 @@ public:
    */
   Result<> writeDataObject(const DataObject* dataObject, H5::GroupWriter& parentGroup);
 
+  /**
+   * @brief Writes the provided dataMap to HDF5 group.
+   * @param dataMap
+   * @param parentGroup
+   * @return Result<>
+   */
   Result<> writeDataMap(const DataMap& dataMap, H5::GroupWriter& parentGroup);
 
 protected:

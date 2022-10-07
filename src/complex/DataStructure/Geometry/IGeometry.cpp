@@ -1,8 +1,5 @@
 #include "IGeometry.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 IGeometry::IGeometry(DataStructure& ds, std::string name)
@@ -190,39 +187,6 @@ std::string IGeometry::LengthUnitToString(LengthUnit unit)
   return "Unknown";
 }
 
-#if 0
-H5::ErrorType IGeometry::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  H5::ErrorType error = BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_ElementSizesTag);
-
-  return error;
-}
-
-H5::ErrorType IGeometry::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_ElementSizesId, H5Constants::k_ElementSizesTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-#endif
-
 void IGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
   BaseGroup::checkUpdatedIdsImpl(updatedIds);
@@ -235,57 +199,4 @@ void IGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>
     }
   }
 }
-
-std::optional<IGeometry::IdType> IGeometry::ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName)
-{
-  if(!objectReader.isValid())
-  {
-    return {};
-  }
-
-  auto attribute = objectReader.getAttribute(attributeName);
-  auto id = attribute.readAsValue<IdType>();
-  if(id == 0)
-  {
-    return {};
-  }
-  return id;
-}
-
-H5::ErrorType IGeometry::WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName)
-{
-  if(!objectWriter.isValid())
-  {
-    return -1;
-  }
-
-  auto attribute = objectWriter.createAttribute(attributeName);
-  if(dataId.has_value())
-  {
-    return attribute.writeValue<IdType>(dataId.value());
-  }
-  return attribute.writeValue<IdType>(0);
-}
-
-#if 0
-std::optional<IGeometry::IdType> IGeometry::ReadZarrDataId(const FileVec::BaseCollection& objectReader, const std::string& attributeName)
-{
-  const auto attribute = objectReader.attributes()[attributeName];
-  auto id = attribute.get<IdType>();
-  if(id == 0)
-  {
-    return {};
-  }
-  return id;
-}
-
-void IGeometry::WriteZarrDataId(FileVec::BaseCollection& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName)
-{
-  if(dataId.has_value())
-  {
-    objectWriter.attributes()[attributeName] = dataId.value();
-  }
-  objectWriter.attributes()[attributeName] = static_cast<IdType>(0);
-}
-#endif
 } // namespace complex

@@ -2,6 +2,8 @@
 
 #include "complex/complex_export.hpp"
 
+#include "complex/Common/Array.hpp"
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/IDataArray.hpp"

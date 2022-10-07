@@ -40,4 +40,5 @@ Result<> IGeometryIO::WriteGeometryData(DataStructureWriter& dataStructureWriter
 
   return {};
 }
+
 } // namespace complex::HDF5

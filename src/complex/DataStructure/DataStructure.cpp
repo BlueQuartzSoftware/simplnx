@@ -762,28 +762,6 @@ DataStructure DataStructure::readFromHdf5(const H5::GroupReader& groupReader, H5
   return std::move(result.value());
 }
 
-#if 0
-Zarr::ErrorType DataStructure::writeZarr(FileVec::IGroup& parentGroupWriter) const
-{
-  Zarr::DataStructureWriter dataStructureWriter;
-  auto groupWriterPtr = parentGroupWriter.createOrFindGroup(Constants::k_DataStructureTag);
-  if(groupWriterPtr == nullptr)
-  {
-    return -5;
-  }
-  FileVec::IGroup& groupWriter = *groupWriterPtr.get();
-  auto idAttribute = groupWriter.attributes()[Constants::k_NextIdTag] = m_NextId;
-
-  return m_RootGroup.writeZarrGroup(dataStructureWriter, groupWriter);
-}
-
-DataStructure DataStructure::readFromZarr(const FileVec::IGroup& groupReader, Zarr::ErrorType& err)
-{
-  Zarr::DataStructureReader dataStructureReader;
-  return dataStructureReader.readGroup(groupReader, err);
-}
-#endif
-
 bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
 {
   if(dataPaths.empty())

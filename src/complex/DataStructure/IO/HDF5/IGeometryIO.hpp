@@ -9,6 +9,9 @@ class IGeometry;
 
 namespace HDF5
 {
+/**
+ * @brief Base class for complex geometry IO using HDF5
+ */
 class COMPLEX_EXPORT IGeometryIO : public BaseGroupIO
 {
 public:
@@ -21,9 +24,31 @@ public:
   IGeometryIO& operator=(IGeometryIO&& rhs) = delete;
 
 protected:
-  static Result<> ReadGeometryData(DataStructureReader& structureReader, IGeometry& geometry, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  /**
+   * @brief Imports the geometry's data from the corresponding HDF5 object.
+   * Returns a result with any errors or warnings that were encountered during the import process.
+   * @param dataStructureReader
+   * @param geometry
+   * @param parentGroup
+   * @param geometryName
+   * @param importId
+   * @param parentId
+   * @param useEmptyDataStore
+   * @return Result<>
+   */
+  static Result<> ReadGeometryData(DataStructureReader& dataStructureReader, IGeometry& geometry, const group_reader_type& parentGroup, const std::string& geometryName, DataObject::IdType importId,
                                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
-  static Result<> WriteGeometryData(DataStructureWriter& structureReader, const IGeometry& geometry, group_writer_type& parentGroup, bool importable);
+
+  /**
+   * @brief Writes the generic geometry data to HDF5.
+   * Returns a Result with any errors or warnings that were encountered during the export process.
+   * @param dataStructureWriter
+   * @param geometry
+   * @param parentGroup
+   * @param importable
+   * @return Result<>
+   */
+  static Result<> WriteGeometryData(DataStructureWriter& dataStructureWriter, const IGeometry& geometry, group_writer_type& parentGroup, bool importable);
 };
 } // namespace HDF5
 } // namespace complex

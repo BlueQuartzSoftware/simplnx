@@ -1,9 +1,5 @@
 #include "INodeGeometry0D.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 INodeGeometry0D::INodeGeometry0D(DataStructure& ds, std::string name)
@@ -129,63 +125,6 @@ void INodeGeometry0D::setVertexData(const AttributeMatrix& attributeMatrix)
 {
   m_VertexDataId = attributeMatrix.getId();
 }
-
-#if 0
-H5::ErrorType INodeGeometry0D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  H5::ErrorType error = IGeometry::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
-  m_VertexDataId = ReadH5DataId(groupReader, H5Constants::k_VertexDataTag);
-
-  return error;
-}
-
-H5::ErrorType INodeGeometry0D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = IGeometry::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-
-  error = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  if(m_VertexListId.has_value())
-  {
-    usize numVerts = getNumberOfVertices();
-    auto datasetWriter = groupWriter.createDatasetWriter("_VertexIndices");
-    std::vector<int64> indices(numVerts);
-    for(usize i = 0; i < numVerts; i++)
-    {
-      indices[i] = i;
-    }
-    error = datasetWriter.writeSpan(H5::DatasetWriter::DimsType{numVerts, 1}, nonstd::span<const int64>{indices});
-    if(error < 0)
-    {
-      return 0;
-    }
-  }
-
-  error = WriteH5DataId(groupWriter, m_VertexDataId, H5Constants::k_VertexDataTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-#endif
 
 void INodeGeometry0D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

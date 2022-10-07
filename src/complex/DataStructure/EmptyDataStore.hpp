@@ -1,8 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <fmt/format.h>
 
@@ -212,51 +210,6 @@ public:
   {
     return std::make_unique<EmptyDataStore<T>>(this->getTupleShape(), this->getComponentShape());
   }
-
-  /**
-   * @brief Throws a runtime error due to the inability to write values to HDF5.
-   * @param datasetWriter
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
-  {
-    throw std::runtime_error("");
-  }
-
-  /**
-   * @brief Creates and returns an EmptyDataStore from the provided DatasetReader
-   * @param datasetReader
-   * @return std::unique_ptr<EmptyDataStore>
-   */
-  static std::unique_ptr<EmptyDataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
-  {
-    auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
-    auto componentShape = IDataStore::ReadComponentShape(datasetReader);
-
-    // Create DataStore
-    auto dataStore = std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
-    return dataStore;
-  }
-
-#if 0
-  static std::unique_ptr<EmptyDataStore> ReadZarr(const FileVec::BaseGenericArray& fileArray)
-  {
-    auto tupleShape = IDataStore::ReadTupleShape(fileArray);
-    auto componentShape = IDataStore::ReadComponentShape(fileArray);
-
-    return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
-  }
-
-  /**
-   * @brief Throws a runtime error due to the inability to write values to HDF5.
-   * @param datasetWriter
-   * @return H5::ErrorType
-   */
-  Zarr::ErrorType writeZarrImpl(FileVec::IArray<T>& fileArray) const override
-  {
-    throw std::runtime_error("");
-  }
-#endif
 
 private:
   ShapeType m_ComponentShape;

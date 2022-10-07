@@ -1,24 +1,14 @@
 #pragma once
 
-#include "complex/DataStructure/DataObject.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "complex/Common/Types.hpp"
+#include "complex/complex_export.hpp"
 
-//#include "FileVec/collection/BaseGenericArray.hpp"
-
-#include <algorithm>
-#include <iterator>
+#include <optional>
 
 #include "fmt/format.h"
 
 namespace complex
 {
-namespace H5
-{
-class DatasetWriter;
-} // namespace H5
-
 /**
  * @class IDataStore
  * @brief The IDataStore class serves as an interface class for the
@@ -65,6 +55,11 @@ public:
    */
   virtual const ShapeType& getComponentShape() const = 0;
 
+  /**
+   * @brief Returns the chunk shape if the DataStore is separated into chunks.
+   * If the DataStore does not have chunks, this method returns a null optional.
+   * @return optional Shapetype
+   */
   virtual std::optional<ShapeType> getChunkShape() const = 0;
 
   /**
@@ -111,66 +106,6 @@ public:
    * @return std::unique_ptr<IDataStore>
    */
   virtual std::unique_ptr<IDataStore> createNewInstance() const = 0;
-
-  /**
-   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param datasetWriter
-   * @return H5::ErrorType
-   */
-  virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
-
-#if 0
-  /**
-   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param datasetWriter
-   * @return Zarr::ErrorType
-   */
-  virtual Zarr::ErrorType writeZarr(FileVec::BaseGenericArray& datasetWriter) const = 0;
-#endif
-
-  static ShapeType ReadTupleShape(const H5::DatasetReader& datasetReader)
-  {
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(complex::H5::k_TupleShapeTag);
-    if(!tupleShapeAttribute.isValid())
-    {
-      throw std::runtime_error(fmt::format("Error reading Tuple Shape from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-    return tupleShapeAttribute.readAsVector<usize>();
-  }
-
-  static ShapeType ReadComponentShape(const H5::DatasetReader& datasetReader)
-  {
-    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(complex::H5::k_ComponentShapeTag);
-    if(!componentShapeAttribute.isValid())
-    {
-      throw std::runtime_error(fmt::format("Error reading Component Shape from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-    return componentShapeAttribute.readAsVector<usize>();
-  }
-
-#if 0
-  static ShapeType ReadTupleShape(const FileVec::BaseGenericArray& datasetReader)
-  {
-    const nlohmann::json tupleShapeAttribute = datasetReader.attributes()[complex::H5::k_TupleShapeTag];
-    if(tupleShapeAttribute.empty())
-    {
-      throw std::runtime_error(fmt::format("Error reading Tuple Shape from Zarr at {}", datasetReader.path()));
-    }
-    return tupleShapeAttribute.get<std::vector<usize>>();
-  }
-
-  static ShapeType ReadComponentShape(const FileVec::BaseGenericArray& datasetReader)
-  {
-    const nlohmann::json componentShapeAttribute = datasetReader.attributes()[complex::H5::k_ComponentShapeTag];
-    if(componentShapeAttribute.empty())
-    {
-      throw std::runtime_error(fmt::format("Error reading Component Shape from Zarr at {}", datasetReader.path()));
-    }
-    return componentShapeAttribute.get<std::vector<usize>>();
-  }
-#endif
 
 protected:
   /**

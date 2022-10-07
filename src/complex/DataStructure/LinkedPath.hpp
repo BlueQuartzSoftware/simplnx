@@ -7,7 +7,6 @@
 
 namespace complex
 {
-
 /**
  * @class LinkedPath
  * @brief The LinkedPath class is an alternate way to store a path through the

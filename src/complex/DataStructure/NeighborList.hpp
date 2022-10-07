@@ -4,22 +4,6 @@
 
 namespace complex
 {
-namespace H5
-{
-class DatasetReader;
-class GroupReader;
-
-template <typename T>
-class NeighborListFactory;
-
-#if 0
-namespace Constants
-{
-constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
-}
-#endif
-} // namespace H5
-
 /**
  * @class NeighborList
  * @brief
@@ -28,8 +12,6 @@ constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
 template <class T>
 class NeighborList : public INeighborList
 {
-  friend class H5::NeighborListFactory<T>;
-
 public:
   using value_type = T;
   using VectorType = std::vector<T>;
@@ -291,40 +273,6 @@ public:
   void reshapeTuples(const std::vector<usize>& tupleShape) override;
 
   const std::vector<SharedVectorType>& getValues() const;
-
-#if 0
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   *
-   * This method will fail if no DataStore has been set.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
-  /**
-   * @brief Read the data vector from HDF5.
-   * @param parentGroup
-   * @param dataReader
-   * @return std::vector<SharedVectorType>
-   */
-  static std::vector<SharedVectorType> ReadHdf5Data(const H5::GroupReader& parentGroup, const H5::DatasetReader& dataReader);
-
-  static std::vector<SharedVectorType> ReadZarrData(const FileVec::IGroup& parentGroup, const FileVec::BaseGenericArray& fileArray);
-  
-  /**
-   * @brief Writes the DataArray to Zarr using the provided group.
-   *
-   * This method will fail if no DataStore has been set.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return Zarr::ErrorType
-   */
-  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override;
-#endif
 
 protected:
   /**

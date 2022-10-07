@@ -4,6 +4,7 @@
 #include "complex/DataStructure/DataMap.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/complex_export.hpp"
 
 #include "nod/nod.hpp"
@@ -38,8 +39,8 @@ class DataStructureReader;
 }
 namespace H5
 {
-class FileReader;
-class FileWriter;
+class GroupReader;
+class GroupWriter;
 } // namespace H5
 
 /**
@@ -612,12 +613,6 @@ public:
    * @return H5::ErrorType
    */
   static DataStructure readFromHdf5(const H5::GroupReader& groupReader, H5::ErrorType& err);
-
-#if 0
-  Zarr::ErrorType writeZarr(FileVec::IGroup& parentGroupWriter) const;
-
-  static DataStructure readFromZarr(const FileVec::IGroup& groupReader, Zarr::ErrorType& err);
-#endif
 
   /**
    * @brief Checks if all IDataArrays at the target paths have the same tuple count.

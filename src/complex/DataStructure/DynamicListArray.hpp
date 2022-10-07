@@ -369,30 +369,6 @@ protected:
     }
   }
 
-#if 0
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    throw std::runtime_error("");
-  }
-  
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override
-  {
-    throw std::runtime_error("");
-  }
-#endif
-
 private:
   ElementList* m_Array = nullptr; // pointer to data
   usize m_Size = 0;

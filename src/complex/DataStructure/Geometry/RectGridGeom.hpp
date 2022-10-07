@@ -303,35 +303,6 @@ public:
    */
   std::optional<usize> getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
 
-#if 0
-  /**
-   * @brief Reads values from HDF5
-   * @param dataStructureReader
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-  
-  /**
-   * @brief Reads the DataStructure group from a target Zarr data.
-   * @param dataStructureReader
-   * @param collection
-   * @return Zarr::Error
-   */
-  Zarr::ErrorType readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight = false) override;
-
-  Zarr::ErrorType writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const override;
-#endif
-
 protected:
   /**
    * @brief

@@ -247,16 +247,4 @@ std::vector<DataPath> DataObject::getDataPaths() const
   }
   return paths;
 }
-
-#if 0
-void DataObject::writeZarrObjectAttributes(Zarr::DataStructureWriter& dataStructureWriter, FileVec::BaseCollection& objectWriter, bool importable) const
-{
-  // Add to DataStructureWriter for use in linking
-  dataStructureWriter.addZarrWriter(objectWriter, getId());
-
-  objectWriter.attributes()[complex::Constants::k_ObjectTypeTag] = getTypeName();
-  objectWriter.attributes()[complex::Constants::k_ObjectIdTag] = getId();
-  objectWriter.attributes()[complex::Constants::k_ImportableTag] = importable ? 1 : 0;
-}
-#endif
 } // namespace complex

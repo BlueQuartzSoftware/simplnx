@@ -8,6 +8,9 @@ class GridMontage;
 
 namespace HDF5
 {
+/**
+ * @brief The GridMontageIO class serves as a reader and writer for GridMontages using HDF5.
+ */
 class COMPLEX_EXPORT GridMontageIO : public BaseGroupIO
 {
 public:
@@ -16,10 +19,36 @@ public:
   GridMontageIO();
   virtual ~GridMontageIO() noexcept;
 
-  Result<> readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  /**
+   * @brief Attempts to read the GridMontage from HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param dataStructureReader
+   * @param parentGroup
+   * @param montageName
+   * @param importId
+   * @param parentId
+   * @param useEmptyDataStore = false
+   * @return Result<>
+   */
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& montageName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const;
-  Result<> writeData(DataStructureWriter& structureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable) const;
 
+  /**
+   * @brief Attempts to write the GridMontage to HDF5.
+   * Returns a Result<> with any errors or warnings encountered during the process.
+   * @param dataStructureWriter
+   * @param montage
+   * @param parentGroup
+   * @param importable
+   */
+  Result<> writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable) const;
+
+  /**
+   * @brief Attempts to write the DataObject to HDF5.
+   * Returns an error if the DataObject cannot be cast to a GridMontage.
+   * Otherwise, this method returns writeData(...)
+   * Return Result<>
+   */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
 
   DataObject::Type getDataType() const override;

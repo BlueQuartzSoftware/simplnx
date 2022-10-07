@@ -1,7 +1,6 @@
 #include "RectGridGeom.hpp"
 
 #include <iterator>
-#include <stdexcept>
 
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -503,117 +502,6 @@ std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, floa
   usize ySize = yBnds.getSize() - 1;
   return (ySize * xSize * z) + (xSize * y) + x;
 }
-
-#if 0
-H5::ErrorType RectGridGeom::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  // Read Dimensions
-  auto volumeAttribute = groupReader.getAttribute("Dimensions");
-  if(!volumeAttribute.isValid())
-  {
-    return -1;
-  }
-  std::vector<size_t> volumeDimensions = volumeAttribute.readAsVector<size_t>();
-  setDimensions(volumeDimensions);
-
-  // Read DataObject IDs
-  m_xBoundsId = ReadH5DataId(groupReader, H5Constants::k_XBoundsTag);
-  m_yBoundsId = ReadH5DataId(groupReader, H5Constants::k_YBoundsTag);
-  m_zBoundsId = ReadH5DataId(groupReader, H5Constants::k_ZBoundsTag);
-
-  return IGridGeometry::readHdf5(dataStructureReader, groupReader, preflight);
-}
-
-H5::ErrorType RectGridGeom::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = IGridGeometry::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-
-  // Write dimensions
-  H5::AttributeWriter::DimsVector dims = {3};
-  std::vector<size_t> dimsVector(3);
-  for(size_t i = 0; i < 3; i++)
-  {
-    dimsVector[i] = m_Dimensions[i];
-  }
-
-  auto dimensionAttr = groupWriter.createAttribute(H5Constants::k_DimensionsTag);
-  error = dimensionAttr.writeVector(dims, dimsVector);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  // Write DataObject IDs
-  error = WriteH5DataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-
-Zarr::ErrorType RectGridGeom::readZarr(Zarr::DataStructureReader& dataStructureReader, const FileVec::IGroup& collection, bool preflight)
-{
-  // Read Dimensions
-  const auto& attributes = collection.attributes();
-  nlohmann::json volumeAttribute = attributes["Dimensions"];
-  if(volumeAttribute.empty())
-  {
-    return -1;
-  }
-  std::vector<size_t> volumeDimensions = volumeAttribute.get<std::vector<size_t>>();
-  setDimensions(volumeDimensions);
-
-  // Read DataObject IDs
-  m_xBoundsId = ReadZarrDataId(collection, H5Constants::k_XBoundsTag);
-  m_yBoundsId = ReadZarrDataId(collection, H5Constants::k_YBoundsTag);
-  m_zBoundsId = ReadZarrDataId(collection, H5Constants::k_ZBoundsTag);
-
-  return BaseGroup::readZarr(dataStructureReader, collection, preflight);
-}
-
-Zarr::ErrorType RectGridGeom::writeZarr(Zarr::DataStructureWriter& dataStructureWriter, FileVec::IGroup& parentGroupWriter, bool importable) const
-{
-  auto& groupWriter = *parentGroupWriter.createOrFindGroup(getName()).get();
-  writeZarrObjectAttributes(dataStructureWriter, groupWriter, importable);
-
-  // Write dimensions
-  H5::AttributeWriter::DimsVector dims = {3};
-  std::vector<size_t> dimsVector(3);
-  for(size_t i = 0; i < 3; i++)
-  {
-    dimsVector[i] = m_Dimensions[i];
-  }
-
-  groupWriter.attributes()[H5Constants::k_DimensionsTag] = dimsVector;
-
-  // Write DataObject IDs
-  WriteZarrDataId(groupWriter, m_xBoundsId, H5Constants::k_XBoundsTag);
-  WriteZarrDataId(groupWriter, m_yBoundsId, H5Constants::k_YBoundsTag);
-  WriteZarrDataId(groupWriter, m_zBoundsId, H5Constants::k_ZBoundsTag);
-
-  return getDataMap().writeZarrGroup(dataStructureWriter, groupWriter);
-}
-#endif
 
 void RectGridGeom::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

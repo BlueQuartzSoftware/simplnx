@@ -1,8 +1,5 @@
 #include "INodeGeometry1D.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 INodeGeometry1D::INodeGeometry1D(DataStructure& ds, std::string name)
