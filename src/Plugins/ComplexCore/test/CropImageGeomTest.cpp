@@ -145,8 +145,8 @@ TEST_CASE("ComplexCore::CropImageGeometry(Valid Parameters)", "[ComplexCore][Cro
     // Write out the DataStructure for later viewing/debugging
     Result<H5::FileWriter> ioResult = H5::FileWriter::CreateFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
     H5::FileWriter fileWriter = std::move(ioResult.value());
-    herr_t err = ds.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    auto resultH5 = ds.writeHdf5(fileWriter);
+    REQUIRE(resultH5.valid());
   }
 
   const auto& newCIDataArray = ds.getDataRefAs<Float32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath(Constants::k_ConfidenceIndex));

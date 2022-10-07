@@ -3,6 +3,7 @@
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -66,6 +67,7 @@ Parameters CreateDataArray::parameters() const
   params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Dimensions", tableInfo));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));
   params.insert(std::make_unique<StringParameter>(k_InitilizationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
+  params.insert(std::make_unique<BoolParameter>(k_InMemory_Key, "In Memory", "This value will specify if the array is stored in memory or out-of-core", true));
   return params;
 }
 
@@ -104,6 +106,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
 
   OutputActions actions;
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath);
+  // auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath, inMemory);
   actions.actions.push_back(std::move(action));
 
   return {std::move(actions)};

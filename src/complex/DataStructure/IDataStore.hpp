@@ -1,22 +1,14 @@
 #pragma once
 
-#include "complex/DataStructure/DataObject.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "complex/Common/Types.hpp"
+#include "complex/complex_export.hpp"
 
-#include <algorithm>
-#include <iterator>
+#include <optional>
 
 #include "fmt/format.h"
 
 namespace complex
 {
-namespace H5
-{
-class DatasetWriter;
-} // namespace H5
-
 /**
  * @class IDataStore
  * @brief The IDataStore class serves as an interface class for the
@@ -33,7 +25,9 @@ public:
   {
     Unknown = -1,
     InMemory = 0,
+    OutOfCore,
     Empty,
+    EmptyOutOfCore
   };
 
   virtual ~IDataStore() = default;
@@ -60,6 +54,13 @@ public:
    * @return
    */
   virtual const ShapeType& getComponentShape() const = 0;
+
+  /**
+   * @brief Returns the chunk shape if the DataStore is separated into chunks.
+   * If the DataStore does not have chunks, this method returns a null optional.
+   * @return optional Shapetype
+   */
+  virtual std::optional<ShapeType> getChunkShape() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.
@@ -105,34 +106,6 @@ public:
    * @return std::unique_ptr<IDataStore>
    */
   virtual std::unique_ptr<IDataStore> createNewInstance() const = 0;
-
-  /**
-   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param datasetWriter
-   * @return H5::ErrorType
-   */
-  virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
-
-  static ShapeType ReadTupleShape(const H5::DatasetReader& datasetReader)
-  {
-    H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(complex::H5::k_TupleShapeTag);
-    if(!tupleShapeAttribute.isValid())
-    {
-      throw std::runtime_error(fmt::format("Error reading Tuple Shape from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-    return tupleShapeAttribute.readAsVector<usize>();
-  }
-
-  static ShapeType ReadComponentShape(const H5::DatasetReader& datasetReader)
-  {
-    H5::AttributeReader componentShapeAttribute = datasetReader.getAttribute(complex::H5::k_ComponentShapeTag);
-    if(!componentShapeAttribute.isValid())
-    {
-      throw std::runtime_error(fmt::format("Error reading Component Shape from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-    return componentShapeAttribute.readAsVector<usize>();
-  }
 
 protected:
   /**

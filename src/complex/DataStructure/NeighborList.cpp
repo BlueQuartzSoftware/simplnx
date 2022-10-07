@@ -3,9 +3,6 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
@@ -42,6 +39,7 @@ NeighborList<T>* NeighborList<T>::Import(DataStructure& ds, const std::string& n
 {
 
   auto data = std::shared_ptr<NeighborList>(new NeighborList(ds, name, dataVector, importId));
+  auto* parentObj = ds.getData(parentId);
   if(!AttemptToAddObject(ds, data, parentId))
   {
     return nullptr;
@@ -291,6 +289,12 @@ void NeighborList<T>::reshapeTuples(const std::vector<usize>& tupleShape)
   resizeTotalElements(numTuples);
 }
 
+template <typename T>
+const std::vector<typename NeighborList<T>::SharedVectorType>& NeighborList<T>::getValues() const
+{
+  return m_Array;
+}
+
 template <>
 DataType COMPLEX_EXPORT NeighborList<int8>::getDataType() const
 {
@@ -357,100 +361,6 @@ template <>
 DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const
 {
   return DataType::float64;
-}
-
-template <typename T>
-H5::ErrorType NeighborList<T>::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  DataStructure tmp;
-
-  // Create NumNeighbors DataStore
-  const usize arraySize = m_Array.size();
-  auto* numNeighborsArray = Int32Array::CreateWithStore<Int32DataStore>(tmp, getNumNeighborsArrayName(), {arraySize}, {1});
-  auto& numNeighborsStore = numNeighborsArray->getDataStoreRef();
-  usize totalItems = 0;
-  for(usize i = 0; i < arraySize; i++)
-  {
-    const auto numNeighbors = m_Array[i]->size();
-    numNeighborsStore[i] = static_cast<int32>(numNeighbors);
-    totalItems += numNeighbors;
-  }
-
-  // Write NumNeighbors data
-  auto error = numNeighborsArray->writeHdf5(dataStructureWriter, parentGroupWriter, false);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  // Create flattened neighbor DataStore
-  DataStore<T> flattenedData(totalItems, static_cast<T>(0));
-  usize offset = 0;
-  for(const auto& segment : m_Array)
-  {
-    usize numElements = segment->size();
-    if(numElements == 0)
-    {
-      continue;
-    }
-    T* start = segment->data();
-    for(usize i = 0; i < numElements; i++)
-    {
-      flattenedData[offset + i] = start[i];
-    }
-    offset += numElements;
-  }
-
-  // Write flattened array to HDF5 as a separate array
-  auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-  H5::ErrorType err = flattenedData.writeHdf5(datasetWriter);
-  if(err < 0)
-  {
-    return err;
-  }
-  auto linkedDatasetAttribute = datasetWriter.createAttribute("Linked NumNeighbors Dataset");
-  err = linkedDatasetAttribute.writeString(getNumNeighborsArrayName());
-  if(err < 0)
-  {
-    return err;
-  }
-  return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
-}
-
-template <typename T>
-std::vector<typename NeighborList<T>::SharedVectorType> NeighborList<T>::ReadHdf5Data(const H5::GroupReader& parentGroup, const H5::DatasetReader& dataReader)
-{
-  auto numNeighborsAttributeName = dataReader.getAttribute("Linked NumNeighbors Dataset");
-  auto numNeighborsName = numNeighborsAttributeName.readAsString();
-
-  auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
-
-  auto numNeighborsPtr = Int32DataStore::ReadHdf5(numNeighborsReader);
-  auto& numNeighborsStore = *numNeighborsPtr.get();
-
-  std::vector<T> flatDataStore = dataReader.template readAsVector<T>();
-  if(flatDataStore.empty())
-  {
-    throw std::runtime_error(fmt::format("Error reading neighbor list from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(dataReader.getParentId()), dataReader.getName()));
-  }
-
-  std::vector<SharedVectorType> dataVector;
-  usize offset = 0;
-  const auto numTuples = numNeighborsStore.getNumberOfTuples();
-  for(usize i = 0; i < numTuples; i++)
-  {
-    const auto numNeighbors = numNeighborsStore[i];
-    auto sharedVector = std::make_shared<std::vector<T>>(numNeighbors);
-    std::vector<T>& vector = *sharedVector.get();
-
-    size_t neighborListStart = offset;
-    size_t neighborListEnd = offset + numNeighbors;
-    sharedVector->assign(flatDataStore.begin() + neighborListStart, flatDataStore.begin() + neighborListEnd);
-    offset += numNeighbors;
-    dataVector.push_back(sharedVector);
-  }
-
-  return dataVector;
 }
 
 #if !defined(__APPLE__) && !defined(_MSC_VER)

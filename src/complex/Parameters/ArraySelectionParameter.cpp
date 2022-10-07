@@ -31,10 +31,12 @@ struct fmt::formatter<complex::DataType>
 
 namespace complex
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes)
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
+                                                 DataLocation location)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowedTypes(allowedTypes)
+, m_Location(location)
 {
   if(allowedTypes.empty())
   {
@@ -100,6 +102,21 @@ ArraySelectionParameter::AllowedTypes ArraySelectionParameter::allowedTypes() co
   return m_AllowedTypes;
 }
 
+bool ArraySelectionParameter::allowsOutOfCore() const
+{
+  return (m_Location == DataLocation::Any) || (m_Location == DataLocation::OutOfCore);
+}
+
+bool ArraySelectionParameter::allowsInMemory() const
+{
+  return (m_Location == DataLocation::Any) || (m_Location == DataLocation::InMemory);
+}
+
+ArraySelectionParameter::DataLocation ArraySelectionParameter::allowedDataLocations() const
+{
+  return m_Location;
+}
+
 Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
@@ -135,6 +152,27 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
       return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
                                       fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
     }
+  }
+
+  if(m_Location == DataLocation::Any)
+  {
+    return {};
+  }
+  else
+  {
+    IDataStore::StoreType storeType = dataArray->getStoreType();
+
+    if(allowsInMemory() && (storeType == IDataStore::StoreType::Empty))
+    {
+      return {};
+    }
+    else if(allowsOutOfCore() && (storeType == IDataStore::StoreType::EmptyOutOfCore))
+    {
+      return {};
+    }
+
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DataLocation_Error,
+                                    fmt::format("{}DataArray at path '{}' was stored at '{}', but only {} are allowed", prefix, value.toString(), storeType, m_Location));
   }
 
   return {};

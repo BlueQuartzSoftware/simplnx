@@ -4,20 +4,6 @@
 
 namespace complex
 {
-namespace H5
-{
-class DatasetReader;
-class GroupReader;
-
-template <typename T>
-class NeighborListFactory;
-
-namespace Constants
-{
-constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
-}
-} // namespace H5
-
 /**
  * @class NeighborList
  * @brief
@@ -26,8 +12,6 @@ constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
 template <class T>
 class NeighborList : public INeighborList
 {
-  friend class H5::NeighborListFactory<T>;
-
 public:
   using value_type = T;
   using VectorType = std::vector<T>;
@@ -288,24 +272,7 @@ public:
    */
   void reshapeTuples(const std::vector<usize>& tupleShape) override;
 
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   *
-   * This method will fail if no DataStore has been set.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
-  /**
-   * @brief Read the data vector from HDF5.
-   * @param parentGroup
-   * @param dataReader
-   * @return std::vector<SharedVectorType>
-   */
-  static std::vector<SharedVectorType> ReadHdf5Data(const H5::GroupReader& parentGroup, const H5::DatasetReader& dataReader);
+  const std::vector<SharedVectorType>& getValues() const;
 
 protected:
   /**

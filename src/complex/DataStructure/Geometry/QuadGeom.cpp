@@ -1,12 +1,8 @@
 #include "QuadGeom.hpp"
 
-#include <stdexcept>
-
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
@@ -51,6 +47,11 @@ QuadGeom* QuadGeom::Import(DataStructure& ds, std::string name, IdType importId,
 }
 
 std::string QuadGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string QuadGeom::GetTypeName()
 {
   return "QuadGeom";
 }

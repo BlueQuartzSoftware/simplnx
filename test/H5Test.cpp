@@ -117,11 +117,11 @@ TEST_CASE("Read Legacy DREAM.3D Data")
   }
 
   {
-    const std::string grainData = "Grain Data";
-    REQUIRE(ds.getData(DataPath({geomName, grainData})) != nullptr);
-    REQUIRE(ds.getDataAs<NeighborList<int32_t>>(DataPath({geomName, grainData, "NeighborList"})) != nullptr);
-    REQUIRE(ds.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumElements"})) != nullptr);
-    REQUIRE(ds.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumNeighbors"})) != nullptr);
+    DataPath grainDataPath({geomName, "Grain Data"});
+    REQUIRE(ds.getData(grainDataPath) != nullptr);
+    REQUIRE(ds.getDataAs<NeighborList<int32_t>>(grainDataPath.createChildPath("NeighborList")) != nullptr);
+    REQUIRE(ds.getDataAs<Int32Array>(grainDataPath.createChildPath("NumElements")) != nullptr);
+    REQUIRE(ds.getDataAs<Int32Array>(grainDataPath.createChildPath("NumNeighbors")) != nullptr);
   }
 }
 #endif
@@ -222,9 +222,8 @@ TEST_CASE("Image Geometry IO")
     H5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
-    herr_t err;
-    err = ds.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    auto resultH5 = ds.writeHdf5(fileWriter);
+    REQUIRE(resultH5.valid());
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -251,8 +250,8 @@ TEST_CASE("Image Geometry IO")
       H5::FileWriter fileWriter = std::move(result.value());
       REQUIRE(fileWriter.isValid());
 
-      err = ds.writeHdf5(fileWriter);
-      REQUIRE(err >= 0);
+      auto resultH5 = ds.writeHdf5(fileWriter);
+      REQUIRE(resultH5.valid());
     } catch(const std::exception& e)
     {
       FAIL(e.what());
@@ -596,9 +595,8 @@ TEST_CASE("Node Based Geometry IO")
     H5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
-    herr_t err;
-    err = ds.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    auto resultH5 = ds.writeHdf5(fileWriter);
+    REQUIRE(resultH5.valid());
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -646,9 +644,8 @@ TEST_CASE("NeighborList IO")
     H5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
-    herr_t err;
-    err = ds.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    Result<> writeResult = ds.writeHdf5(fileWriter);
+    REQUIRE(writeResult.valid());
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -660,7 +657,7 @@ TEST_CASE("NeighborList IO")
     H5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
-    herr_t err;
+    herr_t err = 0;
     auto ds = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
@@ -699,9 +696,8 @@ TEST_CASE("DataArray<bool> IO")
     H5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
-    herr_t err;
-    err = ds.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    Result<> writeResult = ds.writeHdf5(fileWriter);
+    REQUIRE(writeResult.valid());
   } catch(const std::exception& e)
   {
     FAIL(e.what());

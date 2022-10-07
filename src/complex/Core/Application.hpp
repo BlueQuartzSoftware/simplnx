@@ -5,15 +5,25 @@
 #include <string>
 #include <vector>
 
+#include "complex/DataStructure/DataObject.hpp"
 #include "complex/Filter/FilterList.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp"
+//#include "complex/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp"
 
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
 class AbstractPlugin;
+class DataIOCollection;
+class IDataIOManager;
 class JsonPipelineBuilder;
+
+#if 0
+namespace Zarr
+{
+class DataFactoryManager;
+}
+#endif
 
 /**
  * @class Application
@@ -29,6 +39,8 @@ class JsonPipelineBuilder;
 class COMPLEX_EXPORT Application
 {
 public:
+  using name_type_map = std::map<std::string, DataObject::Type>;
+
   /**
    * @brief Constructs an Application using default values and replaces the
    * current Instance pointer.
@@ -58,6 +70,8 @@ public:
    * @return Application*
    */
   static Application* Instance();
+
+  static Application* GetOrCreateInstance();
 
   /**
    * @brief Finds and loads plugins in the target directory.
@@ -97,6 +111,7 @@ public:
    */
   JsonPipelineBuilder* getPipelineBuilder() const;
 
+#if 0
   /**
    * @brief Returns a pointer to the Application's H5::DataFactoryManager.
    *
@@ -105,6 +120,21 @@ public:
    * @return DataFactoryManager*
    */
   H5::DataFactoryManager* getH5FactoryManager() const;
+#endif
+
+  std::shared_ptr<DataIOCollection> getIOCollection() const;
+
+  std::shared_ptr<IDataIOManager> getIOManager(const std::string& formatName) const;
+
+  template <typename T>
+  std::shared_ptr<T> getIOManagerAs(const std::string& formatName) const
+  {
+    return std::dynamic_pointer_cast<T>(getIOManager(formatName));
+  }
+
+#if 0
+  Zarr::DataFactoryManager* getZarrFactoryManager() const;
+#endif
 
   /**
    * @brief Returns a filepath pointing to the current executable.
@@ -118,12 +148,18 @@ public:
    */
   std::filesystem::path getCurrentDir() const;
 
+  void addDataType(DataObject::Type type, const std::string& name);
+
+  DataObject::Type getDataType(const std::string& name) const;
+
 private:
   /**
    * @brief Assigns Application as the current instance and sets the current
    * executable path.
    */
   void assignInstance();
+
+  void initDefaultDataTypes();
 
   /**
    * @brief Loads the plugin at the specified filepath and updates the
@@ -140,6 +176,9 @@ private:
   // Variables
   std::unique_ptr<complex::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
-  std::unique_ptr<H5::DataFactoryManager> m_DataReader;
+  // std::unique_ptr<H5::DataFactoryManager> m_DataReader;
+  std::shared_ptr<DataIOCollection> m_DataIOCollection;
+  name_type_map m_NamedTypesMap;
+  // std::unique_ptr<Zarr::DataFactoryManager> m_ZarrFactoryManager;
 };
 } // namespace complex

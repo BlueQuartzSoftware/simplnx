@@ -1,5 +1,7 @@
 #pragma once
 
+#include "complex/Common/Array.hpp"
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
 
@@ -200,22 +202,6 @@ public:
    * @param attributeMatrix
    */
   void setCellData(const AttributeMatrix& attributeMatrix);
-
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   IGridGeometry(DataStructure& ds, std::string name);

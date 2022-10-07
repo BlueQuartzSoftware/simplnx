@@ -2,6 +2,7 @@
 
 #include "fmt/format.h"
 
+#include <numeric>
 #include <stdexcept>
 
 namespace complex
@@ -185,19 +186,5 @@ void StringArray::reshapeTuples(const std::vector<usize>& tupleShape)
   {
     m_Strings.resize(numTuples);
   }
-}
-
-H5::ErrorType StringArray::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-
-  // writeVectorOfStrings may resize the collection
-  collection_type strings = m_Strings;
-  const auto err = datasetWriter.writeVectorOfStrings(strings);
-  if(err < 0)
-  {
-    return err;
-  }
-  return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
 }
 } // namespace complex

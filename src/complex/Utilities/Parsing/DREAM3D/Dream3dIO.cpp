@@ -16,11 +16,12 @@
 #include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "complex/DataStructure/IO/HDF5/NeighborListIO.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
@@ -741,14 +742,8 @@ complex::DREAM3D::PipelineVersionType complex::DREAM3D::GetPipelineVersion(const
 
 Result<DataStructure> ImportDataStructureV8(const H5::FileReader& fileReader, bool preflight)
 {
-  H5::ErrorType errorCode = 0;
-  H5::DataStructureReader dataStructureReader;
-  auto dataStructure = dataStructureReader.readH5Group(fileReader, errorCode, preflight);
-  if(errorCode < 0)
-  {
-    return MakeErrorResult<DataStructure>(errorCode, fmt::format("Failed to import DataStructure"));
-  }
-  return {std::move(dataStructure)};
+  HDF5::DataStructureReader dataStructureReader;
+  return dataStructureReader.readGroup(fileReader, preflight);
 }
 
 // Begin legacy DCA importing
@@ -908,7 +903,8 @@ template <typename T>
 void createLegacyNeighborList(DataStructure& ds, DataObject ::IdType parentId, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::vector<usize>& tupleDims)
 {
   auto numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
-  auto data = NeighborList<T>::ReadHdf5Data(parentReader, datasetReader);
+
+  auto data = HDF5::NeighborListIO<T>::ReadHdf5Data(parentReader, datasetReader);
   auto* neighborList = NeighborList<T>::Create(ds, datasetReader.getName(), numTuples, parentId);
   for(usize i = 0; i < data.size(); ++i)
   {
@@ -1415,7 +1411,12 @@ H5::ErrorType WritePipeline(H5::FileWriter& fileWriter, const Pipeline& pipeline
 
 H5::ErrorType WriteDataStructure(H5::FileWriter& fileWriter, const DataStructure& dataStructure)
 {
-  return dataStructure.writeHdf5(fileWriter);
+  Result<> result = dataStructure.writeHdf5(fileWriter);
+  if(result.invalid())
+  {
+    return result.errors()[0].code;
+  }
+  return 0;
 }
 
 H5::ErrorType WriteFileVersion(H5::FileWriter& fileWriter)
@@ -1459,7 +1460,7 @@ Result<> complex::DREAM3D::WriteFile(const std::filesystem::path& path, const Da
   H5::ErrorType error = WriteFile(fileWriter, Pipeline(), dataStructure);
   if(error < 0)
   {
-    return MakeErrorResult(-2, fmt::format("complex::DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error {}", error));
+    return MakeErrorResult(error, fmt::format("complex::DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error"));
   }
 
   if(writeXdmf)

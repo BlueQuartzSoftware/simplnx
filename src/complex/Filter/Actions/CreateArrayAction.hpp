@@ -13,7 +13,7 @@ class COMPLEX_EXPORT CreateArrayAction : public IDataCreationAction
 public:
   CreateArrayAction() = delete;
 
-  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path);
+  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, bool inMemory = true);
 
   ~CreateArrayAction() noexcept override;
 
@@ -60,9 +60,16 @@ public:
    */
   std::vector<DataPath> getAllCreatedPaths() const override;
 
+  /**
+   * @brief Checks and returns whether or not the created array stores data in memory.
+   * @return bool
+   */
+  bool inMemory() const;
+
 private:
   DataType m_Type;
   std::vector<usize> m_Dims;
   std::vector<usize> m_CDims;
+  bool m_InMemory = true;
 };
 } // namespace complex

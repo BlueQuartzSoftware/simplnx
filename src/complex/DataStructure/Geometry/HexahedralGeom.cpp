@@ -1,12 +1,8 @@
 #include "HexahedralGeom.hpp"
 
-#include <stdexcept>
-
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
@@ -51,6 +47,11 @@ IGeometry::Type HexahedralGeom::getGeomType() const
 }
 
 std::string HexahedralGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string HexahedralGeom::GetTypeName()
 {
   return "HexahedralGeom";
 }

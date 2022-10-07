@@ -1,12 +1,8 @@
 #include "EdgeGeom.hpp"
 
-#include <stdexcept>
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
@@ -51,6 +47,11 @@ IGeometry::Type EdgeGeom::getGeomType() const
 }
 
 std::string EdgeGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string EdgeGeom::GetTypeName()
 {
   return "EdgeGeom";
 }

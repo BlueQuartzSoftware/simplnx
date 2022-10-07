@@ -140,6 +140,22 @@ public:
     getIDataStoreRef().reshapeTuples(tupleShape);
   }
 
+  /**
+   * @brief Returns the StoreType of the underlying IDataStore specifying if
+   * the IDataStore is in memory, out of core, empty, or unknown.
+   * Returns Unknown if no store could be found.
+   * @return IDataStore::StoreType
+   */
+  IDataStore::StoreType getStoreType() const
+  {
+    const IDataStore* store = getIDataStore();
+    if(store == nullptr)
+    {
+      return IDataStore::StoreType::Unknown;
+    }
+    return store->getStoreType();
+  }
+
 protected:
   IDataArray(DataStructure& dataStructure, std::string name)
   : IArray(dataStructure, std::move(name))

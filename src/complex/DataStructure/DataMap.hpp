@@ -6,21 +6,13 @@
 #include <string>
 #include <vector>
 
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
 class DataStructure;
 class DataObject;
-
-namespace H5
-{
-class DataStructureReader;
-class DataStructureWriter;
-class GroupReader;
-class GroupWriter;
-} // namespace H5
 
 /**
  * @class DataMap
@@ -290,23 +282,6 @@ public:
    * @return DataMap&
    */
   DataMap& operator=(DataMap&& rhs) noexcept;
-
-  /**
-   * @brief Fills the DataMap with values taken from the specified HDF5 group ID.
-   * @param dataStructureReader
-   * @param h5Group
-   * @param dsParentId = {}
-   * @param preflight = false
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<IdType>& dsParentId = {}, bool preflight = false);
-
-  /**
-   * @brief Writes the DataMap and its DataObjects to the target HDF5 group.
-   * @param groupWriter
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const;
 
   /**
    * @brief Updates the map IDs using a vector of updated IDs and their new values.

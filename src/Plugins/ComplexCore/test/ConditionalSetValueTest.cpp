@@ -142,8 +142,8 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   // std::cout << "Writing file to: " << filePath << std::endl;
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
   H5::FileWriter fileWriter = std::move(result.value());
-  herr_t err = dataGraph.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto resultH5 = dataGraph.writeHdf5(fileWriter);
+  REQUIRE(resultH5.valid());
 }
 
 TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")

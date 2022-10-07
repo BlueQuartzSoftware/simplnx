@@ -3,8 +3,6 @@
 #include <exception>
 #include <stdexcept>
 
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-
 using namespace complex;
 
 DataGroup::DataGroup(DataStructure& ds, std::string name)
@@ -65,20 +63,15 @@ DataObject* DataGroup::shallowCopy()
 
 std::string DataGroup::getTypeName() const
 {
+  return GetTypeName();
+}
+
+std::string DataGroup::GetTypeName()
+{
   return "DataGroup";
 }
 
 bool DataGroup::canInsert(const DataObject* obj) const
 {
   return BaseGroup::canInsert(obj);
-}
-
-H5::ErrorType DataGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
-}
-
-H5::ErrorType DataGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  return BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
 }

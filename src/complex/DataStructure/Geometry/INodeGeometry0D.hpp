@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
@@ -50,6 +51,8 @@ public:
    */
   void setVertices(const SharedVertexList& vertices);
 
+  void setVertexListId(const std::optional<IdType>& vertices);
+
   /**
    * @brief Resizes the vertex list to the target size.
    * @param size
@@ -99,6 +102,8 @@ public:
    */
   const std::optional<IdType>& getVertexAttributeMatrixId() const;
 
+  void setVertexDataId(const OptionalId& vertexDataId);
+
   /**
    * @brief Returns pointer to the Attribute Matrix that holds data assigned to each vertex coordinate
    * @return
@@ -134,22 +139,6 @@ public:
    * @param attributeMatrix
    */
   void setVertexAttributeMatrix(const AttributeMatrix& attributeMatrix);
-
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   INodeGeometry0D(DataStructure& ds, std::string name);

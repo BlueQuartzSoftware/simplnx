@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -12,11 +11,6 @@
 
 namespace complex
 {
-namespace H5
-{
-class DatasetWriter;
-} // namespace H5
-
 /**
  * @class AbstractDataStore
  * @brief The AbstractDataStore class serves as an interface class for the
@@ -614,6 +608,11 @@ public:
 
     index_type index = tupleIndex * getNumberOfComponents() + componentIndex;
     return getValue(index);
+  }
+
+  std::optional<ShapeType> getChunkShape() const override
+  {
+    return {};
   }
 
 protected:

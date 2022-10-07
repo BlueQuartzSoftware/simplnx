@@ -4,7 +4,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
@@ -600,25 +599,6 @@ public:
   std::string getTypeName() const override
   {
     return GetTypeName();
-  }
-
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   *
-   * This method will fail if no DataStore has been set.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-    auto err = m_DataStore->writeHdf5(datasetWriter);
-    if(err < 0)
-    {
-      return err;
-    }
-    return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
   }
 
 protected:

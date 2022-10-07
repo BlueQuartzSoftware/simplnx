@@ -162,6 +162,7 @@ Pipeline CreateExportPipeline()
     args.insert("tuple_dimensions", DynamicTableInfo::TableDataType{{1.0}});
     args.insert("initialization_value", std::make_any<std::string>("7"));
     args.insert("output_data_array", DataPath({DataNames::k_ArrayName}));
+    args.insert("in_memory", true);
     pipeline.push_back(k_CreateDataArrayHandle, args);
   }
   {

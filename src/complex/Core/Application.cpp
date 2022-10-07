@@ -17,9 +17,12 @@
 #include <fmt/core.h>
 
 #include "complex/Core/Application.hpp"
+#include "complex/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "complex/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
+//#include "complex/Utilities/Parsing/Zarr/ZarrDataFactoryManager.hpp"
 
 using namespace complex;
 
@@ -71,21 +74,44 @@ Application* Application::s_Instance = nullptr;
 
 Application::Application()
 : m_FilterList(std::make_unique<FilterList>())
-, m_DataReader(std::make_unique<H5::DataFactoryManager>())
+//, m_DataReader(std::make_unique<H5::DataFactoryManager>())
+, m_DataIOCollection(std::make_shared<DataIOCollection>())
+//, m_ZarrFactoryManager(std::make_unique<Zarr::DataFactoryManager>())
 {
   assignInstance();
+  initDefaultDataTypes();
 }
 
 Application::Application(int argc, char** argv)
 : Application()
 {
   assignInstance();
+  initDefaultDataTypes();
 }
 
 void Application::assignInstance()
 {
   s_Instance = this;
   m_CurrentPath = findCurrentPath();
+}
+
+void Application::initDefaultDataTypes()
+{
+  addDataType(DataObject::Type::DynamicListArray, "DynamicListArray");
+  addDataType(DataObject::Type::ScalarData, "ScalarData");
+  addDataType(DataObject::Type::DataGroup, "DataGroup");
+  addDataType(DataObject::Type::AttributeMatrix, "AttributeMatrix");
+  addDataType(DataObject::Type::DataArray, "Data Array<T>");
+  addDataType(DataObject::Type::RectGridGeom, "Rect Grid Geom");
+  addDataType(DataObject::Type::ImageGeom, "Image Geom");
+  addDataType(DataObject::Type::VertexGeom, "Vertex Geom");
+  addDataType(DataObject::Type::EdgeGeom, "Edge Geom");
+  addDataType(DataObject::Type::QuadGeom, "Quad Geom");
+  addDataType(DataObject::Type::TriangleGeom, "Triangle Geom");
+  addDataType(DataObject::Type::HexahedralGeom, "Hexahedral Geom");
+  addDataType(DataObject::Type::TetrahedralGeom, "Tetrahedral Geom");
+  addDataType(DataObject::Type::NeighborList, "NeighborList");
+  addDataType(DataObject::Type::StringArray, "String Array");
 }
 
 Application::~Application()
@@ -98,6 +124,15 @@ Application::~Application()
 
 Application* Application::Instance()
 {
+  return s_Instance;
+}
+
+Application* Application::GetOrCreateInstance()
+{
+  if(s_Instance == nullptr)
+  {
+    new Application();
+  }
   return s_Instance;
 }
 
@@ -156,10 +191,22 @@ JsonPipelineBuilder* Application::getPipelineBuilder() const
   return nullptr;
 }
 
-H5::DataFactoryManager* Application::getH5FactoryManager() const
+std::shared_ptr<DataIOCollection> Application::getIOCollection() const
 {
-  return m_DataReader.get();
+  return m_DataIOCollection;
 }
+
+std::shared_ptr<IDataIOManager> Application::getIOManager(const std::string& formatName) const
+{
+  return m_DataIOCollection->getManager(formatName);
+}
+
+#if 0
+Zarr::DataFactoryManager* Application::getZarrFactoryManager() const
+{
+  return m_ZarrFactoryManager.get();
+}
+#endif
 
 void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
 {
@@ -171,12 +218,31 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
   getFilterList()->addPlugin(pluginLoader);
 
   auto plugin = pluginLoader->getPlugin();
-  if((plugin != nullptr) && (m_DataReader != nullptr))
+  // if((plugin != nullptr) && (m_DataReader != nullptr))
+  //{
+  //  auto factories = plugin->getDataFactories();
+  //  for(auto factory : factories)
+  //  {
+  //    m_DataReader->addFactory(factory);
+  //  }
+  //}
+
+  for(const auto& pluginIO : plugin->getDataIOManagers())
   {
-    auto factories = plugin->getDataFactories();
-    for(auto factory : factories)
-    {
-      m_DataReader->addFactory(factory);
-    }
+    m_DataIOCollection->addIOManager(pluginIO);
   }
+}
+
+void Application::addDataType(DataObject::Type type, const std::string& name)
+{
+  m_NamedTypesMap[name] = type;
+}
+
+DataObject::Type Application::getDataType(const std::string& name) const
+{
+  if(m_NamedTypesMap.find(name) == m_NamedTypesMap.end())
+  {
+    return DataObject::Type::DataObject;
+  }
+  return m_NamedTypesMap.at(name);
 }

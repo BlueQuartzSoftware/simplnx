@@ -54,12 +54,12 @@ add_library(complex::complex ALIAS complex)
 
 target_compile_features(complex
   PUBLIC
-    cxx_std_17
+  cxx_std_17
 )
 
 set_target_properties(complex
   PROPERTIES
-    DEBUG_POSTFIX "_d"
+  DEBUG_POSTFIX "_d"
 )
 
 complex_enable_warnings(TARGET complex)
@@ -67,7 +67,7 @@ complex_enable_warnings(TARGET complex)
 if(MSVC)
   target_compile_options(complex
     PRIVATE
-      /MP
+    /MP
   )
 endif()
 
@@ -81,30 +81,31 @@ endif()
 
 target_link_libraries(complex
   PUBLIC
-    fmt::fmt
-    nlohmann_json::nlohmann_json
-    nonstd::expected-lite
-    nonstd::span-lite
-    Eigen3::Eigen
-    HDF5::HDF5
-    Boost::mp11
-    nod::nod
+  fmt::fmt
+  nlohmann_json::nlohmann_json
+  nonstd::expected-lite
+  nonstd::span-lite
+  Eigen3::Eigen
+  HDF5::HDF5
+  Boost::mp11
+  nod::nod
 )
 
 if(UNIX)
   target_link_libraries(complex
     PRIVATE
-      ${CMAKE_DL_LIBS}
+    ${CMAKE_DL_LIBS}
   )
 endif()
 
 option(COMPLEX_ENABLE_LINK_FILESYSTEM "Enables linking to a C++ filesystem library" OFF)
+
 if(COMPLEX_ENABLE_LINK_FILESYSTEM)
   set(COMPLEX_FILESYSTEM_LIB "stdc++fs" CACHE STRING "C++ filesystem library to link to")
   set_property(CACHE COMPLEX_FILESYSTEM_LIB PROPERTY STRINGS "stdc++fs" "c++fs")
   target_link_libraries(complex
     PUBLIC
-      ${COMPLEX_FILESYSTEM_LIB}
+    ${COMPLEX_FILESYSTEM_LIB}
   )
 endif()
 
@@ -178,21 +179,45 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/AttributeMatrixFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/NeighborListFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/StringArrayFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IOConstants.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStoreIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EmptyDataStoreIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/AttributeMatrixIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/BaseGroupIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataArrayIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ScalarDataIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
@@ -333,16 +358,10 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeReader.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileReader.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupReader.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5IDataFactory.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
@@ -365,21 +384,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/AttributeMatrixFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/NeighborListFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/StringArrayFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.cpp
-
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataRemovedMessage.cpp
@@ -387,6 +391,39 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/AttributeMatrixIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/BaseGroupIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.cpp
@@ -492,23 +529,18 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeReader.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataFactoryManager.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetReader.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureWriter.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileReader.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileWriter.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupReader.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5IDataFactory.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
 )
-
 
 # Add Core FilterParameters
 foreach(param ${CoreParameters})
@@ -527,8 +559,8 @@ set(COMPLEX_ALL_HDRS
 
 target_sources(complex
   PRIVATE
-    ${COMPLEX_ALL_HDRS}
-    ${COMPLEX_SRCS}
+  ${COMPLEX_ALL_HDRS}
+  ${COMPLEX_SRCS}
 )
 
 source_group(TREE ${COMPLEX_SOURCE_DIR} PREFIX "complex" FILES ${COMPLEX_HDRS})
@@ -539,20 +571,21 @@ set(COMPLEX_INCLUDE_DIR ${complex_SOURCE_DIR}/src)
 
 target_include_directories(complex
   PUBLIC
-    $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
-    $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
+  $<INSTALL_INTERFACE:include>
 )
-
 
 # -----------------------------------------------------------------------
 # Download the Test Data. This needs to be done BEFORE the Plugins and test
 # -----------------------------------------------------------------------
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR)
+
 # If DREAM3D_DATA_DIR is NOT defined/set then take a look at the same level as complex
 if("${DREAM3D_DATA_DIR}" STREQUAL "")
   message(STATUS "DREAM3D_DATA_DIR is empty. Attempting to locate DREAM3D_Data at same level as complex directory.")
   get_filename_component(complex_PARENT ${complex_SOURCE_DIR} DIRECTORY CACHE)
+
   if(EXISTS "${complex_PARENT}/DREAM3D_Data")
     message(STATUS "DREAM3D_Data directory was *found* at same level as `complex`")
     set(DREAM3D_DATA_DIR "${complex_PARENT}/DREAM3D_Data" CACHE PATH "The directory where to find test data files")
@@ -561,22 +594,23 @@ if("${DREAM3D_DATA_DIR}" STREQUAL "")
   endif()
 endif()
 
-if(EXISTS "${DREAM3D_DATA_DIR}") 
+if(EXISTS "${DREAM3D_DATA_DIR}")
   dowload_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR})
   create_data_copy_rules(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR})
 else()
   message(WARNING "DREAM3D_DATA_DIR is not set. Any unit test that depends on an external data file will fail.")
 endif()
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Complex Plugins Section
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+
 if("${ComplexPluginTargets}" STREQUAL "")
   set_property(GLOBAL PROPERTY ComplexPluginTargets "")
 endif()
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Add in the ComplexCore Plugin
 set(P_PLUGIN_NAME "ComplexCore")
 add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/${P_PLUGIN_NAME} ${complex_BINARY_DIR}/Plugins/${P_PLUGIN_NAME})
@@ -584,7 +618,7 @@ get_property(PluginNumFilters GLOBAL PROPERTY ${P_PLUGIN_NAME}_filter_count)
 message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
 set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 1)
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Add user defined Plugin Dirs based on the COMPLEX_PLUGIN_SEARCH_DIRS variable
 # and falling back to complex_SOURCE_DIR/../complex_plugins if not defined
 # Use 'COMPLEX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
@@ -595,8 +629,8 @@ endforeach()
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 
 option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
-if(COMPLEX_ENABLE_INSTALL)
 
+if(COMPLEX_ENABLE_INSTALL)
   install(TARGETS complex
     EXPORT complexTargets
   )
@@ -626,15 +660,15 @@ if(COMPLEX_ENABLE_INSTALL)
   include(GNUInstallDirs)
   install(TARGETS complex
     RUNTIME
-      DESTINATION ${CMAKE_INSTALL_BINDIR}
-      COMPONENT runtime
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT runtime
     LIBRARY
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      COMPONENT runtime
-      NAMELINK_COMPONENT develop
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT runtime
+    NAMELINK_COMPONENT develop
     ARCHIVE
-      DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      COMPONENT develop
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    COMPONENT develop
   )
 
   install(EXPORT complexTargets
@@ -656,12 +690,14 @@ if(COMPLEX_ENABLE_INSTALL)
 endif()
 
 option(COMPLEX_ENABLE_PACKAGING "Enables COMPLEX packaging" ON)
+
 if(COMPLEX_ENABLE_PACKAGING)
   if(WIN32)
     set(CPACK_GENERATOR ZIP)
   else()
     set(CPACK_GENERATOR TGZ)
   endif()
+
   include(CPack)
 endif()
 
@@ -675,10 +711,8 @@ if(COMPLEX_BUILD_PYTHON)
 endif()
 
 option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
+
 if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
-endif()
-
-# -----------------------------
-# Pipeline Runner
+endif() # -----------------------------# Pipeline Runner
 add_subdirectory(${complex_SOURCE_DIR}/src/PipelineRunner)

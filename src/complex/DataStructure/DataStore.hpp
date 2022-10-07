@@ -1,10 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <fmt/core.h>
 
@@ -13,6 +9,7 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -315,68 +312,6 @@ public:
   nonstd::span<const T> createSpan() const
   {
     return {data(), this->getSize()};
-  }
-
-  /**
-   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param datasetWriter
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
-  {
-    if(!datasetWriter.isValid())
-    {
-      return -1;
-    }
-
-    // Consolidate the Tuple and Component Dims into a single array which is used
-    // to write the entire data array to HDF5
-    std::vector<hsize_t> h5dims;
-    for(const auto& value : m_TupleShape)
-    {
-      h5dims.push_back(static_cast<hsize_t>(value));
-    }
-    for(const auto& value : m_ComponentShape)
-    {
-      h5dims.push_back(static_cast<hsize_t>(value));
-    }
-
-    usize count = this->getSize();
-    const T* dataPtr = data();
-    herr_t err = datasetWriter.writeSpan(h5dims, nonstd::span<const T>{dataPtr, count});
-    if(err < 0)
-    {
-      return err;
-    }
-
-    // Write shape attributes to the dataset
-    auto tupleAttribute = datasetWriter.createAttribute(complex::H5::k_TupleShapeTag);
-    err = tupleAttribute.writeVector({m_TupleShape.size()}, m_TupleShape);
-    if(err < 0)
-    {
-      return err;
-    }
-
-    auto componentAttribute = datasetWriter.createAttribute(complex::H5::k_ComponentShapeTag);
-    err = componentAttribute.writeVector({m_ComponentShape.size()}, m_ComponentShape);
-
-    return err;
-  }
-
-  static std::unique_ptr<DataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
-  {
-    auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
-    auto componentShape = IDataStore::ReadComponentShape(datasetReader);
-
-    // Create DataStore
-    auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
-    if(!datasetReader.readIntoSpan(dataStore->createSpan()))
-    {
-      throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-
-    return dataStore;
   }
 
 private:

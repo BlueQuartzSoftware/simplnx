@@ -59,6 +59,8 @@ public:
    */
   void setFaceList(const SharedFaceList& faces);
 
+  void setFaceListId(const OptionalId& facesId);
+
   /**
    * @brief Resizes the face list to the target size.
    * @param size
@@ -115,6 +117,8 @@ public:
    */
   const std::optional<IdType>& getUnsharedEdgesId() const;
 
+  void setUnsharedEdgesId(const OptionalId& unsharedEdgesId);
+
   /**
    * @brief
    * @return StatusCode
@@ -145,6 +149,8 @@ public:
    * @return
    */
   const std::optional<IdType>& getFaceAttributeMatrixId() const;
+
+  void setFaceDataId(const OptionalId& faceDataId);
 
   /**
    * @brief
@@ -181,22 +187,6 @@ public:
    * @param attributeMatrix
    */
   void setFaceAttributeMatrix(const AttributeMatrix& attributeMatrix);
-
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   INodeGeometry2D(DataStructure& ds, std::string name);

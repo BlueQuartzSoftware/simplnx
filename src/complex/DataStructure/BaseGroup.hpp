@@ -12,10 +12,6 @@
 
 namespace complex
 {
-namespace H5
-{
-class GroupReader;
-}
 
 /**
  * @class BaseGroup
@@ -84,6 +80,12 @@ public:
    * @return const DataMap&
    */
   const DataMap& getDataMap() const;
+
+  /**
+   * @brief Returns the underlying DataMap by reference.
+   * @return DataMap&
+   */
+  DataMap& getDataMap();
 
   /**
    * @brief Returns true if a child with the specified name exists in the
@@ -310,28 +312,6 @@ protected:
    * @param ds
    */
   void setDataStructure(DataStructure* ds) override;
-
-  /**
-   * @brief Returns the underlying DataMap by reference.
-   * @return DataMap&
-   */
-  DataMap& getDataMap();
-
-  /**
-   * @brief Reads the DataStructure group from a target HDF5 group.
-   * @param dataStructureReader
-   * @param groupReader
-   * @return H5::Error
-   */
-  virtual H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight = false);
-
-  /**
-   * @brief Writes the contained DataObjects to the target HDF5 group.
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 private:
   DataMap m_DataMap;

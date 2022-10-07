@@ -136,8 +136,8 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filepath);
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  const Result<> result2 = dataStructure.writeHdf5(fileWriter);
+  REQUIRE(result2.valid());
 }
 
 /**

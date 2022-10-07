@@ -1,13 +1,9 @@
 #include "TriangleGeom.hpp"
 
-#include <stdexcept>
-
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 using namespace complex;
 
@@ -52,6 +48,11 @@ TriangleGeom* TriangleGeom::Import(DataStructure& ds, std::string name, IdType i
 }
 
 std::string TriangleGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string TriangleGeom::GetTypeName()
 {
   return "TriangleGeom";
 }

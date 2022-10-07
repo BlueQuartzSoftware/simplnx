@@ -86,6 +86,7 @@ H5::ErrorType H5::GroupWriter::createLink(const std::string& objectPath)
   }
   std::string objectName = objectPath.substr(index);
 
-  herr_t errorCode = H5Lcreate_hard(getFileId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+  auto fileId = getFileId();
+  herr_t errorCode = H5Lcreate_hard(fileId, objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
   return errorCode;
 }
