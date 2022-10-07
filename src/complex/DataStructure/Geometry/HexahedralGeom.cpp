@@ -98,11 +98,11 @@ IGeometry::StatusCode HexahedralGeom::findElementSizes()
 IGeometry::StatusCode HexahedralGeom::findElementsContainingVert()
 {
   auto* hexasControllingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Containing Vertices", getId());
-  m_CellContainingVertId = hexasControllingVert->getId();
+  m_CellContainingVertDataArrayId = hexasControllingVert->getId();
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
   {
-    m_CellContainingVertId.reset();
+    m_CellContainingVertDataArrayId.reset();
     return -1;
   }
   return 1;
@@ -120,11 +120,11 @@ IGeometry::StatusCode HexahedralGeom::findElementNeighbors()
     }
   }
   auto* hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Neighbors", getId());
-  m_CellNeighborsId = hexNeighbors->getId();
+  m_CellNeighborsDataArrayId = hexNeighbors->getId();
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighbors, IGeometry::Type::Hexahedral);
   if(getElementNeighbors() == nullptr)
   {
-    m_CellNeighborsId.reset();
+    m_CellNeighborsDataArrayId.reset();
     return -1;
   }
   return err;
@@ -134,11 +134,11 @@ IGeometry::StatusCode HexahedralGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
   auto* hexCentroids = DataArray<float32>::Create(*getDataStructure(), "Hex Centroids", std::move(dataStore), getId());
-  m_CellCentroidsId = hexCentroids->getId();
+  m_CellCentroidsDataArrayId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getPolyhedra(), getVertices(), hexCentroids);
   if(getElementCentroids() == nullptr)
   {
-    m_CellCentroidsId.reset();
+    m_CellCentroidsDataArrayId.reset();
     return -1;
   }
   return 1;
@@ -192,10 +192,10 @@ IGeometry::StatusCode HexahedralGeom::findEdges()
   GeometryHelpers::Connectivity::FindHexEdges<uint64_t>(getPolyhedra(), edgeList);
   if(getEdges() == nullptr)
   {
-    m_EdgeListId.reset();
+    m_EdgeDataArrayId.reset();
     return -1;
   }
-  m_EdgeListId = edgeList->getId();
+  m_EdgeDataArrayId = edgeList->getId();
   return 1;
 }
 

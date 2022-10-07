@@ -15,7 +15,7 @@ INodeGeometry2D::INodeGeometry2D(DataStructure& ds, std::string name, IdType imp
 {
 }
 
-const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceListId() const
+const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceListDataArrayId() const
 {
   return m_FaceListId;
 }
@@ -40,7 +40,7 @@ const INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef() const
   return getDataStructureRef().getDataRefAs<SharedFaceList>(m_FaceListId.value());
 }
 
-void INodeGeometry2D::setFaces(const SharedFaceList& faces)
+void INodeGeometry2D::setFaceList(const SharedFaceList& faces)
 {
   m_FaceListId = faces.getId();
 }
@@ -96,8 +96,8 @@ void INodeGeometry2D::getFaceCoordinates(usize faceId, nonstd::span<Point3Df> co
 
 void INodeGeometry2D::deleteEdges()
 {
-  getDataStructureRef().removeData(m_EdgeListId);
-  m_EdgeListId.reset();
+  getDataStructureRef().removeData(m_EdgeDataArrayId);
+  m_EdgeDataArrayId.reset();
 }
 
 const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getUnsharedEdgesId() const
@@ -116,37 +116,37 @@ void INodeGeometry2D::deleteUnsharedEdges()
   m_UnsharedEdgeListId.reset();
 }
 
-const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceDataId() const
+const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceAttributeMatrixId() const
 {
   return m_FaceDataId;
 }
 
-AttributeMatrix* INodeGeometry2D::getFaceData()
+AttributeMatrix* INodeGeometry2D::getFaceAttributeMatrix()
 {
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceDataId);
 }
 
-const AttributeMatrix* INodeGeometry2D::getFaceData() const
+const AttributeMatrix* INodeGeometry2D::getFaceAttributeMatrix() const
 {
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceDataId);
 }
 
-AttributeMatrix& INodeGeometry2D::getFaceDataRef()
+AttributeMatrix& INodeGeometry2D::getFaceAttributeMatrixRef()
 {
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceDataId.value());
 }
 
-const AttributeMatrix& INodeGeometry2D::getFaceDataRef() const
+const AttributeMatrix& INodeGeometry2D::getFaceAttributeMatrixRef() const
 {
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceDataId.value());
 }
 
-DataPath INodeGeometry2D::getFaceDataPath() const
+DataPath INodeGeometry2D::getFaceAttributeMatrixDataPath() const
 {
-  return getFaceDataRef().getDataPaths().at(0);
+  return getFaceAttributeMatrixRef().getDataPaths().at(0);
 }
 
-void INodeGeometry2D::setFaceData(const AttributeMatrix& attributeMatrix)
+void INodeGeometry2D::setFaceAttributeMatrix(const AttributeMatrix& attributeMatrix)
 {
   m_FaceDataId = attributeMatrix.getId();
 }

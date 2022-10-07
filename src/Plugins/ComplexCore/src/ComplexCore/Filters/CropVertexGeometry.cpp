@@ -126,7 +126,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
     }
   }
 
-  auto* vertexAM = vertexGeom.getVertexData();
+  auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
   if(vertexAM == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-5551, "Could not find vertex data AttributeMatrix in selected Vertex Geometry"), {}};

@@ -115,7 +115,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
     std::string errorMsg = fmt::format("Vertex Geometry not found at path: '{}'", vertexGeomPath.toString());
     return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
   }
-  auto verticesId = vertex->getVertexListId();
+  auto verticesId = vertex->getSharedVertexDataArrayId();
   auto* verticesArray = dataStructure.getDataAs<Float32Array>(verticesId);
   if(verticesArray == nullptr)
   {
@@ -194,7 +194,7 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
 
   VertexGeom& reducedVertex = data.getDataRefAs<VertexGeom>(reducedVertexPath);
   reducedVertex.resizeVertexList(trueCount);
-  ResizeAttributeMatrix(*reducedVertex.getVertexData(), tDims);
+  ResizeAttributeMatrix(*reducedVertex.getVertexAttributeMatrix(), tDims);
 
   for(size_t i = 0; i < trueCount; i++)
   {

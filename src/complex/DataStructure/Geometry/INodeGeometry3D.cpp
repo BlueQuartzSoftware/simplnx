@@ -40,12 +40,12 @@ const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
   return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
 }
 
-void INodeGeometry3D::setPolyhedra(const SharedFaceList& polyhedra)
+void INodeGeometry3D::setPolyhedraList(const SharedFaceList& polyhedra)
 {
   m_PolyhedronListId = polyhedra.getId();
 }
 
-void INodeGeometry3D::resizePolyhedronList(usize size)
+void INodeGeometry3D::resizePolyhedraList(usize size)
 {
   getPolyhedraRef().getIDataStoreRef().reshapeTuples({size});
 }
@@ -119,37 +119,37 @@ void INodeGeometry3D::deleteUnsharedFaces()
   m_UnsharedFaceListId.reset();
 }
 
-const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraDataId() const
+const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraAttributeMatrixId() const
 {
   return m_PolyhedronDataId;
 }
 
-AttributeMatrix* INodeGeometry3D::getPolyhedronData()
+AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix()
 {
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
 }
 
-const AttributeMatrix* INodeGeometry3D::getPolyhedronData() const
+const AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix() const
 {
   return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
 }
 
-AttributeMatrix& INodeGeometry3D::getPolyhedronDataRef()
+AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef()
 {
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronDataId.value());
 }
 
-const AttributeMatrix& INodeGeometry3D::getPolyhedronDataRef() const
+const AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef() const
 {
   return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronDataId.value());
 }
 
-DataPath INodeGeometry3D::getPolyhedronDataPath() const
+DataPath INodeGeometry3D::getPolyhedronAttributeMatrixDataPath() const
 {
-  return getPolyhedronDataRef().getDataPaths().at(0);
+  return getPolyhedraAttributeMatrixRef().getDataPaths().at(0);
 }
 
-void INodeGeometry3D::setPolyhedronData(const AttributeMatrix& attributeMatrix)
+void INodeGeometry3D::setPolyhedraAttributeMatrix(const AttributeMatrix& attributeMatrix)
 {
   m_PolyhedronDataId = attributeMatrix.getId();
 }

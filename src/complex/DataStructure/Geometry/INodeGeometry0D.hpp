@@ -20,16 +20,34 @@ public:
 
   ~INodeGeometry0D() noexcept override = default;
 
-  const std::optional<IdType>& getVertexListId() const;
-
+  /**
+   * @brief Returns a shared pointer to the vertex coordinates array
+   * @return
+   */
   SharedVertexList* getVertices();
 
+  /**
+   * @brief Returns a shared pointer to the vertex coordinates array
+   * @return
+   */
   const SharedVertexList* getVertices() const;
 
+  /**
+   * @brief Returns a reference to the vertex coordinates array
+   * @return
+   */
   SharedVertexList& getVerticesRef();
 
+  /**
+   * @brief Returns a reference to the vertex coordinates array
+   * @return
+   */
   const SharedVertexList& getVerticesRef() const;
 
+  /**
+   * @brief Sets the internal reference to vertex coordinates to vertices
+   * @param vertices The coordinate array that will now be used for the vertex coordinates
+   */
   void setVertices(const SharedVertexList& vertices);
 
   /**
@@ -64,47 +82,58 @@ public:
    */
   void setVertexCoordinate(usize vertId, const Point3D<float32>& coords);
 
-  /**
-   * @brief
-   * @return
+  /****************************************************************************
+   * These functions get values related to where the Vertex Coordinates are
+   * stored in the DataStructure
    */
-  const std::optional<IdType>& getVertexDataId() const;
 
   /**
-   * @brief
+   * @brief Returns the DataStructure unique ID of the vertex coordinate array
    * @return
    */
-  AttributeMatrix* getVertexData();
+  const std::optional<IdType>& getSharedVertexDataArrayId() const;
 
   /**
-   * @brief
+   * @brief Returns the DataStructure unique ID of the Attribute Matrix that holds data assigned to each vertex coordinate
    * @return
    */
-  const AttributeMatrix* getVertexData() const;
+  const std::optional<IdType>& getVertexAttributeMatrixId() const;
 
   /**
-   * @brief
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each vertex coordinate
    * @return
    */
-  AttributeMatrix& getVertexDataRef();
+  AttributeMatrix* getVertexAttributeMatrix();
 
   /**
-   * @brief
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each vertex coordinate
    * @return
    */
-  const AttributeMatrix& getVertexDataRef() const;
+  const AttributeMatrix* getVertexAttributeMatrix() const;
 
   /**
-   * @brief
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each vertex coordinate
    * @return
    */
-  DataPath getVertexDataPath() const;
+  AttributeMatrix& getVertexAttributeMatrixRef();
 
   /**
-   * @brief
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each vertex coordinate
+   * @return
+   */
+  const AttributeMatrix& getVertexAttributeMatrixRef() const;
+
+  /**
+   * @brief Returns the DataPath to the AttributeMatrix for the vertex data
+   * @return
+   */
+  DataPath getVertexAttributeMatrixDataPath() const;
+
+  /**
+   * @brief Sets the Attribute Matrix for the data assigned to the vertex coordinates
    * @param attributeMatrix
    */
-  void setVertexData(const AttributeMatrix& attributeMatrix);
+  void setVertexAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
   /**
    * @brief Reads values from HDF5
@@ -136,7 +165,7 @@ protected:
   /* ***************************************************************************
    * These variables are the Ids of the arrays from the complex::DataStructure object.
    */
-  std::optional<IdType> m_VertexListId;
-  std::optional<IdType> m_VertexDataId;
+  std::optional<IdType> m_VertexDataArrayId;
+  std::optional<IdType> m_VertexAttributeMatrixId;
 };
 } // namespace complex

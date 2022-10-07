@@ -16,34 +16,34 @@ INodeGeometry0D::INodeGeometry0D(DataStructure& ds, std::string name, IdType imp
 {
 }
 
-const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getVertexListId() const
+const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getSharedVertexDataArrayId() const
 {
-  return m_VertexListId;
+  return m_VertexDataArrayId;
 }
 
 INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices()
 {
-  return getDataStructureRef().getDataAs<SharedVertexList>(m_VertexListId);
+  return getDataStructureRef().getDataAs<SharedVertexList>(m_VertexDataArrayId);
 }
 
 const INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices() const
 {
-  return getDataStructureRef().getDataAs<SharedVertexList>(m_VertexListId);
+  return getDataStructureRef().getDataAs<SharedVertexList>(m_VertexDataArrayId);
 }
 
 INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef()
 {
-  return getDataStructureRef().getDataRefAs<SharedVertexList>(m_VertexListId.value());
+  return getDataStructureRef().getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
 }
 
 const INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef() const
 {
-  return getDataStructureRef().getDataRefAs<SharedVertexList>(m_VertexListId.value());
+  return getDataStructureRef().getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
 }
 
 void INodeGeometry0D::setVertices(const INodeGeometry0D::SharedVertexList& vertices)
 {
-  m_VertexListId = vertices.getId();
+  m_VertexDataArrayId = vertices.getId();
 }
 
 void INodeGeometry0D::resizeVertexList(usize size)
@@ -85,39 +85,39 @@ Point3D<float32> INodeGeometry0D::getVertexCoordinate(usize vertId) const
   return coordinate;
 }
 
-const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getVertexDataId() const
+const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getVertexAttributeMatrixId() const
 {
-  return m_VertexDataId;
+  return m_VertexAttributeMatrixId;
 }
 
-AttributeMatrix* INodeGeometry0D::getVertexData()
+AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix()
 {
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexDataId);
+  return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexAttributeMatrixId);
 }
 
-const AttributeMatrix* INodeGeometry0D::getVertexData() const
+const AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix() const
 {
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexDataId);
+  return getDataStructureRef().getDataAs<AttributeMatrix>(m_VertexAttributeMatrixId);
 }
 
-AttributeMatrix& INodeGeometry0D::getVertexDataRef()
+AttributeMatrix& INodeGeometry0D::getVertexAttributeMatrixRef()
 {
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexDataId.value());
+  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexAttributeMatrixId.value());
 }
 
-const AttributeMatrix& INodeGeometry0D::getVertexDataRef() const
+const AttributeMatrix& INodeGeometry0D::getVertexAttributeMatrixRef() const
 {
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexDataId.value());
+  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_VertexAttributeMatrixId.value());
 }
 
-DataPath INodeGeometry0D::getVertexDataPath() const
+DataPath INodeGeometry0D::getVertexAttributeMatrixDataPath() const
 {
-  return getVertexDataRef().getDataPaths().at(0);
+  return getVertexAttributeMatrixRef().getDataPaths().at(0);
 }
 
-void INodeGeometry0D::setVertexData(const AttributeMatrix& attributeMatrix)
+void INodeGeometry0D::setVertexAttributeMatrix(const AttributeMatrix& attributeMatrix)
 {
-  m_VertexDataId = attributeMatrix.getId();
+  m_VertexAttributeMatrixId = attributeMatrix.getId();
 }
 
 H5::ErrorType INodeGeometry0D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
@@ -128,8 +128,8 @@ H5::ErrorType INodeGeometry0D::readHdf5(H5::DataStructureReader& dataStructureRe
     return error;
   }
 
-  m_VertexListId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
-  m_VertexDataId = ReadH5DataId(groupReader, H5Constants::k_VertexDataTag);
+  m_VertexDataArrayId = ReadH5DataId(groupReader, H5Constants::k_VertexListTag);
+  m_VertexAttributeMatrixId = ReadH5DataId(groupReader, H5Constants::k_VertexDataTag);
 
   return error;
 }
@@ -144,13 +144,13 @@ H5::ErrorType INodeGeometry0D::writeHdf5(H5::DataStructureWriter& dataStructureW
 
   H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
 
-  error = WriteH5DataId(groupWriter, m_VertexListId, H5Constants::k_VertexListTag);
+  error = WriteH5DataId(groupWriter, m_VertexDataArrayId, H5Constants::k_VertexListTag);
   if(error < 0)
   {
     return error;
   }
 
-  if(m_VertexListId.has_value())
+  if(m_VertexDataArrayId.has_value())
   {
     usize numVerts = getNumberOfVertices();
     auto datasetWriter = groupWriter.createDatasetWriter("_VertexIndices");
@@ -166,7 +166,7 @@ H5::ErrorType INodeGeometry0D::writeHdf5(H5::DataStructureWriter& dataStructureW
     }
   }
 
-  error = WriteH5DataId(groupWriter, m_VertexDataId, H5Constants::k_VertexDataTag);
+  error = WriteH5DataId(groupWriter, m_VertexAttributeMatrixId, H5Constants::k_VertexDataTag);
   if(error < 0)
   {
     return error;
@@ -181,13 +181,13 @@ void INodeGeometry0D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
 
   for(const auto& updatedId : updatedIds)
   {
-    if(m_VertexListId == updatedId.first)
+    if(m_VertexDataArrayId == updatedId.first)
     {
-      m_VertexListId = updatedId.second;
+      m_VertexDataArrayId = updatedId.second;
     }
-    if(m_VertexDataId == updatedId.first)
+    if(m_VertexAttributeMatrixId == updatedId.first)
     {
-      m_VertexDataId = updatedId.second;
+      m_VertexAttributeMatrixId = updatedId.second;
     }
   }
 }

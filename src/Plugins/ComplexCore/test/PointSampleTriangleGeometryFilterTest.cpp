@@ -128,7 +128,7 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     REQUIRE(executeResult.result.valid());
 
     auto& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
-    DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleGeom.getFaceData()->getName()).createChildPath(triangleAreasName);
+    DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleGeom.getFaceAttributeMatrix()->getName()).createChildPath(triangleAreasName);
 
     // Let's sum up all the areas.
     Float64Array& faceAreas = dataGraph.getDataRefAs<Float64Array>(triangleAreasDataPath);

@@ -26,7 +26,7 @@ DataStructure createTestData()
 
   auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, k_VertexDataName, vertexGeom->getId());
   vertexAttributeMatrix->setShape({k_TupleCount});
-  vertexGeom->setVertexData(*vertexAttributeMatrix);
+  vertexGeom->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
   auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "DataArray", {k_TupleCount}, {1}, vertexAttributeMatrix->getId());
   auto& dataStore = dataArray->getDataStoreRef();

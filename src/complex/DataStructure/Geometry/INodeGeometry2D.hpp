@@ -29,17 +29,35 @@ public:
 
   ~INodeGeometry2D() noexcept override = default;
 
-  const std::optional<IdType>& getFaceListId() const;
-
+  /**
+   * @brief Returns a pointer to the Face List
+   * @return
+   */
   SharedFaceList* getFaces();
 
+  /**
+   * @brief Returns a pointer to the Face List
+   * @return
+   */
   const SharedFaceList* getFaces() const;
 
+  /**
+   * @brief Returns a reference to the Face List
+   * @return
+   */
   SharedFaceList& getFacesRef();
 
+  /**
+   * @brief Returns a reference to the Face List
+   * @return
+   */
   const SharedFaceList& getFacesRef() const;
 
-  void setFaces(const SharedFaceList& faces);
+  /**
+   * @brief Sets the list of Faces for this geometry
+   * @param faces The new list of faces
+   */
+  void setFaceList(const SharedFaceList& faces);
 
   /**
    * @brief Resizes the face list to the target size.
@@ -115,47 +133,54 @@ public:
    */
   void deleteUnsharedEdges();
 
-  /**
-   * @brief
-   * @return
+  /****************************************************************************
+   * These functions get values related to where the Vertex Coordinates are
+   * stored in the DataStructure
    */
-  const std::optional<IdType>& getFaceDataId() const;
+
+  const std::optional<IdType>& getFaceListDataArrayId() const;
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix* getFaceData();
+  const std::optional<IdType>& getFaceAttributeMatrixId() const;
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix* getFaceData() const;
+  AttributeMatrix* getFaceAttributeMatrix();
 
   /**
    * @brief
    * @return
    */
-  AttributeMatrix& getFaceDataRef();
+  const AttributeMatrix* getFaceAttributeMatrix() const;
 
   /**
    * @brief
    * @return
    */
-  const AttributeMatrix& getFaceDataRef() const;
+  AttributeMatrix& getFaceAttributeMatrixRef();
 
   /**
    * @brief
    * @return
    */
-  DataPath getFaceDataPath() const;
+  const AttributeMatrix& getFaceAttributeMatrixRef() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  DataPath getFaceAttributeMatrixDataPath() const;
 
   /**
    * @brief
    * @param attributeMatrix
    */
-  void setFaceData(const AttributeMatrix& attributeMatrix);
+  void setFaceAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
   /**
    * @brief Reads values from HDF5

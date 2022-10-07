@@ -103,8 +103,8 @@ Result<> QuickSurfaceMesh::operator()()
   std::vector<usize> tupleShape = {triangleCount};
   triangleGeom.resizeFaceList(triangleCount);
   triangleGeom.resizeVertexList(nodeCount);
-  ResizeAttributeMatrix(*triangleGeom.getFaceData(), tupleShape);
-  ResizeAttributeMatrix(*triangleGeom.getVertexData(), {nodeCount});
+  ResizeAttributeMatrix(*triangleGeom.getFaceAttributeMatrix(), tupleShape);
+  ResizeAttributeMatrix(*triangleGeom.getVertexAttributeMatrix(), {nodeCount});
 
   // Resize the Face Arrays that are being copied over from the ImageGeom Cell Data
   for(const auto& dataPath : m_Inputs->pCreatedDataArrayPaths)
@@ -808,8 +808,8 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   std::vector<size_t> tDims = {nodeCount};
   triangleGeom->resizeVertexList(nodeCount);
   triangleGeom->resizeFaceList(triangleCount);
-  ResizeAttributeMatrix(*triangleGeom->getFaceData(), {triangleCount});
-  ResizeAttributeMatrix(*triangleGeom->getVertexData(), tDims);
+  ResizeAttributeMatrix(*triangleGeom->getFaceAttributeMatrix(), {triangleCount});
+  ResizeAttributeMatrix(*triangleGeom->getVertexAttributeMatrix(), tDims);
 
   // Remove and then insert a properly sized Int32Array for the FaceLabels
   m_DataStructure.removeData(m_Inputs->pFaceLabelsDataPath);
@@ -1567,5 +1567,5 @@ void QuickSurfaceMesh::generateTripleLines()
     edges->getDataStore()->setValue(idx * numComps + 0, i0);
     edges->getDataStore()->setValue(idx * numComps + 1, i1);
   }
-  tripleLineEdge->setEdges(*edges);
+  tripleLineEdge->setEdgeList(*edges);
 }
