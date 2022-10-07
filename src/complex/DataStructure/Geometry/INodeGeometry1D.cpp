@@ -42,9 +42,14 @@ void INodeGeometry1D::setEdgeList(const SharedEdgeList& edges)
   m_EdgeDataArrayId = edges.getId();
 }
 
+std::optional<DataObject::IdType> INodeGeometry1D::getEdgeListId() const
+{
+  return m_EdgeDataArrayId;
+}
+
 void INodeGeometry1D::setEdgeListId(const std::optional<IdType>& edgeList)
 {
-  m_EdgeListId = edgeList;
+  m_EdgeDataArrayId = edgeList;
 }
 
 void INodeGeometry1D::resizeEdgeList(usize size)
@@ -170,22 +175,22 @@ void INodeGeometry1D::setEdgeAttributeMatrix(const AttributeMatrix& attributeMat
 
 void INodeGeometry1D::setEdgeDataId(const std::optional<IdType>& edgeDataId)
 {
-  m_EdgeDataId = edgeDataId;
+  m_EdgeAttributeMatrixId = edgeDataId;
 }
 
 std::optional<DataObject::IdType> INodeGeometry1D::getElementContainingVertId() const
 {
-  return m_CellContainingVertId;
+  return m_CellContainingVertDataArrayId;
 }
 
 std::optional<DataObject::IdType> INodeGeometry1D::getElementNeighborsId() const
 {
-  return m_CellNeighborsId;
+  return m_CellNeighborsDataArrayId;
 }
 
 std::optional<DataObject::IdType> INodeGeometry1D::getElementCentroidsId() const
 {
-  return m_CellCentroidsId;
+  return m_CellCentroidsDataArrayId;
 }
 
 std::optional<DataObject::IdType> INodeGeometry1D::getElementSizesId() const
@@ -195,17 +200,17 @@ std::optional<DataObject::IdType> INodeGeometry1D::getElementSizesId() const
 
 void INodeGeometry1D::setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId)
 {
-  m_CellContainingVertId = elementsContainingVertId;
+  m_CellContainingVertDataArrayId = elementsContainingVertId;
 }
 
 void INodeGeometry1D::setElementNeighborsId(const std::optional<IdType>& elementNeighborsId)
 {
-  m_CellNeighborsId = elementNeighborsId;
+  m_CellNeighborsDataArrayId = elementNeighborsId;
 }
 
 void INodeGeometry1D::setElementCentroidsId(const std::optional<IdType>& centroidsId)
 {
-  m_CellCentroidsId = centroidsId;
+  m_CellCentroidsDataArrayId = centroidsId;
 }
 
 void INodeGeometry1D::setElementSizesId(const std::optional<IdType>& sizesId)

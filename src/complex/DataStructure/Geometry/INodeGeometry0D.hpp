@@ -51,6 +51,7 @@ public:
    */
   void setVertices(const SharedVertexList& vertices);
 
+  std::optional<IdType> getVertexListId() const;
   void setVertexListId(const std::optional<IdType>& vertices);
 
   /**

@@ -59,7 +59,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     }
   }
 
-  result = WriteDataId(groupWriter, geometry.getVertexDataId(), IOConstants::k_VertexDataTag);
+  result = WriteDataId(groupWriter, geometry.getSharedVertexDataArrayId(), IOConstants::k_VertexDataTag);
   if(result.invalid())
   {
     return result;

@@ -42,9 +42,14 @@ void INodeGeometry0D::setVertices(const INodeGeometry0D::SharedVertexList& verti
   m_VertexDataArrayId = vertices.getId();
 }
 
+std::optional<DataObject::IdType> INodeGeometry0D::getVertexListId() const
+{
+  return m_VertexDataArrayId;
+}
+
 void INodeGeometry0D::setVertexListId(const std::optional<IdType>& vertices)
 {
-  m_VertexListId = vertices;
+  m_VertexDataArrayId = vertices;
 }
 
 void INodeGeometry0D::resizeVertexList(usize size)
@@ -93,7 +98,7 @@ const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getVertexAttribut
 
 void INodeGeometry0D::setVertexDataId(const OptionalId& vertexDataId)
 {
-  m_VertexDataId = vertexDataId;
+  m_VertexDataArrayId = vertexDataId;
 }
 
 AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix()

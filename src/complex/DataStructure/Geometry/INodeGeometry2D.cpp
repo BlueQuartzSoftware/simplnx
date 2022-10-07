@@ -17,6 +17,11 @@ const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceListDataAr
   return m_FaceListId;
 }
 
+INodeGeometry2D::OptionalId INodeGeometry2D::getFaceListId() const
+{
+  return m_FaceListId;
+}
+
 void INodeGeometry2D::setFaceListId(const OptionalId& facesId)
 {
   m_FaceListId = facesId;

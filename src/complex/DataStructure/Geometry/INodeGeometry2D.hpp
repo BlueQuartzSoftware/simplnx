@@ -59,6 +59,7 @@ public:
    */
   void setFaceList(const SharedFaceList& faces);
 
+  OptionalId getFaceListId() const;
   void setFaceListId(const OptionalId& facesId);
 
   /**

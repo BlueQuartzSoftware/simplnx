@@ -41,7 +41,7 @@ Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getFaceDataId(), IOConstants::k_FaceDataTag);
+  result = WriteDataId(groupWriter, geometry.getFaceListDataArrayId(), IOConstants::k_FaceDataTag);
   if(result.invalid())
   {
     return result;

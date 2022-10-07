@@ -18,8 +18,6 @@ public:
 
   ~INodeGeometry3D() noexcept override = default;
 
-  const std::optional<IdType>& getPolyhedronListId() const;
-
   void setPolyhedronListId(const OptionalId& polyListId);
 
   /**
@@ -57,6 +55,8 @@ public:
    * @param size
    */
   void resizePolyhedraList(usize size);
+
+  OptionalId getPolyhedraDataId() const;
 
   /**
    * @brief Returns the number of polyhedra in the geometry.

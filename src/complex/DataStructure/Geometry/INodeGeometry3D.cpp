@@ -42,6 +42,11 @@ const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
   return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
 }
 
+INodeGeometry3D::OptionalId INodeGeometry3D::getPolyhedraDataId() const
+{
+  return m_PolyhedronListId;
+}
+
 void INodeGeometry3D::setPolyhedraList(const SharedFaceList& polyhedra)
 {
   m_PolyhedronListId = polyhedra.getId();

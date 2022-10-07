@@ -43,6 +43,7 @@ public:
    */
   void setEdgeList(const SharedEdgeList& edges);
 
+  std::optional<IdType> getEdgeListId() const;
   void setEdgeListId(const std::optional<IdType>& edgeList);
 
   /**
