@@ -13,6 +13,10 @@ namespace complex
 {
 class IDataFactory;
 
+/**
+ * @brief The IDataIOManager class serves as a base point for reading and writing DataStructures to specific file formats.
+ * To support a new file format, create a derived class and provide subclasses of IDataFactory for all concrete DataObject types.
+ */
 class COMPLEX_EXPORT IDataIOManager
 {
 public:
@@ -34,16 +38,24 @@ public:
    * @brief Returns a pointer to the factory used for creating a specific
    * DataObject subclass.
    * @param typeName
-   * @return IDataFactory*
+   * @return factory_ptr
    */
   factory_ptr getFactory(factory_id_type typeName) const;
 
+  /**
+   * @brief Returns a pointer to the factory used for creating a specific DataObject subclass.
+   * @param typeName
+   * @return std::shared_ptr<T>
+   */
   template <typename T>
   std::shared_ptr<T> getFactoryAs(factory_id_type typeName) const
   {
     return std::dynamic_pointer_cast<T>(getFactory(typeName));
   }
 
+  /**
+   * Adds a factory of the specified type. T should be the IDataFactory subclass type.
+   */
   template <typename T>
   void addFactory()
   {

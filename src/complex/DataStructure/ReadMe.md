@@ -10,7 +10,7 @@ Required subclasses:
 * IDataFactory for each concrete DataObject type
 * IDataIOManager for the format
   * Add IDataFactory subclasses to the IO Manager
-* IDataStructureReader
-* IDataStructureWriter
+
+In addition, a DataStructure reader and writer should be provided for the new format for easy IO.
 
 Once these classes are created, the DataIOManager needs to be added to the plugin so that complex has access to it and can find it using the format name.

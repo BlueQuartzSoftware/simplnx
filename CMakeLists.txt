@@ -180,8 +180,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataStructureReader.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataStructureWriter.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IOConstants.hpp
