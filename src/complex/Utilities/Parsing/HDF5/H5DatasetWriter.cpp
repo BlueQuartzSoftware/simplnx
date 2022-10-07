@@ -17,75 +17,12 @@ H5::DatasetWriter::DatasetWriter(H5::IdType parentId, const std::string& dataset
 : ObjectWriter(parentId)
 , m_DatasetName(datasetName)
 {
-#if 0
-  if(!tryOpeningDataset(datasetName, dataType))
-  {
-    tryCreatingDataset(datasetName, dataType);
-  }
-#endif
 }
 
 H5::DatasetWriter::~DatasetWriter()
 {
   closeHdf5();
 }
-
-#if 0
-bool H5::DatasetWriter::tryOpeningDataset(const std::string& datasetName, H5::Type dataType)
-{
-  setId(H5Dopen(getParentId(), datasetName.c_str(), H5P_DEFAULT));
-  if(getId() <= 0)
-  {
-    return false;
-  }
-
-  // Check type
-  if(getDataObjectType() != dataType)
-  {
-    closeHdf5();
-    return false;
-  }
-
-  // Check dimensions
-  {
-    hid_t dataspaceId = H5Dget_space(m_DatasetId);
-    int32_t rank = H5Sget_simple_extent_ndims(dataspaceId);
-    if(rank != getRank())
-    {
-      closeHdf5();
-      return false;
-    }
-    auto dimensions = getDims();
-    hsize_t* dims;
-    hsize_t* maxDims;
-    bool dimsMatch = true;
-    H5Sget_simple_extent_dims(dataspaceId, dims, maxDims);
-    for(size_t i = 0; i < rank; i++)
-    {
-      if(dimensions[i] != dims[i])
-      {
-        dimsMatch = false;
-      }
-    }
-    delete[] dims;
-    delete[] maxDims;
-    if(!dimsMatch)
-    {
-      return false;
-    }
-  } // end dimension check
-
-  return true;
-}
-
-bool H5::DatasetWriter::tryCreatingDataset(const std::string& datasetName, H5::Type dataType)
-{
-  hid_t h5DataType = H5::getIdForType(dataType);
-  hid_t dataspaceId = H5Screate_simple(getRank(), getDims().data(), nullptr);
-  setId(H5Dcreate(getParentId(), datasetName.c_str(), h5DataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT));
-  return getId() > 0;
-}
-#endif
 
 void H5::DatasetWriter::closeHdf5()
 {
@@ -246,87 +183,3 @@ H5::ErrorType H5::DatasetWriter::writeVectorOfStrings(std::vector<std::string>& 
 
   return returnError;
 }
-
-#if 0
-template <typename T>
-H5::ErrorType H5::DatasetWriter::writeVector(const DimsType& dims, const std::vector<T>& values)
-{
-  herr_t returnError = 0;
-  int32_t rank = static_cast<int32_t>(dims.size());
-  hid_t dataType = H5::Support::HdfTypeForPrimitive<T>();
-  if(dataType == -1)
-  {
-    std::cout << "dataType was unknown" << std::endl;
-    return -1;
-  }
-
-  /* Get the type of object */
-  H5O_info_t objectInfo;
-  if(H5Oget_info_by_name(getParentId(), getName().c_str(), &objectInfo, H5P_DEFAULT) < 0)
-  {
-    std::cout << "Error getting object info at locationId (" << getParentId() << ") with object name (" << getName() << ")" << std::endl;
-    return -1;
-  }
-  /* Open the object */
-  setId(H5::Support::OpenId(getParentId(), getName(), objectInfo.type));
-  if(getId() < 0)
-  {
-    std::cout << "Error opening Object for Attribute operations." << std::endl;
-    return -1;
-  }
-
-  hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
-  if(dataspaceId >= 0)
-  {
-    herr_t error = findAndDeleteAttribute();
-
-    if(error >= 0)
-    {
-      /* Create the attribute. */
-      hid_t attributeId = H5Acreate(getId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
-      if(attributeId >= 0)
-      {
-        /* Write the attribute data. */
-        const void* data = static_cast<const void*>(values.data());
-        error = H5Awrite(attributeId, dataType, data);
-        if(error < 0)
-        {
-          std::cout << "Error Writing Attribute" << std::endl;
-          returnError = error;
-        }
-      }
-      /* Close the attribute. */
-      error = H5Aclose(attributeId);
-      if(error < 0)
-      {
-        std::cout << "Error Closing Attribute" << std::endl;
-        returnError = error;
-      }
-    }
-    /* Close the dataspace. */
-    error = H5Sclose(dataspaceId);
-    if(error < 0)
-    {
-      std::cout << "Error Closing Dataspace" << std::endl;
-      returnError = error;
-    }
-  }
-  else
-  {
-    returnError = static_cast<herr_t>(dataspaceId);
-  }
-  return returnError;
-}
-
-// Declare writeVector
-template H5::ErrorType H5::DatasetWriter::writeVector<int8_t>(const DimsType& dims, const std::vector<int8_t>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<int16_t>(const DimsType& dims, const std::vector<int16_t>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<int32_t>(const DimsType& dims, const std::vector<int32_t>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<int64_t>(const DimsType& dims, const std::vector<int64_t>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<uint8_t>(const DimsType& dims, const std::vector<uint8_t>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<uint16_t>(const DimsType& dims, const std::vector<uint16_t>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<uint32_t>(const DimsType& dims, const std::vector<uint32_t>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<uint64_t>(const DimsType& dims, const std::vector<uint64_t>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<float>(const DimsType& dims, const std::vector<float>& values);
-template H5::ErrorType H5::DatasetWriter::writeVector<double>(const DimsType& dims, const std::vector<double>& values);
-#endif

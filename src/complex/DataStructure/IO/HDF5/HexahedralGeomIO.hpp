@@ -50,7 +50,7 @@ public:
 
   DataObject::Type getDataType() const override;
 
-  std::string HexahedralGeomIO::getTypeName() const override;
+  std::string getTypeName() const override;
 
   HexahedralGeomIO(const HexahedralGeomIO& other) = delete;
   HexahedralGeomIO(HexahedralGeomIO&& other) = delete;
