@@ -31,7 +31,7 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Instantiate Filter", "
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(vertexGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(imageGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ExistingImageGeometry_Key, std::make_any<DataPath>(imageGeomPath));
-  //args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
+  // args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(useMask));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<DataPath>(voxelIndicesPath));
@@ -66,7 +66,7 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 1", "[M
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(vertexGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(newImageGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ExistingImageGeometry_Key, std::make_any<DataPath>(existingImageGeomPath));
-  //args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
+  // args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(useMask));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<std::string>(voxelIndicesName));
@@ -101,7 +101,7 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 2", "[M
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VertexGeometry_Key, std::make_any<DataPath>(vertexGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_NewImageGeometry_Key, std::make_any<DataPath>(newImageGeomPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ExistingImageGeometry_Key, std::make_any<DataPath>(existingImageGeomPath));
-  //args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
+  // args.insertOrAssign(MapPointCloudToRegularGridFilter::k_ArraysToMap_Key, std::make_any<std::vector<DataPath>>(arraysToMap));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(useMask));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<std::string>(voxelIndicesName));
