@@ -280,8 +280,8 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   }
 
   {
-    DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertexGeom->getVertexData()->getName()).createChildPath(voxelIndicesName);
-    auto action = std::make_unique<CreateArrayAction>(DataType::uint64, vertexGeom->getVertexData()->getShape(), std::vector<usize>{1}, voxelIndicesPath);
+    DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertexGeom->getVertexAttributeMatrix()->getName()).createChildPath(voxelIndicesName);
+    auto action = std::make_unique<CreateArrayAction>(DataType::uint64, vertexGeom->getVertexAttributeMatrix()->getShape(), std::vector<usize>{1}, voxelIndicesPath);
     actions.actions.push_back(std::move(action));
   }
 
@@ -357,7 +357,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   }
 
   auto* vertexGeom = data.getDataAs<VertexGeom>(vertexGeomPath);
-  DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertexGeom->getVertexData()->getName()).createChildPath(voxelIndicesName);
+  DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertexGeom->getVertexAttributeMatrix()->getName()).createChildPath(voxelIndicesName);
 
   int64 numVerts = vertexGeom->getNumberOfVertices();
   SizeVec3 dims = image->getDimensions();
