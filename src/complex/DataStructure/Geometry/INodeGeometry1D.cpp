@@ -176,38 +176,19 @@ void INodeGeometry1D::setEdgeDataId(const std::optional<IdType>& edgeDataId)
   m_EdgeDataId = edgeDataId;
 }
 
-#if 0
-H5::ErrorType INodeGeometry1D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  H5::ErrorType error = INodeGeometry0D::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_EdgeListId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
-  m_EdgeDataId = ReadH5DataId(groupReader, H5Constants::k_EdgeDataTag);
-  m_CellContainingVertId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
-  m_CellNeighborsId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
-  m_CellCentroidsId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
-
-  return error;
-}
-#endif
-
 std::optional<DataObject::IdType> INodeGeometry1D::getElementContainingVertId() const
 {
-  return m_ElementContainingVertId;
+  return m_CellContainingVertId;
 }
 
 std::optional<DataObject::IdType> INodeGeometry1D::getElementNeighborsId() const
 {
-  return m_ElementNeighborsId;
+  return m_CellNeighborsId;
 }
 
 std::optional<DataObject::IdType> INodeGeometry1D::getElementCentroidsId() const
 {
-  return m_ElementCentroidsId;
+  return m_CellCentroidsId;
 }
 
 std::optional<DataObject::IdType> INodeGeometry1D::getElementSizesId() const
@@ -217,67 +198,23 @@ std::optional<DataObject::IdType> INodeGeometry1D::getElementSizesId() const
 
 void INodeGeometry1D::setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId)
 {
-  m_ElementContainingVertId = elementsContainingVertId;
+  m_CellContainingVertId = elementsContainingVertId;
 }
 
 void INodeGeometry1D::setElementNeighborsId(const std::optional<IdType>& elementNeighborsId)
 {
-  m_ElementNeighborsId = elementNeighborsId;
+  m_CellNeighborsId = elementNeighborsId;
 }
 
 void INodeGeometry1D::setElementCentroidsId(const std::optional<IdType>& centroidsId)
 {
-  m_ElementCentroidsId = centroidsId;
+  m_CellCentroidsId = centroidsId;
 }
 
 void INodeGeometry1D::setElementSizesId(const std::optional<IdType>& sizesId)
 {
   m_ElementSizesId = sizesId;
 }
-
-#if 0
-H5::ErrorType INodeGeometry1D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = INodeGeometry0D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_EdgeListId, H5Constants::k_EdgeListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_EdgeDataId, H5Constants::k_EdgeDataTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_CellContainingVertId, H5Constants::k_ElementContainingVertTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_CellNeighborsId, H5Constants::k_ElementNeighborsTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_CellCentroidsId, H5Constants::k_ElementCentroidTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-#endif
 
 void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {

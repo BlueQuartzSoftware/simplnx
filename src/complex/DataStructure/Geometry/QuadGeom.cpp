@@ -81,7 +81,7 @@ usize QuadGeom::getNumberOfVerticesPerFace() const
 
 IGeometry::StatusCode QuadGeom::findElementSizes()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfQuads(), 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
   Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", std::move(dataStore), getId());
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
@@ -129,7 +129,7 @@ IGeometry::StatusCode QuadGeom::findElementNeighbors()
 
 IGeometry::StatusCode QuadGeom::findElementCentroids()
 {
-  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfQuads()}, std::vector<usize>{3}, 0.0f);
+  auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
   auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)

@@ -7,6 +7,10 @@ namespace complex
 class COMPLEX_EXPORT INodeGeometry1D : public INodeGeometry0D
 {
 public:
+  static inline constexpr StringLiteral k_EdgeDataName = "Edge Data";
+
+  static inline constexpr usize k_NumEdgeVerts = 2;
+
   ~INodeGeometry1D() noexcept override = default;
 
   const std::optional<IdType>& getEdgeListId() const;
@@ -170,24 +174,6 @@ public:
   void setElementNeighborsId(const std::optional<IdType>& elementNeighborsId);
   void setElementCentroidsId(const std::optional<IdType>& centroidsId);
   void setElementSizesId(const std::optional<IdType>& sizesId);
-
-#if 0
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-#endif
 
 protected:
   INodeGeometry1D(DataStructure& ds, std::string name);
