@@ -22,15 +22,15 @@ CopyGroupAction::CopyGroupAction(const DataPath& path, const DataPath& newPath, 
 
 CopyGroupAction::~CopyGroupAction() noexcept = default;
 
-std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructure, const DataPath& targetPath, const DataPath& copyPath) const
+std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath) const
 {
-  auto* data = dataStructure.getData(targetPath);
+  auto* data = dataStructure.getData(sourcePath);
 
   std::shared_ptr<DataObject> copy = std::shared_ptr<DataObject>(data->deepCopy());
   // copy->rename(newPath().getTargetName());
   // dataStructure.insert(copy, newPath());
-  copy->rename(copyPath.getTargetName());
-  dataStructure.insert(copy, copyPath.getParent());
+  copy->rename(destPath.getTargetName());
+  dataStructure.insert(copy, destPath.getParent());
 
   if(auto* groupData = dynamic_cast<BaseGroup*>(data))
   {
@@ -42,8 +42,8 @@ std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructu
       }
 
       std::string childName = ptr->getName();
-      auto childPath = targetPath.createChildPath(childName);
-      auto childCopyPath = copyPath.createChildPath(childName);
+      auto childPath = sourcePath.createChildPath(childName);
+      auto childCopyPath = destPath.createChildPath(childName);
 
       auto childData = copyData(dataStructure, childPath, childCopyPath);
       dataStructure.insert(childData, childCopyPath);

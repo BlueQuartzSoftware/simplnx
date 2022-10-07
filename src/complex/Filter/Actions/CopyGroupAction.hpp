@@ -56,7 +56,7 @@ private:
    * @param copyPath
    * @return std::shared_ptr<DataObject>
    */
-  std::shared_ptr<DataObject> copyData(DataStructure& dataStructure, const DataPath& targetPath, const DataPath& copyPath) const;
+  std::shared_ptr<DataObject> copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath) const;
 
   ////////////
   // Variables
