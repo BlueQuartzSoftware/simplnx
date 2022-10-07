@@ -169,7 +169,7 @@ TEST_CASE("ComplexCore::FindNeighborListStatistics: Test Algorithm", "[FindNeigh
   REQUIRE(meadianVal2 == 2586.0f);
   REQUIRE(meadianVal3 == 2939.5f);
 
-  REQUIRE(stdVal1 == 1689.3252f);
+  REQUIRE(stdVal1 == 1689.32507f);
   REQUIRE(stdVal2 == 1184.73706f);
   REQUIRE(stdVal3 == 1476.3418f);
 
