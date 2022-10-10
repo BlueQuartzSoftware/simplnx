@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
@@ -55,7 +56,9 @@ DataGroup* DataGroup::Import(DataStructure& ds, std::string name, IdType importI
 
 DataObject* DataGroup::deepCopy()
 {
-  return new DataGroup(*this);
+  auto dataStruct = *getDataStructure();
+  auto* copy = new DataGroup(dataStruct, getName(), getId());
+  return copy;
 }
 
 DataObject* DataGroup::shallowCopy()

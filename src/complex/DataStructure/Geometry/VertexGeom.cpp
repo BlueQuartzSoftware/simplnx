@@ -70,7 +70,21 @@ DataObject* VertexGeom::shallowCopy()
 
 DataObject* VertexGeom::deepCopy()
 {
-  return new VertexGeom(*this);
+  auto dataStruct = *getDataStructure();
+  auto* copy = new VertexGeom(dataStruct, getName());
+  if(getElementSizes() != nullptr)
+  {
+    copy->m_ElementSizesId = m_ElementSizesId;
+  }
+  if(getVertexAttributeMatrix() != nullptr)
+  {
+    copy->m_VertexAttributeMatrixId = m_VertexAttributeMatrixId;
+  }
+  if(getVertices() != nullptr)
+  {
+    copy->m_VertexDataArrayId = m_VertexDataArrayId;
+  }
+  return copy;
 }
 
 IGeometry::StatusCode VertexGeom::findElementSizes()

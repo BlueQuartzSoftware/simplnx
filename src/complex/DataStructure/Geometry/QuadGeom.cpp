@@ -62,7 +62,53 @@ DataObject* QuadGeom::shallowCopy()
 
 DataObject* QuadGeom::deepCopy()
 {
-  return new QuadGeom(*this);
+  auto dataStruct = *getDataStructure();
+  auto* copy = new QuadGeom(dataStruct, getName());
+  if(getElementSizes() != nullptr)
+  {
+    copy->m_ElementSizesId = m_ElementSizesId;
+  }
+  if(getVertexAttributeMatrix() != nullptr)
+  {
+    copy->m_VertexAttributeMatrixId = m_VertexAttributeMatrixId;
+  }
+  if(getVertices() != nullptr)
+  {
+    copy->m_VertexDataArrayId = m_VertexDataArrayId;
+  }
+  if(getEdgeAttributeMatrix() != nullptr)
+  {
+    copy->m_EdgeAttributeMatrixId = m_EdgeAttributeMatrixId;
+  }
+  if(getEdges() != nullptr)
+  {
+    copy->m_EdgeDataArrayId = m_EdgeDataArrayId;
+  }
+  if(getElementsContainingVert() != nullptr)
+  {
+    copy->m_CellContainingVertDataArrayId = m_CellContainingVertDataArrayId;
+  }
+  if(getElementNeighbors() != nullptr)
+  {
+    copy->m_CellNeighborsDataArrayId = m_CellNeighborsDataArrayId;
+  }
+  if(getElementCentroids() != nullptr)
+  {
+    copy->m_CellCentroidsDataArrayId = m_CellCentroidsDataArrayId;
+  }
+  if(getFaceAttributeMatrix() != nullptr)
+  {
+    copy->m_FaceDataId = m_FaceDataId;
+  }
+  if(getFaces() != nullptr)
+  {
+    copy->m_FaceListId = m_FaceListId;
+  }
+  if(getUnsharedEdges() != nullptr)
+  {
+    copy->m_UnsharedEdgeListId = m_UnsharedEdgeListId;
+  }
+  return copy;
 }
 
 usize QuadGeom::getNumberOfCells() const

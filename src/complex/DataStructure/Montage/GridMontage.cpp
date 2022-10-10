@@ -63,7 +63,18 @@ DataObject* GridMontage::shallowCopy()
 
 DataObject* GridMontage::deepCopy()
 {
-  return new GridMontage(*this);
+  auto dataStruct = *getDataStructure();
+  auto* copy = new GridMontage(dataStruct, getName());
+
+  copy->resizeTileDims(m_RowCount, m_ColumnCount, m_DepthCount);
+  usize tileCount = copy->getTileCount();
+  for(usize i = 0; i < tileCount; ++i)
+  {
+    auto tilePos = getTilePosFromOffset(i);
+    auto* geom = getGeometry(tilePos);
+    setGeometry(tilePos, dataStruct.getDataAs<IGeometry>(geom->getDataPaths()[0]));
+  }
+  return copy;
 }
 
 usize GridMontage::getRowCount() const

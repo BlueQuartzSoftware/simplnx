@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/IArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeWriter.hpp"
@@ -55,7 +56,10 @@ AttributeMatrix* AttributeMatrix::Import(DataStructure& ds, std::string name, Id
 
 DataObject* AttributeMatrix::deepCopy()
 {
-  return new AttributeMatrix(*this);
+  auto dataStruct = *getDataStructure();
+  auto* copy = new AttributeMatrix(dataStruct, getName(), getId());
+  copy->setShape(m_TupleShape);
+  return copy;
 }
 
 DataObject* AttributeMatrix::shallowCopy()

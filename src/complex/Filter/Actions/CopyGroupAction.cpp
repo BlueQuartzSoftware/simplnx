@@ -25,10 +25,7 @@ CopyGroupAction::~CopyGroupAction() noexcept = default;
 std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath) const
 {
   auto* data = dataStructure.getData(sourcePath);
-
   std::shared_ptr<DataObject> copy = std::shared_ptr<DataObject>(data->deepCopy());
-  // copy->rename(newPath().getTargetName());
-  // dataStructure.insert(copy, newPath());
   copy->rename(destPath.getTargetName());
   dataStructure.insert(copy, destPath.getParent());
 

@@ -62,7 +62,41 @@ DataObject* EdgeGeom::shallowCopy()
 
 DataObject* EdgeGeom::deepCopy()
 {
-  return new EdgeGeom(*this);
+  auto dataStruct = *getDataStructure();
+  auto* copy = new EdgeGeom(dataStruct, getName());
+  if(getElementSizes() != nullptr)
+  {
+    copy->m_ElementSizesId = m_ElementSizesId;
+  }
+  if(getVertexAttributeMatrix() != nullptr)
+  {
+    copy->m_VertexAttributeMatrixId = m_VertexAttributeMatrixId;
+  }
+  if(getVertices() != nullptr)
+  {
+    copy->m_VertexDataArrayId = m_VertexDataArrayId;
+  }
+  if(getEdgeAttributeMatrix() != nullptr)
+  {
+    copy->m_EdgeAttributeMatrixId = m_EdgeAttributeMatrixId;
+  }
+  if(getEdges() != nullptr)
+  {
+    copy->m_EdgeDataArrayId = m_EdgeDataArrayId;
+  }
+  if(getElementsContainingVert() != nullptr)
+  {
+    copy->m_CellContainingVertDataArrayId = m_CellContainingVertDataArrayId;
+  }
+  if(getElementNeighbors() != nullptr)
+  {
+    copy->m_CellNeighborsDataArrayId = m_CellNeighborsDataArrayId;
+  }
+  if(getElementCentroids() != nullptr)
+  {
+    copy->m_CellCentroidsDataArrayId = m_CellCentroidsDataArrayId;
+  }
+  return copy;
 }
 
 IGeometry::StatusCode EdgeGeom::findElementSizes()

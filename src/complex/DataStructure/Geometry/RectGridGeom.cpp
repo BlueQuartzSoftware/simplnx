@@ -63,7 +63,30 @@ DataObject* RectGridGeom::shallowCopy()
 
 DataObject* RectGridGeom::deepCopy()
 {
-  return new RectGridGeom(*this);
+  auto dataStruct = *getDataStructure();
+  auto* copy = new RectGridGeom(dataStruct, getName());
+  copy->setDimensions(m_Dimensions);
+  if(getElementSizes() != nullptr)
+  {
+    copy->m_ElementSizesId = m_ElementSizesId;
+  }
+  if(getCellData() != nullptr)
+  {
+    copy->m_CellDataId = m_CellDataId;
+  }
+  if(getXBounds() != nullptr)
+  {
+    copy->m_xBoundsId = m_xBoundsId;
+  }
+  if(getYBounds() != nullptr)
+  {
+    copy->m_yBoundsId = m_yBoundsId;
+  }
+  if(getZBounds() != nullptr)
+  {
+    copy->m_zBoundsId = m_zBoundsId;
+  }
+  return copy;
 }
 
 void RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds)

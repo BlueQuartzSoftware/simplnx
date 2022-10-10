@@ -63,7 +63,21 @@ DataObject* ImageGeom::shallowCopy()
 
 DataObject* ImageGeom::deepCopy()
 {
-  return new ImageGeom(*this);
+  auto dataStruct = *getDataStructure();
+  auto* copy = new ImageGeom(dataStruct, getName());
+  copy->setOrigin(m_Origin);
+  copy->setSpacing(m_Spacing);
+  copy->setDimensions(m_Dimensions);
+
+  if(getElementSizes() != nullptr)
+  {
+    copy->m_ElementSizesId = m_ElementSizesId;
+  }
+  if(getCellData() != nullptr)
+  {
+    copy->m_CellDataId = m_CellDataId;
+  }
+  return copy;
 }
 
 FloatVec3 ImageGeom::getSpacing() const
