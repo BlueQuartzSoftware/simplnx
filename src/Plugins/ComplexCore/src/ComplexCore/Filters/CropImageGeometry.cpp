@@ -3,22 +3,23 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
+#include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
+#include "complex/Filter/Actions/CopyGroupAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
+#include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
 {
@@ -271,18 +272,23 @@ std::vector<std::string> CropImageGeometry::defaultTags() const
 Parameters CropImageGeometry::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "DataPath to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeom_Key, "New Image Geom", "DataPath to create the new ImageGeom at", DataPath()));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Remove Original Image Geometry Group", "", true));
 
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
-
   params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
 
+  params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the call feature Attribute Matrix",
                                                                     DataPath({"CellFeatureData"})));
+
+  // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureIds_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrix_Key, true);
 
@@ -304,6 +310,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
   auto cellFeatureAMPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
+  auto pRemoveOriginalGeometry = args.value<bool>(k_RemoveOriginalGeometry_Key);
 
   auto xMin = minVoxels[0];
   auto xMax = maxVoxels[0];
@@ -327,21 +334,6 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   if(zMax < zMin)
   {
     std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
-  }
-  if(xMin < 0)
-  {
-    std::string errMsg = fmt::format("X Min ({}) less than 0", xMin);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
-  }
-  if(yMin < 0)
-  {
-    std::string errMsg = fmt::format("Y Min ({}) less than 0", yMin);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
-  }
-  if(zMin < 0)
-  {
-    std::string errMsg = fmt::format("Z Min ({}) less than 0", zMin);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
@@ -374,15 +366,15 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   const usize requiredTupleCount = srcDimensions[0] * srcDimensions[1] * srcDimensions[2];
 
   std::vector<usize> tDims(3, 0);
-  if(xMax - xMin < 0)
+  if(static_cast<int>(xMax) - static_cast<int>(xMin) < 0)
   {
     xMax = xMin + 1;
   }
-  if(yMax - yMin < 0)
+  if(static_cast<int>(yMax) - static_cast<int>(yMin) < 0)
   {
     yMax = yMin + 1;
   }
-  if(zMax - zMin < 0)
+  if(static_cast<int>(zMax) - static_cast<int>(zMin) < 0)
   {
     zMax = zMin + 1;
   }
@@ -408,6 +400,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     targetOrigin[2] = srcOrigin[2];
   }
 
+  std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
+
   // saveAsNewImage
   {
     auto spacing = srcImageGeom->getSpacing();
@@ -422,6 +416,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
     std::string cellDataName = cellData->getName();
+    ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
     auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec, cellDataName);
     actions.value().actions.push_back(std::move(geomAction));
 
@@ -439,6 +434,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   if(shouldRenumberFeatures)
   {
+    ignorePaths.push_back(cellFeatureAMPath);
     auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
     if(nullptr == featureIdsPtr)
     {
@@ -479,6 +475,44 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       actions.m_Warnings.push_back(Warning({-55503, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}",
                                                                 featureIdsArrayPath.toString(), warningMsg)}));
     }
+  }
+
+  // copy over the rest of the data
+  auto childPaths = GetAllChildDataPaths(data, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+  if(childPaths.has_value())
+  {
+    for(const auto& childPath : childPaths.value())
+    {
+      std::string copiedChildName = complex::StringUtilities::replace(childPath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
+      DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
+      if(data.getDataAs<BaseGroup>(childPath) != nullptr)
+      {
+        std::vector<DataPath> allCreatedPaths = {copiedChildPath};
+        auto pathsToBeCopied = GetAllChildDataPathsRecursive(data, childPath);
+        if(pathsToBeCopied.has_value())
+        {
+          for(const auto& sourcePath : pathsToBeCopied.value())
+          {
+            std::string createdPathName = complex::StringUtilities::replace(sourcePath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
+            allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+          }
+        }
+        actions.value().actions.push_back(std::make_unique<CopyGroupAction>(childPath, copiedChildPath, allCreatedPaths));
+      }
+      else if(data.getDataAs<IDataArray>(childPath) != nullptr)
+      {
+        actions.value().actions.push_back(std::make_unique<CopyArrayInstanceAction>(childPath, copiedChildPath));
+      }
+      // TODO : copy neighborlist
+      // TODO : copy string array
+      // TODO : copy scalar data
+      // TODO : copy dynamic list array
+    }
+  }
+
+  if(pRemoveOriginalGeometry)
+  {
+    actions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(srcImagePath));
   }
 
   return {std::move(actions)};
