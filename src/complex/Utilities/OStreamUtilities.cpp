@@ -23,7 +23,7 @@ using namespace complex;
 
 void OStreamUtilities::OutputFunctions::neighborListImplWrapper(DataStructure& dataStructure, PrintMatrix2D& matrixRef, DataObject::Type type, const DataPath& path, bool hasIndex, bool hasHeaders)
 {
-  if(type == DataObject::Type::NeighborList) // unique because its loaded horizontally no dataAlg use
+  if(type == DataObject::Type::INeighborList) // unique because its loaded horizontally no dataAlg use
   {
     auto dataType = dataStructure.getDataAs<INeighborList>(path)->getDataType();
     switch(dataType)
@@ -156,6 +156,24 @@ void OStreamUtilities::OutputFunctions::dataAlgParallelWrapper(DataStructure& da
   }
 }
 
+template <typename T>
+size_t getMaxNeighborlistElements(NeighborList<T> list)
+{
+  size_t max = 0;
+  for(size_t i = 0; i < list.getNumberOfLists(); i++)
+  {
+    auto grain = list.getListReference(i);
+    for(size_t index = 0; index < grain.size(); index++)
+    {
+      if(grain[index] > max)
+      {
+        max = grain[index];
+      }
+    }
+  }
+  return max;
+}
+
 std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::OutputFunctions::createNeighborListPrintStringMatrices(DataStructure& dataStructure, const std::vector<DataPath>& paths,
                                                                                                                                        bool addIndexValue, bool includeHeaders)
 {
@@ -174,7 +192,51 @@ std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::
     }
     auto list = dataStructure.getDataAs<INeighborList>(path);
     rows += list->getNumberOfTuples();
-    columns += list->getNumberOfComponents();
+
+    auto dataType = dataStructure.getDataAs<INeighborList>(path)->getDataType();
+    switch(dataType)
+    {
+    case DataType::int8: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<int8>>(path));
+      break;
+    }
+    case DataType::int16: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<int16>>(path));
+      break;
+    }
+    case DataType::int32: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<int32>>(path));
+      break;
+    }
+    case DataType::int64: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<int64>>(path));
+      break;
+    }
+    case DataType::uint8: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<uint8>>(path));
+      break;
+    }
+    case DataType::uint16: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<uint16>>(path));
+      break;
+    }
+    case DataType::uint32: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<uint32>>(path));
+      break;
+    }
+    case DataType::uint64: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<uint64>>(path));
+      break;
+    }
+    case DataType::float32: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<float32>>(path));
+      break;
+    }
+    case DataType::float64: {
+      columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<float64>>(path));
+      break;
+    }
+    }
 
     auto matrixPtr = std::make_shared<PrintMatrix2D>(rows, columns);
     // multi-thread element access
@@ -809,10 +871,13 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& 
     stringStoreList.push_back(createStringMapFromVector(stringStore));
   }
 
-  for(auto& stringStore : stringStoreList)
+  for(size_t i = 0; i < stringStoreList.size(); i++)
   {
-    writeOutWrapper(stringStore, outputStrm);
-    outputStrm << "\n"; // seperate neighborlists
+    writeOutWrapper(stringStoreList[i], outputStrm);
+    if(i < (stringStoreList.size() - 1))
+    {
+      outputStrm << "\n"; // seperate neighborlists
+    }
   }
 }
 
@@ -848,9 +913,12 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vec
     throw std::runtime_error("Invalid file path");
   }
 
-  for(auto& stringStore : stringStoreList)
+  for(size_t i = 0; i < stringStoreList.size(); i++)
   {
-    writeOutWrapper(stringStore, outputStrm);
-    outputStrm << "\n"; // seperate neighborlists
+    writeOutWrapper(stringStoreList[i], outputStrm);
+    if(i < (stringStoreList.size() - 1))
+    {
+      outputStrm << "\n"; // seperate neighborlists
+    }
   }
 }

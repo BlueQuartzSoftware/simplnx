@@ -226,6 +226,7 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
         {
           row = i + 1;
           auto grain = m_InputArray.getListReference(i);
+          m_OutputMatrix.getValue(row, 0) = StringUtilities::number(i);            // add comp count
           m_OutputMatrix.getValue(row, 1) = StringUtilities::number(grain.size()); // add comp count
           for(size_t index = 0; index < grain.size(); index++)
           {
@@ -256,6 +257,7 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
         for(size_t i = start; i < m_InputArray.getNumberOfLists(); i++)
         {
           auto grain = m_InputArray.getListReference(i);
+          m_OutputMatrix.getValue(i, 0) = StringUtilities::number(i);            // add comp count
           m_OutputMatrix.getValue(i, 1) = StringUtilities::number(grain.size()); // add comp count
           for(size_t index = 0; index < grain.size(); index++)
           {
@@ -279,11 +281,6 @@ struct LoadNeighborListToMatrixImpl // adds component count implicitly
       }
     }
   }
-
-  // void operator()(const ComplexRange& range) const // to complex to implement reasonably
-  //{
-  //     loadToMatrix(range.min(), range.max());
-  // }
 
 private:
   PrintMatrix2D& m_OutputMatrix;
@@ -368,7 +365,8 @@ struct AssembleVerticalStringFromIndex
     std::stringstream sstrm;
     size_t length = m_Matrix.getRows(); // will print entire array on one line if no componentsPerLine provided
     size_t count = 0;
-    if(m_MaxComp != 0)                    // if a custom print length provided
+    size_t highestIndex = m_Matrix.getRows();
+    if(m_MaxComp != 0) // if a custom print length provided
     {
       length = m_MaxComp;
     }
@@ -422,12 +420,7 @@ struct AssembleVerticalStringFromIndex
         for(size_t i = start; i < end; i++)
         {
           const auto& selected = m_Matrix.getValue(i, m_VertColumn);
-          if(selected.find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
-          {
-            sstrm << "\n";
-            count = 0;
-          }
-          else // not empty matrix slot
+          if(selected.find("UNINITIALIZED") == std::string::npos) // if is not empty insert
           {
             sstrm << selected << m_Delim;
             count++;
@@ -435,6 +428,14 @@ struct AssembleVerticalStringFromIndex
             {
               sstrm << "\n";
               count = 0;
+            }
+            else if(i + 1 < highestIndex) // if next is less than max
+            {
+              if(m_Matrix.getValue(i + 1).find("UNINITIALIZED") != std::string::npos) // if next is empty
+              {
+                sstrm << "\n";
+                count = 0;
+              }
             }
           }
         }
@@ -446,10 +447,9 @@ struct AssembleVerticalStringFromIndex
           for(size_t i = start; i < end; i++)
           {
             const auto& selected = m_Matrix.getValue(i, m_VertColumn);
-            if(selected.find("UNINITIALIZED") == std::string::npos) // if is not empty insert new line in string and reset count
+            if(selected.find("UNINITIALIZED") == std::string::npos) // if is not empty insert
             {
               sstrm << selected;
-              count++;
             }
           }
         }
@@ -458,12 +458,7 @@ struct AssembleVerticalStringFromIndex
           for(size_t i = start; i < end; i++)
           {
             const auto& selected = m_Matrix.getValue(i, m_VertColumn);
-            if(selected.find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
-            {
-              sstrm << "\n";
-              count = 0;
-            }
-            else // not empty matrix slot
+            if(selected.find("UNINITIALIZED") == std::string::npos) // if has value
             {
               sstrm << selected;
               count++;
@@ -471,6 +466,14 @@ struct AssembleVerticalStringFromIndex
               {
                 sstrm << "\n";
                 count = 0;
+              }
+              else if(i + 1 < highestIndex) // if next is less than max
+              {
+                if(m_Matrix.getValue(i + 1).find("UNINITIALIZED") != std::string::npos) // if next is empty
+                {
+                  sstrm << "\n";
+                  count = 0;
+                }
               }
             }
           }
@@ -518,8 +521,8 @@ struct AssembleHorizontalStringFromIndex
     std::stringstream sstrm;
     size_t length = m_Matrix.getColumns(); // default is one tuple per line
     size_t count = 0;
-    size_t elementCount = 0;
-    if(m_MaxComp != 0)                    // if a custom print length provided
+    size_t highestIndex = m_Matrix.getSize();
+    if(m_MaxComp != 0) // if a custom print length provided
     {
       length = m_MaxComp;
     }
@@ -566,12 +569,7 @@ struct AssembleHorizontalStringFromIndex
       {
         for(size_t i = start; i < end; i++)
         {
-          if(m_Matrix.getValue(i).find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
-          {
-            sstrm << "\n";
-            count = 0;
-          }
-          else // not empty matrix slot
+          if(m_Matrix.getValue(i).find("UNINITIALIZED") == std::string::npos) // not empty
           {
             sstrm << m_Matrix.getValue(i) << m_Delim;
             count++;
@@ -580,6 +578,14 @@ struct AssembleHorizontalStringFromIndex
               sstrm << "\n";
               count = 0;
             }
+            else if(i + 1 < highestIndex) // if next is less than max
+            {
+              if(m_Matrix.getValue(i + 1).find("UNINITIALIZED") != std::string::npos) // if next is empty
+              {
+                sstrm << "\n";
+                count = 0;
+              }
+            }
           }
         }
       }
@@ -587,12 +593,7 @@ struct AssembleHorizontalStringFromIndex
       {
         for(size_t i = start; i < end; i++)
         {
-          if(m_Matrix.getValue(i).find("UNINITIALIZED") != std::string::npos) // if is empty insert new line in string and reset count
-          {
-            sstrm << "\n";
-            count = 0;
-          }
-          else // not empty matrix slot
+          if(m_Matrix.getValue(i).find("UNINITIALIZED") == std::string::npos) // not empty
           {
             sstrm << m_Matrix.getValue(i);
             count++;
@@ -600,6 +601,14 @@ struct AssembleHorizontalStringFromIndex
             {
               sstrm << "\n";
               count = 0;
+            }
+            else if(i + 1 < highestIndex) // if next is less than max
+            {
+              if(m_Matrix.getValue(i + 1).find("UNINITIALIZED") != std::string::npos) // if next is empty
+              {
+                sstrm << "\n";
+                count = 0;
+              }
             }
           }
         }
