@@ -61,19 +61,23 @@ DataObject* RectGridGeom::shallowCopy()
   return new RectGridGeom(*this);
 }
 
-DataObject* RectGridGeom::deepCopy()
+std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
 {
-  auto dataStruct = *getDataStructure();
-  auto* copy = new RectGridGeom(dataStruct, getName());
+  auto& dataStruct = *getDataStructure();
+  auto copy = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataStruct, copyPath.getTargetName(), getId()));
   copy->setDimensions(m_Dimensions);
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+  }
+
   if(getElementSizes() != nullptr)
   {
-    copy->m_ElementSizesId = m_ElementSizesId;
+    copy->findElementSizes();
   }
-  if(getCellData() != nullptr)
-  {
-    copy->m_CellDataId = m_CellDataId;
-  }
+  const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
+  copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
+
   if(getXBounds() != nullptr)
   {
     copy->m_xBoundsId = m_xBoundsId;

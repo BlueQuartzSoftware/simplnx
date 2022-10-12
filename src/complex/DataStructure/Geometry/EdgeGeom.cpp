@@ -60,42 +60,40 @@ DataObject* EdgeGeom::shallowCopy()
   return new EdgeGeom(*this);
 }
 
-DataObject* EdgeGeom::deepCopy()
+std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 {
-  auto dataStruct = *getDataStructure();
-  auto* copy = new EdgeGeom(dataStruct, getName());
+  auto& dataStruct = *getDataStructure();
+  auto copy = std::shared_ptr<EdgeGeom>(new EdgeGeom(dataStruct, copyPath.getTargetName(), getId()));
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+  }
+
   if(getElementSizes() != nullptr)
   {
-    copy->m_ElementSizesId = m_ElementSizesId;
-  }
-  if(getVertexAttributeMatrix() != nullptr)
-  {
-    copy->m_VertexAttributeMatrixId = m_VertexAttributeMatrixId;
-  }
-  if(getVertices() != nullptr)
-  {
-    copy->m_VertexDataArrayId = m_VertexDataArrayId;
-  }
-  if(getEdgeAttributeMatrix() != nullptr)
-  {
-    copy->m_EdgeAttributeMatrixId = m_EdgeAttributeMatrixId;
-  }
-  if(getEdges() != nullptr)
-  {
-    copy->m_EdgeDataArrayId = m_EdgeDataArrayId;
+    copy->findElementSizes();
   }
   if(getElementsContainingVert() != nullptr)
   {
-    copy->m_CellContainingVertDataArrayId = m_CellContainingVertDataArrayId;
+    copy->findElementsContainingVert();
   }
   if(getElementNeighbors() != nullptr)
   {
-    copy->m_CellNeighborsDataArrayId = m_CellNeighborsDataArrayId;
+    copy->findElementNeighbors();
   }
   if(getElementCentroids() != nullptr)
   {
-    copy->m_CellCentroidsDataArrayId = m_CellCentroidsDataArrayId;
+    copy->findElementCentroids();
   }
+  const DataPath copiedVertDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
+  copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedVertDataPath);
+  const DataPath copiedVertListPath = copyPath.createChildPath(getVertices()->getName());
+  copy->m_VertexDataArrayId = dataStruct.getId(copiedVertListPath);
+  const DataPath copiedEdgeDataPath = copyPath.createChildPath(getEdgeAttributeMatrix()->getName());
+  copy->m_EdgeAttributeMatrixId = dataStruct.getId(copiedEdgeDataPath);
+  const DataPath copiedEdgeListPath = copyPath.createChildPath(getEdges()->getName());
+  copy->m_EdgeDataArrayId = dataStruct.getId(copiedEdgeListPath);
+
   return copy;
 }
 

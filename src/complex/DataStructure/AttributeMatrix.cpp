@@ -54,11 +54,15 @@ AttributeMatrix* AttributeMatrix::Import(DataStructure& ds, std::string name, Id
   return data.get();
 }
 
-DataObject* AttributeMatrix::deepCopy()
+std::shared_ptr<DataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
 {
-  auto dataStruct = *getDataStructure();
-  auto* copy = new AttributeMatrix(dataStruct, getName(), getId());
+  auto& dataStruct = *getDataStructure();
+  auto copy = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStruct, copyPath.getTargetName(), getId()));
   copy->setShape(m_TupleShape);
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+  }
   return copy;
 }
 

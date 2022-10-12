@@ -92,7 +92,7 @@ public:
    * to the DataStructure. It is up to the caller to delete the returned value.
    * @return DataObject*
    */
-  DataObject* deepCopy() override;
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief Returns the number of rows in the montage.

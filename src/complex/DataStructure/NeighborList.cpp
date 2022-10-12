@@ -40,7 +40,6 @@ NeighborList<T>* NeighborList<T>::Create(DataStructure& ds, const std::string& n
 template <typename T>
 NeighborList<T>* NeighborList<T>::Import(DataStructure& ds, const std::string& name, IdType importId, const std::vector<SharedVectorType>& dataVector, const std::optional<IdType>& parentId)
 {
-
   auto data = std::shared_ptr<NeighborList>(new NeighborList(ds, name, dataVector, importId));
   if(!AttemptToAddObject(ds, data, parentId))
   {
@@ -56,11 +55,21 @@ DataObject* NeighborList<T>::shallowCopy()
 }
 
 template <typename T>
-DataObject* NeighborList<T>::deepCopy()
+std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
 {
-  auto copy = new NeighborList(*this);
+  auto& dataStruct = *getDataStructure();
+  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getNumberOfTuples()));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
-  copy->m_Array = m_Array;
+  copy->m_Array.reserve(m_Array.size());
+  for(usize i = 0; i < m_Array.size(); ++i)
+  {
+    copy->m_Array[i] = std::make_shared<VectorType>(m_Array[i]->size());
+    for(usize j = 0; j < m_Array[i]->size(); ++j)
+    {
+      (*copy->m_Array[i])[j] = (*m_Array[i])[j];
+    }
+  }
+  dataStruct.insert(copy, copyPath.getParent());
   return copy;
 }
 

@@ -149,7 +149,7 @@ public:
    * @brief Returns a deep copy of the DataObject.
    * @return DataObject*
    */
-  virtual DataObject* deepCopy() = 0;
+  virtual std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) = 0;
 
   /**
    * @brief Returns a shallow copy of the DataObject.

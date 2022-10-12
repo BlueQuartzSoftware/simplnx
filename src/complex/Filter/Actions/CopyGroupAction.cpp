@@ -2,11 +2,9 @@
 
 #include <fmt/core.h>
 
-#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 
@@ -22,54 +20,27 @@ CopyGroupAction::CopyGroupAction(const DataPath& path, const DataPath& newPath, 
 
 CopyGroupAction::~CopyGroupAction() noexcept = default;
 
-std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath) const
+std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
 {
   auto* data = dataStructure.getData(sourcePath);
-  std::shared_ptr<DataObject> copy = std::shared_ptr<DataObject>(data->deepCopy());
-  copy->rename(destPath.getTargetName());
-  dataStructure.insert(copy, destPath.getParent());
-
-  if(auto* groupData = dynamic_cast<BaseGroup*>(data))
-  {
-    for(const auto& [id, ptr] : *groupData)
-    {
-      if(ptr == nullptr)
-      {
-        continue;
-      }
-
-      std::string childName = ptr->getName();
-      auto childPath = sourcePath.createChildPath(childName);
-      auto childCopyPath = destPath.createChildPath(childName);
-
-      auto childData = copyData(dataStructure, childPath, childCopyPath);
-      dataStructure.insert(childData, childCopyPath);
-    }
-  }
-
+  std::shared_ptr<DataObject> copy = data->deepCopy(destPath);
   return copy;
 }
 
 Result<> CopyGroupAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  auto* baseGroup = dataStructure.getDataAs<BaseGroup>(path());
-  if(baseGroup == nullptr)
+  if(dataStructure.getDataAs<BaseGroup>(path()) == nullptr)
   {
-    std::string ss = fmt::format("Cannot find group at path '{}'", path().toString());
-    return MakeErrorResult(-5, ss);
+    return MakeErrorResult(-5, fmt::format("Cannot find group at path '{}'", path().toString()));
   }
-  auto* newTargetData = dataStructure.getData(newPath());
-  if(newTargetData != nullptr)
+  if(dataStructure.getData(newPath()) != nullptr)
   {
-    std::string ss = fmt::format("Data already exists at path '{}'", newPath().toString());
-    return MakeErrorResult(-6, ss);
+    return MakeErrorResult(-6, fmt::format("Data already exists at path '{}'", newPath().toString()));
   }
 
-  auto newData = copyData(dataStructure, path(), newPath());
-  if(newData == nullptr)
+  if(copyData(dataStructure, path(), newPath()) == nullptr)
   {
-    std::string ss = fmt::format("Failed to copy data from '{}' to '{}'", path().toString(), newPath().toString());
-    return MakeErrorResult(-7, ss);
+    return MakeErrorResult(-7, fmt::format("Failed to copy data from '{}' to '{}'", path().toString(), newPath().toString()));
   }
 
   return {};

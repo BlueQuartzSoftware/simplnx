@@ -68,22 +68,23 @@ DataObject* VertexGeom::shallowCopy()
   return new VertexGeom(*this);
 }
 
-DataObject* VertexGeom::deepCopy()
+std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 {
-  auto dataStruct = *getDataStructure();
-  auto* copy = new VertexGeom(dataStruct, getName());
+  auto& dataStruct = *getDataStructure();
+  auto copy = std::shared_ptr<VertexGeom>(new VertexGeom(dataStruct, copyPath.getTargetName(), getId()));
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+  }
+
   if(getElementSizes() != nullptr)
   {
-    copy->m_ElementSizesId = m_ElementSizesId;
+    copy->findElementSizes();
   }
-  if(getVertexAttributeMatrix() != nullptr)
-  {
-    copy->m_VertexAttributeMatrixId = m_VertexAttributeMatrixId;
-  }
-  if(getVertices() != nullptr)
-  {
-    copy->m_VertexDataArrayId = m_VertexDataArrayId;
-  }
+  const DataPath copiedVertDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
+  copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedVertDataPath);
+  const DataPath copiedVertListPath = copyPath.createChildPath(getVertices()->getName());
+  copy->m_VertexDataArrayId = dataStruct.getId(copiedVertListPath);
   return copy;
 }
 

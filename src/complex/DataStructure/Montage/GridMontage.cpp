@@ -61,20 +61,24 @@ DataObject* GridMontage::shallowCopy()
   return new GridMontage(*this);
 }
 
-DataObject* GridMontage::deepCopy()
+std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath& copyPath)
 {
-  auto dataStruct = *getDataStructure();
-  auto* copy = new GridMontage(dataStruct, getName());
-
-  copy->resizeTileDims(m_RowCount, m_ColumnCount, m_DepthCount);
-  usize tileCount = copy->getTileCount();
-  for(usize i = 0; i < tileCount; ++i)
-  {
-    auto tilePos = getTilePosFromOffset(i);
-    auto* geom = getGeometry(tilePos);
-    setGeometry(tilePos, dataStruct.getDataAs<IGeometry>(geom->getDataPaths()[0]));
-  }
-  return copy;
+  // auto& dataStruct = *getDataStructure();
+  // auto copy = std::shared_ptr<GridMontage>(new GridMontage(dataStruct, copyPath.getTargetName(), getId()));
+  // copy->resizeTileDims(m_RowCount, m_ColumnCount, m_DepthCount);
+  // const usize tileCount = copy->getTileCount();
+  // for(usize i = 0; i < tileCount; ++i)
+  //{
+  //   auto tilePos = getTilePosFromOffset(i);
+  //   const auto geom = getGeometry(tilePos);
+  //   setGeometry(tilePos, geom);
+  // }
+  // if(dataStruct.insert(copy, copyPath.getParent()))
+  //{
+  //   auto dataMapCopy = getDataMap().deepCopy(copyPath);
+  // }
+  // return copy;
+  throw std::runtime_error("GridMontage deepCopy has not been implemented.");
 }
 
 usize GridMontage::getRowCount() const

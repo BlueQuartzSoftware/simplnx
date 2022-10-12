@@ -1,4 +1,5 @@
 #include "StringArray.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 
 #include "fmt/format.h"
 
@@ -76,9 +77,12 @@ DataObject* StringArray::shallowCopy()
   return new StringArray(*this);
 }
 
-DataObject* StringArray::deepCopy()
+std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
 {
-  return new StringArray(*getDataStructure(), getName(), getId(), m_Strings);
+  auto& dataStruct = *getDataStructure();
+  const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), getId(), m_Strings));
+  dataStruct.insert(copy, copyPath.getParent());
+  return copy;
 }
 
 size_t StringArray::size() const

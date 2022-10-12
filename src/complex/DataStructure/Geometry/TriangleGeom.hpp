@@ -85,7 +85,7 @@ public:
    * @brief
    * @return DataObject*
    */
-  DataObject* deepCopy() override;
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief

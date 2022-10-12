@@ -61,22 +61,24 @@ DataObject* ImageGeom::shallowCopy()
   return new ImageGeom(*this);
 }
 
-DataObject* ImageGeom::deepCopy()
+std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
 {
-  auto dataStruct = *getDataStructure();
-  auto* copy = new ImageGeom(dataStruct, getName());
+  auto& dataStruct = *getDataStructure();
+  auto copy = std::shared_ptr<ImageGeom>(new ImageGeom(dataStruct, copyPath.getTargetName(), getId()));
   copy->setOrigin(m_Origin);
   copy->setSpacing(m_Spacing);
   copy->setDimensions(m_Dimensions);
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+  }
 
   if(getElementSizes() != nullptr)
   {
-    copy->m_ElementSizesId = m_ElementSizesId;
+    copy->findElementSizes();
   }
-  if(getCellData() != nullptr)
-  {
-    copy->m_CellDataId = m_CellDataId;
-  }
+  const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
+  copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
   return copy;
 }
 

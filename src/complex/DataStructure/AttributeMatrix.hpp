@@ -82,7 +82,7 @@ public:
    * responsible for deleting the returned pointer when it is no longer needed.
    * @return DataObject*
    */
-  DataObject* deepCopy() override;
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief Creates and returns a shallow copy of the AttributeMatrix. The caller is

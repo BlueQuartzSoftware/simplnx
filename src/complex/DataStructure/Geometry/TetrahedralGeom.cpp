@@ -60,67 +60,56 @@ DataObject* TetrahedralGeom::shallowCopy()
   return new TetrahedralGeom(*this);
 }
 
-DataObject* TetrahedralGeom::deepCopy()
+std::shared_ptr<DataObject> TetrahedralGeom::deepCopy(const DataPath& copyPath)
 {
-  auto dataStruct = *getDataStructure();
-  return new TetrahedralGeom(*this);
-  auto* copy = new TetrahedralGeom(dataStruct, getName());
+  auto& dataStruct = *getDataStructure();
+  auto copy = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(dataStruct, copyPath.getTargetName(), getId()));
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+  }
+
   if(getElementSizes() != nullptr)
   {
-    copy->m_ElementSizesId = m_ElementSizesId;
-  }
-  if(getVertexAttributeMatrix() != nullptr)
-  {
-    copy->m_VertexAttributeMatrixId = m_VertexAttributeMatrixId;
-  }
-  if(getVertices() != nullptr)
-  {
-    copy->m_VertexDataArrayId = m_VertexDataArrayId;
-  }
-  if(getEdgeAttributeMatrix() != nullptr)
-  {
-    copy->m_EdgeAttributeMatrixId = m_EdgeAttributeMatrixId;
-  }
-  if(getEdges() != nullptr)
-  {
-    copy->m_EdgeDataArrayId = m_EdgeDataArrayId;
+    copy->findElementSizes();
   }
   if(getElementsContainingVert() != nullptr)
   {
-    copy->m_CellContainingVertDataArrayId = m_CellContainingVertDataArrayId;
+    copy->findElementsContainingVert();
   }
   if(getElementNeighbors() != nullptr)
   {
-    copy->m_CellNeighborsDataArrayId = m_CellNeighborsDataArrayId;
+    copy->findElementNeighbors();
   }
   if(getElementCentroids() != nullptr)
   {
-    copy->m_CellCentroidsDataArrayId = m_CellCentroidsDataArrayId;
-  }
-  if(getFaceAttributeMatrix() != nullptr)
-  {
-    copy->m_FaceDataId = m_FaceDataId;
-  }
-  if(getFaces() != nullptr)
-  {
-    copy->m_FaceListId = m_FaceListId;
+    copy->findElementCentroids();
   }
   if(getUnsharedEdges() != nullptr)
   {
-    copy->m_UnsharedEdgeListId = m_UnsharedEdgeListId;
-  }
-  if(getPolyhedraAttributeMatrix() != nullptr)
-  {
-    copy->m_PolyhedronDataId = m_PolyhedronDataId;
-  }
-  if(getPolyhedra() != nullptr)
-  {
-    copy->m_PolyhedronListId = m_PolyhedronListId;
+    copy->findUnsharedEdges();
   }
   if(getUnsharedFaces() != nullptr)
   {
-    copy->m_UnsharedFaceListId = m_UnsharedFaceListId;
+    copy->findUnsharedFaces();
   }
+  const DataPath copiedVertDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
+  copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedVertDataPath);
+  const DataPath copiedVertListPath = copyPath.createChildPath(getVertices()->getName());
+  copy->m_VertexDataArrayId = dataStruct.getId(copiedVertListPath);
+  const DataPath copiedEdgeDataPath = copyPath.createChildPath(getEdgeAttributeMatrix()->getName());
+  copy->m_EdgeAttributeMatrixId = dataStruct.getId(copiedEdgeDataPath);
+  const DataPath copiedEdgeListPath = copyPath.createChildPath(getEdges()->getName());
+  copy->m_EdgeDataArrayId = dataStruct.getId(copiedEdgeListPath);
+  const DataPath copiedFaceDataPath = copyPath.createChildPath(getFaceAttributeMatrix()->getName());
+  copy->m_FaceDataId = dataStruct.getId(copiedFaceDataPath);
+  const DataPath copiedFaceListPath = copyPath.createChildPath(getFaces()->getName());
+  copy->m_FaceListId = dataStruct.getId(copiedFaceListPath);
+  const DataPath copiedPolyDataPath = copyPath.createChildPath(getPolyhedraAttributeMatrix()->getName());
+  copy->m_PolyhedronDataId = dataStruct.getId(copiedPolyDataPath);
+  const DataPath copiedPolyListPath = copyPath.createChildPath(getPolyhedra()->getName());
+  copy->m_PolyhedronListId = dataStruct.getId(copiedPolyListPath);
+
   return copy;
 }
 

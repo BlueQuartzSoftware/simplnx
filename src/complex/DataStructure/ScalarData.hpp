@@ -134,9 +134,12 @@ public:
    * the DataStructure, and it is up to the caller to delete it.
    * @return DataObject*
    */
-  DataObject* deepCopy() override
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
-    return new ScalarData(*getDataStructure(), getName(), getId(), getValue());
+    auto& dataStruct = *getDataStructure();
+    std::shared_ptr<ScalarData<T>> copy = std::shared_ptr<ScalarData<T>>(new ScalarData<T>(dataStruct, copyPath.getTargetName(), getId(), getValue()));
+    dataStruct.insert(copy, copyPath.getParent());
+    return copy;
   }
 
   /**

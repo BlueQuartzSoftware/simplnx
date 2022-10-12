@@ -35,7 +35,7 @@ public:
   std::string getTypeName() const override;
 
   DataObject* shallowCopy() override;
-  DataObject* deepCopy() override;
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   size_t size() const;
   const collection_type& values() const;
