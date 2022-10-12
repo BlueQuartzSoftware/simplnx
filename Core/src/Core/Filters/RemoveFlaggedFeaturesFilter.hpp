@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Processing/Processing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,22 +8,23 @@
 namespace complex
 {
 /**
- * @class RemoveFlaggedFeatures
+ * @class RemoveFlaggedFeaturesFilter
  * @brief This filter will ....
  */
-class PROCESSING_EXPORT RemoveFlaggedFeatures : public IFilter
+class CORE_EXPORT RemoveFlaggedFeaturesFilter : public IFilter
 {
 public:
-  RemoveFlaggedFeatures() = default;
-  ~RemoveFlaggedFeatures() noexcept override = default;
+  RemoveFlaggedFeaturesFilter() = default;
+  ~RemoveFlaggedFeaturesFilter() noexcept override = default;
 
-  RemoveFlaggedFeatures(const RemoveFlaggedFeatures&) = delete;
-  RemoveFlaggedFeatures(RemoveFlaggedFeatures&&) noexcept = delete;
+  RemoveFlaggedFeaturesFilter(const RemoveFlaggedFeaturesFilter&) = delete;
+  RemoveFlaggedFeaturesFilter(RemoveFlaggedFeaturesFilter&&) noexcept = delete;
 
-  RemoveFlaggedFeatures& operator=(const RemoveFlaggedFeatures&) = delete;
-  RemoveFlaggedFeatures& operator=(RemoveFlaggedFeatures&&) noexcept = delete;
+  RemoveFlaggedFeaturesFilter& operator=(const RemoveFlaggedFeaturesFilter&) = delete;
+  RemoveFlaggedFeaturesFilter& operator=(RemoveFlaggedFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_ImageGeometry_Key = "ImageGeometry";
   static inline constexpr StringLiteral k_FillRemovedFeatures_Key = "FillRemovedFeatures";
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
   static inline constexpr StringLiteral k_FlaggedFeaturesArrayPath_Key = "FlaggedFeaturesArrayPath";
@@ -95,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, RemoveFlaggedFeatures, "6e8cc6ec-8b9b-402e-9deb-85bd1cdba743");
+COMPLEX_DEF_FILTER_TRAITS(complex, RemoveFlaggedFeaturesFilter, "6e8cc6ec-8b9b-402e-9deb-85bd1cdba743");

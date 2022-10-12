@@ -1,31 +1,21 @@
 #pragma once
 
-#include "Processing/Processing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  RemoveFlaggedFeaturesInputValues inputValues;
-
-  inputValues.FillRemovedFeatures = filterArgs.value<bool>(k_FillRemovedFeatures_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.FlaggedFeaturesArrayPath = filterArgs.value<DataPath>(k_FlaggedFeaturesArrayPath_Key);
-  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-
-  return RemoveFlaggedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
 namespace complex
 {
 
-struct PROCESSING_EXPORT RemoveFlaggedFeaturesInputValues
+struct CORE_EXPORT RemoveFlaggedFeaturesInputValues
 {
   bool FillRemovedFeatures;
   DataPath FeatureIdsArrayPath;
   DataPath FlaggedFeaturesArrayPath;
+  DataPath ImageGeometryPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
 };
 
@@ -35,7 +25,7 @@ struct PROCESSING_EXPORT RemoveFlaggedFeaturesInputValues
  * where a bool mask array specifies.
  */
 
-class PROCESSING_EXPORT RemoveFlaggedFeatures
+class CORE_EXPORT RemoveFlaggedFeatures
 {
 public:
   RemoveFlaggedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RemoveFlaggedFeaturesInputValues* inputValues);
@@ -49,6 +39,10 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+
+protected:
+  void assign_badpoints();
+  std::vector<bool> remove_flaggedfeatures();
 
 private:
   DataStructure& m_DataStructure;

@@ -27,6 +27,7 @@ set(FilterList
   FindEuclideanDistMapFilter
   FindNeighborhoodsFilter
   FindSurfaceAreaToVolumeFilter
+  RemoveFlaggedFeaturesFilter
 )
 
 set(STUB_FILTERS
@@ -105,6 +106,7 @@ set(filter_algorithms
   FindEuclideanDistMap
   FindNeighborhoods
   FindSurfaceAreaToVolume
+  RemoveFlaggedFeatures
 )
 
 
