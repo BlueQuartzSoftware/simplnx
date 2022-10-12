@@ -8,6 +8,7 @@
 set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsFeatureCentroidTest.cpp
   ConvertColorToGrayScaleTest.cpp
+  ConvertDataTest.cpp
   FillBadDataTest.cpp # NEEDS TEST IMPLEMENTED
   FindFeatureCentroidsFilterTest.cpp
   FindShapesFilterTest.cpp

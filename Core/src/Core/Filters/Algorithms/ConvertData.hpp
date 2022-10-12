@@ -22,8 +22,8 @@ namespace complex
 
 struct CORE_EXPORT ConvertDataInputValues
 {
-  NumericType ScalarType;
-  DataPath SelectedCellArrayPath;
+  DataType ScalarType;
+  DataPath SelectedArrayPath;
   DataPath OutputArrayName;
 };
 
