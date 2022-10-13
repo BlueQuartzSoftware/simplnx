@@ -1,6 +1,5 @@
 #include "CopyDataGroup.hpp"
 
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/Actions/CopyGroupAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
@@ -36,8 +35,9 @@ std::string CopyDataGroup::humanName() const
 Parameters CopyDataGroup::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataPath_Key, "DataGroup to copy", "DataPath to DataGroup", DataPath{}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewPath_Key, "Copied DataGroup", "DataPath to new DataGroup", DataPath{}));
+  params.insert(
+      std::make_unique<DataGroupSelectionParameter>(k_DataPath_Key, "Group to copy", "DataPath to BaseGroup", DataPath{}, DataGroupSelectionParameter::AllowedTypes{DataObject::Type::BaseGroup}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewPath_Key, "Copied Group", "DataPath to new BaseGroup", DataPath{}));
   return params;
 }
 

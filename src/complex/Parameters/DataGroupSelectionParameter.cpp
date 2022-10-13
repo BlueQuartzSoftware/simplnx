@@ -3,6 +3,7 @@
 #include "complex/DataStructure/DataGroup.hpp"
 
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <nlohmann/json.hpp>
 
@@ -10,9 +11,11 @@
 
 namespace complex
 {
-DataGroupSelectionParameter::DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+DataGroupSelectionParameter::DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                                         const AllowedTypes& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
+, m_AllowedTypes(allowedTypes)
 {
 }
 
@@ -53,12 +56,17 @@ Result<std::any> DataGroupSelectionParameter::fromJson(const nlohmann::json& jso
 
 IParameter::UniquePointer DataGroupSelectionParameter::clone() const
 {
-  return std::make_unique<DataGroupSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
+  return std::make_unique<DataGroupSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
 }
 
 std::any DataGroupSelectionParameter::defaultValue() const
 {
   return defaultPath();
+}
+
+const DataGroupSelectionParameter::AllowedTypes& DataGroupSelectionParameter::allowedTypes() const
+{
+  return m_AllowedTypes;
 }
 
 typename DataGroupSelectionParameter::ValueType DataGroupSelectionParameter::defaultPath() const
@@ -79,22 +87,28 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
 
   if(value.empty())
   {
-    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
 
   const DataObject* dataObject = dataStructure.getData(value);
   if(dataObject == nullptr)
   {
-    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+    return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const DataGroup* dataGroup = dynamic_cast<const DataGroup*>(dataObject);
-  if(dataGroup == nullptr)
+  // Look for the actual group type that the user selected in the allowed set
+  if(m_AllowedTypes.count(dataObject->getDataObjectType()) > 0)
   {
-    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is *not* a DataGroup", prefix, value.toString()));
+    return {};
   }
 
-  return {};
+  if(m_AllowedTypes.count(DataObject::Type::BaseGroup) > 0 && dataStructure.getDataAs<BaseGroup>(value) != nullptr)
+  {
+    return {};
+  }
+
+  return MakeErrorResult(FilterParameter::Constants::k_Validate_AllowedType_Error, fmt::format("{}Group at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(),
+                                                                                               dataObject->getTypeName(), DataObject::StringListFromDataObjectType(m_AllowedTypes)));
 }
 
 Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const

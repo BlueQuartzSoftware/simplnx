@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
@@ -18,7 +19,8 @@ public:
   using AllowedTypes = std::set<DataObject::Type>;
 
   DataGroupSelectionParameter() = delete;
-  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                              const AllowedTypes& allowedTypes = {DataObject::Type::DataGroup});
   ~DataGroupSelectionParameter() override = default;
 
   DataGroupSelectionParameter(const DataGroupSelectionParameter&) = delete;
@@ -72,6 +74,12 @@ public:
   ValueType defaultPath() const;
 
   /**
+   * @brief Returns the list of allowed DataObject types.
+   * @return
+   */
+  const AllowedTypes& allowedTypes() const;
+
+  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
@@ -98,6 +106,7 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+  AllowedTypes m_AllowedTypes = {};
 };
 } // namespace complex
 COMPLEX_DEF_PARAMETER_TRAITS(complex::DataGroupSelectionParameter, "bff3d4ac-04a6-5251-b178-4f83f7865074");

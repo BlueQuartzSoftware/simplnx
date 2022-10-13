@@ -249,6 +249,13 @@ public:
    */
   virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable = true) const = 0;
 
+  /**
+   * @brief Converts the set of DataObject Types to strings.
+   * @param dataObjectTypes
+   * @return std::set<std::string>
+   */
+  static std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Type>& dataObjectTypes);
+
 protected:
   /**
    * @brief DataObject constructor takes a reference to the DataStructure and
