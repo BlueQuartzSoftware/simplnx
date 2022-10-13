@@ -63,21 +63,6 @@ DataObject* GridMontage::shallowCopy()
 
 std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath& copyPath)
 {
-  // auto& dataStruct = *getDataStructure();
-  // auto copy = std::shared_ptr<GridMontage>(new GridMontage(dataStruct, copyPath.getTargetName(), getId()));
-  // copy->resizeTileDims(m_RowCount, m_ColumnCount, m_DepthCount);
-  // const usize tileCount = copy->getTileCount();
-  // for(usize i = 0; i < tileCount; ++i)
-  //{
-  //   auto tilePos = getTilePosFromOffset(i);
-  //   const auto geom = getGeometry(tilePos);
-  //   setGeometry(tilePos, geom);
-  // }
-  // if(dataStruct.insert(copy, copyPath.getParent()))
-  //{
-  //   auto dataMapCopy = getDataMap().deepCopy(copyPath);
-  // }
-  // return copy;
   throw std::runtime_error("GridMontage deepCopy has not been implemented.");
 }
 
