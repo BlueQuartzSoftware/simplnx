@@ -6,23 +6,13 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  SplitAttributeArrayInputValues inputValues;
-
-  inputValues.InputArrayPath = filterArgs.value<DataPath>(k_InputArrayPath_Key);
-  inputValues.SplitArraysSuffix = filterArgs.value<StringParameter::ValueType>(k_SplitArraysSuffix_Key);
-
-  return SplitAttributeArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
-
 struct CORE_EXPORT SplitAttributeArrayInputValues
 {
   DataPath InputArrayPath;
-  StringParameter::ValueType SplitArraysSuffix;
+  std::string SplitArraysSuffix;
+  std::vector<usize> ExtractComponents;
 };
 
 /**
