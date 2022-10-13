@@ -78,6 +78,12 @@ public:
   DataObject::Type getDataObjectType() const override;
 
   /**
+   * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
+   * @return
+   */
+  GroupType getGroupType() const override;
+
+  /**
    * @brief Creates and returns a deep copy of the AttributeMatrix. The caller is
    * responsible for deleting the returned pointer when it is no longer needed.
    * @return DataObject*

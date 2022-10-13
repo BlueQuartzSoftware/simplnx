@@ -50,6 +50,11 @@ IGeometry::Type EdgeGeom::getGeomType() const
   return IGeometry::Type::Edge;
 }
 
+BaseGroup::GroupType EdgeGeom::getGroupType() const
+{
+  return GroupType::EdgeGeom;
+}
+
 std::string EdgeGeom::getTypeName() const
 {
   return "EdgeGeom";

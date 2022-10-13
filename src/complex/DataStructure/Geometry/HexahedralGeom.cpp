@@ -50,6 +50,11 @@ IGeometry::Type HexahedralGeom::getGeomType() const
   return IGeometry::Type::Hexahedral;
 }
 
+BaseGroup::GroupType HexahedralGeom::getGroupType() const
+{
+  return GroupType::HexahedralGeom;
+}
+
 std::string HexahedralGeom::getTypeName() const
 {
   return "HexahedralGeom";

@@ -232,9 +232,9 @@ std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Ty
                                                                 {Type::Any, "Any"}};
 
   std::set<std::string> stringValues;
-  for(auto geomType : dataObjectTypes)
+  for(auto objType : dataObjectTypes)
   {
-    stringValues.insert(k_TypeToStringMap.at(geomType));
+    stringValues.insert(k_TypeToStringMap.at(objType));
   }
   return stringValues;
 }

@@ -254,7 +254,7 @@ public:
    * @param dataObjectTypes
    * @return std::set<std::string>
    */
-  static std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Type>& dataObjectTypes);
+  static std::set<std::string> StringListFromDataObjectType(const std::set<Type>& dataObjectTypes);
 
 protected:
   /**

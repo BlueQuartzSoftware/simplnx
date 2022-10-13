@@ -31,6 +31,11 @@ DataObject::Type RectGridGeom::getDataObjectType() const
   return DataObject::Type::RectGridGeom;
 }
 
+BaseGroup::GroupType RectGridGeom::getGroupType() const
+{
+  return GroupType::RectGridGeom;
+}
+
 RectGridGeom* RectGridGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, std::move(name)));

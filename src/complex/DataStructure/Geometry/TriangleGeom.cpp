@@ -31,6 +31,11 @@ DataObject::Type TriangleGeom::getDataObjectType() const
   return DataObject::Type::TriangleGeom;
 }
 
+BaseGroup::GroupType TriangleGeom::getGroupType() const
+{
+  return GroupType::TriangleGeom;
+}
+
 TriangleGeom* TriangleGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, std::move(name)));

@@ -37,6 +37,28 @@ public:
   using Iterator = typename DataMap::Iterator;
   using ConstIterator = typename DataMap::ConstIterator;
 
+  enum class GroupType : uint32
+  {
+    BaseGroup,
+    DataGroup,
+    AttributeMatrix,
+    IGeometry,
+    IGridGeometry,
+    RectGridGeom,
+    ImageGeom,
+    INodeGeometry0D,
+    VertexGeom,
+    INodeGeometry1D,
+    EdgeGeom,
+    INodeGeometry2D,
+    QuadGeom,
+    TriangleGeom,
+    INodeGeometry3D,
+    HexahedralGeom,
+    TetrahedralGeom,
+    Unknown
+  };
+
   /**
    * @brief Copy constructor creates a BaseGroup as a shallow copy of the
    * provided group.
@@ -63,6 +85,12 @@ public:
    * @return
    */
   DataObject::Type getDataObjectType() const override;
+
+  /**
+   * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
+   * @return
+   */
+  virtual GroupType getGroupType() const;
 
   /**
    * @brief Returns the number of DataObjects in the group.
@@ -267,6 +295,19 @@ public:
    * @return ConstIterator
    */
   ConstIterator end() const;
+
+  /**
+   * @brief Creates a set of all the BaseGroup GroupTypes.
+   * @return std::set<GroupType>
+   */
+  static const std::set<GroupType>& GetAllGroupTypes();
+
+  /**
+   * @brief Converts the set of BaseGroup GroupTypes to strings.
+   * @param groupTypes
+   * @return std::set<std::string>
+   */
+  static std::set<std::string> StringListFromGroupType(const std::set<GroupType>& groupTypes);
 
 protected:
   /**

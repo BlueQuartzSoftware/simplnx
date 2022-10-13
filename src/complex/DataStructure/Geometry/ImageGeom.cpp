@@ -31,6 +31,11 @@ DataObject::Type ImageGeom::getDataObjectType() const
   return DataObject::Type::ImageGeom;
 }
 
+BaseGroup::GroupType ImageGeom::getGroupType() const
+{
+  return GroupType::ImageGeom;
+}
+
 ImageGeom* ImageGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, std::move(name)));

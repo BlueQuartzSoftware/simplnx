@@ -33,6 +33,11 @@ DataObject::Type VertexGeom::getDataObjectType() const
   return DataObject::Type::VertexGeom;
 }
 
+BaseGroup::GroupType VertexGeom::getGroupType() const
+{
+  return GroupType::VertexGeom;
+}
+
 VertexGeom* VertexGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, std::move(name)));

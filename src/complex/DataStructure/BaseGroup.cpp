@@ -1,7 +1,5 @@
 #include "BaseGroup.hpp"
 
-#include <exception>
-
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
@@ -39,6 +37,11 @@ BaseGroup::~BaseGroup() = default;
 DataObject::Type BaseGroup::getDataObjectType() const
 {
   return Type::BaseGroup;
+}
+
+BaseGroup::GroupType BaseGroup::getGroupType() const
+{
+  return GroupType::BaseGroup;
 }
 
 const DataMap& BaseGroup::getDataMap() const
@@ -179,6 +182,42 @@ BaseGroup::ConstIterator BaseGroup::begin() const
 BaseGroup::ConstIterator BaseGroup::end() const
 {
   return m_DataMap.end();
+}
+
+const std::set<BaseGroup::GroupType>& BaseGroup::GetAllGroupTypes()
+{
+  static const std::set<GroupType> types = {GroupType::DataGroup, GroupType::AttributeMatrix, GroupType::ImageGeom, GroupType::RectGridGeom,    GroupType::VertexGeom,
+                                            GroupType::EdgeGeom,  GroupType::TriangleGeom,    GroupType::QuadGeom,  GroupType::TetrahedralGeom, GroupType::HexahedralGeom};
+  return types;
+}
+
+std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupType>& groupTypes)
+{
+  static const std::map<GroupType, std::string> k_TypeToStringMap = {{GroupType::BaseGroup, "BaseGroup"},
+                                                                     {GroupType::DataGroup, "DataGroup"},
+                                                                     {GroupType::AttributeMatrix, "AttributeMatrix"},
+                                                                     {GroupType::IGeometry, "IGeometry"},
+                                                                     {GroupType::IGridGeometry, "IGridGeometry"},
+                                                                     {GroupType::RectGridGeom, "RectGridGeom"},
+                                                                     {GroupType::ImageGeom, "ImageGeom"},
+                                                                     {GroupType::INodeGeometry0D, "INodeGeometry0D"},
+                                                                     {GroupType::VertexGeom, "VertexGeom"},
+                                                                     {GroupType::INodeGeometry1D, "INodeGeometry1D"},
+                                                                     {GroupType::EdgeGeom, "EdgeGeom"},
+                                                                     {GroupType::INodeGeometry2D, "INodeGeometry2D"},
+                                                                     {GroupType::QuadGeom, "QuadGeom"},
+                                                                     {GroupType::TriangleGeom, "TriangleGeom"},
+                                                                     {GroupType::INodeGeometry3D, "INodeGeometry3D"},
+                                                                     {GroupType::HexahedralGeom, "HexahedralGeom"},
+                                                                     {GroupType::TetrahedralGeom, "TetrahedralGeom"},
+                                                                     {GroupType::Unknown, "Unknown"}};
+
+  std::set<std::string> stringValues;
+  for(auto groupType : groupTypes)
+  {
+    stringValues.insert(k_TypeToStringMap.at(groupType));
+  }
+  return stringValues;
 }
 
 H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)

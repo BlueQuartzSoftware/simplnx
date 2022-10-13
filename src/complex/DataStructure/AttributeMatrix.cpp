@@ -34,6 +34,11 @@ DataObject::Type AttributeMatrix::getDataObjectType() const
   return Type::AttributeMatrix;
 }
 
+BaseGroup::GroupType AttributeMatrix::getGroupType() const
+{
+  return GroupType::AttributeMatrix;
+}
+
 AttributeMatrix* AttributeMatrix::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(ds, std::move(name)));

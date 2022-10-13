@@ -30,6 +30,11 @@ DataObject::Type QuadGeom::getDataObjectType() const
   return DataObject::Type::QuadGeom;
 }
 
+BaseGroup::GroupType QuadGeom::getGroupType() const
+{
+  return GroupType::QuadGeom;
+}
+
 QuadGeom* QuadGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, std::move(name)));

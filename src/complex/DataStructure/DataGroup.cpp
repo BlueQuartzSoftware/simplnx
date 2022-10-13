@@ -29,9 +29,15 @@ DataGroup::DataGroup(DataGroup&& other)
 }
 
 DataGroup::~DataGroup() = default;
+
 DataObject::Type DataGroup::getDataObjectType() const
 {
   return Type::DataGroup;
+}
+
+BaseGroup::GroupType DataGroup::getGroupType() const
+{
+  return GroupType::DataGroup;
 }
 
 DataGroup* DataGroup::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)

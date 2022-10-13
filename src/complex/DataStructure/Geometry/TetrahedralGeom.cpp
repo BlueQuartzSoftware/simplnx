@@ -30,6 +30,11 @@ DataObject::Type TetrahedralGeom::getDataObjectType() const
   return DataObject::Type::TetrahedralGeom;
 }
 
+BaseGroup::GroupType TetrahedralGeom::getGroupType() const
+{
+  return GroupType::TetrahedralGeom;
+}
+
 TetrahedralGeom* TetrahedralGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(ds, std::move(name)));
