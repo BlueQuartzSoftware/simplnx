@@ -20,7 +20,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindEuclideanDistMapTest.cpp
   FindNeighborhoodsTest.cpp
   FindSurfaceAreaToVolumeTest.cpp
-  RemoveFlaggedFeaturesTest
+  RemoveFlaggedFeaturesTest.cpp
   SplitAttributeArrayTest.cpp
 )
 
