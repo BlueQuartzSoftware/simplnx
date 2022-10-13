@@ -28,6 +28,7 @@ set(FilterList
   FindNeighborhoodsFilter
   FindSurfaceAreaToVolumeFilter
   RemoveFlaggedFeaturesFilter
+  SplitAttributeArrayFilter
 )
 
 set(STUB_FILTERS
@@ -107,6 +108,7 @@ set(filter_algorithms
   FindNeighborhoods
   FindSurfaceAreaToVolume
   RemoveFlaggedFeatures
+  SplitAttributeArray
 )
 
 
