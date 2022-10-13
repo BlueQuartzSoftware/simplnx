@@ -96,19 +96,20 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
     return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  // Look for the actual group type that the user selected in the allowed set
-  if(m_AllowedTypes.count(dataObject->getDataObjectType()) > 0)
+  const auto baseGroupObj = dataStructure.getDataAs<BaseGroup>(value);
+  if(baseGroupObj == nullptr)
   {
-    return {};
+    return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, value.toString()));
   }
 
-  if(m_AllowedTypes.count(DataObject::Type::BaseGroup) > 0 && dataStructure.getDataAs<BaseGroup>(value) != nullptr)
+  // Look for the actual group type that the user selected in the allowed set
+  if(m_AllowedTypes.count(baseGroupObj->getGroupType()) > 0)
   {
     return {};
   }
 
   return MakeErrorResult(FilterParameter::Constants::k_Validate_AllowedType_Error, fmt::format("{}Group at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(),
-                                                                                               dataObject->getTypeName(), DataObject::StringListFromDataObjectType(m_AllowedTypes)));
+                                                                                               dataObject->getTypeName(), BaseGroup::StringListFromGroupType(m_AllowedTypes)));
 }
 
 Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const

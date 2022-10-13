@@ -1,6 +1,6 @@
 #pragma once
 
-#include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
@@ -16,11 +16,11 @@ class COMPLEX_EXPORT DataGroupSelectionParameter : public MutableDataParameter
 public:
   using ValueType = DataPath;
 
-  using AllowedTypes = std::set<DataObject::Type>;
+  using AllowedTypes = std::set<BaseGroup::GroupType>;
 
   DataGroupSelectionParameter() = delete;
   DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                              const AllowedTypes& allowedTypes = {DataObject::Type::DataGroup});
+                              const AllowedTypes& allowedTypes = {BaseGroup::GroupType::DataGroup});
   ~DataGroupSelectionParameter() override = default;
 
   DataGroupSelectionParameter(const DataGroupSelectionParameter&) = delete;
