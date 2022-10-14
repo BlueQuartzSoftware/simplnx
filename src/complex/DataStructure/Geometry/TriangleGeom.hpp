@@ -20,6 +20,12 @@ public:
   static inline constexpr usize k_NumEdgeVerts = 2;
   static inline constexpr usize k_NumFaceVerts = 3;
   static inline constexpr usize k_NumVerts = 3;
+  static inline constexpr StringLiteral k_VoxelSizes = "Triangle Areas";
+  static inline constexpr StringLiteral k_EltsContainingVert = "Triangles Containing Vert";
+  static inline constexpr StringLiteral k_EltNeighbors = "Triangle Neighbors";
+  static inline constexpr StringLiteral k_EltCentroids = "Triangle Centroids";
+  static inline constexpr StringLiteral k_UnsharedEdges = "Unshared Edge List";
+  static inline constexpr StringLiteral k_Edges = "Edge List";
 
   /**
    * @brief

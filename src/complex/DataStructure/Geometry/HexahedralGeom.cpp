@@ -139,37 +139,37 @@ std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
       copy->m_PolyhedronListId = dataStruct.getId(copiedDataPath);
     }
 
-    if(getElementSizes() != nullptr)
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
     {
-      copy->findElementSizes();
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
-    if(getElementsContainingVert() != nullptr)
+    if(const auto eltContVertCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltsContainingVert)); eltContVertCopy != nullptr)
     {
-      copy->findElementsContainingVert();
+      copy->m_CellContainingVertDataArrayId = eltContVertCopy->getId();
     }
-    if(getElementNeighbors() != nullptr)
+    if(const auto eltNeighborsCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltNeighbors)); eltNeighborsCopy != nullptr)
     {
-      copy->findElementNeighbors();
+      copy->m_CellNeighborsDataArrayId = eltNeighborsCopy->getId();
     }
-    if(getElementCentroids() != nullptr)
+    if(const auto eltCentroidsCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_EltCentroids)); eltCentroidsCopy != nullptr)
     {
-      copy->findElementCentroids();
+      copy->m_CellCentroidsDataArrayId = eltCentroidsCopy->getId();
     }
-    if(getUnsharedEdges() != nullptr)
+    if(const auto unsharedEdgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedEdges)); unsharedEdgesCopy != nullptr)
     {
-      copy->findUnsharedEdges();
+      copy->m_UnsharedEdgeListId = unsharedEdgesCopy->getId();
     }
-    if(getEdges() != nullptr)
+    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_Edges)); edgesCopy != nullptr)
     {
-      copy->findEdges();
+      copy->m_EdgeDataArrayId = edgesCopy->getId();
     }
-    if(getUnsharedFaces() != nullptr)
+    if(const auto unsharedFacesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedFaces)); unsharedFacesCopy != nullptr)
     {
-      copy->findUnsharedFaces();
+      copy->m_UnsharedFaceListId = unsharedFacesCopy->getId();
     }
-    if(getFaces() != nullptr)
+    if(const auto facesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry3D::k_QuadFaceList)); facesCopy != nullptr)
     {
-      copy->findFaces();
+      copy->m_FaceListId = facesCopy->getId();
     }
   }
 
@@ -195,7 +195,7 @@ usize HexahedralGeom::getNumberOfCells() const
 IGeometry::StatusCode HexahedralGeom::findElementSizes()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
-  Float32Array* hexSizes = DataArray<float32>::Create(*getDataStructure(), "Hex Volumes", std::move(dataStore), getId());
+  Float32Array* hexSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
   m_ElementSizesId = hexSizes->getId();
   GeometryHelpers::Topology::FindHexVolumes<uint64_t>(getPolyhedra(), getVertices(), hexSizes);
   if(getElementSizes() == nullptr)
@@ -208,7 +208,7 @@ IGeometry::StatusCode HexahedralGeom::findElementSizes()
 
 IGeometry::StatusCode HexahedralGeom::findElementsContainingVert()
 {
-  auto* hexasControllingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Containing Vertices", getId());
+  auto* hexasControllingVert = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
   m_CellContainingVertDataArrayId = hexasControllingVert->getId();
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), hexasControllingVert, getNumberOfVertices());
   if(getElementsContainingVert() == nullptr)
@@ -230,7 +230,7 @@ IGeometry::StatusCode HexahedralGeom::findElementNeighbors()
       return err;
     }
   }
-  auto* hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), "Hex Neighbors", getId());
+  auto* hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
   m_CellNeighborsDataArrayId = hexNeighbors->getId();
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), hexNeighbors, IGeometry::Type::Hexahedral);
   if(getElementNeighbors() == nullptr)
@@ -244,7 +244,7 @@ IGeometry::StatusCode HexahedralGeom::findElementNeighbors()
 IGeometry::StatusCode HexahedralGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
-  auto* hexCentroids = DataArray<float32>::Create(*getDataStructure(), "Hex Centroids", std::move(dataStore), getId());
+  auto* hexCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
   m_CellCentroidsDataArrayId = hexCentroids->getId();
   GeometryHelpers::Topology::FindElementCentroids<uint64_t>(getPolyhedra(), getVertices(), hexCentroids);
   if(getElementCentroids() == nullptr)
@@ -326,7 +326,7 @@ IGeometry::StatusCode HexahedralGeom::findFaces()
 IGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  DataArray<MeshIndexType>* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
+  DataArray<MeshIndexType>* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedHexEdges<uint64_t>(getPolyhedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
@@ -340,7 +340,7 @@ IGeometry::StatusCode HexahedralGeom::findUnsharedEdges()
 IGeometry::StatusCode HexahedralGeom::findUnsharedFaces()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4}, 0);
-  auto* unsharedQuadList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
+  auto* unsharedQuadList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedFaces, std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedHexFaces<uint64_t>(getPolyhedra(), unsharedQuadList);
   if(unsharedQuadList == nullptr)
   {

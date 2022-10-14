@@ -19,6 +19,11 @@ public:
   static inline constexpr usize k_NumEdgeVerts = 2;
   static inline constexpr usize k_NumFaceVerts = 4;
   static inline constexpr usize k_NumVerts = 4;
+  static inline constexpr StringLiteral k_VoxelSizes = "Quad Areas";
+  static inline constexpr StringLiteral k_EltsContainingVert = "Quads Containing Vert";
+  static inline constexpr StringLiteral k_EltNeighbors = "Quad Neighbors";
+  static inline constexpr StringLiteral k_EltCentroids = "Quad Centroids";
+  static inline constexpr StringLiteral k_UnsharedEdges = "Unshared Edge List";
   /**
    * @brief
    * @param ds

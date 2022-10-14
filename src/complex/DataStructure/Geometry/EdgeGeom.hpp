@@ -17,6 +17,10 @@ public:
 
   static inline constexpr usize k_NumVerts = 2;
   static inline constexpr usize k_NumEdgeVerts = 2;
+  static inline constexpr StringLiteral k_VoxelSizes = "Edge Lengths";
+  static inline constexpr StringLiteral k_EltsContainingVert = "Edges Containing Vert";
+  static inline constexpr StringLiteral k_EltNeighbors = "Edge Neighbors";
+  static inline constexpr StringLiteral k_EltCentroids = "Edge Centroids";
 
   /**
    * @brief

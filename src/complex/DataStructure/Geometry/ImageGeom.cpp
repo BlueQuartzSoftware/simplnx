@@ -90,9 +90,9 @@ std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
       copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
     }
 
-    if(getElementSizes() != nullptr)
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
     {
-      copy->findElementSizes();
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
   }
 
@@ -158,7 +158,7 @@ IGeometry::StatusCode ImageGeom::findElementSizes()
   }
   float32 initValue = res[0] * res[1] * res[2];
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, initValue);
-  auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(dataStore), getId());
+  auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
   m_ElementSizesId = voxelSizes->getId();
   return 1;
 }

@@ -128,29 +128,29 @@ std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
       copy->m_FaceListId = dataStruct.getId(copiedDataPath);
     }
 
-    if(getElementSizes() != nullptr)
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
     {
-      copy->findElementSizes();
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
-    if(getElementsContainingVert() != nullptr)
+    if(const auto eltContVertCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltsContainingVert)); eltContVertCopy != nullptr)
     {
-      copy->findElementsContainingVert();
+      copy->m_CellContainingVertDataArrayId = eltContVertCopy->getId();
     }
-    if(getElementNeighbors() != nullptr)
+    if(const auto eltNeighborsCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltNeighbors)); eltNeighborsCopy != nullptr)
     {
-      copy->findElementNeighbors();
+      copy->m_CellNeighborsDataArrayId = eltNeighborsCopy->getId();
     }
-    if(getElementCentroids() != nullptr)
+    if(const auto eltCentroidsCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_EltCentroids)); eltCentroidsCopy != nullptr)
     {
-      copy->findElementCentroids();
+      copy->m_CellCentroidsDataArrayId = eltCentroidsCopy->getId();
     }
-    if(getUnsharedEdges() != nullptr)
+    if(const auto unsharedEdgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedEdges)); unsharedEdgesCopy != nullptr)
     {
-      copy->findUnsharedEdges();
+      copy->m_UnsharedEdgeListId = unsharedEdgesCopy->getId();
     }
-    if(getEdges() != nullptr)
+    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_Edges)); edgesCopy != nullptr)
     {
-      copy->findEdges();
+      copy->m_EdgeDataArrayId = edgesCopy->getId();
     }
   }
 
@@ -171,7 +171,7 @@ usize QuadGeom::getNumberOfVerticesPerFace() const
 IGeometry::StatusCode QuadGeom::findElementSizes()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
-  Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), "Quad Areas", std::move(dataStore), getId());
+  Float32Array* quadSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), quadSizes);
   if(quadSizes == nullptr)
   {
@@ -184,7 +184,7 @@ IGeometry::StatusCode QuadGeom::findElementSizes()
 
 IGeometry::StatusCode QuadGeom::findElementsContainingVert()
 {
-  auto quadsContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Quads Containing Vert", getId());
+  auto quadsContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), quadsContainingVert, getNumberOfVertices());
   if(quadsContainingVert == nullptr)
   {
@@ -205,7 +205,7 @@ IGeometry::StatusCode QuadGeom::findElementNeighbors()
       return err;
     }
   }
-  auto quadNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Quad Neighbors", getId());
+  auto quadNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
   StatusCode err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), quadNeighbors, IGeometry::Type::Quad);
   if(quadNeighbors == nullptr)
   {
@@ -219,7 +219,7 @@ IGeometry::StatusCode QuadGeom::findElementNeighbors()
 IGeometry::StatusCode QuadGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
-  auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), "Quad Centroids", std::move(dataStore), getId());
+  auto quadCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), quadCentroids);
   if(quadCentroids == nullptr)
   {
@@ -266,7 +266,7 @@ IGeometry::StatusCode QuadGeom::findEdges()
 IGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
+  auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {

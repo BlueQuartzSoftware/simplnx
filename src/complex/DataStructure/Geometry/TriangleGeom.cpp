@@ -129,29 +129,29 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
       copy->m_FaceListId = dataStruct.getId(copiedDataPath);
     }
 
-    if(getElementSizes() != nullptr)
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
     {
-      copy->findElementSizes();
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
-    if(getElementsContainingVert() != nullptr)
+    if(const auto eltContVertCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltsContainingVert)); eltContVertCopy != nullptr)
     {
-      copy->findElementsContainingVert();
+      copy->m_CellContainingVertDataArrayId = eltContVertCopy->getId();
     }
-    if(getElementNeighbors() != nullptr)
+    if(const auto eltNeighborsCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltNeighbors)); eltNeighborsCopy != nullptr)
     {
-      copy->findElementNeighbors();
+      copy->m_CellNeighborsDataArrayId = eltNeighborsCopy->getId();
     }
-    if(getElementCentroids() != nullptr)
+    if(const auto eltCentroidsCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_EltCentroids)); eltCentroidsCopy != nullptr)
     {
-      copy->findElementCentroids();
+      copy->m_CellCentroidsDataArrayId = eltCentroidsCopy->getId();
     }
-    if(getUnsharedEdges() != nullptr)
+    if(const auto unsharedEdgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedEdges)); unsharedEdgesCopy != nullptr)
     {
-      copy->findUnsharedEdges();
+      copy->m_UnsharedEdgeListId = unsharedEdgesCopy->getId();
     }
-    if(getEdges() != nullptr)
+    if(const auto edgesCopy = dataStruct.getDataAs<UInt64Array>(copyPath.createChildPath(k_Edges)); edgesCopy != nullptr)
     {
-      copy->findEdges();
+      copy->m_EdgeDataArrayId = edgesCopy->getId();
     }
   }
 
@@ -171,7 +171,7 @@ usize TriangleGeom::getNumberOfVerticesPerFace() const
 IGeometry::StatusCode TriangleGeom::findElementSizes()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
-  Float32Array* triangleSizes = DataArray<float32>::Create(*getDataStructure(), "Triangle Areas", std::move(dataStore), getId());
+  Float32Array* triangleSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizes);
   if(triangleSizes == nullptr)
   {
@@ -184,7 +184,7 @@ IGeometry::StatusCode TriangleGeom::findElementSizes()
 
 IGeometry::StatusCode TriangleGeom::findElementsContainingVert()
 {
-  auto trianglesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Triangles Containing Vert", getId());
+  auto trianglesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
   if(trianglesContainingVert == nullptr)
   {
@@ -206,7 +206,7 @@ IGeometry::StatusCode TriangleGeom::findElementNeighbors()
       return err;
     }
   }
-  auto triangleNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Triangle Neighbors", getId());
+  auto triangleNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, IGeometry::Type::Triangle);
   if(triangleNeighbors == nullptr)
   {
@@ -220,7 +220,7 @@ IGeometry::StatusCode TriangleGeom::findElementNeighbors()
 IGeometry::StatusCode TriangleGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
-  auto triangleCentroids = DataArray<float32>::Create(*getDataStructure(), "Triangle Centroids", std::move(dataStore), getId());
+  auto triangleCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
   if(triangleCentroids == nullptr)
   {
@@ -252,7 +252,7 @@ void TriangleGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pC
 IGeometry::StatusCode TriangleGeom::findEdges()
 {
   auto dataStore = std::make_unique<DataStore<uint64>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  DataArray<uint64>* edgeList = DataArray<uint64>::Create(*getDataStructure(), "Edge List", std::move(dataStore), getId());
+  DataArray<uint64>* edgeList = DataArray<uint64>::Create(*getDataStructure(), k_Edges, std::move(dataStore), getId());
   GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   if(edgeList == nullptr)
   {
@@ -266,7 +266,7 @@ IGeometry::StatusCode TriangleGeom::findEdges()
 IGeometry::StatusCode TriangleGeom::findUnsharedEdges()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  auto* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
+  auto* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {

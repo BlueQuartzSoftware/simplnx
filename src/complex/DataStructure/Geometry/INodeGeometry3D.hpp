@@ -8,6 +8,8 @@ class COMPLEX_EXPORT INodeGeometry3D : public INodeGeometry2D
 {
 public:
   static inline constexpr StringLiteral k_PolyhedronDataName = "Polyhedron Data";
+  static inline constexpr StringLiteral k_TriangleFaceList = "Shared Tri List";
+  static inline constexpr StringLiteral k_QuadFaceList = "Shared Quad List";
 
   INodeGeometry3D() = delete;
   INodeGeometry3D(const INodeGeometry3D&) = default;

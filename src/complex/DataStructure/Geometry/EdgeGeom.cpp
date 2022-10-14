@@ -117,21 +117,21 @@ std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
       copy->m_EdgeDataArrayId = dataStruct.getId(copiedDataPath);
     }
 
-    if(getElementSizes() != nullptr)
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
     {
-      copy->findElementSizes();
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
-    if(getElementsContainingVert() != nullptr)
+    if(const auto eltContVertCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltsContainingVert)); eltContVertCopy != nullptr)
     {
-      copy->findElementsContainingVert();
+      copy->m_CellContainingVertDataArrayId = eltContVertCopy->getId();
     }
-    if(getElementNeighbors() != nullptr)
+    if(const auto eltNeighborsCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltNeighbors)); eltNeighborsCopy != nullptr)
     {
-      copy->findElementNeighbors();
+      copy->m_CellNeighborsDataArrayId = eltNeighborsCopy->getId();
     }
-    if(getElementCentroids() != nullptr)
+    if(const auto eltCentroidsCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_EltCentroids)); eltCentroidsCopy != nullptr)
     {
-      copy->findElementCentroids();
+      copy->m_CellCentroidsDataArrayId = eltCentroidsCopy->getId();
     }
   }
 
@@ -141,7 +141,7 @@ std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 IGeometry::StatusCode EdgeGeom::findElementSizes()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
-  auto* sizes = DataArray<float32>::Create(*getDataStructure(), "Edge Lengths", std::move(dataStore), getId());
+  auto* sizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
   if(sizes == nullptr)
   {
     return -1;
@@ -166,7 +166,7 @@ IGeometry::StatusCode EdgeGeom::findElementSizes()
 
 IGeometry::StatusCode EdgeGeom::findElementsContainingVert()
 {
-  auto* containsVert = ElementDynamicList::Create(*getDataStructure(), "Edges Containing Vert", getId());
+  auto* containsVert = ElementDynamicList::Create(*getDataStructure(), k_EltsContainingVert, getId());
   if(containsVert == nullptr)
   {
     return -1;
@@ -192,7 +192,7 @@ IGeometry::StatusCode EdgeGeom::findElementNeighbors()
       return err;
     }
   }
-  auto* edgeNeighbors = ElementDynamicList::Create(*getDataStructure(), "Edge Neighbors", getId());
+  auto* edgeNeighbors = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
   if(edgeNeighbors == nullptr)
   {
     err = -1;
@@ -211,7 +211,7 @@ IGeometry::StatusCode EdgeGeom::findElementNeighbors()
 IGeometry::StatusCode EdgeGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
-  auto* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), "Edge Centroids", std::move(dataStore), getId());
+  auto* edgeCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   if(getElementCentroids() == nullptr)
   {

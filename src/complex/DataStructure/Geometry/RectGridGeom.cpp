@@ -119,9 +119,9 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
       copy->m_zBoundsId = dataStruct.getId(copiedDataPath);
     }
 
-    if(getElementSizes() != nullptr)
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
     {
-      copy->findElementSizes();
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
   }
 
@@ -222,7 +222,7 @@ IGeometry::StatusCode RectGridGeom::findElementSizes()
     }
   }
 
-  Float32Array* sizeArray = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(sizes), getId());
+  Float32Array* sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(sizes), getId());
   if(!sizeArray)
   {
     m_ElementSizesId.reset();

@@ -139,37 +139,37 @@ std::shared_ptr<DataObject> TetrahedralGeom::deepCopy(const DataPath& copyPath)
       copy->m_PolyhedronListId = dataStruct.getId(copiedDataPath);
     }
 
-    if(getElementSizes() != nullptr)
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
     {
-      copy->findElementSizes();
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
-    if(getElementsContainingVert() != nullptr)
+    if(const auto eltContVertCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltsContainingVert)); eltContVertCopy != nullptr)
     {
-      copy->findElementsContainingVert();
+      copy->m_CellContainingVertDataArrayId = eltContVertCopy->getId();
     }
-    if(getElementNeighbors() != nullptr)
+    if(const auto eltNeighborsCopy = dataStruct.getDataAs<ElementDynamicList>(copyPath.createChildPath(k_EltNeighbors)); eltNeighborsCopy != nullptr)
     {
-      copy->findElementNeighbors();
+      copy->m_CellNeighborsDataArrayId = eltNeighborsCopy->getId();
     }
-    if(getElementCentroids() != nullptr)
+    if(const auto eltCentroidsCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_EltCentroids)); eltCentroidsCopy != nullptr)
     {
-      copy->findElementCentroids();
+      copy->m_CellCentroidsDataArrayId = eltCentroidsCopy->getId();
     }
-    if(getUnsharedEdges() != nullptr)
+    if(const auto unsharedEdgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedEdges)); unsharedEdgesCopy != nullptr)
     {
-      copy->findUnsharedEdges();
+      copy->m_UnsharedEdgeListId = unsharedEdgesCopy->getId();
     }
-    if(getEdges() != nullptr)
+    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_Edges)); edgesCopy != nullptr)
     {
-      copy->findEdges();
+      copy->m_EdgeDataArrayId = edgesCopy->getId();
     }
-    if(getUnsharedFaces() != nullptr)
+    if(const auto unsharedFacesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(k_UnsharedFaces)); unsharedFacesCopy != nullptr)
     {
-      copy->findUnsharedFaces();
+      copy->m_UnsharedFaceListId = unsharedFacesCopy->getId();
     }
-    if(getFaces() != nullptr)
+    if(const auto facesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry3D::k_TriangleFaceList)); facesCopy != nullptr)
     {
-      copy->findFaces();
+      copy->m_FaceListId = facesCopy->getId();
     }
   }
 
@@ -195,7 +195,7 @@ usize TetrahedralGeom::getNumberOfCells() const
 IGeometry::StatusCode TetrahedralGeom::findElementSizes()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
-  Float32Array* tetSizes = DataArray<float32>::Create(*getDataStructure(), "Tet Volumes", std::move(dataStore), getId());
+  Float32Array* tetSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
   GeometryHelpers::Topology::FindTetVolumes(getPolyhedra(), getVertices(), tetSizes);
   if(tetSizes == nullptr)
   {
@@ -208,7 +208,7 @@ IGeometry::StatusCode TetrahedralGeom::findElementSizes()
 
 IGeometry::StatusCode TetrahedralGeom::findElementsContainingVert()
 {
-  auto* tetsContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Elements Containing Vert", getId());
+  auto* tetsContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), tetsContainingVert, getNumberOfVertices());
   if(tetsContainingVert == nullptr)
   {
@@ -230,7 +230,7 @@ IGeometry::StatusCode TetrahedralGeom::findElementNeighbors()
       return err;
     }
   }
-  auto* tetNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), "Tet Neighbors", getId());
+  auto* tetNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
   err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), tetNeighbors, IGeometry::Type::Tetrahedral);
   if(tetNeighbors == nullptr)
   {
@@ -244,7 +244,7 @@ IGeometry::StatusCode TetrahedralGeom::findElementNeighbors()
 IGeometry::StatusCode TetrahedralGeom::findElementCentroids()
 {
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
-  DataArray<float>* tetCentroids = DataArray<float32>::Create(*getDataStructure(), "Tet Centroids", std::move(dataStore), getId());
+  DataArray<float>* tetCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
   GeometryHelpers::Topology::FindElementCentroids(getPolyhedra(), getVertices(), tetCentroids);
   if(tetCentroids == nullptr)
   {
@@ -310,7 +310,7 @@ IGeometry::StatusCode TetrahedralGeom::findFaces()
 IGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  auto* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Edge List", std::move(dataStore), getId());
+  auto* unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedTetEdges(getPolyhedra(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
@@ -324,7 +324,7 @@ IGeometry::StatusCode TetrahedralGeom::findUnsharedEdges()
 IGeometry::StatusCode TetrahedralGeom::findUnsharedFaces()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{3}, 0);
-  auto* unsharedTriList = DataArray<MeshIndexType>::Create(*getDataStructure(), "Unshared Face List", std::move(dataStore), getId());
+  auto* unsharedTriList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedFaces, std::move(dataStore), getId());
   GeometryHelpers::Connectivity::FindUnsharedTetFaces(getPolyhedra(), unsharedTriList);
   if(unsharedTriList == nullptr)
   {

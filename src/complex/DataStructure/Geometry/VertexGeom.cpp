@@ -103,9 +103,9 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
       copy->m_VertexDataArrayId = dataStruct.getId(copiedDataPath);
     }
 
-    if(getElementSizes() != nullptr)
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
     {
-      copy->findElementSizes();
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
   }
 
@@ -118,7 +118,7 @@ IGeometry::StatusCode VertexGeom::findElementSizes()
   // so simply splat 0 over the sizes array
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
 
-  Float32Array* vertexSizes = DataArray<float32>::Create(getDataStructureRef(), "Voxel Sizes", std::move(dataStore), getId());
+  Float32Array* vertexSizes = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
   if(vertexSizes == nullptr)
   {
     return -1;
