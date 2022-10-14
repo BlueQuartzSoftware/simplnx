@@ -114,7 +114,7 @@ public:
     DataPath trianglesPath = getCreatedPath().createChildPath(k_TriangleDataName);
     // Create the default DataArray that will hold the FaceList and Vertices. We
     // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-    complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {3}, trianglesPath, mode);
+    complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumFaceVerts}, trianglesPath, mode);
     if(result.invalid())
     {
       return MakeErrorResult(-226, fmt::format("CreateGeometry2DAction: Could not allocate SharedTriList '{}'", trianglesPath.toString()));
