@@ -229,6 +229,10 @@ public:
     return foundItems;
   }
 
+  /**
+   * @brief Returns true if this group is a parent of the given DataObject
+   * @return bool
+   */
   bool isParentOf(const DataObject* dataObj) const;
 
   /**
