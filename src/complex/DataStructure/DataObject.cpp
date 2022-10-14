@@ -4,6 +4,7 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -198,6 +199,14 @@ Metadata& DataObject::getMetadata()
 const Metadata& DataObject::getMetadata() const
 {
   return m_Metadata;
+}
+
+bool DataObject::hasParent(const DataPath& parentPath) const
+{
+  const auto dataPaths = getDataPaths();
+  const auto originalCellDataPathIt =
+      std::find_if(dataPaths.begin(), dataPaths.end(), [parentPath](const DataPath& path) { return StringUtilities::contains(path.toString(), parentPath.toString()); });
+  return originalCellDataPathIt != dataPaths.end();
 }
 
 std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Type>& dataObjectTypes)

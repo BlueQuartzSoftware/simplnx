@@ -241,6 +241,12 @@ public:
   const Metadata& getMetadata() const;
 
   /**
+   * @brief Returns true if this DataObject has the given parentPath as a parent
+   * @return bool
+   */
+  bool hasParent(const DataPath& parentPath) const;
+
+  /**
    * @brief Writes the DataObject to the target HDF5 group.
    * @param dataStructureWriter
    * @param parentGroupWriter

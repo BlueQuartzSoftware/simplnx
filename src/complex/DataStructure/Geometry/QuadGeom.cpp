@@ -72,40 +72,88 @@ std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
+
+    if(m_VertexAttributeMatrixId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
+      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      if(isParentOf(getVertexAttributeMatrix()))
+      {
+        const auto dataObjCopy = getVertexAttributeMatrix()->deepCopy(copiedDataPath);
+      }
+      copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(m_VertexDataArrayId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getVertices()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(isParentOf(getVertices()))
+      {
+        const auto dataObjCopy = getVertices()->deepCopy(copiedDataPath);
+      }
+      copy->m_VertexDataArrayId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(m_EdgeAttributeMatrixId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getEdgeAttributeMatrix()->getName());
+      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      if(isParentOf(getEdgeAttributeMatrix()))
+      {
+        const auto dataObjCopy = getEdgeAttributeMatrix()->deepCopy(copiedDataPath);
+      }
+      copy->m_EdgeAttributeMatrixId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(m_FaceDataId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getFaceAttributeMatrix()->getName());
+      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      if(isParentOf(getFaceAttributeMatrix()))
+      {
+        const auto dataObjCopy = getFaceAttributeMatrix()->deepCopy(copiedDataPath);
+      }
+      copy->m_FaceDataId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(m_FaceListId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getFaces()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(isParentOf(getFaces()))
+      {
+        const auto dataObjCopy = getFaces()->deepCopy(copiedDataPath);
+      }
+      copy->m_FaceListId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(getElementSizes() != nullptr)
+    {
+      copy->findElementSizes();
+    }
+    if(getElementsContainingVert() != nullptr)
+    {
+      copy->findElementsContainingVert();
+    }
+    if(getElementNeighbors() != nullptr)
+    {
+      copy->findElementNeighbors();
+    }
+    if(getElementCentroids() != nullptr)
+    {
+      copy->findElementCentroids();
+    }
+    if(getUnsharedEdges() != nullptr)
+    {
+      copy->findUnsharedEdges();
+    }
+    if(getEdges() != nullptr)
+    {
+      copy->findEdges();
+    }
   }
 
-  if(getElementSizes() != nullptr)
-  {
-    copy->findElementSizes();
-  }
-  if(getElementsContainingVert() != nullptr)
-  {
-    copy->findElementsContainingVert();
-  }
-  if(getElementNeighbors() != nullptr)
-  {
-    copy->findElementNeighbors();
-  }
-  if(getElementCentroids() != nullptr)
-  {
-    copy->findElementCentroids();
-  }
-  if(getUnsharedEdges() != nullptr)
-  {
-    copy->findUnsharedEdges();
-  }
-  const DataPath copiedVertDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
-  copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedVertDataPath);
-  const DataPath copiedVertListPath = copyPath.createChildPath(getVertices()->getName());
-  copy->m_VertexDataArrayId = dataStruct.getId(copiedVertListPath);
-  const DataPath copiedEdgeDataPath = copyPath.createChildPath(getEdgeAttributeMatrix()->getName());
-  copy->m_EdgeAttributeMatrixId = dataStruct.getId(copiedEdgeDataPath);
-  const DataPath copiedEdgeListPath = copyPath.createChildPath(getEdges()->getName());
-  copy->m_EdgeDataArrayId = dataStruct.getId(copiedEdgeListPath);
-  const DataPath copiedFaceDataPath = copyPath.createChildPath(getFaceAttributeMatrix()->getName());
-  copy->m_FaceDataId = dataStruct.getId(copiedFaceDataPath);
-  const DataPath copiedFaceListPath = copyPath.createChildPath(getFaces()->getName());
-  copy->m_FaceListId = dataStruct.getId(copiedFaceListPath);
   return copy;
 }
 

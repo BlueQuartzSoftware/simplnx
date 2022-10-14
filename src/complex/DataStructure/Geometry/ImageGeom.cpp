@@ -8,6 +8,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 
@@ -76,14 +77,25 @@ std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
+
+    if(m_CellDataId.has_value())
+    {
+      const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
+      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      if(const auto origDataPaths = getDataPaths();
+         std::find_if(origDataPaths.begin(), origDataPaths.end(), [this](const DataPath& path) { return getCellData()->hasParent(path); }) == origDataPaths.end())
+      {
+        const auto cellDataCopy = getCellData()->deepCopy(copiedCellDataPath);
+      }
+      copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
+    }
+
+    if(getElementSizes() != nullptr)
+    {
+      copy->findElementSizes();
+    }
   }
 
-  if(getElementSizes() != nullptr)
-  {
-    copy->findElementSizes();
-  }
-  const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
-  copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
   return copy;
 }
 

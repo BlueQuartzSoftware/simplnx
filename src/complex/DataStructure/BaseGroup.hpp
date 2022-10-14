@@ -229,6 +229,8 @@ public:
     return foundItems;
   }
 
+  bool isParentOf(const DataObject* dataObj) const;
+
   /**
    * @brief Attempts to insert the specified DataObject into the container. If the
    * DataObject passes 'canInsert(obj: weak_ptr<DataObject>): bool', the DataObject

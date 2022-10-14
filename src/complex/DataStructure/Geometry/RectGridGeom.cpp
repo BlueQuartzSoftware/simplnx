@@ -74,27 +74,57 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
+
+    if(m_CellDataId.has_value())
+    {
+      const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
+      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      if(isParentOf(getCellData()))
+      {
+        const auto cellDataCopy = getCellData()->deepCopy(copiedCellDataPath);
+      }
+      copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
+    }
+
+    if(m_xBoundsId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getXBounds()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(isParentOf(getXBounds()))
+      {
+        const auto dataObjCopy = getXBounds()->deepCopy(copiedDataPath);
+      }
+      copy->m_xBoundsId = dataStruct.getId(copiedDataPath);
+    }
+    if(m_yBoundsId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getYBounds()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(isParentOf(getYBounds()))
+        if(const auto origDataPaths = getDataPaths();
+           std::find_if(origDataPaths.begin(), origDataPaths.end(), [this](const DataPath& path) { return getYBounds()->hasParent(path); }) == origDataPaths.end())
+        {
+          const auto dataObjCopy = getYBounds()->deepCopy(copiedDataPath);
+        }
+      copy->m_yBoundsId = dataStruct.getId(copiedDataPath);
+    }
+    if(m_zBoundsId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getZBounds()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(isParentOf(getZBounds()))
+      {
+        const auto dataObjCopy = getZBounds()->deepCopy(copiedDataPath);
+      }
+      copy->m_zBoundsId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(getElementSizes() != nullptr)
+    {
+      copy->findElementSizes();
+    }
   }
 
-  if(getElementSizes() != nullptr)
-  {
-    copy->findElementSizes();
-  }
-  const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
-  copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
-
-  if(getXBounds() != nullptr)
-  {
-    copy->m_xBoundsId = m_xBoundsId;
-  }
-  if(getYBounds() != nullptr)
-  {
-    copy->m_yBoundsId = m_yBoundsId;
-  }
-  if(getZBounds() != nullptr)
-  {
-    copy->m_zBoundsId = m_zBoundsId;
-  }
   return copy;
 }
 

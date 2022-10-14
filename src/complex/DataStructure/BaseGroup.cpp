@@ -1,7 +1,9 @@
 #include "BaseGroup.hpp"
 
+#include "complex/DataStructure/DataPath.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 
@@ -121,6 +123,12 @@ BaseGroup::Iterator BaseGroup::find(const std::string& name)
 BaseGroup::ConstIterator BaseGroup::find(const std::string& name) const
 {
   return m_DataMap.find(name);
+}
+
+bool BaseGroup::isParentOf(const DataObject* dataObj) const
+{
+  const auto origDataPaths = getDataPaths();
+  return std::find_if(origDataPaths.begin(), origDataPaths.end(), [dataObj](const DataPath& path) { return dataObj->hasParent(path); }) != origDataPaths.end();
 }
 
 bool BaseGroup::insert(const std::weak_ptr<DataObject>& obj)
