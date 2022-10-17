@@ -10,6 +10,7 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
@@ -263,6 +264,28 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
         }
       }
     }
+  }
+}
+
+inline void CompareStringArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(computedPath));
+
+  const auto& exemplaryDataArray = dataStructure.getDataRefAs<StringArray>(exemplaryDataPath);
+  const auto& generatedDataArray = dataStructure.getDataRefAs<StringArray>(computedPath);
+  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
+
+  INFO(fmt::format("Input Data Array:'{}'  Output StringArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+
+  usize start = 0;
+  usize end = exemplaryDataArray.getSize();
+  for(usize i = start; i < end; i++)
+  {
+    auto oldVal = exemplaryDataArray[i];
+    auto newVal = generatedDataArray[i];
+    REQUIRE(oldVal == newVal);
   }
 }
 

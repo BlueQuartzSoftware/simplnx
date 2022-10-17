@@ -27,6 +27,7 @@ constexpr StringLiteral k_RectGridGeo = "Rect Grid Geom";
 constexpr StringLiteral k_XBounds = "X Bounds";
 constexpr StringLiteral k_YBounds = "Y Bounds";
 constexpr StringLiteral k_ZBounds = "Z Bounds";
+constexpr StringLiteral k_StringArray = "String Array";
 
 DataStructure createTestDataStructure()
 {
@@ -137,7 +138,7 @@ DataStructure createTestDataStructure()
     std::vector<usize> vertTupleShape = {4};
     vertAttMatrix->setShape(vertTupleShape);
     vertexGeom->setVertexAttributeMatrix(*vertAttMatrix);
-    StringArray* testStringArray = StringArray::CreateWithValues(dataStruct, Constants::k_ConditionalArray, {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrix->getId());
+    StringArray* testStringArray = StringArray::CreateWithValues(dataStruct, k_StringArray, {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrix->getId());
     Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, vertexGeom->getId());
     (*vertListArray)[0] = 0;
     (*vertListArray)[1] = 0;
@@ -839,7 +840,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     std::shared_ptr<DataObject> imageGeoCopy = data->deepCopy(destImageGeoPath);
 
     auto allSrcImageGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcImageGeoPath).value();
-    auto destImageGeoResults = GetAllChildDataPathsRecursive(dataStruct, srcImageGeoPath);
+    auto destImageGeoResults = GetAllChildDataPathsRecursive(dataStruct, destImageGeoPath);
     REQUIRE(destImageGeoResults.has_value());
     auto allDestImageGeoDataPaths = destImageGeoResults.value();
     REQUIRE(allSrcImageGeoDataPaths.size() == allDestImageGeoDataPaths.size());
@@ -919,6 +920,42 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcVoxelSizesArrayPath = srcRectGeoPath.createChildPath(RectGridGeom::k_VoxelSizes);
     const DataPath destVoxelSizesArrayPath = destRectGeoPath.createChildPath(RectGridGeom::k_VoxelSizes);
+    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32Array>(destVoxelSizesArrayPath));
+    UnitTest::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
+  }
+
+  // Vertex Geometry
+  {
+    const DataPath srcGeoPath({Constants::k_VertexGeometry});
+    const DataPath destGeoPath({Constants::k_VertexGeometry.str() + "_COPY"});
+    auto* data = dataStruct.getData(srcGeoPath);
+    std::shared_ptr<DataObject> geoCopy = data->deepCopy(destGeoPath);
+
+    auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
+    auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
+    REQUIRE(destGeoResults.has_value());
+    auto allDestImageGeoDataPaths = destGeoResults.value();
+    REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
+
+    const DataPath srcAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const DataPath destAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const auto srcAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcAttMatrixPath);
+    const auto destAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destAttMatrixPath);
+    REQUIRE(srcAttMatrix != destAttMatrix);
+    REQUIRE(srcAttMatrix->getShape() == destAttMatrix->getShape());
+
+    const DataPath srcStringArrayPath = srcAttMatrixPath.createChildPath(k_StringArray);
+    const DataPath destStringArrayPath = destAttMatrixPath.createChildPath(k_StringArray);
+    REQUIRE(dataStruct.getDataAs<StringArray>(srcStringArrayPath) != dataStruct.getDataAs<StringArray>(destStringArrayPath));
+    UnitTest::CompareStringArrays(dataStruct, srcStringArrayPath, destStringArrayPath);
+
+    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(Constants::k_Float32DataSet);
+    const DataPath destVertArrayPath = destGeoPath.createChildPath(Constants::k_Float32DataSet);
+    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
+    UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
+
+    const DataPath srcVoxelSizesArrayPath = srcGeoPath.createChildPath(VertexGeom::k_VoxelSizes);
+    const DataPath destVoxelSizesArrayPath = destGeoPath.createChildPath(VertexGeom::k_VoxelSizes);
     REQUIRE(dataStruct.getDataAs<Float32Array>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32Array>(destVoxelSizesArrayPath));
     UnitTest::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
   }
