@@ -35,6 +35,7 @@ constexpr StringLiteral k_SharedFaces = "SharedFaces";
 constexpr StringLiteral k_QuadGeo = "Quad Geometry";
 constexpr StringLiteral k_TetGeo = "Tet Geometry";
 constexpr StringLiteral k_SharedPloyhedrons = "SharedPolyhedronList";
+constexpr StringLiteral k_HexGeo = "Hex Geometry";
 
 DataStructure createTestDataStructure()
 {
@@ -372,7 +373,7 @@ DataStructure createTestDataStructure()
 
   // Hexahedral Geometry
   {
-    HexahedralGeom* hexGeom = HexahedralGeom::Create(dataStruct, "Hex Geometry");
+    HexahedralGeom* hexGeom = HexahedralGeom::Create(dataStruct, k_HexGeo);
 
     AttributeMatrix* polyAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, hexGeom->getId());
     std::vector<usize> cellTupleShape = {2};
@@ -420,7 +421,7 @@ DataStructure createTestDataStructure()
     (*vertListArray)[34] = -1;
     (*vertListArray)[35] = 1;
     hexGeom->setVertices(*vertListArray);
-    IGeometry::SharedEdgeList* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, "SharedPolyhedronList", cellTupleShape, {8}, hexGeom->getId());
+    IGeometry::SharedEdgeList* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPloyhedrons, cellTupleShape, {8}, hexGeom->getId());
     (*polyListArray)[0] = 0;
     (*polyListArray)[1] = 1;
     (*polyListArray)[2] = 2;
@@ -839,7 +840,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
 {
   DataStructure dataStruct = createTestDataStructure();
 
-  // Test Image Geometry Copy
+  // Image Geometry
   {
     const DataPath srcImageGeoPath({Constants::k_ImageGeometry});
     const DataPath destImageGeoPath({Constants::k_ImageGeometry.str() + "_COPY"});
@@ -1235,6 +1236,81 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
     const DataPath srcUnsharedFacesArrayPath = srcGeoPath.createChildPath(TetrahedralGeom::k_UnsharedFaces);
     const DataPath destUnsharedFacesArrayPath = destGeoPath.createChildPath(TetrahedralGeom::k_UnsharedFaces);
+    REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedFacesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedFacesArrayPath));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
+  }
+
+  // Hexahedral Geometry
+  {
+    const DataPath srcGeoPath({k_HexGeo});
+    const DataPath destGeoPath({k_HexGeo.str() + "_COPY"});
+    auto* data = dataStruct.getData(srcGeoPath);
+    std::shared_ptr<DataObject> geoCopy = data->deepCopy(destGeoPath);
+
+    auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
+    auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
+    REQUIRE(destGeoResults.has_value());
+    auto allDestImageGeoDataPaths = destGeoResults.value();
+    REQUIRE(allSrcGeoDataPaths.size() == allDestImageGeoDataPaths.size());
+
+    const DataPath srcVertAttMatrixPath = srcGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const DataPath destVertAttMatrixPath = destGeoPath.createChildPath(Constants::k_VertexDataGroupName);
+    const auto srcVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcVertAttMatrixPath);
+    const auto destVertAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destVertAttMatrixPath);
+    REQUIRE(srcVertAttMatrix != destVertAttMatrix);
+    REQUIRE(srcVertAttMatrix->getShape() == destVertAttMatrix->getShape());
+
+    const DataPath srcCellAttMatrixPath = srcGeoPath.createChildPath(INodeGeometry3D::k_PolyhedronDataName);
+    const DataPath destCellAttMatrixPath = destGeoPath.createChildPath(INodeGeometry3D::k_PolyhedronDataName);
+    const auto srcCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(srcCellAttMatrixPath);
+    const auto destCellAttMatrix = dataStruct.getDataAs<AttributeMatrix>(destCellAttMatrixPath);
+    REQUIRE(srcCellAttMatrix != destCellAttMatrix);
+    REQUIRE(srcCellAttMatrix->getShape() == destCellAttMatrix->getShape());
+
+    const DataPath srcVertArrayPath = srcGeoPath.createChildPath(Constants::k_Float32DataSet);
+    const DataPath destVertArrayPath = destGeoPath.createChildPath(Constants::k_Float32DataSet);
+    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
+    UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
+
+    const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedPloyhedrons);
+    const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedPloyhedrons);
+    REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcCellArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destCellArrayPath));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
+
+    const DataPath srcEdgesArrayPath = srcGeoPath.createChildPath(HexahedralGeom::k_Edges);
+    const DataPath destEdgesArrayPath = destGeoPath.createChildPath(HexahedralGeom::k_Edges);
+    REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destEdgesArrayPath));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcEdgesArrayPath, destEdgesArrayPath);
+
+    const DataPath srcFaceArrayPath = srcGeoPath.createChildPath(HexahedralGeom::k_QuadFaceList);
+    const DataPath destFacesArrayPath = destGeoPath.createChildPath(HexahedralGeom::k_QuadFaceList);
+    REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcFaceArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destFacesArrayPath));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcFaceArrayPath, destFacesArrayPath);
+
+    const DataPath srcEltsContVertPath = srcGeoPath.createChildPath(HexahedralGeom::k_EltsContainingVert);
+    const DataPath destEltsContVertPath = destGeoPath.createChildPath(HexahedralGeom::k_EltsContainingVert);
+    REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltsContVertPath) !=
+            dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsContVertPath));
+    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltsContVertPath, destEltsContVertPath);
+
+    const DataPath srcEltNeighborsPath = srcGeoPath.createChildPath(HexahedralGeom::k_EltNeighbors);
+    const DataPath destEltsNeighborsPath = destGeoPath.createChildPath(HexahedralGeom::k_EltNeighbors);
+    REQUIRE(dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(srcEltNeighborsPath) !=
+            dataStruct.getDataAs<DynamicListArray<uint16, IGeometry::MeshIndexType>>(destEltsNeighborsPath));
+    UnitTest::CompareDynamicListArrays<uint16, IGeometry::MeshIndexType>(dataStruct, srcEltNeighborsPath, destEltsNeighborsPath);
+
+    const DataPath srcEltCentroidsPath = srcGeoPath.createChildPath(HexahedralGeom::k_EltCentroids);
+    const DataPath destEltCentroidsPath = destGeoPath.createChildPath(HexahedralGeom::k_EltCentroids);
+    REQUIRE(dataStruct.getDataAs<Float32Array>(srcEltCentroidsPath) != dataStruct.getDataAs<Float32Array>(destEltCentroidsPath));
+    UnitTest::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
+
+    const DataPath srcUnsharedEdgesArrayPath = srcGeoPath.createChildPath(HexahedralGeom::k_UnsharedEdges);
+    const DataPath destUnsharedEdgesArrayPath = destGeoPath.createChildPath(HexahedralGeom::k_UnsharedEdges);
+    REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedEdgesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedEdgesArrayPath));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
+
+    const DataPath srcUnsharedFacesArrayPath = srcGeoPath.createChildPath(HexahedralGeom::k_UnsharedFaces);
+    const DataPath destUnsharedFacesArrayPath = destGeoPath.createChildPath(HexahedralGeom::k_UnsharedFaces);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedFacesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedFacesArrayPath));
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
   }
