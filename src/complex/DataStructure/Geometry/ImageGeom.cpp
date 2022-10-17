@@ -82,8 +82,7 @@ std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
       // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(const auto origDataPaths = getDataPaths();
-         std::find_if(origDataPaths.begin(), origDataPaths.end(), [this](const DataPath& path) { return getCellData()->hasParent(path); }) == origDataPaths.end())
+      if(!isParentOf(getCellData()))
       {
         const auto cellDataCopy = getCellData()->deepCopy(copiedCellDataPath);
       }

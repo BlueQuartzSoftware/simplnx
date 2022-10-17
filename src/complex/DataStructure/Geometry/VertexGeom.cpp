@@ -85,7 +85,7 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
       // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(isParentOf(getVertexAttributeMatrix()))
+      if(!isParentOf(getVertexAttributeMatrix()))
       {
         const auto dataObjCopy = getVertexAttributeMatrix()->deepCopy(copiedDataPath);
       }
@@ -96,7 +96,7 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getVertices()->getName());
       // if this is not a parent of the data object, make a deep copy and insert it here
-      if(isParentOf(getVertices()))
+      if(!isParentOf(getVertices()))
       {
         const auto dataObjCopy = getVertices()->deepCopy(copiedDataPath);
       }

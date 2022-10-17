@@ -78,7 +78,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
       // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(isParentOf(getVertexAttributeMatrix()))
+      if(!isParentOf(getVertexAttributeMatrix()))
       {
         const auto dataObjCopy = getVertexAttributeMatrix()->deepCopy(copiedDataPath);
       }
@@ -89,7 +89,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getVertices()->getName());
       // if this is not a parent of the data object, make a deep copy and insert it here
-      if(isParentOf(getVertices()))
+      if(!isParentOf(getVertices()))
       {
         const auto dataObjCopy = getVertices()->deepCopy(copiedDataPath);
       }
@@ -100,7 +100,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getEdgeAttributeMatrix()->getName());
       // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(isParentOf(getEdgeAttributeMatrix()))
+      if(!isParentOf(getEdgeAttributeMatrix()))
       {
         const auto dataObjCopy = getEdgeAttributeMatrix()->deepCopy(copiedDataPath);
       }
@@ -111,7 +111,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getFaceAttributeMatrix()->getName());
       // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(isParentOf(getFaceAttributeMatrix()))
+      if(!isParentOf(getFaceAttributeMatrix()))
       {
         const auto dataObjCopy = getFaceAttributeMatrix()->deepCopy(copiedDataPath);
       }
@@ -122,7 +122,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getFaces()->getName());
       // if this is not a parent of the data object, make a deep copy and insert it here
-      if(isParentOf(getFaces()))
+      if(!isParentOf(getFaces()))
       {
         const auto dataObjCopy = getFaces()->deepCopy(copiedDataPath);
       }

@@ -79,7 +79,7 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
       // if this is not a parent of the cell data object, make a deep copy and insert it here
-      if(isParentOf(getCellData()))
+      if(!isParentOf(getCellData()))
       {
         const auto cellDataCopy = getCellData()->deepCopy(copiedCellDataPath);
       }
@@ -90,7 +90,7 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getXBounds()->getName());
       // if this is not a parent of the data object, make a deep copy and insert it here
-      if(isParentOf(getXBounds()))
+      if(!isParentOf(getXBounds()))
       {
         const auto dataObjCopy = getXBounds()->deepCopy(copiedDataPath);
       }
@@ -100,19 +100,17 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getYBounds()->getName());
       // if this is not a parent of the data object, make a deep copy and insert it here
-      if(isParentOf(getYBounds()))
-        if(const auto origDataPaths = getDataPaths();
-           std::find_if(origDataPaths.begin(), origDataPaths.end(), [this](const DataPath& path) { return getYBounds()->hasParent(path); }) == origDataPaths.end())
-        {
-          const auto dataObjCopy = getYBounds()->deepCopy(copiedDataPath);
-        }
+      if(!isParentOf(getYBounds()))
+      {
+        const auto dataObjCopy = getYBounds()->deepCopy(copiedDataPath);
+      }
       copy->m_yBoundsId = dataStruct.getId(copiedDataPath);
     }
     if(m_zBoundsId.has_value())
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getZBounds()->getName());
       // if this is not a parent of the data object, make a deep copy and insert it here
-      if(isParentOf(getZBounds()))
+      if(!isParentOf(getZBounds()))
       {
         const auto dataObjCopy = getZBounds()->deepCopy(copiedDataPath);
       }
