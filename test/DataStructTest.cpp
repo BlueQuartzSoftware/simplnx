@@ -23,6 +23,11 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 
+constexpr StringLiteral k_RectGridGeo = "Rect Grid Geom";
+constexpr StringLiteral k_XBounds = "X Bounds";
+constexpr StringLiteral k_YBounds = "Y Bounds";
+constexpr StringLiteral k_ZBounds = "Z Bounds";
+
 DataStructure createTestDataStructure()
 {
   DataStructure dataStruct;
@@ -70,11 +75,11 @@ DataStructure createTestDataStructure()
 
   // Rectilinear Grid Geometry
   {
-    RectGridGeom* rectGeom = RectGridGeom::Create(dataStruct, "Rect Grid Geom");
+    RectGridGeom* rectGeom = RectGridGeom::Create(dataStruct, k_RectGridGeo);
     std::vector<usize> dims = {10, 10, 5};
     rectGeom->setDimensions(dims);
 
-    Float32Array* xBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, "X Bounds", {14}, {1});
+    Float32Array* xBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, k_XBounds, {14}, {1});
     (*xBoundsArray)[0] = 0;
     (*xBoundsArray)[1] = 1;
     (*xBoundsArray)[2] = 2;
@@ -89,7 +94,7 @@ DataStructure createTestDataStructure()
     (*xBoundsArray)[11] = 11;
     (*xBoundsArray)[12] = 12;
     (*xBoundsArray)[13] = 14;
-    Float32Array* yBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, "Y Bounds", {14}, {1});
+    Float32Array* yBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, k_YBounds, {14}, {1});
     (*yBoundsArray)[0] = 0;
     (*yBoundsArray)[1] = 2;
     (*yBoundsArray)[2] = 4;
@@ -104,7 +109,7 @@ DataStructure createTestDataStructure()
     (*yBoundsArray)[11] = 22;
     (*yBoundsArray)[12] = 24;
     (*yBoundsArray)[13] = 26;
-    Float32Array* zBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, "Z Bounds", {14}, {1});
+    Float32Array* zBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStruct, k_ZBounds, {14}, {1});
     (*zBoundsArray)[0] = 0;
     (*zBoundsArray)[1] = 5;
     (*zBoundsArray)[2] = 10;
@@ -881,5 +886,40 @@ TEST_CASE("DataObjectsDeepCopyTest")
 
   // Rectilinear Grid Geometry
   {
+    const DataPath srcRectGeoPath({k_RectGridGeo});
+    const DataPath destRectGeoPath({k_RectGridGeo.str() + "_COPY"});
+    auto* data = dataStruct.getData(srcRectGeoPath);
+    std::shared_ptr<DataObject> rectGeoCopy = data->deepCopy(destRectGeoPath);
+
+    auto allSrcRectGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcRectGeoPath).value();
+    auto destRectGeoResults = GetAllChildDataPathsRecursive(dataStruct, destRectGeoPath);
+    REQUIRE(destRectGeoResults.has_value());
+    auto allDestRectGeoDataPaths = destRectGeoResults.value();
+    REQUIRE(allSrcRectGeoDataPaths.size() == allDestRectGeoDataPaths.size() - 3);
+
+    const auto srcRectGeo = dataStruct.getDataAs<RectGridGeom>(srcRectGeoPath);
+    const auto destRectGeo = dataStruct.getDataAs<RectGridGeom>(destRectGeoPath);
+    REQUIRE(srcRectGeo != destRectGeo);
+    REQUIRE(srcRectGeo->getDimensions() == destRectGeo->getDimensions());
+
+    const DataPath srcXBoundsArrayPath({k_XBounds});
+    const DataPath destXBoundsArrayPath = destRectGeoPath.createChildPath(k_XBounds);
+    REQUIRE(dataStruct.getDataAs<Float32Array>(srcXBoundsArrayPath) != dataStruct.getDataAs<Float32Array>(destXBoundsArrayPath));
+    UnitTest::CompareArrays<float32>(dataStruct, srcXBoundsArrayPath, destXBoundsArrayPath);
+
+    const DataPath srcYBoundsArrayPath({k_YBounds});
+    const DataPath destYBoundsArrayPath = destRectGeoPath.createChildPath(k_YBounds);
+    REQUIRE(dataStruct.getDataAs<Float32Array>(srcYBoundsArrayPath) != dataStruct.getDataAs<Float32Array>(destYBoundsArrayPath));
+    UnitTest::CompareArrays<float32>(dataStruct, srcYBoundsArrayPath, destYBoundsArrayPath);
+
+    const DataPath srcZBoundsArrayPath({k_ZBounds});
+    const DataPath destZBoundsArrayPath = destRectGeoPath.createChildPath(k_ZBounds);
+    REQUIRE(dataStruct.getDataAs<Float32Array>(srcZBoundsArrayPath) != dataStruct.getDataAs<Float32Array>(destZBoundsArrayPath));
+    UnitTest::CompareArrays<float32>(dataStruct, srcZBoundsArrayPath, destZBoundsArrayPath);
+
+    const DataPath srcVoxelSizesArrayPath = srcRectGeoPath.createChildPath(RectGridGeom::k_VoxelSizes);
+    const DataPath destVoxelSizesArrayPath = destRectGeoPath.createChildPath(RectGridGeom::k_VoxelSizes);
+    REQUIRE(dataStruct.getDataAs<Float32Array>(srcVoxelSizesArrayPath) != dataStruct.getDataAs<Float32Array>(destVoxelSizesArrayPath));
+    UnitTest::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
   }
 }
