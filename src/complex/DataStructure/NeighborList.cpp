@@ -63,7 +63,7 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   copy->m_Array.reserve(m_Array.size());
   for(usize i = 0; i < m_Array.size(); ++i)
   {
-    copy->m_Array[i] = std::make_shared<VectorType>(m_Array[i]->size());
+    copy->m_Array.push_back(std::make_shared<VectorType>(m_Array[i]->size()));
     for(usize j = 0; j < m_Array[i]->size(); ++j)
     {
       (*copy->m_Array[i])[j] = (*m_Array[i])[j];
