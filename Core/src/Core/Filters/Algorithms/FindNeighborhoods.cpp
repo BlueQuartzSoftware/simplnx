@@ -187,7 +187,7 @@ Result<> FindNeighborhoods::operator()()
 
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
-  parallelAlgorithm.setParallelizationEnabled(false);
+  parallelAlgorithm.setParallelizationEnabled(true);
   parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, centroids, bins, criticalDistance));
 
   // Output Variables
@@ -199,6 +199,8 @@ Result<> FindNeighborhoods::operator()()
     NeighborList<int32>::SharedVectorType sharedMisorientationList(new std::vector<int32>(m_LocalNeighborhoodList[i]));
     outputNeighborList.setList(static_cast<int32_t>(i), sharedMisorientationList);
   }
+
+  m_LocalNeighborhoodList.clear();
 
   return {};
 }

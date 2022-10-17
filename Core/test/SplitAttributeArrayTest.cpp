@@ -157,7 +157,7 @@ void TestSplitByType(DataStructure& ds, const std::string& dataType, const Dynam
 }
 
 // -----------------------------------------------------------------------------
-TEST_CASE("Core::SplitAttributeArray: Instantiation and Parameter Check", "[Core][SplitAttributeArrayFilter]")
+TEST_CASE("Core::SplitAttributeArray", "[Core][SplitAttributeArrayFilter]")
 {
   DataStructure ds = createDataStructure();
 
@@ -172,5 +172,7 @@ TEST_CASE("Core::SplitAttributeArray: Instantiation and Parameter Check", "[Core
   TestSplitByType<uint64>(ds, "uint64");
   TestSplitByType<float>(ds, "float");
   TestSplitByType<double>(ds, "double");
+#ifndef __APPLE__
   TestSplitByType<usize>(ds, "size_t");
+#endif
 }

@@ -51,7 +51,7 @@ Result<> FindMisorientations::operator()()
   usize quatIndex = 0;
   for(size_t i = 1; i < totalFeatures; i++)
   {
-    quatIndex = quatIndex + i * 4;
+    quatIndex = i * 4;
 
     QuatF q1(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
     uint32_t xtalType1 = inXtalStruct[inFeaturePhases[i]];
