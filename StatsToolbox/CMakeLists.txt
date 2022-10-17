@@ -13,14 +13,9 @@ set(STUB_FILTERS
   ComputeMomentInvariants2D
   FindAvgScalarValueForFeatures
   FindBoundaryElementFractions
-  FindDifferenceMap
-  FindEuclideanDistMap
   FindFeatureClustering
   FindLargestCrossSections
-  FindNeighborhoods
-  FindNeighbors
   FindNumFeatures
-  FindSurfaceAreaToVolume
   FindVolFractions
   FitFeatureData
 
