@@ -1314,4 +1314,25 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcUnsharedFacesArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destUnsharedFacesArrayPath));
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
   }
+
+  // Invalid copies
+  {
+    DataStructure badCopyDataStruct = createTestDataStructure();
+    const DataPath srcGeoPath({Constants::k_ImageGeometry});
+    const DataPath srcGroupPath = srcGeoPath.createChildPath(Constants::k_LevelOne);
+    const DataPath srcArrayPath = srcGroupPath.createChildPath(Constants::k_Int16DataSet);
+    auto* imageGeo = dataStruct.getData(srcGeoPath);
+    auto* dataGroup = dataStruct.getData(srcGroupPath);
+    auto* nlArray = dataStruct.getData(srcArrayPath);
+
+    std::shared_ptr<DataObject> copyToChildGeo = imageGeo->deepCopy(srcGroupPath);
+    REQUIRE(copyToChildGeo == nullptr);
+    REQUIRE(badCopyDataStruct.getDataAs<VertexGeom>(srcGroupPath) == nullptr);
+
+    std::shared_ptr<DataObject> copyGroupToSelfGeo = dataGroup->deepCopy(srcGroupPath);
+    REQUIRE(copyGroupToSelfGeo == nullptr);
+
+    std::shared_ptr<DataObject> copyArrayToSelfGeo = nlArray->deepCopy(srcArrayPath);
+    REQUIRE(copyArrayToSelfGeo == nullptr);
+  }
 }
