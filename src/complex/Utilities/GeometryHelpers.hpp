@@ -981,7 +981,7 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     for(usize j = 0; j < numVertsPerElem; j++)
     {
       std::vector<float32> point{vertices->at(3 * elems[offset + j]), vertices->at(3 * elems[offset + j] + 1), vertices->at(3 * elems[offset + j] + 2)};
-      coords.insert(point.begin(), point.end(), coords.begin());
+      coords.insert(coords.begin(), point.begin(), point.end());
     }
 
     float* coordinates = coords.data();
