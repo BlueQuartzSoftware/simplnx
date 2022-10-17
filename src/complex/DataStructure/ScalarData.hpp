@@ -137,9 +137,16 @@ public:
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
     auto& dataStruct = *getDataStructure();
+    if(dataStruct.containsData(copyPath))
+    {
+      return nullptr;
+    }
     std::shared_ptr<ScalarData<T>> copy = std::shared_ptr<ScalarData<T>>(new ScalarData<T>(dataStruct, copyPath.getTargetName(), getId(), getValue()));
-    dataStruct.insert(copy, copyPath.getParent());
-    return copy;
+    if(dataStruct.insert(copy, copyPath.getParent()))
+    {
+      return copy;
+    }
+    return nullptr;
   }
 
   /**

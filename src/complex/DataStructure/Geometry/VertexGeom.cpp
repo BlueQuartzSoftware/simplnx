@@ -77,7 +77,7 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = *getDataStructure();
   auto copy = std::shared_ptr<VertexGeom>(new VertexGeom(dataStruct, copyPath.getTargetName(), getId()));
-  if(dataStruct.insert(copy, copyPath.getParent()))
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
@@ -107,9 +107,9 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
+    return copy;
   }
-
-  return copy;
+  return nullptr;
 }
 
 IGeometry::StatusCode VertexGeom::findElementSizes()

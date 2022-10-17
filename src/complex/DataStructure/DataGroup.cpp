@@ -65,11 +65,12 @@ std::shared_ptr<DataObject> DataGroup::deepCopy(const DataPath& copyPath)
   auto& dataStruct = *getDataStructure();
   const auto copy = std::shared_ptr<DataGroup>(new DataGroup(dataStruct, copyPath.getTargetName(), getId()));
   copy->clear();
-  if(dataStruct.insert(copy, copyPath.getParent()))
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
+    return copy;
   }
-  return copy;
+  return nullptr;
 }
 
 DataObject* DataGroup::shallowCopy()

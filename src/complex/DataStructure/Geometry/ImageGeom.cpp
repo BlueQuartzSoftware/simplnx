@@ -74,7 +74,7 @@ std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
   copy->setOrigin(m_Origin);
   copy->setSpacing(m_Spacing);
   copy->setDimensions(m_Dimensions);
-  if(dataStruct.insert(copy, copyPath.getParent()))
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
@@ -93,9 +93,9 @@ std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
+    return copy;
   }
-
-  return copy;
+  return nullptr;
 }
 
 FloatVec3 ImageGeom::getSpacing() const

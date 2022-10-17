@@ -58,6 +58,10 @@ template <typename T>
 std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = *getDataStructure();
+  if(dataStruct.containsData(copyPath))
+  {
+    return nullptr;
+  }
   auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getNumberOfTuples()));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
   copy->m_Array.reserve(m_Array.size());
@@ -69,8 +73,11 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
       (*copy->m_Array[i])[j] = (*m_Array[i])[j];
     }
   }
-  dataStruct.insert(copy, copyPath.getParent());
-  return copy;
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    return copy;
+  }
+  return nullptr;
 }
 
 template <typename T>

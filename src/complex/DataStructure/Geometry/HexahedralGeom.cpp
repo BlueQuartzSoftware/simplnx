@@ -69,7 +69,7 @@ std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = *getDataStructure();
   auto copy = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(dataStruct, copyPath.getTargetName(), getId()));
-  if(dataStruct.insert(copy, copyPath.getParent()))
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
@@ -171,9 +171,9 @@ std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_FaceListId = facesCopy->getId();
     }
+    return copy;
   }
-
-  return copy;
+  return nullptr;
 }
 
 usize HexahedralGeom::getNumberOfVerticesPerFace() const

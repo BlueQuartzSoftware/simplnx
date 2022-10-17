@@ -64,11 +64,12 @@ std::shared_ptr<DataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
   auto& dataStruct = *getDataStructure();
   auto copy = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStruct, copyPath.getTargetName(), getId()));
   copy->setShape(m_TupleShape);
-  if(dataStruct.insert(copy, copyPath.getParent()))
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
+    return copy;
   }
-  return copy;
+  return nullptr;
 }
 
 DataObject* AttributeMatrix::shallowCopy()

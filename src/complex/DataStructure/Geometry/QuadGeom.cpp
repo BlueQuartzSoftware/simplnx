@@ -69,7 +69,7 @@ std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = *getDataStructure();
   auto copy = std::shared_ptr<QuadGeom>(new QuadGeom(dataStruct, copyPath.getTargetName(), getId()));
-  if(dataStruct.insert(copy, copyPath.getParent()))
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
@@ -152,9 +152,9 @@ std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_EdgeDataArrayId = edgesCopy->getId();
     }
+    return copy;
   }
-
-  return copy;
+  return nullptr;
 }
 
 usize QuadGeom::getNumberOfCells() const

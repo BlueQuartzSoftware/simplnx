@@ -191,12 +191,19 @@ public:
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
+    DataStructure& dataStruct = *getDataStructure();
+    if(dataStruct.containsData(copyPath))
+    {
+      return nullptr;
+    }
     const std::shared_ptr<IDataStore> sharedStore = getDataStore()->deepCopy();
     std::shared_ptr<store_type> dataStore = std::dynamic_pointer_cast<store_type>(sharedStore);
-    DataStructure& dataStruct = *getDataStructure();
     std::shared_ptr<DataArray<T>> copy = std::shared_ptr<DataArray<T>>(new DataArray<T>(dataStruct, copyPath.getTargetName(), getId(), dataStore));
-    dataStruct.insert(copy, copyPath.getParent());
-    return copy;
+    if(dataStruct.insert(copy, copyPath.getParent()))
+    {
+      return copy;
+    }
+    return nullptr;
   }
 
   /**

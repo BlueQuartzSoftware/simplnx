@@ -80,9 +80,16 @@ DataObject* StringArray::shallowCopy()
 std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = *getDataStructure();
+  if(dataStruct.containsData(copyPath))
+  {
+    return nullptr;
+  }
   const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), getId(), m_Strings));
-  dataStruct.insert(copy, copyPath.getParent());
-  return copy;
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    return copy;
+  }
+  return nullptr;
 }
 
 size_t StringArray::size() const

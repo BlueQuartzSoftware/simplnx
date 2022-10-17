@@ -71,7 +71,7 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
   auto& dataStruct = *getDataStructure();
   auto copy = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataStruct, copyPath.getTargetName(), getId()));
   copy->setDimensions(m_Dimensions);
-  if(dataStruct.insert(copy, copyPath.getParent()))
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);
 
@@ -121,9 +121,9 @@ std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_ElementSizesId = voxelSizesCopy->getId();
     }
+    return copy;
   }
-
-  return copy;
+  return nullptr;
 }
 
 void RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds)
