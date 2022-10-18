@@ -593,7 +593,7 @@ std::map<U, std::vector<T>> OStreamUtilities::OutputFunctions::createSortedMapby
   return sortedMap;
 }
 
-std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::OutputFunctions::unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>> sortedMap,
+std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::OutputFunctions::unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap,
                                                                                                                               DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
                                                                                                                               bool includeIndex, bool includeHeaders, bool includeNeighborLists)
 {
@@ -647,7 +647,7 @@ std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::
   return outputPtrs;
 }
 
-std::map<size_t, std::string> OStreamUtilities::OutputFunctions::createStringMapFromVector(const std::vector<std::string> strings)
+std::map<size_t, std::string> OStreamUtilities::OutputFunctions::createStringMapFromVector(const std::vector<std::string>& strings)
 {
   std::map<size_t, std::string> outputMap;
   for(size_t i = 0; i < strings.size(); i++)
@@ -740,7 +740,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
     {
       throw std::runtime_error("Error creating the file");
     }
-    printMap.emplace(path, std::map<size_t, std::string>(std::move(createStringMapFromVector(stringStore)))); // try to make as resource efficient as possible
+    printMap.emplace(path, createStringMapFromVector(stringStore)); // try to make as resource efficient as possible
     arrayIndex++;
   }
   if(hasNeighborLists) // cant be binary
@@ -767,7 +767,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
       {
         throw std::runtime_error("Error creating the file");
       }
-      printMap.emplace(path, std::map<size_t, std::string>(std::move(createStringMapFromVector(stringStore)))); // try to make as resource efficient as possible
+      printMap.emplace(path, createStringMapFromVector(stringStore)); // try to make as resource efficient as possible
     }
   }
   mesgHandler(IFilter::Message::Type::Info, "Printing out to file");
@@ -800,7 +800,8 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outp
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(std::move(createSortedMapbyType(objectPaths, objTypes)), dataStructure, mesgHandler, false);
+  auto sortedMap = std::move(createSortedMapbyType(objectPaths, objTypes));
+  auto matrices = unpackSortedMapIntoMatricies(sortedMap, dataStructure, mesgHandler, false);
   // unpack matrix from vector
   auto matrix = matrices[0];
 
@@ -811,13 +812,14 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outp
   dataAlg.execute(OStreamUtilities::AssembleVerticalStringFromIndex(*matrix, stringStore, 0, delimiter, componentsPerLine));
 
   mesgHandler(IFilter::Message::Type::Info, "Printing out");
+  auto stringMap = std::move(createStringMapFromVector(stringStore));
   if(hasNeighborLists)
   {
-    writeOutWrapper(std::move(createStringMapFromVector(stringStore)), outputStrm, false);
+    writeOutWrapper(stringMap, outputStrm, false);
   }
   else
   {
-    writeOutWrapper(std::move(createStringMapFromVector(stringStore)), outputStrm, exportToBinary);
+    writeOutWrapper(stringMap, outputStrm, exportToBinary);
   }
 }
 
@@ -840,7 +842,8 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& ob
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(std::move(createSortedMapbyType(objectPaths, objTypes)), dataStructure, mesgHandler, false);
+  auto sortedMap = std::move(createSortedMapbyType(objectPaths, objTypes));
+  auto matrices = unpackSortedMapIntoMatricies(sortedMap, dataStructure, mesgHandler, false);
   // unpack matrix from vector
   auto matrix = matrices[0];
 
@@ -864,13 +867,14 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& ob
   {
     throw std::runtime_error("Invalid file path");
   }
+  auto stringMap = std::move(createStringMapFromVector(stringStore));
   if(hasNeighborLists)
   {
-    writeOutWrapper(std::move(createStringMapFromVector(stringStore)), outputStrm, false);
+    writeOutWrapper(stringMap, outputStrm, false);
   }
   else
   {
-    writeOutWrapper(std::move(createStringMapFromVector(stringStore)), outputStrm, exportToBinary);
+    writeOutWrapper(stringMap, outputStrm, exportToBinary);
   }
 }
 
@@ -888,7 +892,8 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& 
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(std::move(createSortedMapbyType(objectPaths, objTypes)), dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
+  auto sortedMap = std::move(createSortedMapbyType(objectPaths, objTypes));
+  auto matrices = unpackSortedMapIntoMatricies(sortedMap, dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
 
   ParallelDataAlgorithm dataAlg;
   std::vector<std::map<size_t, std::string>> stringStoreList;
@@ -928,7 +933,8 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vec
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(std::move(createSortedMapbyType(objectPaths, objTypes)), dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
+  auto sortedMap = std::move(createSortedMapbyType(objectPaths, objTypes));
+  auto matrices = unpackSortedMapIntoMatricies(sortedMap, dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
 
   ParallelDataAlgorithm dataAlg;
 
