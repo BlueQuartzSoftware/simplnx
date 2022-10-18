@@ -583,9 +583,10 @@ std::map<U, std::vector<T>> OStreamUtilities::OutputFunctions::createSortedMapby
 }
 
 std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::OutputFunctions::unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap,
-                                                                                                                              DataStructure& dataStructure, bool includeIndex, bool includeHeaders,
-                                                                                                                              bool includeNeighborLists)
+                                                                                                                              DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
+                                                                                                                              bool includeIndex, bool includeHeaders, bool includeNeighborLists)
 {
+  mesgHandler(IFilter::Message::Type::Info, "Sorting data...");
   std::vector<std::shared_ptr<PrintMatrix2D>> outputPtrs;
   std::map<DataPath, DataObject::Type> arrayMap = {};
   std::vector<DataPath> neighborLists = {};
@@ -594,30 +595,36 @@ std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::
   {
     if((paths.size() == 1) && (type != DataObject::Type::NeighborList))
     {
+      mesgHandler(IFilter::Message::Type::Info, fmt::format("Assembling single {} print object", type));
       outputPtrs.emplace_back(createSingleTypePrintStringMatrix(dataStructure, paths, type, includeIndex, includeHeaders));
       return outputPtrs;
     }
     switch(type)
     {
     case DataObject::Type::DataArray: {
+      mesgHandler(IFilter::Message::Type::Info, "DataArrays identifed");
       arrayMap.merge(createHomogeneousMapfromVector(paths, type));
       break;
     }
     case DataObject::Type::StringArray: {
+      mesgHandler(IFilter::Message::Type::Info, "StringArrays Identified");
       arrayMap.merge(createHomogeneousMapfromVector(paths, type));
       break;
     }
     case DataObject::Type::NeighborList: {
+      mesgHandler(IFilter::Message::Type::Info, "NeighborLists Identified");
       neighborLists = paths;
       break;
     }
     }
   }
 
+  mesgHandler(IFilter::Message::Type::Info, "Assembling primary print object");
   outputPtrs.emplace_back(createMultipleTypePrintStringMatrix(dataStructure, arrayMap, includeIndex, includeHeaders));
 
   if((neighborLists.size() != 0) && (includeNeighborLists))
   {
+    mesgHandler(IFilter::Message::Type::Info, "Assembling NeighborList print objects");
     auto neighborPtrs = createNeighborListPrintStringMatrices(dataStructure, neighborLists, includeIndex, includeHeaders);
     outputPtrs.insert(outputPtrs.end(), neighborPtrs.begin(), neighborPtrs.end());
   }
@@ -640,8 +647,8 @@ std::map<size_t, std::string> OStreamUtilities::OutputFunctions::createStringMap
 
 // multiple datapaths, Creates OFStream from filepath [BINARY CAPABLE, unless neighborlist] // endianess must be determined in calling class
 void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::directory_entry& directoryPath,
-                                                                     std::string fileExtension, bool exportToBinary, const std::string& delimiter, bool includeIndex, bool includeHeaders,
-                                                                     size_t componentsPerLine)
+                                                                     const IFilter::MessageHandler& mesgHandler, std::string fileExtension, bool exportToBinary, const std::string& delimiter,
+                                                                     bool includeIndex, bool includeHeaders, size_t componentsPerLine)
 // binary bool must come after fileExtension to force caller to input a fileExtension that could support binary
 {
   if(!directoryPath.is_directory())
@@ -668,11 +675,12 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
     }
   }
   auto sortedMap = createSortedMapbyType(objectPaths, objTypes); // used later
-  auto matrices = unpackSortedMapIntoMatricies(sortedMap, dataStructure, includeIndex, true);
+  auto matrices = unpackSortedMapIntoMatricies(sortedMap, dataStructure, mesgHandler, includeIndex, true);
   ParallelDataAlgorithm dataAlg;
   auto& matrix = matrices[0];             // first store never neighborlist so safe to parse vertically implicitly
   dataAlg.setRange(1, matrix->getRows()); // skip 0 index because headers created implicitly
   size_t arrayIndex = 0;
+  mesgHandler(IFilter::Message::Type::Progress, fmt::format("Now processing print object 1 of {}", matrices.size()));
   if(includeIndex)
   {
     arrayIndex++;
@@ -735,6 +743,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
     }
     for(size_t i = 1; i < matrices.size(); i++) // neighborLists automatically stored at the end
     {
+      mesgHandler(IFilter::Message::Type::Progress, fmt::format("Now processing print object {} of {}", i, matrices.size()));
       std::vector<std::string> stringStore(matrices[i]->getSize(), "UNINITIALIZED"); // 1 per matrix
       dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrices[i], stringStore, delimiter, componentsPerLine));
       auto path = directoryPath.path().string() + "/" + neighborNames[(i - 1)] + fileExtension;
@@ -746,7 +755,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
       printMap.emplace(path, std::map<size_t, std::string>(std::move(createStringMapFromVector(stringStore)))); // try to make as resource efficient as possible
     }
   }
-
+  mesgHandler(IFilter::Message::Type::Info, "Printing out to file");
   if(hasNeighborLists)
   {
     multiFileWriteOutWrapper(printMap, false);
@@ -758,8 +767,8 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
 }
 
 // single path, custom OStream [BINARY CAPABLE] // endianess must be determined in calling class
-void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, bool exportToBinary, const std::string delimiter,
-                                                              size_t componentsPerLine)
+void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
+                                                              bool exportToBinary, const std::string delimiter, size_t componentsPerLine)
 {
   bool hasNeighborLists = false;
   if(exportToBinary)
@@ -776,15 +785,17 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outp
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, false);
+  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, mesgHandler, false);
   // unpack matrix from vector
   auto matrix = matrices[0];
 
   ParallelDataAlgorithm dataAlg;
   std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
   dataAlg.setRange(0, matrix->getRows());
+  mesgHandler(IFilter::Message::Type::Progress, "Now processing print object");
   dataAlg.execute(OStreamUtilities::AssembleVerticalStringFromIndex(*matrix, stringStore, 0, delimiter, componentsPerLine));
 
+  mesgHandler(IFilter::Message::Type::Info, "Printing out");
   if(hasNeighborLists)
   {
     writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, false);
@@ -796,8 +807,8 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outp
 }
 
 // single path, Creates OFStream from filepath [BINARY CAPABLE] // endianess must be determined in calling class
-void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, bool exportToBinary,
-                                                              const std::string delimiter, size_t componentsPerLine)
+void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const IFilter::MessageHandler& mesgHandler,
+                                                              bool exportToBinary, const std::string delimiter, size_t componentsPerLine)
 {
   bool hasNeighborLists = false;
   if(exportToBinary)
@@ -814,15 +825,17 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& ob
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, false);
+  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, mesgHandler, false);
   // unpack matrix from vector
   auto matrix = matrices[0];
 
   ParallelDataAlgorithm dataAlg;
   std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
   dataAlg.setRange(0, matrix->getSize());
+  mesgHandler(IFilter::Message::Type::Progress, "Now processing print object");
   dataAlg.execute(OStreamUtilities::AssembleVerticalStringFromIndex(*matrix, stringStore, 0, delimiter, componentsPerLine));
 
+  mesgHandler(IFilter::Message::Type::Info, "Printing out to file");
   std::ofstream outputStrm;
   if(exportToBinary)
   {
@@ -847,8 +860,9 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& ob
 }
 
 // custom OStream [NO BINARY SUPPORT]
-void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter,
-                                                                  bool includeIndex, size_t componentsPerLine, bool includeHeaders, bool includeNeighborLists)
+void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure,
+                                                                  const IFilter::MessageHandler& mesgHandler, const std::string& delimiter, bool includeIndex, size_t componentsPerLine,
+                                                                  bool includeHeaders, bool includeNeighborLists)
 {
   bool hasNeighborLists = false;
   auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
@@ -859,18 +873,22 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& 
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, includeIndex, includeHeaders, includeNeighborLists);
+  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
 
   ParallelDataAlgorithm dataAlg;
   std::vector<std::map<size_t, std::string>> stringStoreList;
+  auto count = 0;
   for(auto& matrix : matrices) // neighborLists automatically stored at the end
   {
+    mesgHandler(IFilter::Message::Type::Progress, fmt::format("Now processing print object {} of {}", count, matrices.size()));
     std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
     dataAlg.setRange(0, matrix->getSize());
     dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrix, stringStore, delimiter, componentsPerLine));
     stringStoreList.push_back(createStringMapFromVector(stringStore));
+    count++;
   }
 
+  mesgHandler(IFilter::Message::Type::Info, "Printing out");
   for(size_t i = 0; i < stringStoreList.size(); i++)
   {
     writeOutWrapper(stringStoreList[i], outputStrm);
@@ -882,8 +900,9 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& 
 }
 
 // Creates OFStream from filepath [NO BINARY SUPPORT]
-void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string& delimiter,
-                                                                  bool includeIndex, size_t componentsPerLine, bool includeHeaders, bool includeNeighborLists)
+void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath,
+                                                                  const IFilter::MessageHandler& mesgHandler, const std::string& delimiter, bool includeIndex, size_t componentsPerLine,
+                                                                  bool includeHeaders, bool includeNeighborLists)
 {
   bool hasNeighborLists = false;
   auto objTypes = getDataTypesWrapper(objectPaths, dataStructure);
@@ -894,17 +913,20 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vec
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, includeIndex, includeHeaders, includeNeighborLists);
+  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
 
   ParallelDataAlgorithm dataAlg;
 
   std::vector<std::map<size_t, std::string>> stringStoreList;
+  auto count = 0;
   for(auto& matrix : matrices) // neighborLists automatically stored at the end
   {
+    mesgHandler(IFilter::Message::Type::Progress, fmt::format("Now processing print object {} of {}", count, matrices.size()));
     std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
     dataAlg.setRange(0, matrix->getSize());
     dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrix, stringStore, delimiter, componentsPerLine));
     stringStoreList.push_back(createStringMapFromVector(stringStore));
+    count++;
   }
 
   std::ofstream outputStrm(filePath.string(), std::ofstream::out); // overwrite old file just in case
@@ -913,6 +935,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vec
     throw std::runtime_error("Invalid file path");
   }
 
+  mesgHandler(IFilter::Message::Type::Info, "Printing out");
   for(size_t i = 0; i < stringStoreList.size(); i++)
   {
     writeOutWrapper(stringStoreList[i], outputStrm);

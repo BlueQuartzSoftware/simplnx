@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/StringArray.hpp"
+#include "complex/Filter/IFilter.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <fstream>
@@ -654,8 +655,9 @@ public:
    * @param includeHeaders The boolean that determines if headers are printed | leave blank if binary is end output
    * @param componentsPerLine The amount of elements to be inserted before newline character
    */
-  void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::directory_entry& directoryPath, std::string fileExtension = ".txt",
-                                    bool exportToBinary = false, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0);
+  void printDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::directory_entry& directoryPath, const IFilter::MessageHandler& mesgHandler,
+                                    std::string fileExtension = ".txt", bool exportToBinary = false, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,
+                                    size_t componentsPerLine = 0);
 
   /**
    * @brief [BINARY CAPABLE, unless neighborlist][Single Output][Custom OStream] | writes one IArray child to some ostream | !!!!endianess must be addressed in calling class!!!!
@@ -667,8 +669,8 @@ public:
    * @param delimiter The delimiter to be inserted into string | leave blank if binary is end output
    * @param componentsPerLine The amount of elements to be inserted before newline character
    */
-  void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, bool exportToBinary = false, const std::string delimiter = "",
-                             size_t componentsPerLine = 0);
+  void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, bool exportToBinary = false,
+                             const std::string delimiter = "", size_t componentsPerLine = 0);
 
   /**
    * @brief [BINARY CAPABLE, unless neighborlist][Single File Output] | writes one IArray child to ofstream | !!!!endianess must be addressed in calling class!!!!
@@ -680,8 +682,8 @@ public:
    * @param delimiter The delimiter to be inserted into string | leave blank if binary is end output
    * @param componentsPerLine The amount of elements to be inserted before newline character
    */
-  void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, bool exportToBinary = false, const std::string delimiter = "",
-                             size_t componentsPerLine = 0);
+  void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const IFilter::MessageHandler& mesgHandler, bool exportToBinary = false,
+                             const std::string delimiter = "", size_t componentsPerLine = 0);
 
   /**
    * @brief [Single Output][Custom OStream] | writes out multiple arrays to ostream
@@ -695,8 +697,8 @@ public:
    * @param includeHeaders The boolean that determines if headers are printed
    * @param IncludeNeighborLists The boolean that determines if NeighborLists are printed at the bottom of file
    */
-  void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& delimiter = "", bool includeIndex = false,
-                                 size_t componentsPerLine = 0, bool includeHeaders = false, bool includeNeighborLists = false);
+  void printDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
+                                 const std::string& delimiter = "", bool includeIndex = false, size_t componentsPerLine = 0, bool includeHeaders = false, bool includeNeighborLists = false);
 
   /**
    * @brief [Single File Output] | writes out multiple arrays to single file
@@ -710,8 +712,8 @@ public:
    * @param includeHeaders The boolean that determines if headers are printed
    * @param IncludeNeighborLists The boolean that determines if NeighborLists are printed at the bottom of file
    */
-  void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const std::string& delimiter = "", bool includeIndex = false,
-                                 size_t componentsPerLine = 0, bool includeHeaders = false, bool includeNeighborLists = false);
+  void printDataSetsToSingleFile(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, std::filesystem::path& filePath, const IFilter::MessageHandler& mesgHandler,
+                                 const std::string& delimiter = "", bool includeIndex = false, size_t componentsPerLine = 0, bool includeHeaders = false, bool includeNeighborLists = false);
 
 private:
   void neighborListImplWrapper(DataStructure& dataStructure, PrintMatrix2D& matrixRef, DataObject::Type type, const DataPath& path, bool hasIndex = false, bool hasHeaders = false);
@@ -750,8 +752,9 @@ private:
   template <typename T, typename U>
   std::map<U, std::vector<T>> createSortedMapbyType(const std::vector<T>& uniqueValuesVec, const std::vector<U>& parallelSortingVec);
 
-  std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap, DataStructure& dataStructure, bool includeIndex = false,
-                                                                           bool includeHeaders = false, bool includeNeighborLists = false);
+  std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap, DataStructure& dataStructure,
+                                                                           const IFilter::MessageHandler& mesgHandler, bool includeIndex = false, bool includeHeaders = false,
+                                                                           bool includeNeighborLists = false);
 
   std::map<size_t, std::string> createStringMapFromVector(const std::vector<std::string>& strings);
 };
