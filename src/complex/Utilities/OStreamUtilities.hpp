@@ -753,11 +753,11 @@ private:
   template <typename T, typename U>
   std::map<U, std::vector<T>> createSortedMapbyType(const std::vector<T>& uniqueValuesVec, const std::vector<U>& parallelSortingVec);
 
-  std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>> sortedMap, DataStructure& dataStructure,
+  std::vector<std::shared_ptr<PrintMatrix2D>> unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap, DataStructure& dataStructure,
                                                                            const IFilter::MessageHandler& mesgHandler, bool includeIndex = false, bool includeHeaders = false,
                                                                            bool includeNeighborLists = false);
 
-  std::map<size_t, std::string> createStringMapFromVector(const std::vector<std::string> strings);
+  std::map<size_t, std::string> createStringMapFromVector(const std::vector<std::string>& strings);
 };
 
 } // namespace OStreamUtilities
