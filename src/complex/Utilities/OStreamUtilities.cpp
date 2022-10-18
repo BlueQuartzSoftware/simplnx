@@ -1,5 +1,3 @@
-#pragma once
-
 #include "OStreamUtilities.hpp"
 #include "StringUtilities.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -77,6 +75,10 @@ void OStreamUtilities::OutputFunctions::neighborListImplWrapper(DataStructure& d
           .loadToMatrix(0, dataStructure.getDataAs<NeighborList<float64>>(path)->getSize());
       break;
     }
+    default: {
+      throw std::runtime_error("Cannot boolean in this data structure type");
+      break;
+    }
     }
   }
   else
@@ -146,6 +148,10 @@ void OStreamUtilities::OutputFunctions::dataAlgParallelWrapper(DataStructure& da
     }
     case DataType::float64: {
       dataAlg.execute(LoadDataArrayToMatrixImpl(matrixRef, dataStructure.getDataRefAs<DataArray<float64>>(path), column, hasHeaders));
+      break;
+    }
+    default: {
+      throw std::runtime_error("Cannot process boolean in this data structure type");
       break;
     }
     }
@@ -234,6 +240,10 @@ std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::
     }
     case DataType::float64: {
       columns += getMaxNeighborlistElements(dataStructure.getDataRefAs<NeighborList<float64>>(path));
+      break;
+    }
+    default: {
+      throw std::runtime_error("Cannot process boolean in this data structure type");
       break;
     }
     }
@@ -404,14 +414,15 @@ OStreamUtilities::OutputFunctions::createMultipleTypePrintStringMatrix(DataStruc
   {
     switch(value)
     {
-    case DataObject::Type::StringArray: {
+    case DataObject::Type::StringArray:
       compCounts.push_back(dataStructure.getDataAs<StringArray>(key)->getSize());
       break;
-    }
-    case DataObject::Type::DataArray: {
+    case DataObject::Type::DataArray:
       compCounts.push_back(dataStructure.getDataAs<IDataArray>(key)->getSize());
       break;
-    }
+    default:
+      throw std::runtime_error("Cannot process this data structure type");
+      break;
     }
     paths.push_back(key);
     types.push_back(value);
@@ -616,6 +627,10 @@ std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::
       neighborLists = paths;
       break;
     }
+    default: {
+      throw std::runtime_error("Cannot process this data structure type");
+      break;
+    }
     }
   }
 
@@ -785,7 +800,7 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outp
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, mesgHandler, false);
+  auto matrices = unpackSortedMapIntoMatricies(std::move(createSortedMapbyType(objectPaths, objTypes)), dataStructure, mesgHandler, false);
   // unpack matrix from vector
   auto matrix = matrices[0];
 
@@ -798,11 +813,11 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outp
   mesgHandler(IFilter::Message::Type::Info, "Printing out");
   if(hasNeighborLists)
   {
-    writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, false);
+    writeOutWrapper(std::move(createStringMapFromVector(stringStore)), outputStrm, false);
   }
   else
   {
-    writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, exportToBinary);
+    writeOutWrapper(std::move(createStringMapFromVector(stringStore)), outputStrm, exportToBinary);
   }
 }
 
@@ -825,7 +840,7 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& ob
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, mesgHandler, false);
+  auto matrices = unpackSortedMapIntoMatricies(std::move(createSortedMapbyType(objectPaths, objTypes)), dataStructure, mesgHandler, false);
   // unpack matrix from vector
   auto matrix = matrices[0];
 
@@ -851,11 +866,11 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& ob
   }
   if(hasNeighborLists)
   {
-    writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, false);
+    writeOutWrapper(std::move(createStringMapFromVector(stringStore)), outputStrm, false);
   }
   else
   {
-    writeOutWrapper(createStringMapFromVector(stringStore), outputStrm, exportToBinary);
+    writeOutWrapper(std::move(createStringMapFromVector(stringStore)), outputStrm, exportToBinary);
   }
 }
 
@@ -873,7 +888,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& 
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
+  auto matrices = unpackSortedMapIntoMatricies(std::move(createSortedMapbyType(objectPaths, objTypes)), dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
 
   ParallelDataAlgorithm dataAlg;
   std::vector<std::map<size_t, std::string>> stringStoreList;
@@ -884,7 +899,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(std::ostream& 
     std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
     dataAlg.setRange(0, matrix->getSize());
     dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrix, stringStore, delimiter, componentsPerLine));
-    stringStoreList.push_back(createStringMapFromVector(stringStore));
+    stringStoreList.emplace_back(createStringMapFromVector(stringStore));
     count++;
   }
 
@@ -913,7 +928,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vec
       hasNeighborLists = true;
     }
   }
-  auto matrices = unpackSortedMapIntoMatricies(createSortedMapbyType(objectPaths, objTypes), dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
+  auto matrices = unpackSortedMapIntoMatricies(std::move(createSortedMapbyType(objectPaths, objTypes)), dataStructure, mesgHandler, includeIndex, includeHeaders, includeNeighborLists);
 
   ParallelDataAlgorithm dataAlg;
 
@@ -925,7 +940,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToSingleFile(const std::vec
     std::vector<std::string> stringStore(matrix->getSize(), "UNINITIALIZED"); // 1 per matrix
     dataAlg.setRange(0, matrix->getSize());
     dataAlg.execute(OStreamUtilities::AssembleHorizontalStringFromIndex(*matrix, stringStore, delimiter, componentsPerLine));
-    stringStoreList.push_back(createStringMapFromVector(stringStore));
+    stringStoreList.emplace_back(createStringMapFromVector(stringStore));
     count++;
   }
 

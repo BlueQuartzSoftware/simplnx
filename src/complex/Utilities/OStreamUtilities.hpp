@@ -1,3 +1,5 @@
+#pragma once
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -636,7 +638,7 @@ private:
 class COMPLEX_EXPORT OutputFunctions
 {
 public:
-  OutputFunctions::OutputFunctions()
+  OutputFunctions()
   {
   }
   ~OutputFunctions() = default;
