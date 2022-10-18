@@ -42,6 +42,7 @@ public:
 
   using LayoutObject = std::variant<ParameterKey, Separator>;
   using LayoutVector = std::vector<LayoutObject>;
+  using GroupList = std::vector<std::pair<std::string, std::any>>;
 
   using IsActiveFunc = detail::IsActiveFunc;
 
@@ -132,37 +133,29 @@ public:
    * @param childKey
    * @param associatedValue
    */
-  void linkParameters(std::string groupKey, std::string childKey, std::any associatedValue);
+  void linkParameters(std::string groupKey, std::string_view childKey, std::any associatedValue);
 
   /**
    * @brief Returns true if the parameter with the given is active for the given value.
    * @param key
-   * @param groupValue
+   * @param args
    * @return
    */
-  bool isParameterActive(std::string_view key, const std::any& groupValue) const;
+  bool isParameterActive(std::string_view key, const Arguments& args) const;
 
   /**
-   * @brief Returns value from a linked parameter for the given key
-   * @param key The activation key
-   * @return The value of the parameter when using the key.
-   */
-  std::any parameterActiveValue(std::string_view key) const;
-
-  /**
-   * @brief Gets the group key of the parameter with the given key.
-   * Returns empty string when a parameter has no group.
+   * @brief Returns the number of groups that the given parameter belongs to.
    * @param key
    * @return
    */
-  std::string getGroup(std::string_view key) const;
+  usize getNumberOfLinkedGroups(std::string_view key) const;
 
   /**
-   * @brief Returns true if the parameter with the given key has a group.
+   * @brief Returns the list of groups that the parameter belongs to.
    * @param key
    * @return
    */
-  bool hasGroup(std::string_view key) const;
+  const GroupList& getLinkedGroups(std::string_view key) const;
 
   /**
    * @brief Returns true if a group with the given key exists.
@@ -219,7 +212,7 @@ public:
 private:
   std::map<std::string, AnyParameter, std::less<>> m_Params;
   std::vector<LayoutObject> m_LayoutVector;
-  std::map<std::string, std::pair<std::string, std::any>, std::less<>> m_ParamGroups;
+  std::map<std::string, GroupList, std::less<>> m_ParamGroups;
   std::map<std::string, IsActiveFunc, std::less<>> m_Groups;
 };
 } // namespace complex

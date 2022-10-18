@@ -48,6 +48,7 @@ void Parameters::insert(IParameter::UniquePointer parameter)
   }
 
   m_Params.insert({name, std::move(parameter)});
+  m_ParamGroups.insert({name, GroupList{}});
 
   m_LayoutVector.emplace_back(ParameterKey{name});
 }
@@ -79,7 +80,7 @@ void Parameters::insertLinkableParameter(IParameter::UniquePointer parameter, Is
   m_Groups.insert({name, func});
 }
 
-void Parameters::linkParameters(std::string groupKey, std::string childKey, std::any associatedValue)
+void Parameters::linkParameters(std::string groupKey, std::string_view childKey, std::any associatedValue)
 {
   if(!contains(childKey))
   {
@@ -101,58 +102,35 @@ void Parameters::linkParameters(std::string groupKey, std::string childKey, std:
     throw std::invalid_argument(fmt::format("Parameters::linkParameters(...): Group '{}' cannot be a child of another group", childKey));
   }
 
-  if(hasGroup(childKey))
-  {
-    std::string group = getGroup(childKey);
-    throw std::invalid_argument(fmt::format("Parameters::linkParameters(...): Child Key '{}' already assigned to group '{}'. Attempted to assign to group '{}'", childKey, group, groupKey));
-  }
-
-  m_ParamGroups.insert({std::move(childKey), {std::move(groupKey), std::move(associatedValue)}});
+  MapAt(m_ParamGroups, childKey, "Parameters::linkParameters(...): Key '{}' does not exist").push_back({std::move(groupKey), std::move(associatedValue)});
 }
 
-bool Parameters::isParameterActive(std::string_view key, const std::any& value) const
+bool Parameters::isParameterActive(std::string_view key, const Arguments& args) const
 {
   // If a parameter is not in a group, it is always active
 
-  if(!hasGroup(key))
+  if(getNumberOfLinkedGroups(key) == 0)
   {
     return true;
   }
 
-  // If a parameter is in a group, it's active if the stored value and argument value pass the stored IsActive function
+  // If a parameter is in at least one group, it's active if the stored value and argument value pass the stored IsActive function for all groups
 
-  const auto& [groupKey, associatedValue] = MapAt(m_ParamGroups, key, "Key '{}' does not have group in Parameters");
+  const auto& groupList = MapAt(m_ParamGroups, key, "Key '{}' does not have group in Parameters");
 
-  IsActiveFunc func = MapAt(m_Groups, groupKey, "Group key '{}' does not exist in Parameters");
+  bool isActive = false;
 
-  const IParameter* groupParameter = at(groupKey).get();
-
-  bool isActive = func(*groupParameter, value, associatedValue);
-
-  return isActive;
-}
-
-std::any Parameters::parameterActiveValue(std::string_view key) const
-{
-  const auto& [groupKey, associatedValue] = MapAt(m_ParamGroups, key, "Key '{}' does not have group in Parameters");
-  return associatedValue;
-}
-
-std::string Parameters::getGroup(std::string_view key) const
-{
-  if(!hasGroup(key))
+  for(const auto& [groupKey, associatedValue] : groupList)
   {
-    return {};
+    const std::any& value = args.at(groupKey);
+    IsActiveFunc func = MapAt(m_Groups, groupKey, "Group key '{}' does not exist in Parameters");
+
+    const IParameter* groupParameter = at(groupKey).get();
+
+    isActive |= func(*groupParameter, value, associatedValue);
   }
 
-  const auto& pair = MapAt(m_ParamGroups, key, "Key '{}' does not have group in Parameters");
-
-  return pair.first;
-}
-
-bool Parameters::hasGroup(std::string_view key) const
-{
-  return m_ParamGroups.count(key) > 0;
+  return isActive;
 }
 
 bool Parameters::containsGroup(std::string_view key) const
@@ -163,11 +141,14 @@ bool Parameters::containsGroup(std::string_view key) const
 std::vector<std::string> Parameters::getKeysInGroup(std::string_view groupKey) const
 {
   std::vector<std::string> keys;
-  for(const auto& [paramKey, pair] : m_ParamGroups)
+  for(const auto& [paramKey, groupList] : m_ParamGroups)
   {
-    if(pair.first == groupKey)
+    for(const auto& pair : groupList)
     {
-      keys.push_back(paramKey);
+      if(pair.first == groupKey)
+      {
+        keys.push_back(paramKey);
+      }
     }
   }
   return keys;
@@ -199,5 +180,15 @@ std::vector<std::string> Parameters::getGroupKeys() const
 const Parameters::LayoutVector& Parameters::getLayout() const
 {
   return m_LayoutVector;
+}
+
+usize Parameters::getNumberOfLinkedGroups(std::string_view key) const
+{
+  return MapAt(m_ParamGroups, key, "Parameters::getNumberOfLinkedGroups(...): Key '{}' does not exist").size();
+}
+
+const Parameters::GroupList& Parameters::getLinkedGroups(std::string_view key) const
+{
+  return MapAt(m_ParamGroups, key, "Parameters::getLinkedGroups(...): Key '{}' does not exist");
 }
 } // namespace complex

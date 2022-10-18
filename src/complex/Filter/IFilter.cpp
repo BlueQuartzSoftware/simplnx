@@ -141,11 +141,10 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
       continue;
     }
     // Only validate dependent parameters if their parent is valid
-    const std::any& groupValue = resolvedArgs.at(groupKey);
     for(const auto& key : dependentKeys)
     {
       const auto& dependentParameter = params.at(key);
-      if(!params.isParameterActive(key, groupValue))
+      if(!params.isParameterActive(key, resolvedArgs))
       {
         continue;
       }

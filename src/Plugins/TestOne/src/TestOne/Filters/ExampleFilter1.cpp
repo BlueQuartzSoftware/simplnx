@@ -3,6 +3,7 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
@@ -26,6 +27,9 @@ constexpr StringLiteral k_Param4 = "param4";
 constexpr StringLiteral k_Param5 = "param5";
 constexpr StringLiteral k_Param6 = "param6";
 constexpr StringLiteral k_Param7 = "param7";
+constexpr StringLiteral k_Param8 = "param8";
+constexpr StringLiteral k_Param9 = "param9";
+constexpr StringLiteral k_Param10 = "param10";
 } // namespace
 
 namespace complex
@@ -84,6 +88,14 @@ Parameters ExampleFilter1::parameters() const
   params.insert(std::make_unique<GeneratedFileListParameter>(k_Param4, "Input File List", "Data needed to generate the input file list", GeneratedFileListParameter::ValueType{}));
 
   params.insert(std::make_unique<ArrayThresholdsParameter>(k_Param7, "Data Thresholds", "DataArray thresholds to mask", ArrayThresholdSet{}));
+
+  // param10 should be active if either param8 OR param9 are the correct value
+  params.insertSeparator({"Multiple Linked Parameters"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param8, "Bool Parameter", "", true));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param9, "Choices Parameter", "", 0, ChoicesParameter::Choices{"0", "1", "2"}));
+  params.insert(std::make_unique<Int32Parameter>(k_Param10, "Int32 Parameter", "", 42));
+  params.linkParameters(k_Param8, k_Param10, true);
+  params.linkParameters(k_Param9, k_Param10, std::make_any<ChoicesParameter::ValueType>(1));
 
   return params;
 }
