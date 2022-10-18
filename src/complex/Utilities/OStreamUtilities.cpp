@@ -593,7 +593,7 @@ std::map<U, std::vector<T>> OStreamUtilities::OutputFunctions::createSortedMapby
   return sortedMap;
 }
 
-std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::OutputFunctions::unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>>& sortedMap,
+std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::OutputFunctions::unpackSortedMapIntoMatricies(std::map<DataObject::Type, std::vector<DataPath>> sortedMap,
                                                                                                                               DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
                                                                                                                               bool includeIndex, bool includeHeaders, bool includeNeighborLists)
 {
@@ -647,7 +647,7 @@ std::vector<std::shared_ptr<OStreamUtilities::PrintMatrix2D>> OStreamUtilities::
   return outputPtrs;
 }
 
-std::map<size_t, std::string> OStreamUtilities::OutputFunctions::createStringMapFromVector(const std::vector<std::string>& strings)
+std::map<size_t, std::string> OStreamUtilities::OutputFunctions::createStringMapFromVector(const std::vector<std::string> strings)
 {
   std::map<size_t, std::string> outputMap;
   for(size_t i = 0; i < strings.size(); i++)
