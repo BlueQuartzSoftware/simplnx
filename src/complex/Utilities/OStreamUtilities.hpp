@@ -1,5 +1,3 @@
-#pragma once
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -7,6 +5,7 @@
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <fstream>
 #include <ostream>
