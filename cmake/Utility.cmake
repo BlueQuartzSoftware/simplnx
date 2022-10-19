@@ -88,7 +88,7 @@ endfunction()
 #------------------------------------------------------------------------------
 include(FetchContent)
 
-function(dowload_test_data)
+function(download_test_data)
   set(optionsArgs)
   set(oneValueArgs DREAM3D_DATA_DIR)
   set(multiValueArgs FILES)
@@ -104,8 +104,8 @@ function(dowload_test_data)
   message(STATUS "DREAM3D_Data: Found at '${ARGS_DREAM3D_DATA_DIR}'")
   message(STATUS "Downloading DREAM3D_Data/TestFiles")
   FetchContent_Declare(download_DREAM3D_Data
-    URL https://github.com/dream3d/DREAM3D_Data/releases/download/v6_9/TestFiles_6_9.tar.gz
-    URL_HASH SHA512=849b3fc7dc080433bacfa9d543f261be60902136b559beba73d6525a92cd591d7fa19aea094a4ef9125b7dfacc386fea62864b8447a153ca3f86b4fa5c4b89ea
+    URL https://github.com/dream3d/DREAM3D_Data/releases/download/v6_10/TestFiles_6_10.tar.gz
+    URL_HASH SHA512=5f09010c81efb49a918f6f9281643987017f002ed6ed5e794f9ccc2527ab592680b708006a1981bde2fd1bb41711adfe0def5b8c8ddce1e509dacf37325d1345
     SOURCE_DIR "${ARGS_DREAM3D_DATA_DIR}/TestFiles"
     DOWNLOAD_DIR "${ARGS_DREAM3D_DATA_DIR}"
   )
