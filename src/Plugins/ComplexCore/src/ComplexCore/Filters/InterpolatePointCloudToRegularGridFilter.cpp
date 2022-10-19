@@ -535,7 +535,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     if(storeKernelDistances)
     {
       auto kernelDistancesNeighborsPath = kernelDistancesDataPath.createChildPath("Neighbor List");
-      auto kernelDistances = data.getDataAs<FloatNeighborListType>(kernelDistancesNeighborsPath);
+      auto kernelDistances = data.getDataAs<Float32NeighborList>(kernelDistancesNeighborsPath);
       mapKernelDistances(kernelDistances, kernelValDistances, kernelNumVoxels, dims.data(), x, y, z);
     }
 
