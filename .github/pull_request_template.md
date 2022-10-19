@@ -27,23 +27,41 @@ close a related issues using keywords (https://help.github.com/articles/closing-
 @mentions (https://help.github.com/articles/basic-writing-and-formatting-syntax/#mentioning-people-and-teams)
 of the person or team responsible for reviewing proposed changes. -->
 
-## PR Checklist
 
+## Naming Conventions
+
+Naming of variables should descriptive where needed. Loop Control Variables can use `i` if warranted. Most of these conventions are enforced through the clang-tidy and clang-format configuration files.
+
+- [ ] Class and Structs are `UpperCamelCase`
+- [ ] Class private member variables are `m_UpperCamelCase`
+- [ ] Class methods are `lowerCamelCase`
+- [ ] Method arguments are `lowerCamelCase`
+- [ ] Normal variables are `lowerCamelCase`
+- [ ] Constants are `k_UpperCamelCase`
+- [ ] Global statics are `s_UpperCamelCase`
+- [ ] Free Functions are `UpperCamelCase`
+- [ ] Macros are `ALL_UPPER_SNAKE_CASE`
+- [ ] Unit test will test data output from the filter.
+- [ ] Reused strings should be constants in an anonymous namespace
+- [ ] If parallelization is used, proper use of the abstracted complex classes are used. Using TBB specifically in a filter should be frowned upon unless for a really good reason.
+
+## Filter Checklist
+
+- [ ] Parameters should be generally broken down into "Input Parameters", "Required Data Objects", "Created Data Objects". There can be exceptions to this.
+- [ ] ChoicesParameter selections should be an enumeration defined in the filer header
 - [ ] Documentation copied from SIMPL Repo and updated (if necessary)
-- [ ] Parameter argument strings are snake_case
+- [ ] Parameter argument variables are k_CamelCase_Key
+- [ ] Parameter argument strings are lower_snake_case
 ```
 static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 ```
-- [ ] Naming conventions for classes/structs/variables and such are being followed
-  - [ ] Class and Structs are `UpperCamelCase`
-  - [ ] Class private member variables are `m_UpperCamelCase`
-  - [ ] Class methods are `lowerCamelCase`
-  - [ ] Method arguments are `lowerCamelCase`
-  - [ ] Constants are `k_UpperCamelCase`
-  - [ ] Global statics are `s_UpperCamelCase`
-  - [ ] Macros are `ALL_UPPER_SNAKE_CASE`
-- [ ] Unit test will tests data output from the filter.
-- [ ] If parallelization is used, proper use of the abstracted complex classes are used. Using TBB specifically in a filter should be frowned upon unless for a really good reason.
+
+## Unit Testing
+- [ ] 1 Unit test to instantiate the filter with the default arguments.
+- [ ] 1 Unit test to test output from the filter against known exemplar set of data
+- [ ] 1 Unit test to test invalid input code paths that are specific to a filter. Don't test that a DataPath does not exist since that test is already performed as part of the SelectDataArrayAction.
+
+## Code Cleanup
 - [ ] No commented out code (rare exceptions to this is allowed..)
 - [ ] Filters should have both the Filter class and Algorithm class for anything beyond trivial needs
 - [ ] No API changes were made (or the changes have been approved)
@@ -53,6 +71,7 @@ static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 - [ ] Added license to new files (if any)
 - [ ] Added Python wrapping to new files (if any) as necessary
 - [ ] Added example pipelines that use the filter
+- [ ] Classes and methods are properly documented.
 
 
 <!-- **Thanks for contributing to complex!** -->
