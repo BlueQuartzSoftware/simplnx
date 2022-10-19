@@ -159,8 +159,8 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
 
   auto& featureIdsArray = data.getDataRefAs<Int32Array>(featureIdsPath);
   auto& numNeighborsArray = data.getDataRefAs<Int32Array>(numNeighborsPath);
-  auto& neighborList = data.getDataRefAs<Int32NeighborListType>(neighborListPath);
-  auto& sharedSurfaceAreaList = data.getDataRefAs<FloatNeighborListType>(sharedSurfaceAreaPath);
+  auto& neighborList = data.getDataRefAs<Int32NeighborList>(neighborListPath);
+  auto& sharedSurfaceAreaList = data.getDataRefAs<Float32NeighborList>(sharedSurfaceAreaPath);
 
   auto* boundaryCellsArray = data.getDataAs<Int8Array>(boundaryCellsPath);
   auto* surfaceFeaturesArray = data.getDataAs<BoolArray>(surfaceFeaturesPath);

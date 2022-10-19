@@ -359,24 +359,21 @@ DataType COMPLEX_EXPORT NeighborList<float32>::getDataType() const;
 template <>
 DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const;
 
-using Int32NeighborListType = NeighborList<int32_t>;
-using FloatNeighborListType = NeighborList<float>;
-
 // -----------------------------------------------------------------------------
 // Declare our extern templates
-// extern template class NeighborList<int8>;
-// extern template class NeighborList<uint8>;
-// extern template class NeighborList<int16>;
-// extern template class NeighborList<uint16>;
-// extern template class NeighborList<int32>;
-// extern template class NeighborList<uint32>;
-// extern template class NeighborList<int64>;
-// extern template class NeighborList<uint64>;
+extern template class NeighborList<int8>;
+extern template class NeighborList<uint8>;
+extern template class NeighborList<int16>;
+extern template class NeighborList<uint16>;
+extern template class NeighborList<int32>;
+extern template class NeighborList<uint32>;
+extern template class NeighborList<int64>;
+extern template class NeighborList<uint64>;
 
-// extern template class NeighborList<float32>;
-// extern template class NeighborList<float64>;
+extern template class NeighborList<float32>;
+extern template class NeighborList<float64>;
 
-// extern template class NeighborList<usize>;
+extern template class NeighborList<usize>;
 
 // Declare Aliases
 using UInt8NeighborList = NeighborList<uint8>;
