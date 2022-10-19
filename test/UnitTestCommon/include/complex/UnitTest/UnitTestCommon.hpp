@@ -17,6 +17,8 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+
 namespace fs = std::filesystem;
 
 #define COMPLEX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
@@ -109,7 +111,7 @@ inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
 namespace UnitTest
 {
 
-inline constexpr float EPSILON = 0.00001;
+inline constexpr float EPSILON = 0.0001;
 
 /**
  * @brief Loads a .dream3d file into a DataStructure. Checks are made to ensure the filepath does exist
@@ -236,8 +238,6 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
   const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
   REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
 
-  INFO(fmt::format("Input NeighborList:'{}'  Output NeighborList: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
-
   for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
   {
     const auto exemplary = exemplaryList.getList(i);
@@ -245,6 +245,23 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
     if(exemplary.get() != nullptr && computed.get() != nullptr)
     {
       REQUIRE(exemplary->size() == computed->size());
+      std::sort(exemplary->begin(), exemplary->end());
+      std::sort(computed->begin(), computed->end());
+      for(usize j = 0; j < exemplary->size(); ++j)
+      {
+        auto exemplaryVal = exemplary->at(j);
+        auto computedVal = computed->at(j);
+        if(exemplaryVal != computedVal)
+        {
+          float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+          INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary->size(),
+                           computedPath.toString(), computed->size()));
+          INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
+
+          REQUIRE(diff < EPSILON);
+          break;
+        }
+      }
     }
   }
 }
