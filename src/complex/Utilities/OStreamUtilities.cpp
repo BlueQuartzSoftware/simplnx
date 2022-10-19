@@ -783,7 +783,7 @@ void OStreamUtilities::OutputFunctions::printDataSetsToMultipleFiles(const std::
 
 // single path, custom OStream [BINARY CAPABLE] // endianess must be determined in calling class
 void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
-                                                              bool exportToBinary, const std::string delimiter, size_t componentsPerLine)
+                                                              bool exportToBinary, const std::string& delimiter, size_t componentsPerLine)
 {
   bool hasNeighborLists = false;
   if(exportToBinary)
@@ -825,7 +825,7 @@ void OStreamUtilities::OutputFunctions::printSingleDataObject(std::ostream& outp
 
 // single path, Creates OFStream from filepath [BINARY CAPABLE] // endianess must be determined in calling class
 void OStreamUtilities::OutputFunctions::printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const IFilter::MessageHandler& mesgHandler,
-                                                              bool exportToBinary, const std::string delimiter, size_t componentsPerLine)
+                                                              bool exportToBinary, const std::string& delimiter, size_t componentsPerLine)
 {
   bool hasNeighborLists = false;
   if(exportToBinary)
