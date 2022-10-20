@@ -840,7 +840,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
 {
   DataStructure dataStruct = createTestDataStructure();
 
-  // Image Geometry
+  SECTION("Image Geometry")
   {
     const DataPath srcImageGeoPath({Constants::k_ImageGeometry});
     const DataPath destImageGeoPath({Constants::k_ImageGeometry.str() + "_COPY"});
@@ -893,7 +893,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     UnitTest::CompareArrays<bool>(dataStruct, srcBoolArrayPath, destBoolArrayPath);
   }
 
-  // Rectilinear Grid Geometry
+  SECTION("Rectilinear Grid Geometry")
   {
     const DataPath srcRectGeoPath({k_RectGridGeo});
     const DataPath destRectGeoPath({k_RectGridGeo.str() + "_COPY"});
@@ -932,7 +932,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     UnitTest::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
   }
 
-  // Vertex Geometry
+  SECTION("Vertex Geometry")
   {
     const DataPath srcGeoPath({Constants::k_VertexGeometry});
     const DataPath destGeoPath({Constants::k_VertexGeometry.str() + "_COPY"});
@@ -968,7 +968,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     UnitTest::CompareArrays<float32>(dataStruct, srcVoxelSizesArrayPath, destVoxelSizesArrayPath);
   }
 
-  // Edge Geometry
+  SECTION("Edge Geometry")
   {
     const DataPath srcGeoPath({k_EdgeGeo});
     const DataPath destGeoPath({k_EdgeGeo.str() + "_COPY"});
@@ -1035,7 +1035,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     UnitTest::CompareArrays<float32>(dataStruct, srcEltCentroidsPath, destEltCentroidsPath);
   }
 
-  // Triangle Geometry
+  SECTION("Triangle Geometry")
   {
     const DataPath srcGeoPath({Constants::k_TriangleGeometryName});
     const DataPath destGeoPath({Constants::k_TriangleGeometryName.str() + "_COPY"});
@@ -1100,7 +1100,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
   }
 
-  // Quad Geometry
+  SECTION("Quad Geometry")
   {
     const DataPath srcGeoPath({k_QuadGeo});
     const DataPath destGeoPath({k_QuadGeo.str() + "_COPY"});
@@ -1165,7 +1165,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedEdgesArrayPath, destUnsharedEdgesArrayPath);
   }
 
-  // Tetrahedral Geometry
+  SECTION("Tetrahedral Geometry")
   {
     const DataPath srcGeoPath({k_TetGeo});
     const DataPath destGeoPath({k_TetGeo.str() + "_COPY"});
@@ -1240,7 +1240,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
   }
 
-  // Hexahedral Geometry
+  SECTION("Hexahedral Geometry")
   {
     const DataPath srcGeoPath({k_HexGeo});
     const DataPath destGeoPath({k_HexGeo.str() + "_COPY"});
@@ -1315,7 +1315,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcUnsharedFacesArrayPath, destUnsharedFacesArrayPath);
   }
 
-  // Invalid copies
+  SECTION("Invalid copies")
   {
     DataStructure badCopyDataStruct = createTestDataStructure();
     const DataPath srcGeoPath({Constants::k_ImageGeometry});
