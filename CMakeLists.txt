@@ -274,6 +274,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry1DAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry2DAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGeometry3DAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateNeighborListAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateVertexGeometryAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/DeleteDataAction.hpp
