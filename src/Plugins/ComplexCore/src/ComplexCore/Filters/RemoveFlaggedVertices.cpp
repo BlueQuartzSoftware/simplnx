@@ -134,7 +134,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
 
   // Create vertex geometry
   uint64 numVertices = vertex->getNumberOfVertices();
-  auto reduced = std::make_unique<CreateVertexGeometryAction>(reducedVertexPath, numVertices, vertexDataName);
+  auto reduced = std::make_unique<CreateVertexGeometryAction>(reducedVertexPath, numVertices, vertexDataName, CreateVertexGeometryAction::k_SharedVertexListName);
   DataPath reducedVertexDataPath = reduced->getVertexDataPath();
   actions.actions.push_back(std::move(reduced));
 

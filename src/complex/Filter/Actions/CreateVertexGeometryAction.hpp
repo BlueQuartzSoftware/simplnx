@@ -26,10 +26,11 @@ public:
 
   CreateVertexGeometryAction() = delete;
 
-  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName)
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName)
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
+  , m_SharedVertexListName(sharedVertexListName)
   {
   }
 
@@ -82,7 +83,7 @@ public:
     using MeshIndexType = IGeometry::MeshIndexType;
 
     // Create the Vertex Array with a component size of 3
-    DataPath vertexPath = getCreatedPath().createChildPath(k_SharedVertexListName);
+    DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVertexListName);
     std::vector<usize> tupleShape = {m_NumVertices}; // We don't probably know how many Vertices there are but take what ever the developer sends us
     std::vector<usize> componentShape = {3};
 
@@ -133,18 +134,28 @@ public:
   }
 
   /**
+   * @brief Returns the path of the shared vertex list in the created geometry.
+   * @return
+   */
+  DataPath getSharedVertexListDataPath() const
+  {
+    return getCreatedPath().createChildPath(m_SharedVertexListName);
+  }
+
+  /**
    * @brief Returns all of the DataPaths to be created.
    * @return std::vector<DataPath>
    */
   std::vector<DataPath> getAllCreatedPaths() const override
   {
     auto topLevelCreatedPath = getCreatedPath();
-    return {topLevelCreatedPath, getVertexDataPath(), topLevelCreatedPath.createChildPath(k_SharedVertexListName)};
+    return {topLevelCreatedPath, getVertexDataPath(), topLevelCreatedPath.createChildPath(m_SharedVertexListName)};
   }
 
 private:
   IGeometry::MeshIndexType m_NumVertices;
   std::string m_VertexDataName;
+  std::string m_SharedVertexListName;
 };
 
 } // namespace complex

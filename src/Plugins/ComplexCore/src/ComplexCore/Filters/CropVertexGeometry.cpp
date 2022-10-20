@@ -133,7 +133,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
   }
   auto tupleShape = vertexAM->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
-  auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples, vertexDataName);
+  auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples, vertexDataName, CreateVertexGeometryAction::k_SharedVertexListName);
   DataPath croppedVertexDataPath = action->getVertexDataPath();
   actions.actions.push_back(std::move(action));
 
