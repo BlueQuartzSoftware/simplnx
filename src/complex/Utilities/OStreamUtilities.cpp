@@ -1,7 +1,15 @@
 #include "OStreamUtilities.hpp"
 #include "StringUtilities.hpp"
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataObject.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
+#include "complex/DataStructure/NeighborList.hpp"
+#include "complex/DataStructure/StringArray.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <ostream>
 #include <sstream>
 #include <string>

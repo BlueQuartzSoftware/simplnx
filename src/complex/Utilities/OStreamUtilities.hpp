@@ -1,17 +1,8 @@
 #pragma once
 
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
-#include "complex/DataStructure/INeighborList.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
-#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
-
-#include <fstream>
 
 namespace fs = std::filesystem;
 
