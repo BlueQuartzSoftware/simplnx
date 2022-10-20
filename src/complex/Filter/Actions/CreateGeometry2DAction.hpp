@@ -30,12 +30,15 @@ public:
 
   CreateGeometry2DAction() = delete;
 
-  CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& faceAttributeMatrixName)
+  CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& faceAttributeMatrixName,
+                         const std::string& sharedVerticesName, const std::string& sharedFacesName)
   : IDataCreationAction(geometryPath)
   , m_NumFaces(numFaces)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_FaceDataName(faceAttributeMatrixName)
+  , m_SharedVerticesName(sharedVerticesName)
+  , m_SharedFacesName(sharedFacesName)
   {
   }
 
@@ -54,8 +57,6 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    const std::string k_TriangleDataName(k_DefaultFacesName);
-    const std::string k_VertexDataName(k_DefaultVerticesName);
     DataPath faceDataPath = getFaceDataPath();
     DataPath vertexDataPath = getVertexDataPath();
 
@@ -111,7 +112,7 @@ public:
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedTriList = IGeometry::SharedTriList;
 
-    DataPath trianglesPath = getCreatedPath().createChildPath(k_TriangleDataName);
+    DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
     // Create the default DataArray that will hold the FaceList and Vertices. We
     // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
     complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumFaceVerts}, trianglesPath, mode);
@@ -123,7 +124,7 @@ public:
     geometry2d->setFaceList(*triangles);
 
     // Create the Vertex Array with a component size of 3
-    DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);
+    DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
     result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
     if(result.invalid())
@@ -188,7 +189,7 @@ public:
   std::vector<DataPath> getAllCreatedPaths() const override
   {
     auto topLevelCreatedPath = getCreatedPath();
-    return {topLevelCreatedPath, getFaceDataPath(), getVertexDataPath(), topLevelCreatedPath.createChildPath(k_DefaultFacesName), topLevelCreatedPath.createChildPath(k_DefaultVerticesName)};
+    return {topLevelCreatedPath, getFaceDataPath(), getVertexDataPath(), topLevelCreatedPath.createChildPath(m_SharedFacesName), topLevelCreatedPath.createChildPath(m_SharedVerticesName)};
   }
 
 private:
@@ -196,6 +197,8 @@ private:
   IGeometry::MeshIndexType m_NumVertices;
   std::string m_VertexDataName;
   std::string m_FaceDataName;
+  std::string m_SharedVerticesName;
+  std::string m_SharedFacesName;
 };
 
 using CreateTriangleGeometryAction = CreateGeometry2DAction<TriangleGeom>;
