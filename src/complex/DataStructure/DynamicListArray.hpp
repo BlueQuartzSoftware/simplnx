@@ -150,7 +150,8 @@ public:
     {
       return nullptr;
     }
-    std::shared_ptr<DynamicListArray<T, K>> copy = std::shared_ptr<DynamicListArray<T, K>>(new DynamicListArray<T, K>(dataStruct, copyPath.getTargetName(), getId()));
+    // Don't construct with id since it will get created when inserting into data structure
+    std::shared_ptr<DynamicListArray<T, K>> copy = std::shared_ptr<DynamicListArray<T, K>>(new DynamicListArray<T, K>(dataStruct, copyPath.getTargetName()));
     std::vector<T> linkCounts(m_Size, 0);
 
     // Figure out how many entries, and for each entry, how many cells

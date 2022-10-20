@@ -100,6 +100,7 @@ public:
 
 protected:
   StringArray(DataStructure& dataStructure, std::string name);
+  StringArray(DataStructure& dataStructure, std::string name, collection_type strings);
   StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings);
 
 private:

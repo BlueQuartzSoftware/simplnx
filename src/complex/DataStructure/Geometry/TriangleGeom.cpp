@@ -69,7 +69,8 @@ DataObject* TriangleGeom::shallowCopy()
 std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  auto copy = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataStruct, copyPath.getTargetName(), getId()));
+  // Don't construct with id since it will get created when inserting into data structure
+  auto copy = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataStruct, copyPath.getTargetName()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {
     auto dataMapCopy = getDataMap().deepCopy(copyPath);

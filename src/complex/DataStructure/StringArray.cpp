@@ -43,6 +43,12 @@ StringArray::StringArray(DataStructure& dataStructure, std::string name)
 {
 }
 
+StringArray::StringArray(DataStructure& dataStructure, std::string name, collection_type strings)
+: IArray(dataStructure, std::move(name))
+, m_Strings(std::move(strings))
+{
+}
+
 StringArray::StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings)
 : IArray(dataStructure, std::move(name), importId)
 , m_Strings(std::move(strings))
@@ -84,7 +90,8 @@ std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
   {
     return nullptr;
   }
-  const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), getId(), m_Strings));
+  // Don't construct with id since it will get created when inserting into data structure
+  const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), m_Strings));
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
     return copy;
