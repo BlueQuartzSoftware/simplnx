@@ -2,6 +2,7 @@
 
 #include "complex/Filter/Parameters.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
@@ -12,6 +13,7 @@ namespace
 constexpr StringLiteral k_FooParamKey = "FooParam";
 constexpr StringLiteral k_BarParamKey = "BarParam";
 constexpr StringLiteral k_BazParamKey = "BazParam";
+constexpr StringLiteral k_BizParamKey = "BizParam";
 } // namespace
 
 TEST_CASE("ParametersTest")
@@ -35,11 +37,13 @@ TEST_CASE("ParametersTest")
   REQUIRE(std::holds_alternative<Parameters::ParameterKey>(params.getLayout().at(0)));
   REQUIRE(std::holds_alternative<Parameters::Separator>(params.getLayout().at(1)));
 
-  REQUIRE_FALSE(params.hasGroup(k_FooParamKey));
-  REQUIRE(params.hasGroup(k_BazParamKey));
+  REQUIRE(params.getNumberOfLinkedGroups(k_FooParamKey) == 0);
+  REQUIRE(params.getNumberOfLinkedGroups(k_BazParamKey) == 1);
 
-  REQUIRE(params.getGroup(k_FooParamKey).empty());
-  REQUIRE(params.getGroup(k_BazParamKey) == k_BarParamKey);
+  REQUIRE(params.getLinkedGroups(k_FooParamKey).empty());
+  const auto& bazGroups = params.getLinkedGroups(k_BazParamKey);
+  REQUIRE(bazGroups.size() == 1);
+  REQUIRE(bazGroups.at(0).first == k_BarParamKey);
 
   const std::vector<std::string> expectedKeys = {k_FooParamKey, k_BarParamKey, k_BazParamKey};
 
@@ -55,6 +59,36 @@ TEST_CASE("ParametersTest")
 
   REQUIRE(params.isParameterActive(k_FooParamKey, {}));
 
-  REQUIRE(params.isParameterActive(k_BazParamKey, true));
-  REQUIRE_FALSE(params.isParameterActive(k_BazParamKey, false));
+  Arguments args;
+  args.insertOrAssign(k_BarParamKey, true);
+
+  REQUIRE(params.isParameterActive(k_BazParamKey, args));
+
+  args.insertOrAssign(k_BarParamKey, false);
+
+  REQUIRE_FALSE(params.isParameterActive(k_BazParamKey, args));
+
+  // Test multiple linked groups
+
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_BizParamKey, "Biz", "Test Parameter", 0, ChoicesParameter::Choices{"Zero", "One", "Two"}));
+
+  REQUIRE(params.size() == 4);
+
+  params.linkParameters(k_BizParamKey, k_BazParamKey, std::make_any<ChoicesParameter::ValueType>(1));
+
+  args.insertOrAssign(k_BarParamKey, false);
+  args.insertOrAssign(k_BizParamKey, std::make_any<ChoicesParameter::ValueType>(0));
+  REQUIRE_FALSE(params.isParameterActive(k_BazParamKey, args));
+
+  args.insertOrAssign(k_BarParamKey, true);
+  args.insertOrAssign(k_BizParamKey, std::make_any<ChoicesParameter::ValueType>(0));
+  REQUIRE(params.isParameterActive(k_BazParamKey, args));
+
+  args.insertOrAssign(k_BarParamKey, false);
+  args.insertOrAssign(k_BizParamKey, std::make_any<ChoicesParameter::ValueType>(1));
+  REQUIRE(params.isParameterActive(k_BazParamKey, args));
+
+  args.insertOrAssign(k_BarParamKey, true);
+  args.insertOrAssign(k_BizParamKey, std::make_any<ChoicesParameter::ValueType>(1));
+  REQUIRE(params.isParameterActive(k_BazParamKey, args));
 }

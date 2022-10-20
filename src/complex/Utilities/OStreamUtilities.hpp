@@ -25,7 +25,7 @@ namespace OStreamUtilities
  * @param numrows The number of rows for the matrix
  * @param numcols The number of columns for the matrix
  */
-struct PrintMatrix2D
+class COMPLEX_EXPORT PrintMatrix2D
 {
   // visual representation of string matrix
   /*
@@ -155,8 +155,9 @@ public:
  * @param hasHeaders bool to determine if index must be advanced 1 to avoid overwrite
  */
 template <typename T>
-struct LoadDataArrayToMatrixImpl
+class COMPLEX_EXPORT LoadDataArrayToMatrixImpl
 {
+public:
   LoadDataArrayToMatrixImpl(PrintMatrix2D& outputMatrix, const DataArray<T>& inputArray, const size_t& columnToWrite, bool hasHeaders = false)
   : m_OutputMatrix(outputMatrix)
   , m_ColumnToWrite(columnToWrite)
@@ -206,8 +207,9 @@ private:
  * @param hasHeaders bool to determine if index must be advanced 1 to avoid column overwrite
  */
 template <typename T>
-struct LoadNeighborListToMatrixImpl // adds component count implicitly
+class COMPLEX_EXPORT LoadNeighborListToMatrixImpl // adds component count implicitly
 {
+public:
   LoadNeighborListToMatrixImpl(PrintMatrix2D& outputMatrix, const NeighborList<T>& inputArray, bool hasIndex = false, bool hasHeader = false)
   : m_OutputMatrix(outputMatrix)
   , m_InputArray(inputArray)
@@ -298,7 +300,7 @@ private:
  * @param columnToWrite The column that the **StringArray** should be stored in
  * @param hasHeaders bool to determine if index must be advanced 1 to avoid overwrite
  */
-struct LoadStringArrayToMatrixImpl
+class COMPLEX_EXPORT LoadStringArrayToMatrixImpl
 {
 public:
   LoadStringArrayToMatrixImpl(PrintMatrix2D& outputMatrix, const StringArray& inputArray, const size_t& columnToWrite, bool hasHeaders = false)
@@ -348,9 +350,10 @@ private:
  * @param delimiter The delimiter to be inserted into string (leave blank if binary is end output)
  * @param componentsPerLine The amount of elements to be inserted before newline character
  */
-struct AssembleVerticalStringFromIndex
+class COMPLEX_EXPORT AssembleVerticalStringFromIndex
 {
-  AssembleVerticalStringFromIndex(const PrintMatrix2D& matrix, std::vector<std::string>& stringStore, const int32 verticalColumnToPrint, const std::string delimiter = "",
+public:
+  AssembleVerticalStringFromIndex(const PrintMatrix2D& matrix, std::vector<std::string>& stringStore, const int32 verticalColumnToPrint, const std::string& delimiter = "",
                                   const size_t componentsPerLine = 0, const bool isBinary = false)
   : m_Matrix(matrix)
   , m_StringStore(stringStore)
@@ -495,7 +498,7 @@ private:
   const PrintMatrix2D& m_Matrix;
   std::vector<std::string>& m_StringStore;
   const size_t m_MaxComp;
-  const std::string m_Delim = "";
+  const std::string m_Delim = {""};
   const int32 m_VertColumn = 0;
   const bool m_IsBinary = false;
 };
@@ -507,9 +510,10 @@ private:
  * @param delimiter The delimiter to be inserted into string (leave blank if binary is end output)
  * @param componentsPerLine The amount of elements to be inserted before newline character
  */
-struct AssembleHorizontalStringFromIndex
+class COMPLEX_EXPORT AssembleHorizontalStringFromIndex
 {
-  AssembleHorizontalStringFromIndex(const PrintMatrix2D& matrix, std::vector<std::string>& stringStore, const std::string delimiter = "", const size_t componentsPerLine = 0)
+public:
+  AssembleHorizontalStringFromIndex(const PrintMatrix2D& matrix, std::vector<std::string>& stringStore, const std::string& delimiter = "", const size_t componentsPerLine = 0)
   : m_Matrix(matrix)
   , m_StringStore(stringStore)
   , m_MaxComp(componentsPerLine)
@@ -629,7 +633,7 @@ private:
   const PrintMatrix2D& m_Matrix;
   std::vector<std::string>& m_StringStore;
   const size_t m_MaxComp;
-  const std::string m_Delim = "";
+  const std::string m_Delim = {""};
 };
 
 /**
@@ -638,9 +642,8 @@ private:
 class COMPLEX_EXPORT OutputFunctions
 {
 public:
-  OutputFunctions()
-  {
-  }
+  OutputFunctions() = default;
+
   ~OutputFunctions() = default;
 
   /**
@@ -671,10 +674,10 @@ public:
    * @param componentsPerLine The amount of elements to be inserted before newline character
    */
   void printSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, bool exportToBinary = false,
-                             const std::string delimiter = "", size_t componentsPerLine = 0);
+                             const std::string& delimiter = "", size_t componentsPerLine = 0);
 
   /**
-   * @brief [BINARY CAPABLE, unless neighborlist][Single File Output] | writes one IArray child to ofstream | !!!!endianess must be addressed in calling class!!!!
+   * @brief [BINARY CAPABLE, unless neighborlist][Single File Output] | writes one IArray child to ofstream | !!!!endian must be addressed in calling class!!!!
    * @param objectPath The datapath for respective dataObject to be written out
    * @param dataStructure The complex datastructure where *objectPath* datacontainer is stored
    * @param filePath The path to file to write to | used to create file paths for ofstream | will overwrite existing contents
@@ -684,7 +687,7 @@ public:
    * @param componentsPerLine The amount of elements to be inserted before newline character
    */
   void printSingleDataObject(const DataPath& objectPath, DataStructure& dataStructure, std::filesystem::path& filePath, const IFilter::MessageHandler& mesgHandler, bool exportToBinary = false,
-                             const std::string delimiter = "", size_t componentsPerLine = 0);
+                             const std::string& delimiter = "", size_t componentsPerLine = 0);
 
   /**
    * @brief [Single Output][Custom OStream] | writes out multiple arrays to ostream
