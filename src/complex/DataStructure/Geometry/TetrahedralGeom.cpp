@@ -67,7 +67,7 @@ DataObject* TetrahedralGeom::shallowCopy()
 
 std::shared_ptr<DataObject> TetrahedralGeom::deepCopy(const DataPath& copyPath)
 {
-  auto& dataStruct = *getDataStructure();
+  auto& dataStruct = getDataStructureRef();
   auto copy = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(dataStruct, copyPath.getTargetName(), getId()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {

@@ -145,7 +145,7 @@ public:
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
-    auto& dataStruct = *getDataStructure();
+    auto& dataStruct = getDataStructureRef();
     if(dataStruct.containsData(copyPath))
     {
       return nullptr;

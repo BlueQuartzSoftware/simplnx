@@ -75,7 +75,7 @@ DataObject* VertexGeom::shallowCopy()
 
 std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 {
-  auto& dataStruct = *getDataStructure();
+  auto& dataStruct = getDataStructureRef();
   auto copy = std::shared_ptr<VertexGeom>(new VertexGeom(dataStruct, copyPath.getTargetName(), getId()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {

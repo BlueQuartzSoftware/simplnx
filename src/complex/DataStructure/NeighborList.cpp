@@ -57,7 +57,7 @@ DataObject* NeighborList<T>::shallowCopy()
 template <typename T>
 std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
 {
-  auto& dataStruct = *getDataStructure();
+  auto& dataStruct = getDataStructureRef();
   if(dataStruct.containsData(copyPath))
   {
     return nullptr;

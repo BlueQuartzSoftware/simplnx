@@ -67,7 +67,7 @@ DataObject* QuadGeom::shallowCopy()
 
 std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
 {
-  auto& dataStruct = *getDataStructure();
+  auto& dataStruct = getDataStructureRef();
   auto copy = std::shared_ptr<QuadGeom>(new QuadGeom(dataStruct, copyPath.getTargetName(), getId()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {

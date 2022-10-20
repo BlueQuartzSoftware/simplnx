@@ -61,7 +61,7 @@ AttributeMatrix* AttributeMatrix::Import(DataStructure& ds, std::string name, Id
 
 std::shared_ptr<DataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
 {
-  auto& dataStruct = *getDataStructure();
+  auto& dataStruct = getDataStructureRef();
   auto copy = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStruct, copyPath.getTargetName(), getId()));
   copy->setShape(m_TupleShape);
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))

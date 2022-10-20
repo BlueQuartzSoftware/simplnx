@@ -79,7 +79,7 @@ DataObject* StringArray::shallowCopy()
 
 std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
 {
-  auto& dataStruct = *getDataStructure();
+  auto& dataStruct = getDataStructureRef();
   if(dataStruct.containsData(copyPath))
   {
     return nullptr;

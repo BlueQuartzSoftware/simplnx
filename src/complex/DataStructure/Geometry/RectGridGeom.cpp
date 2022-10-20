@@ -68,7 +68,7 @@ DataObject* RectGridGeom::shallowCopy()
 
 std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
 {
-  auto& dataStruct = *getDataStructure();
+  auto& dataStruct = getDataStructureRef();
   auto copy = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataStruct, copyPath.getTargetName(), getId()));
   copy->setDimensions(m_Dimensions);
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))

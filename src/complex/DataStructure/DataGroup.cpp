@@ -62,7 +62,7 @@ DataGroup* DataGroup::Import(DataStructure& ds, std::string name, IdType importI
 
 std::shared_ptr<DataObject> DataGroup::deepCopy(const DataPath& copyPath)
 {
-  auto& dataStruct = *getDataStructure();
+  auto& dataStruct = getDataStructureRef();
   const auto copy = std::shared_ptr<DataGroup>(new DataGroup(dataStruct, copyPath.getTargetName(), getId()));
   copy->clear();
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
