@@ -29,12 +29,15 @@ public:
 
   CreateGeometry1DAction() = delete;
 
-  CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& edgeAttributeMatrixName)
+  CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& edgeAttributeMatrixName,
+                         const std::string& sharedVerticesName, const std::string& sharedEdgesName)
   : IDataCreationAction(geometryPath)
   , m_NumEdges(numEdges)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_EdgeDataName(edgeAttributeMatrixName)
+  , m_SharedVerticesName(sharedVerticesName)
+  , m_SharedEdgesName(sharedEdgesName)
   {
   }
 
@@ -53,8 +56,6 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    const std::string k_EdgeGeometryName(k_DefaultEdgesName);
-    const std::string k_VertexDataName(k_DefaultVerticesName);
     DataPath edgeDataPath = getEdgeDataPath();
     DataPath vertexDataPath = getVertexDataPath();
 
@@ -110,7 +111,7 @@ public:
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedEdgeList = IGeometry::SharedEdgeList;
 
-    DataPath edgesPath = getCreatedPath().createChildPath(k_EdgeGeometryName);
+    DataPath edgesPath = getCreatedPath().createChildPath(m_SharedEdgesName);
     // Create the default DataArray that will hold the EdgeList and Vertices. We
     // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
     complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode);
@@ -122,7 +123,7 @@ public:
     geometry1d->setEdgeList(*edges);
 
     // Create the Vertex Array with a component size of 3
-    DataPath vertexPath = getCreatedPath().createChildPath(k_VertexDataName);
+    DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
     result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
     if(result.invalid())
@@ -187,7 +188,7 @@ public:
   std::vector<DataPath> getAllCreatedPaths() const override
   {
     auto topLevelCreatedPath = getCreatedPath();
-    return {topLevelCreatedPath, getEdgeDataPath(), getVertexDataPath(), topLevelCreatedPath.createChildPath(k_DefaultEdgesName), topLevelCreatedPath.createChildPath(k_DefaultVerticesName)};
+    return {topLevelCreatedPath, getEdgeDataPath(), getVertexDataPath(), topLevelCreatedPath.createChildPath(m_SharedEdgesName), topLevelCreatedPath.createChildPath(m_SharedVerticesName)};
   }
 
 private:
@@ -195,6 +196,8 @@ private:
   IGeometry::MeshIndexType m_NumVertices;
   std::string m_VertexDataName;
   std::string m_EdgeDataName;
+  std::string m_SharedVerticesName;
+  std::string m_SharedEdgesName;
 };
 
 using CreateEdgeGeometryAction = CreateGeometry1DAction<EdgeGeom>;
