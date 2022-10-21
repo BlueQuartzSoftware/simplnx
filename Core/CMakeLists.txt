@@ -27,6 +27,7 @@ set(FilterList
   FindEuclideanDistMapFilter
   FindNeighborhoodsFilter
   FindSurfaceAreaToVolumeFilter
+  CalculateArrayHistogramFilter
   RemoveFlaggedFeaturesFilter
   SplitAttributeArrayFilter
 )
@@ -107,6 +108,7 @@ set(filter_algorithms
   FindEuclideanDistMap
   FindNeighborhoods
   FindSurfaceAreaToVolume
+  CalculateArrayHistogram
   RemoveFlaggedFeatures
   SplitAttributeArray
 )
