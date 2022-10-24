@@ -131,7 +131,7 @@ Result<> CalculateArrayHistogramFilter::executeImpl(DataStructure& dataStructure
   inputValues.MinRange = filterArgs.value<float64>(k_MinRange_Key);
   inputValues.MaxRange = filterArgs.value<float64>(k_MaxRange_Key);
   inputValues.SelectedArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedArrayPaths_Key);
-  
+
   auto histogramSuffix = filterArgs.value<std::string>(k_HistoName_Key);
 
   DataPath dataGroupPath;

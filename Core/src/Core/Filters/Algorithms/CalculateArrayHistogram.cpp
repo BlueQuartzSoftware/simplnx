@@ -33,62 +33,62 @@ public:
 
   void operator()() const
   {
-      static_assert(std::is_base_of_v<DataObject, DataArrayType>);
-      const DataArrayType& inputArray = dynamic_cast<const DataArrayType&>(m_InputArray);
-      auto end = inputArray.getSize();
+    static_assert(std::is_base_of_v<DataObject, DataArrayType>);
+    const DataArrayType& inputArray = dynamic_cast<const DataArrayType&>(m_InputArray);
+    auto end = inputArray.getSize();
 
-      // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }
-      float64 min = std::numeric_limits<float>::max();
-      float64 max = -1.0 * std::numeric_limits<float>::max();
-      if (std::get<0>(m_Range))
-      {
-          min = std::get<1>(m_Range);
-          max = std::get<2>(m_Range);
-      }
-      else
-      {
-          auto minMax = std::minmax_element(inputArray.begin(), inputArray.end());
-          min = (static_cast<float64>(*minMax.first) - 1);  // ensure upper limit encapsulates max value
-          max = (static_cast<float64>(*minMax.second) + 1); // ensure lower limit encapsulates min value
-      }
+    // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }
+    float64 min = std::numeric_limits<float>::max();
+    float64 max = -1.0 * std::numeric_limits<float>::max();
+    if(std::get<0>(m_Range))
+    {
+      min = std::get<1>(m_Range);
+      max = std::get<2>(m_Range);
+    }
+    else
+    {
+      auto minMax = std::minmax_element(inputArray.begin(), inputArray.end());
+      min = (static_cast<float64>(*minMax.first) - 1);  // ensure upper limit encapsulates max value
+      max = (static_cast<float64>(*minMax.second) + 1); // ensure lower limit encapsulates min value
+    }
 
-      const float64 increment = (max - min) / static_cast<float64>(m_NumBins);
-      if (m_NumBins == 1) // if one bin, just set the first element to total number of points
+    const float64 increment = (max - min) / static_cast<float64>(m_NumBins);
+    if(m_NumBins == 1) // if one bin, just set the first element to total number of points
+    {
+      m_Histogram[0] = max;
+      m_Histogram[1] = end;
+    }
+    else
+    {
+      size_t progCounter = 0;
+      for(usize i = 0; i < end; i++)
       {
-          m_Histogram[0] = max;
-          m_Histogram[1] = end;
+        if(progCounter > m_ProgIncrement)
+        {
+          m_Filter.updateThreadSafeProgress(progCounter);
+          progCounter = 0;
+        }
+        if(m_Filter.getCancel())
+        {
+          return;
+        }
+        const auto bin = std::floor((inputArray[i] - min) / increment);
+        if((bin >= 0) && (bin < m_NumBins))
+        {
+          m_Histogram[bin * 2 + 1]++;
+        }
+        else
+        {
+          m_Overflow++;
+        }
+        progCounter++;
       }
-      else
-      {
-          size_t progCounter = 0;
-          for (usize i = 0; i < end; i++)
-          {
-              if (progCounter > m_ProgIncrement)
-              {
-                  m_Filter.updateThreadSafeProgress(progCounter);
-                  progCounter = 0;
-              }
-              if (m_Filter.getCancel())
-              {
-                  return;
-              }
-              const auto bin = std::floor((inputArray[i] - min) / increment);
-              if ((bin >= 0) && (bin < m_NumBins))
-              {
-                  m_Histogram[bin * 2 + 1]++;
-              }
-              else
-              {
-                  m_Overflow++;
-              }
-              progCounter++;
-          }
-      }
+    }
 
-      for (int64 i = 0; i < m_NumBins; i++)
-      {
-          m_Histogram[(i * 2)] = min + (increment * (i + 1.0)); // load bin maximum into respective postion {(x, ), (x , ), ...}
-      }
+    for(int64 i = 0; i < m_NumBins; i++)
+    {
+      m_Histogram[(i * 2)] = min + (increment * (i + 1.0)); // load bin maximum into respective postion {(x, ), (x , ), ...}
+    }
   }
 
 private:
