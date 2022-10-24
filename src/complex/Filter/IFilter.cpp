@@ -96,8 +96,9 @@ Result<> ValidateParameter(std::string_view name, const AnyParameter& parameter,
 
   if(std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), arg.type()) == acceptedTypes.cend())
   {
-    throw std::invalid_argument(
-        fmt::format("Argument Type was not found in the parameter's accepted types\n  Filter='{}'\n  Parameter Name:'{}'\n  Argument Name='{}'", filter.humanName(), parameter->humanName(), name));
+    throw std::invalid_argument(fmt::format("A mismatch between the argument types for a parameter was detected. This can happen if the improper type is specified when creating a parameter "
+                                            "argument.\n  Filter='{}'\n  Parameter Name:'{}'\n  Argument Name='{}'",
+                                            filter.humanName(), parameter->humanName(), name));
   }
 
   switch(parameter->type())

@@ -25,19 +25,19 @@ public:
 
   // Parameter Keys
 
-  static inline constexpr StringLiteral k_GenerateTripleLines_Key = "GenerateTripleLines";
-  static inline constexpr StringLiteral k_FixProblemVoxels_Key = "FixProblemVoxels";
-  static inline constexpr StringLiteral k_GridGeometryDataPath_Key = "GridGeometryDataPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
+  static inline constexpr StringLiteral k_GenerateTripleLines_Key = "generate_triple_lines";
+  static inline constexpr StringLiteral k_FixProblemVoxels_Key = "fix_problem_voxels";
+  static inline constexpr StringLiteral k_GridGeometryDataPath_Key = "grid_geometry_data_path";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
 
-  static inline constexpr StringLiteral k_TriangleGeometryName_Key = "TriangleGeometryName";
+  static inline constexpr StringLiteral k_TriangleGeometryName_Key = "triangle_geometry_name";
 
-  static inline constexpr StringLiteral k_VertexDataGroupName_Key = "VertexDataGroupName";
-  static inline constexpr StringLiteral k_NodeTypesArrayName_Key = "NodeTypesArrayName";
+  static inline constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
+  static inline constexpr StringLiteral k_NodeTypesArrayName_Key = "node_types_array_name";
 
-  static inline constexpr StringLiteral k_FaceDataGroupName_Key = "FaceDataGroupName";
-  static inline constexpr StringLiteral k_FaceLabelsArrayName_Key = "FaceLabelsArrayName";
+  static inline constexpr StringLiteral k_FaceDataGroupName_Key = "face_data_group_name";
+  static inline constexpr StringLiteral k_FaceLabelsArrayName_Key = "face_labels_array_name";
   static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName_Key = "face_feature_attribute_matrix_name";
 
   /**

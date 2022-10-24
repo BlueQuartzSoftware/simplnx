@@ -27,7 +27,7 @@ TEST_CASE("ComplexCore::FindFeaturePhasesFilter(Valid Parameters)", "[ComplexCor
     FindFeaturePhasesFilter ffpFilter;
     Arguments args;
     args.insert(FindFeaturePhasesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellPhasesPath));
-    args.insert(FindFeaturePhasesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+    args.insert(FindFeaturePhasesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
     args.insert(FindFeaturePhasesFilter::k_CellFeaturesAttributeMatrixPath_Key, std::make_any<DataPath>(cellFeatureDataPath));
     args.insert(FindFeaturePhasesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<std::string>(featurePhasesName));
 

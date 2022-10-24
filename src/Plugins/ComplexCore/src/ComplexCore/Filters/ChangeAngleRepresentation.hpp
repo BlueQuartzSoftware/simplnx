@@ -24,8 +24,8 @@ public:
   ChangeAngleRepresentation& operator=(ChangeAngleRepresentation&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ConversionType_Key = "ConversionType";
-  static inline constexpr StringLiteral k_AnglesArrayPath_Key = "AnglesArrayPath";
+  static inline constexpr StringLiteral k_ConversionType_Key = "conversion_type";
+  static inline constexpr StringLiteral k_AnglesArrayPath_Key = "angles_array_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -105,7 +105,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   auto pGenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
   auto pFixProblemVoxelsValue = filterArgs.value<bool>(k_FixProblemVoxels_Key);
   auto pGridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryName_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
@@ -195,7 +195,7 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
   inputs.pGenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
   inputs.pFixProblemVoxels = filterArgs.value<bool>(k_FixProblemVoxels_Key);
   inputs.pGridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
-  inputs.pFeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputs.pFeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputs.pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   inputs.pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryName_Key);
   inputs.pVertexGroupDataPath = inputs.pTriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_VertexDataGroupName_Key));

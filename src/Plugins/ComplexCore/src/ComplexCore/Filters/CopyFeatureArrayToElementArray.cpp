@@ -100,7 +100,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
                                                                        const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedFeatureArrayPathValue = filterArgs.value<DataPath>(k_SelectedFeatureArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
   const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);
@@ -126,7 +126,7 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
                                                      const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedFeatureArrayPathValue = filterArgs.value<DataPath>(k_SelectedFeatureArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
   const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);

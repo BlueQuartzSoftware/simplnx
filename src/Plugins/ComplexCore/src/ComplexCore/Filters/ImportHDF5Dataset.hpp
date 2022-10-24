@@ -26,7 +26,7 @@ public:
   ImportHDF5Dataset& operator=(ImportHDF5Dataset&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImportHDF5File_Key = "ImportHDF5File";
+  static inline constexpr StringLiteral k_ImportHDF5File_Key = "import_hd_f5_file";
 
   /**
    * @brief Returns the name of the filter.

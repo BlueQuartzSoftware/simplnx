@@ -72,7 +72,7 @@ IFilter::PreflightResult FindFeaturePhasesFilter::preflightImpl(const DataStruct
                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellFeatureAMPathValue = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
   auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayPath_Key));
 
@@ -103,7 +103,7 @@ Result<> FindFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, cons
                                               const std::atomic_bool& shouldCancel) const
 {
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellFeatureAMPathValue = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
   auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayPath_Key));
 

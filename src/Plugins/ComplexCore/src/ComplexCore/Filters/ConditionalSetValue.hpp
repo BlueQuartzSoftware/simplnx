@@ -25,9 +25,9 @@ public:
   ConditionalSetValue& operator=(ConditionalSetValue&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ReplaceValue_Key = "ReplaceValue";
-  static inline constexpr StringLiteral k_ConditionalArrayPath_Key = "ConditionalArrayPath";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
+  static inline constexpr StringLiteral k_ReplaceValue_Key = "replace_value";
+  static inline constexpr StringLiteral k_ConditionalArrayPath_Key = "conditional_array_path";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
 
   /**
    * @brief Returns the name of the filter.

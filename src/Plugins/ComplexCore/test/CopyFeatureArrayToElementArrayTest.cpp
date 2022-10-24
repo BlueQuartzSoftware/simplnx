@@ -26,7 +26,7 @@ TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parame
 
   // Create default Parameters for the filter.
   args.insertOrAssign(CopyFeatureArrayToElementArray::k_SelectedFeatureArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyFeatureArrayToElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(CopyFeatureArrayToElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
@@ -82,7 +82,7 @@ TEMPLATE_LIST_TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Valid filt
   Arguments args;
 
   args.insertOrAssign(CopyFeatureArrayToElementArray::k_SelectedFeatureArrayPath_Key, std::make_any<DataPath>(DataPath({k_FeatureDataArrayName})));
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_CellFeatureIdsArrayName})));
+  args.insertOrAssign(CopyFeatureArrayToElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_CellFeatureIdsArrayName})));
   args.insertOrAssign(CopyFeatureArrayToElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(DataPath({k_CellTempArrayName})));
 
   // Preflight the filter

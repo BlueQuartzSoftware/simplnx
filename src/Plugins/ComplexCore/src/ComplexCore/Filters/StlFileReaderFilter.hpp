@@ -26,11 +26,11 @@ public:
   StlFileReaderFilter& operator=(StlFileReaderFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_StlFilePath_Key = "StlFilePath";
-  static inline constexpr StringLiteral k_GeometryDataPath_Key = "GeometryDataPath";
+  static inline constexpr StringLiteral k_StlFilePath_Key = "stl_file_path";
+  static inline constexpr StringLiteral k_GeometryDataPath_Key = "geometry_data_path";
 
-  static inline constexpr StringLiteral k_FaceGroupDataPath_Key = "FaceDataPath";
-  static inline constexpr StringLiteral k_FaceNormalsDataPath_Key = "FaceNormalsDataPath";
+  static inline constexpr StringLiteral k_FaceGroupDataPath_Key = "face_data_path";
+  static inline constexpr StringLiteral k_FaceNormalsDataPath_Key = "face_normals_data_path";
   static inline constexpr StringLiteral k_ScaleOutput = "ScaleOutput";
   static inline constexpr StringLiteral k_ScaleFactor = "ScaleFactor";
 
