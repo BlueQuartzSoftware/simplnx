@@ -1,0 +1,342 @@
+#include <catch2/catch.hpp>
+
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include "ComplexCore/Filters/CombineAttributeArraysFilter.hpp"
+
+using namespace complex;
+
+namespace
+{
+const std::string k_Array1("Array_1");
+const std::string k_Array2("Array_2");
+const std::string k_Array3("Array_3");
+const std::string k_InvalidArrayType("Invalid_Array_Type");
+const std::string k_OutputArray("OutputArray");
+} // namespace
+
+template <typename T>
+DataStructure CreateTestDataStructure()
+{
+  using DataArrayType = DataArray<T>;
+
+  DataStructure dataStructure;
+
+  DataArrayType* array1 = complex::UnitTest::CreateTestDataArray<T>(dataStructure, k_Array1, {10ULL, 10ULL}, {1}, 0);
+  array1->fill(static_cast<T>(1));
+  DataArrayType* array2 = complex::UnitTest::CreateTestDataArray<T>(dataStructure, k_Array2, {10ULL, 10ULL}, {2}, 0);
+  array2->fill(static_cast<T>(2));
+  DataArrayType* array3 = complex::UnitTest::CreateTestDataArray<T>(dataStructure, k_Array3, {10ULL, 10ULL}, {3}, 0);
+  array3->fill(static_cast<T>(3));
+
+  return dataStructure;
+}
+
+TEST_CASE("Core::CombineAttributeArrays: Instantiation and Parameter Check", "[Core][CombineAttributeArrays]")
+{
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+
+  DataStructure dataStructure = CreateTestDataStructure<uint8_t>();
+  Arguments args;
+  CombineAttributeArraysFilter filter;
+
+  MultiArraySelectionParameter::ValueType inputArrays = {DataPath({k_Array1}), DataPath({k_Array2}), DataPath({k_Array3})};
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Invalid because no arrays are selected
+  args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  // Invalid because no output array is set
+  args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(""));
+  preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  // Invalid because mismatch array types
+  Float32Array* array3 = complex::UnitTest::CreateTestDataArray<float32>(dataStructure, k_InvalidArrayType, {10ULL, 10ULL}, {3}, 0);
+  array3->fill(static_cast<float32>(3));
+  inputArrays.push_back(DataPath({k_InvalidArrayType}));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+  args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+  preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  // Invalid because mismatch array types
+  dataStructure = CreateTestDataStructure<uint8>();                                                                             // Reset the DataStructure
+  UInt8Array* array4 = complex::UnitTest::CreateTestDataArray<uint8>(dataStructure, k_InvalidArrayType, {5ULL, 55ULL}, {3}, 0); // Non-matching tuple shape
+  array4->fill(static_cast<uint8>(3));
+  preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
+
+template <typename T>
+Result<> ValidateFilterOutput(const DataStructure& dataStructure)
+{
+  using DataArrayType = DataArray<T>;
+
+  auto& output = dataStructure.template getDataRefAs<DataArrayType>(DataPath({k_OutputArray}));
+  size_t numTuples = output.getNumberOfTuples();
+  REQUIRE(numTuples == 100);
+
+  size_t numOutputComps = output.getNumberOfComponents();
+  REQUIRE(numOutputComps == 6);
+
+  MultiArraySelectionParameter::ValueType inputDataPaths = {DataPath({k_Array1}), DataPath({k_Array2}), DataPath({k_Array3})};
+  size_t compOffset = 0;
+  for(const auto& inputDataPath : inputDataPaths)
+  {
+    auto& inputArray = dataStructure.template getDataRefAs<DataArrayType>(inputDataPath);
+    size_t numInputComps = inputArray.getNumberOfComponents();
+    for(size_t tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+    {
+      for(size_t compIndex = 0; compIndex < numInputComps; compIndex++)
+      {
+        REQUIRE(output[tupleIndex * numOutputComps + compIndex + compOffset] == inputArray[tupleIndex * numInputComps + compIndex]);
+      }
+    }
+    compOffset += numInputComps;
+  }
+
+  return {};
+}
+
+TEST_CASE("Core::CombineAttributeArrays: Algorithm Validation", "[Core][CombineAttributeArrays]")
+{
+  MultiArraySelectionParameter::ValueType inputArrays = {DataPath({k_Array1}), DataPath({k_Array2}), DataPath({k_Array3})};
+
+  SECTION("UINT8")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<uint8_t>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+
+    Result<> validationResult = ValidateFilterOutput<uint8_t>(dataStructure);
+    COMPLEX_RESULT_REQUIRE_VALID(validationResult)
+  }
+
+  SECTION("INT8")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<int8_t>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+
+  SECTION("UINT16")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<uint16_t>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+
+  SECTION("INT16")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<int16_t>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+  SECTION("UINT32")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<uint32_t>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+
+  SECTION("INT32")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<int32_t>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+  SECTION("UINT64")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<uint64_t>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+
+  SECTION("INT64")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<int8_t>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+
+  SECTION("FLOAT32")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<float32>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+
+  SECTION("DOUBLE")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<double>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+
+  SECTION("BOOL")
+  {
+    DataStructure dataStructure = CreateTestDataStructure<bool>();
+    Arguments args;
+    CombineAttributeArraysFilter filter;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(CombineAttributeArraysFilter::k_NormalizeData_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_MoveValues_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputArrays));
+    args.insertOrAssign(CombineAttributeArraysFilter::k_StackedDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_OutputArray));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  }
+}

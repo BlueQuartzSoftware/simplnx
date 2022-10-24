@@ -544,13 +544,28 @@ COMPLEX_EXPORT Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, 
 COMPLEX_EXPORT Result<> CheckValueConverts(const std::string& value, NumericType numericType);
 
 /**
+ * @brief This method will ensure that all the arrays are of the same type
+ * @param dataStructure DataStructure that contains the data arrays
+ * @param dataArrayPaths  The Paths to check
+ * @return
+ */
+COMPLEX_EXPORT bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths);
+
+/**
+ * @brief This method will ensure that all the arrays have the same tuple count
+ * @param dataStructure DataStructure that contains the data arrays
+ * @param dataArrayPaths  The Paths to check
+ * @return
+ */
+COMPLEX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths);
+
+/**
  * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected DataArray
  *
  * @param value The string value that is to be parsed
  * @param inputDataArray The DataArray that the value would be inserted into.
  * @return
  */
-COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObject& inputDataArray);
 
 COMPLEX_EXPORT void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape);
 

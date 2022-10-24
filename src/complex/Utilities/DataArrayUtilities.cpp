@@ -1,6 +1,9 @@
 #include "DataArrayUtilities.hpp"
 
+#include "complex/Common/Types.hpp"
 #include "complex/Common/TypesUtility.hpp"
+
+#include <set>
 
 using namespace complex;
 
@@ -106,6 +109,30 @@ Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObjec
   }
 
   return {MakeErrorResult(-259, fmt::format("Input DataObject could not be cast to any primitive type."))};
+}
+
+//-----------------------------------------------------------------------------
+bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths)
+{
+  std::set<complex::DataType> types;
+  for(const auto& dataPath : dataArrayPaths)
+  {
+    const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
+    types.insert(dataArray->getDataType());
+  }
+  return types.size() == 1;
+}
+
+//-----------------------------------------------------------------------------
+bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths)
+{
+  std::set<size_t> types;
+  for(const auto& dataPath : dataArrayPaths)
+  {
+    const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
+    types.insert(dataArray->getNumberOfTuples());
+  }
+  return types.size() == 1;
 }
 
 //-----------------------------------------------------------------------------
