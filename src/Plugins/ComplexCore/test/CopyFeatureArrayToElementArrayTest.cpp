@@ -11,8 +11,6 @@ using namespace complex;
 
 namespace
 {
-const int k_EmptyArrayPath = -201;
-
 const std::string k_CellFeatureIdsArrayName("FeatureIds");
 const std::string k_CellTempArrayName("Cell Temperature");
 const std::string k_FeatureDataArrayName("Feature Temperature");
@@ -36,7 +34,7 @@ TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parame
   REQUIRE(preflightResult.outputActions.errors().size() == 3);
   for(const Error& err : preflightResult.outputActions.errors())
   {
-    REQUIRE(err.code == k_EmptyArrayPath);
+    REQUIRE(err.code == complex::FilterParameter::Constants::k_Validate_Empty_Value);
   }
 
   // Execute the filter and check the result
@@ -45,7 +43,7 @@ TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parame
   REQUIRE(executeResult.result.errors().size() == 3);
   for(const Error& err : executeResult.result.errors())
   {
-    REQUIRE(err.code == k_EmptyArrayPath);
+    REQUIRE(err.code == complex::FilterParameter::Constants::k_Validate_Empty_Value);
   }
 }
 
