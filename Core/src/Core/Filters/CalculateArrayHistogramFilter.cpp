@@ -59,7 +59,8 @@ Parameters CalculateArrayHistogramFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Set Up"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_NewDataGroup_Key, "Create New DataGroup for Histograms", "", true));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupName_Key, "New DataGroup Path", "", DataPath{}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataGroupName_Key, "Output DataGroup Path", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataGroupName_Key, "Output DataGroup Path", "", DataPath{},
+                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<StringParameter>(k_HistoName_Key, "Suffix for created Histograms", "", " Histogram"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UserDefinedRange_Key, k_MinRange_Key, true);
