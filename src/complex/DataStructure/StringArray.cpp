@@ -1,4 +1,5 @@
 #include "StringArray.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 
 #include "fmt/format.h"
 
@@ -42,6 +43,12 @@ StringArray::StringArray(DataStructure& dataStructure, std::string name)
 {
 }
 
+StringArray::StringArray(DataStructure& dataStructure, std::string name, collection_type strings)
+: IArray(dataStructure, std::move(name))
+, m_Strings(std::move(strings))
+{
+}
+
 StringArray::StringArray(DataStructure& dataStructure, std::string name, IdType importId, collection_type strings)
 : IArray(dataStructure, std::move(name), importId)
 , m_Strings(std::move(strings))
@@ -76,9 +83,20 @@ DataObject* StringArray::shallowCopy()
   return new StringArray(*this);
 }
 
-DataObject* StringArray::deepCopy()
+std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
 {
-  return new StringArray(*getDataStructure(), getName(), getId(), m_Strings);
+  auto& dataStruct = getDataStructureRef();
+  if(dataStruct.containsData(copyPath))
+  {
+    return nullptr;
+  }
+  // Don't construct with id since it will get created when inserting into data structure
+  const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), m_Strings));
+  if(dataStruct.insert(copy, copyPath.getParent()))
+  {
+    return copy;
+  }
+  return nullptr;
 }
 
 size_t StringArray::size() const

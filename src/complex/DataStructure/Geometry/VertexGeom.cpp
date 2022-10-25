@@ -33,6 +33,11 @@ DataObject::Type VertexGeom::getDataObjectType() const
   return DataObject::Type::VertexGeom;
 }
 
+BaseGroup::GroupType VertexGeom::getGroupType() const
+{
+  return GroupType::VertexGeom;
+}
+
 VertexGeom* VertexGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, std::move(name)));
@@ -68,9 +73,44 @@ DataObject* VertexGeom::shallowCopy()
   return new VertexGeom(*this);
 }
 
-DataObject* VertexGeom::deepCopy()
+std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 {
-  return new VertexGeom(*this);
+  auto& dataStruct = getDataStructureRef();
+  // Don't construct with id since it will get created when inserting into data structure
+  auto copy = std::shared_ptr<VertexGeom>(new VertexGeom(dataStruct, copyPath.getTargetName()));
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+
+    if(m_VertexAttributeMatrixId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getVertexAttributeMatrix()->getName());
+      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      if(!isParentOf(getVertexAttributeMatrix()))
+      {
+        const auto dataObjCopy = getVertexAttributeMatrix()->deepCopy(copiedDataPath);
+      }
+      copy->m_VertexAttributeMatrixId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(m_VertexDataArrayId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getVertices()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(!isParentOf(getVertices()))
+      {
+        const auto dataObjCopy = getVertices()->deepCopy(copiedDataPath);
+      }
+      copy->m_VertexDataArrayId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
+    {
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
+    }
+    return copy;
+  }
+  return nullptr;
 }
 
 IGeometry::StatusCode VertexGeom::findElementSizes()
@@ -79,7 +119,7 @@ IGeometry::StatusCode VertexGeom::findElementSizes()
   // so simply splat 0 over the sizes array
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
 
-  Float32Array* vertexSizes = DataArray<float32>::Create(getDataStructureRef(), "Voxel Sizes", std::move(dataStore), getId());
+  Float32Array* vertexSizes = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
   if(vertexSizes == nullptr)
   {
     return -1;

@@ -53,4 +53,6 @@ COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const D
  */
 COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths = {});
 
+COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths = {});
+
 } // namespace complex

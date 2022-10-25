@@ -1,9 +1,10 @@
 #include "CopyDataGroup.hpp"
 
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/Actions/CopyGroupAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
 {
@@ -34,8 +35,8 @@ std::string CopyDataGroup::humanName() const
 Parameters CopyDataGroup::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataPath_Key, "DataGroup to copy", "DataPath to DataGroup", DataPath{}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewPath_Key, "Copied DataGroup", "DataPath to new DataGroup", DataPath{}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataPath_Key, "Group to copy", "DataPath to BaseGroup", DataPath{}, BaseGroup::GetAllGroupTypes()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewPath_Key, "Copied Group", "DataPath to new BaseGroup", DataPath{}));
   return params;
 }
 
@@ -49,7 +50,17 @@ IFilter::PreflightResult CopyDataGroup::preflightImpl(const DataStructure& data,
   auto dataArrayPath = args.value<DataPath>(k_DataPath_Key);
   auto newDataPath = args.value<DataPath>(k_NewPath_Key);
 
-  auto action = std::make_unique<CopyGroupAction>(dataArrayPath, newDataPath);
+  std::vector<DataPath> allCreatedPaths = {newDataPath};
+  auto pathsToBeCopied = GetAllChildDataPathsRecursive(data, dataArrayPath);
+  if(pathsToBeCopied.has_value())
+  {
+    for(const auto& sourcePath : pathsToBeCopied.value())
+    {
+      std::string createdPathName = complex::StringUtilities::replace(sourcePath.toString(), dataArrayPath.getTargetName(), newDataPath.getTargetName());
+      allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+    }
+  }
+  auto action = std::make_unique<CopyGroupAction>(dataArrayPath, newDataPath, allCreatedPaths);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));

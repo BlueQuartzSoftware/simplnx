@@ -26,15 +26,16 @@ DataMap::DataMap(DataMap&& other) noexcept
 
 DataMap::~DataMap() = default;
 
-DataMap DataMap::deepCopy() const
+DataMap DataMap::deepCopy(const DataPath& parentCopyPath) const
 {
   DataMap dataMap(*this);
 
-  auto keys = getKeys();
+  const auto keys = getKeys();
   for(auto& key : keys)
   {
-    DataObject* copy = m_Map.at(key)->deepCopy();
-    dataMap.m_Map[key] = std::shared_ptr<DataObject>(copy);
+    const auto& dataObj = m_Map.at(key);
+    const auto copy = dataObj->deepCopy(parentCopyPath.createChildPath(dataObj->getName()));
+    dataMap.m_Map[key] = copy;
   }
   return dataMap;
 }

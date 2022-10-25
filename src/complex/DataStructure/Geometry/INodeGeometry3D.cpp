@@ -202,14 +202,14 @@ H5::ErrorType INodeGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureW
 INodeGeometry3D::SharedQuadList* INodeGeometry3D::createSharedQuadList(usize numQuads)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numQuads}, std::vector<usize>{4}, 0);
-  SharedQuadList* quads = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Quad List", std::move(dataStore), getId());
+  SharedQuadList* quads = DataArray<MeshIndexType>::Create(*getDataStructure(), k_QuadFaceList, std::move(dataStore), getId());
   return quads;
 }
 
 INodeGeometry3D::SharedTriList* INodeGeometry3D::createSharedTriList(usize numTris)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numTris}, std::vector<usize>{3}, 0);
-  SharedTriList* triangles = DataArray<MeshIndexType>::Create(*getDataStructure(), "Shared Tri List", std::move(dataStore), getId());
+  SharedTriList* triangles = DataArray<MeshIndexType>::Create(*getDataStructure(), k_TriangleFaceList, std::move(dataStore), getId());
   return triangles;
 }
 

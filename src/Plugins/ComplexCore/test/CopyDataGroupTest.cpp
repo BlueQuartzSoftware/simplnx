@@ -25,6 +25,9 @@ TEST_CASE("ComplexCore::CopyDataGroup(Instantiate)", "[ComplexCore][CopyDataGrou
 
   auto result = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
+
+  DataGroup* copiedDataGroup = ds.getDataAs<DataGroup>(k_CopyPath);
+  REQUIRE(copiedDataGroup != nullptr);
 }
 
 TEST_CASE("ComplexCore::CopyDataGroup(Invalid Parameters)", "[ComplexCore][CopyDataGroup]")

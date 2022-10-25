@@ -27,6 +27,8 @@ public:
   using SharedHexList = MeshIndexArrayType;
   using ElementDynamicList = DynamicListArray<uint16, MeshIndexType>;
 
+  static inline constexpr StringLiteral k_VoxelSizes = "Voxel Sizes";
+
   enum class Type : uint32
   {
     Image,

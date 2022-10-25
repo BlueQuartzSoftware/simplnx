@@ -143,9 +143,15 @@ public:
    * deleting the returned value.
    * @return DataObject*
    */
-  DataObject* deepCopy() override
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
-    DynamicListArray* copy = new DynamicListArray(*this);
+    auto& dataStruct = getDataStructureRef();
+    if(dataStruct.containsData(copyPath))
+    {
+      return nullptr;
+    }
+    // Don't construct with id since it will get created when inserting into data structure
+    std::shared_ptr<DynamicListArray<T, K>> copy = std::shared_ptr<DynamicListArray<T, K>>(new DynamicListArray<T, K>(dataStruct, copyPath.getTargetName()));
     std::vector<T> linkCounts(m_Size, 0);
 
     // Figure out how many entries, and for each entry, how many cells
@@ -161,7 +167,11 @@ public:
       ElementList& elementList = getElementList(ptId);
       copy->setElementList(ptId, elementList);
     }
-    return copy;
+    if(dataStruct.insert(copy, copyPath.getParent()))
+    {
+      return copy;
+    }
+    return nullptr;
   }
 
   /**

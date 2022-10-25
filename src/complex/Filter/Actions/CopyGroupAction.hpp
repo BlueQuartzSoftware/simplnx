@@ -8,12 +8,12 @@ namespace complex
 /**
  * @brief Action for copying a BaseGroup in a DataStructure
  */
-class COMPLEX_EXPORT CopyGroupAction : public IDataAction
+class COMPLEX_EXPORT CopyGroupAction : public IDataCreationAction
 {
 public:
   CopyGroupAction() = delete;
 
-  CopyGroupAction(const DataPath& path, const DataPath& newPath);
+  CopyGroupAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths);
 
   ~CopyGroupAction() noexcept override;
 
@@ -42,19 +42,26 @@ public:
    */
   const DataPath& newPath() const;
 
+  /**
+   * @brief Returns all of the DataPaths to be created.
+   * @return std::vector<DataPath>
+   */
+  std::vector<DataPath> getAllCreatedPaths() const override;
+
 private:
   /**
-   * @brief Recursively copies data
+   * @brief Recursively copies all the data in (and including) the target path
    * @param dataStructure
    * @param targetPath
    * @param copyPath
    * @return std::shared_ptr<DataObject>
    */
-  std::shared_ptr<DataObject> copyData(DataStructure& dataStructure, const DataPath& targetPath, const DataPath& copyPath) const;
+  static std::shared_ptr<DataObject> copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath);
 
   ////////////
   // Variables
   DataPath m_Path;
   DataPath m_NewPath;
+  std::vector<DataPath> m_AllCreatedPaths;
 };
 } // namespace complex

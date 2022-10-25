@@ -11,7 +11,6 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 #include <any>
 
 using namespace complex;
@@ -73,7 +72,8 @@ Parameters ExampleFilter2::parameters() const
   params.insert(std::make_unique<DynamicTableParameter>(k_Param13, "DynamicTableParameter", "DynamicTableParameter Example Help Text", defaultTable, tableInfo));
 
   // These should show up under the "Required Objects" Section in the GUI
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroupSelectionParameter", "Example data group selection help text", DataPath{}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroupSelectionParameter", "Example data group selection help text", DataPath{},
+                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPathSelectionParameter", "Example data path selection help text", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "Example array selection help text", ArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_Param11, "GeometrySelectionParameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));

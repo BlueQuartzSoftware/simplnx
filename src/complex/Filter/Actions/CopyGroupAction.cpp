@@ -2,72 +2,45 @@
 
 #include <fmt/core.h>
 
-#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 
 using namespace complex;
 
 namespace complex
 {
-CopyGroupAction::CopyGroupAction(const DataPath& path, const DataPath& newPath)
-: m_Path(path)
+CopyGroupAction::CopyGroupAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths)
+: IDataCreationAction(newPath)
+, m_Path(path)
 , m_NewPath(newPath)
+, m_AllCreatedPaths(allCreatedPaths)
 {
 }
 
 CopyGroupAction::~CopyGroupAction() noexcept = default;
 
-std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructure, const DataPath& targetPath, const DataPath& copyPath) const
+std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
 {
-  auto* data = dataStructure.getData(targetPath);
-
-  auto copy = std::shared_ptr<DataObject>(data->deepCopy());
-  copy->rename(newPath().getTargetName());
-  dataStructure.insert(copy, newPath());
-
-  if(auto* groupData = dynamic_cast<BaseGroup*>(data))
-  {
-    for(const auto& [id, ptr] : *groupData)
-    {
-      if(ptr == nullptr)
-      {
-        continue;
-      }
-
-      std::string childName = ptr->getName();
-      auto childPath = targetPath.createChildPath(childName);
-      auto childCopyPath = copyPath.createChildPath(childName);
-
-      auto childData = copyData(dataStructure, childPath, childCopyPath);
-      dataStructure.insert(childData, childCopyPath);
-    }
-  }
-
+  auto* data = dataStructure.getData(sourcePath);
+  std::shared_ptr<DataObject> copy = data->deepCopy(destPath);
   return copy;
 }
 
 Result<> CopyGroupAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  auto* baseGroup = dataStructure.getDataAs<BaseGroup>(path());
-  if(baseGroup == nullptr)
+  if(dataStructure.getDataAs<BaseGroup>(path()) == nullptr)
   {
-    std::string ss = fmt::format("Cannot find group at path '{}'", path().toString());
-    return MakeErrorResult(-5, ss);
+    return MakeErrorResult(-5, fmt::format("Cannot find group at path '{}'", path().toString()));
+  }
+  if(dataStructure.getData(newPath()) != nullptr)
+  {
+    return MakeErrorResult(-6, fmt::format("Data already exists at path '{}'", newPath().toString()));
   }
 
-  auto* newTargetData = dataStructure.getData(newPath());
-  if(newTargetData != nullptr)
+  if(copyData(dataStructure, path(), newPath()) == nullptr)
   {
-    std::string ss = fmt::format("Data already exists at path '{}'", newPath().toString());
-    return MakeErrorResult(-6, ss);
-  }
-
-  auto newData = copyData(dataStructure, path(), newPath());
-  if(newData == nullptr)
-  {
-    std::string ss = fmt::format("Failed to copy data from '{}' to '{}'", path().toString(), newPath().toString());
-    return MakeErrorResult(-7, ss);
+    return MakeErrorResult(-7, fmt::format("Failed to copy data from '{}' to '{}'", path().toString(), newPath().toString()));
   }
 
   return {};
@@ -81,5 +54,10 @@ const DataPath& CopyGroupAction::path() const
 const DataPath& CopyGroupAction::newPath() const
 {
   return m_NewPath;
+}
+
+std::vector<DataPath> CopyGroupAction::getAllCreatedPaths() const
+{
+  return m_AllCreatedPaths;
 }
 } // namespace complex

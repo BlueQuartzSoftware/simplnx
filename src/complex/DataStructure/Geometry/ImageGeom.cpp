@@ -8,6 +8,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 
@@ -29,6 +30,11 @@ IGeometry::Type ImageGeom::getGeomType() const
 DataObject::Type ImageGeom::getDataObjectType() const
 {
   return DataObject::Type::ImageGeom;
+}
+
+BaseGroup::GroupType ImageGeom::getGroupType() const
+{
+  return GroupType::ImageGeom;
 }
 
 ImageGeom* ImageGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
@@ -61,9 +67,36 @@ DataObject* ImageGeom::shallowCopy()
   return new ImageGeom(*this);
 }
 
-DataObject* ImageGeom::deepCopy()
+std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
 {
-  return new ImageGeom(*this);
+  auto& dataStruct = getDataStructureRef();
+  // Don't construct with id since it will get created when inserting into data structure
+  auto copy = std::shared_ptr<ImageGeom>(new ImageGeom(dataStruct, copyPath.getTargetName()));
+  copy->setOrigin(m_Origin);
+  copy->setSpacing(m_Spacing);
+  copy->setDimensions(m_Dimensions);
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+
+    if(m_CellDataId.has_value())
+    {
+      const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
+      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      if(!isParentOf(getCellData()))
+      {
+        const auto cellDataCopy = getCellData()->deepCopy(copiedCellDataPath);
+      }
+      copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
+    }
+
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
+    {
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
+    }
+    return copy;
+  }
+  return nullptr;
 }
 
 FloatVec3 ImageGeom::getSpacing() const
@@ -125,7 +158,7 @@ IGeometry::StatusCode ImageGeom::findElementSizes()
   }
   float32 initValue = res[0] * res[1] * res[2];
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, initValue);
-  auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(dataStore), getId());
+  auto voxelSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
   m_ElementSizesId = voxelSizes->getId();
   return 1;
 }

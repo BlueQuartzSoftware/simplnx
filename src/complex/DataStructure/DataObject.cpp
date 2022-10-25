@@ -4,6 +4,7 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -198,6 +199,53 @@ Metadata& DataObject::getMetadata()
 const Metadata& DataObject::getMetadata() const
 {
   return m_Metadata;
+}
+
+bool DataObject::hasParent(const DataPath& parentPath) const
+{
+  const auto dataPaths = getDataPaths();
+  const auto originalCellDataPathIt =
+      std::find_if(dataPaths.begin(), dataPaths.end(), [parentPath](const DataPath& path) { return StringUtilities::contains(path.toString(), parentPath.toString()); });
+  return originalCellDataPathIt != dataPaths.end();
+}
+
+std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Type>& dataObjectTypes)
+{
+  static const std::map<Type, std::string> k_TypeToStringMap = {{Type::DataObject, "DataObject"},
+                                                                {Type::DynamicListArray, "DynamicListArray"},
+                                                                {Type::ScalarData, "ScalarData"},
+                                                                {Type::BaseGroup, "BaseGroup"},
+                                                                {Type::AbstractMontage, "AbstractMontage"},
+                                                                {Type::DataGroup, "DataGroup"},
+                                                                {Type::AttributeMatrix, "AttributeMatrix"},
+                                                                {Type::IDataArray, "IDataArray"},
+                                                                {Type::DataArray, "DataArray"},
+                                                                {Type::IGeometry, "IGeometry"},
+                                                                {Type::IGridGeometry, "IGridGeometry"},
+                                                                {Type::RectGridGeom, "RectGridGeom"},
+                                                                {Type::ImageGeom, "ImageGeom"},
+                                                                {Type::INodeGeometry0D, "INodeGeometry0D"},
+                                                                {Type::VertexGeom, "VertexGeom"},
+                                                                {Type::INodeGeometry1D, "INodeGeometry1D"},
+                                                                {Type::EdgeGeom, "EdgeGeom"},
+                                                                {Type::INodeGeometry2D, "INodeGeometry2D"},
+                                                                {Type::QuadGeom, "QuadGeom"},
+                                                                {Type::TriangleGeom, "TriangleGeom"},
+                                                                {Type::INodeGeometry3D, "INodeGeometry3D"},
+                                                                {Type::HexahedralGeom, "HexahedralGeom"},
+                                                                {Type::TetrahedralGeom, "TetrahedralGeom"},
+                                                                {Type::INeighborList, "INeighborList"},
+                                                                {Type::NeighborList, "NeighborList"},
+                                                                {Type::StringArray, "StringArray"},
+                                                                {Type::Unknown, "Unknown"},
+                                                                {Type::Any, "Any"}};
+
+  std::set<std::string> stringValues;
+  for(auto objType : dataObjectTypes)
+  {
+    stringValues.insert(k_TypeToStringMap.at(objType));
+  }
+  return stringValues;
 }
 
 void DataObject::addParent(BaseGroup* parent)

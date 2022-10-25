@@ -149,7 +149,7 @@ public:
    * @brief Returns a deep copy of the DataObject.
    * @return DataObject*
    */
-  virtual DataObject* deepCopy() = 0;
+  virtual std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) = 0;
 
   /**
    * @brief Returns a shallow copy of the DataObject.
@@ -241,6 +241,12 @@ public:
   const Metadata& getMetadata() const;
 
   /**
+   * @brief Returns true if this DataObject has the given parentPath as a parent
+   * @return bool
+   */
+  bool hasParent(const DataPath& parentPath) const;
+
+  /**
    * @brief Writes the DataObject to the target HDF5 group.
    * @param dataStructureWriter
    * @param parentGroupWriter
@@ -248,6 +254,13 @@ public:
    * @return H5::ErrorType
    */
   virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable = true) const = 0;
+
+  /**
+   * @brief Converts the set of DataObject Types to strings.
+   * @param dataObjectTypes
+   * @return std::set<std::string>
+   */
+  static std::set<std::string> StringListFromDataObjectType(const std::set<Type>& dataObjectTypes);
 
 protected:
   /**

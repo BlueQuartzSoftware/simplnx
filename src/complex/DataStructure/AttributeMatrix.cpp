@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/IArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeWriter.hpp"
@@ -33,6 +34,11 @@ DataObject::Type AttributeMatrix::getDataObjectType() const
   return Type::AttributeMatrix;
 }
 
+BaseGroup::GroupType AttributeMatrix::getGroupType() const
+{
+  return GroupType::AttributeMatrix;
+}
+
 AttributeMatrix* AttributeMatrix::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(ds, std::move(name)));
@@ -53,9 +59,18 @@ AttributeMatrix* AttributeMatrix::Import(DataStructure& ds, std::string name, Id
   return data.get();
 }
 
-DataObject* AttributeMatrix::deepCopy()
+std::shared_ptr<DataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
 {
-  return new AttributeMatrix(*this);
+  auto& dataStruct = getDataStructureRef();
+  // Don't construct with id since it will get created when inserting into data structure
+  auto copy = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStruct, copyPath.getTargetName()));
+  copy->setShape(m_TupleShape);
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+    return copy;
+  }
+  return nullptr;
 }
 
 DataObject* AttributeMatrix::shallowCopy()

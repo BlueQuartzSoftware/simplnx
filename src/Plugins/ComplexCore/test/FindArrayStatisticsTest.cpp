@@ -6,13 +6,8 @@ namespace fs = std::filesystem;
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/Dream3dImportParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/FindArrayStatisticsFilter.hpp"

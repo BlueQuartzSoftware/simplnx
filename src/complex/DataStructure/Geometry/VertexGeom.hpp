@@ -66,6 +66,12 @@ public:
   DataObject::Type getDataObjectType() const override;
 
   /**
+   * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
+   * @return
+   */
+  GroupType getGroupType() const override;
+
+  /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
    */
@@ -81,7 +87,7 @@ public:
    * @brief
    * @return DataObject*
    */
-  DataObject* deepCopy() override;
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief

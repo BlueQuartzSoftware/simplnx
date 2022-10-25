@@ -61,9 +61,9 @@ DataObject* GridMontage::shallowCopy()
   return new GridMontage(*this);
 }
 
-DataObject* GridMontage::deepCopy()
+std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath& copyPath)
 {
-  return new GridMontage(*this);
+  throw std::runtime_error("GridMontage deepCopy has not been implemented.");
 }
 
 usize GridMontage::getRowCount() const
