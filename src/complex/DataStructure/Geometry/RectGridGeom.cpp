@@ -31,6 +31,11 @@ DataObject::Type RectGridGeom::getDataObjectType() const
   return DataObject::Type::RectGridGeom;
 }
 
+BaseGroup::GroupType RectGridGeom::getGroupType() const
+{
+  return GroupType::RectGridGeom;
+}
+
 RectGridGeom* RectGridGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, std::move(name)));
@@ -61,9 +66,65 @@ DataObject* RectGridGeom::shallowCopy()
   return new RectGridGeom(*this);
 }
 
-DataObject* RectGridGeom::deepCopy()
+std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
 {
-  return new RectGridGeom(*this);
+  auto& dataStruct = getDataStructureRef();
+  // Don't construct with id since it will get created when inserting into data structure
+  auto copy = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataStruct, copyPath.getTargetName()));
+  copy->setDimensions(m_Dimensions);
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+
+    if(m_CellDataId.has_value())
+    {
+      const DataPath copiedCellDataPath = copyPath.createChildPath(getCellData()->getName());
+      // if this is not a parent of the cell data object, make a deep copy and insert it here
+      if(!isParentOf(getCellData()))
+      {
+        const auto cellDataCopy = getCellData()->deepCopy(copiedCellDataPath);
+      }
+      copy->m_CellDataId = dataStruct.getId(copiedCellDataPath);
+    }
+
+    if(m_xBoundsId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getXBounds()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(!isParentOf(getXBounds()))
+      {
+        const auto dataObjCopy = getXBounds()->deepCopy(copiedDataPath);
+      }
+      copy->m_xBoundsId = dataStruct.getId(copiedDataPath);
+    }
+    if(m_yBoundsId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getYBounds()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(!isParentOf(getYBounds()))
+      {
+        const auto dataObjCopy = getYBounds()->deepCopy(copiedDataPath);
+      }
+      copy->m_yBoundsId = dataStruct.getId(copiedDataPath);
+    }
+    if(m_zBoundsId.has_value())
+    {
+      const DataPath copiedDataPath = copyPath.createChildPath(getZBounds()->getName());
+      // if this is not a parent of the data object, make a deep copy and insert it here
+      if(!isParentOf(getZBounds()))
+      {
+        const auto dataObjCopy = getZBounds()->deepCopy(copiedDataPath);
+      }
+      copy->m_zBoundsId = dataStruct.getId(copiedDataPath);
+    }
+
+    if(const auto voxelSizesCopy = dataStruct.getDataAs<Float32Array>(copyPath.createChildPath(k_VoxelSizes)); voxelSizesCopy != nullptr)
+    {
+      copy->m_ElementSizesId = voxelSizesCopy->getId();
+    }
+    return copy;
+  }
+  return nullptr;
 }
 
 void RectGridGeom::setBounds(const Float32Array* xBounds, const Float32Array* yBounds, const Float32Array* zBounds)
@@ -160,7 +221,7 @@ IGeometry::StatusCode RectGridGeom::findElementSizes()
     }
   }
 
-  Float32Array* sizeArray = DataArray<float32>::Create(*getDataStructure(), "Voxel Sizes", std::move(sizes), getId());
+  Float32Array* sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(sizes), getId());
   if(!sizeArray)
   {
     m_ElementSizesId.reset();

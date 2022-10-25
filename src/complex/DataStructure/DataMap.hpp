@@ -13,6 +13,7 @@ namespace complex
 {
 class DataStructure;
 class DataObject;
+class DataPath;
 
 namespace H5
 {
@@ -64,7 +65,7 @@ public:
    * @brief Creates and returns a deep copy of the DataMap.
    * @return
    */
-  DataMap deepCopy() const;
+  DataMap deepCopy(const DataPath& parentCopyPath) const;
 
   /**
    * @brief Returns the number of items in the DataMap.

@@ -18,6 +18,12 @@ public:
   static inline constexpr usize k_NumEdgeVerts = 2;
   static inline constexpr usize k_NumFaceVerts = 3;
   static inline constexpr usize k_NumVerts = 4;
+  static inline constexpr StringLiteral k_VoxelSizes = "Tet Volumes";
+  static inline constexpr StringLiteral k_EltsContainingVert = "Elements Containing Vert";
+  static inline constexpr StringLiteral k_EltNeighbors = "Tet Neighbors";
+  static inline constexpr StringLiteral k_EltCentroids = "Tet Centroids";
+  static inline constexpr StringLiteral k_UnsharedEdges = "Unshared Edge List";
+  static inline constexpr StringLiteral k_UnsharedFaces = "Unshared Face List";
 
   /**
    * @brief
@@ -68,6 +74,12 @@ public:
   DataObject::Type getDataObjectType() const override;
 
   /**
+   * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
+   * @return
+   */
+  GroupType getGroupType() const override;
+
+  /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
    */
@@ -83,7 +95,7 @@ public:
    * @brief
    * @return DataObject*
    */
-  DataObject* deepCopy() override;
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief

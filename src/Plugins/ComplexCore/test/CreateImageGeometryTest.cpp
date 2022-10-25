@@ -22,7 +22,6 @@
 
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
 

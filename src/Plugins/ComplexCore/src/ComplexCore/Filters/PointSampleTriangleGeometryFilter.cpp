@@ -1,11 +1,8 @@
 #include "PointSampleTriangleGeometryFilter.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -15,7 +12,6 @@
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 
 #include "ComplexCore/Filters/Algorithms/PointSampleTriangleGeometry.hpp"
 
@@ -76,7 +72,8 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
 
-  // params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexParentGroup_Key, "Created Vertex Geometry Parent [Data Group]", "", DataPath{}));
+  // params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexParentGroup_Key, "Created Vertex Geometry Parent [Data Group]", "", DataPath{},
+  // DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Vertex Geometry Name",
                                                              "The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points", DataPath({"[Vertex Geometry]"})));
   params.insert(

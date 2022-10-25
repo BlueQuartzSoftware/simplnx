@@ -4,8 +4,6 @@
 
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/EmptyDataStore.hpp"
 
 using namespace complex;
 
@@ -26,9 +24,9 @@ ImportObjectAction::~ImportObjectAction() noexcept = default;
 
 Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  auto importData = std::shared_ptr<DataObject>(getImportObject()->deepCopy());
+  const auto importData = std::shared_ptr<DataObject>(getImportObject()->shallowCopy());
   // Clear all children before inserting into the DataStructure
-  if(auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData); importGroup != nullptr)
+  if(const auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData); importGroup != nullptr)
   {
     importGroup->clear();
   }

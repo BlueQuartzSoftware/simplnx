@@ -10,6 +10,7 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
@@ -261,6 +262,79 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
           REQUIRE(diff < EPSILON);
           break;
         }
+      }
+    }
+  }
+}
+
+/**
+ * @brief Compares the referenced StringArray objects in the dataStructure for any differences
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+inline void CompareStringArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(computedPath));
+
+  const auto& exemplaryDataArray = dataStructure.getDataRefAs<StringArray>(exemplaryDataPath);
+  const auto& generatedDataArray = dataStructure.getDataRefAs<StringArray>(computedPath);
+  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
+
+  INFO(fmt::format("Input Data Array:'{}'  Output StringArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+
+  usize start = 0;
+  usize end = exemplaryDataArray.getSize();
+  for(usize i = start; i < end; i++)
+  {
+    auto oldVal = exemplaryDataArray[i];
+    auto newVal = generatedDataArray[i];
+    REQUIRE(oldVal == newVal);
+  }
+}
+
+/**
+ * @brief Compares the referenced DynamicListArray objects in the dataStructure for any differences
+ * @tparam T index type
+ * @tparam K value type
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+template <typename T, typename K>
+void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DynamicListArray<T, K>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DynamicListArray<T, K>>(computedPath));
+
+  const auto& exemplaryArray = dataStructure.getDataRefAs<DynamicListArray<T, K>>(exemplaryDataPath);
+  const auto& generatedArray = dataStructure.getDataRefAs<DynamicListArray<T, K>>(computedPath);
+  REQUIRE(exemplaryArray.size() == generatedArray.size());
+
+  INFO(fmt::format("Input Data Array:'{}'  Output DynamicListArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+
+  usize start = 0;
+  usize end = exemplaryArray.size();
+  for(usize i = start; i < end; i++)
+  {
+    auto oldEltList = exemplaryArray.getElementList(i);
+    auto newEltList = generatedArray.getElementList(i);
+    T oldNumCells = oldEltList.numCells;
+    T newNumCells = newEltList.numCells;
+    if(oldNumCells != newNumCells)
+    {
+      float diff = std::fabs(static_cast<float>(oldNumCells - newNumCells));
+      REQUIRE(diff < EPSILON);
+    }
+    for(T j = 0; j < oldNumCells; ++j)
+    {
+      auto oldVal = oldEltList.cells[j];
+      auto newVal = newEltList.cells[j];
+      if(oldVal != newVal)
+      {
+        float diff = std::fabs(static_cast<float>(oldVal - newVal));
+        REQUIRE(diff < EPSILON);
       }
     }
   }

@@ -7,7 +7,6 @@
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 using namespace complex;
@@ -67,7 +66,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
       return MakeErrorResult(-5900, fmt::format("DataStructure Object Path '{}' does not exist for importing.", targetPath.toString()));
     }
     auto importObject = importStructure.getSharedData(targetPath);
-    auto importData = std::shared_ptr<DataObject>(importObject->deepCopy());
+    auto importData = std::shared_ptr<DataObject>(importObject->shallowCopy());
     // Clear all children before inserting into the DataStructure
     if(auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData); importGroup != nullptr)
     {

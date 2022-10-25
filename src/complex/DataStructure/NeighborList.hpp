@@ -71,7 +71,7 @@ public:
    * data.
    * @return DataObject*
    */
-  DataObject* deepCopy() override;
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief Gives this array a human readable name

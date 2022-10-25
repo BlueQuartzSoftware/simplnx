@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 using namespace complex;
@@ -28,9 +29,15 @@ DataGroup::DataGroup(DataGroup&& other)
 }
 
 DataGroup::~DataGroup() = default;
+
 DataObject::Type DataGroup::getDataObjectType() const
 {
   return Type::DataGroup;
+}
+
+BaseGroup::GroupType DataGroup::getGroupType() const
+{
+  return GroupType::DataGroup;
 }
 
 DataGroup* DataGroup::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
@@ -53,9 +60,18 @@ DataGroup* DataGroup::Import(DataStructure& ds, std::string name, IdType importI
   return data.get();
 }
 
-DataObject* DataGroup::deepCopy()
+std::shared_ptr<DataObject> DataGroup::deepCopy(const DataPath& copyPath)
 {
-  return new DataGroup(*this);
+  auto& dataStruct = getDataStructureRef();
+  // Don't construct with id since it will get created when inserting into data structure
+  const auto copy = std::shared_ptr<DataGroup>(new DataGroup(dataStruct, copyPath.getTargetName()));
+  copy->clear();
+  if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
+  {
+    auto dataMapCopy = getDataMap().deepCopy(copyPath);
+    return copy;
+  }
+  return nullptr;
 }
 
 DataObject* DataGroup::shallowCopy()

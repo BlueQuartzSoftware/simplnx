@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DataPath.hpp"
+#include "DataStructure.hpp"
 #include "complex/Common/Bit.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
@@ -187,11 +189,22 @@ public:
    * data store. The object will be owned by the DataStructure.
    * @return DataObject*
    */
-  DataObject* deepCopy() override
+  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
-    std::shared_ptr<IDataStore> sharedStore = getDataStore()->deepCopy();
-    std::shared_ptr<store_type> datastore = std::dynamic_pointer_cast<store_type>(sharedStore);
-    return new DataArray(*getDataStructure(), getName(), getId(), datastore);
+    DataStructure& dataStruct = getDataStructureRef();
+    if(dataStruct.containsData(copyPath))
+    {
+      return nullptr;
+    }
+    const std::shared_ptr<IDataStore> sharedStore = getDataStore()->deepCopy();
+    std::shared_ptr<store_type> dataStore = std::dynamic_pointer_cast<store_type>(sharedStore);
+    // Don't construct with id since it will get created when inserting into data structure
+    std::shared_ptr<DataArray<T>> copy = std::shared_ptr<DataArray<T>>(new DataArray<T>(dataStruct, copyPath.getTargetName(), dataStore));
+    if(dataStruct.insert(copy, copyPath.getParent()))
+    {
+      return copy;
+    }
+    return nullptr;
   }
 
   /**
