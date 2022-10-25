@@ -30,6 +30,16 @@ public:
 
   CreateGeometry2DAction() = delete;
 
+  /**
+   * @brief Constructor to create the 2D geometry and allocate a default arrays for the shared vertex & shared face lists
+   * @param geometryPath The path to the created geometry
+   * @param numFaces The number of faces in the geometry
+   * @param numVertices The number of vertices in the geometry
+   * @param vertexAttributeMatrixName The name of the vertex AttributeMatrix to be created
+   * @param faceAttributeMatrixName The name of the face AttributeMatrix to be created
+   * @param sharedVerticesName The name of the shared vertex list array to be created
+   * @param sharedFacesName The name of the shared face list array to be created
+   */
   CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& faceAttributeMatrixName,
                          const std::string& sharedVerticesName, const std::string& sharedFacesName)
   : IDataCreationAction(geometryPath)
@@ -42,7 +52,29 @@ public:
   {
   }
 
-  ~CreateGeometry2DAction() noexcept = default;
+  /**
+   * @brief Constructor to create the 2D geometry using existing vertices & faces arrays by either copying, moving, or referencing them
+   * @param geometryPath The path to the created geometry
+   * @param inputVerticesArrayPath The path to the existing vertices array
+   * @param inputFacesArrayPath The path to the existing faces array
+   * @param vertexAttributeMatrixName The name of the vertex AttributeMatrix to be created
+   * @param faceAttributeMatrixName The name of the face AttributeMatrix to be created
+   * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
+   */
+  CreateGeometry2DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputFacesArrayPath, const std::string& vertexAttributeMatrixName,
+                         const std::string& faceAttributeMatrixName, const ArrayHandlingType& arrayType)
+  : IDataCreationAction(geometryPath)
+  , m_VertexDataName(vertexAttributeMatrixName)
+  , m_FaceDataName(faceAttributeMatrixName)
+  , m_SharedVerticesName(inputVerticesArrayPath.getTargetName())
+  , m_SharedFacesName(inputFacesArrayPath.getTargetName())
+  , m_InputVertices(inputVerticesArrayPath)
+  , m_InputFaces(inputFacesArrayPath)
+  , m_ArrayHandlingType(arrayType)
+  {
+  }
+
+  ~CreateGeometry2DAction() noexcept override = default;
 
   CreateGeometry2DAction(const CreateGeometry2DAction&) = delete;
   CreateGeometry2DAction(CreateGeometry2DAction&&) noexcept = delete;
@@ -57,8 +89,10 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
-    DataPath faceDataPath = getFaceDataPath();
-    DataPath vertexDataPath = getVertexDataPath();
+    using MeshIndexType = IGeometry::MeshIndexType;
+    using SharedTriList = IGeometry::SharedTriList;
+    const DataPath faceDataPath = getFaceDataPath();
+    const DataPath vertexDataPath = getVertexDataPath();
 
     // Check for empty Geometry DataPath
     if(getCreatedPath().empty())
@@ -67,16 +101,16 @@ public:
     }
 
     // Check if the Geometry Path already exists
-    BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
+    const BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
     if(parentObject != nullptr)
     {
       return MakeErrorResult(-221, fmt::format("CreateGeometry2DAction: DataObject already exists at path '{}'", getCreatedPath().toString()));
     }
 
-    DataPath parentPath = getCreatedPath().getParent();
+    const DataPath parentPath = getCreatedPath().getParent();
     if(!parentPath.empty())
     {
-      Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
+      const Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
       if(geomPath.invalid())
       {
         return MakeErrorResult(-222, fmt::format("CreateGeometry2DAction: Geometry could not be created at path:'{}'", getCreatedPath().toString()));
@@ -88,51 +122,123 @@ public:
       return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
     }
 
+    // Get the vertices list if we are using an existing array
+    const auto vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
+    if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
+    {
+      return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Could not find vertices array at path '{}'", m_InputVertices.toString()));
+    }
+
+    // Get the faces list if we are using an existing array
+    const auto faces = dataStructure.getDataAs<DataArray<MeshIndexType>>(m_InputFaces);
+    if(m_ArrayHandlingType != ArrayHandlingType::Create && faces == nullptr)
+    {
+      return MakeErrorResult(-225, fmt::format("CreateGeometry2DAction: Could not find faces array at path '{}'", m_InputFaces.toString()));
+    }
+
     // Create the TriangleGeometry
     auto geometry2d = Geometry2DType::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
+    DimensionType faceTupleShape = {m_NumFaces};
+    DimensionType vertexTupleShape = {m_NumVertices}; // We probably don't know how many Vertices there are but take what ever the developer sends us
 
+    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    {
+      faceTupleShape = faces->getTupleShape();
+      vertexTupleShape = vertices->getTupleShape();
+
+      // std::shared_ptr<Float32Array> vertexArray = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
+      const auto vertexCopy = vertices->deepCopy();
+      dataStructure.insert(std::shared_ptr<DataObject>(vertexCopy), getCreatedPath());
+      const auto vertexArray = dynamic_cast<Float32Array*>(vertexCopy);
+
+      // std::shared_ptr<DataArray<MeshIndexType>> facesArray = faces->deepCopy(getCreatedPath().createChildPath(m_SharedFacesName));
+      const auto facesCopy = faces->deepCopy();
+      dataStructure.insert(std::shared_ptr<DataObject>(facesCopy), getCreatedPath());
+      const auto facesArray = dynamic_cast<DataArray<MeshIndexType>*>(facesCopy);
+
+      geometry2d->setFaceList(*facesArray);
+      geometry2d->setVertices(*vertexArray);
+    }
+    else if(m_ArrayHandlingType == ArrayHandlingType::Move)
+    {
+      faceTupleShape = faces->getTupleShape();
+      vertexTupleShape = vertices->getTupleShape();
+      const auto rectGeomId = geometry2d->getId();
+
+      const auto verticesId = vertices->getId();
+      dataStructure.setAdditionalParent(verticesId, rectGeomId);
+      const auto oldVertexParentId = dataStructure.getId(m_InputVertices.getParent());
+      if(!oldVertexParentId.has_value())
+      {
+        return MakeErrorResult(-226, fmt::format("CreateGeometry2DAction: Failed to remove vertices array '{}' from parent at path '{}' while moving array", m_SharedVerticesName,
+                                                 m_InputVertices.getParent().toString()));
+      }
+      dataStructure.removeParent(verticesId, oldVertexParentId.value());
+
+      const auto facesId = faces->getId();
+      dataStructure.setAdditionalParent(facesId, rectGeomId);
+      const auto oldFaceParentId = dataStructure.getId(m_InputFaces.getParent());
+      if(!oldFaceParentId.has_value())
+      {
+        return MakeErrorResult(
+            -226, fmt::format("CreateGeometry2DAction: Failed to remove faces array '{}' from parent at path '{}' while moving array", m_SharedFacesName, m_InputFaces.getParent().toString()));
+      }
+      dataStructure.removeParent(facesId, oldFaceParentId.value());
+
+      geometry2d->setVertices(*vertices);
+      geometry2d->setFaceList(*faces);
+    }
+    else if(m_ArrayHandlingType == ArrayHandlingType::Reference)
+    {
+      faceTupleShape = faces->getTupleShape();
+      vertexTupleShape = vertices->getTupleShape();
+      const auto geomId = geometry2d->getId();
+      dataStructure.setAdditionalParent(vertices->getId(), geomId);
+      dataStructure.setAdditionalParent(faces->getId(), geomId);
+      geometry2d->setVertices(*vertices);
+      geometry2d->setFaceList(*faces);
+    }
+    else
+    {
+      DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
+      // Create the default DataArray that will hold the FaceList and Vertices. We
+      // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
+      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode);
+      if(result.invalid())
+      {
+        return MakeErrorResult(-227, fmt::format("CreateGeometry2DAction: Could not allocate SharedTriList '{}'", trianglesPath.toString()));
+      }
+      SharedTriList* triangles = complex::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
+      geometry2d->setFaceList(*triangles);
+
+      // Create the Vertex Array with a component size of 3
+      DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
+
+      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
+      if(result.invalid())
+      {
+        return MakeErrorResult(-227, fmt::format("CreateGeometry2DAction: Could not allocate SharedVertList '{}'", vertexPath.toString()));
+      }
+      Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
+      geometry2d->setVertices(*vertexArray);
+    }
+
+    // Create the vertex and face AttributeMatrix
     auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, m_FaceDataName, geometry2d->getId());
     if(faceAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", faceDataPath.toString()));
+      return MakeErrorResult(-228, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", faceDataPath.toString()));
     }
-    DimensionType faceTupleShape = {m_NumFaces};
     faceAttributeMatrix->setShape(faceTupleShape);
     geometry2d->setFaceAttributeMatrix(*faceAttributeMatrix);
 
     auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry2d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-225, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", vertexDataPath.toString()));
+      return MakeErrorResult(-229, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", vertexDataPath.toString()));
     }
-    DimensionType vertexTupleShape = {m_NumVertices}; // We probably don't know how many Vertices there are but take what ever the developer sends us
     vertexAttributeMatrix->setShape(vertexTupleShape);
     geometry2d->setVertexAttributeMatrix(*vertexAttributeMatrix);
-
-    using MeshIndexType = IGeometry::MeshIndexType;
-    using SharedTriList = IGeometry::SharedTriList;
-
-    DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
-    // Create the default DataArray that will hold the FaceList and Vertices. We
-    // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-    complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode);
-    if(result.invalid())
-    {
-      return MakeErrorResult(-226, fmt::format("CreateGeometry2DAction: Could not allocate SharedTriList '{}'", trianglesPath.toString()));
-    }
-    SharedTriList* triangles = complex::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
-    geometry2d->setFaceList(*triangles);
-
-    // Create the Vertex Array with a component size of 3
-    DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
-
-    result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
-    if(result.invalid())
-    {
-      return MakeErrorResult(-227, fmt::format("CreateGeometry2DAction: Could not allocate SharedVertList '{}'", vertexPath.toString()));
-    }
-    Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
-    geometry2d->setVertices(*vertexArray);
 
     return {};
   }
@@ -188,17 +294,26 @@ public:
    */
   std::vector<DataPath> getAllCreatedPaths() const override
   {
-    auto topLevelCreatedPath = getCreatedPath();
-    return {topLevelCreatedPath, getFaceDataPath(), getVertexDataPath(), topLevelCreatedPath.createChildPath(m_SharedFacesName), topLevelCreatedPath.createChildPath(m_SharedVerticesName)};
+    const auto topLevelCreatedPath = getCreatedPath();
+    std::vector<DataPath> createdPaths = {topLevelCreatedPath, getFaceDataPath(), getVertexDataPath()};
+    if(m_ArrayHandlingType == ArrayHandlingType::Create || m_ArrayHandlingType == ArrayHandlingType::Copy)
+    {
+      createdPaths.push_back(topLevelCreatedPath.createChildPath(m_SharedVerticesName));
+      createdPaths.push_back(topLevelCreatedPath.createChildPath(m_SharedFacesName));
+    }
+    return createdPaths;
   }
 
 private:
-  IGeometry::MeshIndexType m_NumFaces;
-  IGeometry::MeshIndexType m_NumVertices;
+  IGeometry::MeshIndexType m_NumFaces = 1;
+  IGeometry::MeshIndexType m_NumVertices = Geometry2DType::k_NumVerts;
   std::string m_VertexDataName;
   std::string m_FaceDataName;
   std::string m_SharedVerticesName;
   std::string m_SharedFacesName;
+  DataPath m_InputVertices;
+  DataPath m_InputFaces;
+  ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
 };
 
 using CreateTriangleGeometryAction = CreateGeometry2DAction<TriangleGeom>;
