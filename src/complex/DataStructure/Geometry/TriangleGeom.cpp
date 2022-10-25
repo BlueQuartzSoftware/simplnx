@@ -108,7 +108,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
       copy->m_EdgeAttributeMatrixId = dataStruct.getId(copiedDataPath);
     }
 
-    if(m_FaceDataId.has_value())
+    if(m_FaceAttributeMatrixId.has_value())
     {
       const DataPath copiedDataPath = copyPath.createChildPath(getFaceAttributeMatrix()->getName());
       // if this is not a parent of the cell data object, make a deep copy and insert it here
@@ -116,7 +116,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
       {
         const auto dataObjCopy = getFaceAttributeMatrix()->deepCopy(copiedDataPath);
       }
-      copy->m_FaceDataId = dataStruct.getId(copiedDataPath);
+      copy->m_FaceAttributeMatrixId = dataStruct.getId(copiedDataPath);
     }
 
     if(m_FaceListId.has_value())
