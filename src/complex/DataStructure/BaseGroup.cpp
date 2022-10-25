@@ -141,6 +141,7 @@ bool BaseGroup::remove(DataObject* obj)
   {
     return false;
   }
+  obj->removeParent(this);
   return m_DataMap.remove(obj->getId());
 }
 
