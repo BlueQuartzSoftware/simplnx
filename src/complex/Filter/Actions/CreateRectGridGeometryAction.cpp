@@ -5,6 +5,8 @@
 #include "complex/DataStructure/Geometry/RectGridGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
+#include <memory>
+
 using namespace complex;
 
 namespace complex
@@ -106,24 +108,13 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   Result<> results;
   if(m_ArrayHandlingType == ArrayHandlingType::Copy)
   {
-    // std::shared_ptr<Float32Array> xBoundsArray = xBounds->deepCopy(getCreatedPath().createChildPath(m_XBoundsArrayName));
-    // std::shared_ptr<Float32Array> yBoundsArray = yBounds->deepCopy(getCreatedPath().createChildPath(m_YBoundsArrayName));
-    // std::shared_ptr<Float32Array> zBoundsArray = zBounds->deepCopy(getCreatedPath().createChildPath(m_ZBoundsArrayName));
-    // rectGridGeom->setBounds(xBoundsArray.get(), yBoundsArray.get(), zBoundsArray.get());
-
-    const auto xCopy = xBounds->deepCopy();
-    dataStructure.insert(std::shared_ptr<DataObject>(xCopy), getCreatedPath());
-    const auto xBoundsArray = dynamic_cast<Float32Array*>(xCopy);
-
-    const auto yCopy = yBounds->deepCopy();
-    dataStructure.insert(std::shared_ptr<DataObject>(yCopy), getCreatedPath());
-    const auto yBoundsArray = dynamic_cast<Float32Array*>(yCopy);
-
-    const auto zCopy = zBounds->deepCopy();
-    dataStructure.insert(std::shared_ptr<DataObject>(zCopy), getCreatedPath());
-    const auto zBoundsArray = dynamic_cast<Float32Array*>(zCopy);
-
-    rectGridGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
+    std::shared_ptr<DataObject> xCopy = xBounds->deepCopy(getCreatedPath().createChildPath(m_XBoundsArrayName));
+    std::shared_ptr<DataObject> yCopy = yBounds->deepCopy(getCreatedPath().createChildPath(m_YBoundsArrayName));
+    std::shared_ptr<DataObject> zCopy = zBounds->deepCopy(getCreatedPath().createChildPath(m_ZBoundsArrayName));
+    const auto xBoundsArray = std::dynamic_pointer_cast<Float32Array>(xCopy);
+    const auto yBoundsArray = std::dynamic_pointer_cast<Float32Array>(yCopy);
+    const auto zBoundsArray = std::dynamic_pointer_cast<Float32Array>(zCopy);
+    rectGridGeom->setBounds(xBoundsArray.get(), yBoundsArray.get(), zBoundsArray.get());
   }
   else if(m_ArrayHandlingType == ArrayHandlingType::Move)
   {

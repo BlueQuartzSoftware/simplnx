@@ -118,10 +118,8 @@ public:
     {
       tupleShape = vertices->getTupleShape();
 
-      // std::shared_ptr<Float32Array> vertexArray = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVertexListName));
-      const auto copy = vertices->deepCopy();
-      dataStructure.insert(std::shared_ptr<DataObject>(copy), getCreatedPath());
-      const auto vertexArray = dynamic_cast<Float32Array*>(copy);
+      std::shared_ptr<DataObject> copy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVertexListName));
+      const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(copy);
 
       vertexGeom->setVertices(*vertexArray);
     }

@@ -146,15 +146,11 @@ public:
       cellTupleShape = cells->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
-      // std::shared_ptr<Float32Array> vertexArray = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
-      const auto vertexCopy = vertices->deepCopy();
-      dataStructure.insert(std::shared_ptr<DataObject>(vertexCopy), getCreatedPath());
-      const auto vertexArray = dynamic_cast<Float32Array*>(vertexCopy);
+      std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
+      const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
-      // std::shared_ptr<DataArray<MeshIndexType>> cellsArray = cells->deepCopy(getCreatedPath().createChildPath(m_SharedCellsName));
-      const auto cellsCopy = cells->deepCopy();
-      dataStructure.insert(std::shared_ptr<DataObject>(cellsCopy), getCreatedPath());
-      const auto cellsArray = dynamic_cast<DataArray<MeshIndexType>*>(cellsCopy);
+      std::shared_ptr<DataObject> cellsCopy = cells->deepCopy(getCreatedPath().createChildPath(m_SharedCellsName));
+      const auto cellsArray = std::dynamic_pointer_cast<DataArray<MeshIndexType>>(cellsCopy);
 
       geometry3d->setPolyhedraList(*cellsArray);
       geometry3d->setVertices(*vertexArray);

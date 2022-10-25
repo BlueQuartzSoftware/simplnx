@@ -145,15 +145,11 @@ public:
       edgeTupleShape = edges->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
-      // std::shared_ptr<Float32Array> vertexArray = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
-      const auto vertexCopy = vertices->deepCopy();
-      dataStructure.insert(std::shared_ptr<DataObject>(vertexCopy), getCreatedPath());
-      const auto vertexArray = dynamic_cast<Float32Array*>(vertexCopy);
+      std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
+      const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
-      // std::shared_ptr<DataArray<MeshIndexType>> edgesArray = edges->deepCopy(getCreatedPath().createChildPath(m_SharedEdgesName));
-      const auto edgesCopy = edges->deepCopy();
-      dataStructure.insert(std::shared_ptr<DataObject>(edgesCopy), getCreatedPath());
-      const auto edgesArray = dynamic_cast<DataArray<MeshIndexType>*>(edgesCopy);
+      std::shared_ptr<DataObject> edgesCopy = edges->deepCopy(getCreatedPath().createChildPath(m_SharedEdgesName));
+      const auto edgesArray = std::dynamic_pointer_cast<DataArray<MeshIndexType>>(edgesCopy);
 
       geometry1d->setEdgeList(*edgesArray);
       geometry1d->setVertices(*vertexArray);

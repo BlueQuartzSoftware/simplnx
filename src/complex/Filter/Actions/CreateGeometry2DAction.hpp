@@ -146,15 +146,11 @@ public:
       faceTupleShape = faces->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
-      // std::shared_ptr<Float32Array> vertexArray = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
-      const auto vertexCopy = vertices->deepCopy();
-      dataStructure.insert(std::shared_ptr<DataObject>(vertexCopy), getCreatedPath());
-      const auto vertexArray = dynamic_cast<Float32Array*>(vertexCopy);
+      std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
+      const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
-      // std::shared_ptr<DataArray<MeshIndexType>> facesArray = faces->deepCopy(getCreatedPath().createChildPath(m_SharedFacesName));
-      const auto facesCopy = faces->deepCopy();
-      dataStructure.insert(std::shared_ptr<DataObject>(facesCopy), getCreatedPath());
-      const auto facesArray = dynamic_cast<DataArray<MeshIndexType>*>(facesCopy);
+      std::shared_ptr<DataObject> facesCopy = faces->deepCopy(getCreatedPath().createChildPath(m_SharedFacesName));
+      const auto facesArray = std::dynamic_pointer_cast<DataArray<MeshIndexType>>(facesCopy);
 
       geometry2d->setFaceList(*facesArray);
       geometry2d->setVertices(*vertexArray);
