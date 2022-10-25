@@ -34,6 +34,8 @@ protected:
   void onFilterUpdate(AbstractPipelineNode* node, const std::string& msg) const;
 
   void onFaultStateChanged(AbstractPipelineNode* node, FaultState state) const;
+private:
+  std::vector<nod::scoped_connection> m_SignalConnections;
 };
 } // namespace PipelineRunner
 } // namespace complex
