@@ -31,6 +31,7 @@ Normally this **Filter** will leave the origin of the volume set at (0, 0, 0), w
 | Features IDs | DataPath | DataPath to the target Feature IDs array |
 | Voxel Arrays | std::vector<DataPath> | DataArrays to crop |
 | New Cell Features Group Name | std::string | Specifies the name of the DataGroup containing cropped DataArrays |
+| Remove Original Geometry | bool | Whether the current **Geometry** should be removed after cropping |
 
 ## Required Geometry ##
 
