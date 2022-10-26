@@ -158,10 +158,10 @@ public:
     {
       edgeTupleShape = edges->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
-      const auto rectGeomId = geometry1d->getId();
+      const auto geomId = geometry1d->getId();
 
       const auto verticesId = vertices->getId();
-      dataStructure.setAdditionalParent(verticesId, rectGeomId);
+      dataStructure.setAdditionalParent(verticesId, geomId);
       const auto oldVertexParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldVertexParentId.has_value())
       {
@@ -171,7 +171,7 @@ public:
       dataStructure.removeParent(verticesId, oldVertexParentId.value());
 
       const auto edgesId = edges->getId();
-      dataStructure.setAdditionalParent(edgesId, rectGeomId);
+      dataStructure.setAdditionalParent(edgesId, geomId);
       const auto oldEdgeParentId = dataStructure.getId(m_InputEdges.getParent());
       if(!oldEdgeParentId.has_value())
       {

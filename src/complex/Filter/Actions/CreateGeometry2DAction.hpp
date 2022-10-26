@@ -159,10 +159,10 @@ public:
     {
       faceTupleShape = faces->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
-      const auto rectGeomId = geometry2d->getId();
+      const auto geomId = geometry2d->getId();
 
       const auto verticesId = vertices->getId();
-      dataStructure.setAdditionalParent(verticesId, rectGeomId);
+      dataStructure.setAdditionalParent(verticesId, geomId);
       const auto oldVertexParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldVertexParentId.has_value())
       {
@@ -172,7 +172,7 @@ public:
       dataStructure.removeParent(verticesId, oldVertexParentId.value());
 
       const auto facesId = faces->getId();
-      dataStructure.setAdditionalParent(facesId, rectGeomId);
+      dataStructure.setAdditionalParent(facesId, geomId);
       const auto oldFaceParentId = dataStructure.getId(m_InputFaces.getParent());
       if(!oldFaceParentId.has_value())
       {

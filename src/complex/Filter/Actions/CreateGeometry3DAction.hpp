@@ -159,10 +159,10 @@ public:
     {
       cellTupleShape = cells->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
-      const auto rectGeomId = geometry3d->getId();
+      const auto geomId = geometry3d->getId();
 
       const auto verticesId = vertices->getId();
-      dataStructure.setAdditionalParent(verticesId, rectGeomId);
+      dataStructure.setAdditionalParent(verticesId, geomId);
       const auto oldVertexParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldVertexParentId.has_value())
       {
@@ -172,7 +172,7 @@ public:
       dataStructure.removeParent(verticesId, oldVertexParentId.value());
 
       const auto cellsId = cells->getId();
-      dataStructure.setAdditionalParent(cellsId, rectGeomId);
+      dataStructure.setAdditionalParent(cellsId, geomId);
       const auto oldCellParentId = dataStructure.getId(m_InputCells.getParent());
       if(!oldCellParentId.has_value())
       {

@@ -126,9 +126,9 @@ public:
     else if(m_ArrayHandlingType == ArrayHandlingType::Move)
     {
       tupleShape = vertices->getTupleShape();
-      const auto rectGeomId = vertexGeom->getId();
+      const auto geomId = vertexGeom->getId();
       const auto verticesId = vertices->getId();
-      dataStructure.setAdditionalParent(verticesId, rectGeomId);
+      dataStructure.setAdditionalParent(verticesId, geomId);
       const auto oldParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldParentId.has_value())
       {
