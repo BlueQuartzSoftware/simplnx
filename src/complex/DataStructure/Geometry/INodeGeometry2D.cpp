@@ -118,27 +118,27 @@ void INodeGeometry2D::deleteUnsharedEdges()
 
 const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceAttributeMatrixId() const
 {
-  return m_FaceDataId;
+  return m_FaceAttributeMatrixId;
 }
 
 AttributeMatrix* INodeGeometry2D::getFaceAttributeMatrix()
 {
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceDataId);
+  return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry2D::getFaceAttributeMatrix() const
 {
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceDataId);
+  return getDataStructureRef().getDataAs<AttributeMatrix>(m_FaceAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry2D::getFaceAttributeMatrixRef()
 {
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceDataId.value());
+  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry2D::getFaceAttributeMatrixRef() const
 {
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceDataId.value());
+  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_FaceAttributeMatrixId.value());
 }
 
 DataPath INodeGeometry2D::getFaceAttributeMatrixDataPath() const
@@ -148,7 +148,7 @@ DataPath INodeGeometry2D::getFaceAttributeMatrixDataPath() const
 
 void INodeGeometry2D::setFaceAttributeMatrix(const AttributeMatrix& attributeMatrix)
 {
-  m_FaceDataId = attributeMatrix.getId();
+  m_FaceAttributeMatrixId = attributeMatrix.getId();
 }
 
 H5::ErrorType INodeGeometry2D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
@@ -160,7 +160,7 @@ H5::ErrorType INodeGeometry2D::readHdf5(H5::DataStructureReader& dataStructureRe
   }
 
   m_FaceListId = ReadH5DataId(groupReader, H5Constants::k_FaceListTag);
-  m_FaceDataId = ReadH5DataId(groupReader, H5Constants::k_FaceDataTag);
+  m_FaceAttributeMatrixId = ReadH5DataId(groupReader, H5Constants::k_FaceDataTag);
   m_UnsharedEdgeListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedEdgeListTag);
 
   return error;
@@ -181,7 +181,7 @@ H5::ErrorType INodeGeometry2D::writeHdf5(H5::DataStructureWriter& dataStructureW
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_FaceDataId, H5Constants::k_FaceDataTag);
+  error = WriteH5DataId(groupWriter, m_FaceAttributeMatrixId, H5Constants::k_FaceDataTag);
   if(error < 0)
   {
     return error;
@@ -214,9 +214,9 @@ void INodeGeometry2D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
       m_FaceListId = updatedId.second;
     }
 
-    if(m_FaceDataId == updatedId.first)
+    if(m_FaceAttributeMatrixId == updatedId.first)
     {
-      m_FaceDataId = updatedId.second;
+      m_FaceAttributeMatrixId = updatedId.second;
     }
 
     if(m_UnsharedEdgeListId == updatedId.first)

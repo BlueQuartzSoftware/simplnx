@@ -221,7 +221,7 @@ protected:
    * These variables are the Ids of the arrays from the complex::DataStructure object.
    */
   std::optional<IdType> m_FaceListId;
-  std::optional<IdType> m_FaceDataId;
+  std::optional<IdType> m_FaceAttributeMatrixId;
   std::optional<IdType> m_UnsharedEdgeListId;
 };
 } // namespace complex

@@ -210,7 +210,7 @@ protected:
    * These variables are the Ids of the arrays from the complex::DataStructure object.
    */
   std::optional<IdType> m_PolyhedronListId;
-  std::optional<IdType> m_PolyhedronDataId;
+  std::optional<IdType> m_PolyhedronAttributeMatrixId;
   std::optional<IdType> m_UnsharedFaceListId;
 };
 } // namespace complex
