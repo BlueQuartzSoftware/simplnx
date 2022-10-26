@@ -282,7 +282,7 @@ TEST_CASE("Core::CombineAttributeArrays: Algorithm Validation", "[Core][CombineA
 
   SECTION("INT64")
   {
-    DataStructure dataStructure = CreateTestDataStructure<int8_t>();
+    DataStructure dataStructure = CreateTestDataStructure<int64_t>();
     Arguments args;
     CombineAttributeArraysFilter filter;
 
