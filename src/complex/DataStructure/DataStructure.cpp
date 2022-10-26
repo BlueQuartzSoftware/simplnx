@@ -669,11 +669,15 @@ bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject:
 bool DataStructure::removeParent(DataObject::IdType targetId, DataObject::IdType parentId)
 {
   const auto& target = m_DataObjects[targetId];
-  auto parent = dynamic_cast<BaseGroup*>(getData(parentId));
-  auto targetPtr = target.lock();
+  const auto parent = dynamic_cast<BaseGroup*>(getData(parentId));
+  const auto targetPtr = target.lock();
   if(targetPtr == nullptr)
   {
     return false;
+  }
+  if(parentId == 0)
+  {
+    return removeTopLevel(targetPtr.get());
   }
   return parent->remove(targetPtr.get());
 }
