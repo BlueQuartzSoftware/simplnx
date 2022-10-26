@@ -121,27 +121,27 @@ void INodeGeometry3D::deleteUnsharedFaces()
 
 const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraAttributeMatrixId() const
 {
-  return m_PolyhedronDataId;
+  return m_PolyhedronAttributeMatrixId;
 }
 
 AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix()
 {
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
+  return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId);
 }
 
 const AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix() const
 {
-  return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronDataId);
+  return getDataStructureRef().getDataAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId);
 }
 
 AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef()
 {
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronDataId.value());
+  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId.value());
 }
 
 const AttributeMatrix& INodeGeometry3D::getPolyhedraAttributeMatrixRef() const
 {
-  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronDataId.value());
+  return getDataStructureRef().getDataRefAs<AttributeMatrix>(m_PolyhedronAttributeMatrixId.value());
 }
 
 DataPath INodeGeometry3D::getPolyhedronAttributeMatrixDataPath() const
@@ -151,7 +151,7 @@ DataPath INodeGeometry3D::getPolyhedronAttributeMatrixDataPath() const
 
 void INodeGeometry3D::setPolyhedraAttributeMatrix(const AttributeMatrix& attributeMatrix)
 {
-  m_PolyhedronDataId = attributeMatrix.getId();
+  m_PolyhedronAttributeMatrixId = attributeMatrix.getId();
 }
 
 H5::ErrorType INodeGeometry3D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
@@ -163,7 +163,7 @@ H5::ErrorType INodeGeometry3D::readHdf5(H5::DataStructureReader& dataStructureRe
   }
 
   m_PolyhedronListId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronListTag);
-  m_PolyhedronDataId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronDataTag);
+  m_PolyhedronAttributeMatrixId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronDataTag);
   m_UnsharedFaceListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedFaceListTag);
 
   return error;
@@ -184,7 +184,7 @@ H5::ErrorType INodeGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureW
     return error;
   }
 
-  error = WriteH5DataId(groupWriter, m_PolyhedronDataId, H5Constants::k_PolyhedronDataTag);
+  error = WriteH5DataId(groupWriter, m_PolyhedronAttributeMatrixId, H5Constants::k_PolyhedronDataTag);
   if(error < 0)
   {
     return error;
@@ -224,9 +224,9 @@ void INodeGeometry3D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
       m_PolyhedronListId = updatedId.second;
     }
 
-    if(m_PolyhedronDataId == updatedId.first)
+    if(m_PolyhedronAttributeMatrixId == updatedId.first)
     {
-      m_PolyhedronDataId = updatedId.second;
+      m_PolyhedronAttributeMatrixId = updatedId.second;
     }
 
     if(m_UnsharedFaceListId == updatedId.first)

@@ -231,11 +231,6 @@ void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, Id
 
   for(const auto& updatedId : updatedIds)
   {
-    if(m_VertexDataArrayId == updatedId.first)
-    {
-      m_VertexDataArrayId = updatedId.second;
-    }
-
     if(m_EdgeAttributeMatrixId == updatedId.first)
     {
       m_EdgeAttributeMatrixId = updatedId.second;
