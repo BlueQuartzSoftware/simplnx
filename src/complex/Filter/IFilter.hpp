@@ -88,6 +88,11 @@ public:
     std::vector<PreflightValue> outputValues;
   };
 
+  static PreflightResult MakePreflightErrorResult(int32 errorCode, const std::string& errorMessage)
+  {
+    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, errorMessage}})};
+  }
+
   struct ExecuteResult
   {
     Result<> result;
@@ -158,7 +163,7 @@ public:
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
-   * On failure, there is no guarentee that the DataStructure is in a correct state.
+   * On failure, there is no guarantee that the DataStructure is in a correct state.
    * @param data
    * @param args
    * @param pipelineNode = nullptr
