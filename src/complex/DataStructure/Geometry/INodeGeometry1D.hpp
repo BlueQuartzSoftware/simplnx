@@ -8,6 +8,7 @@ class COMPLEX_EXPORT INodeGeometry1D : public INodeGeometry0D
 {
 public:
   static inline constexpr StringLiteral k_EdgeDataName = "Edge Data";
+  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrix = "Face Feature Data";
 
   static inline constexpr usize k_NumEdgeVerts = 2;
 
