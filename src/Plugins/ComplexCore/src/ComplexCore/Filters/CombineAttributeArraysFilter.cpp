@@ -3,8 +3,8 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
@@ -63,8 +63,8 @@ Parameters CombineAttributeArraysFilter::parameters() const
                                                                MultiArraySelectionParameter::AllowedTypes{}));
 
   params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_StackedDataArrayName_Key, "Created Data Array",
-                                                          "This is the output array name of the combined attribute arrays. It will be created next to the input arrays", "Combined DataArray"));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_StackedDataArrayName_Key, "Created Data Array", "This is the DataPath to the created output array of the combined attribute arrays.",
+                                                         DataPath({"Combined DataArray"})));
 
   return params;
 }
@@ -82,7 +82,7 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   // auto normalizeDataValue = filterArgs.value<bool>(k_NormalizeData_Key);
   auto moveValuesValue = filterArgs.value<bool>(k_MoveValues_Key);
   auto selectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  auto stackedDataArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key);
+  auto stackedDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_StackedDataArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -127,12 +127,9 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
 
   // Create the output array
   {
-    DataPath parentGroup = selectedDataArrayPathsValue[0].getParent();
-
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedDataArrayPathsValue[0]);
     auto tupleShape = dataArray->getTupleShape();
-    auto outputArrayPath = parentGroup.createChildPath(stackedDataArrayNameValue);
-    auto action = std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, outputArrayPath);
+    auto action = std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, stackedDataArrayPath);
     resultOutputActions.value().actions.push_back(std::move(action));
   }
 

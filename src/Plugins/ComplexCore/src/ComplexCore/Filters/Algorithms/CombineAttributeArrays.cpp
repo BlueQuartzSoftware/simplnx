@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
@@ -9,40 +10,29 @@ using namespace complex;
  * @brief The CombineAttributeArraysImpl class is a templated private implementation that deals with
  * combining the various input arrays into one contiguous array
  */
-template <typename DataType>
-class CombineAttributeArraysImpl
+namespace
 {
-private:
-  const CombineAttributeArraysInputValues* m_InputValues = nullptr;
-  const std::vector<DataObject*> m_InputArrays;
-  DataObject* m_OutputArray = nullptr;
+struct CombineAttributeArraysImpl
+{
 
-public:
-  typedef DataArray<DataType> DataArrayType;
-
-  CombineAttributeArraysImpl(const CombineAttributeArraysInputValues* inputValues, std::vector<DataObject*>& inputArrays, DataObject* outputArray)
-  : m_InputValues(inputValues)
-  , m_InputArrays(inputArrays)
-  , m_OutputArray(outputArray)
-  {
-  }
-
-  virtual ~CombineAttributeArraysImpl() = default;
-
-  // -----------------------------------------------------------------------------
-  Result<> operator()()
+  template <typename DataType>
+  Result<> operator()(const CombineAttributeArraysInputValues* inputValues, std::vector<DataObject*>& inputArraysVec, DataObject* outputArrayPtr)
   {
     using OutputArrayType = DataArray<DataType>;
     using InputArrayType = DataArray<DataType>;
 
-    auto& outputArray = dynamic_cast<OutputArrayType&>(*m_OutputArray);
-    int32_t numArrays = m_InputArrays.size();
+    auto& outputArray = dynamic_cast<OutputArrayType&>(*outputArrayPtr);
+    int32_t numArrays = inputArraysVec.size();
+    if(numArrays == 0)
+    {
+      return MakeWarningVoidResult(1, "No arrays were selected to combine.");
+    }
 
     std::vector<InputArrayType*> inputArrays;
 
     for(size_t i = 0; i < numArrays; i++)
     {
-      inputArrays.push_back(dynamic_cast<InputArrayType*>(m_InputArrays[i]));
+      inputArrays.push_back(dynamic_cast<InputArrayType*>(inputArrays[i]));
     }
 
     size_t numTuples = inputArrays[0]->getNumberOfTuples();
@@ -50,7 +40,7 @@ public:
     size_t arrayOffset = 0;
     size_t numComps = 0;
 
-    if(m_InputValues->NormalizeData)
+    if(inputValues->NormalizeData)
     {
       std::vector<DataType> maxValues(stackedDims, std::numeric_limits<DataType>::lowest());
       std::vector<DataType> minValues(stackedDims, std::numeric_limits<DataType>::max());
@@ -129,11 +119,9 @@ public:
     }
     return {};
   }
-
-public:
-  CombineAttributeArraysImpl(const CombineAttributeArraysImpl&) = delete; // Copy Constructor Not Implemented
-  void operator=(const CombineAttributeArraysImpl&) = delete;             // Move assignment Not Implemented
 };
+
+} // namespace
 
 // -----------------------------------------------------------------------------
 CombineAttributeArrays::CombineAttributeArrays(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -168,43 +156,6 @@ Result<> CombineAttributeArrays::operator()()
   }
 
   auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->StackedDataArrayPath);
-  auto dataType = outputArray.getDataType();
-  switch(dataType)
-  {
-  case DataType::int8: {
-    return CombineAttributeArraysImpl<int8>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::int16: {
-    return CombineAttributeArraysImpl<int16>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::int32: {
-    return CombineAttributeArraysImpl<int32>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::int64: {
-    return CombineAttributeArraysImpl<int64>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::uint8: {
-    return CombineAttributeArraysImpl<uint8>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::uint16: {
-    return CombineAttributeArraysImpl<uint16>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::uint32: {
-    return CombineAttributeArraysImpl<uint32>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::uint64: {
-    return CombineAttributeArraysImpl<uint64>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::float32: {
-    return CombineAttributeArraysImpl<float32>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::float64: {
-    return CombineAttributeArraysImpl<float64>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  case DataType::boolean: {
-    return CombineAttributeArraysImpl<bool>(m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath))();
-  }
-  }
 
-  return {};
+  return ExecuteDataFunction(CombineAttributeArraysImpl{}, outputArray.getDataType(), m_InputValues, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath));
 }

@@ -45,7 +45,7 @@ auto ExecuteDataFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
     return func.template operator()<float64>(std::forward<ArgsT>(args)...);
   }
   default: {
-    throw std::runtime_error("Invalid DataType");
+    throw std::runtime_error("complex::ExecuteDataFunction<...>(FuncT&& func, DataType dataType, ArgsT&&... args). Error: Invalid DataType");
   }
   }
 }
