@@ -32,7 +32,7 @@ struct CombineAttributeArraysImpl
 
     for(size_t i = 0; i < numArrays; i++)
     {
-      inputArrays.push_back(dynamic_cast<InputArrayType*>(inputArrays[i]));
+      inputArrays.push_back(dynamic_cast<InputArrayType*>(inputArraysVec[i]));
     }
 
     size_t numTuples = inputArrays[0]->getNumberOfTuples();

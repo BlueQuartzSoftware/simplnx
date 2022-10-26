@@ -157,9 +157,7 @@ Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure,
   inputValues.NormalizeData = filterArgs.value<bool>(k_NormalizeData_Key);
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  auto stackedDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_StackedDataArrayName_Key);
-  DataPath parentGroup = inputValues.SelectedDataArrayPaths[0].getParent();
-  inputValues.StackedDataArrayPath = parentGroup.createChildPath(stackedDataArrayNameValue);
+  inputValues.StackedDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_StackedDataArrayName_Key);
 
   return CombineAttributeArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
