@@ -160,3 +160,28 @@ a feature attribute matrix then the following filters have examples.
 * TriangleNormalFilter
 * CalculateFeatureSizesFilter
 
+
+## Porting SIMPL Filter ##
+
++ Create Filter class in "PLUGIN_NAME/src/PLUGIN_NAME/Filters/xxxxFilter[.hpp|.cpp]"
++ Update Plugin's top level CMakeLists.txt to include the filter
++ Create Algorithm class in "PLUGIN_NAME/src/PLUGIN_NAME/Filters/Algorithms/xxxxFilter[.hpp|.cpp]"
++ Update Plugin's top level CMakeLists.txt to include the algorithm
++ Ensure the UUID is the proper UUID from the know mappings file.
+
+### Parameters ###
+
+Use proper grouping in the parameters to help the User Interface.
+
+There are potentially 3 sections of parameters:
+```
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+```
+```
+  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
+```
+```
+  params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
+```
+
+these should be used as needed by the filter.

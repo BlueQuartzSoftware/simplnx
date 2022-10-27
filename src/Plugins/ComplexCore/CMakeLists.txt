@@ -14,6 +14,7 @@ set(FilterList
   CalculateTriangleAreasFilter
   CreateFeatureArrayFromElementArray
   ChangeAngleRepresentation
+  CombineAttributeArraysFilter
   ConditionalSetValue
   CopyDataGroup
   CopyFeatureArrayToElementArray
@@ -73,7 +74,8 @@ set(AlgorithmList
   RawBinaryReader
   ScalarSegmentFeatures
   FindArrayStatistics
-)
+  CombineAttributeArrays
+  )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
