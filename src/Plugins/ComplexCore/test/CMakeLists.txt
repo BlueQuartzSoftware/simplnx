@@ -12,6 +12,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CalculateTriangleAreasFilterTest.cpp
   CalculateFeatureSizesTest.cpp
   ChangeAngleRepresentationTest.cpp
+  CombineAttributeArraysTest.cpp
   ConditionalSetValueTest.cpp
   CopyDataGroupTest.cpp
   CreateAttributeMatrixTest.cpp
