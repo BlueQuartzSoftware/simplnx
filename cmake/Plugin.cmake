@@ -78,14 +78,18 @@ function(complex_add_plugin)
   # By this point we should have everything defined and ready to go...
   if(DEFINED COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR AND DEFINED ${ARGS_PLUGIN_NAME}_IMPORT_FILE)
     #message(STATUS "Plugin: Adding Plugin ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
-    complex_COMPILE_PLUGIN(PLUGIN_NAME ${ARGS_PLUGIN_NAME}
-                           PLUGIN_SOURCE_DIR ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}
-    )
+
     if(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME})
+      #message(STATUS "${PLUGIN_NAME} ENABLED")
+      complex_COMPILE_PLUGIN(PLUGIN_NAME ${ARGS_PLUGIN_NAME}
+        PLUGIN_SOURCE_DIR ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}
+      )
       # Increment the plugin count only if it is enabled
       get_property(PLUGIN_COUNT GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT)
       math(EXPR PLUGIN_COUNT "${PLUGIN_COUNT}+1")
       set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT ${PLUGIN_COUNT})
+    else()
+      message(STATUS "${PLUGIN_NAME} DISABLED use '-DCOMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME}=ON to enable this plugin")
     endif()
   else()
     set(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir} CACHE PATH "" FORCE)
