@@ -69,7 +69,7 @@ namespace Type
 constexpr StringLiteral ImageGeom = "ImageGeometry";
 constexpr StringLiteral EdgeGeom = "EdgeGeometry";
 constexpr StringLiteral HexGeom = "HexahedralGeometry";
-constexpr StringLiteral QuadGeom = "QuadGeometry";
+constexpr StringLiteral QuadGeom = "QuadrilateralGeometry";
 constexpr StringLiteral RectGridGeom = "RectGridGeometry";
 constexpr StringLiteral TetrahedralGeom = "TetrahedralGeometry";
 constexpr StringLiteral TriangleGeom = "TriangleGeometry";
