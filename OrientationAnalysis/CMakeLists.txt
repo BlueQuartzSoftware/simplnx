@@ -224,3 +224,23 @@ if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
     COMPONENT Applications
   )
 endif()
+
+# -----------------------------------------------------------------------
+# Copy Example Data Files to binary directory
+# -----------------------------------------------------------------------
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
+add_custom_target(SmallIN100Copy ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
+  ${DATA_DEST_DIR}/H5Ebsd/Small_IN100.h5ebsd
+  COMMENT "Copying Data Folder into Binary Directory")
+  set_target_properties(SmallIN100Copy PROPERTIES FOLDER ZZ_COPY_FILES
+)
+
+# -----------------------------------------------------------------------
+# Install Example Data Files
+# -----------------------------------------------------------------------
+install(FILES 
+  ${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
+  DESTINATION Data/H5Ebsd/
+  COMPONENT Applications
+)
