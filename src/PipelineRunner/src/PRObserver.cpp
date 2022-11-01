@@ -24,14 +24,8 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
     return;
   }
   int32_t currentFilterIndex = 0;
-  for(auto iter = pipeline->begin(); iter != pipeline->end(); iter++)
+  for(const auto cxFilter : *pipeline)
   {
-    std::shared_ptr<complex::AbstractPipelineNode> cxFilter = *iter;
-
-    m_SignalConnections.push_back(cxFilter->getFilterRunStateSignal().connect([currentFilterIndex](complex::AbstractPipelineNode* node, int32_t filterIndex, complex::RunState state) {
-      // std::cout << "[" << currentFilterIndex << "] Changed State" << std::endl;
-    }));
-
     m_SignalConnections.push_back(cxFilter->getFilterUpdateSignal().connect([currentFilterIndex](complex::AbstractPipelineNode* node, int32_t, const std::string& message) {
       std::cout << "[" << currentFilterIndex << "] " << node->getName() << ": " << message << std::endl;
     }));
@@ -43,7 +37,7 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
     m_SignalConnections.push_back(cxFilter->getFilterFaultSignal().connect([currentFilterIndex](complex::AbstractPipelineNode*, int32_t filterIndex, complex::FaultState state) {
       if(state != complex::FaultState::None)
       {
-        std::cout << "[" << currentFilterIndex << "] Errors thrown... Fault state= " << static_cast<int32_t>(state) << std::endl;
+        std::cout << "[" << currentFilterIndex << "] Error Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
       }
     }));
 
