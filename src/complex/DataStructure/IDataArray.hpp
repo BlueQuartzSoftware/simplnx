@@ -12,6 +12,8 @@ namespace complex
 class COMPLEX_EXPORT IDataArray : public IArray
 {
 public:
+  static inline constexpr StringLiteral k_TypeName = "IDataArray";
+
   virtual ~IDataArray() = default;
 
   /**

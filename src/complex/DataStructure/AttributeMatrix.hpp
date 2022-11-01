@@ -17,6 +17,8 @@ class COMPLEX_EXPORT AttributeMatrix : public BaseGroup
 public:
   using ShapeType = std::vector<usize>;
 
+  static inline constexpr StringLiteral k_TypeName = "AttributeMatrix";
+
   /**
    * @brief Attempts to construct and insert a AttributeMatrix into the DataStructure.
    * If a parentId is provided, then the AttributeMatrix is created with the

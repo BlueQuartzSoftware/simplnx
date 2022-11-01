@@ -10,6 +10,7 @@ public:
   static inline constexpr StringLiteral k_PolyhedronDataName = "Polyhedron Data";
   static inline constexpr StringLiteral k_TriangleFaceList = "Shared Tri List";
   static inline constexpr StringLiteral k_QuadFaceList = "Shared Quad List";
+  static inline constexpr StringLiteral k_TypeName = "INodeGeometry3D";
 
   INodeGeometry3D() = delete;
   INodeGeometry3D(const INodeGeometry3D&) = default;

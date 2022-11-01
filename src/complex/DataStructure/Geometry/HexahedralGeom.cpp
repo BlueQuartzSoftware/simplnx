@@ -57,7 +57,7 @@ BaseGroup::GroupType HexahedralGeom::getGroupType() const
 
 std::string HexahedralGeom::getTypeName() const
 {
-  return "HexahedralGeom";
+  return k_TypeName;
 }
 
 DataObject* HexahedralGeom::shallowCopy()

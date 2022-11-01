@@ -15,6 +15,8 @@ public:
   using iterator = typename collection_type::iterator;
   using const_iterator = typename collection_type::const_iterator;
 
+  static inline constexpr StringLiteral k_TypeName = "StringArray";
+
   /**
    * @brief Static function to get the typename
    * @return std::string

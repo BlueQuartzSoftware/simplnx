@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdexcept>
-
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
@@ -10,6 +8,11 @@
 
 namespace complex
 {
+
+namespace ScalarDataConstants
+{
+constexpr StringLiteral k_TypeName = "ScalarData";
+}
 
 /**
  * @class ScalarData
@@ -115,7 +118,7 @@ public:
    */
   std::string getTypeName() const override
   {
-    return "ScalarData";
+    return ScalarDataConstants::k_TypeName;
   }
 
   /**

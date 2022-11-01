@@ -65,7 +65,7 @@ IGeometry::Type VertexGeom::getGeomType() const
 
 std::string VertexGeom::getTypeName() const
 {
-  return "VertexGeom";
+  return k_TypeName;
 }
 
 DataObject* VertexGeom::shallowCopy()

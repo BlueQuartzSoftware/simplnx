@@ -9,6 +9,7 @@ class COMPLEX_EXPORT IGridGeometry : public IGeometry
 {
 public:
   static inline constexpr StringLiteral k_CellDataName = "Cell Data";
+  static inline constexpr StringLiteral k_TypeName = "IGridGeometry";
 
   IGridGeometry() = delete;
   IGridGeometry(const IGridGeometry&) = default;

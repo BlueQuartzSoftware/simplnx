@@ -81,7 +81,7 @@ DataObject* DataGroup::shallowCopy()
 
 std::string DataGroup::getTypeName() const
 {
-  return "DataGroup";
+  return k_TypeName;
 }
 
 bool DataGroup::canInsert(const DataObject* obj) const
