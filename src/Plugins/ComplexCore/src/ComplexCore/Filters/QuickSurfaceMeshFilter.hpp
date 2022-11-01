@@ -38,6 +38,7 @@ public:
 
   static inline constexpr StringLiteral k_FaceDataGroupName_Key = "FaceDataGroupName";
   static inline constexpr StringLiteral k_FaceLabelsArrayName_Key = "FaceLabelsArrayName";
+  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName_Key = "face_feature_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.
