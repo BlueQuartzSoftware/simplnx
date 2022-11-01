@@ -148,7 +148,8 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numElements, 1, pVertexGroupDataName, pFaceGroupDataName);
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numElements, 1, pVertexGroupDataName, pFaceGroupDataName,
+                                                                                       CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
     resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
   }
   // Create the face NodesType DataArray action and store it

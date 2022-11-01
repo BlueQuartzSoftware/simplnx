@@ -138,7 +138,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
       numTuples = dataStructure.getDataAs<IDataArray>(pSelectedDataArrayPaths[0])->getNumberOfTuples();
     }
 
-    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, numTuples, pVertexGroupDataName);
+    auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, numTuples, pVertexGroupDataName, CreateVertexGeometryAction::k_SharedVertexListName);
     resultOutputActions.value().actions.push_back(std::move(createVertexGeometryAction));
   }
 

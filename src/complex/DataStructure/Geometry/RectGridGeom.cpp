@@ -187,6 +187,33 @@ const Float32Array* RectGridGeom::getZBounds() const
   return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_zBoundsId));
 }
 
+std::shared_ptr<Float32Array> RectGridGeom::getSharedXBounds()
+{
+  if(!m_xBoundsId.has_value())
+  {
+    return nullptr;
+  }
+  return getDataStructure()->getSharedDataAs<Float32Array>(m_xBoundsId.value());
+}
+
+std::shared_ptr<Float32Array> RectGridGeom::getSharedYBounds()
+{
+  if(!m_yBoundsId.has_value())
+  {
+    return nullptr;
+  }
+  return getDataStructure()->getSharedDataAs<Float32Array>(m_yBoundsId.value());
+}
+
+std::shared_ptr<Float32Array> RectGridGeom::getSharedZBounds()
+{
+  if(!m_zBoundsId.has_value())
+  {
+    return nullptr;
+  }
+  return getDataStructure()->getSharedDataAs<Float32Array>(m_zBoundsId.value());
+}
+
 usize RectGridGeom::getNumberOfCells() const
 {
   return m_Dimensions.getX() * m_Dimensions.getY() * m_Dimensions.getZ();

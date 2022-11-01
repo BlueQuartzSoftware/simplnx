@@ -134,6 +134,24 @@ public:
 
   /**
    * @brief
+   * @return std::shared_ptr<Float32Array>
+   */
+  std::shared_ptr<Float32Array> getSharedXBounds();
+
+  /**
+   * @brief
+   * @return std::shared_ptr<Float32Array>
+   */
+  std::shared_ptr<Float32Array> getSharedYBounds();
+
+  /**
+   * @brief
+   * @return std::shared_ptr<Float32Array>
+   */
+  std::shared_ptr<Float32Array> getSharedZBounds();
+
+  /**
+   * @brief
    * @return usize
    */
   usize getNumberOfCells() const override;
