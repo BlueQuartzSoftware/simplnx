@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -53,9 +54,11 @@ Parameters QuickSurfaceMeshFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", false));
+  params.insertSeparator(Parameters::Separator{"Parameters"});
 
   params.insert(std::make_unique<BoolParameter>(k_FixProblemVoxels_Key, "Attempt to Fix Problem Voxels", "See help page.", false));
+  params.insert(std::make_unique<BoolParameter>(k_GenerateTripleLines_Key, "Generate Triple Lines", "Experimental feature. May not work.", false));
+
   params.insertSeparator(Parameters::Separator{"Cell Data"});
 
   params.insert(
@@ -68,21 +71,24 @@ Parameters QuickSurfaceMeshFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Triangle Geometry"});
   params.insert(
-      std::make_unique<DataGroupCreationParameter>(k_TriangleGeometryName_Key, "Triangle Geometry Path [Data Group]", "The name of the created Triangle Geometry", DataPath({"Surface Mesh"})));
+      std::make_unique<DataGroupCreationParameter>(k_TriangleGeometryName_Key, "Created Triangle Geometry", "The name of the created Triangle Geometry", DataPath({"TriangleDataContainer"})));
 
   params.insertSeparator(Parameters::Separator{"Created Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NodeTypesArrayName_Key, "Node Types", "The complete path to the Array specifying the type of node in the Triangle Geometry",
-                                                         DataPath({"Vertex Data", "Node Types"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NodeTypesArrayName_Key, "NodeType", "The complete path to the Array specifying the type of node in the Triangle Geometry",
+                                                         DataPath({"TriangleDataContainer", "VertexData", "NodeTypes"})));
 
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataGroupName_Key, "Face Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
   params.insert(std::make_unique<ArrayCreationParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
                                                          "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry",
-                                                         DataPath({"Face Data", "Face Labels"})));
-
+                                                         DataPath({"TriangleDataContainer", "FaceData", "FaceLabels"})));
+  params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceFeatureAttributeMatrixName_Key, "Face Feature Data [AttributeMatrix]",
+                                                          "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created",
+                                                          INodeGeometry1D::k_FaceFeatureAttributeMatrix));
   return params;
 }
 
@@ -96,11 +102,6 @@ IFilter::UniquePointer QuickSurfaceMeshFilter::clone() const
 IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel) const
 {
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
   auto pGenerateTripleLines = filterArgs.value<bool>(k_GenerateTripleLines_Key);
   auto pFixProblemVoxelsValue = filterArgs.value<bool>(k_FixProblemVoxels_Key);
   auto pGridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
@@ -111,6 +112,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   auto pNodeTypesDataPath = filterArgs.value<DataPath>(k_NodeTypesArrayName_Key);
   auto pFaceGroupDataName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
   auto pFaceLabelsDataPath = filterArgs.value<DataPath>(k_FaceLabelsArrayName_Key);
+
   DataPath pVertexGroupDataPath = pTriangleGeometryPath.createChildPath(pVertexGroupDataName);
   DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
 
@@ -168,6 +170,12 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
     auto createArrayAction = std::make_unique<CopyArrayInstanceAction>(selectedDataPath, createdDataPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  }
+
+  {
+    auto faceFeatureAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FaceFeatureAttributeMatrixName_Key);
+    DataPath pFaceFeatureAttrMatrixPath = pTriangleGeometryPath.createChildPath(faceFeatureAttributeMatrixName);
+    auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(pFaceFeatureAttrMatrixPath, std::vector<usize>{1});
   }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
