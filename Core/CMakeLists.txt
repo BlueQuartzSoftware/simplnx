@@ -14,6 +14,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # Core/src/Core/Filters/ directory.
 set(FilterList
   AlignSectionsFeatureCentroidFilter
+  CreateGeometryFilter
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
   FillBadDataFilter
