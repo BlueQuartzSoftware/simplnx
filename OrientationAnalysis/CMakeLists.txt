@@ -229,11 +229,11 @@ endif()
 # Copy Example Data Files to binary directory
 # -----------------------------------------------------------------------
 set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
-add_custom_target(SmallIN100Copy ALL
+add_custom_target(H5EbsdDataCopy ALL
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
   ${DATA_DEST_DIR}/H5Ebsd/Small_IN100.h5ebsd
   COMMENT "Copying Data Folder into Binary Directory")
-  set_target_properties(SmallIN100Copy PROPERTIES FOLDER ZZ_COPY_FILES
+  set_target_properties(H5EbsdDataCopy PROPERTIES FOLDER ZZ_COPY_FILES
 )
 
 # -----------------------------------------------------------------------
