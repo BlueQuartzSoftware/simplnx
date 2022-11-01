@@ -182,7 +182,8 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   // Create Geometry
   usize numFaces = triangleGeom.getNumberOfFaces();
   usize numVertices = triangleGeom.getNumberOfVertices();
-  auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeometryAction>(internalTrianglesGeomPath, numFaces, numVertices, vertexDataName, faceDataName);
+  auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeometryAction>(internalTrianglesGeomPath, numFaces, numVertices, vertexDataName, faceDataName,
+                                                                                      CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
   DataPath internalVertexDataPath = createInternalTrianglesAction->getVertexDataPath();
   DataPath internalFaceDataPath = createInternalTrianglesAction->getFaceDataPath();
   actions.actions.push_back(std::move(createInternalTrianglesAction));

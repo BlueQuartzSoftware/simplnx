@@ -3,6 +3,7 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -407,4 +408,101 @@ inline constexpr DataType ConvertNumericTypeToDataType(NumericType numericType)
   }
   }
 }
+
+/**
+ * @brief Returns a string representation of the passed in IGeometry::Type
+ * @param dataType
+ * @return
+ */
+inline constexpr StringLiteral GeometryTypeToString(IGeometry::Type geomType)
+{
+  switch(geomType)
+  {
+  case IGeometry::Type::Image: {
+    return "Image";
+  }
+  case IGeometry::Type::RectGrid: {
+    return "Rectilinear Grid";
+  }
+  case IGeometry::Type::Vertex: {
+    return "Vertex";
+  }
+  case IGeometry::Type::Edge: {
+    return "Edge";
+  }
+  case IGeometry::Type::Triangle: {
+    return "Triangle";
+  }
+  case IGeometry::Type::Quad: {
+    return "Quadrilateral";
+  }
+  case IGeometry::Type::Tetrahedral: {
+    return "Tetrahedral";
+  }
+  case IGeometry::Type::Hexahedral: {
+    return "Hexahedral";
+  }
+  default:
+    throw std::runtime_error("complex::GeometryTypeToString: Unknown IGeometry::Type");
+  }
+}
+
+/**
+ * @brief Returns string representations for all DataTypes.
+ * @return
+ */
+inline const std::vector<std::string>& GetAllGeometryTypesAsStrings()
+{
+  static const std::vector<std::string> geomTypes = {GeometryTypeToString(IGeometry::Type::Image),       GeometryTypeToString(IGeometry::Type::RectGrid),
+                                                     GeometryTypeToString(IGeometry::Type::Vertex),      GeometryTypeToString(IGeometry::Type::Edge),
+                                                     GeometryTypeToString(IGeometry::Type::Triangle),    GeometryTypeToString(IGeometry::Type::Quad),
+                                                     GeometryTypeToString(IGeometry::Type::Tetrahedral), GeometryTypeToString(IGeometry::Type::Hexahedral)};
+  return geomTypes;
+}
+
+/**
+ * @brief Returns a IGeometry::Type for the passed in string representation
+ * @param geomTypeString
+ * @return
+ */
+inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeString)
+{
+  if(geomTypeString == GeometryTypeToString(IGeometry::Type::Image).view())
+  {
+    return IGeometry::Type::Image;
+  }
+  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::RectGrid).view())
+  {
+    return IGeometry::Type::RectGrid;
+  }
+  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::Vertex).view())
+  {
+    return IGeometry::Type::Vertex;
+  }
+  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::Edge).view())
+  {
+    return IGeometry::Type::Edge;
+  }
+  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::Triangle).view())
+  {
+    return IGeometry::Type::Triangle;
+  }
+  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::Quad).view())
+  {
+    return IGeometry::Type::Quad;
+  }
+  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::Tetrahedral).view())
+  {
+    return IGeometry::Type::Tetrahedral;
+  }
+  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::Hexahedral).view())
+  {
+    return IGeometry::Type::Hexahedral;
+  }
+  else
+  {
+    throw std::runtime_error("complex::StringToGeometryType: No known IGeometry::Type matches the given string value.");
+  }
+}
+
 } // namespace complex
