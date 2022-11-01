@@ -136,16 +136,9 @@ function(create_data_copy_rules)
     COMMENT "Copying Data Folder into Binary Directory")
   set_target_properties(DataFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
 
-  add_custom_target(H5EbsdDataCopy ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${ARGS_DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
-    ${DATA_DEST_DIR}/H5Ebsd/Small_IN100.h5ebsd
-    COMMENT "Copying Data Folder into Binary Directory")
-  set_target_properties(H5EbsdDataCopy PROPERTIES FOLDER ZZ_COPY_FILES)  
-
   set(DREAM3D_DATA_DIRECTORIES
     ${ARGS_DREAM3D_DATA_DIR}/Data/Image
     ${ARGS_DREAM3D_DATA_DIR}/Data/Models
-    ${ARGS_DREAM3D_DATA_DIR}/Data/H5Ebsd
   )
 
   set(INSTALL_DESTINATION "Data")
