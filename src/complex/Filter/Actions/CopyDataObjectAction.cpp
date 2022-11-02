@@ -1,4 +1,4 @@
-#include "CopyGroupAction.hpp"
+#include "CopyDataObjectAction.hpp"
 
 #include <fmt/core.h>
 
@@ -10,7 +10,7 @@ using namespace complex;
 
 namespace complex
 {
-CopyGroupAction::CopyGroupAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths)
+CopyDataObjectAction::CopyDataObjectAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths)
 : IDataCreationAction(newPath)
 , m_Path(path)
 , m_NewPath(newPath)
@@ -18,20 +18,20 @@ CopyGroupAction::CopyGroupAction(const DataPath& path, const DataPath& newPath, 
 {
 }
 
-CopyGroupAction::~CopyGroupAction() noexcept = default;
+CopyDataObjectAction::~CopyDataObjectAction() noexcept = default;
 
-std::shared_ptr<DataObject> CopyGroupAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
+std::shared_ptr<DataObject> CopyDataObjectAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
 {
   auto* data = dataStructure.getData(sourcePath);
   std::shared_ptr<DataObject> copy = data->deepCopy(destPath);
   return copy;
 }
 
-Result<> CopyGroupAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  if(dataStructure.getDataAs<BaseGroup>(path()) == nullptr)
+  if(dataStructure.getData(path()) == nullptr)
   {
-    return MakeErrorResult(-5, fmt::format("Cannot find group at path '{}'", path().toString()));
+    return MakeErrorResult(-5, fmt::format("Cannot find data object at path '{}'", path().toString()));
   }
   if(dataStructure.getData(newPath()) != nullptr)
   {
@@ -46,17 +46,17 @@ Result<> CopyGroupAction::apply(DataStructure& dataStructure, Mode mode) const
   return {};
 }
 
-const DataPath& CopyGroupAction::path() const
+const DataPath& CopyDataObjectAction::path() const
 {
   return m_Path;
 }
 
-const DataPath& CopyGroupAction::newPath() const
+const DataPath& CopyDataObjectAction::newPath() const
 {
   return m_NewPath;
 }
 
-std::vector<DataPath> CopyGroupAction::getAllCreatedPaths() const
+std::vector<DataPath> CopyDataObjectAction::getAllCreatedPaths() const
 {
   return m_AllCreatedPaths;
 }
