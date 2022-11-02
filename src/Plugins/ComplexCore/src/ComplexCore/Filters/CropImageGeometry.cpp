@@ -21,6 +21,19 @@
 #include "complex/Utilities/SamplingUtils.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+namespace
+{
+std::string GenerateGeometryInfo(const complex::SizeVec3& dims, const complex::FloatVec3& spacing, const complex::FloatVec3& origin)
+{
+  std::stringstream description;
+
+  description << "X Range: " << origin[0] << " to " << (origin[0] + (dims[0] * spacing[0])) << " (Delta: " << (dims[0] * spacing[0]) << ") " << 0 << "-" << dims[0] - 1 << " Voxels\n";
+  description << "Y Range: " << origin[1] << " to " << (origin[1] + (dims[1] * spacing[1])) << " (Delta: " << (dims[1] * spacing[1]) << ") " << 0 << "-" << dims[1] - 1 << " Voxels\n";
+  description << "Z Range: " << origin[2] << " to " << (origin[2] + (dims[2] * spacing[2])) << " (Delta: " << (dims[2] * spacing[2]) << ") " << 0 << "-" << dims[2] - 1 << " Voxels\n";
+  return description.str();
+}
+} // namespace
+
 namespace complex
 {
 namespace
@@ -302,6 +315,7 @@ IFilter::UniquePointer CropImageGeometry::clone() const
 
 IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
+
   auto srcImagePath = args.value<DataPath>(k_ImageGeom_Key);
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
@@ -319,7 +333,9 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto zMax = maxVoxels[2];
   auto zMin = minVoxels[2];
 
-  complex::Result<OutputActions> actions;
+  complex::Result<OutputActions> resultOutputActions;
+
+  std::vector<PreflightValue> preflightUpdatedValues;
 
   if(xMax < xMin)
   {
@@ -418,7 +434,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     std::string cellDataName = cellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
     auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec, cellDataName);
-    actions.value().actions.push_back(std::move(geomAction));
+    resultOutputActions.value().actions.push_back(std::move(geomAction));
 
     DataPath newCellFeaturesPath = destImagePath.createChildPath(cellDataName);
 
@@ -428,8 +444,14 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       DataType dataType = srcArray.getDataType();
       IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellFeaturesPath.createChildPath(srcArray.getName());
-      actions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
+      resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
     }
+
+    // Store the preflight updated value(s) into the preflightUpdatedValues vector using
+    // the appropriate methods.
+    // These values should have been updated during the preflightImpl(...) method
+    preflightUpdatedValues.push_back({"Input Geometry Info", ::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
+    preflightUpdatedValues.push_back({"Cropped Image Geometry Info", ::GenerateGeometryInfo(tDims, spacingVec, targetOrigin)});
   }
 
   if(shouldRenumberFeatures)
@@ -455,7 +477,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     std::string warningMsg = "";
     DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
     tDims = srcCellFeaturData->getShape();
-    actions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
+    resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
     for(const auto& [id, object] : *srcCellFeaturData)
     {
       if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
@@ -463,7 +485,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
         DataType dataType = srcArray->getDataType();
         IDataStore::ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
         DataPath dataArrayPath = destCellFeatureAMPath.createChildPath(srcArray->getName());
-        actions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
+        resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
       }
       else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
       {
@@ -472,8 +494,9 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
     if(!warningMsg.empty())
     {
-      actions.m_Warnings.push_back(Warning({-55503, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}",
-                                                                featureIdsArrayPath.toString(), warningMsg)}));
+      resultOutputActions.m_Warnings.push_back(
+          Warning({-55503, fmt::format("This filter modifies the Cell Level Array '{}', the following arrays are of type NeighborList and will not be copied over:{}", featureIdsArrayPath.toString(),
+                                       warningMsg)}));
     }
   }
 
@@ -497,11 +520,11 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
             allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
           }
         }
-        actions.value().actions.push_back(std::make_unique<CopyGroupAction>(childPath, copiedChildPath, allCreatedPaths));
+        resultOutputActions.value().actions.push_back(std::make_unique<CopyGroupAction>(childPath, copiedChildPath, allCreatedPaths));
       }
       else if(data.getDataAs<IDataArray>(childPath) != nullptr)
       {
-        actions.value().actions.push_back(std::make_unique<CopyArrayInstanceAction>(childPath, copiedChildPath));
+        resultOutputActions.value().actions.push_back(std::make_unique<CopyArrayInstanceAction>(childPath, copiedChildPath));
       }
       // TODO : copy neighborlist
       // TODO : copy string array
@@ -512,10 +535,11 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   if(pRemoveOriginalGeometry)
   {
-    actions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(srcImagePath));
+    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(srcImagePath));
   }
 
-  return {std::move(actions)};
+  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
