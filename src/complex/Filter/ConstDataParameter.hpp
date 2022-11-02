@@ -5,7 +5,7 @@
 namespace complex
 {
 /**
- * @brief MutableDataParameter provides const access to DataStructure for parameters.
+ * @brief ConstDataParameter provides const access to DataStructure for parameters.
  */
 class COMPLEX_EXPORT ConstDataParameter : public DataParameter
 {

@@ -5,12 +5,15 @@
 #include <nlohmann/json.hpp>
 
 #include "complex/Common/Any.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
 {
-ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, ComponentTypes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
 , m_DefaultValue(defaultValue)
+, m_RequiredComponentShapes(requiredComps)
 {
 }
 
@@ -57,6 +60,11 @@ typename ArrayThresholdsParameter::ValueType ArrayThresholdsParameter::defaultPa
   return m_DefaultValue;
 }
 
+ArrayThresholdsParameter::ComponentTypes ArrayThresholdsParameter::requiredComponentShapes() const
+{
+  return m_RequiredComponentShapes;
+}
+
 Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   const auto& threshold = GetAnyRef<ValueType>(value);
@@ -76,6 +84,37 @@ Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructu
   if(object == nullptr)
   {
     return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object does not exist at path '{}'", prefix, dataPath.toString()));
+  }
+
+  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
+  if(dataArray == nullptr)
+  {
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, dataPath.toString()));
+  }
+
+  if(!m_RequiredComponentShapes.empty())
+  {
+    std::string compStr;
+    bool foundMatch = false;
+    for(const auto& compShape : m_RequiredComponentShapes)
+    {
+      if(compShape == dataArray->getComponentShape())
+      {
+        foundMatch = true;
+        break;
+      }
+      compStr += StringUtilities::number(compShape[0]);
+      for(usize i = 1; i < compShape.size(); ++i)
+      {
+        compStr += " x " + StringUtilities::number(compShape[i]);
+      }
+      compStr += " or ";
+    }
+    if(!foundMatch)
+    {
+      return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_TupleShapeValue,
+                                        fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, dataPath.toString(), compStr));
+    }
   }
 
   return {};

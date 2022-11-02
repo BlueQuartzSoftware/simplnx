@@ -5,14 +5,17 @@
 #include <nlohmann/json.hpp>
 
 #include "complex/Common/Any.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
 {
 MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                           const AllowedTypes& allowedTypes)
+                                                           const AllowedTypes& allowedTypes, ComponentTypes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowedTypes(allowedTypes)
+, m_RequiredComponentShapes(requiredComps)
 {
 }
 
@@ -93,6 +96,11 @@ MultiArraySelectionParameter::AllowedTypes MultiArraySelectionParameter::allowed
   return m_AllowedTypes;
 }
 
+MultiArraySelectionParameter::ComponentTypes MultiArraySelectionParameter::requiredComponentShapes() const
+{
+  return m_RequiredComponentShapes;
+}
+
 Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   const auto& paths = GetAnyRef<ValueType>(value);
@@ -109,7 +117,7 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
   {
     const auto& path = value.at(i);
 
-    if(value.empty())
+    if(path.empty())
     {
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
@@ -120,10 +128,35 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
-    if(object->getDataObjectType() != DataObject::Type::DataArray)
+    const auto* dataArray = dataStructure.getDataAs<IDataArray>(path);
+    if(dataArray == nullptr)
     {
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not a DataArray", prefix, path.toString())});
       continue;
+    }
+    if(!m_RequiredComponentShapes.empty())
+    {
+      std::string compStr;
+      bool foundMatch = false;
+      for(const auto& compShape : m_RequiredComponentShapes)
+      {
+        if(compShape == dataArray->getComponentShape())
+        {
+          foundMatch = true;
+          break;
+        }
+        compStr += StringUtilities::number(compShape[0]);
+        for(usize j = 1; j < compShape.size(); ++j)
+        {
+          compStr += " x " + StringUtilities::number(compShape[j]);
+        }
+        compStr += " or ";
+      }
+      if(!foundMatch)
+      {
+        errors.push_back(
+            Error{complex::FilterParameter::Constants::k_Validate_TupleShapeValue, fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, path.toString(), compStr)});
+      }
     }
   }
 
