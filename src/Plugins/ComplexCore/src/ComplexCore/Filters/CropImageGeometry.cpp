@@ -4,7 +4,7 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
 #include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
-#include "complex/Filter/Actions/CopyGroupAction.hpp"
+#include "complex/Filter/Actions/CopyDataObjectAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
@@ -520,16 +520,12 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
             allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
           }
         }
-        resultOutputActions.value().actions.push_back(std::make_unique<CopyGroupAction>(childPath, copiedChildPath, allCreatedPaths));
+        resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
       }
-      else if(data.getDataAs<IDataArray>(childPath) != nullptr)
+      else
       {
-        resultOutputActions.value().actions.push_back(std::make_unique<CopyArrayInstanceAction>(childPath, copiedChildPath));
+        resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
       }
-      // TODO : copy neighborlist
-      // TODO : copy string array
-      // TODO : copy scalar data
-      // TODO : copy dynamic list array
     }
   }
 
