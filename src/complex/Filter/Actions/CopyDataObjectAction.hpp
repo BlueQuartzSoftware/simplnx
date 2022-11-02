@@ -8,19 +8,19 @@ namespace complex
 /**
  * @brief Action for copying a BaseGroup in a DataStructure
  */
-class COMPLEX_EXPORT CopyGroupAction : public IDataCreationAction
+class COMPLEX_EXPORT CopyDataObjectAction : public IDataCreationAction
 {
 public:
-  CopyGroupAction() = delete;
+  CopyDataObjectAction() = delete;
 
-  CopyGroupAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths);
+  CopyDataObjectAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths);
 
-  ~CopyGroupAction() noexcept override;
+  ~CopyDataObjectAction() noexcept override;
 
-  CopyGroupAction(const CopyGroupAction&) = delete;
-  CopyGroupAction(CopyGroupAction&&) noexcept = delete;
-  CopyGroupAction& operator=(const CopyGroupAction&) = delete;
-  CopyGroupAction& operator=(CopyGroupAction&&) noexcept = delete;
+  CopyDataObjectAction(const CopyDataObjectAction&) = delete;
+  CopyDataObjectAction(CopyDataObjectAction&&) noexcept = delete;
+  CopyDataObjectAction& operator=(const CopyDataObjectAction&) = delete;
+  CopyDataObjectAction& operator=(CopyDataObjectAction&&) noexcept = delete;
 
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.

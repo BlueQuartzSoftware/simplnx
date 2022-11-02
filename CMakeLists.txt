@@ -269,7 +269,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyGroupAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyDataObjectAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateRectGridGeometryAction.hpp
@@ -439,7 +439,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateStringArrayAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyArrayInstanceAction.cpp
-  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyGroupAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CopyDataObjectAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateDataGroupAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateImageGeometryAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateRectGridGeometryAction.cpp

@@ -1,6 +1,6 @@
 #include "CopyDataGroup.hpp"
 
-#include "complex/Filter/Actions/CopyGroupAction.hpp"
+#include "complex/Filter/Actions/CopyDataObjectAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
@@ -51,7 +51,7 @@ IFilter::PreflightResult CopyDataGroup::preflightImpl(const DataStructure& data,
   auto newDataPath = args.value<DataPath>(k_NewPath_Key);
 
   std::vector<DataPath> allCreatedPaths = {newDataPath};
-  auto pathsToBeCopied = GetAllChildDataPathsRecursive(data, dataArrayPath);
+  const auto pathsToBeCopied = GetAllChildDataPathsRecursive(data, dataArrayPath);
   if(pathsToBeCopied.has_value())
   {
     for(const auto& sourcePath : pathsToBeCopied.value())
@@ -60,7 +60,7 @@ IFilter::PreflightResult CopyDataGroup::preflightImpl(const DataStructure& data,
       allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
     }
   }
-  auto action = std::make_unique<CopyGroupAction>(dataArrayPath, newDataPath, allCreatedPaths);
+  auto action = std::make_unique<CopyDataObjectAction>(dataArrayPath, newDataPath, allCreatedPaths);
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
