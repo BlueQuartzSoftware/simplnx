@@ -135,9 +135,10 @@ Parameters RobustAutomaticThreshold::parameters() const
 {
   Parameters params;
   // Input cannot be bool array
-  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath(), complex::GetAllNumericTypes()));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath(), complex::GetAllNumericTypes(), ArraySelectionParameter::ComponentTypes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GradientMagnitudePath, "Gradient Magnitude Data", "The complete path to the Array specifying the gradient magnitude of the Input Array",
-                                                          DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::ComponentTypes{{1}}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_ArrayCreationPath, "Mask", "Created mask based on Input Array and Gradient Magnitude", DataPath()));
 
   return params;

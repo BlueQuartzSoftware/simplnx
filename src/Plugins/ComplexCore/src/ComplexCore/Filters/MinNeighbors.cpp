@@ -308,13 +308,14 @@ Parameters MinNeighbors::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellDataAttributeMatrix_Key, "Cell AttributeMatrix", "", DataPath({"Data Container", "CellData"})));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::ComponentTypes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", DataPath({"Data Container", "Feature Data", "NumNeighbors"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::ComponentTypes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhases_Key, "Feature Phases", "", DataPath({"Data Container", "Feature Data", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::ComponentTypes{{1}}));
   // Attribute Arrays to Ignore
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredVoxelArrays_Key, "Cell Arrays to Ignore", "", std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{}));
 

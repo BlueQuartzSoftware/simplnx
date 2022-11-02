@@ -297,7 +297,8 @@ Parameters CropImageGeometry::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          ArraySelectionParameter::ComponentTypes{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the call feature Attribute Matrix",
                                                                     DataPath({"CellFeatureData"})));
 

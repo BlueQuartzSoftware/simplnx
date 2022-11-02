@@ -140,7 +140,8 @@ Parameters FindArrayStatisticsFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "", DataPath{}, complex::GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "", DataPath{}, complex::GetAllDataTypes(),
+                                                          ArraySelectionParameter::ComponentTypes{{1}}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Histogram Options"});
@@ -178,11 +179,13 @@ Parameters FindArrayStatisticsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8},
+                                                          ArraySelectionParameter::ComponentTypes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Algorithm Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          ArraySelectionParameter::ComponentTypes{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FindHistogram_Key, k_HistogramArrayName_Key, true);
