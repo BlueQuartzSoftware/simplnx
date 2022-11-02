@@ -27,7 +27,6 @@
 
 #include <optional>
 #include <stdexcept>
-#include <type_traits>
 #include <vector>
 
 namespace complex
@@ -524,7 +523,6 @@ inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeS
     throw std::runtime_error("complex::StringToGeometryType: No known IGeometry::Type matches the given string value.");
   }
 }
-
 
 inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjType)
 {
