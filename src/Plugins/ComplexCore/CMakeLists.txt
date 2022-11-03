@@ -8,11 +8,10 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
   AlignGeometries
-  ApproximatePointCloudHull
   ApplyTransformationToGeometryFilter
+  ApproximatePointCloudHull
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
-  CreateFeatureArrayFromElementArray
   ChangeAngleRepresentation
   CombineAttributeArraysFilter
   ConditionalSetValue
@@ -21,18 +20,21 @@ set(FilterList
   CreateAttributeMatrixFilter
   CreateDataArray
   CreateDataGroup
+  CreateFeatureArrayFromElementArray
   CreateImageGeometry
   CropImageGeometry
   CropVertexGeometry
   DeleteData
-  ExtractInternalSurfacesFromTriangleGeometry
   ExportDREAM3DFilter
+  ExtractInternalSurfacesFromTriangleGeometry
+  FindArrayStatisticsFilter
   FindDifferencesMap
   FindFeaturePhasesFilter
   FindNeighborListStatistics
   FindNeighbors
   FindSurfaceFeatures
   IdentifySample
+  ImportCSVDataFilter
   ImportDREAM3DFilter
   ImportHDF5Dataset
   ImportTextFilter
@@ -40,7 +42,6 @@ set(FilterList
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
   LaplacianSmoothingFilter
-  LinkGeometryDataFilter
   MapPointCloudToRegularGridFilter
   MinNeighbors
   MoveData
@@ -48,7 +49,6 @@ set(FilterList
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RawBinaryReaderFilter
-  ImportCSVDataFilter
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
@@ -56,9 +56,8 @@ set(FilterList
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   StlFileReaderFilter
-  FindArrayStatisticsFilter
-  TriangleNormalFilter
   TriangleDihedralAngleFilter
+  TriangleNormalFilter
 )
 
 set(ActionList
@@ -83,6 +82,8 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
                       ALGORITHM_LIST ${AlgorithmList}
                       DESCRIPTION "Plugin for ${PLUGIN_NAME}"
                       VERSION "0.1.0"
+                      DOC_CHECK
+                      ADD_TO_GLOBAL_LIST
 )
 
 #------------------------------------------------------------------------------

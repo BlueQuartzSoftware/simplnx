@@ -1,4 +1,4 @@
-# Create Data Group  #
+# Copy Data Group #
 
 
 ## Group (Subgroup) ##
@@ -7,7 +7,7 @@ Core (Generation)
 
 ## Description ##
 
-This **Filter** creates a new **Data Container**.
+This **Filter** copies a DataGroup
 
 ## Parameters ##
 
@@ -25,7 +25,7 @@ Not Applicable
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|-------------|---------|----------------|
-| **Data Container** | DataContainer | N/A | N/A | Created **Data Container** name |
+| DataGroup | DataContainer | N/A | N/A | Created Group name |
 
 
 ## Example Pipelines ##

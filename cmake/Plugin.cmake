@@ -10,7 +10,7 @@ include(GNUInstallDirs)
 # PLUGIN_SOURCE_DIR The source directory for the plugin
 function(complex_COMPILE_PLUGIN)
   set(options)
-  set(oneValueArgs PLUGIN_NAME PLUGIN_SOURCE_DIR)
+  set(oneValueArgs PLUGIN_NAME PLUGIN_SOURCE_DIR DOC_CHECK)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   option(COMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME} "Build the ${ARGS_PLUGIN_NAME}" ON)
@@ -20,10 +20,6 @@ function(complex_COMPILE_PLUGIN)
     get_property(PluginNumFilters GLOBAL PROPERTY ${ARGS_PLUGIN_NAME}_filter_count)
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/test_output)
     message(STATUS "${ARGS_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
-
-    get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
-    set(ComplexPluginTargets ${ComplexPluginTargets} ${ARGS_PLUGIN_NAME})
-    set_property(GLOBAL PROPERTY ComplexPluginTargets ${ComplexPluginTargets})
 
     #- Now set up the dependency between the main application and each of the plugins so that
     #- things like Visual Studio are forced to rebuild the plugins when launching
@@ -43,11 +39,12 @@ endfunction()
 # Arguments:
 # PLUGIN_NAME The name of the Plugin
 function(complex_add_plugin)
-  set(options)
+  set(options )
   set(oneValueArgs PLUGIN_NAME)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(COMPLEX_PLUGIN_SEARCH_DIRS_2 ${COMPLEX_PLUGIN_SEARCH_DIRS} 
+                                      ${complex_SOURCE_DIR}/src/Plugins
                                       ${complex_SOURCE_DIR}/../complex_plugins 
                                       ${complex_SOURCE_DIR}/../DREAM3D_Plugins
                                       )
@@ -57,7 +54,7 @@ function(complex_add_plugin)
   if(NOT DEFINED COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR OR NOT EXISTS "${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
     #message(STATUS "COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR was NOT Defined. Searching for Plugins in 'COMPLEX_PLUGIN_SEARCH_DIRS_2'")
     foreach(pluginSearchDir ${COMPLEX_PLUGIN_SEARCH_DIRS_2})
-      # message(STATUS "|-Searching:${pluginSearchDir} ")
+      #message(STATUS "|-Searching:${pluginSearchDir} ")
       if(EXISTS ${pluginSearchDir}/${ARGS_PLUGIN_NAME}/CMakeLists.txt)
         set(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir}/${ARGS_PLUGIN_NAME} CACHE PATH "")
         #message(STATUS "  |-Plugin: Defining COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR to ${COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR}")
@@ -89,7 +86,7 @@ function(complex_add_plugin)
       math(EXPR PLUGIN_COUNT "${PLUGIN_COUNT}+1")
       set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT ${PLUGIN_COUNT})
     else()
-      message(STATUS "${PLUGIN_NAME} DISABLED use '-DCOMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME}=ON to enable this plugin")
+      message(STATUS "${ARGS_PLUGIN_NAME} [DISABLED]: Use '-DCOMPLEX_PLUGIN_ENABLE_${ARGS_PLUGIN_NAME}=ON' to enable this plugin")
     endif()
   else()
     set(COMPLEX_${ARGS_PLUGIN_NAME}_SOURCE_DIR ${pluginSearchDir} CACHE PATH "" FORCE)
@@ -107,7 +104,7 @@ endfunction()
 # FILTER_LIST the list of filters to compile
 # ACTION_LIST
 function(create_complex_plugin)
-  set(options)
+  set(options DOC_CHECK ADD_TO_GLOBAL_LIST)
   set(oneValueArgs NAME DESCRIPTION VERSION)
   set(multiValueArgs FILTER_LIST ACTION_LIST ALGORITHM_LIST)
   cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -135,8 +132,6 @@ function(create_complex_plugin)
   set(${ARGS_NAME}_Plugin_SRCS
     ${${ARGS_NAME}_SOURCE_DIR}/src/${ARGS_NAME}/${ARGS_NAME}Plugin.cpp
   )
-
-
 
   #------------------------------------------------------------------------------
   # Plugin Filter Files
@@ -199,16 +194,35 @@ function(create_complex_plugin)
 
   #------------------------------------------------------------------------------
   # Add the plugin to the global list of plugins. This is needed for installation.
-  #------------------------------------------------------------------------------  
-  get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
-  set(ComplexPluginTargets ${ComplexPluginTargets} ${ARGS_NAME})
-  set_property(GLOBAL PROPERTY ComplexPluginTargets ${ComplexPluginTargets})
-  
+  #------------------------------------------------------------------------------
+  if(${ARGS_ADD_TO_GLOBAL_LIST})
+    get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+    set(ComplexPluginTargets ${ComplexPluginTargets} ${ARGS_NAME})
+    set_property(GLOBAL PROPERTY ComplexPluginTargets ${ComplexPluginTargets})
+  endif()
+  #------------------------------------------------------------------------------
+  # Add a global property that stores the filters that are in this plugin
+  #------------------------------------------------------------------------------   
+  set_property(GLOBAL PROPERTY ${ARGS_NAME}_FILTER_LIST ${ARGS_FILTER_LIST})
+
   set_target_properties(${ARGS_NAME}
     PROPERTIES
       FOLDER "Plugins/${ARGS_NAME}"
       SUFFIX ".complex"
   )
+
+  #------------------------------------------------------------------------------
+  # Sanity check there is a documentation file
+  #------------------------------------------------------------------------------
+  if(${ARGS_DOC_CHECK})
+    foreach(file_name ${ARGS_FILTER_LIST})
+      #message(STATUS "CHECKING DOCS FOR ${file_name}")
+      #string(REPLACE "Filter" "" file_name ${file_name})
+      if(NOT EXISTS "${${ARGS_NAME}_SOURCE_DIR}/docs/${file_name}.md")
+        message(STATUS "!!!> DOCUMENTATION WARNING:${${ARGS_NAME}_SOURCE_DIR}/docs/${file_name}.md Does Not Exist")
+      endif()
+    endforeach()
+  endif()
 
   #------------------------------------------------------------------------------
   # Where are the plugins going to be placed during the build, unless overridden
