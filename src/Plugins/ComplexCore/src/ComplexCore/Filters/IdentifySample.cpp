@@ -274,7 +274,7 @@ Parameters IdentifySample::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "DataPath to the target ImageGeom", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxels_Key, "Mask", "DataPath to the target Good Voxels array", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::boolean, complex::DataType::uint8}, ArraySelectionParameter::ComponentTypes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::boolean, complex::DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   return params;
 }
 

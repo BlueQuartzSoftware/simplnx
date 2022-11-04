@@ -11,7 +11,7 @@
 namespace complex
 {
 MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                           const AllowedTypes& allowedTypes, ComponentTypes requiredComps)
+                                                           const AllowedTypes& allowedTypes, AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowedTypes(allowedTypes)
@@ -96,7 +96,7 @@ MultiArraySelectionParameter::AllowedTypes MultiArraySelectionParameter::allowed
   return m_AllowedTypes;
 }
 
-MultiArraySelectionParameter::ComponentTypes MultiArraySelectionParameter::requiredComponentShapes() const
+MultiArraySelectionParameter::AllowedComponentShapes MultiArraySelectionParameter::requiredComponentShapes() const
 {
   return m_RequiredComponentShapes;
 }

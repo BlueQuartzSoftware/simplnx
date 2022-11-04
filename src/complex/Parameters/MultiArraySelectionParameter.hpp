@@ -14,11 +14,11 @@ class COMPLEX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 public:
   using ValueType = std::vector<DataPath>;
   using AllowedTypes = std::set<DataType>;
-  using ComponentTypes = std::vector<IArray::ShapeType>;
+  using AllowedComponentShapes = std::vector<IArray::ShapeType>;
 
   MultiArraySelectionParameter() = delete;
   MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                               ComponentTypes requiredComps = {});
+                               AllowedComponentShapes requiredComps = {});
   ~MultiArraySelectionParameter() override = default;
 
   MultiArraySelectionParameter(const MultiArraySelectionParameter&) = delete;
@@ -81,7 +81,7 @@ public:
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
    * @return
    */
-  ComponentTypes requiredComponentShapes() const;
+  AllowedComponentShapes requiredComponentShapes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -111,7 +111,7 @@ public:
 private:
   ValueType m_DefaultValue = {};
   AllowedTypes m_AllowedTypes = {};
-  ComponentTypes m_RequiredComponentShapes = {};
+  AllowedComponentShapes m_RequiredComponentShapes = {};
 };
 } // namespace complex
 

@@ -19,11 +19,11 @@ class COMPLEX_EXPORT ArraySelectionParameter : public MutableDataParameter
 public:
   using ValueType = DataPath;
   using AllowedTypes = std::set<DataType>;
-  using ComponentTypes = std::vector<IArray::ShapeType>;
+  using AllowedComponentShapes = std::vector<IArray::ShapeType>;
 
   ArraySelectionParameter() = delete;
   ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                          ComponentTypes requiredComps = {});
+                          AllowedComponentShapes requiredComps = {});
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;
@@ -86,7 +86,7 @@ public:
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
    * @return
    */
-  ComponentTypes requiredComponentShapes() const;
+  AllowedComponentShapes requiredComponentShapes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -116,7 +116,7 @@ public:
 private:
   ValueType m_DefaultValue = {};
   AllowedTypes m_AllowedTypes = {};
-  ComponentTypes m_RequiredComponentShapes = {};
+  AllowedComponentShapes m_RequiredComponentShapes = {};
 };
 } // namespace complex
 

@@ -32,7 +32,7 @@ struct fmt::formatter<complex::DataType>
 namespace complex
 {
 ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                                                 ComponentTypes requiredComps)
+                                                 AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowedTypes(allowedTypes)
@@ -102,7 +102,7 @@ ArraySelectionParameter::AllowedTypes ArraySelectionParameter::allowedTypes() co
   return m_AllowedTypes;
 }
 
-ArraySelectionParameter::ComponentTypes ArraySelectionParameter::requiredComponentShapes() const
+ArraySelectionParameter::AllowedComponentShapes ArraySelectionParameter::requiredComponentShapes() const
 {
   return m_RequiredComponentShapes;
 }

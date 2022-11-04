@@ -53,7 +53,7 @@ Parameters LaplacianSmoothingFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle, IGeometry::Type::Tetrahedral}));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type", "The complete path to the array specifying the type of node in the Geometry", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int8}, ArraySelectionParameter::ComponentTypes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Smoothing Values"});
 
   params.insert(std::make_unique<Int32Parameter>(
