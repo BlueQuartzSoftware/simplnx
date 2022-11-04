@@ -4,6 +4,7 @@
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -125,7 +126,7 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const INeighborList* neighborList = dynamic_cast<const INeighborList*>(object);
+  const auto* neighborList = dynamic_cast<const INeighborList*>(object);
   if(neighborList == nullptr)
   {
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not a neighbor list.", prefix, value.toString()));

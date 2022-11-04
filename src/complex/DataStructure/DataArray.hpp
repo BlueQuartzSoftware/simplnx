@@ -3,6 +3,7 @@
 #include "DataPath.hpp"
 #include "DataStructure.hpp"
 #include "complex/Common/Bit.hpp"
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
@@ -12,6 +13,11 @@ namespace complex
 {
 template <typename T>
 class NeighborList;
+
+namespace DataArrayConstants
+{
+constexpr StringLiteral k_TypeName = "DataArray<T>";
+}
 
 /**
  * @class DataArray

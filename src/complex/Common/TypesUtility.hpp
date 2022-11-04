@@ -3,11 +3,30 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/DataStructure/AttributeMatrix.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/DynamicListArray.hpp"
+#include "complex/DataStructure/Geometry/EdgeGeom.hpp"
+#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
+#include "complex/DataStructure/Geometry/IGridGeometry.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry1D.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry3D.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Geometry/QuadGeom.hpp"
+#include "complex/DataStructure/Geometry/RectGridGeom.hpp"
+#include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+#include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
+#include "complex/DataStructure/NeighborList.hpp"
+#include "complex/DataStructure/ScalarData.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 
 #include <optional>
 #include <stdexcept>
-#include <type_traits>
 #include <vector>
 
 namespace complex
@@ -505,4 +524,85 @@ inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeS
   }
 }
 
+inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjType)
+{
+  switch(dataObjType)
+  {
+  case complex::DataObject::Type::BaseGroup: {
+    return complex::BaseGroup::k_TypeName;
+  }
+  case complex::DataObject::Type::DataGroup: {
+    return complex::DataGroup::k_TypeName;
+  }
+  case complex::DataObject::Type::AttributeMatrix: {
+    return complex::AttributeMatrix::k_TypeName;
+  }
+  case complex::DataObject::Type::IGeometry: {
+    return complex::IGeometry::k_TypeName;
+  }
+  case complex::DataObject::Type::IGridGeometry: {
+    return complex::IGridGeometry::k_TypeName;
+  }
+  case complex::DataObject::Type::INodeGeometry0D: {
+    return complex::INodeGeometry0D::k_TypeName;
+  }
+  case complex::DataObject::Type::INodeGeometry1D: {
+    return complex::INodeGeometry1D::k_TypeName;
+  }
+  case complex::DataObject::Type::INodeGeometry2D: {
+    return complex::INodeGeometry2D::k_TypeName;
+  }
+  case complex::DataObject::Type::INodeGeometry3D: {
+    return complex::INodeGeometry3D::k_TypeName;
+  }
+  case complex::DataObject::Type::ImageGeom: {
+    return complex::ImageGeom::k_TypeName;
+  }
+  case complex::DataObject::Type::RectGridGeom: {
+    return complex::RectGridGeom::k_TypeName;
+  }
+  case complex::DataObject::Type::VertexGeom: {
+    return complex::VertexGeom::k_TypeName;
+  }
+  case complex::DataObject::Type::EdgeGeom: {
+    return complex::EdgeGeom::k_TypeName;
+  }
+  case complex::DataObject::Type::TriangleGeom: {
+    return complex::TriangleGeom::k_TypeName;
+  }
+  case complex::DataObject::Type::QuadGeom: {
+    return complex::QuadGeom::k_TypeName;
+  }
+  case complex::DataObject::Type::TetrahedralGeom: {
+    return complex::TetrahedralGeom::k_TypeName;
+  }
+  case complex::DataObject::Type::HexahedralGeom: {
+    return complex::HexahedralGeom::k_TypeName;
+  }
+  case complex::DataObject::Type::IDataArray: {
+    return complex::IDataArray::k_TypeName;
+  }
+  case complex::DataObject::Type::DataArray: {
+    return complex::DataArrayConstants::k_TypeName;
+  }
+  case complex::DataObject::Type::INeighborList: {
+    return complex::INeighborList::k_TypeName;
+  }
+  case complex::DataObject::Type::NeighborList: {
+    return complex::NeighborListConstants::k_TypeName;
+  }
+  case complex::DataObject::Type::ScalarData: {
+    return complex::ScalarDataConstants::k_TypeName;
+  }
+  case complex::DataObject::Type::StringArray: {
+    return complex::StringArray::k_TypeName;
+  }
+  case complex::DataObject::Type::DynamicListArray: {
+    return complex::DynamicListArrayConstants::k_TypeName;
+  }
+  default: {
+    throw std::runtime_error("complex::DataObjectTypeToString: Unknown DataObject::Type");
+  }
+  }
+}
 } // namespace complex

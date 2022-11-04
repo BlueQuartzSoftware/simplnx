@@ -17,6 +17,8 @@ public:
 
   static inline constexpr usize k_NumVerts = 1;
 
+  static inline constexpr StringLiteral k_TypeName = "VertexGeom";
+
   /**
    * @brief
    * @param ds

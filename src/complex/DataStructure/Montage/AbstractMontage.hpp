@@ -24,6 +24,8 @@ public:
   using ConstIterator = CollectionType::const_iterator;
   using BoundsType = void;
 
+  static inline constexpr StringLiteral k_TypeName = "AbstractMontage";
+
   /**
    * @brief Creates a copy of the target AbstractMontage but does not add it to
    * DataStructure. The caller is responsible for deleting the constructed

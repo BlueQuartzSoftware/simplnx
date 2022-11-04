@@ -9,6 +9,8 @@ class COMPLEX_EXPORT IArray : public DataObject
 public:
   using ShapeType = std::vector<usize>;
 
+  static inline constexpr StringLiteral k_TypeName = "IArray";
+
   ~IArray() override = default;
 
   /**

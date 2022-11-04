@@ -57,7 +57,7 @@ QuadGeom* QuadGeom::Import(DataStructure& ds, std::string name, IdType importId,
 
 std::string QuadGeom::getTypeName() const
 {
-  return "QuadGeom";
+  return k_TypeName;
 }
 
 DataObject* QuadGeom::shallowCopy()

@@ -20,6 +20,7 @@ class COMPLEX_EXPORT INodeGeometry2D : public INodeGeometry1D
 public:
   static inline constexpr StringLiteral k_FaceDataName = "Face Data";
   static inline constexpr StringLiteral k_Edges = "Shared Edge List";
+  static inline constexpr StringLiteral k_TypeName = "INodeGeometry2D";
 
   INodeGeometry2D() = delete;
   INodeGeometry2D(const INodeGeometry2D&) = default;

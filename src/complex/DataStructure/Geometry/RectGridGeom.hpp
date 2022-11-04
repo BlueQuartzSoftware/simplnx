@@ -16,6 +16,8 @@ class COMPLEX_EXPORT RectGridGeom : public IGridGeometry
 public:
   friend class DataStructure;
 
+  static inline constexpr StringLiteral k_TypeName = "RectGridGeom";
+
   /**
    * @brief
    * @param ds

@@ -12,10 +12,13 @@ TEST_CASE("ComplexCore::IdentifySample(Instantiate)", "[ComplexCore][IdentifySam
 {
   static constexpr bool k_FillHoles = true;
   static const DataPath k_ImageGeomPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
-  static const DataPath k_MaskArrayPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "IPF Colors"});
+  static const std::string k_MaskName = "Mask";
+  static const DataPath k_MaskArrayPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_MaskName});
 
   IdentifySample filter;
   DataStructure dataGraph = UnitTest::CreateDataStructure();
+  auto scanDataId = dataGraph.getId(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData})).value();
+  UInt8Array* maskArray = UnitTest::CreateTestDataArray<uint8>(dataGraph, k_MaskName, {80, 60, 40}, {1}, scanDataId);
   Arguments args;
 
   args.insert(IdentifySample::k_FillHoles_Key, std::make_any<bool>(k_FillHoles));

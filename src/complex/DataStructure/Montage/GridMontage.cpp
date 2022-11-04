@@ -53,7 +53,7 @@ GridMontage* GridMontage::Import(DataStructure& ds, std::string name, IdType imp
 
 std::string GridMontage::getTypeName() const
 {
-  return "GridMontage";
+  return k_TypeName;
 }
 
 DataObject* GridMontage::shallowCopy()

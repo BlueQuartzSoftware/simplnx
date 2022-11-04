@@ -22,6 +22,8 @@ class COMPLEX_EXPORT ImageGeom : public IGridGeometry
 public:
   friend class DataStructure;
 
+  static inline constexpr StringLiteral k_TypeName = "ImageGeom";
+
   enum class ErrorType : EnumType
   {
     XOutOfBoundsLow = 0,

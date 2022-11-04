@@ -47,9 +47,9 @@ Parameters ConditionalSetValue::parameters() const
 {
   Parameters params;
   params.insert(std::make_unique<StringParameter>(k_ReplaceValue_Key, "New Value", "The value that will be used as the replacement value", ""));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ConditionalArrayPath_Key, "Conditional Array",
-                                                          "The complete path to the conditional array that will determine which values/entries will be replaced", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8, DataType::int8}));
+  params.insert(std::make_unique<ArraySelectionParameter>(
+      k_ConditionalArrayPath_Key, "Conditional Array", "The complete path to the conditional array that will determine which values/entries will be replaced", DataPath{},
+      ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array", "The complete path to array that will have values replaced", DataPath{}, complex::GetAllDataTypes()));
   return params;

@@ -10,6 +10,7 @@ class COMPLEX_EXPORT INodeGeometry0D : public IGeometry
 {
 public:
   static inline constexpr StringLiteral k_VertexDataName = "Vertex Data";
+  static inline constexpr StringLiteral k_TypeName = "INodeGeometry0D";
 
   INodeGeometry0D() = delete;
   INodeGeometry0D(const INodeGeometry0D&) = default;
