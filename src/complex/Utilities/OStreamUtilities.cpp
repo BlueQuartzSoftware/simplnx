@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <fstream>
+#include <iomanip>
 #include <ostream>
 #include <string>
 
@@ -40,7 +41,8 @@ struct PrintNeighborList
       {
         outputStrm << "Feature_IDs" << delimiter;
       }
-      outputStrm << "Element Count" << delimiter << "NeighborList" << delimiter << "\n";
+      outputStrm << "Element Count" << delimiter << "NeighborList"
+                 << "\n";
     }
     if(hasIndex)
     {
@@ -58,12 +60,16 @@ struct PrintNeighborList
           }
         }
         const auto& grain = neighborList.getListReference(list);
-        outputStrm << list << grain.size() << delimiter;
+        outputStrm << list << delimiter << grain.size() << delimiter;
         for(size_t index = 0; index < grain.size(); index++)
         {
           if constexpr(std::is_same_v<ScalarType, int8> || std::is_same_v<ScalarType, uint8>)
           {
             outputStrm << static_cast<int32>(grain[index]);
+          }
+          else if constexpr(std::is_same_v<ScalarType, float32> || std::is_same_v<ScalarType, float64>)
+          {
+            outputStrm << fmt::format("{}", grain[index]);
           }
           else
           {
@@ -99,6 +105,10 @@ struct PrintNeighborList
           if constexpr(std::is_same_v<ScalarType, int8> || std::is_same_v<ScalarType, uint8>)
           {
             outputStrm << static_cast<int32>(grain[index]);
+          }
+          else if constexpr(std::is_same_v<ScalarType, float32> || std::is_same_v<ScalarType, float64>)
+          {
+            outputStrm << fmt::format("{}", grain[index]);
           }
           else
           {
@@ -159,6 +169,10 @@ struct PrintDataArray
         if constexpr(std::is_same_v<ScalarType, int8> || std::is_same_v<ScalarType, uint8>)
         {
           outputStrm << static_cast<int32>(dataArray[index]);
+        }
+        else if constexpr(std::is_same_v<ScalarType, float32> || std::is_same_v<ScalarType, float64>)
+        {
+          outputStrm << fmt::format("{}", dataArray[index]);
         }
         else
         {
@@ -259,6 +273,10 @@ public:
       if constexpr(std::is_same_v<ScalarType, int8> || std::is_same_v<ScalarType, uint8>)
       {
         outputStrm << static_cast<int32>(m_DataArray[tupleIndex * m_NumComps + comp]);
+      }
+      else if constexpr(std::is_same_v<ScalarType, float32> || std::is_same_v<ScalarType, float64>)
+      {
+        outputStrm << fmt::format("{}", m_DataArray[tupleIndex * m_NumComps + comp]);
       }
       else
       {
@@ -510,7 +528,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
 
   if(neighborLists.size() != 0)
   {
-    for(const auto& dataPath : objectPaths)
+    for(const auto& dataPath : neighborLists)
     {
       auto* neighborList = dataStructure.getDataAs<INeighborList>(dataPath);
       if(neighborList != nullptr)
