@@ -13,7 +13,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FillBadDataTest.cpp # NEEDS TEST IMPLEMENTED
   FindFeatureCentroidsFilterTest.cpp
   FindShapesFilterTest.cpp
-  ResampleImageGeomFilterTest.cpp # NEEDS TEST IMPLEMENTED
+  ResampleImageGeomFilterTest.cpp
   RotateSampleRefFrameTest.cpp
   ErodeDilateBadDataTest.cpp
   WriteASCIIDataTest.cpp

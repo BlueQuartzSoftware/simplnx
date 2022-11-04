@@ -38,7 +38,7 @@ public:
   ~ChangeResolutionImpl() = default;
 
   // -----------------------------------------------------------------------------
-  void compute(size_t zStart, size_t zEnd, size_t yStart, size_t yEnd, size_t xStart, size_t xEnd) const
+  void compute(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd, size_t zStart, size_t zEnd) const
   {
     for(size_t i = zStart; i < zEnd; i++)
     {
@@ -150,6 +150,7 @@ Result<> ResampleImageGeom::operator()()
   int32_t threadCount = 0;
 #endif
 
+  // copy over/resample the cell data
   for(const auto& cellArrayPath : selectedCellArrays)
   {
     if(m_ShouldCancel)
@@ -230,12 +231,13 @@ Result<> ResampleImageGeom::operator()()
   g->wait();
 #endif
 
+  // optionally: copy over and renumber/resize the cell feature data
   if(m_InputValues->renumberFeatures)
   {
     const AttributeMatrix* srcCellFeaturData = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->cellFeatureAttributeMatrix);
     DataPath destCellFeaturesPath = m_InputValues->newDataContainerPath.createChildPath(m_InputValues->cellFeatureAttributeMatrix.getTargetName());
-    AttributeMatrix& cellFeaturData = m_DataStructure.getDataRefAs<AttributeMatrix>(destCellFeaturesPath);
-    for(const auto& [id, object] : cellFeaturData)
+    AttributeMatrix& cellFeatureData = m_DataStructure.getDataRefAs<AttributeMatrix>(destCellFeaturesPath);
+    for(const auto& [id, object] : cellFeatureData)
     {
       if(m_ShouldCancel)
       {
@@ -293,11 +295,6 @@ Result<> ResampleImageGeom::operator()()
     {
       return result;
     }
-  }
-
-  if(m_InputValues->removeOriginalImageGeom)
-  {
-    return MakeErrorResult(-23500, "Removing Original Geometry Group is not Implemented.");
   }
 
   return {};
