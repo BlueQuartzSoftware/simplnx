@@ -54,10 +54,11 @@ Parameters FindSurfaceAreaToVolumeFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          ArraySelectionParameter::ComponentTypes{{1}}));
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_NumCellsArrayPath_Key, "Number of Cells", "", DataPath({"CellFeatureData", "NumElements"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsArrayPath_Key, "Number of Cells", "", DataPath({"CellFeatureData", "NumElements"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::ComponentTypes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceAreaVolumeRatioArrayName_Key, "Surface Area to Volume Ratio", "", DataPath({"CellFeatureData", "SurfaceAreaVolumeRatio"})));
   params.insert(std::make_unique<ArrayCreationParameter>(k_SphericityArrayName_Key, "Sphericity Array Name", "", DataPath({"CellFeatureData", "Sphericity"})));

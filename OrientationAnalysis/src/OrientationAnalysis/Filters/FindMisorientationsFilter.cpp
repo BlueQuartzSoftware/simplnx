@@ -56,15 +56,15 @@ Parameters FindMisorientationsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Feature Neighbor List", "", DataPath({"DataContainer", "FeatureData", "NeighborList"}),
-                                                                 ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
+                                                                 NeighborListSelectionParameter::AllowedTypes{complex::DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Feature Average Quaternions", "", DataPath({"DataContainer", "FeatureData", "AvgQuats"}),
-                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::float32}));
+                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::float32}, ArraySelectionParameter::ComponentTypes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "", DataPath({"DataContainer", "FeatureData", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
+                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::int32}, ArraySelectionParameter::ComponentTypes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::ComponentTypes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationListArrayName_Key, "Misorientation List", "", "MisorientationList"));

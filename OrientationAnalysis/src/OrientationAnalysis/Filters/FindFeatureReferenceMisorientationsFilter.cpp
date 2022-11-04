@@ -56,19 +56,22 @@ Parameters FindFeatureReferenceMisorientationsFilter::parameters() const
       std::make_unique<ChoicesParameter>(k_ReferenceOrientation_Key, "Reference Orientation", "", 0, ChoicesParameter::Choices{"Average Orientation", "Orientation at Feature Centroid"}));
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"CellData", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath({"CellData", "Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          ArraySelectionParameter::ComponentTypes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"CellData", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+                                                          ArraySelectionParameter::ComponentTypes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Quaternions", "", DataPath({"CellData", "Quats"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
+                                                          ArraySelectionParameter::ComponentTypes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "", DataPath({"CellData", "GBEuclideanDistances"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::ComponentTypes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "", DataPath({"CellFeatureData", "AvgQuats"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::ComponentTypes{{4}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "", DataPath({"CellFeatureData"})));
   params.insertSeparator(Parameters::Separator{"Required Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"Ensemble Data", "CrystalStructures"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::ComponentTypes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureReferenceMisorientationsArrayName_Key, "Feature Reference Misorientations", "", "FeatureReferenceMisorientations"));
