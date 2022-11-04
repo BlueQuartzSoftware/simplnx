@@ -3,6 +3,7 @@
 #include <set>
 #include <string>
 
+#include "complex/DataStructure/IArray.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/complex_export.hpp"

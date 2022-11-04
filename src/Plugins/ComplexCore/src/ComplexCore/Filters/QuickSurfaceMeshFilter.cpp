@@ -64,7 +64,7 @@ Parameters QuickSurfaceMeshFilter::parameters() const
   params.insert(
       std::make_unique<DataPathSelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "The complete path to the Array specifying which Feature each Cell belongs to", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Transfer",
                                                                "The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry",
                                                                MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));

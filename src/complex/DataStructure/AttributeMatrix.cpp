@@ -80,7 +80,7 @@ DataObject* AttributeMatrix::shallowCopy()
 
 std::string AttributeMatrix::getTypeName() const
 {
-  return "AttributeMatrix";
+  return k_TypeName;
 }
 
 bool AttributeMatrix::canInsert(const DataObject* obj) const

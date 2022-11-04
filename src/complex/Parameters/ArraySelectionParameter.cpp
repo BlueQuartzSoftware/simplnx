@@ -4,7 +4,7 @@
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
-#include "complex/DataStructure/INeighborList.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -31,10 +31,12 @@ struct fmt::formatter<complex::DataType>
 
 namespace complex
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes)
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
+                                                 AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowedTypes(allowedTypes)
+, m_RequiredComponentShapes(requiredComps)
 {
   if(allowedTypes.empty())
   {
@@ -100,6 +102,11 @@ ArraySelectionParameter::AllowedTypes ArraySelectionParameter::allowedTypes() co
   return m_AllowedTypes;
 }
 
+ArraySelectionParameter::AllowedComponentShapes ArraySelectionParameter::requiredComponentShapes() const
+{
+  return m_RequiredComponentShapes;
+}
+
 Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
@@ -121,7 +128,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const IDataArray* dataArray = dynamic_cast<const IDataArray*>(object);
+  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
   if(dataArray == nullptr)
   {
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
@@ -134,6 +141,31 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     {
       return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
                                       fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
+    }
+  }
+
+  if(!m_RequiredComponentShapes.empty())
+  {
+    std::string compStr;
+    bool foundMatch = false;
+    for(const auto& compShape : m_RequiredComponentShapes)
+    {
+      if(compShape == dataArray->getComponentShape())
+      {
+        foundMatch = true;
+        break;
+      }
+      compStr += StringUtilities::number(compShape[0]);
+      for(usize i = 1; i < compShape.size(); ++i)
+      {
+        compStr += " x " + StringUtilities::number(compShape[i]);
+      }
+      compStr += " or ";
+    }
+    if(!foundMatch)
+    {
+      return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_TupleShapeValue,
+                                        fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, value.toString(), compStr));
     }
   }
 

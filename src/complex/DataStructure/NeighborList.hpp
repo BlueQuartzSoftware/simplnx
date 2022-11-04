@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
 
 namespace complex
@@ -17,6 +18,11 @@ namespace Constants
 constexpr StringLiteral NumNeighborsTag = "_NumNeighbors";
 }
 } // namespace H5
+
+namespace NeighborListConstants
+{
+static inline constexpr StringLiteral k_TypeName = "NeighborList<T>";
+}
 
 /**
  * @class NeighborList

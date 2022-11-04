@@ -58,7 +58,7 @@ TriangleGeom* TriangleGeom::Import(DataStructure& ds, std::string name, IdType i
 
 std::string TriangleGeom::getTypeName() const
 {
-  return "TriangleGeom";
+  return k_TypeName;
 }
 
 DataObject* TriangleGeom::shallowCopy()

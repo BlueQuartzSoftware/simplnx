@@ -58,7 +58,7 @@ RectGridGeom* RectGridGeom::Import(DataStructure& ds, std::string name, IdType i
 
 std::string RectGridGeom::getTypeName() const
 {
-  return "RectGridGeom";
+  return k_TypeName;
 }
 
 DataObject* RectGridGeom::shallowCopy()

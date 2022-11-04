@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "complex/DataStructure/IArray.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Utilities/ArrayThreshold.hpp"
@@ -13,9 +14,10 @@ class COMPLEX_EXPORT ArrayThresholdsParameter : public MutableDataParameter
 {
 public:
   using ValueType = ArrayThresholdSet;
+  using AllowedComponentShapes = std::vector<IArray::ShapeType>;
 
   ArrayThresholdsParameter() = delete;
-  ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, AllowedComponentShapes requiredComps = {});
   ~ArrayThresholdsParameter() override = default;
 
   ArrayThresholdsParameter(const ArrayThresholdsParameter&) = delete;
@@ -68,6 +70,12 @@ public:
   ValueType defaultPath() const;
 
   /**
+   * @brief Returns the required number of components. If return value is empty, then no component requirements.
+   * @return
+   */
+  AllowedComponentShapes requiredComponentShapes() const;
+
+  /**
    * @brief
    * @param value
    * @return Result<>
@@ -100,6 +108,7 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
+  AllowedComponentShapes m_RequiredComponentShapes = {};
 };
 } // namespace complex
 

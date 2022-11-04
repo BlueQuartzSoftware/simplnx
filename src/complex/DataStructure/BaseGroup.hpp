@@ -37,6 +37,8 @@ public:
   using Iterator = typename DataMap::Iterator;
   using ConstIterator = typename DataMap::ConstIterator;
 
+  static inline constexpr StringLiteral k_TypeName = "BaseGroup";
+
   enum class GroupType : uint32
   {
     BaseGroup,

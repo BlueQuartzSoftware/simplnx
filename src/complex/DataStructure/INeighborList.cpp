@@ -1,5 +1,7 @@
 #include "INeighborList.hpp"
 
+#include "complex/DataStructure/NeighborList.hpp"
+
 namespace complex
 {
 INeighborList::INeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples)
@@ -18,7 +20,7 @@ INeighborList::~INeighborList() = default;
 
 std::string INeighborList::getTypeName() const
 {
-  return std::string("NeighborList<T>");
+  return NeighborListConstants::k_TypeName;
 }
 
 void INeighborList::setNumNeighborsArrayName(const std::string& name)

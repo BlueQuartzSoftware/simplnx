@@ -9,6 +9,12 @@
 
 namespace complex
 {
+
+namespace DynamicListArrayConstants
+{
+constexpr StringLiteral k_TypeName = "DynamicListArray";
+}
+
 template <typename T, typename K>
 class DynamicListArray : public DataObject
 {
@@ -126,7 +132,7 @@ public:
    */
   std::string getTypeName() const override
   {
-    return "DynamicListArray";
+    return DynamicListArrayConstants::k_TypeName;
   }
 
   /**

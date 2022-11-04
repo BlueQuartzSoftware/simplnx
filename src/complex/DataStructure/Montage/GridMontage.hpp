@@ -21,6 +21,8 @@ public:
   using DimensionsType = SizeVec3;
   using TileIdType = GridTileIndex;
 
+  static inline constexpr StringLiteral k_TypeName = "GridMontage";
+
   /**
    * @brief Attempts to create a new GridMontage and insert it into the
    * DataStructure. If the parentId is provided, then the created montage will

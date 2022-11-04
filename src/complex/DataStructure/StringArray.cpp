@@ -9,7 +9,7 @@ namespace complex
 {
 std::string StringArray::GetTypeName()
 {
-  return "StringArray";
+  return k_TypeName;
 }
 
 StringArray* StringArray::Create(DataStructure& ds, const std::string_view& name, const std::optional<IdType>& parentId)

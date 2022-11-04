@@ -57,7 +57,7 @@ BaseGroup::GroupType EdgeGeom::getGroupType() const
 
 std::string EdgeGeom::getTypeName() const
 {
-  return "EdgeGeom";
+  return k_TypeName;
 }
 
 DataObject* EdgeGeom::shallowCopy()

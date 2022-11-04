@@ -57,7 +57,7 @@ TetrahedralGeom* TetrahedralGeom::Import(DataStructure& ds, std::string name, Id
 
 std::string TetrahedralGeom::getTypeName() const
 {
-  return "TetrahedralGeom";
+  return k_TypeName;
 }
 
 DataObject* TetrahedralGeom::shallowCopy()

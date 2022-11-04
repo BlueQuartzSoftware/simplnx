@@ -28,6 +28,7 @@ public:
   using ElementDynamicList = DynamicListArray<uint16, MeshIndexType>;
 
   static inline constexpr StringLiteral k_VoxelSizes = "Voxel Sizes";
+  static inline constexpr StringLiteral k_TypeName = "IGeometry";
 
   enum class Type : uint32
   {

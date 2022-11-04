@@ -15,6 +15,8 @@ namespace complex
 class COMPLEX_EXPORT DataGroup : public BaseGroup
 {
 public:
+  static constexpr StringLiteral k_TypeName = "DataGroup";
+
   /**
    * @brief Attempts to construct and insert a DataGroup into the DataStructure.
    * If a parentId is provided, then the DataGroup is created with the
