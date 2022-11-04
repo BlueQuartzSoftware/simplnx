@@ -1,4 +1,4 @@
-# Remove Flagged Vertices #
+# Remove Flagged Vertices
 
 ## Group (Subgroup) ##
 

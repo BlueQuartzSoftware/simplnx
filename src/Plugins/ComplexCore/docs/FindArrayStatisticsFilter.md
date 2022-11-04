@@ -1,4 +1,4 @@
-# Find Attribute Array Statistics #
+# Find Attribute Array Statistics
 
 ## Group (Subgroup) ##
 

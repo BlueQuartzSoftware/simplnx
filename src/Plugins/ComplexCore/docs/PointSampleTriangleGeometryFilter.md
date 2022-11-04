@@ -1,4 +1,4 @@
-# Point Sample Triangle Geometry #
+# Point Sample Triangle Geometry
 
 ## Group (Subgroup) ##
 

@@ -1,4 +1,4 @@
-# IterativeClosestPoint #
+# IterativeClosestPoint
 
 ## Group (Subgroup) ##
 

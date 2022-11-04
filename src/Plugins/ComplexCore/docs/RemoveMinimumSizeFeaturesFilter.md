@@ -1,4 +1,4 @@
-# Minimum Size #
+# Minimum Size
 
 
 ## Group (Subgroup) ##

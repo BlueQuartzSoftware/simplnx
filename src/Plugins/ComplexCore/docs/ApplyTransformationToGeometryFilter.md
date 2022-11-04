@@ -1,4 +1,4 @@
-# Apply Transformation to Geometry #
+# Apply Transformation to Geometry
 
 ## Group (Subgroup) ##
 
