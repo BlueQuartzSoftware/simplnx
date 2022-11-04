@@ -37,11 +37,10 @@ constexpr int32 k_Validate_AllowedType_Error = -206;
 namespace complex
 {
 NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                               const AllowedTypes& allowedTypes, ComponentTypes requiredComps)
+                                                               const AllowedTypes& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowedTypes(allowedTypes)
-, m_RequiredComponentShapes(requiredComps)
 {
   if(allowedTypes.empty())
   {
@@ -106,11 +105,6 @@ NeighborListSelectionParameter::AllowedTypes NeighborListSelectionParameter::all
   return m_AllowedTypes;
 }
 
-NeighborListSelectionParameter::ComponentTypes NeighborListSelectionParameter::requiredComponentShapes() const
-{
-  return m_RequiredComponentShapes;
-}
-
 Result<> NeighborListSelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
@@ -145,31 +139,6 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
     {
       return complex::MakeErrorResult(k_Validate_AllowedType_Error,
                                       fmt::format("{}DataNeighborList at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
-    }
-  }
-
-  if(!m_RequiredComponentShapes.empty())
-  {
-    std::string compStr;
-    bool foundMatch = false;
-    for(const auto& compShape : m_RequiredComponentShapes)
-    {
-      if(compShape == neighborList->getComponentShape())
-      {
-        foundMatch = true;
-        break;
-      }
-      compStr += StringUtilities::number(compShape[0]);
-      for(usize i = 1; i < compShape.size(); ++i)
-      {
-        compStr += " x " + StringUtilities::number(compShape[i]);
-      }
-      compStr += " or ";
-    }
-    if(!foundMatch)
-    {
-      return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_TupleShapeValue,
-                                        fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, value.toString(), compStr));
     }
   }
 

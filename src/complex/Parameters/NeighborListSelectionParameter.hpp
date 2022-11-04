@@ -16,11 +16,9 @@ class COMPLEX_EXPORT NeighborListSelectionParameter : public MutableDataParamete
 public:
   using ValueType = DataPath;
   using AllowedTypes = std::set<DataType>;
-  using ComponentTypes = std::vector<IArray::ShapeType>;
 
   NeighborListSelectionParameter() = delete;
-  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                                 ComponentTypes requiredComps = {});
+  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
   ~NeighborListSelectionParameter() override = default;
 
   NeighborListSelectionParameter(const NeighborListSelectionParameter&) = delete;
@@ -80,12 +78,6 @@ public:
   AllowedTypes allowedTypes() const;
 
   /**
-   * @brief Returns the required number of components. If return value is empty, then no component requirements.
-   * @return
-   */
-  ComponentTypes requiredComponentShapes() const;
-
-  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
@@ -113,7 +105,6 @@ public:
 private:
   ValueType m_DefaultValue = {};
   AllowedTypes m_AllowedTypes = {};
-  ComponentTypes m_RequiredComponentShapes = {};
 };
 
 } // namespace complex
