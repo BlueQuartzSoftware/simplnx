@@ -10,7 +10,8 @@
 
 namespace complex
 {
-ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, AllowedComponentShapes requiredComps)
+ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+                                                   AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
 , m_DefaultValue(defaultValue)
 , m_RequiredComponentShapes(requiredComps)
