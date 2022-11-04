@@ -230,7 +230,8 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask", "Path to the target mask array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::boolean},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "Path to the Voxel Indices array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::uint64}));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "", ImageGeom::k_CellDataName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "The name of the cell data attribute matrix to be created within the created Image Geometry",
+                                                          ImageGeom::k_CellDataName));
 
   params.linkParameters(k_UseMask_Key, k_MaskPath_Key, std::make_any<bool>(true));
   params.linkParameters(k_SamplingGridType_Key, k_GridDimensions_Key, std::make_any<ChoicesParameter::ValueType>(0));

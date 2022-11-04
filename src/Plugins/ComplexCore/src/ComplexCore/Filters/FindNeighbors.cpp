@@ -43,22 +43,31 @@ Parameters FindNeighbors::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreBoundary_Key, "Store Boundary Cells Array", "", false));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreBoundary_Key, "Store Boundary Cells Array", "Whether to store the boundary Cells array", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreSurface_Key, "Store Surface Features Array", "Whether to store the surface Features array", false));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "", DataPath({"DataContainer"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "", DataPath({"DataContainer", "CellFeatureData"})));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "The geometry in which to identify feature neighbors", DataPath({"DataContainer"}),
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatures_Key, "Cell Feature AttributeMatrix", "Feature Attribute Matrix of the selected Feature Ids",
+                                                                    DataPath({"DataContainer", "CellFeatureData"})));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_BoundaryCells_Key, "Boundary Cells", "", "BoundaryCells"));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_BoundaryCells_Key, "Boundary Cells",
+      "The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6. Only created if Store Boundary Cells Array is checked",
+      "BoundaryCells"));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NumNeighbors_Key, "Number of Neighbors", "", "NumNeighbors2"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborList_Key, "Neighbor List", "", "NeighborList2"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List", "", "SharedSurfaceAreaList2"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceFeatures_Key, "Surface Features", "", "SurfaceFeatures"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NumNeighbors_Key, "Number of Neighbors", "Number of contiguous neighboring Features for a given Feature", "NumNeighbors2"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborList_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", "NeighborList2"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List",
+                                                          "List of the shared surface area for each of the contiguous neighboring Features for a given Feature", "SharedSurfaceAreaList2"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceFeatures_Key, "Surface Features",
+                                                          "The name of the surface features data array. Flag equal to 1 if the Feature touches an outer surface of the sample and equal to 0 if it "
+                                                          "does not. Only created if Store Surface Features Array is checked",
+                                                          "SurfaceFeatures"));
 
   params.linkParameters(k_StoreBoundary_Key, k_BoundaryCells_Key, std::make_any<bool>(true));
   params.linkParameters(k_StoreSurface_Key, k_SurfaceFeatures_Key, std::make_any<bool>(true));

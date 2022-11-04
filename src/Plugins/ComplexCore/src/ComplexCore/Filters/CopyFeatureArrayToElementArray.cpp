@@ -83,11 +83,10 @@ Parameters CopyFeatureArrayToElementArray::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedFeatureArrayPath_Key, "Feature Data to Copy to Element Data", "", DataPath{}, complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
-
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CreatedArrayName_Key, "Created Cell Attribute Array", "", ""));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CreatedArrayName_Key, "Created Cell Attribute Array", "The copied Attribute Array", ""));
 
   return params;
 }

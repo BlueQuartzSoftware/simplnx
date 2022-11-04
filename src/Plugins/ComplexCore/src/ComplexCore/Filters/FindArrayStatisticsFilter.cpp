@@ -140,51 +140,55 @@ Parameters FindArrayStatisticsFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "", DataPath{}, complex::GetAllDataTypes(),
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "", DataPath{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
+                                                          complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed statistics", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Histogram Options"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindHistogram_Key, "Find Histogram", "", false));
-  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Histogram Min Value", "", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Histogram Max Value", "", 0.0));
-  params.insert(std::make_unique<BoolParameter>(k_UseFullRange_Key, "Use Full Range for Histogram", "", false));
-  params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "", 0));
-  params.insert(std::make_unique<StringParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "", "Historgram"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindHistogram_Key, "Find Histogram", "Whether to compute the histogram of the input array", false));
+  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Histogram Min Value", "Min cutoff value for histogram", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Histogram Max Value", "Max cutoff value for histogram", 0.0));
+  params.insert(
+      std::make_unique<BoolParameter>(k_UseFullRange_Key, "Use Full Range for Histogram", "If true, ignore min and max and use min and max from array upon which histogram is computed", false));
+  params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 0));
+  params.insert(std::make_unique<StringParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Historgram"));
 
   params.insertSeparator(Parameters::Separator{"Statistics Options"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "", false));
-  params.insert(std::make_unique<StringParameter>(k_LengthArrayName_Key, "Length Array Name", "", "Length"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Whether to compute the length of the input array", false));
+  params.insert(std::make_unique<StringParameter>(k_LengthArrayName_Key, "Length Array Name", "The name of the length array", "Length"));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMin_Key, "Find Minimum", "", false));
-  params.insert(std::make_unique<StringParameter>(k_MinimumArrayName_Key, "Minimum Array Name", "", "Minimum"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMin_Key, "Find Minimum", "Whether to compute the minimum of the input array", false));
+  params.insert(std::make_unique<StringParameter>(k_MinimumArrayName_Key, "Minimum Array Name", "The name of the minimum array", "Minimum"));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMax_Key, "Find Maximum", "", false));
-  params.insert(std::make_unique<StringParameter>(k_MaximumArrayName_Key, "Maximum Array Name", "", "Maximum"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMax_Key, "Find Maximum", "Whether to compute the maximum of the input array", false));
+  params.insert(std::make_unique<StringParameter>(k_MaximumArrayName_Key, "Maximum Array Name", "The name of the maximum array", "Maximum"));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMean_Key, "Find Mean", "", false));
-  params.insert(std::make_unique<StringParameter>(k_MeanArrayName_Key, "Mean Array Name", "", "Mean"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMean_Key, "Find Mean", "Whether to compute the arithmetic mean of the input array", false));
+  params.insert(std::make_unique<StringParameter>(k_MeanArrayName_Key, "Mean Array Name", "The name of the mean array", "Mean"));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMedian_Key, "Find Median", "", false));
-  params.insert(std::make_unique<StringParameter>(k_MedianArrayName_Key, "Median Array Name", "", "Median"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindMedian_Key, "Find Median", "Whether to compute the median of the input array", false));
+  params.insert(std::make_unique<StringParameter>(k_MedianArrayName_Key, "Median Array Name", "The name of the median array", "Median"));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindStdDeviation_Key, "Find Standard Deviation", "", false));
-  params.insert(std::make_unique<StringParameter>(k_StdDeviationArrayName_Key, "Standard Deviation Array Name", "", "StandardDeviation"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindStdDeviation_Key, "Find Standard Deviation", "Whether to compute the standard deviation of the input array", false));
+  params.insert(std::make_unique<StringParameter>(k_StdDeviationArrayName_Key, "Standard Deviation Array Name", "The name of the standard deviation array", "StandardDeviation"));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "", false));
-  params.insert(std::make_unique<StringParameter>(k_SummationArrayName_Key, "Summation Array Name", "", "Summation"));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "Whether to compute the summation of the input array", false));
+  params.insert(std::make_unique<StringParameter>(k_SummationArrayName_Key, "Summation Array Name", "The name of the summation array", "Summation"));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StandardizeData_Key, "Standardize Data", "", false));
-  params.insert(std::make_unique<StringParameter>(k_StandardizedArrayName_Key, "Standardized Data Array Name", "", "Standardized"));
+  params.insert(std::make_unique<StringParameter>(k_StandardizedArrayName_Key, "Standardized Data Array Name", "The name of the standardized data array", "Standardized"));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Whether to use a boolean mask array to ignore certain points flagged as false from the statistics", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The path to the data array that specifies if the point is to be counted in the statistics", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Optional Algorithm Options"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}),
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "Whether the statistics should be computed on a Feature/Ensemble basis", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
