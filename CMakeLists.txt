@@ -586,7 +586,7 @@ include(${complex_SOURCE_DIR}/cmake/Plugin.cmake)
 # add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/${P_PLUGIN_NAME} ${complex_BINARY_DIR}/Plugins/${P_PLUGIN_NAME})
 # get_property(PluginNumFilters GLOBAL PROPERTY ${P_PLUGIN_NAME}_filter_count)
 # message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
-set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 1)
+set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 0)
 
 #------------------------------------------------------------------------------
 # Add user defined Plugin Dirs based on the COMPLEX_PLUGIN_SEARCH_DIRS variable
