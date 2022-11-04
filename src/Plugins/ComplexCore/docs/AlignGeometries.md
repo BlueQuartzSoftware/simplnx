@@ -1,4 +1,4 @@
-# Align Geometries #
+# Align Geometries
 
 ## Group (Subgroup) ##
 

@@ -1,4 +1,4 @@
-# ExtractInternalSurfacesFromTriangleGeometry #
+# ExtractInternalSurfacesFromTriangleGeometry
 
 This filter will extract triangles that are designated as "internal surface" from a triangle geometry.
 

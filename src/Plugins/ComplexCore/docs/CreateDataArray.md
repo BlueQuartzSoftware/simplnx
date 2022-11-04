@@ -1,4 +1,4 @@
-# Create Data Array #
+# Create Data Array
 
 ## Group (Subgroup) ##
 

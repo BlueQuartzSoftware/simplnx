@@ -1,2 +1,2 @@
-# ImportDREAM3DFilter #
+# ImportDREAM3DFilter
 

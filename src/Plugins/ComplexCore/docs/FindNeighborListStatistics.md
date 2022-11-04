@@ -1,4 +1,4 @@
-# Find NeighborList Statistics #
+# Find NeighborList Statistics
 
 ## Group (Subgroup) ##
 

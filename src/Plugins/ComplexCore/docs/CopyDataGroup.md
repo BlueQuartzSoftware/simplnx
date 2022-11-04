@@ -1,4 +1,4 @@
-# Copy Data Group #
+# Copy Data Group
 
 
 ## Group (Subgroup) ##

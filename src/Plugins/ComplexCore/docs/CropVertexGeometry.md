@@ -1,4 +1,4 @@
-# CropVertexGeometry #
+# CropVertexGeometry
 
 
 ## Group (Subgroup) ##
