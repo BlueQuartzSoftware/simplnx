@@ -18,7 +18,7 @@ A new grid of **Cells** is created and "overlaid" on the existing grid of **Cell
 |------|------|-------------|
 | Sapcing | float (3x) | The new resolution values (dx, dy, dz) |
 | Renumber Features | bool | Whether the **Features** should be renumbered |
-| Save as New Data Container | bool | Whether the new grid of **Cells** should replace the current **Geometry** or if a new **Data Container** should be created to hold it |
+| Remove Original Geometry | bool | Whether the current **Geometry** should be removed after the resampling |
 
 ## Required Geometry ##
 
@@ -36,7 +36,7 @@ Image
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Data Container** | NewImageDataContainer | N/A | N/A | Created **Data Container** name with an **Image Geometry**. Only created if _Save as New Data Container_ is checked |
+| **Data Container** | NewImageDataContainer | N/A | N/A | Created **Data Container** name with an **Image Geometry**. |
 
 ## Example Pipelines ##
 
