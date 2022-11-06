@@ -66,9 +66,16 @@ Result<> DataObjectNameParameter::validate(const std::any& value) const
 
 Result<> DataObjectNameParameter::validateName(const std::string& value) const
 {
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+
+  if(value.empty())
+  {
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataObjectName cannot be empty", prefix));
+  }
+
   if(!DataObject::IsValidName(value))
   {
-    return MakeErrorResult(-3, fmt::format("'{}' is not a valid DataObject name", value));
+    return MakeErrorResult(complex::FilterParameter::Constants::k_Validate_InvalidDataObjectName, fmt::format("{}'{}' is not a valid DataObject name", prefix, value));
   }
   return {};
 }

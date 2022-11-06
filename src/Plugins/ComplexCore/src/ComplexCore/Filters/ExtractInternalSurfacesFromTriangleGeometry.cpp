@@ -114,13 +114,14 @@ std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Input Geometry and Data"});
+  params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+  params.insertSeparator(Parameters::Separator{"Input Vertex Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypes{DataType::int8},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created/Output Data"});
+  params.insertSeparator(Parameters::Separator{"Create Data Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name", INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceDataName));
@@ -128,7 +129,7 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
                                                                std::vector<DataPath>{}, GetAllDataTypes()));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Triangle Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Face Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
                                                                std::vector<DataPath>{}, GetAllDataTypes()));
   return params;
 }

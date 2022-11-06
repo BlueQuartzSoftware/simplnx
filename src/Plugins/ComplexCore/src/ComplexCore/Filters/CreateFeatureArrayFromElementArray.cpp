@@ -105,7 +105,7 @@ Parameters CreateFeatureArrayFromElementArray::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Element Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Element Data to Copy to Feature Data", "", DataPath{}, complex::GetAllDataTypes()));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedArrayName_Key, "Copied Attribute Array", "", DataPath{}));
@@ -124,7 +124,7 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
                                                                            const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
   const IDataArray& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
@@ -148,7 +148,7 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
                                                          const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
   const IDataArray& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);

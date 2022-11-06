@@ -166,8 +166,8 @@ Pipeline CreateExportPipeline()
   }
   {
     Arguments args;
-    args.insert("Export_File_Path", GetExportDataPath());
-    args.insert("Write_Xdmf_File", true);
+    args.insert("export_file_path", GetExportDataPath());
+    args.insert("write_xdmf_file", true);
     pipeline.push_back(k_ExportD3DHandle, args);
   }
   return pipeline;
@@ -186,8 +186,8 @@ Pipeline CreateImportPipeline()
   }
   {
     Arguments args;
-    args.insert("Export_File_Path", GetReExportDataPath());
-    args.insert("Write_Xdmf_File", true);
+    args.insert("export_file_path", GetReExportDataPath());
+    args.insert("write_xdmf_file", true);
     pipeline.push_back(k_ExportD3DHandle, args);
   }
   return pipeline;
@@ -205,8 +205,8 @@ void CreateMultiExportFiles()
     }
     {
       Arguments args;
-      args.insert("Export_File_Path", GetMultiExportDataPath1());
-      args.insert("Write_Xdmf_File", true);
+      args.insert("export_file_path", GetMultiExportDataPath1());
+      args.insert("write_xdmf_file", true);
       pipeline.push_back(k_ExportD3DHandle, args);
     }
     REQUIRE(pipeline.execute());
@@ -221,8 +221,8 @@ void CreateMultiExportFiles()
     }
     {
       Arguments args;
-      args.insert("Export_File_Path", GetMultiExportDataPath2());
-      args.insert("Write_Xdmf_File", true);
+      args.insert("export_file_path", GetMultiExportDataPath2());
+      args.insert("write_xdmf_file", true);
       pipeline.push_back(k_ExportD3DHandle, args);
     }
     REQUIRE(pipeline.execute());
@@ -250,7 +250,7 @@ Pipeline CreateMultiImportPipeline()
   }
   {
     Arguments args;
-    args.insert("Export_File_Path", GetReMultiExportDataPath());
+    args.insert("export_file_path", GetReMultiExportDataPath());
     pipeline.push_back(k_ExportD3DHandle, args);
   }
   return pipeline;

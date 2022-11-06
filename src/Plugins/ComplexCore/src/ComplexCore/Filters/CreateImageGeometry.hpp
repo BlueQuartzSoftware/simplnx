@@ -24,11 +24,11 @@ public:
   CreateImageGeometry& operator=(CreateImageGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GeometryDataPath_Key = "GeometryDataPath";
-  static inline constexpr StringLiteral k_Dimensions_Key = "Dimensions";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_CellDataName_Key = "CellDataName";
+  static inline constexpr StringLiteral k_GeometryDataPath_Key = "geometry_data_path";
+  static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
 
   /**
    * @brief Returns the name of the filter.

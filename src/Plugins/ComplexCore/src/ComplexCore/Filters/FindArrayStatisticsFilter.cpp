@@ -184,8 +184,8 @@ Parameters FindArrayStatisticsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Algorithm Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FindHistogram_Key, k_HistogramArrayName_Key, true);
@@ -201,7 +201,7 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.linkParameters(k_FindStdDeviation_Key, k_StdDeviationArrayName_Key, true);
   params.linkParameters(k_FindSummation_Key, k_SummationArrayName_Key, true);
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
-  params.linkParameters(k_ComputeByIndex_Key, k_FeatureIdsArrayPath_Key, true);
+  params.linkParameters(k_ComputeByIndex_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_StandardizeData_Key, k_StandardizedArrayName_Key, true);
 
   return params;
@@ -269,7 +269,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
   const Int32Array* featureIdsPtr = nullptr;
   if(pComputeByIndexValue)
   {
-    auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+    auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
     featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
     if(featureIdsPtr == nullptr)
     {
@@ -335,7 +335,7 @@ Result<> FindArrayStatisticsFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.ComputeByIndex = filterArgs.value<bool>(k_ComputeByIndex_Key);
   inputValues.StandardizeData = filterArgs.value<bool>(k_StandardizeData_Key);
   inputValues.SelectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrix_Key);
   inputValues.HistogramArrayName = inputValues.DestinationAttributeMatrix.createChildPath(filterArgs.value<std::string>(k_HistogramArrayName_Key));

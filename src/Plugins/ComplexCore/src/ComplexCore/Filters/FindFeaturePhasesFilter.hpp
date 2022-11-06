@@ -28,10 +28,10 @@ public:
   FindFeaturePhasesFilter& operator=(FindFeaturePhasesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CellFeaturesAttributeMatrixPath_Key = "CellFeaturesAttributeMatrixPath";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CellFeaturesAttributeMatrixPath_Key = "cell_features_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

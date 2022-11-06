@@ -27,8 +27,8 @@ public:
   ExportDREAM3DFilter& operator=(ExportDREAM3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ExportFilePath = "Export_File_Path";
-  static inline constexpr StringLiteral k_WriteXdmf = "Write_Xdmf_File";
+  static inline constexpr StringLiteral k_ExportFilePath = "export_file_path";
+  static inline constexpr StringLiteral k_WriteXdmf = "write_xdmf_file";
 
   /**
    * @brief Returns the name of the filter class.

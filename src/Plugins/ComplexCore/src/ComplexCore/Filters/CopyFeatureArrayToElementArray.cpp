@@ -6,6 +6,7 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
@@ -78,13 +79,15 @@ Parameters CopyFeatureArrayToElementArray::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  //  params.insertSeparator(Parameters::Separator{"Feature Data"});
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedFeatureArrayPath_Key, "Feature Data to Copy to Element Data", "", DataPath{}, complex::GetAllDataTypes()));
-  //  params.insertSeparator(Parameters::Separator{"Element Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
+
+  params.insertSeparator(Parameters::Separator{"Input Cell Data Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  //  params.insertSeparator(Parameters::Separator{"Element Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedArrayName_Key, "Copied Attribute Array", "", DataPath{}));
+
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CreatedArrayName_Key, "Created Cell Attribute Array", "", ""));
 
   return params;
 }
@@ -100,8 +103,9 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
                                                                        const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedFeatureArrayPathValue = filterArgs.value<DataPath>(k_SelectedFeatureArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedArrayName_Key);
+  DataPath createdArrayPath = pFeatureIdsArrayPathValue.getParent().createChildPath(createdArrayName);
 
   const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);
   const IDataStore& selectedFeatureArrayStore = selectedFeatureArray.getIDataStoreRef();
@@ -114,7 +118,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
   DataType dataType = selectedFeatureArray.getDataType();
 
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, featureIdsArrayStore.getTupleShape(), selectedFeatureArrayStore.getComponentShape(), pCreatedArrayNameValue);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, featureIdsArrayStore.getTupleShape(), selectedFeatureArrayStore.getComponentShape(), createdArrayPath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
@@ -126,8 +130,9 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
                                                      const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedFeatureArrayPathValue = filterArgs.value<DataPath>(k_SelectedFeatureArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedArrayName_Key);
+  DataPath createdArrayPath = pFeatureIdsArrayPathValue.getParent().createChildPath(createdArrayName);
 
   const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
@@ -141,37 +146,37 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
   switch(selectedFeatureArray.getDataType())
   {
   case DataType::int8:
-    copyData<int8>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<int8>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::uint8:
-    copyData<uint8>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<uint8>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::int16:
-    copyData<int16>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<int16>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::uint16:
-    copyData<uint16>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<uint16>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::int32:
-    copyData<int32>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<int32>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::uint32:
-    copyData<uint32>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<uint32>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::int64:
-    copyData<int64>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<int64>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::uint64:
-    copyData<uint64>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<uint64>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::float32:
-    copyData<float>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<float>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::float64:
-    copyData<double>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<double>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   case DataType::boolean:
-    copyData<bool>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+    copyData<bool>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
     return {};
   default:
     return MakeErrorResult(-14000, fmt::format("The selected array was of unsupported type. The path is {}", pSelectedFeatureArrayPathValue.toString()));

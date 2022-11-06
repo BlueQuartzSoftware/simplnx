@@ -24,17 +24,17 @@ public:
   PointSampleTriangleGeometryFilter& operator=(PointSampleTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  // static inline constexpr StringLiteral k_VertexParentGroup_Key = "VertexGeometryParentGroup";
-  // static inline constexpr StringLiteral k_SamplesNumberType_Key = "SamplesNumberType";
-  static inline constexpr StringLiteral k_NumberOfSamples_Key = "NumberOfSamples";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_TriangleGeometry_Key = "TriangleGeometryPath";
-  // static inline constexpr StringLiteral k_ParentGeometry_Key = "ParentGeometry";
-  static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "TriangleAreasArrayPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
-  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "VertexGeometryPath";
-  static inline constexpr StringLiteral k_VertexDataGroupPath_Key = "VertexDataGroupPath";
+  // static inline constexpr StringLiteral k_VertexParentGroup_Key = "vertex_geometry_parent_group";
+  // static inline constexpr StringLiteral k_SamplesNumberType_Key = "samples_number_type";
+  static inline constexpr StringLiteral k_NumberOfSamples_Key = "number_of_samples";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_TriangleGeometry_Key = "triangle_geometry_path";
+  // static inline constexpr StringLiteral k_ParentGeometry_Key = "parent_geometry";
+  static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "triangle_areas_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "vertex_geometry_path";
+  static inline constexpr StringLiteral k_VertexDataGroupPath_Key = "vertex_data_group_path";
 
   /**
    * @brief Returns the name of the filter.
