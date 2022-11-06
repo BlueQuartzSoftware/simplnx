@@ -24,11 +24,11 @@ public:
   AddBadData& operator=(AddBadData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PoissonNoise_Key = "PoissonNoise";
-  static inline constexpr StringLiteral k_PoissonVolFraction_Key = "PoissonVolFraction";
-  static inline constexpr StringLiteral k_BoundaryNoise_Key = "BoundaryNoise";
-  static inline constexpr StringLiteral k_BoundaryVolFraction_Key = "BoundaryVolFraction";
-  static inline constexpr StringLiteral k_GBEuclideanDistancesArrayPath_Key = "GBEuclideanDistancesArrayPath";
+  static inline constexpr StringLiteral k_PoissonNoise_Key = "poisson_noise";
+  static inline constexpr StringLiteral k_PoissonVolFraction_Key = "poisson_vol_fraction";
+  static inline constexpr StringLiteral k_BoundaryNoise_Key = "boundary_noise";
+  static inline constexpr StringLiteral k_BoundaryVolFraction_Key = "boundary_vol_fraction";
+  static inline constexpr StringLiteral k_GBEuclideanDistancesArrayPath_Key = "g_beuclidean_distances_array_path";
 
   /**
    * @brief Returns the name of the filter.

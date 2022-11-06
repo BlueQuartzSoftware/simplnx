@@ -340,16 +340,16 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     },
     {
       "args": {
-        "AlignmentShiftFileName": "align_sections_misorientation.txt",
+        "alignment_shift_file_name": "align_sections_misorientation.txt",
         "CellPhasesArrayPath": "Data Container/CellData/Phases",
         "CrystalStructuresArrayPath": "Data Container/CellEnsembleData/CrystalStructures",
-        "GoodVoxelsArrayPath": "Data Container/CellData/Mask",
+        "good_voxels_array_path": "Data Container/CellData/Mask",
         "MisorientationTolerance": 5.0,
         "QuatsArrayPath": "Data Container/CellData/Quats",
-        "SelectedCellDataPath": "Data Container/CellData",
-        "SelectedImageGeometryPath": "Exemplar Data",
+        "selected_cell_data_path": "Data Container/CellData",
+        "selected_image_geometry_path": "Exemplar Data",
         "UseGoodVoxels": true,
-        "WriteAlignmentShifts": true
+        "write_alignment_shifts": true
       },
       "filter": {
         "name": "complex::AlignSectionsMisorientationFilter",
@@ -359,7 +359,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     },
     {
       "args": {
-        "Export_File_Path": "align_sections_misorientations.dream3d"
+        "export_file_path": "align_sections_misorientations.dream3d"
       },
       "filter": {
         "name": "complex::ExportDREAM3DFilter",

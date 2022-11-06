@@ -24,15 +24,15 @@ public:
   CreateAbaqusFile& operator=(CreateAbaqusFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "OutputFilePrefix";
-  static inline constexpr StringLiteral k_JobName_Key = "JobName";
-  static inline constexpr StringLiteral k_NumDepvar_Key = "NumDepvar";
-  static inline constexpr StringLiteral k_NumUserOutVar_Key = "NumUserOutVar";
-  static inline constexpr StringLiteral k_MatConst_Key = "MatConst";
-  static inline constexpr StringLiteral k_AbqFeatureIdsArrayPath_Key = "AbqFeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "output_file_prefix";
+  static inline constexpr StringLiteral k_JobName_Key = "job_name";
+  static inline constexpr StringLiteral k_NumDepvar_Key = "num_depvar";
+  static inline constexpr StringLiteral k_NumUserOutVar_Key = "num_user_out_var";
+  static inline constexpr StringLiteral k_MatConst_Key = "mat_const";
+  static inline constexpr StringLiteral k_AbqFeatureIdsArrayPath_Key = "abq_feature_ids_array_path";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
 
   /**
    * @brief Returns the name of the filter.

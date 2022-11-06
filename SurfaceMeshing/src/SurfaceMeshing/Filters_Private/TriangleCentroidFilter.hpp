@@ -24,7 +24,7 @@ public:
   TriangleCentroidFilter& operator=(TriangleCentroidFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshTriangleCentroidsArrayPath_Key = "SurfaceMeshTriangleCentroidsArrayPath";
+  static inline constexpr StringLiteral k_SurfaceMeshTriangleCentroidsArrayPath_Key = "surface_mesh_triangle_centroids_array_path";
 
   /**
    * @brief Returns the name of the filter.

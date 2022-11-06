@@ -24,8 +24,8 @@ public:
   PhWriter& operator=(PhWriter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputFile_Key = "OutputFile";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
 
   /**
    * @brief Returns the name of the filter.

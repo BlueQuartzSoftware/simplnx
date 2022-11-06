@@ -24,15 +24,15 @@ public:
   NeighborOrientationCorrelationFilter& operator=(NeighborOrientationCorrelationFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
-  static inline constexpr StringLiteral k_MinConfidence_Key = "MinConfidence";
-  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
-  static inline constexpr StringLiteral k_Level_Key = "Level";
-  static inline constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "ConfidenceIndexArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
+  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
+  static inline constexpr StringLiteral k_Level_Key = "level";
+  static inline constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "confidence_index_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.

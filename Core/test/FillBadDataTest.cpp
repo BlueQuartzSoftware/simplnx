@@ -41,7 +41,7 @@ TEST_CASE("Core::FillBadData: Instantiation and Parameter Check", "[Core][FillBa
   // Create default Parameters for the filter.
   args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(1234356));
   args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FillBadDataFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key,
                       std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));

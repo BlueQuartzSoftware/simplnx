@@ -24,13 +24,13 @@ public:
   FindAvgOrientationsFilter& operator=(FindAvgOrientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "CellFeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "CellQuatsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_AvgEulerAnglesArrayPath_Key = "AvgEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrix_Key = "CellFeatureAttributeMatrix";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "cell_feature_ids_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "cell_quats_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_AvgEulerAnglesArrayPath_Key = "avg_euler_angles_array_path";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrix_Key = "cell_feature_attribute_matrix";
 
   /**
    * @brief Returns the name of the filter.

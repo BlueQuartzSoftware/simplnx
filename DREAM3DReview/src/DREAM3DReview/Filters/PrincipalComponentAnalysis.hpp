@@ -24,14 +24,14 @@ public:
   PrincipalComponentAnalysis& operator=(PrincipalComponentAnalysis&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
-  static inline constexpr StringLiteral k_MatrixApproach_Key = "MatrixApproach";
-  static inline constexpr StringLiteral k_ProjectDataSpace_Key = "ProjectDataSpace";
-  static inline constexpr StringLiteral k_NumberOfDimensionsForProjection_Key = "NumberOfDimensionsForProjection";
-  static inline constexpr StringLiteral k_ProjectedDataSpaceArrayPath_Key = "ProjectedDataSpaceArrayPath";
-  static inline constexpr StringLiteral k_PCAttributeMatrixName_Key = "PCAttributeMatrixName";
-  static inline constexpr StringLiteral k_PCEigenvaluesName_Key = "PCEigenvaluesName";
-  static inline constexpr StringLiteral k_PCEigenvectorsName_Key = "PCEigenvectorsName";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_MatrixApproach_Key = "matrix_approach";
+  static inline constexpr StringLiteral k_ProjectDataSpace_Key = "project_data_space";
+  static inline constexpr StringLiteral k_NumberOfDimensionsForProjection_Key = "number_of_dimensions_for_projection";
+  static inline constexpr StringLiteral k_ProjectedDataSpaceArrayPath_Key = "projected_data_space_array_path";
+  static inline constexpr StringLiteral k_PCAttributeMatrixName_Key = "p_cattribute_matrix_name";
+  static inline constexpr StringLiteral k_PCEigenvaluesName_Key = "p_ceigenvalues_name";
+  static inline constexpr StringLiteral k_PCEigenvectorsName_Key = "p_ceigenvectors_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,12 +24,12 @@ public:
   ResampleImageGeomFilter& operator=(ResampleImageGeomFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_RenumberFeatures_Key = "RenumberFeatures";
-  static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "RemoveOriginalGeometry";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "CellFeatureAttributeMatrixPath";
-  static inline constexpr StringLiteral k_NewDataContainerPath_Key = "NewDataContainerPath";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
+  static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static inline constexpr StringLiteral k_NewDataContainerPath_Key = "new_data_container_path";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**

@@ -26,7 +26,7 @@
   inputValues.SoftFeatureLowerThreshold = filterArgs.value<float32>(k_SoftFeatureLowerThreshold_Key);
   inputValues.SoftFeatureUpperThreshold = filterArgs.value<float32>(k_SoftFeatureUpperThreshold_Key);
   inputValues.DataContainerName = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   inputValues.FeatureEulerAnglesArrayPath = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);

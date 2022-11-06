@@ -39,7 +39,7 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientations: Instan
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeatureReferenceCAxisMisorientations::k_AvgCAxesArrayPath_Key, std::make_any<DataPath>(DataPath{}));

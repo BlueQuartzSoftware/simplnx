@@ -24,9 +24,9 @@ public:
   ReplaceValueInArray& operator=(ReplaceValueInArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_RemoveValue_Key = "RemoveValue";
-  static inline constexpr StringLiteral k_ReplaceValue_Key = "ReplaceValue";
-  static inline constexpr StringLiteral k_SelectedArray_Key = "SelectedArray";
+  static inline constexpr StringLiteral k_RemoveValue_Key = "remove_value";
+  static inline constexpr StringLiteral k_ReplaceValue_Key = "replace_value";
+  static inline constexpr StringLiteral k_SelectedArray_Key = "selected_array";
 
   /**
    * @brief Returns the name of the filter.

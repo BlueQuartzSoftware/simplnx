@@ -46,7 +46,8 @@ Parameters FindAvgScalarValueForFeatures::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Element Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Attribute Array to Average", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_NewFeatureArrayArrayPath_Key, "Scalar Feature Averages", "", DataPath{}));
 
@@ -73,7 +74,7 @@ IFilter::PreflightResult FindAvgScalarValueForFeatures::preflightImpl(const Data
    * do not need some of them remove them.
    */
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pNewFeatureArrayArrayPathValue = filterArgs.value<DataPath>(k_NewFeatureArrayArrayPath_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -132,7 +133,7 @@ Result<> FindAvgScalarValueForFeatures::executeImpl(DataStructure& dataStructure
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pNewFeatureArrayArrayPathValue = filterArgs.value<DataPath>(k_NewFeatureArrayArrayPath_Key);
 
   /****************************************************************************

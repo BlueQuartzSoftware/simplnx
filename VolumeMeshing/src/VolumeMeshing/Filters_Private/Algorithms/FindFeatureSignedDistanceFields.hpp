@@ -10,7 +10,7 @@
 * This is example code to put in the Execute Method of the filter.
   FindFeatureSignedDistanceFieldsInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
   inputValues.SignedDistanceFieldsPrefix = filterArgs.value<StringParameter::ValueType>(k_SignedDistanceFieldsPrefix_Key);
 

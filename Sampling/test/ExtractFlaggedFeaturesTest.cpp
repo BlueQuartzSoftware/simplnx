@@ -37,7 +37,7 @@ TEST_CASE("Sampling::ExtractFlaggedFeatures: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractFlaggedFeatures::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractFlaggedFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ExtractFlaggedFeatures::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result

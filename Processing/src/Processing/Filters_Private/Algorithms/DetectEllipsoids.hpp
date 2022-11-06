@@ -15,7 +15,7 @@
   inputValues.HoughTransformThreshold = filterArgs.value<float32>(k_HoughTransformThreshold_Key);
   inputValues.MinAspectRatio = filterArgs.value<float32>(k_MinAspectRatio_Key);
   inputValues.ImageScaleBarLength = filterArgs.value<int32>(k_ImageScaleBarLength_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
   inputValues.EllipseFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_EllipseFeatureAttributeMatrixPath_Key);
   inputValues.CenterCoordinatesArrayName = filterArgs.value<DataPath>(k_CenterCoordinatesArrayName_Key);

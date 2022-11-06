@@ -24,9 +24,9 @@ public:
   GenerateGeometryConnectivity& operator=(GenerateGeometryConnectivity&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GenerateVertexTriangleLists_Key = "GenerateVertexTriangleLists";
-  static inline constexpr StringLiteral k_GenerateTriangleNeighbors_Key = "GenerateTriangleNeighbors";
-  static inline constexpr StringLiteral k_SurfaceDataContainerName_Key = "SurfaceDataContainerName";
+  static inline constexpr StringLiteral k_GenerateVertexTriangleLists_Key = "generate_vertex_triangle_lists";
+  static inline constexpr StringLiteral k_GenerateTriangleNeighbors_Key = "generate_triangle_neighbors";
+  static inline constexpr StringLiteral k_SurfaceDataContainerName_Key = "surface_data_container_name";
 
   /**
    * @brief Returns the name of the filter.

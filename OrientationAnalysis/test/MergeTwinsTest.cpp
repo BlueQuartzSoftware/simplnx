@@ -137,11 +137,11 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     Arguments args;
 
     constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-    constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
+    constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
     constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
 
     args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
-    args.insertOrAssign(k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+    args.insertOrAssign(k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
     args.insertOrAssign(k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeaturePhasesPath));
 
     // Preflight the filter and check result
@@ -227,7 +227,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(MergeTwinsFilter::k_AngleTolerance_Key, std::make_any<float32>(1.0f));
     args.insertOrAssign(MergeTwinsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeaturePhasesPath));
     args.insertOrAssign(MergeTwinsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_AvgQuatsPath));
-    args.insertOrAssign(MergeTwinsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+    args.insertOrAssign(MergeTwinsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
     args.insertOrAssign(MergeTwinsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
     args.insertOrAssign(MergeTwinsFilter::k_CellParentIdsArrayName_Key, std::make_any<std::string>(k_CellParentIdsName));
     args.insertOrAssign(MergeTwinsFilter::k_NewCellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_NewFeatureAttributeMatrixName));

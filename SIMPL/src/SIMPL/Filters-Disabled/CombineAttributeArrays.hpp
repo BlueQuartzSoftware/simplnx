@@ -24,10 +24,10 @@ public:
   CombineAttributeArrays& operator=(CombineAttributeArrays&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NormalizeData_Key = "NormalizeData";
-  static inline constexpr StringLiteral k_MoveValues_Key = "MoveValues";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
-  static inline constexpr StringLiteral k_StackedDataArrayName_Key = "StackedDataArrayName";
+  static inline constexpr StringLiteral k_NormalizeData_Key = "normalize_data";
+  static inline constexpr StringLiteral k_MoveValues_Key = "move_values";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_StackedDataArrayName_Key = "stacked_data_array_name";
 
   /**
    * @brief Returns the name of the filter.

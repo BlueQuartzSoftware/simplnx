@@ -11,7 +11,7 @@
   CreateFeatureArrayFromElementArrayInputValues inputValues;
 
   inputValues.SelectedCellArrayPath = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellFeatureAttributeMatrixName = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
   inputValues.CreatedArrayName = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 

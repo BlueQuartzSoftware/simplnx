@@ -24,12 +24,12 @@ public:
   Lesson5& operator=(Lesson5&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "InputDataArrayPath";
-  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "OutputDataArrayPath";
-  static inline constexpr StringLiteral k_Value_Key = "Value";
-  static inline constexpr StringLiteral k_Operator_Key = "Operator";
-  static inline constexpr StringLiteral k_Selection_Key = "Selection";
-  static inline constexpr StringLiteral k_FloatValue_Key = "FloatValue";
+  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "input_data_array_path";
+  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "output_data_array_path";
+  static inline constexpr StringLiteral k_Value_Key = "value";
+  static inline constexpr StringLiteral k_Operator_Key = "operator";
+  static inline constexpr StringLiteral k_Selection_Key = "selection";
+  static inline constexpr StringLiteral k_FloatValue_Key = "float_value";
 
   /**
    * @brief Returns the name of the filter.

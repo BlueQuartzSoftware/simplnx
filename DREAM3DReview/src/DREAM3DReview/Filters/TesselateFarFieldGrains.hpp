@@ -24,17 +24,17 @@ public:
   TesselateFarFieldGrains& operator=(TesselateFarFieldGrains&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureInputFileListInfo_Key = "FeatureInputFileListInfo";
-  static inline constexpr StringLiteral k_OutputCellAttributeMatrixName_Key = "OutputCellAttributeMatrixName";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
-  static inline constexpr StringLiteral k_CellPhasesArrayName_Key = "CellPhasesArrayName";
-  static inline constexpr StringLiteral k_OutputCellFeatureAttributeMatrixName_Key = "OutputCellFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayName_Key = "FeaturePhasesArrayName";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayName_Key = "FeatureEulerAnglesArrayName";
-  static inline constexpr StringLiteral k_ElasticStrainsArrayName_Key = "ElasticStrainsArrayName";
-  static inline constexpr StringLiteral k_OutputCellEnsembleAttributeMatrixName_Key = "OutputCellEnsembleAttributeMatrixName";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayName_Key = "CrystalStructuresArrayName";
+  static inline constexpr StringLiteral k_FeatureInputFileListInfo_Key = "feature_input_file_list_info";
+  static inline constexpr StringLiteral k_OutputCellAttributeMatrixName_Key = "output_cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static inline constexpr StringLiteral k_CellPhasesArrayName_Key = "cell_phases_array_name";
+  static inline constexpr StringLiteral k_OutputCellFeatureAttributeMatrixName_Key = "output_cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayName_Key = "feature_phases_array_name";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayName_Key = "feature_euler_angles_array_name";
+  static inline constexpr StringLiteral k_ElasticStrainsArrayName_Key = "elastic_strains_array_name";
+  static inline constexpr StringLiteral k_OutputCellEnsembleAttributeMatrixName_Key = "output_cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayName_Key = "crystal_structures_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,11 +24,11 @@ public:
   ApplyDewarpParameters& operator=(ApplyDewarpParameters&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MontageName_Key = "MontageName";
-  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "AttributeMatrixName";
-  static inline constexpr StringLiteral k_TransformPath_Key = "TransformPath";
-  static inline constexpr StringLiteral k_TransformPrefix_Key = "TransformPrefix";
-  static inline constexpr StringLiteral k_MaskName_Key = "MaskName";
+  static inline constexpr StringLiteral k_MontageName_Key = "montage_name";
+  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "attribute_matrix_name";
+  static inline constexpr StringLiteral k_TransformPath_Key = "transform_path";
+  static inline constexpr StringLiteral k_TransformPrefix_Key = "transform_prefix";
+  static inline constexpr StringLiteral k_MaskName_Key = "mask_name";
 
   /**
    * @brief Returns the name of the filter.

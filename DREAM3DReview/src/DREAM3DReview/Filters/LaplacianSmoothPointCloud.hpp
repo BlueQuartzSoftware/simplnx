@@ -24,11 +24,11 @@ public:
   LaplacianSmoothPointCloud& operator=(LaplacianSmoothPointCloud&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_NumIterations_Key = "NumIterations";
-  static inline constexpr StringLiteral k_Lambda_Key = "Lambda";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_NumIterations_Key = "num_iterations";
+  static inline constexpr StringLiteral k_Lambda_Key = "lambda";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Returns the name of the filter.

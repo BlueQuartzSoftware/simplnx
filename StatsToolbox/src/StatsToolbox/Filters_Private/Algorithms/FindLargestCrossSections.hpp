@@ -11,7 +11,7 @@
   FindLargestCrossSectionsInputValues inputValues;
 
   inputValues.Plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.LargestCrossSectionsArrayPath = filterArgs.value<DataPath>(k_LargestCrossSectionsArrayPath_Key);
 
   return FindLargestCrossSections(dataStructure, messageHandler, shouldCancel, &inputValues)();

@@ -24,12 +24,12 @@ public:
   ExportMultiOnScaleTableFile& operator=(ExportMultiOnScaleTableFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_DataContainerPrefix_Key = "DataContainerPrefix";
-  static inline constexpr StringLiteral k_MatrixName_Key = "MatrixName";
-  static inline constexpr StringLiteral k_ArrayName_Key = "ArrayName";
-  static inline constexpr StringLiteral k_NumKeypoints_Key = "NumKeypoints";
-  static inline constexpr StringLiteral k_PhaseNamesArrayPath_Key = "PhaseNamesArrayPath";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_DataContainerPrefix_Key = "data_container_prefix";
+  static inline constexpr StringLiteral k_MatrixName_Key = "matrix_name";
+  static inline constexpr StringLiteral k_ArrayName_Key = "array_name";
+  static inline constexpr StringLiteral k_NumKeypoints_Key = "num_keypoints";
+  static inline constexpr StringLiteral k_PhaseNamesArrayPath_Key = "phase_names_array_path";
 
   /**
    * @brief Returns the name of the filter.

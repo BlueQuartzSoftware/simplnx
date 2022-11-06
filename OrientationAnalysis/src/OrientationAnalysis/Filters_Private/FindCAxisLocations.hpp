@@ -24,8 +24,8 @@ public:
   FindCAxisLocations& operator=(FindCAxisLocations&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_CAxisLocationsArrayName_Key = "CAxisLocationsArrayName";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_CAxisLocationsArrayName_Key = "c_axis_locations_array_name";
 
   /**
    * @brief Returns the name of the filter.

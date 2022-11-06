@@ -30,12 +30,12 @@ public:
   ITKShiftScaleImage& operator=(ITKShiftScaleImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_Shift_Key = "Shift";
-  static inline constexpr StringLiteral k_Scale_Key = "Scale";
-  static inline constexpr StringLiteral k_OutputPixelType_Key = "OutputPixelType";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_Shift_Key = "shift";
+  static inline constexpr StringLiteral k_Scale_Key = "scale";
+  static inline constexpr StringLiteral k_OutputPixelType_Key = "output_pixel_type";
 
   /**
    * @brief Returns the name of the filter.

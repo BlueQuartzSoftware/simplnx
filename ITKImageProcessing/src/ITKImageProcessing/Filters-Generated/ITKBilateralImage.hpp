@@ -62,12 +62,12 @@ public:
   ITKBilateralImage& operator=(ITKBilateralImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_DomainSigma_Key = "DomainSigma";
-  static inline constexpr StringLiteral k_RangeSigma_Key = "RangeSigma";
-  static inline constexpr StringLiteral k_NumberOfRangeGaussianSamples_Key = "NumberOfRangeGaussianSamples";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_DomainSigma_Key = "domain_sigma";
+  static inline constexpr StringLiteral k_RangeSigma_Key = "range_sigma";
+  static inline constexpr StringLiteral k_NumberOfRangeGaussianSamples_Key = "number_of_range_gaussian_samples";
 
   /**
    * @brief Returns the name of the filter.

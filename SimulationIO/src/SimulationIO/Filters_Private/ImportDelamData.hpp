@@ -24,12 +24,12 @@ public:
   ImportDelamData& operator=(ImportDelamData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CSDGMFile_Key = "CSDGMFile";
-  static inline constexpr StringLiteral k_BvidStdOutFile_Key = "BvidStdOutFile";
-  static inline constexpr StringLiteral k_InterfaceThickness_Key = "InterfaceThickness";
-  static inline constexpr StringLiteral k_DataContainerPath_Key = "DataContainerPath";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_DataArrayName_Key = "DataArrayName";
+  static inline constexpr StringLiteral k_CSDGMFile_Key = "c_sd_gm_file";
+  static inline constexpr StringLiteral k_BvidStdOutFile_Key = "bvid_std_out_file";
+  static inline constexpr StringLiteral k_InterfaceThickness_Key = "interface_thickness";
+  static inline constexpr StringLiteral k_DataContainerPath_Key = "data_container_path";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_DataArrayName_Key = "data_array_name";
 
   /**
    * @brief Returns the name of the filter.

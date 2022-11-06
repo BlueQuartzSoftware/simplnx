@@ -24,11 +24,11 @@ public:
   DownsampleVertexGeometry& operator=(DownsampleVertexGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DownsampleType_Key = "DownsampleType";
-  static inline constexpr StringLiteral k_DecimationFreq_Key = "DecimationFreq";
-  static inline constexpr StringLiteral k_DecimationFraction_Key = "DecimationFraction";
-  static inline constexpr StringLiteral k_GridResolution_Key = "GridResolution";
-  static inline constexpr StringLiteral k_VertexAttrMatPath_Key = "VertexAttrMatPath";
+  static inline constexpr StringLiteral k_DownsampleType_Key = "downsample_type";
+  static inline constexpr StringLiteral k_DecimationFreq_Key = "decimation_freq";
+  static inline constexpr StringLiteral k_DecimationFraction_Key = "decimation_fraction";
+  static inline constexpr StringLiteral k_GridResolution_Key = "grid_resolution";
+  static inline constexpr StringLiteral k_VertexAttrMatPath_Key = "vertex_attr_mat_path";
 
   /**
    * @brief Returns the name of the filter.

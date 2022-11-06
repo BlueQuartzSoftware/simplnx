@@ -24,9 +24,9 @@ public:
   GenerateColorTable& operator=(GenerateColorTable&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedPresetName_Key = "SelectedPresetName";
-  static inline constexpr StringLiteral k_SelectedDataArrayPath_Key = "SelectedDataArrayPath";
-  static inline constexpr StringLiteral k_RgbArrayName_Key = "RgbArrayName";
+  static inline constexpr StringLiteral k_SelectedPresetName_Key = "selected_preset_name";
+  static inline constexpr StringLiteral k_SelectedDataArrayPath_Key = "selected_data_array_path";
+  static inline constexpr StringLiteral k_RgbArrayName_Key = "rgb_array_name";
 
   /**
    * @brief Returns the name of the filter.

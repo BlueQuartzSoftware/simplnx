@@ -24,16 +24,16 @@ public:
   EMMPMFilter& operator=(EMMPMFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumClasses_Key = "NumClasses";
-  static inline constexpr StringLiteral k_UseOneBasedValues_Key = "UseOneBasedValues";
-  static inline constexpr StringLiteral k_UseGradientPenalty_Key = "UseGradientPenalty";
-  static inline constexpr StringLiteral k_GradientBetaE_Key = "GradientBetaE";
-  static inline constexpr StringLiteral k_UseCurvaturePenalty_Key = "UseCurvaturePenalty";
-  static inline constexpr StringLiteral k_CurvatureBetaC_Key = "CurvatureBetaC";
-  static inline constexpr StringLiteral k_CurvatureRMax_Key = "CurvatureRMax";
-  static inline constexpr StringLiteral k_CurvatureEMLoopDelay_Key = "CurvatureEMLoopDelay";
-  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "InputDataArrayPath";
-  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "OutputDataArrayPath";
+  static inline constexpr StringLiteral k_NumClasses_Key = "num_classes";
+  static inline constexpr StringLiteral k_UseOneBasedValues_Key = "use_one_based_values";
+  static inline constexpr StringLiteral k_UseGradientPenalty_Key = "use_gradient_penalty";
+  static inline constexpr StringLiteral k_GradientBetaE_Key = "gradient_beta_e";
+  static inline constexpr StringLiteral k_UseCurvaturePenalty_Key = "use_curvature_penalty";
+  static inline constexpr StringLiteral k_CurvatureBetaC_Key = "curvature_beta_c";
+  static inline constexpr StringLiteral k_CurvatureRMax_Key = "curvature_rmax";
+  static inline constexpr StringLiteral k_CurvatureEMLoopDelay_Key = "curvature_em_loop_delay";
+  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "input_data_array_path";
+  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "output_data_array_path";
 
   /**
    * @brief Returns the name of the filter.

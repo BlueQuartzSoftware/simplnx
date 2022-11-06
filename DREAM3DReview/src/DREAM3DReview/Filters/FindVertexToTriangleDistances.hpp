@@ -24,11 +24,11 @@ public:
   FindVertexToTriangleDistances& operator=(FindVertexToTriangleDistances&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_VertexDataContainer_Key = "VertexDataContainer";
-  static inline constexpr StringLiteral k_TriangleDataContainer_Key = "TriangleDataContainer";
-  static inline constexpr StringLiteral k_TriangleNormalsArrayPath_Key = "TriangleNormalsArrayPath";
-  static inline constexpr StringLiteral k_DistancesArrayPath_Key = "DistancesArrayPath";
-  static inline constexpr StringLiteral k_ClosestTriangleIdArrayPath_Key = "ClosestTriangleIdArrayPath";
+  static inline constexpr StringLiteral k_VertexDataContainer_Key = "vertex_data_container";
+  static inline constexpr StringLiteral k_TriangleDataContainer_Key = "triangle_data_container";
+  static inline constexpr StringLiteral k_TriangleNormalsArrayPath_Key = "triangle_normals_array_path";
+  static inline constexpr StringLiteral k_DistancesArrayPath_Key = "distances_array_path";
+  static inline constexpr StringLiteral k_ClosestTriangleIdArrayPath_Key = "closest_triangle_id_array_path";
 
   /**
    * @brief Returns the name of the filter.

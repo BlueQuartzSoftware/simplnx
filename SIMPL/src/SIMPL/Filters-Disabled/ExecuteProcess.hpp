@@ -24,7 +24,7 @@ public:
   ExecuteProcess& operator=(ExecuteProcess&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Arguments_Key = "Arguments";
+  static inline constexpr StringLiteral k_Arguments_Key = "arguments";
 
   /**
    * @brief Returns the name of the filter.

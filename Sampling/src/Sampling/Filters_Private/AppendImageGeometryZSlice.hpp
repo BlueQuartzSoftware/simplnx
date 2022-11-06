@@ -24,9 +24,9 @@ public:
   AppendImageGeometryZSlice& operator=(AppendImageGeometryZSlice&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputAttributeMatrix_Key = "InputAttributeMatrix";
-  static inline constexpr StringLiteral k_DestinationAttributeMatrix_Key = "DestinationAttributeMatrix";
-  static inline constexpr StringLiteral k_CheckResolution_Key = "CheckResolution";
+  static inline constexpr StringLiteral k_InputAttributeMatrix_Key = "input_attribute_matrix";
+  static inline constexpr StringLiteral k_DestinationAttributeMatrix_Key = "destination_attribute_matrix";
+  static inline constexpr StringLiteral k_CheckResolution_Key = "check_resolution";
 
   /**
    * @brief Returns the name of the filter.

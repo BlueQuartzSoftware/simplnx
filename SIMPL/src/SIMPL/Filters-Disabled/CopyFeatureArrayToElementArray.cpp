@@ -46,7 +46,8 @@ Parameters CopyFeatureArrayToElementArray::parameters() const
   params.insertSeparator(Parameters::Separator{"Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedFeatureArrayPath_Key, "Feature Data to Copy to Element Data", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Element Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Element Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedArrayName_Key, "Copied Attribute Array", "", DataPath{}));
 
@@ -73,7 +74,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
    * do not need some of them remove them.
    */
   auto pSelectedFeatureArrayPathValue = filterArgs.value<DataPath>(k_SelectedFeatureArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -126,7 +127,7 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pSelectedFeatureArrayPathValue = filterArgs.value<DataPath>(k_SelectedFeatureArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
   /****************************************************************************

@@ -24,8 +24,8 @@ public:
   ExtractFlaggedFeatures& operator=(ExtractFlaggedFeatures&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FlaggedFeaturesArrayPath_Key = "FlaggedFeaturesArrayPath";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FlaggedFeaturesArrayPath_Key = "flagged_features_array_path";
 
   /**
    * @brief Returns the name of the filter.

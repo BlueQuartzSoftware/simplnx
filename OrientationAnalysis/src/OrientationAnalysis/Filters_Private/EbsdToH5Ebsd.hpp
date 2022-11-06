@@ -24,7 +24,7 @@ public:
   EbsdToH5Ebsd& operator=(EbsdToH5Ebsd&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OrientationData_Key = "OrientationData";
+  static inline constexpr StringLiteral k_OrientationData_Key = "orientation_data";
 
   /**
    * @brief Returns the name of the filter.

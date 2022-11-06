@@ -24,13 +24,13 @@ public:
   ImportVectorImageStack& operator=(ImportVectorImageStack&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFileListInfo_Key = "InputFileListInfo";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_ConvertToGrayscale_Key = "ConvertToGrayscale";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_VectorDataArrayName_Key = "VectorDataArrayName";
+  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_info";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_ConvertToGrayscale_Key = "convert_to_grayscale";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_VectorDataArrayName_Key = "vector_data_array_name";
 
   /**
    * @brief Returns the name of the filter.

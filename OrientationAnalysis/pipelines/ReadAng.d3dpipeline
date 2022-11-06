@@ -8,7 +8,7 @@
         "CellAttributeMatrixName": "Cell Data",
         "CellEnsembleAttributeMatrixName": "Cell Ensemble Data",
         "DataContainerName": "DataContainer",
-        "InputFile": "/Users/mjackson/Workspace1/DREAM3D-Build/CLion-NX-Debug/Bin/Data/SmallIN100/Slice_1.ang"
+        "InputFile": "Data/SmallIN100/Slice_1.ang"
       },
       "filter": {
         "name": "complex::ReadAngDataFilter",
@@ -22,7 +22,7 @@
         "CellIPFColorsArrayName": "IPFColors",
         "CellPhasesArrayPath": "DataContainer/Cell Data/Phases",
         "CrystalStructuresArrayPath": "DataContainer/Cell Ensemble Data/CrystalStructures",
-        "GoodVoxelsArrayPath": "",
+        "good_voxels_array_path": "",
         "ReferenceDir": [
           0.0,
           0.0,

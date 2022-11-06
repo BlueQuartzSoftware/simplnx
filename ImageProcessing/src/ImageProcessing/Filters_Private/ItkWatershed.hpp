@@ -24,10 +24,10 @@ public:
   ItkWatershed& operator=(ItkWatershed&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
-  static inline constexpr StringLiteral k_Threshold_Key = "Threshold";
-  static inline constexpr StringLiteral k_Level_Key = "Level";
+  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static inline constexpr StringLiteral k_Threshold_Key = "threshold";
+  static inline constexpr StringLiteral k_Level_Key = "level";
 
   /**
    * @brief Returns the name of the filter.

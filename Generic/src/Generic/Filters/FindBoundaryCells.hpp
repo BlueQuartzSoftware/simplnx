@@ -24,10 +24,10 @@ public:
   FindBoundaryCells& operator=(FindBoundaryCells&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_IgnoreFeatureZero_Key = "IgnoreFeatureZero";
-  static inline constexpr StringLiteral k_IncludeVolumeBoundary_Key = "IncludeVolumeBoundary";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_BoundaryCellsArrayName_Key = "BoundaryCellsArrayName";
+  static inline constexpr StringLiteral k_IgnoreFeatureZero_Key = "ignore_feature_zero";
+  static inline constexpr StringLiteral k_IncludeVolumeBoundary_Key = "include_volume_boundary";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_BoundaryCellsArrayName_Key = "boundary_cells_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,14 +24,14 @@ public:
   ExportCLIFile& operator=(ExportCLIFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UnitsScaleFactor_Key = "UnitsScaleFactor";
-  static inline constexpr StringLiteral k_Precision_Key = "Precision";
-  static inline constexpr StringLiteral k_OutputDirectory_Key = "OutputDirectory";
-  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "OutputFilePrefix";
-  static inline constexpr StringLiteral k_SplitByGroup_Key = "SplitByGroup";
-  static inline constexpr StringLiteral k_EdgeGeometry_Key = "EdgeGeometry";
-  static inline constexpr StringLiteral k_LayerIdsArrayPath_Key = "LayerIdsArrayPath";
-  static inline constexpr StringLiteral k_GroupIdsArrayPath_Key = "GroupIdsArrayPath";
+  static inline constexpr StringLiteral k_UnitsScaleFactor_Key = "units_scale_factor";
+  static inline constexpr StringLiteral k_Precision_Key = "precision";
+  static inline constexpr StringLiteral k_OutputDirectory_Key = "output_directory";
+  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "output_file_prefix";
+  static inline constexpr StringLiteral k_SplitByGroup_Key = "split_by_group";
+  static inline constexpr StringLiteral k_EdgeGeometry_Key = "edge_geometry";
+  static inline constexpr StringLiteral k_LayerIdsArrayPath_Key = "layer_ids_array_path";
+  static inline constexpr StringLiteral k_GroupIdsArrayPath_Key = "group_ids_array_path";
 
   /**
    * @brief Returns the name of the filter.

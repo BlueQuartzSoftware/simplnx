@@ -24,11 +24,11 @@ public:
   RemoveComponentFromArray& operator=(RemoveComponentFromArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CompNumber_Key = "CompNumber";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_NewArrayArrayName_Key = "NewArrayArrayName";
-  static inline constexpr StringLiteral k_ReducedArrayArrayName_Key = "ReducedArrayArrayName";
-  static inline constexpr StringLiteral k_SaveRemovedComponent_Key = "SaveRemovedComponent";
+  static inline constexpr StringLiteral k_CompNumber_Key = "comp_number";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_NewArrayArrayName_Key = "new_array_array_name";
+  static inline constexpr StringLiteral k_ReducedArrayArrayName_Key = "reduced_array_array_name";
+  static inline constexpr StringLiteral k_SaveRemovedComponent_Key = "save_removed_component";
 
   /**
    * @brief Returns the name of the filter.

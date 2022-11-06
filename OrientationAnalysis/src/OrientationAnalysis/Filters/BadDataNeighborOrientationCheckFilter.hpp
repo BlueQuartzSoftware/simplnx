@@ -24,13 +24,13 @@ public:
   BadDataNeighborOrientationCheckFilter& operator=(BadDataNeighborOrientationCheckFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
-  static inline constexpr StringLiteral k_NumberOfNeighbors_Key = "NumberOfNeighbors";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
+  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
+  static inline constexpr StringLiteral k_NumberOfNeighbors_Key = "number_of_neighbors";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
   /**
    * @brief Returns the name of the filter.

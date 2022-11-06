@@ -46,7 +46,7 @@ TEST_CASE("VolumeMeshing::VMFillLevelSetWithTetrahedra: Instantiation and Parame
   args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_AngleThreshold_Key, std::make_any<float64>(2.3456789));
   args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_TriangleDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_LevelSetArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_TetrahedralDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
   args.insertOrAssign(VMFillLevelSetWithTetrahedra::k_CellAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));

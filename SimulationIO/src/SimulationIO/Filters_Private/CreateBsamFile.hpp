@@ -24,9 +24,9 @@ public:
   CreateBsamFile& operator=(CreateBsamFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "OutputFilePrefix";
-  static inline constexpr StringLiteral k_NumClusters_Key = "NumClusters";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "output_file_prefix";
+  static inline constexpr StringLiteral k_NumClusters_Key = "num_clusters";
 
   /**
    * @brief Returns the name of the filter.

@@ -38,8 +38,8 @@ TEST_CASE("Core::FindFeatureCentroidsFilter", "[Core][FindFeatureCentroidsFilter
     const DataPath k_SelectedImageGeometry({k_DataContainer});
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(FindFeatureCentroidsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath2));
-    args.insertOrAssign(FindFeatureCentroidsFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CentroidsNXArrayPath));
+    args.insertOrAssign(FindFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath2));
+    args.insertOrAssign(FindFeatureCentroidsFilter::k_CentroidsArrayPath_Key, std::make_any<std::string>(k_CentroidsNX));
     args.insertOrAssign(FindFeatureCentroidsFilter::k_FeatureAttributeMatrix_Key, std::make_any<DataPath>(k_FeatureAttributeMatrix));
     args.insertOrAssign(FindFeatureCentroidsFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedImageGeometry));
 

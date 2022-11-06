@@ -21,7 +21,7 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Instantiation", "[Core][RemoveFlaggedFea
   // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_ImageGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key,
                       std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
@@ -93,7 +93,7 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Test Algorithm", "[Core][RemoveFlaggedFe
   // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_ImageGeometry_Key, std::make_any<DataPath>(imageGeomPath));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(flaggedFeaturesPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 

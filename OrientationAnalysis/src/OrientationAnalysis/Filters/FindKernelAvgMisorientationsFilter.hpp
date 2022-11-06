@@ -24,13 +24,13 @@ public:
   FindKernelAvgMisorientationsFilter& operator=(FindKernelAvgMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_KernelSize_Key = "KernelSize";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_KernelAverageMisorientationsArrayName_Key = "KernelAverageMisorientationsArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometryPath";
+  static inline constexpr StringLiteral k_KernelSize_Key = "kernel_size";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_KernelAverageMisorientationsArrayName_Key = "kernel_average_misorientations_array_name";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,11 +24,11 @@ public:
   IdentifyDislocationSegments& operator=(IdentifyDislocationSegments&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_BurgersVectorsArrayPath_Key = "BurgersVectorsArrayPath";
-  static inline constexpr StringLiteral k_SlipPlaneNormalsArrayPath_Key = "SlipPlaneNormalsArrayPath";
-  static inline constexpr StringLiteral k_DislocationIdsArrayName_Key = "DislocationIdsArrayName";
-  static inline constexpr StringLiteral k_EdgeFeatureAttributeMatrixName_Key = "EdgeFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_ActiveArrayName_Key = "ActiveArrayName";
+  static inline constexpr StringLiteral k_BurgersVectorsArrayPath_Key = "burgers_vectors_array_path";
+  static inline constexpr StringLiteral k_SlipPlaneNormalsArrayPath_Key = "slip_plane_normals_array_path";
+  static inline constexpr StringLiteral k_DislocationIdsArrayName_Key = "dislocation_ids_array_name";
+  static inline constexpr StringLiteral k_EdgeFeatureAttributeMatrixName_Key = "edge_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
 
   /**
    * @brief Returns the name of the filter.

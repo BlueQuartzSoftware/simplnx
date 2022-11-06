@@ -24,9 +24,9 @@ public:
   ConvertDataFilter& operator=(ConvertDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ScalarType_Key = "ScalarType";
-  static inline constexpr StringLiteral k_ArrayToConvert_Key = "ArrayToConvert";
-  static inline constexpr StringLiteral k_ConvertedArray_Key = "ConvertedArray";
+  static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type";
+  static inline constexpr StringLiteral k_ArrayToConvert_Key = "array_to_convert";
+  static inline constexpr StringLiteral k_ConvertedArray_Key = "converted_array";
 
   /**
    * @brief Returns the name of the filter.

@@ -45,7 +45,7 @@ TEST_CASE("DREAM3DReview::FFTHDFWriterFilter: Instantiation and Parameter Check"
   args.insertOrAssign(FFTHDFWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
   args.insertOrAssign(FFTHDFWriterFilter::k_WriteEigenstrains_Key, std::make_any<bool>(false));
   args.insertOrAssign(FFTHDFWriterFilter::k_EigenstrainsOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(FFTHDFWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FFTHDFWriterFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FFTHDFWriterFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FFTHDFWriterFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FFTHDFWriterFilter::k_CellEigenstrainsArrayPath_Key, std::make_any<DataPath>(DataPath{}));

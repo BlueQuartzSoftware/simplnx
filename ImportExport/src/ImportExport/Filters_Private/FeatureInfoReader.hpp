@@ -24,17 +24,17 @@ public:
   FeatureInfoReader& operator=(FeatureInfoReader&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_CreateCellLevelArrays_Key = "CreateCellLevelArrays";
-  static inline constexpr StringLiteral k_RenumberFeatures_Key = "RenumberFeatures";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayName_Key = "CellPhasesArrayName";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayName_Key = "CellEulerAnglesArrayName";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "CellFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayName_Key = "FeaturePhasesArrayName";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayName_Key = "FeatureEulerAnglesArrayName";
-  static inline constexpr StringLiteral k_Delimiter_Key = "Delimiter";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_CreateCellLevelArrays_Key = "create_cell_level_arrays";
+  static inline constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayName_Key = "cell_phases_array_name";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayName_Key = "cell_euler_angles_array_name";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayName_Key = "feature_phases_array_name";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayName_Key = "feature_euler_angles_array_name";
+  static inline constexpr StringLiteral k_Delimiter_Key = "delimiter";
 
   /**
    * @brief Returns the name of the filter.

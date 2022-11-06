@@ -16,7 +16,7 @@
   inputValues.RenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
   inputValues.SaveAsNewDataContainer = filterArgs.value<bool>(k_SaveAsNewDataContainer_Key);
   inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   inputValues.NewDataContainerPath = filterArgs.value<DataPath>(k_NewDataContainerPath_Key);
 

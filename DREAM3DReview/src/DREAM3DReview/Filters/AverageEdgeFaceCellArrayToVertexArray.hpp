@@ -24,8 +24,8 @@ public:
   AverageEdgeFaceCellArrayToVertexArray& operator=(AverageEdgeFaceCellArrayToVertexArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_AverageVertexArrayPath_Key = "AverageVertexArrayPath";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_AverageVertexArrayPath_Key = "average_vertex_array_path";
 
   /**
    * @brief Returns the name of the filter.

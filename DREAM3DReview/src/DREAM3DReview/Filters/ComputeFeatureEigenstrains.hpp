@@ -24,19 +24,19 @@ public:
   ComputeFeatureEigenstrains& operator=(ComputeFeatureEigenstrains&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PoissonRatio_Key = "PoissonRatio";
-  static inline constexpr StringLiteral k_UseEllipsoidalGrains_Key = "UseEllipsoidalGrains";
-  static inline constexpr StringLiteral k_UseCorrectionalMatrix_Key = "UseCorrectionalMatrix";
-  static inline constexpr StringLiteral k_Beta11_Key = "Beta11";
-  static inline constexpr StringLiteral k_Beta22_Key = "Beta22";
-  static inline constexpr StringLiteral k_Beta33_Key = "Beta33";
-  static inline constexpr StringLiteral k_Beta23_Key = "Beta23";
-  static inline constexpr StringLiteral k_Beta13_Key = "Beta13";
-  static inline constexpr StringLiteral k_Beta12_Key = "Beta12";
-  static inline constexpr StringLiteral k_AxisLengthsArrayPath_Key = "AxisLengthsArrayPath";
-  static inline constexpr StringLiteral k_AxisEulerAnglesArrayPath_Key = "AxisEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_ElasticStrainsArrayPath_Key = "ElasticStrainsArrayPath";
-  static inline constexpr StringLiteral k_EigenstrainsArrayName_Key = "EigenstrainsArrayName";
+  static inline constexpr StringLiteral k_PoissonRatio_Key = "poisson_ratio";
+  static inline constexpr StringLiteral k_UseEllipsoidalGrains_Key = "use_ellipsoidal_grains";
+  static inline constexpr StringLiteral k_UseCorrectionalMatrix_Key = "use_correctional_matrix";
+  static inline constexpr StringLiteral k_Beta11_Key = "beta11";
+  static inline constexpr StringLiteral k_Beta22_Key = "beta22";
+  static inline constexpr StringLiteral k_Beta33_Key = "beta33";
+  static inline constexpr StringLiteral k_Beta23_Key = "beta23";
+  static inline constexpr StringLiteral k_Beta13_Key = "beta13";
+  static inline constexpr StringLiteral k_Beta12_Key = "beta12";
+  static inline constexpr StringLiteral k_AxisLengthsArrayPath_Key = "axis_lengths_array_path";
+  static inline constexpr StringLiteral k_AxisEulerAnglesArrayPath_Key = "axis_euler_angles_array_path";
+  static inline constexpr StringLiteral k_ElasticStrainsArrayPath_Key = "elastic_strains_array_path";
+  static inline constexpr StringLiteral k_EigenstrainsArrayName_Key = "eigenstrains_array_name";
 
   /**
    * @brief Returns the name of the filter.

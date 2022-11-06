@@ -10,7 +10,7 @@
 * This is example code to put in the Execute Method of the filter.
   ExtractFlaggedFeaturesInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.FlaggedFeaturesArrayPath = filterArgs.value<DataPath>(k_FlaggedFeaturesArrayPath_Key);
 
   return ExtractFlaggedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();

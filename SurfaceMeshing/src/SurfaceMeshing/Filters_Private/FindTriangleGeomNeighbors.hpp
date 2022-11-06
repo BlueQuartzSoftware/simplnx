@@ -24,10 +24,10 @@ public:
   FindTriangleGeomNeighbors& operator=(FindTriangleGeomNeighbors&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "FaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "FeatureAttributeMatrixPath";
-  static inline constexpr StringLiteral k_NumNeighborsArrayName_Key = "NumNeighborsArrayName";
-  static inline constexpr StringLiteral k_NeighborListArrayName_Key = "NeighborListArrayName";
+  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static inline constexpr StringLiteral k_NumNeighborsArrayName_Key = "num_neighbors_array_name";
+  static inline constexpr StringLiteral k_NeighborListArrayName_Key = "neighbor_list_array_name";
 
   /**
    * @brief Returns the name of the filter.

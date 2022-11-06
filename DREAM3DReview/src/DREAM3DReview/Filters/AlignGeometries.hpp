@@ -24,9 +24,9 @@ public:
   AlignGeometries& operator=(AlignGeometries&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MovingGeometry_Key = "MovingGeometry";
-  static inline constexpr StringLiteral k_TargetGeometry_Key = "TargetGeometry";
-  static inline constexpr StringLiteral k_AlignmentType_Key = "AlignmentType";
+  static inline constexpr StringLiteral k_MovingGeometry_Key = "moving_geometry";
+  static inline constexpr StringLiteral k_TargetGeometry_Key = "target_geometry";
+  static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 
   /**
    * @brief Returns the name of the filter.

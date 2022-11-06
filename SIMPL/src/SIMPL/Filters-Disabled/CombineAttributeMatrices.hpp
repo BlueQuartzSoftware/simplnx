@@ -24,12 +24,12 @@ public:
   CombineAttributeMatrices& operator=(CombineAttributeMatrices&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FirstAttributeMatrixPath_Key = "FirstAttributeMatrixPath";
-  static inline constexpr StringLiteral k_SecondAttributeMatrixPath_Key = "SecondAttributeMatrixPath";
-  static inline constexpr StringLiteral k_FirstIndexArrayPath_Key = "FirstIndexArrayPath";
-  static inline constexpr StringLiteral k_SecondIndexArrayPath_Key = "SecondIndexArrayPath";
-  static inline constexpr StringLiteral k_NewIndexArrayName_Key = "NewIndexArrayName";
-  static inline constexpr StringLiteral k_CombinedAttributeMatrixName_Key = "CombinedAttributeMatrixName";
+  static inline constexpr StringLiteral k_FirstAttributeMatrixPath_Key = "first_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SecondAttributeMatrixPath_Key = "second_attribute_matrix_path";
+  static inline constexpr StringLiteral k_FirstIndexArrayPath_Key = "first_index_array_path";
+  static inline constexpr StringLiteral k_SecondIndexArrayPath_Key = "second_index_array_path";
+  static inline constexpr StringLiteral k_NewIndexArrayName_Key = "new_index_array_name";
+  static inline constexpr StringLiteral k_CombinedAttributeMatrixName_Key = "combined_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

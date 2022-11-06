@@ -24,11 +24,11 @@ public:
   ExportOnScaleTableFile& operator=(ExportOnScaleTableFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "OutputFilePrefix";
-  static inline constexpr StringLiteral k_NumKeypoints_Key = "NumKeypoints";
-  static inline constexpr StringLiteral k_PhaseNamesArrayPath_Key = "PhaseNamesArrayPath";
-  static inline constexpr StringLiteral k_PzflexFeatureIdsArrayPath_Key = "PzflexFeatureIdsArrayPath";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "output_file_prefix";
+  static inline constexpr StringLiteral k_NumKeypoints_Key = "num_keypoints";
+  static inline constexpr StringLiteral k_PhaseNamesArrayPath_Key = "phase_names_array_path";
+  static inline constexpr StringLiteral k_PzflexFeatureIdsArrayPath_Key = "pzflex_feature_ids_array_path";
 
   /**
    * @brief Returns the name of the filter.

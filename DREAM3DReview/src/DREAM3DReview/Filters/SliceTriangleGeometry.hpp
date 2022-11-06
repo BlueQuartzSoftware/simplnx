@@ -24,18 +24,18 @@ public:
   SliceTriangleGeometry& operator=(SliceTriangleGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SliceDirection_Key = "SliceDirection";
-  static inline constexpr StringLiteral k_SliceRange_Key = "SliceRange";
-  static inline constexpr StringLiteral k_Zstart_Key = "Zstart";
-  static inline constexpr StringLiteral k_Zend_Key = "Zend";
-  static inline constexpr StringLiteral k_SliceResolution_Key = "SliceResolution";
-  static inline constexpr StringLiteral k_HaveRegionIds_Key = "HaveRegionIds";
-  static inline constexpr StringLiteral k_CADDataContainerName_Key = "CADDataContainerName";
-  static inline constexpr StringLiteral k_RegionIdArrayPath_Key = "RegionIdArrayPath";
-  static inline constexpr StringLiteral k_SliceDataContainerName_Key = "SliceDataContainerName";
-  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "EdgeAttributeMatrixName";
-  static inline constexpr StringLiteral k_SliceIdArrayName_Key = "SliceIdArrayName";
-  static inline constexpr StringLiteral k_SliceAttributeMatrixName_Key = "SliceAttributeMatrixName";
+  static inline constexpr StringLiteral k_SliceDirection_Key = "slice_direction";
+  static inline constexpr StringLiteral k_SliceRange_Key = "slice_range";
+  static inline constexpr StringLiteral k_Zstart_Key = "zstart";
+  static inline constexpr StringLiteral k_Zend_Key = "zend";
+  static inline constexpr StringLiteral k_SliceResolution_Key = "slice_resolution";
+  static inline constexpr StringLiteral k_HaveRegionIds_Key = "have_region_ids";
+  static inline constexpr StringLiteral k_CADDataContainerName_Key = "c_ad_data_container_name";
+  static inline constexpr StringLiteral k_RegionIdArrayPath_Key = "region_id_array_path";
+  static inline constexpr StringLiteral k_SliceDataContainerName_Key = "slice_data_container_name";
+  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
+  static inline constexpr StringLiteral k_SliceIdArrayName_Key = "slice_id_array_name";
+  static inline constexpr StringLiteral k_SliceAttributeMatrixName_Key = "slice_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

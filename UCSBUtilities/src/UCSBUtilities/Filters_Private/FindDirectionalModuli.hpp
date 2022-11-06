@@ -24,12 +24,12 @@ public:
   FindDirectionalModuli& operator=(FindDirectionalModuli&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_LoadingDirection_Key = "LoadingDirection";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_CrystalCompliancesArrayPath_Key = "CrystalCompliancesArrayPath";
-  static inline constexpr StringLiteral k_DirectionalModuliArrayName_Key = "DirectionalModuliArrayName";
+  static inline constexpr StringLiteral k_LoadingDirection_Key = "loading_direction";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_CrystalCompliancesArrayPath_Key = "crystal_compliances_array_path";
+  static inline constexpr StringLiteral k_DirectionalModuliArrayName_Key = "directional_moduli_array_name";
 
   /**
    * @brief Returns the name of the filter.

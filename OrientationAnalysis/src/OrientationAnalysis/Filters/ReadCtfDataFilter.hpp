@@ -24,12 +24,12 @@ public:
   ReadCtfDataFilter& operator=(ReadCtfDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_DegreesToRadians_Key = "DegreesToRadians";
-  static inline constexpr StringLiteral k_EdaxHexagonalAlignment_Key = "EdaxHexagonalAlignment";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "CellEnsembleAttributeMatrixName";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_DegreesToRadians_Key = "degrees_to_radians";
+  static inline constexpr StringLiteral k_EdaxHexagonalAlignment_Key = "edax_hexagonal_alignment";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

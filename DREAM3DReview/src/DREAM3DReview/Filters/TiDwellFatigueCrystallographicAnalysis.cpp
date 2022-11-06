@@ -64,7 +64,7 @@ Parameters TiDwellFatigueCrystallographicAnalysis::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_SoftFeatureUpperThreshold_Key, "Soft Feature Upper Threshold (Degrees)", "", 1.23345f));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "FeatureIds", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "FeatureIds", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureEulerAnglesArrayPath_Key, "Average Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
@@ -127,7 +127,7 @@ IFilter::PreflightResult TiDwellFatigueCrystallographicAnalysis::preflightImpl(c
   auto pSoftFeatureLowerThresholdValue = filterArgs.value<float32>(k_SoftFeatureLowerThreshold_Key);
   auto pSoftFeatureUpperThresholdValue = filterArgs.value<float32>(k_SoftFeatureUpperThreshold_Key);
   auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   auto pFeatureEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
@@ -208,7 +208,7 @@ Result<> TiDwellFatigueCrystallographicAnalysis::executeImpl(DataStructure& data
   auto pSoftFeatureLowerThresholdValue = filterArgs.value<float32>(k_SoftFeatureLowerThreshold_Key);
   auto pSoftFeatureUpperThresholdValue = filterArgs.value<float32>(k_SoftFeatureUpperThreshold_Key);
   auto pDataContainerNameValue = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   auto pFeatureEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);

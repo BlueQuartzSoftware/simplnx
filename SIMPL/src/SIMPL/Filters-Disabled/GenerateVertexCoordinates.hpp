@@ -24,8 +24,8 @@ public:
   GenerateVertexCoordinates& operator=(GenerateVertexCoordinates&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedDataContainerName_Key = "SelectedDataContainerName";
-  static inline constexpr StringLiteral k_CoordinateArrayPath_Key = "CoordinateArrayPath";
+  static inline constexpr StringLiteral k_SelectedDataContainerName_Key = "selected_data_container_name";
+  static inline constexpr StringLiteral k_CoordinateArrayPath_Key = "coordinate_array_path";
 
   /**
    * @brief Returns the name of the filter.

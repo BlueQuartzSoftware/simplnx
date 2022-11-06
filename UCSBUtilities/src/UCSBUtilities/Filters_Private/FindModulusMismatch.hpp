@@ -24,9 +24,9 @@ public:
   FindModulusMismatch& operator=(FindModulusMismatch&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ModuliArrayPath_Key = "ModuliArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshDeltaModulusArrayName_Key = "SurfaceMeshDeltaModulusArrayName";
+  static inline constexpr StringLiteral k_ModuliArrayPath_Key = "moduli_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshDeltaModulusArrayName_Key = "surface_mesh_delta_modulus_array_name";
 
   /**
    * @brief Returns the name of the filter.

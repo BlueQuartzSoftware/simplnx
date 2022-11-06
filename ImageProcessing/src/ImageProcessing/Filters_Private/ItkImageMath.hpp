@@ -24,11 +24,11 @@ public:
   ItkImageMath& operator=(ItkImageMath&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SaveAsNewArray_Key = "SaveAsNewArray";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_Operator_Key = "Operator";
-  static inline constexpr StringLiteral k_Value_Key = "Value";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
+  static inline constexpr StringLiteral k_SaveAsNewArray_Key = "save_as_new_array";
+  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static inline constexpr StringLiteral k_Operator_Key = "operator";
+  static inline constexpr StringLiteral k_Value_Key = "value";
+  static inline constexpr StringLiteral k_NewCellArrayName_Key = "new_cell_array_name";
 
   /**
    * @brief Returns the name of the filter.

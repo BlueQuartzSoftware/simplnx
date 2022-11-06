@@ -24,11 +24,11 @@ public:
   ImportPrintRiteHDF5File& operator=(ImportPrintRiteHDF5File&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_HFDataContainerName_Key = "HFDataContainerName";
-  static inline constexpr StringLiteral k_HFDataName_Key = "HFDataName";
-  static inline constexpr StringLiteral k_HFSliceIdsArrayName_Key = "HFSliceIdsArrayName";
-  static inline constexpr StringLiteral k_HFSliceDataName_Key = "HFSliceDataName";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_HFDataContainerName_Key = "h_fdata_container_name";
+  static inline constexpr StringLiteral k_HFDataName_Key = "h_fdata_name";
+  static inline constexpr StringLiteral k_HFSliceIdsArrayName_Key = "h_fslice_ids_array_name";
+  static inline constexpr StringLiteral k_HFSliceDataName_Key = "h_fslice_data_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -25,13 +25,13 @@ public:
   AlignSectionsFeatureCentroidFilter& operator=(AlignSectionsFeatureCentroidFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_WriteAlignmentShifts_Key = "WriteAlignmentShifts";
-  static inline constexpr StringLiteral k_AlignmentShiftFileName_Key = "AlignmentShiftFileName";
-  static inline constexpr StringLiteral k_UseReferenceSlice_Key = "UseReferenceSlice";
-  static inline constexpr StringLiteral k_ReferenceSlice_Key = "ReferenceSlice";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometryPath";
-  static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "SelectedCellDataPath";
+  static inline constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
+  static inline constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
+  static inline constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
+  static inline constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
+  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+  static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
   /**
    * @brief Returns the name of the filter.

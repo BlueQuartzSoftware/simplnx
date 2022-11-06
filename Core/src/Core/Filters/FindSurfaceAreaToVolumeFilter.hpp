@@ -24,11 +24,11 @@ public:
   FindSurfaceAreaToVolumeFilter& operator=(FindSurfaceAreaToVolumeFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_NumCellsArrayPath_Key = "NumCellsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceAreaVolumeRatioArrayName_Key = "SurfaceAreaVolumeRatioArrayName";
-  static inline constexpr StringLiteral k_CalculateSphericity_Key = "CalculateSphericity";
-  static inline constexpr StringLiteral k_SphericityArrayName_Key = "SphericityArrayName";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_NumCellsArrayPath_Key = "num_cells_array_path";
+  static inline constexpr StringLiteral k_SurfaceAreaVolumeRatioArrayName_Key = "surface_area_volume_ratio_array_name";
+  static inline constexpr StringLiteral k_CalculateSphericity_Key = "calculate_sphericity";
+  static inline constexpr StringLiteral k_SphericityArrayName_Key = "sphericity_array_name";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**

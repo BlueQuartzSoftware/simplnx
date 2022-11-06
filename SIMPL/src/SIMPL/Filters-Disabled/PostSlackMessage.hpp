@@ -24,10 +24,10 @@ public:
   PostSlackMessage& operator=(PostSlackMessage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SlackUser_Key = "SlackUser";
-  static inline constexpr StringLiteral k_SlackUrl_Key = "SlackUrl";
-  static inline constexpr StringLiteral k_SlackMessage_Key = "SlackMessage";
-  static inline constexpr StringLiteral k_WarningsAsError_Key = "WarningsAsError";
+  static inline constexpr StringLiteral k_SlackUser_Key = "slack_user";
+  static inline constexpr StringLiteral k_SlackUrl_Key = "slack_url";
+  static inline constexpr StringLiteral k_SlackMessage_Key = "slack_message";
+  static inline constexpr StringLiteral k_WarningsAsError_Key = "warnings_as_error";
 
   /**
    * @brief Returns the name of the filter.

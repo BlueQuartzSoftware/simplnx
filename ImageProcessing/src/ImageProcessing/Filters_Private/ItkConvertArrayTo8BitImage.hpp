@@ -24,8 +24,8 @@ public:
   ItkConvertArrayTo8BitImage& operator=(ItkConvertArrayTo8BitImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_NewArrayArrayName_Key = "NewArrayArrayName";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_NewArrayArrayName_Key = "new_array_array_name";
 
   /**
    * @brief Returns the name of the filter.

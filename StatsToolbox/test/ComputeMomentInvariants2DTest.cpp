@@ -39,7 +39,7 @@ TEST_CASE("StatsToolbox::ComputeMomentInvariants2D: Instantiation and Parameter 
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ComputeMomentInvariants2D::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ComputeMomentInvariants2D::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ComputeMomentInvariants2D::k_FeatureRectArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ComputeMomentInvariants2D::k_NormalizeMomentInvariants_Key, std::make_any<bool>(false));
   args.insertOrAssign(ComputeMomentInvariants2D::k_Omega1ArrayPath_Key, std::make_any<DataPath>(DataPath{}));

@@ -24,8 +24,8 @@ public:
   ComputeFeatureRect& operator=(ComputeFeatureRect&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FeatureRectArrayPath_Key = "FeatureRectArrayPath";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeatureRectArrayPath_Key = "feature_rect_array_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,9 +24,9 @@ public:
   WriteStlFile& operator=(WriteStlFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputStlDirectory_Key = "OutputStlDirectory";
-  static inline constexpr StringLiteral k_OutputStlPrefix_Key = "OutputStlPrefix";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
+  static inline constexpr StringLiteral k_OutputStlDirectory_Key = "output_stl_directory";
+  static inline constexpr StringLiteral k_OutputStlPrefix_Key = "output_stl_prefix";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
 
   /**
    * @brief Returns the name of the filter.

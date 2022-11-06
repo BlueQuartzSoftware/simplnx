@@ -24,9 +24,9 @@ public:
   FindSurfaceRoughness& operator=(FindSurfaceRoughness&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_BoundaryCellsArrayPath_Key = "BoundaryCellsArrayPath";
-  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "AttributeMatrixName";
-  static inline constexpr StringLiteral k_RoughnessParamsArrayName_Key = "RoughnessParamsArrayName";
+  static inline constexpr StringLiteral k_BoundaryCellsArrayPath_Key = "boundary_cells_array_path";
+  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "attribute_matrix_name";
+  static inline constexpr StringLiteral k_RoughnessParamsArrayName_Key = "roughness_params_array_name";
 
   /**
    * @brief Returns the name of the filter.

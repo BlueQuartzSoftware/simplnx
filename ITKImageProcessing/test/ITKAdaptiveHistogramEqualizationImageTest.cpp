@@ -55,13 +55,13 @@ DataPath ConvertColorToGrayScale(DataStructure& dataStructure, DataPath inputGeo
   const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_CorePluginId);
 
   // Parameter Keys
-  constexpr StringLiteral k_ConversionAlgorithm_Key = "ConversionAlgorithm";
-  constexpr StringLiteral k_ColorWeights_Key = "ColorWeights";
-  constexpr StringLiteral k_ColorChannel_Key = "ColorChannel";
-  constexpr StringLiteral k_InputDataArrayVector_Key = "InputDataArrayVector";
-  constexpr StringLiteral k_CreateNewAttributeMatrix_Key = "CreateNewAttributeMatrix";
-  constexpr StringLiteral k_OutputAttributeMatrixName_Key = "OutputAttributeMatrixName";
-  constexpr StringLiteral k_OutputArrayPrefix_Key = "OutputArrayPrefix";
+  constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm";
+  constexpr StringLiteral k_ColorWeights_Key = "color_weights";
+  constexpr StringLiteral k_ColorChannel_Key = "color_channel";
+  constexpr StringLiteral k_InputDataArrayVector_Key = "input_data_array_vector";
+  constexpr StringLiteral k_CreateNewAttributeMatrix_Key = "create_new_attribute_matrix";
+  constexpr StringLiteral k_OutputAttributeMatrixName_Key = "output_attribute_matrix_name";
+  constexpr StringLiteral k_OutputArrayPrefix_Key = "output_array_prefix";
 
   auto filter = s_FilterList->createFilter(k_ColorToGrayScaleFilterHandle);
   REQUIRE(nullptr != filter);

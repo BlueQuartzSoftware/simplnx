@@ -24,23 +24,23 @@ public:
   ITKImportRoboMetMontage& operator=(ITKImportRoboMetMontage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_MontageName_Key = "MontageName";
-  static inline constexpr StringLiteral k_ColumnMontageLimits_Key = "ColumnMontageLimits";
-  static inline constexpr StringLiteral k_RowMontageLimits_Key = "RowMontageLimits";
-  static inline constexpr StringLiteral k_LengthUnit_Key = "LengthUnit";
-  static inline constexpr StringLiteral k_SliceNumber_Key = "SliceNumber";
-  static inline constexpr StringLiteral k_ImageFilePrefix_Key = "ImageFilePrefix";
-  static inline constexpr StringLiteral k_ImageFileExtension_Key = "ImageFileExtension";
-  static inline constexpr StringLiteral k_ChangeOrigin_Key = "ChangeOrigin";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_ChangeSpacing_Key = "ChangeSpacing";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_ConvertToGrayScale_Key = "ConvertToGrayScale";
-  static inline constexpr StringLiteral k_ColorWeights_Key = "ColorWeights";
-  static inline constexpr StringLiteral k_DataContainerPath_Key = "DataContainerPath";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "ImageDataArrayName";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_MontageName_Key = "montage_name";
+  static inline constexpr StringLiteral k_ColumnMontageLimits_Key = "column_montage_limits";
+  static inline constexpr StringLiteral k_RowMontageLimits_Key = "row_montage_limits";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+  static inline constexpr StringLiteral k_SliceNumber_Key = "slice_number";
+  static inline constexpr StringLiteral k_ImageFilePrefix_Key = "image_file_prefix";
+  static inline constexpr StringLiteral k_ImageFileExtension_Key = "image_file_extension";
+  static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
+  static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";
+  static inline constexpr StringLiteral k_DataContainerPath_Key = "data_container_path";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "image_data_array_name";
 
   /**
    * @brief Returns the name of the filter.

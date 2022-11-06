@@ -14,7 +14,7 @@
   inputValues.CreateCellLevelArrays = filterArgs.value<bool>(k_CreateCellLevelArrays_Key);
   inputValues.RenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellPhasesArrayName = filterArgs.value<DataPath>(k_CellPhasesArrayName_Key);
   inputValues.CellEulerAnglesArrayName = filterArgs.value<DataPath>(k_CellEulerAnglesArrayName_Key);
   inputValues.CellFeatureAttributeMatrixName = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);

@@ -42,7 +42,7 @@ TEST_CASE("ImportExport::SPParksSitesWriter: Instantiation and Parameter Check",
 
   // Create default Parameters for the filter.
   args.insertOrAssign(SPParksSitesWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(SPParksSitesWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SPParksSitesWriter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

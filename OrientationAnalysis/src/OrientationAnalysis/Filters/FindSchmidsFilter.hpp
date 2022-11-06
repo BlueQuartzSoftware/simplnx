@@ -24,19 +24,19 @@ public:
   FindSchmidsFilter& operator=(FindSchmidsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_LoadingDirection_Key = "LoadingDirection";
-  static inline constexpr StringLiteral k_StoreAngleComponents_Key = "StoreAngleComponents";
-  static inline constexpr StringLiteral k_OverrideSystem_Key = "OverrideSystem";
-  static inline constexpr StringLiteral k_SlipPlane_Key = "SlipPlane";
-  static inline constexpr StringLiteral k_SlipDirection_Key = "SlipDirection";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_SchmidsArrayName_Key = "SchmidsArrayName";
-  static inline constexpr StringLiteral k_SlipSystemsArrayName_Key = "SlipSystemsArrayName";
-  static inline constexpr StringLiteral k_PolesArrayName_Key = "PolesArrayName";
-  static inline constexpr StringLiteral k_PhisArrayName_Key = "PhisArrayName";
-  static inline constexpr StringLiteral k_LambdasArrayName_Key = "LambdasArrayName";
+  static inline constexpr StringLiteral k_LoadingDirection_Key = "loading_direction";
+  static inline constexpr StringLiteral k_StoreAngleComponents_Key = "store_angle_components";
+  static inline constexpr StringLiteral k_OverrideSystem_Key = "override_system";
+  static inline constexpr StringLiteral k_SlipPlane_Key = "slip_plane";
+  static inline constexpr StringLiteral k_SlipDirection_Key = "slip_direction";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_SchmidsArrayName_Key = "schmids_array_name";
+  static inline constexpr StringLiteral k_SlipSystemsArrayName_Key = "slip_systems_array_name";
+  static inline constexpr StringLiteral k_PolesArrayName_Key = "poles_array_name";
+  static inline constexpr StringLiteral k_PhisArrayName_Key = "phis_array_name";
+  static inline constexpr StringLiteral k_LambdasArrayName_Key = "lambdas_array_name";
 
   /**
    * @brief Returns the name of the filter.

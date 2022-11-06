@@ -24,11 +24,11 @@ public:
   ITKImageWriter& operator=(ITKImageWriter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Plane_Key = "Plane";
-  static inline constexpr StringLiteral k_FileName_Key = "FileName";
-  static inline constexpr StringLiteral k_IndexOffset_Key = "IndexOffset";
-  static inline constexpr StringLiteral k_ImageArrayPath_Key = "ImageArrayPath";
-  static inline constexpr StringLiteral k_ImageGeomPath_Key = "ImageGeomPath";
+  static inline constexpr StringLiteral k_Plane_Key = "plane";
+  static inline constexpr StringLiteral k_FileName_Key = "file_name";
+  static inline constexpr StringLiteral k_IndexOffset_Key = "index_offset";
+  static inline constexpr StringLiteral k_ImageArrayPath_Key = "image_array_path";
+  static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
 
   static inline constexpr usize k_XYPlane = 0;
   static inline constexpr usize k_XZPlane = 1;

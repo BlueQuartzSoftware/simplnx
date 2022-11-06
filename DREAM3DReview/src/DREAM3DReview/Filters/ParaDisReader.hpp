@@ -24,15 +24,15 @@ public:
   ParaDisReader& operator=(ParaDisReader&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_BurgersVector_Key = "BurgersVector";
-  static inline constexpr StringLiteral k_EdgeDataContainerName_Key = "EdgeDataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "EdgeAttributeMatrixName";
-  static inline constexpr StringLiteral k_NumberOfArmsArrayName_Key = "NumberOfArmsArrayName";
-  static inline constexpr StringLiteral k_NodeConstraintsArrayName_Key = "NodeConstraintsArrayName";
-  static inline constexpr StringLiteral k_BurgersVectorsArrayName_Key = "BurgersVectorsArrayName";
-  static inline constexpr StringLiteral k_SlipPlaneNormalsArrayName_Key = "SlipPlaneNormalsArrayName";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_BurgersVector_Key = "burgers_vector";
+  static inline constexpr StringLiteral k_EdgeDataContainerName_Key = "edge_data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
+  static inline constexpr StringLiteral k_NumberOfArmsArrayName_Key = "number_of_arms_array_name";
+  static inline constexpr StringLiteral k_NodeConstraintsArrayName_Key = "node_constraints_array_name";
+  static inline constexpr StringLiteral k_BurgersVectorsArrayName_Key = "burgers_vectors_array_name";
+  static inline constexpr StringLiteral k_SlipPlaneNormalsArrayName_Key = "slip_plane_normals_array_name";
 
   /**
    * @brief Returns the name of the filter.

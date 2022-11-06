@@ -24,12 +24,12 @@ public:
   FitFeatureData& operator=(FitFeatureData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DistributionType_Key = "DistributionType";
-  static inline constexpr StringLiteral k_RemoveBiasedFeatures_Key = "RemoveBiasedFeatures";
-  static inline constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "SelectedFeatureArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_BiasedFeaturesArrayPath_Key = "BiasedFeaturesArrayPath";
-  static inline constexpr StringLiteral k_NewEnsembleArrayArray_Key = "NewEnsembleArrayArray";
+  static inline constexpr StringLiteral k_DistributionType_Key = "distribution_type";
+  static inline constexpr StringLiteral k_RemoveBiasedFeatures_Key = "remove_biased_features";
+  static inline constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "selected_feature_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_BiasedFeaturesArrayPath_Key = "biased_features_array_path";
+  static inline constexpr StringLiteral k_NewEnsembleArrayArray_Key = "new_ensemble_array_array";
 
   /**
    * @brief Returns the name of the filter.

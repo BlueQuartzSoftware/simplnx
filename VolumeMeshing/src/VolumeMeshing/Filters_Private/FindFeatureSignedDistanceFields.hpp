@@ -24,9 +24,9 @@ public:
   FindFeatureSignedDistanceFields& operator=(FindFeatureSignedDistanceFields&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "FeatureAttributeMatrixPath";
-  static inline constexpr StringLiteral k_SignedDistanceFieldsPrefix_Key = "SignedDistanceFieldsPrefix";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SignedDistanceFieldsPrefix_Key = "signed_distance_fields_prefix";
 
   /**
    * @brief Returns the name of the filter.

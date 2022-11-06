@@ -53,7 +53,7 @@ TEST_CASE("DREAM3DReview::InsertTransformationPhases: Instantiation and Paramete
   args.insertOrAssign(InsertTransformationPhases::k_TransformationPhaseThickness_Key, std::make_any<float32>(1.23345f));
   args.insertOrAssign(InsertTransformationPhases::k_NumTransformationPhasesPerFeature_Key, std::make_any<int32>(1234356));
   args.insertOrAssign(InsertTransformationPhases::k_PeninsulaFrac_Key, std::make_any<float32>(1.23345f));
-  args.insertOrAssign(InsertTransformationPhases::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertTransformationPhases::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(InsertTransformationPhases::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(InsertTransformationPhases::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(InsertTransformationPhases::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));

@@ -52,7 +52,7 @@ TEST_CASE("Sampling::CropImageGeometry: Instantiation and Parameter Check", "[Sa
   args.insertOrAssign(CropImageGeometry::k_NewDataContainerName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(CropImageGeometry::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
-  args.insertOrAssign(CropImageGeometry::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CropImageGeometry::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(CropImageGeometry::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result

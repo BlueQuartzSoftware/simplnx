@@ -85,13 +85,12 @@ Parameters ResampleImageGeomFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Renumber feature Ids to ensure continuous values starting at 0.", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "", DataPath({"Cell Feature Data"})));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrixPath_Key, true);
-  params.linkParameters(k_RenumberFeatures_Key, k_FeatureIdsArrayPath_Key, true);
+  params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Created Image Geometry"});
   params.insert(
@@ -114,7 +113,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   auto createdImageGeomPath = filterArgs.value<DataPath>(k_NewDataContainerPath_Key);
 
   auto pRenumberFeaturesValue = filterArgs.value<bool>(k_RenumberFeatures_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
 
   auto selectedImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
@@ -284,7 +283,7 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.cellDataGroupPath = inputValues.inputImageGeometry.createChildPath(cellDataGroup->getName());
 
   inputValues.renumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
-  inputValues.featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.cellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
 
   inputValues.removeOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);

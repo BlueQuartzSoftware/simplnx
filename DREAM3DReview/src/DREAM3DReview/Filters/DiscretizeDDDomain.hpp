@@ -24,11 +24,11 @@ public:
   DiscretizeDDDomain& operator=(DiscretizeDDDomain&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellSize_Key = "CellSize";
-  static inline constexpr StringLiteral k_EdgeDataContainerName_Key = "EdgeDataContainerName";
-  static inline constexpr StringLiteral k_OutputDataContainerName_Key = "OutputDataContainerName";
-  static inline constexpr StringLiteral k_OutputAttributeMatrixName_Key = "OutputAttributeMatrixName";
-  static inline constexpr StringLiteral k_OutputArrayName_Key = "OutputArrayName";
+  static inline constexpr StringLiteral k_CellSize_Key = "cell_size";
+  static inline constexpr StringLiteral k_EdgeDataContainerName_Key = "edge_data_container_name";
+  static inline constexpr StringLiteral k_OutputDataContainerName_Key = "output_data_container_name";
+  static inline constexpr StringLiteral k_OutputAttributeMatrixName_Key = "output_attribute_matrix_name";
+  static inline constexpr StringLiteral k_OutputArrayName_Key = "output_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,13 +24,13 @@ public:
   FindFeatureReferenceCAxisMisorientations& operator=(FindFeatureReferenceCAxisMisorientations&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_AvgCAxesArrayPath_Key = "AvgCAxesArrayPath";
-  static inline constexpr StringLiteral k_FeatureAvgCAxisMisorientationsArrayName_Key = "FeatureAvgCAxisMisorientationsArrayName";
-  static inline constexpr StringLiteral k_FeatureStdevCAxisMisorientationsArrayName_Key = "FeatureStdevCAxisMisorientationsArrayName";
-  static inline constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayName_Key = "FeatureReferenceCAxisMisorientationsArrayName";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_AvgCAxesArrayPath_Key = "avg_caxes_array_path";
+  static inline constexpr StringLiteral k_FeatureAvgCAxisMisorientationsArrayName_Key = "feature_avg_caxis_misorientations_array_name";
+  static inline constexpr StringLiteral k_FeatureStdevCAxisMisorientationsArrayName_Key = "feature_stdev_caxis_misorientations_array_name";
+  static inline constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayName_Key = "feature_reference_caxis_misorientations_array_name";
 
   /**
    * @brief Returns the name of the filter.

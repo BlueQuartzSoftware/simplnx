@@ -24,16 +24,16 @@ public:
   ImportH5EspritData& operator=(ImportH5EspritData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_SelectedScanNames_Key = "SelectedScanNames";
-  static inline constexpr StringLiteral k_ZSpacing_Key = "ZSpacing";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_CombineEulerAngles_Key = "CombineEulerAngles";
-  static inline constexpr StringLiteral k_DegreesToRadians_Key = "DegreesToRadians";
-  static inline constexpr StringLiteral k_ReadPatternData_Key = "ReadPatternData";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "CellEnsembleAttributeMatrixName";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_SelectedScanNames_Key = "selected_scan_names";
+  static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_CombineEulerAngles_Key = "combine_euler_angles";
+  static inline constexpr StringLiteral k_DegreesToRadians_Key = "degrees_to_radians";
+  static inline constexpr StringLiteral k_ReadPatternData_Key = "read_pattern_data";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -61,8 +61,7 @@ Parameters ErodeDilateBadDataFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "",
                                                                MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}, MultiArraySelectionParameter::AllowedTypes{}));
@@ -88,7 +87,7 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   auto pXDirOnValue = filterArgs.value<bool>(k_XDirOn_Key);
   auto pYDirOnValue = filterArgs.value<bool>(k_YDirOn_Key);
   auto pZDirOnValue = filterArgs.value<bool>(k_ZDirOn_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -128,7 +127,7 @@ Result<> ErodeDilateBadDataFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.XDirOn = filterArgs.value<bool>(k_XDirOn_Key);
   inputValues.YDirOn = filterArgs.value<bool>(k_YDirOn_Key);
   inputValues.ZDirOn = filterArgs.value<bool>(k_ZDirOn_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   inputValues.FeatureDataPath = filterArgs.value<DataPath>(k_SelectedFeatureDataGroup_Key);

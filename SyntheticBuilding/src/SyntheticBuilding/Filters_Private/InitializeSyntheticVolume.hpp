@@ -24,17 +24,17 @@ public:
   InitializeSyntheticVolume& operator=(InitializeSyntheticVolume&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_EstimateNumberOfFeatures_Key = "EstimateNumberOfFeatures";
-  static inline constexpr StringLiteral k_GeometryDataContainer_Key = "GeometryDataContainer";
-  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "InputStatsArrayPath";
-  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "InputPhaseTypesArrayPath";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_GeometrySelection_Key = "GeometrySelection";
-  static inline constexpr StringLiteral k_Dimensions_Key = "Dimensions";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_LengthUnit_Key = "LengthUnit";
+  static inline constexpr StringLiteral k_EstimateNumberOfFeatures_Key = "estimate_number_of_features";
+  static inline constexpr StringLiteral k_GeometryDataContainer_Key = "geometry_data_container";
+  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "input_stats_array_path";
+  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "input_phase_types_array_path";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_GeometrySelection_Key = "geometry_selection";
+  static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
 
   /**
    * @brief Returns the name of the filter.

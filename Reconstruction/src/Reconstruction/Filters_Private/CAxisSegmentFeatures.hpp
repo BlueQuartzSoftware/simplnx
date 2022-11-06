@@ -24,15 +24,15 @@ public:
   CAxisSegmentFeatures& operator=(CAxisSegmentFeatures&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
-  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "UseGoodVoxels";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "CellFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_ActiveArrayName_Key = "ActiveArrayName";
+  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
+  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
 
   /**
    * @brief Returns the name of the filter.

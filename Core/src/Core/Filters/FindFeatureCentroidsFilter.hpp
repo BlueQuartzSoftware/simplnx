@@ -24,10 +24,10 @@ public:
   FindFeatureCentroidsFilter& operator=(FindFeatureCentroidsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "CentroidsArrayPath";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometry";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrix_Key = "FeatureAttributeMatrix";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrix_Key = "feature_attribute_matrix";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,12 +24,12 @@ public:
   ExtractVertexGeometry& operator=(ExtractVertexGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ArrayHandling_Key = "ArrayHandling";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_SelectedDataContainerName_Key = "SelectedDataContainerName";
-  static inline constexpr StringLiteral k_IncludedDataArrayPaths_Key = "IncludedDataArrayPaths";
-  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "VertexDataContainerName";
+  static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_SelectedDataContainerName_Key = "selected_data_container_name";
+  static inline constexpr StringLiteral k_IncludedDataArrayPaths_Key = "included_data_array_paths";
+  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "vertex_data_container_name";
 
   /**
    * @brief Returns the name of the filter.

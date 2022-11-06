@@ -24,10 +24,10 @@ public:
   ImportVolumeGraphicsFile& operator=(ImportVolumeGraphicsFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_VGHeaderFile_Key = "VGHeaderFile";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_DensityArrayName_Key = "DensityArrayName";
+  static inline constexpr StringLiteral k_VGHeaderFile_Key = "v_gheader_file";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
 
   /**
    * @brief Returns the name of the filter.

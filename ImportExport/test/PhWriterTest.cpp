@@ -42,7 +42,7 @@ TEST_CASE("ImportExport::PhWriter: Instantiation and Parameter Check", "[ImportE
 
   // Create default Parameters for the filter.
   args.insertOrAssign(PhWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(PhWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(PhWriter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);

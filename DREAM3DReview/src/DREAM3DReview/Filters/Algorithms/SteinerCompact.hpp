@@ -16,7 +16,7 @@
   inputValues.VtkFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_VtkFileName_Key);
   inputValues.TxtOutput = filterArgs.value<bool>(k_TxtOutput_Key);
   inputValues.TxtFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_TxtFileName_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
   return SteinerCompact(dataStructure, messageHandler, shouldCancel, &inputValues)();

@@ -24,25 +24,25 @@ public:
   PackPrimaryPhases& operator=(PackPrimaryPhases&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PeriodicBoundaries_Key = "PeriodicBoundaries";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_OutputCellAttributeMatrixPath_Key = "OutputCellAttributeMatrixPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "InputStatsArrayPath";
-  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "InputPhaseTypesArrayPath";
-  static inline constexpr StringLiteral k_InputPhaseNamesArrayPath_Key = "InputPhaseNamesArrayPath";
-  static inline constexpr StringLiteral k_InputShapeTypesArrayPath_Key = "InputShapeTypesArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
-  static inline constexpr StringLiteral k_CellPhasesArrayName_Key = "CellPhasesArrayName";
-  static inline constexpr StringLiteral k_OutputCellFeatureAttributeMatrixName_Key = "OutputCellFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayName_Key = "FeaturePhasesArrayName";
-  static inline constexpr StringLiteral k_OutputCellEnsembleAttributeMatrixName_Key = "OutputCellEnsembleAttributeMatrixName";
-  static inline constexpr StringLiteral k_NumFeaturesArrayName_Key = "NumFeaturesArrayName";
-  static inline constexpr StringLiteral k_FeatureGeneration_Key = "FeatureGeneration";
-  static inline constexpr StringLiteral k_FeatureInputFile_Key = "FeatureInputFile";
-  static inline constexpr StringLiteral k_SaveGeometricDescriptions_Key = "SaveGeometricDescriptions";
-  static inline constexpr StringLiteral k_NewAttributeMatrixPath_Key = "NewAttributeMatrixPath";
-  static inline constexpr StringLiteral k_SelectedAttributeMatrixPath_Key = "SelectedAttributeMatrixPath";
+  static inline constexpr StringLiteral k_PeriodicBoundaries_Key = "periodic_boundaries";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_OutputCellAttributeMatrixPath_Key = "output_cell_attribute_matrix_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "input_stats_array_path";
+  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "input_phase_types_array_path";
+  static inline constexpr StringLiteral k_InputPhaseNamesArrayPath_Key = "input_phase_names_array_path";
+  static inline constexpr StringLiteral k_InputShapeTypesArrayPath_Key = "input_shape_types_array_path";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static inline constexpr StringLiteral k_CellPhasesArrayName_Key = "cell_phases_array_name";
+  static inline constexpr StringLiteral k_OutputCellFeatureAttributeMatrixName_Key = "output_cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayName_Key = "feature_phases_array_name";
+  static inline constexpr StringLiteral k_OutputCellEnsembleAttributeMatrixName_Key = "output_cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_NumFeaturesArrayName_Key = "num_features_array_name";
+  static inline constexpr StringLiteral k_FeatureGeneration_Key = "feature_generation";
+  static inline constexpr StringLiteral k_FeatureInputFile_Key = "feature_input_file";
+  static inline constexpr StringLiteral k_SaveGeometricDescriptions_Key = "save_geometric_descriptions";
+  static inline constexpr StringLiteral k_NewAttributeMatrixPath_Key = "new_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SelectedAttributeMatrixPath_Key = "selected_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

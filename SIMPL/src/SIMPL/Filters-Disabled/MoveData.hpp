@@ -24,11 +24,11 @@ public:
   MoveData& operator=(MoveData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_WhatToMove_Key = "WhatToMove";
-  static inline constexpr StringLiteral k_AttributeMatrixSource_Key = "AttributeMatrixSource";
-  static inline constexpr StringLiteral k_DataContainerDestination_Key = "DataContainerDestination";
-  static inline constexpr StringLiteral k_DataArraySource_Key = "DataArraySource";
-  static inline constexpr StringLiteral k_AttributeMatrixDestination_Key = "AttributeMatrixDestination";
+  static inline constexpr StringLiteral k_WhatToMove_Key = "what_to_move";
+  static inline constexpr StringLiteral k_AttributeMatrixSource_Key = "attribute_matrix_source";
+  static inline constexpr StringLiteral k_DataContainerDestination_Key = "data_container_destination";
+  static inline constexpr StringLiteral k_DataArraySource_Key = "data_array_source";
+  static inline constexpr StringLiteral k_AttributeMatrixDestination_Key = "attribute_matrix_destination";
 
   /**
    * @brief Returns the name of the filter.

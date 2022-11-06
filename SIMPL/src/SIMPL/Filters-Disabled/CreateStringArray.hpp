@@ -24,8 +24,8 @@ public:
   CreateStringArray& operator=(CreateStringArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InitializationValue_Key = "InitializationValue";
-  static inline constexpr StringLiteral k_NewArray_Key = "NewArray";
+  static inline constexpr StringLiteral k_InitializationValue_Key = "initialization_value";
+  static inline constexpr StringLiteral k_NewArray_Key = "new_array";
 
   /**
    * @brief Returns the name of the filter.

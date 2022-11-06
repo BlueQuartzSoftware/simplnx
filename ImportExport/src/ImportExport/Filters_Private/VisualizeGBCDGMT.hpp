@@ -24,11 +24,11 @@ public:
   VisualizeGBCDGMT& operator=(VisualizeGBCDGMT&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PhaseOfInterest_Key = "PhaseOfInterest";
-  static inline constexpr StringLiteral k_MisorientationRotation_Key = "MisorientationRotation";
-  static inline constexpr StringLiteral k_OutputFile_Key = "OutputFile";
-  static inline constexpr StringLiteral k_GBCDArrayPath_Key = "GBCDArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
+  static inline constexpr StringLiteral k_PhaseOfInterest_Key = "phase_of_interest";
+  static inline constexpr StringLiteral k_MisorientationRotation_Key = "misorientation_rotation";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static inline constexpr StringLiteral k_GBCDArrayPath_Key = "g_bc_darray_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
   /**
    * @brief Returns the name of the filter.

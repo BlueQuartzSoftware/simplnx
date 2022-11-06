@@ -24,28 +24,28 @@ public:
   Export3dSolidMesh& operator=(Export3dSolidMesh&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MeshingPackage_Key = "MeshingPackage";
-  static inline constexpr StringLiteral k_outputPath_Key = "outputPath";
-  static inline constexpr StringLiteral k_PackageLocation_Key = "PackageLocation";
-  static inline constexpr StringLiteral k_NetgenSTLFileName_Key = "NetgenSTLFileName";
-  static inline constexpr StringLiteral k_GmshSTLFileName_Key = "GmshSTLFileName";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "FeatureEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_FeatureCentroidArrayPath_Key = "FeatureCentroidArrayPath";
-  static inline constexpr StringLiteral k_MeshFileFormat_Key = "MeshFileFormat";
-  static inline constexpr StringLiteral k_RefineMesh_Key = "RefineMesh";
-  static inline constexpr StringLiteral k_MaxRadiusEdgeRatio_Key = "MaxRadiusEdgeRatio";
-  static inline constexpr StringLiteral k_MinDihedralAngle_Key = "MinDihedralAngle";
-  static inline constexpr StringLiteral k_OptimizationLevel_Key = "OptimizationLevel";
-  static inline constexpr StringLiteral k_MeshSize_Key = "MeshSize";
-  static inline constexpr StringLiteral k_LimitTetrahedraVolume_Key = "LimitTetrahedraVolume";
-  static inline constexpr StringLiteral k_MaxTetrahedraVolume_Key = "MaxTetrahedraVolume";
-  static inline constexpr StringLiteral k_IncludeHolesUsingPhaseID_Key = "IncludeHolesUsingPhaseID";
-  static inline constexpr StringLiteral k_PhaseID_Key = "PhaseID";
-  static inline constexpr StringLiteral k_TetDataContainerName_Key = "TetDataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
+  static inline constexpr StringLiteral k_MeshingPackage_Key = "meshing_package";
+  static inline constexpr StringLiteral k_outputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_PackageLocation_Key = "package_location";
+  static inline constexpr StringLiteral k_NetgenSTLFileName_Key = "netgen_st_lfile_name";
+  static inline constexpr StringLiteral k_GmshSTLFileName_Key = "gmsh_st_lfile_name";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_FeatureCentroidArrayPath_Key = "feature_centroid_array_path";
+  static inline constexpr StringLiteral k_MeshFileFormat_Key = "mesh_file_format";
+  static inline constexpr StringLiteral k_RefineMesh_Key = "refine_mesh";
+  static inline constexpr StringLiteral k_MaxRadiusEdgeRatio_Key = "max_radius_edge_ratio";
+  static inline constexpr StringLiteral k_MinDihedralAngle_Key = "min_dihedral_angle";
+  static inline constexpr StringLiteral k_OptimizationLevel_Key = "optimization_level";
+  static inline constexpr StringLiteral k_MeshSize_Key = "mesh_size";
+  static inline constexpr StringLiteral k_LimitTetrahedraVolume_Key = "limit_tetrahedra_volume";
+  static inline constexpr StringLiteral k_MaxTetrahedraVolume_Key = "max_tetrahedra_volume";
+  static inline constexpr StringLiteral k_IncludeHolesUsingPhaseID_Key = "include_holes_using_phase_id";
+  static inline constexpr StringLiteral k_PhaseID_Key = "phase_id";
+  static inline constexpr StringLiteral k_TetDataContainerName_Key = "tet_data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,11 +24,11 @@ public:
   ConvertColorToGrayScaleFilter& operator=(ConvertColorToGrayScaleFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ConversionAlgorithm_Key = "ConversionAlgorithm";
-  static inline constexpr StringLiteral k_ColorWeights_Key = "ColorWeights";
-  static inline constexpr StringLiteral k_ColorChannel_Key = "ColorChannel";
-  static inline constexpr StringLiteral k_InputDataArrayVector_Key = "InputDataArrayVector";
-  static inline constexpr StringLiteral k_OutputArrayPrefix_Key = "OutputArrayPrefix";
+  static inline constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm";
+  static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";
+  static inline constexpr StringLiteral k_ColorChannel_Key = "color_channel";
+  static inline constexpr StringLiteral k_InputDataArrayVector_Key = "input_data_array_vector";
+  static inline constexpr StringLiteral k_OutputArrayPrefix_Key = "output_array_prefix";
 
   /**
    * @brief Returns the name of the filter.

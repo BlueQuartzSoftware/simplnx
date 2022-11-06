@@ -14,7 +14,7 @@
   inputValues.Temperature = filterArgs.value<float64>(k_Temperature_Key);
   inputValues.PeriodicBoundaries = filterArgs.value<bool>(k_PeriodicBoundaries_Key);
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
   return PottsModel(dataStructure, messageHandler, shouldCancel, &inputValues)();

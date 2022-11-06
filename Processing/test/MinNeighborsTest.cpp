@@ -43,7 +43,7 @@ TEST_CASE("Processing::MinNeighbors: Instantiation and Parameter Check", "[Proce
   args.insertOrAssign(MinNeighbors::k_MinNumNeighbors_Key, std::make_any<int32>(1234356));
   args.insertOrAssign(MinNeighbors::k_ApplyToSinglePhase_Key, std::make_any<bool>(false));
   args.insertOrAssign(MinNeighbors::k_PhaseNumber_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(MinNeighbors::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MinNeighbors::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MinNeighbors::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MinNeighbors::k_NumNeighborsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MinNeighbors::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));

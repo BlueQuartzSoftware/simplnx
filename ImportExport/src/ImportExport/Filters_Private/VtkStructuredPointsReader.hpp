@@ -24,13 +24,13 @@ public:
   VtkStructuredPointsReader& operator=(VtkStructuredPointsReader&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_ReadPointData_Key = "ReadPointData";
-  static inline constexpr StringLiteral k_ReadCellData_Key = "ReadCellData";
-  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "VertexDataContainerName";
-  static inline constexpr StringLiteral k_VolumeDataContainerName_Key = "VolumeDataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_ReadPointData_Key = "read_point_data";
+  static inline constexpr StringLiteral k_ReadCellData_Key = "read_cell_data";
+  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "vertex_data_container_name";
+  static inline constexpr StringLiteral k_VolumeDataContainerName_Key = "volume_data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

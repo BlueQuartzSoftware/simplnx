@@ -24,23 +24,23 @@ public:
   InsertPrecipitatePhases& operator=(InsertPrecipitatePhases&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PeriodicBoundaries_Key = "PeriodicBoundaries";
-  static inline constexpr StringLiteral k_MatchRDF_Key = "MatchRDF";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_BoundaryCellsArrayPath_Key = "BoundaryCellsArrayPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "InputStatsArrayPath";
-  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "InputPhaseTypesArrayPath";
-  static inline constexpr StringLiteral k_InputShapeTypesArrayPath_Key = "InputShapeTypesArrayPath";
-  static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "NumFeaturesArrayPath";
-  static inline constexpr StringLiteral k_FeatureGeneration_Key = "FeatureGeneration";
-  static inline constexpr StringLiteral k_PrecipInputFile_Key = "PrecipInputFile";
-  static inline constexpr StringLiteral k_SaveGeometricDescriptions_Key = "SaveGeometricDescriptions";
-  static inline constexpr StringLiteral k_NewAttributeMatrixPath_Key = "NewAttributeMatrixPath";
-  static inline constexpr StringLiteral k_SelectedAttributeMatrixPath_Key = "SelectedAttributeMatrixPath";
+  static inline constexpr StringLiteral k_PeriodicBoundaries_Key = "periodic_boundaries";
+  static inline constexpr StringLiteral k_MatchRDF_Key = "match_rd_f";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_BoundaryCellsArrayPath_Key = "boundary_cells_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "input_stats_array_path";
+  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "input_phase_types_array_path";
+  static inline constexpr StringLiteral k_InputShapeTypesArrayPath_Key = "input_shape_types_array_path";
+  static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "num_features_array_path";
+  static inline constexpr StringLiteral k_FeatureGeneration_Key = "feature_generation";
+  static inline constexpr StringLiteral k_PrecipInputFile_Key = "precip_input_file";
+  static inline constexpr StringLiteral k_SaveGeometricDescriptions_Key = "save_geometric_descriptions";
+  static inline constexpr StringLiteral k_NewAttributeMatrixPath_Key = "new_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SelectedAttributeMatrixPath_Key = "selected_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

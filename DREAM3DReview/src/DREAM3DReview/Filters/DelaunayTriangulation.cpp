@@ -50,14 +50,15 @@ Parameters DelaunayTriangulation::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_Tolerance_Key, "Tolerance", "", 2.3456789));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_TriangulateByFeature_Key, "Triangulate by Feature", "", false));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_InputGeometry_Key, "Input Vertices", "", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<StringParameter>(k_TriangleDataContainerName_Key, "Triangle Data Container", "", "SomeString"));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<StringParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "", "SomeString"));
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<StringParameter>(k_FaceAttributeMatrixName_Key, "Face Attribute Matrix", "", "SomeString"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_TriangulateByFeature_Key, k_FeatureIdsArrayPath_Key, true);
+  params.linkParameters(k_TriangulateByFeature_Key, k_CellFeatureIdsArrayPath_Key, true);
 
   return params;
 }
@@ -85,7 +86,7 @@ IFilter::PreflightResult DelaunayTriangulation::preflightImpl(const DataStructur
   auto pToleranceValue = filterArgs.value<float64>(k_Tolerance_Key);
   auto pTriangulateByFeatureValue = filterArgs.value<bool>(k_TriangulateByFeature_Key);
   auto pInputGeometryValue = filterArgs.value<DataPath>(k_InputGeometry_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pTriangleDataContainerNameValue = filterArgs.value<StringParameter::ValueType>(k_TriangleDataContainerName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pFaceAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_FaceAttributeMatrixName_Key);
@@ -143,7 +144,7 @@ Result<> DelaunayTriangulation::executeImpl(DataStructure& dataStructure, const 
   auto pToleranceValue = filterArgs.value<float64>(k_Tolerance_Key);
   auto pTriangulateByFeatureValue = filterArgs.value<bool>(k_TriangulateByFeature_Key);
   auto pInputGeometryValue = filterArgs.value<DataPath>(k_InputGeometry_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pTriangleDataContainerNameValue = filterArgs.value<StringParameter::ValueType>(k_TriangleDataContainerName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pFaceAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_FaceAttributeMatrixName_Key);

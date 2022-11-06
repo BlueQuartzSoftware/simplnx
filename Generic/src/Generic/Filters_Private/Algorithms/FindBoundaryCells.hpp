@@ -12,7 +12,7 @@
 
   inputValues.IgnoreFeatureZero = filterArgs.value<bool>(k_IgnoreFeatureZero_Key);
   inputValues.IncludeVolumeBoundary = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.BoundaryCellsArrayName = filterArgs.value<DataPath>(k_BoundaryCellsArrayName_Key);
 
   return FindBoundaryCells(dataStructure, messageHandler, shouldCancel, &inputValues)();

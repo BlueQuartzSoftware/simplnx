@@ -49,7 +49,7 @@ TEST_CASE("ImportExport::FeatureInfoReader: Instantiation and Parameter Check", 
   args.insertOrAssign(FeatureInfoReader::k_CreateCellLevelArrays_Key, std::make_any<bool>(false));
   args.insertOrAssign(FeatureInfoReader::k_RenumberFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(FeatureInfoReader::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FeatureInfoReader::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FeatureInfoReader::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FeatureInfoReader::k_CellPhasesArrayName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FeatureInfoReader::k_CellEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FeatureInfoReader::k_CellFeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));

@@ -24,11 +24,11 @@ public:
   ItkAutoThreshold& operator=(ItkAutoThreshold&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Method_Key = "Method";
-  static inline constexpr StringLiteral k_Slice_Key = "Slice";
-  static inline constexpr StringLiteral k_SaveAsNewArray_Key = "SaveAsNewArray";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
+  static inline constexpr StringLiteral k_Method_Key = "method";
+  static inline constexpr StringLiteral k_Slice_Key = "slice";
+  static inline constexpr StringLiteral k_SaveAsNewArray_Key = "save_as_new_array";
+  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static inline constexpr StringLiteral k_NewCellArrayName_Key = "new_cell_array_name";
 
   /**
    * @brief Returns the name of the filter.

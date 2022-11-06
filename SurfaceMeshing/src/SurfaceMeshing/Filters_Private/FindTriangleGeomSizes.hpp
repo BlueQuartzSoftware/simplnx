@@ -24,9 +24,9 @@ public:
   FindTriangleGeomSizes& operator=(FindTriangleGeomSizes&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "FaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "FeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_VolumesArrayName_Key = "VolumesArrayName";
+  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
 
   /**
    * @brief Returns the name of the filter.

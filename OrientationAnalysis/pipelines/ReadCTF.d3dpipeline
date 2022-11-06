@@ -10,7 +10,7 @@
         "DataContainerName": "DataContainer",
         "DegreesToRadians": true,
         "EdaxHexagonalAlignment": false,
-        "InputFile": "/Users/mjackson/Workspace1/DREAM3D-Build/CLion-NX-Debug/Bin/Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
+        "InputFile": "Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
       },
       "filter": {
         "name": "complex::ReadCtfDataFilter",
@@ -24,7 +24,7 @@
         "CellIPFColorsArrayName": "IPFColors",
         "CellPhasesArrayPath": "DataContainer/Cell Data/Phases",
         "CrystalStructuresArrayPath": "DataContainer/CellEnsembleData/CrystalStructures",
-        "GoodVoxelsArrayPath": "",
+        "good_voxels_array_path": "",
         "ReferenceDir": [
           0.0,
           0.0,

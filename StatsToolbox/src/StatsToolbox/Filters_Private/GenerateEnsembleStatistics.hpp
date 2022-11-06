@@ -24,33 +24,33 @@ public:
   GenerateEnsembleStatistics& operator=(GenerateEnsembleStatistics&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PhaseTypeArray_Key = "PhaseTypeArray";
-  static inline constexpr StringLiteral k_SizeCorrelationResolution_Key = "SizeCorrelationResolution";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "NeighborListArrayPath";
-  static inline constexpr StringLiteral k_CalculateMorphologicalStats_Key = "CalculateMorphologicalStats";
-  static inline constexpr StringLiteral k_SizeDistributionFitType_Key = "SizeDistributionFitType";
-  static inline constexpr StringLiteral k_BiasedFeaturesArrayPath_Key = "BiasedFeaturesArrayPath";
-  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "EquivalentDiametersArrayPath";
-  static inline constexpr StringLiteral k_AspectRatioDistributionFitType_Key = "AspectRatioDistributionFitType";
-  static inline constexpr StringLiteral k_AspectRatiosArrayPath_Key = "AspectRatiosArrayPath";
-  static inline constexpr StringLiteral k_Omega3DistributionFitType_Key = "Omega3DistributionFitType";
-  static inline constexpr StringLiteral k_Omega3sArrayPath_Key = "Omega3sArrayPath";
-  static inline constexpr StringLiteral k_NeighborhoodDistributionFitType_Key = "NeighborhoodDistributionFitType";
-  static inline constexpr StringLiteral k_NeighborhoodsArrayPath_Key = "NeighborhoodsArrayPath";
-  static inline constexpr StringLiteral k_AxisEulerAnglesArrayPath_Key = "AxisEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_CalculateCrystallographicStats_Key = "CalculateCrystallographicStats";
-  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "SurfaceFeaturesArrayPath";
-  static inline constexpr StringLiteral k_VolumesArrayPath_Key = "VolumesArrayPath";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "FeatureEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_SharedSurfaceAreaListArrayPath_Key = "SharedSurfaceAreaListArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_PhaseTypesArrayName_Key = "PhaseTypesArrayName";
-  static inline constexpr StringLiteral k_StatisticsArrayName_Key = "StatisticsArrayName";
-  static inline constexpr StringLiteral k_IncludeRadialDistFunc_Key = "IncludeRadialDistFunc";
-  static inline constexpr StringLiteral k_RDFArrayPath_Key = "RDFArrayPath";
-  static inline constexpr StringLiteral k_MaxMinRDFArrayPath_Key = "MaxMinRDFArrayPath";
+  static inline constexpr StringLiteral k_PhaseTypeArray_Key = "phase_type_array";
+  static inline constexpr StringLiteral k_SizeCorrelationResolution_Key = "size_correlation_resolution";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
+  static inline constexpr StringLiteral k_CalculateMorphologicalStats_Key = "calculate_morphological_stats";
+  static inline constexpr StringLiteral k_SizeDistributionFitType_Key = "size_distribution_fit_type";
+  static inline constexpr StringLiteral k_BiasedFeaturesArrayPath_Key = "biased_features_array_path";
+  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
+  static inline constexpr StringLiteral k_AspectRatioDistributionFitType_Key = "aspect_ratio_distribution_fit_type";
+  static inline constexpr StringLiteral k_AspectRatiosArrayPath_Key = "aspect_ratios_array_path";
+  static inline constexpr StringLiteral k_Omega3DistributionFitType_Key = "omega3_distribution_fit_type";
+  static inline constexpr StringLiteral k_Omega3sArrayPath_Key = "omega3s_array_path";
+  static inline constexpr StringLiteral k_NeighborhoodDistributionFitType_Key = "neighborhood_distribution_fit_type";
+  static inline constexpr StringLiteral k_NeighborhoodsArrayPath_Key = "neighborhoods_array_path";
+  static inline constexpr StringLiteral k_AxisEulerAnglesArrayPath_Key = "axis_euler_angles_array_path";
+  static inline constexpr StringLiteral k_CalculateCrystallographicStats_Key = "calculate_crystallographic_stats";
+  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "surface_features_array_path";
+  static inline constexpr StringLiteral k_VolumesArrayPath_Key = "volumes_array_path";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_SharedSurfaceAreaListArrayPath_Key = "shared_surface_area_list_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_PhaseTypesArrayName_Key = "phase_types_array_name";
+  static inline constexpr StringLiteral k_StatisticsArrayName_Key = "statistics_array_name";
+  static inline constexpr StringLiteral k_IncludeRadialDistFunc_Key = "include_radial_dist_func";
+  static inline constexpr StringLiteral k_RDFArrayPath_Key = "r_df_array_path";
+  static inline constexpr StringLiteral k_MaxMinRDFArrayPath_Key = "max_min_rd_farray_path";
 
   /**
    * @brief Returns the name of the filter.

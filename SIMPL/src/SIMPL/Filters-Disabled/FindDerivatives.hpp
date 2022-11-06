@@ -24,8 +24,8 @@ public:
   FindDerivatives& operator=(FindDerivatives&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_DerivativesArrayPath_Key = "DerivativesArrayPath";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_DerivativesArrayPath_Key = "derivatives_array_path";
 
   /**
    * @brief Returns the name of the filter.

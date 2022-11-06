@@ -42,7 +42,7 @@ TEST_CASE("OrientationAnalysis::INLWriter: Instantiation and Parameter Check", "
 
   // Create default Parameters for the filter.
   args.insertOrAssign(INLWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(INLWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(INLWriter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(INLWriter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(INLWriter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(INLWriter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));

@@ -10,7 +10,7 @@
 * This is example code to put in the Execute Method of the filter.
   ComputeFeatureRectInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.FeatureRectArrayPath = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
 
   return ComputeFeatureRect(dataStructure, messageHandler, shouldCancel, &inputValues)();

@@ -24,19 +24,19 @@ public:
   DetectEllipsoids& operator=(DetectEllipsoids&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MinFiberAxisLength_Key = "MinFiberAxisLength";
-  static inline constexpr StringLiteral k_MaxFiberAxisLength_Key = "MaxFiberAxisLength";
-  static inline constexpr StringLiteral k_HoughTransformThreshold_Key = "HoughTransformThreshold";
-  static inline constexpr StringLiteral k_MinAspectRatio_Key = "MinAspectRatio";
-  static inline constexpr StringLiteral k_ImageScaleBarLength_Key = "ImageScaleBarLength";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "FeatureAttributeMatrixPath";
-  static inline constexpr StringLiteral k_EllipseFeatureAttributeMatrixPath_Key = "EllipseFeatureAttributeMatrixPath";
-  static inline constexpr StringLiteral k_CenterCoordinatesArrayName_Key = "CenterCoordinatesArrayName";
-  static inline constexpr StringLiteral k_MajorAxisLengthArrayName_Key = "MajorAxisLengthArrayName";
-  static inline constexpr StringLiteral k_MinorAxisLengthArrayName_Key = "MinorAxisLengthArrayName";
-  static inline constexpr StringLiteral k_RotationalAnglesArrayName_Key = "RotationalAnglesArrayName";
-  static inline constexpr StringLiteral k_DetectedEllipsoidsFeatureIdsArrayPath_Key = "DetectedEllipsoidsFeatureIdsArrayPath";
+  static inline constexpr StringLiteral k_MinFiberAxisLength_Key = "min_fiber_axis_length";
+  static inline constexpr StringLiteral k_MaxFiberAxisLength_Key = "max_fiber_axis_length";
+  static inline constexpr StringLiteral k_HoughTransformThreshold_Key = "hough_transform_threshold";
+  static inline constexpr StringLiteral k_MinAspectRatio_Key = "min_aspect_ratio";
+  static inline constexpr StringLiteral k_ImageScaleBarLength_Key = "image_scale_bar_length";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static inline constexpr StringLiteral k_EllipseFeatureAttributeMatrixPath_Key = "ellipse_feature_attribute_matrix_path";
+  static inline constexpr StringLiteral k_CenterCoordinatesArrayName_Key = "center_coordinates_array_name";
+  static inline constexpr StringLiteral k_MajorAxisLengthArrayName_Key = "major_axis_length_array_name";
+  static inline constexpr StringLiteral k_MinorAxisLengthArrayName_Key = "minor_axis_length_array_name";
+  static inline constexpr StringLiteral k_RotationalAnglesArrayName_Key = "rotational_angles_array_name";
+  static inline constexpr StringLiteral k_DetectedEllipsoidsFeatureIdsArrayPath_Key = "detected_ellipsoids_feature_ids_array_path";
 
   /**
    * @brief Returns the name of the filter.

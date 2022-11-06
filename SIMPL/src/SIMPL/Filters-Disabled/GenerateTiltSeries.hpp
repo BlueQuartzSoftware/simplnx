@@ -24,11 +24,11 @@ public:
   GenerateTiltSeries& operator=(GenerateTiltSeries&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_RotationAxis_Key = "RotationAxis";
-  static inline constexpr StringLiteral k_RotationLimits_Key = "RotationLimits";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "InputDataArrayPath";
-  static inline constexpr StringLiteral k_OutputPrefix_Key = "OutputPrefix";
+  static inline constexpr StringLiteral k_RotationAxis_Key = "rotation_axis";
+  static inline constexpr StringLiteral k_RotationLimits_Key = "rotation_limits";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "input_data_array_path";
+  static inline constexpr StringLiteral k_OutputPrefix_Key = "output_prefix";
 
   /**
    * @brief Returns the name of the filter.

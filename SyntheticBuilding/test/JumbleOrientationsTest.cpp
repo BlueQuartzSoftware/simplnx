@@ -38,7 +38,7 @@ TEST_CASE("SyntheticBuilding::JumbleOrientations: Instantiation and Parameter Ch
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(JumbleOrientations::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(JumbleOrientations::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(JumbleOrientations::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(JumbleOrientations::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(JumbleOrientations::k_CellEulerAnglesArrayName_Key, std::make_any<DataPath>(DataPath{}));

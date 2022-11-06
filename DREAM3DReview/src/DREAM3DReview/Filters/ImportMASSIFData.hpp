@@ -24,9 +24,9 @@ public:
   ImportMASSIFData& operator=(ImportMASSIFData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MassifInputFilePath_Key = "MassifInputFilePath";
-  static inline constexpr StringLiteral k_FilePrefix_Key = "FilePrefix";
-  static inline constexpr StringLiteral k_StepNumber_Key = "StepNumber";
+  static inline constexpr StringLiteral k_MassifInputFilePath_Key = "massif_input_file_path";
+  static inline constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
+  static inline constexpr StringLiteral k_StepNumber_Key = "step_number";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,8 +24,8 @@ public:
   WaveFrontObjectFileWriter& operator=(WaveFrontObjectFileWriter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputWaveFrontFile_Key = "OutputWaveFrontFile";
-  static inline constexpr StringLiteral k_TriangleGeometry_Key = "TriangleGeometry";
+  static inline constexpr StringLiteral k_OutputWaveFrontFile_Key = "output_wave_front_file";
+  static inline constexpr StringLiteral k_TriangleGeometry_Key = "triangle_geometry";
 
   /**
    * @brief Returns the name of the filter.

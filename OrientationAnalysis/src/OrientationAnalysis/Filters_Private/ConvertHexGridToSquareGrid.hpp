@@ -24,7 +24,7 @@ public:
   ConvertHexGridToSquareGrid& operator=(ConvertHexGridToSquareGrid&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_HexGridStack_Key = "HexGridStack";
+  static inline constexpr StringLiteral k_HexGridStack_Key = "hex_grid_stack";
 
   /**
    * @brief Returns the name of the filter.

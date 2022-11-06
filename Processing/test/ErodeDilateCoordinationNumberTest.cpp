@@ -42,7 +42,7 @@ TEST_CASE("Processing::ErodeDilateCoordinationNumber: Instantiation and Paramete
   // Create default Parameters for the filter.
   args.insertOrAssign(ErodeDilateCoordinationNumber::k_CoordinationNumber_Key, std::make_any<int32>(1234356));
   args.insertOrAssign(ErodeDilateCoordinationNumber::k_Loop_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ErodeDilateCoordinationNumber::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ErodeDilateCoordinationNumber::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ErodeDilateCoordinationNumber::k_IgnoredDataArrayPaths_Key,
                       std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 

@@ -62,10 +62,10 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
   REQUIRE(nullptr != filter);
 
   // Parameter Keys from AlignSectionsMisorientation. If those change these will need to be updated
-  constexpr StringLiteral k_InputType_Key = "InputType";
-  constexpr StringLiteral k_OutputType_Key = "OutputType";
-  constexpr StringLiteral k_InputOrientationArrayPath_Key = "InputOrientationArrayPath";
-  constexpr StringLiteral k_OutputOrientationArrayName_Key = "OutputOrientationArrayName";
+  constexpr StringLiteral k_InputType_Key = "input_type";
+  constexpr StringLiteral k_OutputType_Key = "output_type";
+  constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
+  constexpr StringLiteral k_OutputOrientationArrayName_Key = "output_orientation_array_name";
 
   Arguments args;
   args.insertOrAssign(k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
@@ -117,16 +117,16 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
 
   // Parameter Keys
   constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
-  constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
-  constexpr StringLiteral k_UseGoodVoxels_Key = "UseGoodVoxels";
-  constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  constexpr StringLiteral k_GoodVoxelsPath_Key = "GoodVoxelsArrayPath";
-  constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
-  constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "CellFeatureAttributeMatrixName";
-  constexpr StringLiteral k_ActiveArrayName_Key = "ActiveArrayName";
-  constexpr StringLiteral k_RandomizeFeatures_Key = "RandomizeFeatures";
+  constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
+  constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  constexpr StringLiteral k_GoodVoxelsPath_Key = "good_voxels_array_path";
+  constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
+  constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
+  constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
 
   Arguments args;
 
@@ -160,19 +160,19 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
-  constexpr StringLiteral k_WriteAlignmentShifts_Key = "WriteAlignmentShifts";
-  constexpr StringLiteral k_AlignmentShiftFileName_Key = "AlignmentShiftFileName";
+  constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
+  constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
 
-  constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
+  constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
 
-  constexpr StringLiteral k_GoodVoxels_Key = "UseGoodVoxels";
-  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
+  constexpr StringLiteral k_GoodVoxels_Key = "use_good_voxels";
+  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
 
-  constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
+  constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
-  constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometryPath";
+  constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
 
   Arguments args;
 
@@ -209,13 +209,13 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
-  constexpr StringLiteral k_WriteAlignmentShifts_Key = "WriteAlignmentShifts";
-  constexpr StringLiteral k_AlignmentShiftFileName_Key = "AlignmentShiftFileName";
-  constexpr StringLiteral k_UseReferenceSlice_Key = "UseReferenceSlice";
-  constexpr StringLiteral k_ReferenceSlice_Key = "ReferenceSlice";
-  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
-  constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometryPath";
-  constexpr StringLiteral k_SelectedCellDataGroup_Key = "SelectedCellDataPath";
+  constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
+  constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
+  constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
+  constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
+  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+  constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
   Arguments args;
   // Create default Parameters for the filter.
@@ -244,13 +244,13 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
   auto filter = filterList.createFilter(k_BadDataNeighborOrientationCheckFilterHandle);
   REQUIRE(nullptr != filter);
   // Parameter Keys
-  constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
-  constexpr StringLiteral k_NumberOfNeighbors_Key = "NumberOfNeighbors";
-  constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
-  constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
-  constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
+  constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
+  constexpr StringLiteral k_NumberOfNeighbors_Key = "number_of_neighbors";
+  constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
   Arguments args;
   // Create default Parameters for the filter.
@@ -279,15 +279,15 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
-  constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
-  constexpr StringLiteral k_MinConfidence_Key = "MinConfidence";
-  constexpr StringLiteral k_MisorientationTolerance_Key = "MisorientationTolerance";
-  constexpr StringLiteral k_Level_Key = "Level";
-  constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "ConfidenceIndexArrayPath";
-  constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
+  constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
+  constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
+  constexpr StringLiteral k_Level_Key = "level";
+  constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "confidence_index_array_path";
+  constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   Arguments args;
   // Create default Parameters for the filter.

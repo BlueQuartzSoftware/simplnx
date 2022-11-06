@@ -46,7 +46,7 @@ TEST_CASE("Processing::DetectEllipsoids: Instantiation and Parameter Check", "[P
   args.insertOrAssign(DetectEllipsoids::k_HoughTransformThreshold_Key, std::make_any<float32>(1.23345f));
   args.insertOrAssign(DetectEllipsoids::k_MinAspectRatio_Key, std::make_any<float32>(1.23345f));
   args.insertOrAssign(DetectEllipsoids::k_ImageScaleBarLength_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(DetectEllipsoids::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DetectEllipsoids::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(DetectEllipsoids::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(DetectEllipsoids::k_EllipseFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(DetectEllipsoids::k_CenterCoordinatesArrayName_Key, std::make_any<DataPath>(DataPath{}));

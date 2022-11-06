@@ -24,11 +24,11 @@ public:
   SharedFeatureFaceFilter& operator=(SharedFeatureFaceFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceIdsArrayName_Key = "SurfaceMeshFeatureFaceIdsArrayName";
-  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName_Key = "FaceFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceLabelsArrayName_Key = "SurfaceMeshFeatureFaceLabelsArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceNumTrianglesArrayName_Key = "SurfaceMeshFeatureFaceNumTrianglesArrayName";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceIdsArrayName_Key = "surface_mesh_feature_face_ids_array_name";
+  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName_Key = "face_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceLabelsArrayName_Key = "surface_mesh_feature_face_labels_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceNumTrianglesArrayName_Key = "surface_mesh_feature_face_num_triangles_array_name";
 
   /**
    * @brief Returns the name of the filter.

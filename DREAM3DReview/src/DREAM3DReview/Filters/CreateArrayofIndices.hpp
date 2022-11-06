@@ -24,7 +24,7 @@ public:
   CreateArrayofIndices& operator=(CreateArrayofIndices&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_IndexArrayPath_Key = "IndexArrayPath";
+  static inline constexpr StringLiteral k_IndexArrayPath_Key = "index_array_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,16 +24,16 @@ public:
   FindEuclideanDistMapFilter& operator=(FindEuclideanDistMapFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CalcManhattanDist_Key = "CalcManhattanDist";
-  static inline constexpr StringLiteral k_DoBoundaries_Key = "DoBoundaries";
-  static inline constexpr StringLiteral k_DoTripleLines_Key = "DoTripleLines";
-  static inline constexpr StringLiteral k_DoQuadPoints_Key = "DoQuadPoints";
-  static inline constexpr StringLiteral k_SaveNearestNeighbors_Key = "SaveNearestNeighbors";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_GBDistancesArrayName_Key = "GBDistancesArrayName";
-  static inline constexpr StringLiteral k_TJDistancesArrayName_Key = "TJDistancesArrayName";
-  static inline constexpr StringLiteral k_QPDistancesArrayName_Key = "QPDistancesArrayName";
-  static inline constexpr StringLiteral k_NearestNeighborsArrayName_Key = "NearestNeighborsArrayName";
+  static inline constexpr StringLiteral k_CalcManhattanDist_Key = "calc_manhattan_dist";
+  static inline constexpr StringLiteral k_DoBoundaries_Key = "do_boundaries";
+  static inline constexpr StringLiteral k_DoTripleLines_Key = "do_triple_lines";
+  static inline constexpr StringLiteral k_DoQuadPoints_Key = "do_quad_points";
+  static inline constexpr StringLiteral k_SaveNearestNeighbors_Key = "save_nearest_neighbors";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_GBDistancesArrayName_Key = "g_bdistances_array_name";
+  static inline constexpr StringLiteral k_TJDistancesArrayName_Key = "t_jdistances_array_name";
+  static inline constexpr StringLiteral k_QPDistancesArrayName_Key = "q_pdistances_array_name";
+  static inline constexpr StringLiteral k_NearestNeighborsArrayName_Key = "nearest_neighbors_array_name";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**

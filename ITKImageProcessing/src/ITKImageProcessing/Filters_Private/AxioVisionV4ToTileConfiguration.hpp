@@ -24,8 +24,8 @@ public:
   AxioVisionV4ToTileConfiguration& operator=(AxioVisionV4ToTileConfiguration&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_OutputFile_Key = "OutputFile";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
 
   /**
    * @brief Returns the name of the filter.

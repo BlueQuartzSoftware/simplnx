@@ -24,15 +24,15 @@ public:
   CalculateArrayHistogramFilter& operator=(CalculateArrayHistogramFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumberOfBins_Key = "NumberOfBins";
-  static inline constexpr StringLiteral k_UserDefinedRange_Key = "UserDefinedRange";
-  static inline constexpr StringLiteral k_MinRange_Key = "MinRange";
-  static inline constexpr StringLiteral k_MaxRange_Key = "MaxRange";
-  static inline constexpr StringLiteral k_NewDataGroup_Key = "NewDataGroup";
-  static inline constexpr StringLiteral k_SelectedArrayPaths_Key = "SelectedArrayPaths";
-  static inline constexpr StringLiteral k_NewDataGroupName_Key = "NewDataGroupName";
-  static inline constexpr StringLiteral k_DataGroupName_Key = "DataGroupName";
-  static inline constexpr StringLiteral k_HistoName_Key = "HistogramSuffix";
+  static inline constexpr StringLiteral k_NumberOfBins_Key = "number_of_bins";
+  static inline constexpr StringLiteral k_UserDefinedRange_Key = "user_defined_range";
+  static inline constexpr StringLiteral k_MinRange_Key = "min_range";
+  static inline constexpr StringLiteral k_MaxRange_Key = "max_range";
+  static inline constexpr StringLiteral k_NewDataGroup_Key = "new_data_group";
+  static inline constexpr StringLiteral k_SelectedArrayPaths_Key = "selected_array_paths";
+  static inline constexpr StringLiteral k_NewDataGroupName_Key = "new_data_group_name";
+  static inline constexpr StringLiteral k_DataGroupName_Key = "data_group_name";
+  static inline constexpr StringLiteral k_HistoName_Key = "histogram_suffix";
 
   /**
    * @brief Returns the name of the filter.

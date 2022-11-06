@@ -49,11 +49,11 @@ public:
   ITKSpeckleNoiseImage& operator=(ITKSpeckleNoiseImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_StandardDeviation_Key = "StandardDeviation";
-  static inline constexpr StringLiteral k_Seed_Key = "Seed";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_StandardDeviation_Key = "standard_deviation";
+  static inline constexpr StringLiteral k_Seed_Key = "seed";
 
   /**
    * @brief Returns the name of the filter.

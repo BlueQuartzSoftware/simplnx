@@ -58,7 +58,7 @@ TEST_CASE("DREAM3DReview::TiDwellFatigueCrystallographicAnalysis: Instantiation 
   args.insertOrAssign(TiDwellFatigueCrystallographicAnalysis::k_SoftFeatureLowerThreshold_Key, std::make_any<float32>(1.23345f));
   args.insertOrAssign(TiDwellFatigueCrystallographicAnalysis::k_SoftFeatureUpperThreshold_Key, std::make_any<float32>(1.23345f));
   args.insertOrAssign(TiDwellFatigueCrystallographicAnalysis::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(TiDwellFatigueCrystallographicAnalysis::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(TiDwellFatigueCrystallographicAnalysis::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(TiDwellFatigueCrystallographicAnalysis::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(TiDwellFatigueCrystallographicAnalysis::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(TiDwellFatigueCrystallographicAnalysis::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));

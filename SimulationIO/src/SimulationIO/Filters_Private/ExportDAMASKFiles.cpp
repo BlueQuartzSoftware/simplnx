@@ -57,7 +57,8 @@ Parameters ExportDAMASKFiles::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_HomogenizationIndex_Key, "Homogenization Index", "", 1234356));
   params.insert(std::make_unique<BoolParameter>(k_CompressGeomFile_Key, "Compress Geom File", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -90,7 +91,7 @@ IFilter::PreflightResult ExportDAMASKFiles::preflightImpl(const DataStructure& d
   auto pGeometryFileNameValue = filterArgs.value<StringParameter::ValueType>(k_GeometryFileName_Key);
   auto pHomogenizationIndexValue = filterArgs.value<int32>(k_HomogenizationIndex_Key);
   auto pCompressGeomFileValue = filterArgs.value<bool>(k_CompressGeomFile_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
@@ -148,7 +149,7 @@ Result<> ExportDAMASKFiles::executeImpl(DataStructure& dataStructure, const Argu
   auto pGeometryFileNameValue = filterArgs.value<StringParameter::ValueType>(k_GeometryFileName_Key);
   auto pHomogenizationIndexValue = filterArgs.value<int32>(k_HomogenizationIndex_Key);
   auto pCompressGeomFileValue = filterArgs.value<bool>(k_CompressGeomFile_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 

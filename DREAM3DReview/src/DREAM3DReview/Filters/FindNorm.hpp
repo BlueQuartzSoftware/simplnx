@@ -24,9 +24,9 @@ public:
   FindNorm& operator=(FindNorm&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PSpace_Key = "PSpace";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_NormArrayPath_Key = "NormArrayPath";
+  static inline constexpr StringLiteral k_PSpace_Key = "p_space";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_NormArrayPath_Key = "norm_array_path";
 
   /**
    * @brief Returns the name of the filter.

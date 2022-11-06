@@ -47,7 +47,8 @@ Parameters FindLargestCrossSections::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane of Interest", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_LargestCrossSectionsArrayPath_Key, "Largest Cross Sections", "", DataPath{}));
 
@@ -74,7 +75,7 @@ IFilter::PreflightResult FindLargestCrossSections::preflightImpl(const DataStruc
    * do not need some of them remove them.
    */
   auto pPlaneValue = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pLargestCrossSectionsArrayPathValue = filterArgs.value<DataPath>(k_LargestCrossSectionsArrayPath_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -133,7 +134,7 @@ Result<> FindLargestCrossSections::executeImpl(DataStructure& dataStructure, con
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
   auto pPlaneValue = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pLargestCrossSectionsArrayPathValue = filterArgs.value<DataPath>(k_LargestCrossSectionsArrayPath_Key);
 
   /****************************************************************************

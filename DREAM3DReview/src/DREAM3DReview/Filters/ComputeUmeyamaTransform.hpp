@@ -24,11 +24,11 @@ public:
   ComputeUmeyamaTransform& operator=(ComputeUmeyamaTransform&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseScaling_Key = "UseScaling";
-  static inline constexpr StringLiteral k_SourcePointSet_Key = "SourcePointSet";
-  static inline constexpr StringLiteral k_DestPointSet_Key = "DestPointSet";
-  static inline constexpr StringLiteral k_TransformationAttributeMatrixName_Key = "TransformationAttributeMatrixName";
-  static inline constexpr StringLiteral k_TransformationMatrixName_Key = "TransformationMatrixName";
+  static inline constexpr StringLiteral k_UseScaling_Key = "use_scaling";
+  static inline constexpr StringLiteral k_SourcePointSet_Key = "source_point_set";
+  static inline constexpr StringLiteral k_DestPointSet_Key = "dest_point_set";
+  static inline constexpr StringLiteral k_TransformationAttributeMatrixName_Key = "transformation_attribute_matrix_name";
+  static inline constexpr StringLiteral k_TransformationMatrixName_Key = "transformation_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

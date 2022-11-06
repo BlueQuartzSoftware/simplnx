@@ -24,7 +24,7 @@ public:
   PipelineAnnotation& operator=(PipelineAnnotation&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Summary_Key = "Summary";
+  static inline constexpr StringLiteral k_Summary_Key = "summary";
 
   /**
    * @brief Returns the name of the filter.

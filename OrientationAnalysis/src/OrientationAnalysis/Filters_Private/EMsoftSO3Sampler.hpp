@@ -24,15 +24,15 @@ public:
   EMsoftSO3Sampler& operator=(EMsoftSO3Sampler&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_sampleModeSelector_Key = "sampleModeSelector";
-  static inline constexpr StringLiteral k_PointGroup_Key = "PointGroup";
-  static inline constexpr StringLiteral k_OffsetGrid_Key = "OffsetGrid";
-  static inline constexpr StringLiteral k_MisOr_Key = "MisOr";
-  static inline constexpr StringLiteral k_RefOr_Key = "RefOr";
-  static inline constexpr StringLiteral k_MisOrFull_Key = "MisOrFull";
-  static inline constexpr StringLiteral k_RefOrFull_Key = "RefOrFull";
-  static inline constexpr StringLiteral k_Numsp_Key = "Numsp";
-  static inline constexpr StringLiteral k_EulerAnglesArrayName_Key = "EulerAnglesArrayName";
+  static inline constexpr StringLiteral k_sampleModeSelector_Key = "sample_mode_selector";
+  static inline constexpr StringLiteral k_PointGroup_Key = "point_group";
+  static inline constexpr StringLiteral k_OffsetGrid_Key = "offset_grid";
+  static inline constexpr StringLiteral k_MisOr_Key = "mis_or";
+  static inline constexpr StringLiteral k_RefOr_Key = "ref_or";
+  static inline constexpr StringLiteral k_MisOrFull_Key = "mis_or_full";
+  static inline constexpr StringLiteral k_RefOrFull_Key = "ref_or_full";
+  static inline constexpr StringLiteral k_Numsp_Key = "numsp";
+  static inline constexpr StringLiteral k_EulerAnglesArrayName_Key = "euler_angles_array_name";
 
   /**
    * @brief Returns the name of the filter.

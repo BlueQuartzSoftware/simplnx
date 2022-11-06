@@ -24,10 +24,10 @@ public:
   CombineStlFiles& operator=(CombineStlFiles&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_StlFilesPath_Key = "StlFilesPath";
-  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "TriangleDataContainerName";
-  static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "FaceAttributeMatrixName";
-  static inline constexpr StringLiteral k_FaceNormalsArrayName_Key = "FaceNormalsArrayName";
+  static inline constexpr StringLiteral k_StlFilesPath_Key = "stl_files_path";
+  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "triangle_data_container_name";
+  static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FaceNormalsArrayName_Key = "face_normals_array_name";
 
   /**
    * @brief Returns the name of the filter.

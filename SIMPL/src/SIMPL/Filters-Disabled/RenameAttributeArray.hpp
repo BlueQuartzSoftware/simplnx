@@ -24,8 +24,8 @@ public:
   RenameAttributeArray& operator=(RenameAttributeArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_NewArrayName_Key = "NewArrayName";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_NewArrayName_Key = "new_array_name";
 
   /**
    * @brief Returns the name of the filter.

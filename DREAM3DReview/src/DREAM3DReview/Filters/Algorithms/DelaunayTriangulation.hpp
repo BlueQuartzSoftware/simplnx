@@ -14,7 +14,7 @@
   inputValues.Tolerance = filterArgs.value<float64>(k_Tolerance_Key);
   inputValues.TriangulateByFeature = filterArgs.value<bool>(k_TriangulateByFeature_Key);
   inputValues.InputGeometry = filterArgs.value<DataPath>(k_InputGeometry_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.TriangleDataContainerName = filterArgs.value<StringParameter::ValueType>(k_TriangleDataContainerName_Key);
   inputValues.VertexAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   inputValues.FaceAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_FaceAttributeMatrixName_Key);

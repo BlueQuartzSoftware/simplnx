@@ -24,11 +24,11 @@ public:
   FillBadDataFilter& operator=(FillBadDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MinAllowedDefectSize_Key = "MinAllowedDefectSize";
-  static inline constexpr StringLiteral k_StoreAsNewPhase_Key = "StoreAsNewPhase";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
+  static inline constexpr StringLiteral k_MinAllowedDefectSize_Key = "min_allowed_defect_size";
+  static inline constexpr StringLiteral k_StoreAsNewPhase_Key = "store_as_new_phase";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
   static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_group";
 

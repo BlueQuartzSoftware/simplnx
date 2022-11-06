@@ -24,11 +24,11 @@ public:
   CopyObject& operator=(CopyObject&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ObjectToCopy_Key = "ObjectToCopy";
-  static inline constexpr StringLiteral k_DataContainerToCopy_Key = "DataContainerToCopy";
-  static inline constexpr StringLiteral k_AttributeMatrixToCopy_Key = "AttributeMatrixToCopy";
-  static inline constexpr StringLiteral k_AttributeArrayToCopy_Key = "AttributeArrayToCopy";
-  static inline constexpr StringLiteral k_CopiedObjectName_Key = "CopiedObjectName";
+  static inline constexpr StringLiteral k_ObjectToCopy_Key = "object_to_copy";
+  static inline constexpr StringLiteral k_DataContainerToCopy_Key = "data_container_to_copy";
+  static inline constexpr StringLiteral k_AttributeMatrixToCopy_Key = "attribute_matrix_to_copy";
+  static inline constexpr StringLiteral k_AttributeArrayToCopy_Key = "attribute_array_to_copy";
+  static inline constexpr StringLiteral k_CopiedObjectName_Key = "copied_object_name";
 
   /**
    * @brief Returns the name of the filter.

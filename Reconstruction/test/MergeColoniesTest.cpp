@@ -48,7 +48,7 @@ TEST_CASE("Reconstruction::MergeColonies: Instantiation and Parameter Check", "[
   args.insertOrAssign(MergeColonies::k_IdentifyGlobAlpha_Key, std::make_any<bool>(false));
   args.insertOrAssign(MergeColonies::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MergeColonies::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(MergeColonies::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MergeColonies::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MergeColonies::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MergeColonies::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MergeColonies::k_CellParentIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));

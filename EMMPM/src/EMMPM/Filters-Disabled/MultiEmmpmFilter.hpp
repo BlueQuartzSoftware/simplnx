@@ -24,18 +24,18 @@ public:
   MultiEmmpmFilter& operator=(MultiEmmpmFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumClasses_Key = "NumClasses";
-  static inline constexpr StringLiteral k_UseOneBasedValues_Key = "UseOneBasedValues";
-  static inline constexpr StringLiteral k_UseGradientPenalty_Key = "UseGradientPenalty";
-  static inline constexpr StringLiteral k_GradientBetaE_Key = "GradientBetaE";
-  static inline constexpr StringLiteral k_UseCurvaturePenalty_Key = "UseCurvaturePenalty";
-  static inline constexpr StringLiteral k_CurvatureBetaC_Key = "CurvatureBetaC";
-  static inline constexpr StringLiteral k_CurvatureRMax_Key = "CurvatureRMax";
-  static inline constexpr StringLiteral k_CurvatureEMLoopDelay_Key = "CurvatureEMLoopDelay";
-  static inline constexpr StringLiteral k_InputDataArrayVector_Key = "InputDataArrayVector";
-  static inline constexpr StringLiteral k_OutputAttributeMatrixName_Key = "OutputAttributeMatrixName";
-  static inline constexpr StringLiteral k_UsePreviousMuSigma_Key = "UsePreviousMuSigma";
-  static inline constexpr StringLiteral k_OutputArrayPrefix_Key = "OutputArrayPrefix";
+  static inline constexpr StringLiteral k_NumClasses_Key = "num_classes";
+  static inline constexpr StringLiteral k_UseOneBasedValues_Key = "use_one_based_values";
+  static inline constexpr StringLiteral k_UseGradientPenalty_Key = "use_gradient_penalty";
+  static inline constexpr StringLiteral k_GradientBetaE_Key = "gradient_beta_e";
+  static inline constexpr StringLiteral k_UseCurvaturePenalty_Key = "use_curvature_penalty";
+  static inline constexpr StringLiteral k_CurvatureBetaC_Key = "curvature_beta_c";
+  static inline constexpr StringLiteral k_CurvatureRMax_Key = "curvature_rmax";
+  static inline constexpr StringLiteral k_CurvatureEMLoopDelay_Key = "curvature_em_loop_delay";
+  static inline constexpr StringLiteral k_InputDataArrayVector_Key = "input_data_array_vector";
+  static inline constexpr StringLiteral k_OutputAttributeMatrixName_Key = "output_attribute_matrix_name";
+  static inline constexpr StringLiteral k_UsePreviousMuSigma_Key = "use_previous_mu_sigma";
+  static inline constexpr StringLiteral k_OutputArrayPrefix_Key = "output_array_prefix";
 
   /**
    * @brief Returns the name of the filter.

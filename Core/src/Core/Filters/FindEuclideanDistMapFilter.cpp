@@ -61,8 +61,8 @@ Parameters FindEuclideanDistMapFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_GBDistancesArrayName_Key, "Boundary Distances", "", "GBManhattanDistances"));
@@ -95,7 +95,7 @@ IFilter::PreflightResult FindEuclideanDistMapFilter::preflightImpl(const DataStr
   auto pDoQuadPointsValue = filterArgs.value<bool>(k_DoQuadPoints_Key);
   auto pSaveNearestNeighborsValue = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
 
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   DataPath parentGroup = pFeatureIdsArrayPathValue.getParent();
 
   // Interesting thing about this parameter: The Default VALUE must be at the root level of the Data Structure. This is because the
@@ -182,7 +182,7 @@ Result<> FindEuclideanDistMapFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.DoTripleLines = filterArgs.value<bool>(k_DoTripleLines_Key);
   inputValues.DoQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
   inputValues.SaveNearestNeighbors = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   DataPath parentGroupPath = inputValues.FeatureIdsArrayPath.getParent();
   inputValues.GBDistancesArrayName = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
   inputValues.TJDistancesArrayName = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));

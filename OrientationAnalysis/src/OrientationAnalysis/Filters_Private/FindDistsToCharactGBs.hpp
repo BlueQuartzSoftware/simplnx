@@ -24,15 +24,15 @@ public:
   FindDistsToCharactGBs& operator=(FindDistsToCharactGBs&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "SurfaceMeshFaceNormalsArrayPath";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "FeatureEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_DistToTiltArrayPath_Key = "DistToTiltArrayPath";
-  static inline constexpr StringLiteral k_DistToTwistArrayPath_Key = "DistToTwistArrayPath";
-  static inline constexpr StringLiteral k_DistToSymmetricArrayPath_Key = "DistToSymmetricArrayPath";
-  static inline constexpr StringLiteral k_DistTo180TiltArrayPath_Key = "DistTo180TiltArrayPath";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_DistToTiltArrayPath_Key = "dist_to_tilt_array_path";
+  static inline constexpr StringLiteral k_DistToTwistArrayPath_Key = "dist_to_twist_array_path";
+  static inline constexpr StringLiteral k_DistToSymmetricArrayPath_Key = "dist_to_symmetric_array_path";
+  static inline constexpr StringLiteral k_DistTo180TiltArrayPath_Key = "dist_to180_tilt_array_path";
 
   /**
    * @brief Returns the name of the filter.

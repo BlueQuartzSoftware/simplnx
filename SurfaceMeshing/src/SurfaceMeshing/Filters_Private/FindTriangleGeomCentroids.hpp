@@ -24,9 +24,9 @@ public:
   FindTriangleGeomCentroids& operator=(FindTriangleGeomCentroids&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "FaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "FeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_CentroidsArrayName_Key = "CentroidsArrayName";
+  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
 
   /**
    * @brief Returns the name of the filter.

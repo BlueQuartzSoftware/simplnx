@@ -12,7 +12,7 @@
 
   inputValues.CoordinationNumber = filterArgs.value<int32>(k_CoordinationNumber_Key);
   inputValues.Loop = filterArgs.value<bool>(k_Loop_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
 
   return ErodeDilateCoordinationNumber(dataStructure, messageHandler, shouldCancel, &inputValues)();

@@ -44,13 +44,21 @@ struct CompareDataArrayFunctor
     UnitTest::CompareDataArrays<T>(left, right, start);
   }
 };
-
 TEST_CASE("Core::ResampleImageGeom: Instantiation, Parameter Check and valid filter execution", "[Core][ResampleImageGeom]")
 {
   // 3D image geom
   {
     ResampleImageGeomFilter filter;
     Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(ResampleImageGeomFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
+    args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
+    // args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_NewDataContainerPath_Key, std::make_any<DataPath>(DataPath{}));
 
     DataStructure ds = LoadDataStructure(fs::path(fmt::format("{}/TestFiles/ResampleImageGeom_Exemplar.dream3d", unit_test::k_DREAM3DDataDir)));
     DataPath srcGeomPath({Constants::k_SmallIN100});
@@ -71,7 +79,7 @@ TEST_CASE("Core::ResampleImageGeom: Instantiation, Parameter Check and valid fil
     args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(true));
     args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
     args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(srcGeomPath));
-    args.insertOrAssign(ResampleImageGeomFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
+    args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
     args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(cellFeatureDataPath));
     args.insertOrAssign(ResampleImageGeomFilter::k_NewDataContainerPath_Key, std::make_any<DataPath>(destGeomPath));
 
@@ -186,7 +194,7 @@ TEST_CASE("Core::ResampleImageGeom: Instantiation, Parameter Check and valid fil
     args.insertOrAssign(ResampleImageGeomFilter::k_RenumberFeatures_Key, std::make_any<bool>(false));
     args.insertOrAssign(ResampleImageGeomFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
     args.insertOrAssign(ResampleImageGeomFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(srcGeomPath));
-    args.insertOrAssign(ResampleImageGeomFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(ResampleImageGeomFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(ResampleImageGeomFilter::k_NewDataContainerPath_Key, std::make_any<DataPath>(destGeomPath));
 

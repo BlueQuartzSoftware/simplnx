@@ -24,9 +24,9 @@ public:
   GenerateOrientationMatrixTranspose& operator=(GenerateOrientationMatrixTranspose&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OrientationMatrixDataArrayPath_Key = "OrientationMatrixDataArrayPath";
-  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "OutputDataArrayPath";
-  static inline constexpr StringLiteral k_DeleteOriginalData_Key = "DeleteOriginalData";
+  static inline constexpr StringLiteral k_OrientationMatrixDataArrayPath_Key = "orientation_matrix_data_array_path";
+  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "output_data_array_path";
+  static inline constexpr StringLiteral k_DeleteOriginalData_Key = "delete_original_data";
 
   /**
    * @brief Returns the name of the filter.

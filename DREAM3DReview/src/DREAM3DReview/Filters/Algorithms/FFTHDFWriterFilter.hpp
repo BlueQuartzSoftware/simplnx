@@ -13,7 +13,7 @@
   inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   inputValues.WriteEigenstrains = filterArgs.value<bool>(k_WriteEigenstrains_Key);
   inputValues.EigenstrainsOutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_EigenstrainsOutputFile_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.CellEigenstrainsArrayPath = filterArgs.value<DataPath>(k_CellEigenstrainsArrayPath_Key);

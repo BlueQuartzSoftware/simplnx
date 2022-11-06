@@ -24,9 +24,9 @@ public:
   CopyFeatureArrayToElementArray& operator=(CopyFeatureArrayToElementArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "SelectedFeatureArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CreatedArrayName_Key = "CreatedArrayName";
+  static inline constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "selected_feature_array_path";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CreatedArrayName_Key = "created_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,7 +24,7 @@ public:
   CreateDataContainer& operator=(CreateDataContainer&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
 
   /**
    * @brief Returns the name of the filter.

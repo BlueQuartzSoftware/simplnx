@@ -25,13 +25,13 @@ public:
   FindShapesFilter& operator=(FindShapesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "CentroidsArrayPath";
-  static inline constexpr StringLiteral k_Omega3sArrayName_Key = "Omega3sArrayName";
-  static inline constexpr StringLiteral k_AxisLengthsArrayName_Key = "AxisLengthsArrayName";
-  static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "AxisEulerAnglesArrayName";
-  static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "AspectRatiosArrayName";
-  static inline constexpr StringLiteral k_VolumesArrayName_Key = "VolumesArrayName";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static inline constexpr StringLiteral k_Omega3sArrayName_Key = "omega3s_array_name";
+  static inline constexpr StringLiteral k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
+  static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
+  static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
+  static inline constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**

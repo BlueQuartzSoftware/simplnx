@@ -24,14 +24,14 @@ public:
   KMedoids& operator=(KMedoids&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InitClusters_Key = "InitClusters";
-  static inline constexpr StringLiteral k_DistanceMetric_Key = "DistanceMetric";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "FeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_MedoidsArrayName_Key = "MedoidsArrayName";
+  static inline constexpr StringLiteral k_InitClusters_Key = "init_clusters";
+  static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_MedoidsArrayName_Key = "medoids_array_name";
 
   /**
    * @brief Returns the name of the filter.

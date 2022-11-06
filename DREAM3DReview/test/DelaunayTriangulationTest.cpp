@@ -45,7 +45,7 @@ TEST_CASE("DREAM3DReview::DelaunayTriangulation: Instantiation and Parameter Che
   args.insertOrAssign(DelaunayTriangulation::k_Tolerance_Key, std::make_any<float64>(2.3456789));
   args.insertOrAssign(DelaunayTriangulation::k_TriangulateByFeature_Key, std::make_any<bool>(false));
   args.insertOrAssign(DelaunayTriangulation::k_InputGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(DelaunayTriangulation::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(DelaunayTriangulation::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(DelaunayTriangulation::k_TriangleDataContainerName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
   args.insertOrAssign(DelaunayTriangulation::k_VertexAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
   args.insertOrAssign(DelaunayTriangulation::k_FaceAttributeMatrixName_Key, std::make_any<StringParameter::ValueType>("SomeString"));

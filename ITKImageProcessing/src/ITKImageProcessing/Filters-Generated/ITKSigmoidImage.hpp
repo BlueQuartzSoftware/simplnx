@@ -33,13 +33,13 @@ public:
   ITKSigmoidImage& operator=(ITKSigmoidImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_Alpha_Key = "Alpha";
-  static inline constexpr StringLiteral k_Beta_Key = "Beta";
-  static inline constexpr StringLiteral k_OutputMaximum_Key = "OutputMaximum";
-  static inline constexpr StringLiteral k_OutputMinimum_Key = "OutputMinimum";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_Alpha_Key = "alpha";
+  static inline constexpr StringLiteral k_Beta_Key = "beta";
+  static inline constexpr StringLiteral k_OutputMaximum_Key = "output_maximum";
+  static inline constexpr StringLiteral k_OutputMinimum_Key = "output_minimum";
 
   /**
    * @brief Returns the name of the filter.

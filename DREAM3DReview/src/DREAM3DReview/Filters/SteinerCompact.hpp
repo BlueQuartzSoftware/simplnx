@@ -24,14 +24,14 @@ public:
   SteinerCompact& operator=(SteinerCompact&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Plane_Key = "Plane";
-  static inline constexpr StringLiteral k_Sites_Key = "Sites";
-  static inline constexpr StringLiteral k_VtkOutput_Key = "VtkOutput";
-  static inline constexpr StringLiteral k_VtkFileName_Key = "VtkFileName";
-  static inline constexpr StringLiteral k_TxtOutput_Key = "TxtOutput";
-  static inline constexpr StringLiteral k_TxtFileName_Key = "TxtFileName";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
+  static inline constexpr StringLiteral k_Plane_Key = "plane";
+  static inline constexpr StringLiteral k_Sites_Key = "sites";
+  static inline constexpr StringLiteral k_VtkOutput_Key = "vtk_output";
+  static inline constexpr StringLiteral k_VtkFileName_Key = "vtk_file_name";
+  static inline constexpr StringLiteral k_TxtOutput_Key = "txt_output";
+  static inline constexpr StringLiteral k_TxtFileName_Key = "txt_file_name";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
 
   /**
    * @brief Returns the name of the filter.

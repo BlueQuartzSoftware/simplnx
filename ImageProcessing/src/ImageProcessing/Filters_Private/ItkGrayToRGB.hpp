@@ -24,10 +24,10 @@ public:
   ItkGrayToRGB& operator=(ItkGrayToRGB&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_RedArrayPath_Key = "RedArrayPath";
-  static inline constexpr StringLiteral k_GreenArrayPath_Key = "GreenArrayPath";
-  static inline constexpr StringLiteral k_BlueArrayPath_Key = "BlueArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
+  static inline constexpr StringLiteral k_RedArrayPath_Key = "red_array_path";
+  static inline constexpr StringLiteral k_GreenArrayPath_Key = "green_array_path";
+  static inline constexpr StringLiteral k_BlueArrayPath_Key = "blue_array_path";
+  static inline constexpr StringLiteral k_NewCellArrayName_Key = "new_cell_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,16 +24,16 @@ public:
   CreateLambertSphere& operator=(CreateLambertSphere&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Hemisphere_Key = "Hemisphere";
-  static inline constexpr StringLiteral k_CreateVertexGeometry_Key = "CreateVertexGeometry";
-  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "VertexDataContainerName";
-  static inline constexpr StringLiteral k_CreateEdgeGeometry_Key = "CreateEdgeGeometry";
-  static inline constexpr StringLiteral k_EdgeDataContainerName_Key = "EdgeDataContainerName";
-  static inline constexpr StringLiteral k_CreateTriangleGeometry_Key = "CreateTriangleGeometry";
-  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "TriangleDataContainerName";
-  static inline constexpr StringLiteral k_CreateQuadGeometry_Key = "CreateQuadGeometry";
-  static inline constexpr StringLiteral k_QuadDataContainerName_Key = "QuadDataContainerName";
-  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "ImageDataArrayPath";
+  static inline constexpr StringLiteral k_Hemisphere_Key = "hemisphere";
+  static inline constexpr StringLiteral k_CreateVertexGeometry_Key = "create_vertex_geometry";
+  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "vertex_data_container_name";
+  static inline constexpr StringLiteral k_CreateEdgeGeometry_Key = "create_edge_geometry";
+  static inline constexpr StringLiteral k_EdgeDataContainerName_Key = "edge_data_container_name";
+  static inline constexpr StringLiteral k_CreateTriangleGeometry_Key = "create_triangle_geometry";
+  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "triangle_data_container_name";
+  static inline constexpr StringLiteral k_CreateQuadGeometry_Key = "create_quad_geometry";
+  static inline constexpr StringLiteral k_QuadDataContainerName_Key = "quad_data_container_name";
+  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_path";
 
   /**
    * @brief Returns the name of the filter.

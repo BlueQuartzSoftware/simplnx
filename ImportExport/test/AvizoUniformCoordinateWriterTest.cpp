@@ -45,7 +45,7 @@ TEST_CASE("ImportExport::AvizoUniformCoordinateWriter: Instantiation and Paramet
   // Create default Parameters for the filter.
   args.insertOrAssign(AvizoUniformCoordinateWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
   args.insertOrAssign(AvizoUniformCoordinateWriter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
-  args.insertOrAssign(AvizoUniformCoordinateWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(AvizoUniformCoordinateWriter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(AvizoUniformCoordinateWriter::k_Units_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result

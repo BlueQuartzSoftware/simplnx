@@ -24,9 +24,9 @@ public:
   VtkRectilinearGridWriter& operator=(VtkRectilinearGridWriter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputFile_Key = "OutputFile";
-  static inline constexpr StringLiteral k_WriteBinaryFile_Key = "WriteBinaryFile";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static inline constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.

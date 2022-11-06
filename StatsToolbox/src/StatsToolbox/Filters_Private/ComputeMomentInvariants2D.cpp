@@ -45,7 +45,8 @@ Parameters ComputeMomentInvariants2D::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureRectArrayPath_Key, "Feature Rect", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<BoolParameter>(k_NormalizeMomentInvariants_Key, "Normalize Moment Invariants", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
@@ -78,7 +79,7 @@ IFilter::PreflightResult ComputeMomentInvariants2D::preflightImpl(const DataStru
    * otherwise passed into the filter. These are here for your convenience. If you
    * do not need some of them remove them.
    */
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pFeatureRectArrayPathValue = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
   auto pNormalizeMomentInvariantsValue = filterArgs.value<bool>(k_NormalizeMomentInvariants_Key);
   auto pOmega1ArrayPathValue = filterArgs.value<DataPath>(k_Omega1ArrayPath_Key);
@@ -149,7 +150,7 @@ Result<> ComputeMomentInvariants2D::executeImpl(DataStructure& dataStructure, co
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
    ***************************************************************************/
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pFeatureRectArrayPathValue = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
   auto pNormalizeMomentInvariantsValue = filterArgs.value<bool>(k_NormalizeMomentInvariants_Key);
   auto pOmega1ArrayPathValue = filterArgs.value<DataPath>(k_Omega1ArrayPath_Key);
