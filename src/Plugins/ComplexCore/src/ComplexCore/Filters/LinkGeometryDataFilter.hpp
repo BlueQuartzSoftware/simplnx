@@ -21,11 +21,11 @@ public:
   LinkGeometryDataFilter& operator=(LinkGeometryDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GeometryDataPath_Key = "GeometryDataPath";
-  static inline constexpr StringLiteral k_SelectedVertexDataArrayPaths_Key = "SelectedVertexDataArrayPaths";
-  static inline constexpr StringLiteral k_SelectedEdgeDataArrayPaths_Key = "SelectedEdgeDataArrayPaths";
-  static inline constexpr StringLiteral k_SelectedFaceDataArrayPaths_Key = "SelectedFaceDataArrayPaths";
-  static inline constexpr StringLiteral k_SelectedVolumeDataArrayPaths_Key = "SelectedVolumeElementDataArrayPaths";
+  static inline constexpr StringLiteral k_GeometryDataPath_Key = "geometry_data_path";
+  static inline constexpr StringLiteral k_SelectedVertexDataArrayPaths_Key = "selected_vertex_data_array_paths";
+  static inline constexpr StringLiteral k_SelectedEdgeDataArrayPaths_Key = "selected_edge_data_array_paths";
+  static inline constexpr StringLiteral k_SelectedFaceDataArrayPaths_Key = "selected_face_data_array_paths";
+  static inline constexpr StringLiteral k_SelectedVolumeDataArrayPaths_Key = "selected_volume_element_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.

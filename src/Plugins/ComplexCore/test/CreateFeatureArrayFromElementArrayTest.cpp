@@ -59,7 +59,7 @@ void testElementArray(const DataPath& cellDataPath)
 
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateFeatureArrayFromElementArray::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(cellDataPath));
-    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
     args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(computedFeatureArrayPath));
 
     // Preflight the filter and check result
@@ -99,7 +99,7 @@ TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Instantiation and Pa
 
   // Create default Parameters for the filter.
   args.insertOrAssign(CreateFeatureArrayFromElementArray::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result

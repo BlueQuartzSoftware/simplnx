@@ -24,8 +24,8 @@ public:
   CalculateTriangleAreasFilter& operator=(CalculateTriangleAreasFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "TriangleGeometryDataPath";
-  static inline constexpr StringLiteral k_CalculatedAreasDataPath_Key = "TriangleAreasArrayPath";
+  static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "triangle_geometry_data_path";
+  static inline constexpr StringLiteral k_CalculatedAreasDataPath_Key = "triangle_areas_array_path";
 
   /**
    * @brief Returns the name of the filter.

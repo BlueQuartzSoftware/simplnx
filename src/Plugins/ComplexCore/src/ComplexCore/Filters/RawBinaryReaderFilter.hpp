@@ -29,13 +29,13 @@ public:
   RawBinaryReaderFilter& operator=(RawBinaryReaderFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_ScalarType_Key = "ScalarType";
-  static inline constexpr StringLiteral k_TupleDims_Key = "TupleDimensions";
-  static inline constexpr StringLiteral k_NumberOfComponents_Key = "NumberOfComponents";
-  static inline constexpr StringLiteral k_Endian_Key = "Endian";
-  static inline constexpr StringLiteral k_SkipHeaderBytes_Key = "SkipHeaderBytes";
-  static inline constexpr StringLiteral k_CreatedAttributeArrayPath_Key = "CreatedAttributeArrayPath";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type";
+  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+  static inline constexpr StringLiteral k_NumberOfComponents_Key = "number_of_components";
+  static inline constexpr StringLiteral k_Endian_Key = "endian";
+  static inline constexpr StringLiteral k_SkipHeaderBytes_Key = "skip_header_bytes";
+  static inline constexpr StringLiteral k_CreatedAttributeArrayPath_Key = "created_attribute_array_path";
 
   /**
    * @brief Returns the name of the filter.

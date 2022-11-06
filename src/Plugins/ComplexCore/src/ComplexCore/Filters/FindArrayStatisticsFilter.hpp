@@ -25,34 +25,34 @@ public:
   FindArrayStatisticsFilter& operator=(FindArrayStatisticsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FindHistogram_Key = "FindHistogram";
-  static inline constexpr StringLiteral k_MinRange_Key = "MinRange";
-  static inline constexpr StringLiteral k_MaxRange_Key = "MaxRange";
-  static inline constexpr StringLiteral k_UseFullRange_Key = "UseFullRange";
-  static inline constexpr StringLiteral k_NumBins_Key = "NumBins";
-  static inline constexpr StringLiteral k_FindLength_Key = "FindLength";
-  static inline constexpr StringLiteral k_FindMin_Key = "FindMin";
-  static inline constexpr StringLiteral k_FindMax_Key = "FindMax";
-  static inline constexpr StringLiteral k_FindMean_Key = "FindMean";
-  static inline constexpr StringLiteral k_FindMedian_Key = "FindMedian";
-  static inline constexpr StringLiteral k_FindStdDeviation_Key = "FindStdDeviation";
-  static inline constexpr StringLiteral k_FindSummation_Key = "FindSummation";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_ComputeByIndex_Key = "ComputeByIndex";
-  static inline constexpr StringLiteral k_StandardizeData_Key = "StandardizeData";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_DestinationAttributeMatrix_Key = "DestinationAttributeMatrix";
-  static inline constexpr StringLiteral k_HistogramArrayName_Key = "HistogramArrayName";
-  static inline constexpr StringLiteral k_LengthArrayName_Key = "LengthArrayName";
-  static inline constexpr StringLiteral k_MinimumArrayName_Key = "MinimumArrayName";
-  static inline constexpr StringLiteral k_MaximumArrayName_Key = "MaximumArrayName";
-  static inline constexpr StringLiteral k_MeanArrayName_Key = "MeanArrayName";
-  static inline constexpr StringLiteral k_MedianArrayName_Key = "MedianArrayName";
-  static inline constexpr StringLiteral k_StdDeviationArrayName_Key = "StdDeviationArrayName";
-  static inline constexpr StringLiteral k_SummationArrayName_Key = "SummationArrayName";
-  static inline constexpr StringLiteral k_StandardizedArrayName_Key = "StandardizedArrayName";
+  static inline constexpr StringLiteral k_FindHistogram_Key = "find_histogram";
+  static inline constexpr StringLiteral k_MinRange_Key = "min_range";
+  static inline constexpr StringLiteral k_MaxRange_Key = "max_range";
+  static inline constexpr StringLiteral k_UseFullRange_Key = "use_full_range";
+  static inline constexpr StringLiteral k_NumBins_Key = "num_bins";
+  static inline constexpr StringLiteral k_FindLength_Key = "find_length";
+  static inline constexpr StringLiteral k_FindMin_Key = "find_min";
+  static inline constexpr StringLiteral k_FindMax_Key = "find_max";
+  static inline constexpr StringLiteral k_FindMean_Key = "find_mean";
+  static inline constexpr StringLiteral k_FindMedian_Key = "find_median";
+  static inline constexpr StringLiteral k_FindStdDeviation_Key = "find_std_deviation";
+  static inline constexpr StringLiteral k_FindSummation_Key = "find_summation";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_ComputeByIndex_Key = "compute_by_index";
+  static inline constexpr StringLiteral k_StandardizeData_Key = "standardize_data";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_DestinationAttributeMatrix_Key = "destination_attribute_matrix";
+  static inline constexpr StringLiteral k_HistogramArrayName_Key = "histogram_array_name";
+  static inline constexpr StringLiteral k_LengthArrayName_Key = "length_array_name";
+  static inline constexpr StringLiteral k_MinimumArrayName_Key = "minimum_array_name";
+  static inline constexpr StringLiteral k_MaximumArrayName_Key = "maximum_array_name";
+  static inline constexpr StringLiteral k_MeanArrayName_Key = "mean_array_name";
+  static inline constexpr StringLiteral k_MedianArrayName_Key = "median_array_name";
+  static inline constexpr StringLiteral k_StdDeviationArrayName_Key = "std_deviation_array_name";
+  static inline constexpr StringLiteral k_SummationArrayName_Key = "summation_array_name";
+  static inline constexpr StringLiteral k_StandardizedArrayName_Key = "standardized_array_name";
 
   /**
    * @brief Returns the name of the filter.

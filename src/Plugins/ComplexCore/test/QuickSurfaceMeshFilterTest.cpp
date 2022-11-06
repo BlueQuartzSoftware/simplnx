@@ -46,7 +46,7 @@ TEST_CASE("ComplexCore::QuickSurfaceMeshFilter", "[ComplexCore][QuickSurfaceMesh
     DataPath gridGeomDataPath({k_DataContainer});
     args.insertOrAssign(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
 
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
 
     MultiArraySelectionParameter::ValueType selectedArrayPaths = {ebsdSanDataPath.createChildPath(k_ConfidenceIndex), ebsdSanDataPath.createChildPath(k_IPFColors),
                                                                   ebsdSanDataPath.createChildPath(k_ImageQuality), ebsdSanDataPath.createChildPath(k_Phases)};
