@@ -25,7 +25,7 @@
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
 // Defined in CMake
-//#define H5_USE_110_API
+// #define H5_USE_110_API
 
 #define HDF_ERROR_HANDLER_OFF                                                                                                                                                                          \
   herr_t (*_oldHDF_error_func)(hid_t, void*);                                                                                                                                                          \
