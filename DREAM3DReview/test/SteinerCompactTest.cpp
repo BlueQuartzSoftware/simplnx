@@ -46,7 +46,7 @@ TEST_CASE("DREAM3DReview::SteinerCompact: Instantiation and Parameter Check", "[
   args.insertOrAssign(SteinerCompact::k_VtkFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
   args.insertOrAssign(SteinerCompact::k_TxtOutput_Key, std::make_any<bool>(false));
   args.insertOrAssign(SteinerCompact::k_TxtFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(SteinerCompact::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(SteinerCompact::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(SteinerCompact::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result

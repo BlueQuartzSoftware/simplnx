@@ -24,17 +24,17 @@ public:
   FindFeatureClustering& operator=(FindFeatureClustering&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumberOfBins_Key = "NumberOfBins";
-  static inline constexpr StringLiteral k_PhaseNumber_Key = "PhaseNumber";
-  static inline constexpr StringLiteral k_RemoveBiasedFeatures_Key = "RemoveBiasedFeatures";
-  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "EquivalentDiametersArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "CentroidsArrayPath";
-  static inline constexpr StringLiteral k_BiasedFeaturesArrayPath_Key = "BiasedFeaturesArrayPath";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "CellEnsembleAttributeMatrixName";
-  static inline constexpr StringLiteral k_ClusteringListArrayName_Key = "ClusteringListArrayName";
-  static inline constexpr StringLiteral k_NewEnsembleArrayArrayName_Key = "NewEnsembleArrayArrayName";
-  static inline constexpr StringLiteral k_MaxMinArrayName_Key = "MaxMinArrayName";
+  static inline constexpr StringLiteral k_NumberOfBins_Key = "number_of_bins";
+  static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
+  static inline constexpr StringLiteral k_RemoveBiasedFeatures_Key = "remove_biased_features";
+  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static inline constexpr StringLiteral k_BiasedFeaturesArrayPath_Key = "biased_features_array_path";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ClusteringListArrayName_Key = "clustering_list_array_name";
+  static inline constexpr StringLiteral k_NewEnsembleArrayArrayName_Key = "new_ensemble_array_array_name";
+  static inline constexpr StringLiteral k_MaxMinArrayName_Key = "max_min_array_name";
 
   /**
    * @brief Returns the name of the filter.

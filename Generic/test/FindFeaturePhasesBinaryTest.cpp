@@ -38,7 +38,7 @@ TEST_CASE("Generic::FindFeaturePhasesBinary: Instantiation and Parameter Check",
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindFeaturePhasesBinary::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeaturePhasesBinary::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeaturePhasesBinary::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeaturePhasesBinary::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeaturePhasesBinary::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));

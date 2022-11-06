@@ -9,6 +9,7 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -52,12 +53,12 @@ Parameters FindFeatureCentroidsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Cell Feature AttributeMatrix", "", DataPath({"Data Container", "Feature Data"})));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CentroidsArrayPath_Key, "Centroids", "", DataPath({"Centroids"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CentroidsArrayPath_Key, "Centroids", "DataPath to create the 'Centroids' output array", "Centroids"));
 
   return params;
 }
@@ -72,9 +73,11 @@ IFilter::UniquePointer FindFeatureCentroidsFilter::clone() const
 IFilter::PreflightResult FindFeatureCentroidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                    const std::atomic_bool& shouldCancel) const
 {
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  auto pCentroidsArrayPathValue = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto featureAttrMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+
+  auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayPath_Key);
+  DataPath pCentroidsArrayPath = featureAttrMatrixPath.createChildPath(pCentroidsArrayName);
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -105,7 +108,7 @@ IFilter::PreflightResult FindFeatureCentroidsFilter::preflightImpl(const DataStr
 
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {
-    auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3ULL}, pCentroidsArrayPathValue);
+    auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3ULL}, pCentroidsArrayPath);
     resultOutputActions.value().actions.push_back(std::move(createFeatureCentroidsAction));
   }
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
@@ -122,9 +125,10 @@ Result<> FindFeatureCentroidsFilter::executeImpl(DataStructure& dataStructure, c
 {
   FindFeatureCentroidsInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
+  auto pCentroidsArrayName = filterArgs.value<std::string>(k_CentroidsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+  inputValues.CentroidsArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(pCentroidsArrayName);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   return FindFeatureCentroids(dataStructure, messageHandler, shouldCancel, &inputValues)();

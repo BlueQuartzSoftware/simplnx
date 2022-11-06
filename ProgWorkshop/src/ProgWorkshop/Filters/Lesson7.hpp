@@ -24,7 +24,7 @@ public:
   Lesson7& operator=(Lesson7&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GeometrySelection_Key = "GeometrySelection";
+  static inline constexpr StringLiteral k_GeometrySelection_Key = "geometry_selection";
 
   /**
    * @brief Returns the name of the filter.

@@ -38,7 +38,7 @@ TEST_CASE("Generic::FindSurfaceFeatures: Instantiation and Parameter Check", "[G
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindSurfaceFeatures::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result

@@ -24,9 +24,9 @@ public:
   FindAvgScalarValueForFeatures& operator=(FindAvgScalarValueForFeatures&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_NewFeatureArrayArrayPath_Key = "NewFeatureArrayArrayPath";
+  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_NewFeatureArrayArrayPath_Key = "new_feature_array_array_path";
 
   /**
    * @brief Returns the name of the filter.

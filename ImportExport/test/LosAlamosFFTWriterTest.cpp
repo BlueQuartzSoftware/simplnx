@@ -42,7 +42,7 @@ TEST_CASE("ImportExport::LosAlamosFFTWriter: Instantiation and Parameter Check",
 
   // Create default Parameters for the filter.
   args.insertOrAssign(LosAlamosFFTWriter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(LosAlamosFFTWriter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(LosAlamosFFTWriter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(LosAlamosFFTWriter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(LosAlamosFFTWriter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 

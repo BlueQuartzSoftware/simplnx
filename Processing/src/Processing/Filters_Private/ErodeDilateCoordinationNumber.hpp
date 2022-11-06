@@ -24,10 +24,10 @@ public:
   ErodeDilateCoordinationNumber& operator=(ErodeDilateCoordinationNumber&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CoordinationNumber_Key = "CoordinationNumber";
-  static inline constexpr StringLiteral k_Loop_Key = "Loop";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
+  static inline constexpr StringLiteral k_CoordinationNumber_Key = "coordination_number";
+  static inline constexpr StringLiteral k_Loop_Key = "loop";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.

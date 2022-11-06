@@ -10,7 +10,7 @@
 * This is example code to put in the Execute Method of the filter.
   FindBoundaryElementFractionsInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.BoundaryCellsArrayPath = filterArgs.value<DataPath>(k_BoundaryCellsArrayPath_Key);
   inputValues.BoundaryCellFractionsArrayPath = filterArgs.value<DataPath>(k_BoundaryCellFractionsArrayPath_Key);
 

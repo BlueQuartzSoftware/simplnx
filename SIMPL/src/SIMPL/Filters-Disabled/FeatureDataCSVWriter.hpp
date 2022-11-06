@@ -24,11 +24,11 @@ public:
   FeatureDataCSVWriter& operator=(FeatureDataCSVWriter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureDataFile_Key = "FeatureDataFile";
-  static inline constexpr StringLiteral k_WriteNeighborListData_Key = "WriteNeighborListData";
-  static inline constexpr StringLiteral k_WriteNumFeaturesLine_Key = "WriteNumFeaturesLine";
-  static inline constexpr StringLiteral k_DelimiterChoiceInt_Key = "DelimiterChoiceInt";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "CellFeatureAttributeMatrixPath";
+  static inline constexpr StringLiteral k_FeatureDataFile_Key = "feature_data_file";
+  static inline constexpr StringLiteral k_WriteNeighborListData_Key = "write_neighbor_list_data";
+  static inline constexpr StringLiteral k_WriteNumFeaturesLine_Key = "write_num_features_line";
+  static inline constexpr StringLiteral k_DelimiterChoiceInt_Key = "delimiter_choice_int";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

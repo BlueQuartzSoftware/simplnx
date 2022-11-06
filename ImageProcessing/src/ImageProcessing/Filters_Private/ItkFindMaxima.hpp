@@ -24,9 +24,9 @@ public:
   ItkFindMaxima& operator=(ItkFindMaxima&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_Tolerance_Key = "Tolerance";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
+  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static inline constexpr StringLiteral k_Tolerance_Key = "tolerance";
+  static inline constexpr StringLiteral k_NewCellArrayName_Key = "new_cell_array_name";
 
   /**
    * @brief Returns the name of the filter.

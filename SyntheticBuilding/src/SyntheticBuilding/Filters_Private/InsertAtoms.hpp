@@ -24,13 +24,13 @@ public:
   InsertAtoms& operator=(InsertAtoms&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_LatticeConstants_Key = "LatticeConstants";
-  static inline constexpr StringLiteral k_Basis_Key = "Basis";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "VertexDataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_AtomFeatureLabelsArrayName_Key = "AtomFeatureLabelsArrayName";
+  static inline constexpr StringLiteral k_LatticeConstants_Key = "lattice_constants";
+  static inline constexpr StringLiteral k_Basis_Key = "basis";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "vertex_data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_AtomFeatureLabelsArrayName_Key = "atom_feature_labels_array_name";
 
   /**
    * @brief Returns the name of the filter.

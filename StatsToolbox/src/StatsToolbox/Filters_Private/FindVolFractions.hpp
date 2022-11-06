@@ -24,8 +24,8 @@ public:
   FindVolFractions& operator=(FindVolFractions&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_VolFractionsArrayPath_Key = "VolFractionsArrayPath";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_VolFractionsArrayPath_Key = "vol_fractions_array_path";
 
   /**
    * @brief Returns the name of the filter.

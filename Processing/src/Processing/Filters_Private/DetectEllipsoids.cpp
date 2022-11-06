@@ -53,7 +53,8 @@ Parameters DetectEllipsoids::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_HoughTransformThreshold_Key, "Threshold for Hough Transform", "", 1.23345f));
   params.insert(std::make_unique<Float32Parameter>(k_MinAspectRatio_Key, "Minimum Aspect Ratio", "", 1.23345f));
   params.insert(std::make_unique<Int32Parameter>(k_ImageScaleBarLength_Key, "Length of Image Scale Bar", "", 1234356));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_EllipseFeatureAttributeMatrixPath_Key, "Ellipsoid Feature Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CenterCoordinatesArrayName_Key, "Ellipsoid Center Coordinates", "", DataPath{}));
@@ -89,7 +90,7 @@ IFilter::PreflightResult DetectEllipsoids::preflightImpl(const DataStructure& da
   auto pHoughTransformThresholdValue = filterArgs.value<float32>(k_HoughTransformThreshold_Key);
   auto pMinAspectRatioValue = filterArgs.value<float32>(k_MinAspectRatio_Key);
   auto pImageScaleBarLengthValue = filterArgs.value<int32>(k_ImageScaleBarLength_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
   auto pEllipseFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_EllipseFeatureAttributeMatrixPath_Key);
   auto pCenterCoordinatesArrayNameValue = filterArgs.value<DataPath>(k_CenterCoordinatesArrayName_Key);
@@ -162,7 +163,7 @@ Result<> DetectEllipsoids::executeImpl(DataStructure& dataStructure, const Argum
   auto pHoughTransformThresholdValue = filterArgs.value<float32>(k_HoughTransformThreshold_Key);
   auto pMinAspectRatioValue = filterArgs.value<float32>(k_MinAspectRatio_Key);
   auto pImageScaleBarLengthValue = filterArgs.value<int32>(k_ImageScaleBarLength_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
   auto pEllipseFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_EllipseFeatureAttributeMatrixPath_Key);
   auto pCenterCoordinatesArrayNameValue = filterArgs.value<DataPath>(k_CenterCoordinatesArrayName_Key);

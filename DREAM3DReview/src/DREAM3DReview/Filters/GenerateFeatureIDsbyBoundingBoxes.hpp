@@ -24,11 +24,11 @@ public:
   GenerateFeatureIDsbyBoundingBoxes& operator=(GenerateFeatureIDsbyBoundingBoxes&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIDsArrayPath_Key = "FeatureIDsArrayPath";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixArrayPath_Key = "FeatureAttributeMatrixArrayPath";
-  static inline constexpr StringLiteral k_BoxCenterArrayPath_Key = "BoxCenterArrayPath";
-  static inline constexpr StringLiteral k_BoxDimensionsArrayPath_Key = "BoxDimensionsArrayPath";
-  static inline constexpr StringLiteral k_BoxFeatureIDsArrayPath_Key = "BoxFeatureIDsArrayPath";
+  static inline constexpr StringLiteral k_FeatureIDsArrayPath_Key = "feature_ids_array_path";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixArrayPath_Key = "feature_attribute_matrix_array_path";
+  static inline constexpr StringLiteral k_BoxCenterArrayPath_Key = "box_center_array_path";
+  static inline constexpr StringLiteral k_BoxDimensionsArrayPath_Key = "box_dimensions_array_path";
+  static inline constexpr StringLiteral k_BoxFeatureIDsArrayPath_Key = "box_feature_ids_array_path";
 
   /**
    * @brief Returns the name of the filter.

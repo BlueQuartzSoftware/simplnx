@@ -24,11 +24,11 @@ public:
   FindBoundingBoxFeatures& operator=(FindBoundingBoxFeatures&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CalcByPhase_Key = "CalcByPhase";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "CentroidsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "SurfaceFeaturesArrayPath";
-  static inline constexpr StringLiteral k_PhasesArrayPath_Key = "PhasesArrayPath";
-  static inline constexpr StringLiteral k_BiasedFeaturesArrayName_Key = "BiasedFeaturesArrayName";
+  static inline constexpr StringLiteral k_CalcByPhase_Key = "calc_by_phase";
+  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "surface_features_array_path";
+  static inline constexpr StringLiteral k_PhasesArrayPath_Key = "phases_array_path";
+  static inline constexpr StringLiteral k_BiasedFeaturesArrayName_Key = "biased_features_array_name";
 
   /**
    * @brief Returns the name of the filter.

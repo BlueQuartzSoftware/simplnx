@@ -24,16 +24,16 @@ public:
   FindTwinBoundarySchmidFactors& operator=(FindTwinBoundarySchmidFactors&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_LoadingDir_Key = "LoadingDir";
-  static inline constexpr StringLiteral k_WriteFile_Key = "WriteFile";
-  static inline constexpr StringLiteral k_TwinBoundarySchmidFactorsFile_Key = "TwinBoundarySchmidFactorsFile";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "SurfaceMeshFaceNormalsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshTwinBoundaryArrayPath_Key = "SurfaceMeshTwinBoundaryArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshTwinBoundarySchmidFactorsArrayName_Key = "SurfaceMeshTwinBoundarySchmidFactorsArrayName";
+  static inline constexpr StringLiteral k_LoadingDir_Key = "loading_dir";
+  static inline constexpr StringLiteral k_WriteFile_Key = "write_file";
+  static inline constexpr StringLiteral k_TwinBoundarySchmidFactorsFile_Key = "twin_boundary_schmid_factors_file";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshTwinBoundaryArrayPath_Key = "surface_mesh_twin_boundary_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshTwinBoundarySchmidFactorsArrayName_Key = "surface_mesh_twin_boundary_schmid_factors_array_name";
 
   /**
    * @brief Returns the name of the filter.

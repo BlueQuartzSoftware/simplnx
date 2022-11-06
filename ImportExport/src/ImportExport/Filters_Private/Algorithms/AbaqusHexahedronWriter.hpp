@@ -14,7 +14,7 @@
   inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
 
   return AbaqusHexahedronWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
 */

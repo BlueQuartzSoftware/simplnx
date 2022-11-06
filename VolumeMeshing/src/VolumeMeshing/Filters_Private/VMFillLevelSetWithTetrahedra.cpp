@@ -52,7 +52,8 @@ Parameters VMFillLevelSetWithTetrahedra::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_AngleThreshold_Key, "Angle Threshold", "", 2.3456789));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_TriangleDataContainerName_Key, "Triangle Data Container", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_LevelSetArrayPath_Key, "Level Set", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_TetrahedralDataContainerName_Key, "Tetrahedral Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<StringParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "", "SomeString"));
@@ -89,7 +90,7 @@ IFilter::PreflightResult VMFillLevelSetWithTetrahedra::preflightImpl(const DataS
   auto pAngleThresholdValue = filterArgs.value<float64>(k_AngleThreshold_Key);
   auto pTriangleDataContainerNameValue = filterArgs.value<DataPath>(k_TriangleDataContainerName_Key);
   auto pLevelSetArrayPathValue = filterArgs.value<DataPath>(k_LevelSetArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pTetrahedralDataContainerNameValue = filterArgs.value<DataPath>(k_TetrahedralDataContainerName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
@@ -153,7 +154,7 @@ Result<> VMFillLevelSetWithTetrahedra::executeImpl(DataStructure& dataStructure,
   auto pAngleThresholdValue = filterArgs.value<float64>(k_AngleThreshold_Key);
   auto pTriangleDataContainerNameValue = filterArgs.value<DataPath>(k_TriangleDataContainerName_Key);
   auto pLevelSetArrayPathValue = filterArgs.value<DataPath>(k_LevelSetArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pTetrahedralDataContainerNameValue = filterArgs.value<DataPath>(k_TetrahedralDataContainerName_Key);
   auto pVertexAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);

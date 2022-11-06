@@ -10,7 +10,7 @@
 * This is example code to put in the Execute Method of the filter.
   ComputeMomentInvariants2DInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.FeatureRectArrayPath = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
   inputValues.NormalizeMomentInvariants = filterArgs.value<bool>(k_NormalizeMomentInvariants_Key);
   inputValues.Omega1ArrayPath = filterArgs.value<DataPath>(k_Omega1ArrayPath_Key);

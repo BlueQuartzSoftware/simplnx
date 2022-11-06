@@ -11,7 +11,7 @@
   PhWriterInputValues inputValues;
 
   inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
 
   return PhWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
 */

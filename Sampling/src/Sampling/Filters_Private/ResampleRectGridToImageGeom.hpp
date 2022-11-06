@@ -24,11 +24,11 @@ public:
   ResampleRectGridToImageGeom& operator=(ResampleRectGridToImageGeom&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_RectilinearGridPath_Key = "RectilinearGridPath";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
-  static inline constexpr StringLiteral k_Dimensions_Key = "Dimensions";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
-  static inline constexpr StringLiteral k_ImageGeomCellAttributeMatrix_Key = "ImageGeomCellAttributeMatrix";
+  static inline constexpr StringLiteral k_RectilinearGridPath_Key = "rectilinear_grid_path";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageGeomCellAttributeMatrix_Key = "image_geom_cell_attribute_matrix";
 
   /**
    * @brief Returns the name of the filter.

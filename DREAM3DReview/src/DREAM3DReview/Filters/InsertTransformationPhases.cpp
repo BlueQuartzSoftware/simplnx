@@ -60,7 +60,8 @@ Parameters InsertTransformationPhases::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_NumTransformationPhasesPerFeature_Key, "Average Number Of Transformation Phases Per Feature", "", 1234356));
   params.insert(std::make_unique<Float32Parameter>(k_PeninsulaFrac_Key, "Peninsula Transformation Phase Fraction", "", 1.23345f));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Cell Feature Data"});
@@ -117,7 +118,7 @@ IFilter::PreflightResult InsertTransformationPhases::preflightImpl(const DataStr
   auto pTransformationPhaseThicknessValue = filterArgs.value<float32>(k_TransformationPhaseThickness_Key);
   auto pNumTransformationPhasesPerFeatureValue = filterArgs.value<int32>(k_NumTransformationPhasesPerFeature_Key);
   auto pPeninsulaFracValue = filterArgs.value<float32>(k_PeninsulaFrac_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellFeatureAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
@@ -199,7 +200,7 @@ Result<> InsertTransformationPhases::executeImpl(DataStructure& dataStructure, c
   auto pTransformationPhaseThicknessValue = filterArgs.value<float32>(k_TransformationPhaseThickness_Key);
   auto pNumTransformationPhasesPerFeatureValue = filterArgs.value<int32>(k_NumTransformationPhasesPerFeature_Key);
   auto pPeninsulaFracValue = filterArgs.value<float32>(k_PeninsulaFrac_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellFeatureAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);

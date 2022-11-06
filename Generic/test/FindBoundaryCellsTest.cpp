@@ -41,7 +41,7 @@ TEST_CASE("Generic::FindBoundaryCells: Instantiation and Parameter Check", "[Gen
   // Create default Parameters for the filter.
   args.insertOrAssign(FindBoundaryCells::k_IgnoreFeatureZero_Key, std::make_any<bool>(false));
   args.insertOrAssign(FindBoundaryCells::k_IncludeVolumeBoundary_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindBoundaryCells::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindBoundaryCells::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindBoundaryCells::k_BoundaryCellsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result

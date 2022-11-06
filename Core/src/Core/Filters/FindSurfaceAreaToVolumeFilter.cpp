@@ -54,8 +54,8 @@ Parameters FindSurfaceAreaToVolumeFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsArrayPath_Key, "Number of Cells", "", DataPath({"CellFeatureData", "NumElements"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -78,7 +78,7 @@ IFilter::UniquePointer FindSurfaceAreaToVolumeFilter::clone() const
 IFilter::PreflightResult FindSurfaceAreaToVolumeFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                       const std::atomic_bool& shouldCancel) const
 {
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pNumCellsArrayPathValue = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
   auto pCalculateSphericityValue = filterArgs.value<bool>(k_CalculateSphericity_Key);
 
@@ -130,7 +130,7 @@ Result<> FindSurfaceAreaToVolumeFilter::executeImpl(DataStructure& dataStructure
 {
   FindSurfaceAreaToVolumeInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.NumCellsArrayPath = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
   inputValues.SurfaceAreaVolumeRatioArrayName = filterArgs.value<DataPath>(k_SurfaceAreaVolumeRatioArrayName_Key);
   inputValues.CalculateSphericity = filterArgs.value<bool>(k_CalculateSphericity_Key);

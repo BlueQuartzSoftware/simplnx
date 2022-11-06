@@ -57,7 +57,8 @@ Parameters SteinerCompact::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_TxtFileName_Key, "Output Text File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputFile));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_VtkOutput_Key, k_VtkFileName_Key, true);
@@ -91,7 +92,7 @@ IFilter::PreflightResult SteinerCompact::preflightImpl(const DataStructure& data
   auto pVtkFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_VtkFileName_Key);
   auto pTxtOutputValue = filterArgs.value<bool>(k_TxtOutput_Key);
   auto pTxtFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_TxtFileName_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -149,7 +150,7 @@ Result<> SteinerCompact::executeImpl(DataStructure& dataStructure, const Argumen
   auto pVtkFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_VtkFileName_Key);
   auto pTxtOutputValue = filterArgs.value<bool>(k_TxtOutput_Key);
   auto pTxtFileNameValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_TxtFileName_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
   /****************************************************************************

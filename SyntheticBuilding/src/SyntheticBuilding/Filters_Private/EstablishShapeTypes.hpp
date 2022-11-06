@@ -24,9 +24,9 @@ public:
   EstablishShapeTypes& operator=(EstablishShapeTypes&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "InputPhaseTypesArrayPath";
-  static inline constexpr StringLiteral k_ShapeTypesArrayName_Key = "ShapeTypesArrayName";
-  static inline constexpr StringLiteral k_ShapeTypeData_Key = "ShapeTypeData";
+  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "input_phase_types_array_path";
+  static inline constexpr StringLiteral k_ShapeTypesArrayName_Key = "shape_types_array_name";
+  static inline constexpr StringLiteral k_ShapeTypeData_Key = "shape_type_data";
 
   /**
    * @brief Returns the name of the filter.

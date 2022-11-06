@@ -24,12 +24,12 @@ public:
   ErodeDilateMask& operator=(ErodeDilateMask&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Direction_Key = "Direction";
-  static inline constexpr StringLiteral k_NumIterations_Key = "NumIterations";
-  static inline constexpr StringLiteral k_XDirOn_Key = "XDirOn";
-  static inline constexpr StringLiteral k_YDirOn_Key = "YDirOn";
-  static inline constexpr StringLiteral k_ZDirOn_Key = "ZDirOn";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
+  static inline constexpr StringLiteral k_Direction_Key = "direction";
+  static inline constexpr StringLiteral k_NumIterations_Key = "num_iterations";
+  static inline constexpr StringLiteral k_XDirOn_Key = "x_dir_on";
+  static inline constexpr StringLiteral k_YDirOn_Key = "y_dir_on";
+  static inline constexpr StringLiteral k_ZDirOn_Key = "z_dir_on";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,10 +24,10 @@ public:
   ApproximatePointCloudHull& operator=(ApproximatePointCloudHull&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GridResolution_Key = "GridResolution";
-  static inline constexpr StringLiteral k_NumberOfEmptyNeighbors_Key = "NumberOfEmptyNeighbors";
-  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "VertexDataContainerName";
-  static inline constexpr StringLiteral k_HullDataContainerName_Key = "HullDataContainerName";
+  static inline constexpr StringLiteral k_GridResolution_Key = "grid_resolution";
+  static inline constexpr StringLiteral k_NumberOfEmptyNeighbors_Key = "number_of_empty_neighbors";
+  static inline constexpr StringLiteral k_VertexDataContainerName_Key = "vertex_data_container_name";
+  static inline constexpr StringLiteral k_HullDataContainerName_Key = "hull_data_container_name";
 
   /**
    * @brief Returns the name of the filter.

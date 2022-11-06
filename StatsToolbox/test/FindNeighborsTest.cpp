@@ -42,7 +42,7 @@ TEST_CASE("StatsToolbox::FindNeighbors: Instantiation and Parameter Check", "[St
   // Create default Parameters for the filter.
   args.insertOrAssign(FindNeighbors::k_StoreBoundaryCells_Key, std::make_any<bool>(false));
   args.insertOrAssign(FindNeighbors::k_StoreSurfaceFeatures_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindNeighbors::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindNeighbors::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindNeighbors::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindNeighbors::k_BoundaryCellsArrayName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindNeighbors::k_NumNeighborsArrayName_Key, std::make_any<DataPath>(DataPath{}));

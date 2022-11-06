@@ -24,13 +24,13 @@ public:
   StatsGeneratorFilter& operator=(StatsGeneratorFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_StatsGenerator_Key = "StatsGenerator";
-  static inline constexpr StringLiteral k_StatsGeneratorDataContainerName_Key = "StatsGeneratorDataContainerName";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "CellEnsembleAttributeMatrixName";
-  static inline constexpr StringLiteral k_StatsDataArrayName_Key = "StatsDataArrayName";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayName_Key = "CrystalStructuresArrayName";
-  static inline constexpr StringLiteral k_PhaseTypesArrayName_Key = "PhaseTypesArrayName";
-  static inline constexpr StringLiteral k_PhaseNamesArrayName_Key = "PhaseNamesArrayName";
+  static inline constexpr StringLiteral k_StatsGenerator_Key = "stats_generator";
+  static inline constexpr StringLiteral k_StatsGeneratorDataContainerName_Key = "stats_generator_data_container_name";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_StatsDataArrayName_Key = "stats_data_array_name";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayName_Key = "crystal_structures_array_name";
+  static inline constexpr StringLiteral k_PhaseTypesArrayName_Key = "phase_types_array_name";
+  static inline constexpr StringLiteral k_PhaseNamesArrayName_Key = "phase_names_array_name";
 
   /**
    * @brief Returns the name of the filter.

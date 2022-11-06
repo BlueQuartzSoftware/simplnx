@@ -40,7 +40,7 @@ TEST_CASE("SyntheticBuilding::MatchCrystallography: Instantiation and Parameter 
 
   // Create default Parameters for the filter.
   args.insertOrAssign(MatchCrystallography::k_MaxIterations_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(MatchCrystallography::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(MatchCrystallography::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MatchCrystallography::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MatchCrystallography::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(MatchCrystallography::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));

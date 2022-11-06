@@ -24,21 +24,21 @@ public:
   FindGBPDMetricBased& operator=(FindGBPDMetricBased&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PhaseOfInterest_Key = "PhaseOfInterest";
-  static inline constexpr StringLiteral k_LimitDist_Key = "LimitDist";
-  static inline constexpr StringLiteral k_NumSamplPts_Key = "NumSamplPts";
-  static inline constexpr StringLiteral k_ExcludeTripleLines_Key = "ExcludeTripleLines";
-  static inline constexpr StringLiteral k_DistOutputFile_Key = "DistOutputFile";
-  static inline constexpr StringLiteral k_ErrOutputFile_Key = "ErrOutputFile";
-  static inline constexpr StringLiteral k_SaveRelativeErr_Key = "SaveRelativeErr";
-  static inline constexpr StringLiteral k_NodeTypesArrayPath_Key = "NodeTypesArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "SurfaceMeshFaceNormalsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceAreasArrayPath_Key = "SurfaceMeshFaceAreasArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceLabelsArrayPath_Key = "SurfaceMeshFeatureFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "FeatureEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
+  static inline constexpr StringLiteral k_PhaseOfInterest_Key = "phase_of_interest";
+  static inline constexpr StringLiteral k_LimitDist_Key = "limit_dist";
+  static inline constexpr StringLiteral k_NumSamplPts_Key = "num_sampl_pts";
+  static inline constexpr StringLiteral k_ExcludeTripleLines_Key = "exclude_triple_lines";
+  static inline constexpr StringLiteral k_DistOutputFile_Key = "dist_output_file";
+  static inline constexpr StringLiteral k_ErrOutputFile_Key = "err_output_file";
+  static inline constexpr StringLiteral k_SaveRelativeErr_Key = "save_relative_err";
+  static inline constexpr StringLiteral k_NodeTypesArrayPath_Key = "node_types_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceAreasArrayPath_Key = "surface_mesh_face_areas_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceLabelsArrayPath_Key = "surface_mesh_feature_face_labels_array_path";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
   /**
    * @brief Returns the name of the filter.

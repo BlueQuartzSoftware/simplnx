@@ -24,32 +24,32 @@ public:
   InsertTransformationPhases& operator=(InsertTransformationPhases&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ParentPhase_Key = "ParentPhase";
-  static inline constexpr StringLiteral k_TransCrystalStruct_Key = "TransCrystalStruct";
-  static inline constexpr StringLiteral k_TransformationPhaseMisorientation_Key = "TransformationPhaseMisorientation";
-  static inline constexpr StringLiteral k_DefineHabitPlane_Key = "DefineHabitPlane";
-  static inline constexpr StringLiteral k_TransformationPhaseHabitPlane_Key = "TransformationPhaseHabitPlane";
-  static inline constexpr StringLiteral k_UseAllVariants_Key = "UseAllVariants";
-  static inline constexpr StringLiteral k_CoherentFrac_Key = "CoherentFrac";
-  static inline constexpr StringLiteral k_TransformationPhaseThickness_Key = "TransformationPhaseThickness";
-  static inline constexpr StringLiteral k_NumTransformationPhasesPerFeature_Key = "NumTransformationPhasesPerFeature";
-  static inline constexpr StringLiteral k_PeninsulaFrac_Key = "PeninsulaFrac";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "CellFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "FeatureEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "CentroidsArrayPath";
-  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "EquivalentDiametersArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_StatsGenCellEnsembleAttributeMatrixPath_Key = "StatsGenCellEnsembleAttributeMatrixPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_PhaseTypesArrayPath_Key = "PhaseTypesArrayPath";
-  static inline constexpr StringLiteral k_ShapeTypesArrayPath_Key = "ShapeTypesArrayPath";
-  static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "NumFeaturesArrayPath";
-  static inline constexpr StringLiteral k_FeatureParentIdsArrayName_Key = "FeatureParentIdsArrayName";
-  static inline constexpr StringLiteral k_NumFeaturesPerParentArrayPath_Key = "NumFeaturesPerParentArrayPath";
+  static inline constexpr StringLiteral k_ParentPhase_Key = "parent_phase";
+  static inline constexpr StringLiteral k_TransCrystalStruct_Key = "trans_crystal_struct";
+  static inline constexpr StringLiteral k_TransformationPhaseMisorientation_Key = "transformation_phase_misorientation";
+  static inline constexpr StringLiteral k_DefineHabitPlane_Key = "define_habit_plane";
+  static inline constexpr StringLiteral k_TransformationPhaseHabitPlane_Key = "transformation_phase_habit_plane";
+  static inline constexpr StringLiteral k_UseAllVariants_Key = "use_all_variants";
+  static inline constexpr StringLiteral k_CoherentFrac_Key = "coherent_frac";
+  static inline constexpr StringLiteral k_TransformationPhaseThickness_Key = "transformation_phase_thickness";
+  static inline constexpr StringLiteral k_NumTransformationPhasesPerFeature_Key = "num_transformation_phases_per_feature";
+  static inline constexpr StringLiteral k_PeninsulaFrac_Key = "peninsula_frac";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_StatsGenCellEnsembleAttributeMatrixPath_Key = "stats_gen_cell_ensemble_attribute_matrix_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_PhaseTypesArrayPath_Key = "phase_types_array_path";
+  static inline constexpr StringLiteral k_ShapeTypesArrayPath_Key = "shape_types_array_path";
+  static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "num_features_array_path";
+  static inline constexpr StringLiteral k_FeatureParentIdsArrayName_Key = "feature_parent_ids_array_name";
+  static inline constexpr StringLiteral k_NumFeaturesPerParentArrayPath_Key = "num_features_per_parent_array_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,21 +24,21 @@ public:
   WritePoleFigure& operator=(WritePoleFigure&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Title_Key = "Title";
-  static inline constexpr StringLiteral k_GenerationAlgorithm_Key = "GenerationAlgorithm";
-  static inline constexpr StringLiteral k_LambertSize_Key = "LambertSize";
-  static inline constexpr StringLiteral k_NumColors_Key = "NumColors";
-  static inline constexpr StringLiteral k_ImageFormat_Key = "ImageFormat";
-  static inline constexpr StringLiteral k_ImageLayout_Key = "ImageLayout";
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_ImagePrefix_Key = "ImagePrefix";
-  static inline constexpr StringLiteral k_ImageSize_Key = "ImageSize";
-  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "UseGoodVoxels";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_MaterialNameArrayPath_Key = "MaterialNameArrayPath";
+  static inline constexpr StringLiteral k_Title_Key = "title";
+  static inline constexpr StringLiteral k_GenerationAlgorithm_Key = "generation_algorithm";
+  static inline constexpr StringLiteral k_LambertSize_Key = "lambert_size";
+  static inline constexpr StringLiteral k_NumColors_Key = "num_colors";
+  static inline constexpr StringLiteral k_ImageFormat_Key = "image_format";
+  static inline constexpr StringLiteral k_ImageLayout_Key = "image_layout";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_ImagePrefix_Key = "image_prefix";
+  static inline constexpr StringLiteral k_ImageSize_Key = "image_size";
+  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_MaterialNameArrayPath_Key = "material_name_array_path";
 
   /**
    * @brief Returns the name of the filter.

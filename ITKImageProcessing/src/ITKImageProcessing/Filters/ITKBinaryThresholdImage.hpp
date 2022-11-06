@@ -39,13 +39,13 @@ public:
   ITKBinaryThresholdImage& operator=(ITKBinaryThresholdImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_LowerThreshold_Key = "LowerThreshold";
-  static inline constexpr StringLiteral k_UpperThreshold_Key = "UpperThreshold";
-  static inline constexpr StringLiteral k_InsideValue_Key = "InsideValue";
-  static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_LowerThreshold_Key = "lower_threshold";
+  static inline constexpr StringLiteral k_UpperThreshold_Key = "upper_threshold";
+  static inline constexpr StringLiteral k_InsideValue_Key = "inside_value";
+  static inline constexpr StringLiteral k_OutsideValue_Key = "outside_value";
 
   /**
    * @brief Returns the name of the filter.

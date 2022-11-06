@@ -48,7 +48,7 @@ TEST_CASE("SimulationIO::ExportDAMASKFiles: Instantiation and Parameter Check", 
   args.insertOrAssign(ExportDAMASKFiles::k_GeometryFileName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
   args.insertOrAssign(ExportDAMASKFiles::k_HomogenizationIndex_Key, std::make_any<int32>(1234356));
   args.insertOrAssign(ExportDAMASKFiles::k_CompressGeomFile_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ExportDAMASKFiles::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExportDAMASKFiles::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ExportDAMASKFiles::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(ExportDAMASKFiles::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 

@@ -24,11 +24,11 @@ public:
   ScaleVolume& operator=(ScaleVolume&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ScaleFactor_Key = "ScaleFactor";
-  static inline constexpr StringLiteral k_ApplyToVoxelVolume_Key = "ApplyToVoxelVolume";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_ApplyToSurfaceMesh_Key = "ApplyToSurfaceMesh";
-  static inline constexpr StringLiteral k_SurfaceDataContainerName_Key = "SurfaceDataContainerName";
+  static inline constexpr StringLiteral k_ScaleFactor_Key = "scale_factor";
+  static inline constexpr StringLiteral k_ApplyToVoxelVolume_Key = "apply_to_voxel_volume";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_ApplyToSurfaceMesh_Key = "apply_to_surface_mesh";
+  static inline constexpr StringLiteral k_SurfaceDataContainerName_Key = "surface_data_container_name";
 
   /**
    * @brief Returns the name of the filter.

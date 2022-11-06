@@ -24,8 +24,8 @@ public:
   NearestPointFuseRegularGrids& operator=(NearestPointFuseRegularGrids&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ReferenceCellAttributeMatrixPath_Key = "ReferenceCellAttributeMatrixPath";
-  static inline constexpr StringLiteral k_SamplingCellAttributeMatrixPath_Key = "SamplingCellAttributeMatrixPath";
+  static inline constexpr StringLiteral k_ReferenceCellAttributeMatrixPath_Key = "reference_cell_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SamplingCellAttributeMatrixPath_Key = "sampling_cell_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

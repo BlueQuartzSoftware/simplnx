@@ -24,12 +24,12 @@ public:
   DxReader& operator=(DxReader&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_VolumeDataContainerName_Key = "VolumeDataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_VolumeDataContainerName_Key = "volume_data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
 
   /**
    * @brief Returns the name of the filter.

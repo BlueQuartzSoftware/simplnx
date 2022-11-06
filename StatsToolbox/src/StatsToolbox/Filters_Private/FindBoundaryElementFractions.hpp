@@ -24,9 +24,9 @@ public:
   FindBoundaryElementFractions& operator=(FindBoundaryElementFractions&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_BoundaryCellsArrayPath_Key = "BoundaryCellsArrayPath";
-  static inline constexpr StringLiteral k_BoundaryCellFractionsArrayPath_Key = "BoundaryCellFractionsArrayPath";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_BoundaryCellsArrayPath_Key = "boundary_cells_array_path";
+  static inline constexpr StringLiteral k_BoundaryCellFractionsArrayPath_Key = "boundary_cell_fractions_array_path";
 
   /**
    * @brief Returns the name of the filter.

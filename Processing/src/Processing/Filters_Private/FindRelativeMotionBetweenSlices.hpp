@@ -24,14 +24,14 @@ public:
   FindRelativeMotionBetweenSlices& operator=(FindRelativeMotionBetweenSlices&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Plane_Key = "Plane";
-  static inline constexpr StringLiteral k_PSize1_Key = "PSize1";
-  static inline constexpr StringLiteral k_PSize2_Key = "PSize2";
-  static inline constexpr StringLiteral k_SSize1_Key = "SSize1";
-  static inline constexpr StringLiteral k_SSize2_Key = "SSize2";
-  static inline constexpr StringLiteral k_SliceStep_Key = "SliceStep";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_MotionDirectionArrayName_Key = "MotionDirectionArrayName";
+  static inline constexpr StringLiteral k_Plane_Key = "plane";
+  static inline constexpr StringLiteral k_PSize1_Key = "p_size1";
+  static inline constexpr StringLiteral k_PSize2_Key = "p_size2";
+  static inline constexpr StringLiteral k_SSize1_Key = "s_size1";
+  static inline constexpr StringLiteral k_SSize2_Key = "s_size2";
+  static inline constexpr StringLiteral k_SliceStep_Key = "slice_step";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_MotionDirectionArrayName_Key = "motion_direction_array_name";
 
   /**
    * @brief Returns the name of the filter.

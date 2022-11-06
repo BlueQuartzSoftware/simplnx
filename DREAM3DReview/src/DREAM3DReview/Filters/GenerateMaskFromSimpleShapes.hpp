@@ -24,13 +24,13 @@ public:
   GenerateMaskFromSimpleShapes& operator=(GenerateMaskFromSimpleShapes&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MaskShape_Key = "MaskShape";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_CentersArrayPath_Key = "CentersArrayPath";
-  static inline constexpr StringLiteral k_AxesLengthArrayPath_Key = "AxesLengthArrayPath";
-  static inline constexpr StringLiteral k_BoxDimensionsArrayPath_Key = "BoxDimensionsArrayPath";
-  static inline constexpr StringLiteral k_CylinderRadiusArrayPath_Key = "CylinderRadiusArrayPath";
-  static inline constexpr StringLiteral k_CylinderHeightArrayPath_Key = "CylinderHeightArrayPath";
+  static inline constexpr StringLiteral k_MaskShape_Key = "mask_shape";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_CentersArrayPath_Key = "centers_array_path";
+  static inline constexpr StringLiteral k_AxesLengthArrayPath_Key = "axes_length_array_path";
+  static inline constexpr StringLiteral k_BoxDimensionsArrayPath_Key = "box_dimensions_array_path";
+  static inline constexpr StringLiteral k_CylinderRadiusArrayPath_Key = "cylinder_radius_array_path";
+  static inline constexpr StringLiteral k_CylinderHeightArrayPath_Key = "cylinder_height_array_path";
 
   /**
    * @brief Returns the name of the filter.

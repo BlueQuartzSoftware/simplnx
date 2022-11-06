@@ -24,11 +24,11 @@ public:
   EnsembleInfoReader& operator=(EnsembleInfoReader&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "CellEnsembleAttributeMatrixName";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayName_Key = "CrystalStructuresArrayName";
-  static inline constexpr StringLiteral k_PhaseTypesArrayName_Key = "PhaseTypesArrayName";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayName_Key = "crystal_structures_array_name";
+  static inline constexpr StringLiteral k_PhaseTypesArrayName_Key = "phase_types_array_name";
 
   /**
    * @brief Returns the name of the filter.

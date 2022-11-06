@@ -24,15 +24,15 @@ public:
   VMFillLevelSetWithTetrahedra& operator=(VMFillLevelSetWithTetrahedra&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_AutoDetectFeatures_Key = "AutoDetectFeatures";
-  static inline constexpr StringLiteral k_AngleThreshold_Key = "AngleThreshold";
-  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "TriangleDataContainerName";
-  static inline constexpr StringLiteral k_LevelSetArrayPath_Key = "LevelSetArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_TetrahedralDataContainerName_Key = "TetrahedralDataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_TetFeatureIdsName_Key = "TetFeatureIdsName";
+  static inline constexpr StringLiteral k_AutoDetectFeatures_Key = "auto_detect_features";
+  static inline constexpr StringLiteral k_AngleThreshold_Key = "angle_threshold";
+  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "triangle_data_container_name";
+  static inline constexpr StringLiteral k_LevelSetArrayPath_Key = "level_set_array_path";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_TetrahedralDataContainerName_Key = "tetrahedral_data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_TetFeatureIdsName_Key = "tet_feature_ids_name";
 
   /**
    * @brief Returns the name of the filter.

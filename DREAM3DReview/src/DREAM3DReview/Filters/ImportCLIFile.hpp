@@ -24,12 +24,12 @@ public:
   ImportCLIFile& operator=(ImportCLIFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CLIFile_Key = "CLIFile";
-  static inline constexpr StringLiteral k_EdgeDataContainerName_Key = "EdgeDataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "EdgeAttributeMatrixName";
-  static inline constexpr StringLiteral k_LayerIdsArrayName_Key = "LayerIdsArrayName";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
+  static inline constexpr StringLiteral k_CLIFile_Key = "c_li_file";
+  static inline constexpr StringLiteral k_EdgeDataContainerName_Key = "edge_data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
+  static inline constexpr StringLiteral k_LayerIdsArrayName_Key = "layer_ids_array_name";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
 
   /**
    * @brief Returns the name of the filter.

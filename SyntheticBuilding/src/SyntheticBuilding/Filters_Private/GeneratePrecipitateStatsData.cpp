@@ -165,7 +165,7 @@ IFilter::PreflightResult GeneratePrecipitateStatsData::preflightImpl(const DataS
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
   // These values should have been updated during the preflightImpl(...) method
-  preflightUpdatedValues.push_back({"NumberOfBins", numberOfBins});
+  preflightUpdatedValues.push_back({"number_of_bins", numberOfBins});
   preflightUpdatedValues.push_back({"FeatureESD", featureESD});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

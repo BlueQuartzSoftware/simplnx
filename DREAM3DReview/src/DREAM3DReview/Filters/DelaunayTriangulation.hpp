@@ -24,14 +24,14 @@ public:
   DelaunayTriangulation& operator=(DelaunayTriangulation&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Offset_Key = "Offset";
-  static inline constexpr StringLiteral k_Tolerance_Key = "Tolerance";
-  static inline constexpr StringLiteral k_TriangulateByFeature_Key = "TriangulateByFeature";
-  static inline constexpr StringLiteral k_InputGeometry_Key = "InputGeometry";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "TriangleDataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "FaceAttributeMatrixName";
+  static inline constexpr StringLiteral k_Offset_Key = "offset";
+  static inline constexpr StringLiteral k_Tolerance_Key = "tolerance";
+  static inline constexpr StringLiteral k_TriangulateByFeature_Key = "triangulate_by_feature";
+  static inline constexpr StringLiteral k_InputGeometry_Key = "input_geometry";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "triangle_data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

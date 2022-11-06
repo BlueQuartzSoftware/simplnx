@@ -108,13 +108,13 @@ TEST_CASE("Core::AlignSectionsFeatureCentroidFilter: Small IN100 Pipeline", "[Re
     REQUIRE(nullptr != filter);
 
     // Parameter Keys
-    constexpr StringLiteral k_WriteAlignmentShifts_Key = "WriteAlignmentShifts";
-    constexpr StringLiteral k_AlignmentShiftFileName_Key = "AlignmentShiftFileName";
-    constexpr StringLiteral k_UseReferenceSlice_Key = "UseReferenceSlice";
-    constexpr StringLiteral k_ReferenceSlice_Key = "ReferenceSlice";
-    constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
-    constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometryPath";
-    constexpr StringLiteral k_SelectedCellDataGroup_Key = "SelectedCellDataPath";
+    constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
+    constexpr StringLiteral k_AlignmentShiftFileName_Key = "alignment_shift_file_name";
+    constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
+    constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
+    constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
+    constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
+    constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
     Arguments args;
     // Create default Parameters for the filter.

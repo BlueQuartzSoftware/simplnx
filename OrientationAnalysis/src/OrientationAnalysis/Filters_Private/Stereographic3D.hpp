@@ -24,8 +24,8 @@ public:
   Stereographic3D& operator=(Stereographic3D&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_CoordinatesArrayName_Key = "CoordinatesArrayName";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_CoordinatesArrayName_Key = "coordinates_array_name";
 
   /**
    * @brief Returns the name of the filter.

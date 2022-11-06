@@ -39,7 +39,7 @@ TEST_CASE("VolumeMeshing::FindFeatureSignedDistanceFields: Instantiation and Par
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindFeatureSignedDistanceFields::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureSignedDistanceFields::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeatureSignedDistanceFields::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeatureSignedDistanceFields::k_SignedDistanceFieldsPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 

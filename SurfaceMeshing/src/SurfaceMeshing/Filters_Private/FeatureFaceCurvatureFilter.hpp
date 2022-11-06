@@ -24,22 +24,22 @@ public:
   FeatureFaceCurvatureFilter& operator=(FeatureFaceCurvatureFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NRing_Key = "NRing";
-  static inline constexpr StringLiteral k_ComputePrincipalDirectionVectors_Key = "ComputePrincipalDirectionVectors";
-  static inline constexpr StringLiteral k_ComputeGaussianCurvature_Key = "ComputeGaussianCurvature";
-  static inline constexpr StringLiteral k_ComputeMeanCurvature_Key = "ComputeMeanCurvature";
-  static inline constexpr StringLiteral k_UseNormalsForCurveFitting_Key = "UseNormalsForCurveFitting";
-  static inline constexpr StringLiteral k_FaceAttributeMatrixPath_Key = "FaceAttributeMatrixPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceIdsArrayPath_Key = "SurfaceMeshFeatureFaceIdsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "SurfaceMeshFaceNormalsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshTriangleCentroidsArrayPath_Key = "SurfaceMeshTriangleCentroidsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshPrincipalCurvature1sArrayName_Key = "SurfaceMeshPrincipalCurvature1sArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshPrincipalCurvature2sArrayName_Key = "SurfaceMeshPrincipalCurvature2sArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshPrincipalDirection1sArrayName_Key = "SurfaceMeshPrincipalDirection1sArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshPrincipalDirection2sArrayName_Key = "SurfaceMeshPrincipalDirection2sArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshGaussianCurvaturesArrayName_Key = "SurfaceMeshGaussianCurvaturesArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshMeanCurvaturesArrayName_Key = "SurfaceMeshMeanCurvaturesArrayName";
+  static inline constexpr StringLiteral k_NRing_Key = "n_ring";
+  static inline constexpr StringLiteral k_ComputePrincipalDirectionVectors_Key = "compute_principal_direction_vectors";
+  static inline constexpr StringLiteral k_ComputeGaussianCurvature_Key = "compute_gaussian_curvature";
+  static inline constexpr StringLiteral k_ComputeMeanCurvature_Key = "compute_mean_curvature";
+  static inline constexpr StringLiteral k_UseNormalsForCurveFitting_Key = "use_normals_for_curve_fitting";
+  static inline constexpr StringLiteral k_FaceAttributeMatrixPath_Key = "face_attribute_matrix_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceIdsArrayPath_Key = "surface_mesh_feature_face_ids_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshTriangleCentroidsArrayPath_Key = "surface_mesh_triangle_centroids_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshPrincipalCurvature1sArrayName_Key = "surface_mesh_principal_curvature1s_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshPrincipalCurvature2sArrayName_Key = "surface_mesh_principal_curvature2s_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshPrincipalDirection1sArrayName_Key = "surface_mesh_principal_direction1s_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshPrincipalDirection2sArrayName_Key = "surface_mesh_principal_direction2s_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshGaussianCurvaturesArrayName_Key = "surface_mesh_gaussian_curvatures_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshMeanCurvaturesArrayName_Key = "surface_mesh_mean_curvatures_array_name";
 
   /**
    * @brief Returns the name of the filter.

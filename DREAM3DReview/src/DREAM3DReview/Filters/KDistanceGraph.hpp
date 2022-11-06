@@ -24,12 +24,12 @@ public:
   KDistanceGraph& operator=(KDistanceGraph&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MinDist_Key = "MinDist";
-  static inline constexpr StringLiteral k_DistanceMetric_Key = "DistanceMetric";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_KDistanceArrayPath_Key = "KDistanceArrayPath";
+  static inline constexpr StringLiteral k_MinDist_Key = "min_dist";
+  static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_KDistanceArrayPath_Key = "k_distance_array_path";
 
   /**
    * @brief Returns the name of the filter.

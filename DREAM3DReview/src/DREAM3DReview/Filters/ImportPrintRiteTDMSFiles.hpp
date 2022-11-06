@@ -24,25 +24,25 @@ public:
   ImportPrintRiteTDMSFiles& operator=(ImportPrintRiteTDMSFiles&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_LayerThickness_Key = "LayerThickness";
-  static inline constexpr StringLiteral k_LaserOnArrayOption_Key = "LaserOnArrayOption";
-  static inline constexpr StringLiteral k_LaserOnThreshold_Key = "LaserOnThreshold";
-  static inline constexpr StringLiteral k_DowncastRawData_Key = "DowncastRawData";
-  static inline constexpr StringLiteral k_ScaleLaserPower_Key = "ScaleLaserPower";
-  static inline constexpr StringLiteral k_PowerScalingCoefficients_Key = "PowerScalingCoefficients";
-  static inline constexpr StringLiteral k_ScalePyrometerTemperature_Key = "ScalePyrometerTemperature";
-  static inline constexpr StringLiteral k_TemperatureScalingCoefficients_Key = "TemperatureScalingCoefficients";
-  static inline constexpr StringLiteral k_SpatialTransformOption_Key = "SpatialTransformOption";
-  static inline constexpr StringLiteral k_LayerForScaling_Key = "LayerForScaling";
-  static inline constexpr StringLiteral k_SearchRadius_Key = "SearchRadius";
-  static inline constexpr StringLiteral k_SplitRegions1_Key = "SplitRegions1";
-  static inline constexpr StringLiteral k_SplitRegions2_Key = "SplitRegions2";
-  static inline constexpr StringLiteral k_STLFilePath1_Key = "STLFilePath1";
-  static inline constexpr StringLiteral k_STLFilePath2_Key = "STLFilePath2";
-  static inline constexpr StringLiteral k_InputSpatialTransformFilePath_Key = "InputSpatialTransformFilePath";
-  static inline constexpr StringLiteral k_InputFilesList_Key = "InputFilesList";
-  static inline constexpr StringLiteral k_OutputDirectory_Key = "OutputDirectory";
-  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "OutputFilePrefix";
+  static inline constexpr StringLiteral k_LayerThickness_Key = "layer_thickness";
+  static inline constexpr StringLiteral k_LaserOnArrayOption_Key = "laser_on_array_option";
+  static inline constexpr StringLiteral k_LaserOnThreshold_Key = "laser_on_threshold";
+  static inline constexpr StringLiteral k_DowncastRawData_Key = "downcast_raw_data";
+  static inline constexpr StringLiteral k_ScaleLaserPower_Key = "scale_laser_power";
+  static inline constexpr StringLiteral k_PowerScalingCoefficients_Key = "power_scaling_coefficients";
+  static inline constexpr StringLiteral k_ScalePyrometerTemperature_Key = "scale_pyrometer_temperature";
+  static inline constexpr StringLiteral k_TemperatureScalingCoefficients_Key = "temperature_scaling_coefficients";
+  static inline constexpr StringLiteral k_SpatialTransformOption_Key = "spatial_transform_option";
+  static inline constexpr StringLiteral k_LayerForScaling_Key = "layer_for_scaling";
+  static inline constexpr StringLiteral k_SearchRadius_Key = "search_radius";
+  static inline constexpr StringLiteral k_SplitRegions1_Key = "split_regions1";
+  static inline constexpr StringLiteral k_SplitRegions2_Key = "split_regions2";
+  static inline constexpr StringLiteral k_STLFilePath1_Key = "s_tl_file_path1";
+  static inline constexpr StringLiteral k_STLFilePath2_Key = "s_tl_file_path2";
+  static inline constexpr StringLiteral k_InputSpatialTransformFilePath_Key = "input_spatial_transform_file_path";
+  static inline constexpr StringLiteral k_InputFilesList_Key = "input_files_list";
+  static inline constexpr StringLiteral k_OutputDirectory_Key = "output_directory";
+  static inline constexpr StringLiteral k_OutputFilePrefix_Key = "output_file_prefix";
 
   /**
    * @brief Returns the name of the filter.

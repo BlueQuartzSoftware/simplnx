@@ -24,12 +24,12 @@ public:
   Silhouette& operator=(Silhouette&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DistanceMetric_Key = "DistanceMetric";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_SilhouetteArrayPath_Key = "SilhouetteArrayPath";
+  static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_SilhouetteArrayPath_Key = "silhouette_array_path";
 
   /**
    * @brief Returns the name of the filter.

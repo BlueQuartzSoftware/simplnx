@@ -24,13 +24,13 @@ public:
   GenerateIPFColorsFilter& operator=(GenerateIPFColorsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ReferenceDir_Key = "ReferenceDir";
-  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "UseGoodVoxels";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "GoodVoxelsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_CellIPFColorsArrayName_Key = "CellIPFColorsArrayName";
+  static inline constexpr StringLiteral k_ReferenceDir_Key = "reference_dir";
+  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "good_voxels_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_CellIPFColorsArrayName_Key = "cell_ip_fcolors_array_name";
 
   /**
    * @brief Returns the name of the filter.

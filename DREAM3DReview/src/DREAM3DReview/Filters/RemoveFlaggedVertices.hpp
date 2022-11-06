@@ -24,9 +24,9 @@ public:
   RemoveFlaggedVertices& operator=(RemoveFlaggedVertices&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_VertexGeometry_Key = "VertexGeometry";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_ReducedVertexGeometry_Key = "ReducedVertexGeometry";
+  static inline constexpr StringLiteral k_VertexGeometry_Key = "vertex_geometry";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_ReducedVertexGeometry_Key = "reduced_vertex_geometry";
 
   /**
    * @brief Returns the name of the filter.

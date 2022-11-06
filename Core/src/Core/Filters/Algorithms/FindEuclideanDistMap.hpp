@@ -15,7 +15,7 @@
   inputValues.DoTripleLines = filterArgs.value<bool>(k_DoTripleLines_Key);
   inputValues.DoQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
   inputValues.SaveNearestNeighbors = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.GBDistancesArrayName = filterArgs.value<DataPath>(k_GBDistancesArrayName_Key);
   inputValues.TJDistancesArrayName = filterArgs.value<DataPath>(k_TJDistancesArrayName_Key);
   inputValues.QPDistancesArrayName = filterArgs.value<DataPath>(k_QPDistancesArrayName_Key);

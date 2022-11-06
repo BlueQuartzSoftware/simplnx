@@ -24,14 +24,14 @@ public:
   FindSlipTransmissionMetrics& operator=(FindSlipTransmissionMetrics&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "NeighborListArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_F1ListArrayName_Key = "F1ListArrayName";
-  static inline constexpr StringLiteral k_F1sptListArrayName_Key = "F1sptListArrayName";
-  static inline constexpr StringLiteral k_F7ListArrayName_Key = "F7ListArrayName";
-  static inline constexpr StringLiteral k_mPrimeListArrayName_Key = "mPrimeListArrayName";
+  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_F1ListArrayName_Key = "f1_list_array_name";
+  static inline constexpr StringLiteral k_F1sptListArrayName_Key = "f1spt_list_array_name";
+  static inline constexpr StringLiteral k_F7ListArrayName_Key = "f7_list_array_name";
+  static inline constexpr StringLiteral k_mPrimeListArrayName_Key = "m_prime_list_array_name";
 
   /**
    * @brief Returns the name of the filter.

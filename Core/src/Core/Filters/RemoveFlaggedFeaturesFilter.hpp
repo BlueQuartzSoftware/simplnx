@@ -24,11 +24,11 @@ public:
   RemoveFlaggedFeaturesFilter& operator=(RemoveFlaggedFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeometry_Key = "ImageGeometry";
-  static inline constexpr StringLiteral k_FillRemovedFeatures_Key = "FillRemovedFeatures";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FlaggedFeaturesArrayPath_Key = "FlaggedFeaturesArrayPath";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
+  static inline constexpr StringLiteral k_ImageGeometry_Key = "image_geometry";
+  static inline constexpr StringLiteral k_FillRemovedFeatures_Key = "fill_removed_features";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FlaggedFeaturesArrayPath_Key = "flagged_features_array_path";
+  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.

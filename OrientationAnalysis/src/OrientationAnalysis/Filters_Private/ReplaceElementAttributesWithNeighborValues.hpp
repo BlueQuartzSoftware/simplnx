@@ -24,10 +24,10 @@ public:
   ReplaceElementAttributesWithNeighborValues& operator=(ReplaceElementAttributesWithNeighborValues&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MinConfidence_Key = "MinConfidence";
-  static inline constexpr StringLiteral k_SelectedComparison_Key = "SelectedComparison";
-  static inline constexpr StringLiteral k_Loop_Key = "Loop";
-  static inline constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "ConfidenceIndexArrayPath";
+  static inline constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
+  static inline constexpr StringLiteral k_SelectedComparison_Key = "selected_comparison";
+  static inline constexpr StringLiteral k_Loop_Key = "loop";
+  static inline constexpr StringLiteral k_ConfidenceIndexArrayPath_Key = "confidence_index_array_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -34,10 +34,10 @@ public:
   ConvertOrientations& operator=(ConvertOrientations&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputType_Key = "InputType";
-  static inline constexpr StringLiteral k_OutputType_Key = "OutputType";
-  static inline constexpr StringLiteral k_InputOrientationArrayPath_Key = "InputOrientationArrayPath";
-  static inline constexpr StringLiteral k_OutputOrientationArrayName_Key = "OutputOrientationArrayName";
+  static inline constexpr StringLiteral k_InputType_Key = "input_type";
+  static inline constexpr StringLiteral k_OutputType_Key = "output_type";
+  static inline constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
+  static inline constexpr StringLiteral k_OutputOrientationArrayName_Key = "output_orientation_array_name";
 
   /**
    * @brief Returns the name of the filter.

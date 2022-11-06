@@ -24,9 +24,9 @@ public:
   RotateEulerRefFrameFilter& operator=(RotateEulerRefFrameFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_RotationAngle_Key = "RotationAngle";
-  static inline constexpr StringLiteral k_RotationAxis_Key = "RotationAxis";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
+  static inline constexpr StringLiteral k_RotationAngle_Key = "rotation_angle";
+  static inline constexpr StringLiteral k_RotationAxis_Key = "rotation_axis";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
 
   /**
    * @brief Returns the name of the filter.

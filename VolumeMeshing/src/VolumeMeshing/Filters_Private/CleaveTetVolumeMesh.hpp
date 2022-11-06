@@ -24,13 +24,13 @@ public:
   CleaveTetVolumeMesh& operator=(CleaveTetVolumeMesh&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SignedDistanceArrayPaths_Key = "SignedDistanceArrayPaths";
-  static inline constexpr StringLiteral k_Lipschitz_Key = "Lipschitz";
-  static inline constexpr StringLiteral k_Scale_Key = "Scale";
-  static inline constexpr StringLiteral k_Multiplier_Key = "Multiplier";
-  static inline constexpr StringLiteral k_Alpha_Key = "Alpha";
-  static inline constexpr StringLiteral k_Padding_Key = "Padding";
-  static inline constexpr StringLiteral k_AdaptiveSurface_Key = "AdaptiveSurface";
+  static inline constexpr StringLiteral k_SignedDistanceArrayPaths_Key = "signed_distance_array_paths";
+  static inline constexpr StringLiteral k_Lipschitz_Key = "lipschitz";
+  static inline constexpr StringLiteral k_Scale_Key = "scale";
+  static inline constexpr StringLiteral k_Multiplier_Key = "multiplier";
+  static inline constexpr StringLiteral k_Alpha_Key = "alpha";
+  static inline constexpr StringLiteral k_Padding_Key = "padding";
+  static inline constexpr StringLiteral k_AdaptiveSurface_Key = "adaptive_surface";
 
   /**
    * @brief Returns the name of the filter.

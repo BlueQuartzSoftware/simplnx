@@ -12,7 +12,7 @@
 
   inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   inputValues.AddSurfaceLayer = filterArgs.value<bool>(k_AddSurfaceLayer_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
 
   return DxWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
 */

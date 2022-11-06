@@ -10,7 +10,7 @@
 * This is example code to put in the Execute Method of the filter.
   FindFeatureCentroidsInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
 
   return FindFeatureCentroids(dataStructure, messageHandler, shouldCancel, &inputValues)();

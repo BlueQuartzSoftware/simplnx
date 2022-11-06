@@ -39,11 +39,11 @@ public:
   ITKLabelContourImage& operator=(ITKLabelContourImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
-  static inline constexpr StringLiteral k_BackgroundValue_Key = "BackgroundValue";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
+  static inline constexpr StringLiteral k_BackgroundValue_Key = "background_value";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,8 +24,8 @@ public:
   FindSurfaceFeatures& operator=(FindSurfaceFeatures&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "SurfaceFeaturesArrayPath";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "surface_features_array_path";
 
   /**
    * @brief Returns the name of the filter.

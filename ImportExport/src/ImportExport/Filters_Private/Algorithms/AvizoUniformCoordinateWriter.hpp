@@ -12,7 +12,7 @@
 
   inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   inputValues.WriteBinaryFile = filterArgs.value<bool>(k_WriteBinaryFile_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.Units = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
 
   return AvizoUniformCoordinateWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();

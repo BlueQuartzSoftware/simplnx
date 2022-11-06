@@ -41,16 +41,16 @@ public:
   ITKDoubleThresholdImage& operator=(ITKDoubleThresholdImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_Threshold1_Key = "Threshold1";
-  static inline constexpr StringLiteral k_Threshold2_Key = "Threshold2";
-  static inline constexpr StringLiteral k_Threshold3_Key = "Threshold3";
-  static inline constexpr StringLiteral k_Threshold4_Key = "Threshold4";
-  static inline constexpr StringLiteral k_InsideValue_Key = "InsideValue";
-  static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
-  static inline constexpr StringLiteral k_FullyConnected_Key = "FullyConnected";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_Threshold1_Key = "threshold1";
+  static inline constexpr StringLiteral k_Threshold2_Key = "threshold2";
+  static inline constexpr StringLiteral k_Threshold3_Key = "threshold3";
+  static inline constexpr StringLiteral k_Threshold4_Key = "threshold4";
+  static inline constexpr StringLiteral k_InsideValue_Key = "inside_value";
+  static inline constexpr StringLiteral k_OutsideValue_Key = "outside_value";
+  static inline constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
 
   /**
    * @brief Returns the name of the filter.

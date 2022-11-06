@@ -24,9 +24,9 @@ public:
   AlignSectionsList& operator=(AlignSectionsList&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_DREAM3DAlignmentFile_Key = "DREAM3DAlignmentFile";
-  static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "CellAttributeMatrixPath";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_DREAM3DAlignmentFile_Key = "d_re_am3_dalignment_file";
+  static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

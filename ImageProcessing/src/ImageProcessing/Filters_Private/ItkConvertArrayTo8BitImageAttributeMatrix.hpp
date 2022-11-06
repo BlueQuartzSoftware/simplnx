@@ -24,7 +24,7 @@ public:
   ItkConvertArrayTo8BitImageAttributeMatrix& operator=(ItkConvertArrayTo8BitImageAttributeMatrix&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "AttributeMatrixName";
+  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

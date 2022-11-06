@@ -10,7 +10,7 @@
 * This is example code to put in the Execute Method of the filter.
   FindSurfaceFeaturesInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.SurfaceFeaturesArrayPath = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
 
   return FindSurfaceFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();

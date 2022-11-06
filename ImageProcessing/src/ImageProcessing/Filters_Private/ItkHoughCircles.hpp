@@ -24,12 +24,12 @@ public:
   ItkHoughCircles& operator=(ItkHoughCircles&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SaveAsNewArray_Key = "SaveAsNewArray";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_NewCellArrayName_Key = "NewCellArrayName";
-  static inline constexpr StringLiteral k_MinRadius_Key = "MinRadius";
-  static inline constexpr StringLiteral k_MaxRadius_Key = "MaxRadius";
-  static inline constexpr StringLiteral k_NumberCircles_Key = "NumberCircles";
+  static inline constexpr StringLiteral k_SaveAsNewArray_Key = "save_as_new_array";
+  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static inline constexpr StringLiteral k_NewCellArrayName_Key = "new_cell_array_name";
+  static inline constexpr StringLiteral k_MinRadius_Key = "min_radius";
+  static inline constexpr StringLiteral k_MaxRadius_Key = "max_radius";
+  static inline constexpr StringLiteral k_NumberCircles_Key = "number_circles";
 
   /**
    * @brief Returns the name of the filter.

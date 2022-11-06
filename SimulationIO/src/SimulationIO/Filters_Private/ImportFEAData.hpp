@@ -24,22 +24,22 @@ public:
   ImportFEAData& operator=(ImportFEAData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FEAPackage_Key = "FEAPackage";
-  static inline constexpr StringLiteral k_odbName_Key = "odbName";
-  static inline constexpr StringLiteral k_odbFilePath_Key = "odbFilePath";
-  static inline constexpr StringLiteral k_ABQPythonCommand_Key = "ABQPythonCommand";
-  static inline constexpr StringLiteral k_InstanceName_Key = "InstanceName";
-  static inline constexpr StringLiteral k_Step_Key = "Step";
-  static inline constexpr StringLiteral k_FrameNumber_Key = "FrameNumber";
-  static inline constexpr StringLiteral k_BSAMInputFile_Key = "BSAMInputFile";
-  static inline constexpr StringLiteral k_DEFORMInputFile_Key = "DEFORMInputFile";
-  static inline constexpr StringLiteral k_DEFORMPointTrackInputFile_Key = "DEFORMPointTrackInputFile";
-  static inline constexpr StringLiteral k_ImportSingleTimeStep_Key = "ImportSingleTimeStep";
-  static inline constexpr StringLiteral k_SingleTimeStepValue_Key = "SingleTimeStepValue";
-  static inline constexpr StringLiteral k_TimeSeriesBundleName_Key = "TimeSeriesBundleName";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
+  static inline constexpr StringLiteral k_FEAPackage_Key = "f_ea_package";
+  static inline constexpr StringLiteral k_odbName_Key = "odb_name";
+  static inline constexpr StringLiteral k_odbFilePath_Key = "odb_file_path";
+  static inline constexpr StringLiteral k_ABQPythonCommand_Key = "a_bq_python_command";
+  static inline constexpr StringLiteral k_InstanceName_Key = "instance_name";
+  static inline constexpr StringLiteral k_Step_Key = "step";
+  static inline constexpr StringLiteral k_FrameNumber_Key = "frame_number";
+  static inline constexpr StringLiteral k_BSAMInputFile_Key = "b_sa_minput_file";
+  static inline constexpr StringLiteral k_DEFORMInputFile_Key = "d_ef_or_minput_file";
+  static inline constexpr StringLiteral k_DEFORMPointTrackInputFile_Key = "d_ef_or_mpoint_track_input_file";
+  static inline constexpr StringLiteral k_ImportSingleTimeStep_Key = "import_single_time_step";
+  static inline constexpr StringLiteral k_SingleTimeStepValue_Key = "single_time_step_value";
+  static inline constexpr StringLiteral k_TimeSeriesBundleName_Key = "time_series_bundle_name";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

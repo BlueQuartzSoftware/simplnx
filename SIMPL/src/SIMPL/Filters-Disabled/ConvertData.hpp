@@ -24,9 +24,9 @@ public:
   ConvertData& operator=(ConvertData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ScalarType_Key = "ScalarType";
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_OutputArrayName_Key = "OutputArrayName";
+  static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type";
+  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static inline constexpr StringLiteral k_OutputArrayName_Key = "output_array_name";
 
   /**
    * @brief Returns the name of the filter.

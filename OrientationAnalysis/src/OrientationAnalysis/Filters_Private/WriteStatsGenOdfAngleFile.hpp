@@ -24,15 +24,15 @@ public:
   WriteStatsGenOdfAngleFile& operator=(WriteStatsGenOdfAngleFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputFile_Key = "OutputFile";
-  static inline constexpr StringLiteral k_Weight_Key = "Weight";
-  static inline constexpr StringLiteral k_Sigma_Key = "Sigma";
-  static inline constexpr StringLiteral k_Delimiter_Key = "Delimiter";
-  static inline constexpr StringLiteral k_ConvertToDegrees_Key = "ConvertToDegrees";
-  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "UseGoodVoxels";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "GoodVoxelsArrayPath";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static inline constexpr StringLiteral k_Weight_Key = "weight";
+  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
+  static inline constexpr StringLiteral k_Delimiter_Key = "delimiter";
+  static inline constexpr StringLiteral k_ConvertToDegrees_Key = "convert_to_degrees";
+  static inline constexpr StringLiteral k_UseGoodVoxels_Key = "use_good_voxels";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_GoodVoxelsArrayPath_Key = "good_voxels_array_path";
 
   /**
    * @brief Returns the name of the filter.

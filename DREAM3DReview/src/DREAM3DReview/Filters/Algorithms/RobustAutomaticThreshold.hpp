@@ -12,7 +12,7 @@
 
   inputValues.InputArrayPath = filterArgs.value<DataPath>(k_InputArrayPath_Key);
   inputValues.GradientMagnitudeArrayPath = filterArgs.value<DataPath>(k_GradientMagnitudeArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
 
   return RobustAutomaticThreshold(dataStructure, messageHandler, shouldCancel, &inputValues)();
 */

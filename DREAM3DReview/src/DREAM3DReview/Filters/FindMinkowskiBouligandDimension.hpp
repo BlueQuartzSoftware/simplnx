@@ -24,9 +24,9 @@ public:
   FindMinkowskiBouligandDimension& operator=(FindMinkowskiBouligandDimension&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "AttributeMatrixName";
-  static inline constexpr StringLiteral k_MinkowskiBouligandDimensionArrayName_Key = "MinkowskiBouligandDimensionArrayName";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "attribute_matrix_name";
+  static inline constexpr StringLiteral k_MinkowskiBouligandDimensionArrayName_Key = "minkowski_bouligand_dimension_array_name";
 
   /**
    * @brief Returns the name of the filter.

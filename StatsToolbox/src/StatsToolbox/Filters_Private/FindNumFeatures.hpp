@@ -24,8 +24,8 @@ public:
   FindNumFeatures& operator=(FindNumFeatures&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "NumFeaturesArrayPath";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "num_features_array_path";
 
   /**
    * @brief Returns the name of the filter.

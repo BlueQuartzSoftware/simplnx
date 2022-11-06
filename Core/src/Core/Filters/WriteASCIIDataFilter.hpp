@@ -39,12 +39,12 @@ public:
   };
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputStyle_Key = "OutputStyle";
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_FileExtension_Key = "FileExtension";
-  static inline constexpr StringLiteral k_MaxValPerLine_Key = "MaxValPerLine";
-  static inline constexpr StringLiteral k_Delimiter_Key = "Delimiter";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
+  static inline constexpr StringLiteral k_OutputStyle_Key = "output_style";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_FileExtension_Key = "file_extension";
+  static inline constexpr StringLiteral k_MaxValPerLine_Key = "max_val_per_line";
+  static inline constexpr StringLiteral k_Delimiter_Key = "delimiter";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.

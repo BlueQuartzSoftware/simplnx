@@ -24,16 +24,16 @@ public:
   FindFeatureReferenceMisorientationsFilter& operator=(FindFeatureReferenceMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ReferenceOrientation_Key = "ReferenceOrientation";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_GBEuclideanDistancesArrayPath_Key = "GBEuclideanDistancesArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_FeatureReferenceMisorientationsArrayName_Key = "FeatureReferenceMisorientationsArrayName";
-  static inline constexpr StringLiteral k_FeatureAvgMisorientationsArrayName_Key = "FeatureAvgMisorientationsArrayName";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "CellFeatureAttributeMatrixPath";
+  static inline constexpr StringLiteral k_ReferenceOrientation_Key = "reference_orientation";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_GBEuclideanDistancesArrayPath_Key = "g_beuclidean_distances_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_FeatureReferenceMisorientationsArrayName_Key = "feature_reference_misorientations_array_name";
+  static inline constexpr StringLiteral k_FeatureAvgMisorientationsArrayName_Key = "feature_avg_misorientations_array_name";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,26 +24,26 @@ public:
   GeneratePrecipitateStatsData& operator=(GeneratePrecipitateStatsData&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PhaseName_Key = "PhaseName";
-  static inline constexpr StringLiteral k_CrystalSymmetry_Key = "CrystalSymmetry";
-  static inline constexpr StringLiteral k_MicroPresetModel_Key = "MicroPresetModel";
-  static inline constexpr StringLiteral k_PhaseFraction_Key = "PhaseFraction";
-  static inline constexpr StringLiteral k_Mu_Key = "Mu";
-  static inline constexpr StringLiteral k_Sigma_Key = "Sigma";
-  static inline constexpr StringLiteral k_MinCutOff_Key = "MinCutOff";
-  static inline constexpr StringLiteral k_MaxCutOff_Key = "MaxCutOff";
-  static inline constexpr StringLiteral k_BinStepSize_Key = "BinStepSize";
-  static inline constexpr StringLiteral k_OdfData_Key = "OdfData";
-  static inline constexpr StringLiteral k_MdfData_Key = "MdfData";
-  static inline constexpr StringLiteral k_AxisOdfData_Key = "AxisOdfData";
-  static inline constexpr StringLiteral k_RdfMinMaxDistance_Key = "RdfMinMaxDistance";
-  static inline constexpr StringLiteral k_RdfNumBins_Key = "RdfNumBins";
-  static inline constexpr StringLiteral k_RdfBoxSize_Key = "RdfBoxSize";
-  static inline constexpr StringLiteral k_CreateEnsembleAttributeMatrix_Key = "CreateEnsembleAttributeMatrix";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "CellEnsembleAttributeMatrixName";
-  static inline constexpr StringLiteral k_AppendToExistingAttributeMatrix_Key = "AppendToExistingAttributeMatrix";
-  static inline constexpr StringLiteral k_SelectedEnsembleAttributeMatrix_Key = "SelectedEnsembleAttributeMatrix";
+  static inline constexpr StringLiteral k_PhaseName_Key = "phase_name";
+  static inline constexpr StringLiteral k_CrystalSymmetry_Key = "crystal_symmetry";
+  static inline constexpr StringLiteral k_MicroPresetModel_Key = "micro_preset_model";
+  static inline constexpr StringLiteral k_PhaseFraction_Key = "phase_fraction";
+  static inline constexpr StringLiteral k_Mu_Key = "mu";
+  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
+  static inline constexpr StringLiteral k_MinCutOff_Key = "min_cut_off";
+  static inline constexpr StringLiteral k_MaxCutOff_Key = "max_cut_off";
+  static inline constexpr StringLiteral k_BinStepSize_Key = "bin_step_size";
+  static inline constexpr StringLiteral k_OdfData_Key = "odf_data";
+  static inline constexpr StringLiteral k_MdfData_Key = "mdf_data";
+  static inline constexpr StringLiteral k_AxisOdfData_Key = "axis_odf_data";
+  static inline constexpr StringLiteral k_RdfMinMaxDistance_Key = "rdf_min_max_distance";
+  static inline constexpr StringLiteral k_RdfNumBins_Key = "rdf_num_bins";
+  static inline constexpr StringLiteral k_RdfBoxSize_Key = "rdf_box_size";
+  static inline constexpr StringLiteral k_CreateEnsembleAttributeMatrix_Key = "create_ensemble_attribute_matrix";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_AppendToExistingAttributeMatrix_Key = "append_to_existing_attribute_matrix";
+  static inline constexpr StringLiteral k_SelectedEnsembleAttributeMatrix_Key = "selected_ensemble_attribute_matrix";
 
   /**
    * @brief Returns the name of the filter.

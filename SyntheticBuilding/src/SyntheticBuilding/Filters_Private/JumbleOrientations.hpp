@@ -24,11 +24,11 @@ public:
   JumbleOrientations& operator=(JumbleOrientations&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "FeatureEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayName_Key = "CellEulerAnglesArrayName";
-  static inline constexpr StringLiteral k_AvgQuatsArrayName_Key = "AvgQuatsArrayName";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayName_Key = "cell_euler_angles_array_name";
+  static inline constexpr StringLiteral k_AvgQuatsArrayName_Key = "avg_quats_array_name";
 
   /**
    * @brief Returns the name of the filter.

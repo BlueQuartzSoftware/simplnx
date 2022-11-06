@@ -24,8 +24,8 @@ public:
   ExportLAMMPSFile& operator=(ExportLAMMPSFile&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_LammpsFile_Key = "LammpsFile";
-  static inline constexpr StringLiteral k_AtomFeatureLabelsPath_Key = "AtomFeatureLabelsPath";
+  static inline constexpr StringLiteral k_LammpsFile_Key = "lammps_file";
+  static inline constexpr StringLiteral k_AtomFeatureLabelsPath_Key = "atom_feature_labels_path";
 
   /**
    * @brief Returns the name of the filter.

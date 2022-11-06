@@ -24,13 +24,13 @@ public:
   ComputeMomentInvariants2D& operator=(ComputeMomentInvariants2D&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FeatureRectArrayPath_Key = "FeatureRectArrayPath";
-  static inline constexpr StringLiteral k_NormalizeMomentInvariants_Key = "NormalizeMomentInvariants";
-  static inline constexpr StringLiteral k_Omega1ArrayPath_Key = "Omega1ArrayPath";
-  static inline constexpr StringLiteral k_Omega2ArrayPath_Key = "Omega2ArrayPath";
-  static inline constexpr StringLiteral k_SaveCentralMoments_Key = "SaveCentralMoments";
-  static inline constexpr StringLiteral k_CentralMomentsArrayPath_Key = "CentralMomentsArrayPath";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeatureRectArrayPath_Key = "feature_rect_array_path";
+  static inline constexpr StringLiteral k_NormalizeMomentInvariants_Key = "normalize_moment_invariants";
+  static inline constexpr StringLiteral k_Omega1ArrayPath_Key = "omega1_array_path";
+  static inline constexpr StringLiteral k_Omega2ArrayPath_Key = "omega2_array_path";
+  static inline constexpr StringLiteral k_SaveCentralMoments_Key = "save_central_moments";
+  static inline constexpr StringLiteral k_CentralMomentsArrayPath_Key = "central_moments_array_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,16 +24,16 @@ public:
   FindCSLBoundaries& operator=(FindCSLBoundaries&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CSL_Key = "CSL";
-  static inline constexpr StringLiteral k_AxisTolerance_Key = "AxisTolerance";
-  static inline constexpr StringLiteral k_AngleTolerance_Key = "AngleTolerance";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "SurfaceMeshFaceNormalsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshCSLBoundaryArrayName_Key = "SurfaceMeshCSLBoundaryArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshCSLBoundaryIncoherenceArrayName_Key = "SurfaceMeshCSLBoundaryIncoherenceArrayName";
+  static inline constexpr StringLiteral k_CSL_Key = "c_sl";
+  static inline constexpr StringLiteral k_AxisTolerance_Key = "axis_tolerance";
+  static inline constexpr StringLiteral k_AngleTolerance_Key = "angle_tolerance";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshCSLBoundaryArrayName_Key = "surface_mesh_cs_lboundary_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshCSLBoundaryIncoherenceArrayName_Key = "surface_mesh_cs_lboundary_incoherence_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,12 +24,12 @@ public:
   ITKImportImageStack& operator=(ITKImportImageStack&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFileListInfo_Key = "InputFileListInfo";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "ImageGeometryPath";
-  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "ImageDataArrayPath";
-  static inline constexpr StringLiteral k_CellDataName_Key = "CellDataName";
+  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_info";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_path";
+  static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
 
   /**
    * @brief Returns the name of the filter.

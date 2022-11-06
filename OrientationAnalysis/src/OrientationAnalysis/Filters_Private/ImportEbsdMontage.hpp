@@ -24,15 +24,15 @@ public:
   ImportEbsdMontage& operator=(ImportEbsdMontage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFileListInfo_Key = "InputFileListInfo";
-  static inline constexpr StringLiteral k_MontageName_Key = "MontageName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "CellEnsembleAttributeMatrixName";
-  static inline constexpr StringLiteral k_DefineScanOverlap_Key = "DefineScanOverlap";
-  static inline constexpr StringLiteral k_ScanOverlapPixel_Key = "ScanOverlapPixel";
-  static inline constexpr StringLiteral k_ScanOverlapPercent_Key = "ScanOverlapPercent";
-  static inline constexpr StringLiteral k_GenerateIPFColorMap_Key = "GenerateIPFColorMap";
-  static inline constexpr StringLiteral k_CellIPFColorsArrayName_Key = "CellIPFColorsArrayName";
+  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_info";
+  static inline constexpr StringLiteral k_MontageName_Key = "montage_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_DefineScanOverlap_Key = "define_scan_overlap";
+  static inline constexpr StringLiteral k_ScanOverlapPixel_Key = "scan_overlap_pixel";
+  static inline constexpr StringLiteral k_ScanOverlapPercent_Key = "scan_overlap_percent";
+  static inline constexpr StringLiteral k_GenerateIPFColorMap_Key = "generate_ip_fcolor_map";
+  static inline constexpr StringLiteral k_CellIPFColorsArrayName_Key = "cell_ip_fcolors_array_name";
 
   /**
    * @brief Returns the name of the filter.

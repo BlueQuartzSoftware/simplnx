@@ -24,13 +24,13 @@ public:
   FindProjectedImageStatistics& operator=(FindProjectedImageStatistics&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Plane_Key = "Plane";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_ProjectedImageMinArrayName_Key = "ProjectedImageMinArrayName";
-  static inline constexpr StringLiteral k_ProjectedImageMaxArrayName_Key = "ProjectedImageMaxArrayName";
-  static inline constexpr StringLiteral k_ProjectedImageAvgArrayName_Key = "ProjectedImageAvgArrayName";
-  static inline constexpr StringLiteral k_ProjectedImageStdArrayName_Key = "ProjectedImageStdArrayName";
-  static inline constexpr StringLiteral k_ProjectedImageVarArrayName_Key = "ProjectedImageVarArrayName";
+  static inline constexpr StringLiteral k_Plane_Key = "plane";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_ProjectedImageMinArrayName_Key = "projected_image_min_array_name";
+  static inline constexpr StringLiteral k_ProjectedImageMaxArrayName_Key = "projected_image_max_array_name";
+  static inline constexpr StringLiteral k_ProjectedImageAvgArrayName_Key = "projected_image_avg_array_name";
+  static inline constexpr StringLiteral k_ProjectedImageStdArrayName_Key = "projected_image_std_array_name";
+  static inline constexpr StringLiteral k_ProjectedImageVarArrayName_Key = "projected_image_var_array_name";
 
   /**
    * @brief Returns the name of the filter.

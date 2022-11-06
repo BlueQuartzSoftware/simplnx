@@ -24,9 +24,9 @@ public:
   WriteTriangleGeometry& operator=(WriteTriangleGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputNodesFile_Key = "OutputNodesFile";
-  static inline constexpr StringLiteral k_OutputTrianglesFile_Key = "OutputTrianglesFile";
-  static inline constexpr StringLiteral k_DataContainerSelection_Key = "DataContainerSelection";
+  static inline constexpr StringLiteral k_OutputNodesFile_Key = "output_nodes_file";
+  static inline constexpr StringLiteral k_OutputTrianglesFile_Key = "output_triangles_file";
+  static inline constexpr StringLiteral k_DataContainerSelection_Key = "data_container_selection";
 
   /**
    * @brief Returns the name of the filter.

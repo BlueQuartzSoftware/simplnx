@@ -24,14 +24,14 @@ public:
   RegularGridSampleSurfaceMesh& operator=(RegularGridSampleSurfaceMesh&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_Dimensions_Key = "Dimensions";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_Origin_Key = "Origin";
-  static inline constexpr StringLiteral k_LengthUnit_Key = "LengthUnit";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
 
   /**
    * @brief Returns the name of the filter.

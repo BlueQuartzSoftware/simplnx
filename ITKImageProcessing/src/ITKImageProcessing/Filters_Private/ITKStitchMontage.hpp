@@ -24,13 +24,13 @@ public:
   ITKStitchMontage& operator=(ITKStitchMontage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MontageSelection_Key = "MontageSelection";
-  static inline constexpr StringLiteral k_CommonAttributeMatrixName_Key = "CommonAttributeMatrixName";
-  static inline constexpr StringLiteral k_CommonDataArrayName_Key = "CommonDataArrayName";
-  static inline constexpr StringLiteral k_MontageDataContainerName_Key = "MontageDataContainerName";
-  static inline constexpr StringLiteral k_MontageAttributeMatrixName_Key = "MontageAttributeMatrixName";
-  static inline constexpr StringLiteral k_MontageDataArrayName_Key = "MontageDataArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_MontageSelection_Key = "montage_selection";
+  static inline constexpr StringLiteral k_CommonAttributeMatrixName_Key = "common_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CommonDataArrayName_Key = "common_data_array_name";
+  static inline constexpr StringLiteral k_MontageDataContainerName_Key = "montage_data_container_name";
+  static inline constexpr StringLiteral k_MontageAttributeMatrixName_Key = "montage_attribute_matrix_name";
+  static inline constexpr StringLiteral k_MontageDataArrayName_Key = "montage_data_array_name";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,9 +24,9 @@ public:
   SampleSurfaceMeshSpecifiedPoints& operator=(SampleSurfaceMeshSpecifiedPoints&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_InputFilePath_Key = "InputFilePath";
-  static inline constexpr StringLiteral k_OutputFilePath_Key = "OutputFilePath";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_InputFilePath_Key = "input_file_path";
+  static inline constexpr StringLiteral k_OutputFilePath_Key = "output_file_path";
 
   /**
    * @brief Returns the name of the filter.

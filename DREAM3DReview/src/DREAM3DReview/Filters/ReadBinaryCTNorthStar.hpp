@@ -24,14 +24,14 @@ public:
   ReadBinaryCTNorthStar& operator=(ReadBinaryCTNorthStar&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputHeaderFile_Key = "InputHeaderFile";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_DensityArrayName_Key = "DensityArrayName";
-  static inline constexpr StringLiteral k_LengthUnit_Key = "LengthUnit";
-  static inline constexpr StringLiteral k_ImportSubvolume_Key = "ImportSubvolume";
-  static inline constexpr StringLiteral k_StartVoxelCoord_Key = "StartVoxelCoord";
-  static inline constexpr StringLiteral k_EndVoxelCoord_Key = "EndVoxelCoord";
+  static inline constexpr StringLiteral k_InputHeaderFile_Key = "input_header_file";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+  static inline constexpr StringLiteral k_ImportSubvolume_Key = "import_subvolume";
+  static inline constexpr StringLiteral k_StartVoxelCoord_Key = "start_voxel_coord";
+  static inline constexpr StringLiteral k_EndVoxelCoord_Key = "end_voxel_coord";
 
   /**
    * @brief Returns the name of the filter.

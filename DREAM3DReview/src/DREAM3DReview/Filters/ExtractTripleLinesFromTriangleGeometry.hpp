@@ -24,12 +24,12 @@ public:
   ExtractTripleLinesFromTriangleGeometry& operator=(ExtractTripleLinesFromTriangleGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SmoothTripleLines_Key = "SmoothTripleLines";
-  static inline constexpr StringLiteral k_NodeTypesArrayPath_Key = "NodeTypesArrayPath";
-  static inline constexpr StringLiteral k_EdgeGeometry_Key = "EdgeGeometry";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_NodeTypesArrayName_Key = "NodeTypesArrayName";
-  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "EdgeAttributeMatrixName";
+  static inline constexpr StringLiteral k_SmoothTripleLines_Key = "smooth_triple_lines";
+  static inline constexpr StringLiteral k_NodeTypesArrayPath_Key = "node_types_array_path";
+  static inline constexpr StringLiteral k_EdgeGeometry_Key = "edge_geometry";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_NodeTypesArrayName_Key = "node_types_array_name";
+  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

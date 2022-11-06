@@ -54,13 +54,13 @@ public:
   ITKThresholdMaximumConnectedComponentsImage& operator=(ITKThresholdMaximumConnectedComponentsImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_MinimumObjectSizeInPixels_Key = "MinimumObjectSizeInPixels";
-  static inline constexpr StringLiteral k_UpperBoundary_Key = "UpperBoundary";
-  static inline constexpr StringLiteral k_InsideValue_Key = "InsideValue";
-  static inline constexpr StringLiteral k_OutsideValue_Key = "OutsideValue";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_MinimumObjectSizeInPixels_Key = "minimum_object_size_in_pixels";
+  static inline constexpr StringLiteral k_UpperBoundary_Key = "upper_boundary";
+  static inline constexpr StringLiteral k_InsideValue_Key = "inside_value";
+  static inline constexpr StringLiteral k_OutsideValue_Key = "outside_value";
 
   /**
    * @brief Returns the name of the filter.

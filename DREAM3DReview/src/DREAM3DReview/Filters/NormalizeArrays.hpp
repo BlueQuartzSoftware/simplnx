@@ -24,14 +24,14 @@ public:
   NormalizeArrays& operator=(NormalizeArrays&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NormalizeType_Key = "NormalizeType";
-  static inline constexpr StringLiteral k_Postfix_Key = "Postfix";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_DefaultValue_Key = "DefaultValue";
-  static inline constexpr StringLiteral k_RangeMin_Key = "RangeMin";
-  static inline constexpr StringLiteral k_RangeMax_Key = "RangeMax";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
+  static inline constexpr StringLiteral k_NormalizeType_Key = "normalize_type";
+  static inline constexpr StringLiteral k_Postfix_Key = "postfix";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_DefaultValue_Key = "default_value";
+  static inline constexpr StringLiteral k_RangeMin_Key = "range_min";
+  static inline constexpr StringLiteral k_RangeMax_Key = "range_max";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Returns the name of the filter.

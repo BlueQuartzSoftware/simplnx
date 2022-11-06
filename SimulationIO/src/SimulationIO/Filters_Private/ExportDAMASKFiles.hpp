@@ -24,14 +24,14 @@ public:
   ExportDAMASKFiles& operator=(ExportDAMASKFiles&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataFormat_Key = "DataFormat";
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_GeometryFileName_Key = "GeometryFileName";
-  static inline constexpr StringLiteral k_HomogenizationIndex_Key = "HomogenizationIndex";
-  static inline constexpr StringLiteral k_CompressGeomFile_Key = "CompressGeomFile";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "CellPhasesArrayPath";
+  static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_GeometryFileName_Key = "geometry_file_name";
+  static inline constexpr StringLiteral k_HomogenizationIndex_Key = "homogenization_index";
+  static inline constexpr StringLiteral k_CompressGeomFile_Key = "compress_geom_file";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
 
   /**
    * @brief Returns the name of the filter.

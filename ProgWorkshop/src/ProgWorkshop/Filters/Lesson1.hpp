@@ -24,9 +24,9 @@ public:
   Lesson1& operator=(Lesson1&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "InputDataArrayPath";
-  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "OutputDataArrayPath";
-  static inline constexpr StringLiteral k_Value_Key = "Value";
+  static inline constexpr StringLiteral k_InputDataArrayPath_Key = "input_data_array_path";
+  static inline constexpr StringLiteral k_OutputDataArrayPath_Key = "output_data_array_path";
+  static inline constexpr StringLiteral k_Value_Key = "value";
 
   /**
    * @brief Returns the name of the filter.

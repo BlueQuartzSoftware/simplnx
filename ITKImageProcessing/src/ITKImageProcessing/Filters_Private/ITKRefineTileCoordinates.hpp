@@ -24,13 +24,13 @@ public:
   ITKRefineTileCoordinates& operator=(ITKRefineTileCoordinates&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MontageSize_Key = "MontageSize";
-  static inline constexpr StringLiteral k_ImportMode_Key = "ImportMode";
-  static inline constexpr StringLiteral k_TileOverlap_Key = "TileOverlap";
-  static inline constexpr StringLiteral k_ApplyRefinedOrigin_Key = "ApplyRefinedOrigin";
-  static inline constexpr StringLiteral k_DataContainers_Key = "DataContainers";
-  static inline constexpr StringLiteral k_CommonAttributeMatrixName_Key = "CommonAttributeMatrixName";
-  static inline constexpr StringLiteral k_CommonDataArrayName_Key = "CommonDataArrayName";
+  static inline constexpr StringLiteral k_MontageSize_Key = "montage_size";
+  static inline constexpr StringLiteral k_ImportMode_Key = "import_mode";
+  static inline constexpr StringLiteral k_TileOverlap_Key = "tile_overlap";
+  static inline constexpr StringLiteral k_ApplyRefinedOrigin_Key = "apply_refined_origin";
+  static inline constexpr StringLiteral k_DataContainers_Key = "data_containers";
+  static inline constexpr StringLiteral k_CommonAttributeMatrixName_Key = "common_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CommonDataArrayName_Key = "common_data_array_name";
 
   /**
    * @brief Returns the name of the filter.

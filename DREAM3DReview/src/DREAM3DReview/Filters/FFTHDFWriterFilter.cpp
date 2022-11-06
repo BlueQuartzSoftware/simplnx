@@ -53,7 +53,8 @@ Parameters FFTHDFWriterFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_EigenstrainsOutputFile_Key, "Eigenstrain Output File", "", fs::path("<default file to read goes here>"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEigenstrainsArrayPath_Key, "Eigenstrains", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
@@ -86,7 +87,7 @@ IFilter::PreflightResult FFTHDFWriterFilter::preflightImpl(const DataStructure& 
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWriteEigenstrainsValue = filterArgs.value<bool>(k_WriteEigenstrains_Key);
   auto pEigenstrainsOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_EigenstrainsOutputFile_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellEigenstrainsArrayPathValue = filterArgs.value<DataPath>(k_CellEigenstrainsArrayPath_Key);
@@ -143,7 +144,7 @@ Result<> FFTHDFWriterFilter::executeImpl(DataStructure& dataStructure, const Arg
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWriteEigenstrainsValue = filterArgs.value<bool>(k_WriteEigenstrains_Key);
   auto pEigenstrainsOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_EigenstrainsOutputFile_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellEigenstrainsArrayPathValue = filterArgs.value<DataPath>(k_CellEigenstrainsArrayPath_Key);

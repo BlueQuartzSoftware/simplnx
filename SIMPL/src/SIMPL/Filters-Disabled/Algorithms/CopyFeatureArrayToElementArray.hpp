@@ -11,7 +11,7 @@
   CopyFeatureArrayToElementArrayInputValues inputValues;
 
   inputValues.SelectedFeatureArrayPath = filterArgs.value<DataPath>(k_SelectedFeatureArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CreatedArrayName = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
   return CopyFeatureArrayToElementArray(dataStructure, messageHandler, shouldCancel, &inputValues)();

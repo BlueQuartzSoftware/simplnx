@@ -24,15 +24,15 @@ public:
   FindLayerStatistics& operator=(FindLayerStatistics&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Plane_Key = "Plane";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "SelectedArrayPath";
-  static inline constexpr StringLiteral k_LayerAttributeMatrixName_Key = "LayerAttributeMatrixName";
-  static inline constexpr StringLiteral k_LayerIDsArrayName_Key = "LayerIDsArrayName";
-  static inline constexpr StringLiteral k_LayerMinArrayName_Key = "LayerMinArrayName";
-  static inline constexpr StringLiteral k_LayerMaxArrayName_Key = "LayerMaxArrayName";
-  static inline constexpr StringLiteral k_LayerAvgArrayName_Key = "LayerAvgArrayName";
-  static inline constexpr StringLiteral k_LayerStdArrayName_Key = "LayerStdArrayName";
-  static inline constexpr StringLiteral k_LayerVarArrayName_Key = "LayerVarArrayName";
+  static inline constexpr StringLiteral k_Plane_Key = "plane";
+  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_LayerAttributeMatrixName_Key = "layer_attribute_matrix_name";
+  static inline constexpr StringLiteral k_LayerIDsArrayName_Key = "layer_ids_array_name";
+  static inline constexpr StringLiteral k_LayerMinArrayName_Key = "layer_min_array_name";
+  static inline constexpr StringLiteral k_LayerMaxArrayName_Key = "layer_max_array_name";
+  static inline constexpr StringLiteral k_LayerAvgArrayName_Key = "layer_avg_array_name";
+  static inline constexpr StringLiteral k_LayerStdArrayName_Key = "layer_std_array_name";
+  static inline constexpr StringLiteral k_LayerVarArrayName_Key = "layer_var_array_name";
 
   /**
    * @brief Returns the name of the filter.

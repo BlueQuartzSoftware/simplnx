@@ -14,7 +14,7 @@
   inputValues.AngleThreshold = filterArgs.value<float64>(k_AngleThreshold_Key);
   inputValues.TriangleDataContainerName = filterArgs.value<DataPath>(k_TriangleDataContainerName_Key);
   inputValues.LevelSetArrayPath = filterArgs.value<DataPath>(k_LevelSetArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.TetrahedralDataContainerName = filterArgs.value<DataPath>(k_TetrahedralDataContainerName_Key);
   inputValues.VertexAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_VertexAttributeMatrixName_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);

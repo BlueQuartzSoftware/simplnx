@@ -36,13 +36,13 @@ public:
   ITKIntensityWindowingImage& operator=(ITKIntensityWindowingImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_WindowMinimum_Key = "WindowMinimum";
-  static inline constexpr StringLiteral k_WindowMaximum_Key = "WindowMaximum";
-  static inline constexpr StringLiteral k_OutputMinimum_Key = "OutputMinimum";
-  static inline constexpr StringLiteral k_OutputMaximum_Key = "OutputMaximum";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_WindowMinimum_Key = "window_minimum";
+  static inline constexpr StringLiteral k_WindowMaximum_Key = "window_maximum";
+  static inline constexpr StringLiteral k_OutputMinimum_Key = "output_minimum";
+  static inline constexpr StringLiteral k_OutputMaximum_Key = "output_maximum";
 
   /**
    * @brief Returns the name of the filter.

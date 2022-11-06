@@ -24,10 +24,10 @@ public:
   ArrayCalculator& operator=(ArrayCalculator&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedAttributeMatrix_Key = "SelectedAttributeMatrix";
-  static inline constexpr StringLiteral k_InfixEquation_Key = "InfixEquation";
-  static inline constexpr StringLiteral k_ScalarType_Key = "ScalarType";
-  static inline constexpr StringLiteral k_CalculatedArray_Key = "CalculatedArray";
+  static inline constexpr StringLiteral k_SelectedAttributeMatrix_Key = "selected_attribute_matrix";
+  static inline constexpr StringLiteral k_InfixEquation_Key = "infix_equation";
+  static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type";
+  static inline constexpr StringLiteral k_CalculatedArray_Key = "calculated_array";
 
   /**
    * @brief Returns the name of the filter.

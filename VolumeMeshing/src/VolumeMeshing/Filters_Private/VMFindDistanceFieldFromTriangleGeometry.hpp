@@ -24,14 +24,14 @@ public:
   VMFindDistanceFieldFromTriangleGeometry& operator=(VMFindDistanceFieldFromTriangleGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DistanceFieldType_Key = "DistanceFieldType";
-  static inline constexpr StringLiteral k_Spacing_Key = "Spacing";
-  static inline constexpr StringLiteral k_StoreClosestTriangle_Key = "StoreClosestTriangle";
-  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "TriangleDataContainerName";
-  static inline constexpr StringLiteral k_ImageDataContainerName_Key = "ImageDataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_SignedDistanceFieldName_Key = "SignedDistanceFieldName";
-  static inline constexpr StringLiteral k_ClosestTriangleName_Key = "ClosestTriangleName";
+  static inline constexpr StringLiteral k_DistanceFieldType_Key = "distance_field_type";
+  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static inline constexpr StringLiteral k_StoreClosestTriangle_Key = "store_closest_triangle";
+  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "triangle_data_container_name";
+  static inline constexpr StringLiteral k_ImageDataContainerName_Key = "image_data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_SignedDistanceFieldName_Key = "signed_distance_field_name";
+  static inline constexpr StringLiteral k_ClosestTriangleName_Key = "closest_triangle_name";
 
   /**
    * @brief Returns the name of the filter.

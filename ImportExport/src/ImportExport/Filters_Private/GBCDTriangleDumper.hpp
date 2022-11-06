@@ -24,11 +24,11 @@ public:
   GBCDTriangleDumper& operator=(GBCDTriangleDumper&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputFile_Key = "OutputFile";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "SurfaceMeshFaceNormalsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceAreasArrayPath_Key = "SurfaceMeshFaceAreasArrayPath";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "FeatureEulerAnglesArrayPath";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceAreasArrayPath_Key = "surface_mesh_face_areas_array_path";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
 
   /**
    * @brief Returns the name of the filter.

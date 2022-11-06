@@ -24,11 +24,11 @@ public:
   AbaqusHexahedronWriter& operator=(AbaqusHexahedronWriter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_HourglassStiffness_Key = "HourglassStiffness";
-  static inline constexpr StringLiteral k_JobName_Key = "JobName";
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_FilePrefix_Key = "FilePrefix";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
+  static inline constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
+  static inline constexpr StringLiteral k_JobName_Key = "job_name";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
 
   /**
    * @brief Returns the name of the filter.

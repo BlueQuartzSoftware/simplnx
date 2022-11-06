@@ -51,7 +51,7 @@ Parameters AvizoUniformCoordinateWriter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<BoolParameter>(k_WriteBinaryFile_Key, "Write Binary File", "", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "FeatureIds", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "FeatureIds", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<StringParameter>(k_Units_Key, "Units", "", "SomeString"));
 
   return params;
@@ -78,7 +78,7 @@ IFilter::PreflightResult AvizoUniformCoordinateWriter::preflightImpl(const DataS
    */
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWriteBinaryFileValue = filterArgs.value<bool>(k_WriteBinaryFile_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pUnitsValue = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -132,7 +132,7 @@ Result<> AvizoUniformCoordinateWriter::executeImpl(DataStructure& dataStructure,
    ***************************************************************************/
   auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pWriteBinaryFileValue = filterArgs.value<bool>(k_WriteBinaryFile_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pUnitsValue = filterArgs.value<StringParameter::ValueType>(k_Units_Key);
 
   /****************************************************************************

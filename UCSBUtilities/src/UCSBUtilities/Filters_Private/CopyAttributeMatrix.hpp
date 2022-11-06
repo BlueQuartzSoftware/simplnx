@@ -24,8 +24,8 @@ public:
   CopyAttributeMatrix& operator=(CopyAttributeMatrix&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedAttributeMatrixPath_Key = "SelectedAttributeMatrixPath";
-  static inline constexpr StringLiteral k_NewAttributeMatrix_Key = "NewAttributeMatrix";
+  static inline constexpr StringLiteral k_SelectedAttributeMatrixPath_Key = "selected_attribute_matrix_path";
+  static inline constexpr StringLiteral k_NewAttributeMatrix_Key = "new_attribute_matrix";
 
   /**
    * @brief Returns the name of the filter.

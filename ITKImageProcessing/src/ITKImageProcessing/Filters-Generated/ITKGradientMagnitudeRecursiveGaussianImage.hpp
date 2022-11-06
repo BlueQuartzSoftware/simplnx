@@ -29,11 +29,11 @@ public:
   ITKGradientMagnitudeRecursiveGaussianImage& operator=(ITKGradientMagnitudeRecursiveGaussianImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_Sigma_Key = "Sigma";
-  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "NormalizeAcrossScale";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_Sigma_Key = "sigma";
+  static inline constexpr StringLiteral k_NormalizeAcrossScale_Key = "normalize_across_scale";
 
   /**
    * @brief Returns the name of the filter.

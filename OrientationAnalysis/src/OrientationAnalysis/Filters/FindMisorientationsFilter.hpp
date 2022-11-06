@@ -24,13 +24,13 @@ public:
   FindMisorientationsFilter& operator=(FindMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FindAvgMisors_Key = "FindAvgMisors";
-  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "NeighborListArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_MisorientationListArrayName_Key = "MisorientationListArrayName";
-  static inline constexpr StringLiteral k_AvgMisorientationsArrayName_Key = "AvgMisorientationsArrayName";
+  static inline constexpr StringLiteral k_FindAvgMisors_Key = "find_avg_misors";
+  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_MisorientationListArrayName_Key = "misorientation_list_array_name";
+  static inline constexpr StringLiteral k_AvgMisorientationsArrayName_Key = "avg_misorientations_array_name";
 
   /**
    * @brief Returns the name of the filter.

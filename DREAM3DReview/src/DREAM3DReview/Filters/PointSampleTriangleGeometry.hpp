@@ -24,16 +24,16 @@ public:
   PointSampleTriangleGeometry& operator=(PointSampleTriangleGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SamplesNumberType_Key = "SamplesNumberType";
-  static inline constexpr StringLiteral k_NumberOfSamples_Key = "NumberOfSamples";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_TriangleGeometry_Key = "TriangleGeometry";
-  static inline constexpr StringLiteral k_ParentGeometry_Key = "ParentGeometry";
-  static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "TriangleAreasArrayPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "SelectedDataArrayPaths";
-  static inline constexpr StringLiteral k_VertexGeometry_Key = "VertexGeometry";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
+  static inline constexpr StringLiteral k_SamplesNumberType_Key = "samples_number_type";
+  static inline constexpr StringLiteral k_NumberOfSamples_Key = "number_of_samples";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_TriangleGeometry_Key = "triangle_geometry";
+  static inline constexpr StringLiteral k_ParentGeometry_Key = "parent_geometry";
+  static inline constexpr StringLiteral k_TriangleAreasArrayPath_Key = "triangle_areas_array_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_VertexGeometry_Key = "vertex_geometry";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,13 +24,13 @@ public:
   FindFeatureNeighborCAxisMisalignments& operator=(FindFeatureNeighborCAxisMisalignments&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FindAvgMisals_Key = "FindAvgMisals";
-  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "NeighborListArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_CAxisMisalignmentListArrayName_Key = "CAxisMisalignmentListArrayName";
-  static inline constexpr StringLiteral k_AvgCAxisMisalignmentsArrayName_Key = "AvgCAxisMisalignmentsArrayName";
+  static inline constexpr StringLiteral k_FindAvgMisals_Key = "find_avg_misals";
+  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_CAxisMisalignmentListArrayName_Key = "c_axis_misalignment_list_array_name";
+  static inline constexpr StringLiteral k_AvgCAxisMisalignmentsArrayName_Key = "avg_caxis_misalignments_array_name";
 
   /**
    * @brief Returns the name of the filter.

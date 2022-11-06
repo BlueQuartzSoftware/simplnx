@@ -24,22 +24,22 @@ public:
   IlluminationCorrection& operator=(IlluminationCorrection&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MontageSelection_Key = "MontageSelection";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "CellAttributeMatrixName";
-  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "ImageDataArrayName";
-  static inline constexpr StringLiteral k_CorrectedImageDataArrayName_Key = "CorrectedImageDataArrayName";
-  static inline constexpr StringLiteral k_BackgroundDataContainerPath_Key = "BackgroundDataContainerPath";
-  static inline constexpr StringLiteral k_BackgroundCellAttributeMatrixPath_Key = "BackgroundCellAttributeMatrixPath";
-  static inline constexpr StringLiteral k_BackgroundImageArrayPath_Key = "BackgroundImageArrayPath";
-  static inline constexpr StringLiteral k_LowThreshold_Key = "LowThreshold";
-  static inline constexpr StringLiteral k_HighThreshold_Key = "HighThreshold";
-  static inline constexpr StringLiteral k_ApplyMedianFilter_Key = "ApplyMedianFilter";
-  static inline constexpr StringLiteral k_MedianRadius_Key = "MedianRadius";
-  static inline constexpr StringLiteral k_ApplyCorrection_Key = "ApplyCorrection";
-  static inline constexpr StringLiteral k_ExportCorrectedImages_Key = "ExportCorrectedImages";
-  static inline constexpr StringLiteral k_OutputPath_Key = "OutputPath";
-  static inline constexpr StringLiteral k_FileExtension_Key = "FileExtension";
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
+  static inline constexpr StringLiteral k_MontageSelection_Key = "montage_selection";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "image_data_array_name";
+  static inline constexpr StringLiteral k_CorrectedImageDataArrayName_Key = "corrected_image_data_array_name";
+  static inline constexpr StringLiteral k_BackgroundDataContainerPath_Key = "background_data_container_path";
+  static inline constexpr StringLiteral k_BackgroundCellAttributeMatrixPath_Key = "background_cell_attribute_matrix_path";
+  static inline constexpr StringLiteral k_BackgroundImageArrayPath_Key = "background_image_array_path";
+  static inline constexpr StringLiteral k_LowThreshold_Key = "low_threshold";
+  static inline constexpr StringLiteral k_HighThreshold_Key = "high_threshold";
+  static inline constexpr StringLiteral k_ApplyMedianFilter_Key = "apply_median_filter";
+  static inline constexpr StringLiteral k_MedianRadius_Key = "median_radius";
+  static inline constexpr StringLiteral k_ApplyCorrection_Key = "apply_correction";
+  static inline constexpr StringLiteral k_ExportCorrectedImages_Key = "export_corrected_images";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_FileExtension_Key = "file_extension";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
 
   /**
    * @brief Returns the name of the filter.

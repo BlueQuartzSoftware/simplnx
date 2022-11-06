@@ -24,8 +24,8 @@ public:
   AddOrientationNoise& operator=(AddOrientationNoise&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Magnitude_Key = "Magnitude";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "CellEulerAnglesArrayPath";
+  static inline constexpr StringLiteral k_Magnitude_Key = "magnitude";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
 
   /**
    * @brief Returns the name of the filter.

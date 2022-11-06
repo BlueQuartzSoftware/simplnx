@@ -24,9 +24,9 @@ public:
   FindAvgCAxes& operator=(FindAvgCAxes&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "QuatsArrayPath";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_AvgCAxesArrayPath_Key = "AvgCAxesArrayPath";
+  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_AvgCAxesArrayPath_Key = "avg_caxes_array_path";
 
   /**
    * @brief Returns the name of the filter.

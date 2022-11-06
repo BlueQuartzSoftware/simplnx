@@ -24,9 +24,9 @@ public:
   FindBoundaryAreas& operator=(FindBoundaryAreas&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshTriangleAreasArrayPath_Key = "SurfaceMeshTriangleAreasArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceIdsArrayPath_Key = "SurfaceMeshFeatureFaceIdsArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshBoundaryAreasArrayPath_Key = "SurfaceMeshBoundaryAreasArrayPath";
+  static inline constexpr StringLiteral k_SurfaceMeshTriangleAreasArrayPath_Key = "surface_mesh_triangle_areas_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceIdsArrayPath_Key = "surface_mesh_feature_face_ids_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshBoundaryAreasArrayPath_Key = "surface_mesh_boundary_areas_array_path";
 
   /**
    * @brief Returns the name of the filter.

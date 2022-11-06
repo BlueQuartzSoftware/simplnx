@@ -24,13 +24,13 @@ public:
   FindNeighborhoodsFilter& operator=(FindNeighborhoodsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MultiplesOfAverage_Key = "MultiplesOfAverage";
-  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "EquivalentDiametersArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "CentroidsArrayPath";
-  static inline constexpr StringLiteral k_NeighborhoodsArrayName_Key = "NeighborhoodsArrayName";
-  static inline constexpr StringLiteral k_NeighborhoodListArrayName_Key = "NeighborhoodListArrayName";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "SelectedImageGeometryPath";
+  static inline constexpr StringLiteral k_MultiplesOfAverage_Key = "multiples_of_average";
+  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static inline constexpr StringLiteral k_NeighborhoodsArrayName_Key = "neighborhoods_array_name";
+  static inline constexpr StringLiteral k_NeighborhoodListArrayName_Key = "neighborhood_list_array_name";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

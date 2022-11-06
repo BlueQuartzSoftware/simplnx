@@ -24,9 +24,9 @@ public:
   FindLargestCrossSections& operator=(FindLargestCrossSections&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Plane_Key = "Plane";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_LargestCrossSectionsArrayPath_Key = "LargestCrossSectionsArrayPath";
+  static inline constexpr StringLiteral k_Plane_Key = "plane";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_LargestCrossSectionsArrayPath_Key = "largest_cross_sections_array_path";
 
   /**
    * @brief Returns the name of the filter.

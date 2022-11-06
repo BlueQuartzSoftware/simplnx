@@ -24,9 +24,9 @@ public:
   RegularizeZSpacing& operator=(RegularizeZSpacing&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "InputFile";
-  static inline constexpr StringLiteral k_NewZRes_Key = "NewZRes";
-  static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "CellAttributeMatrixPath";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_NewZRes_Key = "new_zres";
+  static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

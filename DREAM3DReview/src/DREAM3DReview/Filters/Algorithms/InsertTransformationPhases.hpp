@@ -20,7 +20,7 @@
   inputValues.TransformationPhaseThickness = filterArgs.value<float32>(k_TransformationPhaseThickness_Key);
   inputValues.NumTransformationPhasesPerFeature = filterArgs.value<int32>(k_NumTransformationPhasesPerFeature_Key);
   inputValues.PeninsulaFrac = filterArgs.value<float32>(k_PeninsulaFrac_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.CellFeatureAttributeMatrixName = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);

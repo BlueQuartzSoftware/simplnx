@@ -15,7 +15,7 @@
   inputValues.GeometryFileName = filterArgs.value<StringParameter::ValueType>(k_GeometryFileName_Key);
   inputValues.HomogenizationIndex = filterArgs.value<int32>(k_HomogenizationIndex_Key);
   inputValues.CompressGeomFile = filterArgs.value<bool>(k_CompressGeomFile_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 

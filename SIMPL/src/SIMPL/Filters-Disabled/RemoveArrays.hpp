@@ -24,7 +24,7 @@ public:
   RemoveArrays& operator=(RemoveArrays&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataArraysToRemove_Key = "DataArraysToRemove";
+  static inline constexpr StringLiteral k_DataArraysToRemove_Key = "data_arrays_to_remove";
 
   /**
    * @brief Returns the name of the filter.

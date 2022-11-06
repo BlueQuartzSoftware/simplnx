@@ -24,16 +24,16 @@ public:
   WarpRegularGrid& operator=(WarpRegularGrid&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PolyOrder_Key = "PolyOrder";
-  static inline constexpr StringLiteral k_SecondOrderACoeff_Key = "SecondOrderACoeff";
-  static inline constexpr StringLiteral k_SecondOrderBCoeff_Key = "SecondOrderBCoeff";
-  static inline constexpr StringLiteral k_ThirdOrderACoeff_Key = "ThirdOrderACoeff";
-  static inline constexpr StringLiteral k_ThirdOrderBCoeff_Key = "ThirdOrderBCoeff";
-  static inline constexpr StringLiteral k_FourthOrderACoeff_Key = "FourthOrderACoeff";
-  static inline constexpr StringLiteral k_FourthOrderBCoeff_Key = "FourthOrderBCoeff";
-  static inline constexpr StringLiteral k_SaveAsNewDataContainer_Key = "SaveAsNewDataContainer";
-  static inline constexpr StringLiteral k_NewDataContainerName_Key = "NewDataContainerName";
-  static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "CellAttributeMatrixPath";
+  static inline constexpr StringLiteral k_PolyOrder_Key = "poly_order";
+  static inline constexpr StringLiteral k_SecondOrderACoeff_Key = "second_order_acoeff";
+  static inline constexpr StringLiteral k_SecondOrderBCoeff_Key = "second_order_bcoeff";
+  static inline constexpr StringLiteral k_ThirdOrderACoeff_Key = "third_order_acoeff";
+  static inline constexpr StringLiteral k_ThirdOrderBCoeff_Key = "third_order_bcoeff";
+  static inline constexpr StringLiteral k_FourthOrderACoeff_Key = "fourth_order_acoeff";
+  static inline constexpr StringLiteral k_FourthOrderBCoeff_Key = "fourth_order_bcoeff";
+  static inline constexpr StringLiteral k_SaveAsNewDataContainer_Key = "save_as_new_data_container";
+  static inline constexpr StringLiteral k_NewDataContainerName_Key = "new_data_container_name";
+  static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
 
   /**
    * @brief Returns the name of the filter.

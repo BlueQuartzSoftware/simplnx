@@ -43,14 +43,14 @@ public:
   ITKOtsuMultipleThresholdsImage& operator=(ITKOtsuMultipleThresholdsImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_NumberOfThresholds_Key = "NumberOfThresholds";
-  static inline constexpr StringLiteral k_LabelOffset_Key = "LabelOffset";
-  static inline constexpr StringLiteral k_NumberOfHistogramBins_Key = "NumberOfHistogramBins";
-  static inline constexpr StringLiteral k_ValleyEmphasis_Key = "ValleyEmphasis";
-  static inline constexpr StringLiteral k_ReturnBinMidpoint_Key = "ReturnBinMidpoint";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_NumberOfThresholds_Key = "number_of_thresholds";
+  static inline constexpr StringLiteral k_LabelOffset_Key = "label_offset";
+  static inline constexpr StringLiteral k_NumberOfHistogramBins_Key = "number_of_histogram_bins";
+  static inline constexpr StringLiteral k_ValleyEmphasis_Key = "valley_emphasis";
+  static inline constexpr StringLiteral k_ReturnBinMidpoint_Key = "return_bin_midpoint";
 
   /**
    * @brief Returns the name of the filter.

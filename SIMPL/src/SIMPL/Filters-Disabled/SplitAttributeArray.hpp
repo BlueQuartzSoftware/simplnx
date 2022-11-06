@@ -24,8 +24,8 @@ public:
   SplitAttributeArray& operator=(SplitAttributeArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputArrayPath_Key = "InputArrayPath";
-  static inline constexpr StringLiteral k_SplitArraysSuffix_Key = "SplitArraysSuffix";
+  static inline constexpr StringLiteral k_InputArrayPath_Key = "input_array_path";
+  static inline constexpr StringLiteral k_SplitArraysSuffix_Key = "split_arrays_suffix";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,10 +24,10 @@ public:
   FindElementCentroids& operator=(FindElementCentroids&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CreateVertexDataContainer_Key = "CreateVertexDataContainer";
-  static inline constexpr StringLiteral k_NewDataContainerName_Key = "NewDataContainerName";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_CellCentroidsArrayPath_Key = "CellCentroidsArrayPath";
+  static inline constexpr StringLiteral k_CreateVertexDataContainer_Key = "create_vertex_data_container";
+  static inline constexpr StringLiteral k_NewDataContainerName_Key = "new_data_container_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellCentroidsArrayPath_Key = "cell_centroids_array_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,20 +24,20 @@ public:
   MatchCrystallography& operator=(MatchCrystallography&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MaxIterations_Key = "MaxIterations";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "SurfaceFeaturesArrayPath";
-  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "NeighborListArrayPath";
-  static inline constexpr StringLiteral k_SharedSurfaceAreaListArrayPath_Key = "SharedSurfaceAreaListArrayPath";
-  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "InputStatsArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_PhaseTypesArrayPath_Key = "PhaseTypesArrayPath";
-  static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "NumFeaturesArrayPath";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayName_Key = "CellEulerAnglesArrayName";
-  static inline constexpr StringLiteral k_VolumesArrayName_Key = "VolumesArrayName";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayName_Key = "FeatureEulerAnglesArrayName";
-  static inline constexpr StringLiteral k_AvgQuatsArrayName_Key = "AvgQuatsArrayName";
+  static inline constexpr StringLiteral k_MaxIterations_Key = "max_iterations";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "surface_features_array_path";
+  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
+  static inline constexpr StringLiteral k_SharedSurfaceAreaListArrayPath_Key = "shared_surface_area_list_array_path";
+  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "input_stats_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_PhaseTypesArrayPath_Key = "phase_types_array_path";
+  static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "num_features_array_path";
+  static inline constexpr StringLiteral k_CellEulerAnglesArrayName_Key = "cell_euler_angles_array_name";
+  static inline constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
+  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayName_Key = "feature_euler_angles_array_name";
+  static inline constexpr StringLiteral k_AvgQuatsArrayName_Key = "avg_quats_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,28 +24,28 @@ public:
   EstablishFoamMorphology& operator=(EstablishFoamMorphology&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PeriodicBoundaries_Key = "PeriodicBoundaries";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "DataContainerName";
-  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "InputStatsArrayPath";
-  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "InputPhaseTypesArrayPath";
-  static inline constexpr StringLiteral k_InputPhaseNamesArrayPath_Key = "InputPhaseNamesArrayPath";
-  static inline constexpr StringLiteral k_InputShapeTypesArrayPath_Key = "InputShapeTypesArrayPath";
-  static inline constexpr StringLiteral k_InputCellFeatureIdsArrayPath_Key = "InputCellFeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_OutputCellEnsembleAttributeMatrixName_Key = "OutputCellEnsembleAttributeMatrixName";
-  static inline constexpr StringLiteral k_NumFeaturesArrayName_Key = "NumFeaturesArrayName";
-  static inline constexpr StringLiteral k_OutputCellFeatureAttributeMatrixName_Key = "OutputCellFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "FeatureIdsArrayName";
-  static inline constexpr StringLiteral k_MaskArrayName_Key = "MaskArrayName";
-  static inline constexpr StringLiteral k_CellPhasesArrayName_Key = "CellPhasesArrayName";
-  static inline constexpr StringLiteral k_QPEuclideanDistancesArrayName_Key = "QPEuclideanDistancesArrayName";
-  static inline constexpr StringLiteral k_TJEuclideanDistancesArrayName_Key = "TJEuclideanDistancesArrayName";
-  static inline constexpr StringLiteral k_GBEuclideanDistancesArrayName_Key = "GBEuclideanDistancesArrayName";
-  static inline constexpr StringLiteral k_WriteGoalAttributes_Key = "WriteGoalAttributes";
-  static inline constexpr StringLiteral k_CsvOutputFile_Key = "CsvOutputFile";
-  static inline constexpr StringLiteral k_HaveFeatures_Key = "HaveFeatures";
-  static inline constexpr StringLiteral k_MinStrutThickness_Key = "MinStrutThickness";
-  static inline constexpr StringLiteral k_StrutThicknessVariability_Key = "StrutThicknessVariability";
-  static inline constexpr StringLiteral k_StrutShapeVariability_Key = "StrutShapeVariability";
+  static inline constexpr StringLiteral k_PeriodicBoundaries_Key = "periodic_boundaries";
+  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_InputStatsArrayPath_Key = "input_stats_array_path";
+  static inline constexpr StringLiteral k_InputPhaseTypesArrayPath_Key = "input_phase_types_array_path";
+  static inline constexpr StringLiteral k_InputPhaseNamesArrayPath_Key = "input_phase_names_array_path";
+  static inline constexpr StringLiteral k_InputShapeTypesArrayPath_Key = "input_shape_types_array_path";
+  static inline constexpr StringLiteral k_InputCellFeatureIdsArrayPath_Key = "input_cell_feature_ids_array_path";
+  static inline constexpr StringLiteral k_OutputCellEnsembleAttributeMatrixName_Key = "output_cell_ensemble_attribute_matrix_name";
+  static inline constexpr StringLiteral k_NumFeaturesArrayName_Key = "num_features_array_name";
+  static inline constexpr StringLiteral k_OutputCellFeatureAttributeMatrixName_Key = "output_cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static inline constexpr StringLiteral k_MaskArrayName_Key = "mask_array_name";
+  static inline constexpr StringLiteral k_CellPhasesArrayName_Key = "cell_phases_array_name";
+  static inline constexpr StringLiteral k_QPEuclideanDistancesArrayName_Key = "q_peuclidean_distances_array_name";
+  static inline constexpr StringLiteral k_TJEuclideanDistancesArrayName_Key = "t_jeuclidean_distances_array_name";
+  static inline constexpr StringLiteral k_GBEuclideanDistancesArrayName_Key = "g_beuclidean_distances_array_name";
+  static inline constexpr StringLiteral k_WriteGoalAttributes_Key = "write_goal_attributes";
+  static inline constexpr StringLiteral k_CsvOutputFile_Key = "csv_output_file";
+  static inline constexpr StringLiteral k_HaveFeatures_Key = "have_features";
+  static inline constexpr StringLiteral k_MinStrutThickness_Key = "min_strut_thickness";
+  static inline constexpr StringLiteral k_StrutThicknessVariability_Key = "strut_thickness_variability";
+  static inline constexpr StringLiteral k_StrutShapeVariability_Key = "strut_shape_variability";
 
   /**
    * @brief Returns the name of the filter.

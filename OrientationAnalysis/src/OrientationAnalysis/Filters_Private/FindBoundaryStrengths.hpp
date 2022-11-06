@@ -24,15 +24,15 @@ public:
   FindBoundaryStrengths& operator=(FindBoundaryStrengths&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Loading_Key = "Loading";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "SurfaceMeshFaceLabelsArrayPath";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "AvgQuatsArrayPath";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "FeaturePhasesArrayPath";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "CrystalStructuresArrayPath";
-  static inline constexpr StringLiteral k_SurfaceMeshF1sArrayName_Key = "SurfaceMeshF1sArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshF1sptsArrayName_Key = "SurfaceMeshF1sptsArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshF7sArrayName_Key = "SurfaceMeshF7sArrayName";
-  static inline constexpr StringLiteral k_SurfaceMeshmPrimesArrayName_Key = "SurfaceMeshmPrimesArrayName";
+  static inline constexpr StringLiteral k_Loading_Key = "loading";
+  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static inline constexpr StringLiteral k_SurfaceMeshF1sArrayName_Key = "surface_mesh_f1s_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshF1sptsArrayName_Key = "surface_mesh_f1spts_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshF7sArrayName_Key = "surface_mesh_f7s_array_name";
+  static inline constexpr StringLiteral k_SurfaceMeshmPrimesArrayName_Key = "surface_meshm_primes_array_name";
 
   /**
    * @brief Returns the name of the filter.

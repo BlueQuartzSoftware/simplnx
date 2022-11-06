@@ -24,9 +24,9 @@ public:
   LabelTriangleGeometry& operator=(LabelTriangleGeometry&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CADDataContainerName_Key = "CADDataContainerName";
-  static inline constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "TriangleAttributeMatrixName";
-  static inline constexpr StringLiteral k_RegionIdArrayName_Key = "RegionIdArrayName";
+  static inline constexpr StringLiteral k_CADDataContainerName_Key = "c_ad_data_container_name";
+  static inline constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
+  static inline constexpr StringLiteral k_RegionIdArrayName_Key = "region_id_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,12 +24,12 @@ public:
   ItkStitchImages& operator=(ItkStitchImages&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "AttributeMatrixName";
-  static inline constexpr StringLiteral k_StitchedCoordinatesArrayPath_Key = "StitchedCoordinatesArrayPath";
-  static inline constexpr StringLiteral k_AttributeArrayNamesPath_Key = "AttributeArrayNamesPath";
-  static inline constexpr StringLiteral k_StitchedVolumeDataContainerName_Key = "StitchedVolumeDataContainerName";
-  static inline constexpr StringLiteral k_StitchedAttributeMatrixName_Key = "StitchedAttributeMatrixName";
-  static inline constexpr StringLiteral k_StitchedImagesArrayName_Key = "StitchedImagesArrayName";
+  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "attribute_matrix_name";
+  static inline constexpr StringLiteral k_StitchedCoordinatesArrayPath_Key = "stitched_coordinates_array_path";
+  static inline constexpr StringLiteral k_AttributeArrayNamesPath_Key = "attribute_array_names_path";
+  static inline constexpr StringLiteral k_StitchedVolumeDataContainerName_Key = "stitched_volume_data_container_name";
+  static inline constexpr StringLiteral k_StitchedAttributeMatrixName_Key = "stitched_attribute_matrix_name";
+  static inline constexpr StringLiteral k_StitchedImagesArrayName_Key = "stitched_images_array_name";
 
   /**
    * @brief Returns the name of the filter.

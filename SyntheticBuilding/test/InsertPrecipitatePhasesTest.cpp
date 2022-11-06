@@ -47,7 +47,7 @@ TEST_CASE("SyntheticBuilding::InsertPrecipitatePhases: Instantiation and Paramet
   args.insertOrAssign(InsertPrecipitatePhases::k_PeriodicBoundaries_Key, std::make_any<bool>(false));
   args.insertOrAssign(InsertPrecipitatePhases::k_MatchRDF_Key, std::make_any<bool>(false));
   args.insertOrAssign(InsertPrecipitatePhases::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(InsertPrecipitatePhases::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(InsertPrecipitatePhases::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(InsertPrecipitatePhases::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(InsertPrecipitatePhases::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(InsertPrecipitatePhases::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));

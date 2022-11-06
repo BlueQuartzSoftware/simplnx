@@ -24,12 +24,12 @@ public:
   PottsModel& operator=(PottsModel&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Iterations_Key = "Iterations";
-  static inline constexpr StringLiteral k_Temperature_Key = "Temperature";
-  static inline constexpr StringLiteral k_PeriodicBoundaries_Key = "PeriodicBoundaries";
-  static inline constexpr StringLiteral k_UseMask_Key = "UseMask";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
+  static inline constexpr StringLiteral k_Iterations_Key = "iterations";
+  static inline constexpr StringLiteral k_Temperature_Key = "temperature";
+  static inline constexpr StringLiteral k_PeriodicBoundaries_Key = "periodic_boundaries";
+  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Returns the name of the filter.

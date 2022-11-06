@@ -24,9 +24,9 @@ public:
   LinkFeatureMapToElementArray& operator=(LinkFeatureMapToElementArray&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "SelectedCellArrayPath";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "CellFeatureAttributeMatrixName";
-  static inline constexpr StringLiteral k_ActiveArrayName_Key = "ActiveArrayName";
+  static inline constexpr StringLiteral k_SelectedCellArrayPath_Key = "selected_cell_array_path";
+  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
 
   /**
    * @brief Returns the name of the filter.

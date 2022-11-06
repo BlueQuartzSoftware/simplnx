@@ -47,11 +47,11 @@ public:
   ITKRelabelComponentImage& operator=(ITKRelabelComponentImage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "SelectedImageGeomPath";
-  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "InputImageDataPath";
-  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "OutputImageDataPath";
-  static inline constexpr StringLiteral k_MinimumObjectSize_Key = "MinimumObjectSize";
-  static inline constexpr StringLiteral k_SortByObjectSize_Key = "SortByObjectSize";
+  static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
+  static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
+  static inline constexpr StringLiteral k_MinimumObjectSize_Key = "minimum_object_size";
+  static inline constexpr StringLiteral k_SortByObjectSize_Key = "sort_by_object_size";
 
   /**
    * @brief Returns the name of the filter.

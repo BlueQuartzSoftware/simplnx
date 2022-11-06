@@ -39,7 +39,7 @@ TEST_CASE("Core::CopyFeatureArrayToElementArray: Instantiation and Parameter Che
 
   // Create default Parameters for the filter.
   args.insertOrAssign(CopyFeatureArrayToElementArray::k_SelectedFeatureArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(CopyFeatureArrayToElementArray::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(CopyFeatureArrayToElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(CopyFeatureArrayToElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result

@@ -24,10 +24,10 @@ public:
   AvizoUniformCoordinateWriter& operator=(AvizoUniformCoordinateWriter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputFile_Key = "OutputFile";
-  static inline constexpr StringLiteral k_WriteBinaryFile_Key = "WriteBinaryFile";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_Units_Key = "Units";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static inline constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_Units_Key = "units";
 
   /**
    * @brief Returns the name of the filter.

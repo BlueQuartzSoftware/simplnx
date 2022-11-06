@@ -24,7 +24,7 @@ public:
   ClearDataMask& operator=(ClearDataMask&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "MaskArrayPath";
+  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Returns the name of the filter.

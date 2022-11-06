@@ -47,7 +47,8 @@ Parameters FindBoundaryCells::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_IgnoreFeatureZero_Key, "Ignore Feature 0", "", false));
   params.insert(std::make_unique<BoolParameter>(k_IncludeVolumeBoundary_Key, "Include Volume Boundary", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_BoundaryCellsArrayName_Key, "Boundary Cells", "", DataPath{}));
 
@@ -75,7 +76,7 @@ IFilter::PreflightResult FindBoundaryCells::preflightImpl(const DataStructure& d
    */
   auto pIgnoreFeatureZeroValue = filterArgs.value<bool>(k_IgnoreFeatureZero_Key);
   auto pIncludeVolumeBoundaryValue = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pBoundaryCellsArrayNameValue = filterArgs.value<DataPath>(k_BoundaryCellsArrayName_Key);
 
   // Declare the preflightResult variable that will be populated with the results
@@ -129,7 +130,7 @@ Result<> FindBoundaryCells::executeImpl(DataStructure& dataStructure, const Argu
    ***************************************************************************/
   auto pIgnoreFeatureZeroValue = filterArgs.value<bool>(k_IgnoreFeatureZero_Key);
   auto pIncludeVolumeBoundaryValue = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pBoundaryCellsArrayNameValue = filterArgs.value<DataPath>(k_BoundaryCellsArrayName_Key);
 
   /****************************************************************************

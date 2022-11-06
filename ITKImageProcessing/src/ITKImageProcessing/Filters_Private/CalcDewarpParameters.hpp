@@ -24,18 +24,18 @@ public:
   CalcDewarpParameters& operator=(CalcDewarpParameters&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MontageName_Key = "MontageName";
-  static inline constexpr StringLiteral k_MaxIterations_Key = "MaxIterations";
-  static inline constexpr StringLiteral k_Delta_Key = "Delta";
-  static inline constexpr StringLiteral k_FractionalTolerance_Key = "FractionalTolerance";
-  static inline constexpr StringLiteral k_SpecifyInitialSimplex_Key = "SpecifyInitialSimplex";
-  static inline constexpr StringLiteral k_XFactors_Key = "XFactors";
-  static inline constexpr StringLiteral k_YFactors_Key = "YFactors";
-  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "AttributeMatrixName";
-  static inline constexpr StringLiteral k_IPFColorsArrayName_Key = "IPFColorsArrayName";
-  static inline constexpr StringLiteral k_TransformDCName_Key = "TransformDCName";
-  static inline constexpr StringLiteral k_TransformMatrixName_Key = "TransformMatrixName";
-  static inline constexpr StringLiteral k_TransformArrayName_Key = "TransformArrayName";
+  static inline constexpr StringLiteral k_MontageName_Key = "montage_name";
+  static inline constexpr StringLiteral k_MaxIterations_Key = "max_iterations";
+  static inline constexpr StringLiteral k_Delta_Key = "delta";
+  static inline constexpr StringLiteral k_FractionalTolerance_Key = "fractional_tolerance";
+  static inline constexpr StringLiteral k_SpecifyInitialSimplex_Key = "specify_initial_simplex";
+  static inline constexpr StringLiteral k_XFactors_Key = "x_factors";
+  static inline constexpr StringLiteral k_YFactors_Key = "y_factors";
+  static inline constexpr StringLiteral k_AttributeMatrixName_Key = "attribute_matrix_name";
+  static inline constexpr StringLiteral k_IPFColorsArrayName_Key = "i_pf_colors_array_name";
+  static inline constexpr StringLiteral k_TransformDCName_Key = "transform_dc_name";
+  static inline constexpr StringLiteral k_TransformMatrixName_Key = "transform_matrix_name";
+  static inline constexpr StringLiteral k_TransformArrayName_Key = "transform_array_name";
 
   /**
    * @brief Returns the name of the filter.

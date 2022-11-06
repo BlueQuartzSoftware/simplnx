@@ -24,8 +24,8 @@ public:
   InputCrystalCompliances& operator=(InputCrystalCompliances&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Compliances_Key = "Compliances";
-  static inline constexpr StringLiteral k_CrystalCompliancesArrayPath_Key = "CrystalCompliancesArrayPath";
+  static inline constexpr StringLiteral k_Compliances_Key = "compliances";
+  static inline constexpr StringLiteral k_CrystalCompliancesArrayPath_Key = "crystal_compliances_array_path";
 
   /**
    * @brief Returns the name of the filter.

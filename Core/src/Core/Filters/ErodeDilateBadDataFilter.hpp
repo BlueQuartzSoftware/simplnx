@@ -24,13 +24,13 @@ public:
   ErodeDilateBadDataFilter& operator=(ErodeDilateBadDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Operation_Key = "Operation";
-  static inline constexpr StringLiteral k_NumIterations_Key = "NumIterations";
-  static inline constexpr StringLiteral k_XDirOn_Key = "XDirOn";
-  static inline constexpr StringLiteral k_YDirOn_Key = "YDirOn";
-  static inline constexpr StringLiteral k_ZDirOn_Key = "ZDirOn";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "FeatureIdsArrayPath";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "IgnoredDataArrayPaths";
+  static inline constexpr StringLiteral k_Operation_Key = "operation";
+  static inline constexpr StringLiteral k_NumIterations_Key = "num_iterations";
+  static inline constexpr StringLiteral k_XDirOn_Key = "x_dir_on";
+  static inline constexpr StringLiteral k_YDirOn_Key = "y_dir_on";
+  static inline constexpr StringLiteral k_ZDirOn_Key = "z_dir_on";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
   static inline constexpr StringLiteral k_SelectedFeatureDataGroup_Key = "selected_feature_group";
 

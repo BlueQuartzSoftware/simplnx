@@ -24,11 +24,11 @@ public:
   ImportQMMeltpoolH5File& operator=(ImportQMMeltpoolH5File&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFiles_Key = "InputFiles";
-  static inline constexpr StringLiteral k_SliceRange_Key = "SliceRange";
-  static inline constexpr StringLiteral k_DataContainerPath_Key = "DataContainerPath";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "VertexAttributeMatrixName";
-  static inline constexpr StringLiteral k_Power_Key = "Power";
+  static inline constexpr StringLiteral k_InputFiles_Key = "input_files";
+  static inline constexpr StringLiteral k_SliceRange_Key = "slice_range";
+  static inline constexpr StringLiteral k_DataContainerPath_Key = "data_container_path";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_Power_Key = "power";
 
   /**
    * @brief Returns the name of the filter.
