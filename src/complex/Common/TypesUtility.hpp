@@ -600,6 +600,9 @@ inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjTy
   case complex::DataObject::Type::DynamicListArray: {
     return complex::DynamicListArrayConstants::k_TypeName;
   }
+  case complex::DataObject::Type::Any: {
+    return {"Any"};
+  }
   default: {
     throw std::runtime_error("complex::DataObjectTypeToString: Unknown DataObject::Type");
   }
