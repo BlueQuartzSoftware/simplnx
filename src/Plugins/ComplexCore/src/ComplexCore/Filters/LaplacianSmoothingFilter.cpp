@@ -72,7 +72,7 @@ Parameters LaplacianSmoothingFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_SurfaceTripleLineLambda_Key, "Outer Triple Line Lambda", "Value of λ for triple lines that lie on the outer surface of the volume", 0.0f));
   params.insert(
       std::make_unique<Float32Parameter>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "Value of λ for the quadruple Points that lie on the outer surface of the volume.", 0.0f));
-  
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseTaubinSmoothing_Key, k_MuFactor_Key, true);
 
