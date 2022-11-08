@@ -39,7 +39,9 @@ std::vector<std::string> DeleteData::defaultTags() const
 Parameters DeleteData::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Comments"});
   params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
+  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_DataPath_Key, "DataPath to remove", "The complete path to the DataObject to be removed", DataPath{}));
   return params;
 }

@@ -56,7 +56,10 @@ std::string CreateDataArray::humanName() const
 Parameters CreateDataArray::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Comments"});
   params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Numeric Type", "Numeric Type of data to create", NumericType::int32));
   params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Number of Components", "Number of components", 1));
 

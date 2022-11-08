@@ -52,6 +52,7 @@ Naming of variables should descriptive where needed. Loop Control Variables can 
 - [ ] Documentation copied from SIMPL Repo and updated (if necessary)
 - [ ] Parameter argument variables are k_CamelCase_Key
 - [ ] Parameter argument strings are lower_snake_case
+- [ ] CommentParameter placed as the very first parameter
 ```
 static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 ```

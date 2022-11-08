@@ -222,6 +222,7 @@ std::vector<std::string> FindSurfaceFeatures::defaultTags() const
 Parameters FindSurfaceFeatures::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Comments"});
   params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});

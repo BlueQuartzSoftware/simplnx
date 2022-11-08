@@ -129,7 +129,10 @@ std::vector<std::string> ApplyTransformationToGeometryFilter::defaultTags() cons
 Parameters ApplyTransformationToGeometryFilter::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Comments"});
   params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryToTransform_Key, "Geometry to Transform", "The complete path to the geometry to transform", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
                                                                                                       IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));

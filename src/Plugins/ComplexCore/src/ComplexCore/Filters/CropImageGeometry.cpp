@@ -285,6 +285,7 @@ std::vector<std::string> CropImageGeometry::defaultTags() const
 Parameters CropImageGeometry::parameters() const
 {
   Parameters params;
+  params.insertSeparator(Parameters::Separator{"Comments"});
   params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "DataPath to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
