@@ -69,6 +69,7 @@ std::vector<std::string> ScalarSegmentFeaturesFilter::defaultTags() const
 Parameters ScalarSegmentFeaturesFilter::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
 
   params.insertSeparator(Parameters::Separator{"Segmentation Parameters"});
   params.insert(std::make_unique<NumberParameter<int>>(k_ScalarToleranceKey, "Scalar Tolerance", "Tolerance for segmenting input Cell Data", 1));

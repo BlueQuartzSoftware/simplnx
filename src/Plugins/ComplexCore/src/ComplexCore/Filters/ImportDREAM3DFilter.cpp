@@ -44,6 +44,7 @@ std::string ImportDREAM3DFilter::humanName() const
 Parameters ImportDREAM3DFilter::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   params.insert(std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData()));
   return params;
 }

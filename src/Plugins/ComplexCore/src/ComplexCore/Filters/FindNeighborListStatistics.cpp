@@ -288,6 +288,7 @@ std::string FindNeighborListStatistics::humanName() const
 Parameters FindNeighborListStatistics::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   params.insert(
       std::make_unique<NeighborListSelectionParameter>(k_InputArray_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(), complex::GetAllDataTypes()));
 

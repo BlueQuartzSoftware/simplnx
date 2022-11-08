@@ -53,6 +53,7 @@ std::vector<std::string> CalculateFeatureSizesFilter::defaultTags() const
 Parameters CalculateFeatureSizesFilter::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_SaveElementSizes_Key, "Save Element Sizes", "Save element sizes", false));
 

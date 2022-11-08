@@ -8,7 +8,6 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/CommentParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 

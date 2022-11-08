@@ -315,6 +315,7 @@ std::vector<std::string> ImportCSVDataFilter::defaultTags() const
 Parameters ImportCSVDataFilter::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
 
   params.insert(std::make_unique<ImportCSVDataParameter>(k_WizardData_Key, "CSV Wizard Data", "Holds all relevant csv file data collected from the wizard", CSVWizardData()));
 

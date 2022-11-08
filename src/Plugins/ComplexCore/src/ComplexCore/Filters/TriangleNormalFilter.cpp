@@ -107,6 +107,7 @@ std::vector<std::string> TriangleNormalFilter::defaultTags() const
 Parameters TriangleNormalFilter::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   // Create the parameter descriptors that are needed for this filter
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},

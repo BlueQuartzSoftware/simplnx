@@ -14,6 +14,7 @@
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Filter/Parameters.hpp"
+#include "complex/Parameters/CommentParameter.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex

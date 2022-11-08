@@ -165,6 +165,7 @@ std::string InitializeData::humanName() const
 Parameters InitializeData::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   // TODO: restrict types
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "The cell data arrays in which to initialize a subvolume to zeros", std::vector<DataPath>{},
                                                                complex::GetAllDataTypes()));

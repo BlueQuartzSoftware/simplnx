@@ -283,6 +283,7 @@ std::vector<std::string> RemoveMinimumSizeFeaturesFilter::defaultTags() const
 Parameters RemoveMinimumSizeFeaturesFilter::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<NumberParameter<int64>>(k_MinAllowedFeaturesSize_Key, "Minimum Allowed Features Size", "Minimum allowed features size", 0));

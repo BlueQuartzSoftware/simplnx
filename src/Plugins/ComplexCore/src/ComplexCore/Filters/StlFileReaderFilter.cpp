@@ -63,6 +63,7 @@ std::vector<std::string> StlFileReaderFilter::defaultTags() const
 Parameters StlFileReaderFilter::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   // Create the parameter descriptors that are needed for this filter
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ScaleOutput, "Scale Output Geometry", "Scale the output Triangle Geometry by the Scaling Factor", false));

@@ -36,6 +36,7 @@ std::vector<std::string> CreateDataGroup::defaultTags() const
 Parameters CreateDataGroup::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataObjectPath, "DataObject Path", "The complete path to the DataObject being created", DataPath{}));
   return params;
 }

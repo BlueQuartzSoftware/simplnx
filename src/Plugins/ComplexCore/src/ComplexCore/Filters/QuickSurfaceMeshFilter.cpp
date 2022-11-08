@@ -53,6 +53,7 @@ std::vector<std::string> QuickSurfaceMeshFilter::defaultTags() const
 Parameters QuickSurfaceMeshFilter::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Parameters"});
 

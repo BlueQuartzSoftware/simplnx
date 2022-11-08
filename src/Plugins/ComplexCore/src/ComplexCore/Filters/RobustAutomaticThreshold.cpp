@@ -134,6 +134,7 @@ std::vector<std::string> RobustAutomaticThreshold::defaultTags() const
 Parameters RobustAutomaticThreshold::parameters() const
 {
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   // Input cannot be bool array
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath(), complex::GetAllNumericTypes(),
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
