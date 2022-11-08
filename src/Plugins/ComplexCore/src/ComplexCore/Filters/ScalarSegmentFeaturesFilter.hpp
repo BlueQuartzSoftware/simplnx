@@ -29,14 +29,14 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
-  static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar tolerance";
-  static inline constexpr StringLiteral k_InputArrayPathKey = "input array path";
-  static inline constexpr StringLiteral k_UseGoodVoxelsKey = "use mask";
-  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "mask path";
-  static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature ids path";
-  static inline constexpr StringLiteral k_CellFeaturePathKey = "cell feature group path";
-  static inline constexpr StringLiteral k_ActiveArrayPathKey = "active array path";
-  static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize features";
+  static inline constexpr StringLiteral k_ScalarToleranceKey = "scalar_tolerance";
+  static inline constexpr StringLiteral k_InputArrayPathKey = "input_array_path";
+  static inline constexpr StringLiteral k_UseGoodVoxelsKey = "use_mask";
+  static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "mask_path";
+  static inline constexpr StringLiteral k_FeatureIdsPathKey = "feature_ids_path";
+  static inline constexpr StringLiteral k_CellFeaturePathKey = "cell_feature_group_path";
+  static inline constexpr StringLiteral k_ActiveArrayPathKey = "active_array_path";
+  static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
 
   /**
    * @brief Returns the filter's name.
