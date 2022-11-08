@@ -8,6 +8,7 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/CommentParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
@@ -397,6 +398,7 @@ Parameters AlignGeometries::parameters() const
   GeometrySelectionParameter::AllowedTypes geomTypes = IGeometry::GetAllGeomTypes();
 
   Parameters params;
+  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_MovingGeometry_Key, "Moving Geometry", "The geometry that will be moved.", DataPath(), geomTypes));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TargetGeometry_Key, "Fixed Geometry", "The geometry that does *not* move.", DataPath(), geomTypes));
   params.insert(std::make_unique<ChoicesParameter>(k_AlignmentType_Key, "Alignment Type", "The type of alignment to perform (Origin or Centroid.", 0, std::vector<std::string>{"Origin", "Centroid"}));
