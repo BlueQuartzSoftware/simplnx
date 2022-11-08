@@ -47,7 +47,7 @@ std::vector<std::string> LaplacianSmoothingFilter::defaultTags() const
 Parameters LaplacianSmoothingFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Geometry and Node Type Array"});
 
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry",
@@ -72,15 +72,6 @@ Parameters LaplacianSmoothingFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_SurfaceTripleLineLambda_Key, "Outer Triple Line Lambda", "Value of λ for triple lines that lie on the outer surface of the volume", 0.0f));
   params.insert(
       std::make_unique<Float32Parameter>(k_SurfaceQuadPointLambda_Key, "Outer Quadruple Points Lambda", "Value of λ for the quadruple Points that lie on the outer surface of the volume.", 0.0f));
-
-  params.insertSeparator(Parameters::Separator{"Input Geometry and Node Type Array"});
-
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry",
-                                                             "The complete path to the surface mesh Geometry for which to apply Laplacian smoothing", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle, IGeometry::Type::Tetrahedral}));
-  params.insertSeparator(Parameters::Separator{"Vertex Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshNodeTypeArrayPath_Key, "Node Type Array", "The complete path to the array specifying the type of node in the Geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int8}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseTaubinSmoothing_Key, k_MuFactor_Key, true);
