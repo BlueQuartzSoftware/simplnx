@@ -129,6 +129,7 @@ set(CoreParameters
   NeighborListSelectionParameter
   BoolParameter
   ChoicesParameter
+  CommentParameter
   DataGroupCreationParameter
   DataGroupSelectionParameter
   DataObjectNameParameter

@@ -107,6 +107,8 @@ public:
   IFilter& operator=(const IFilter&) = delete;
   IFilter& operator=(IFilter&&) noexcept = delete;
 
+  static inline constexpr StringLiteral k_FilterComment_Key = "filter_comment";
+
   /**
    * @brief Returns the name of the filter.
    * @return std::string
