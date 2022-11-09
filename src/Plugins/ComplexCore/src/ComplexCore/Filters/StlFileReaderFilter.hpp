@@ -31,8 +31,8 @@ public:
 
   static inline constexpr StringLiteral k_FaceGroupDataPath_Key = "face_data_path";
   static inline constexpr StringLiteral k_FaceNormalsDataPath_Key = "face_normals_data_path";
-  static inline constexpr StringLiteral k_ScaleOutput = "ScaleOutput";
-  static inline constexpr StringLiteral k_ScaleFactor = "ScaleFactor";
+  static inline constexpr StringLiteral k_ScaleOutput = "scale_output";
+  static inline constexpr StringLiteral k_ScaleFactor = "scale_factor";
 
   /**
    * @brief Returns the name of the filter.

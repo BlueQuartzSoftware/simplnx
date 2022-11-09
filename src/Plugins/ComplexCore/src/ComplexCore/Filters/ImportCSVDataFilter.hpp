@@ -34,11 +34,11 @@ public:
   ImportCSVDataFilter& operator=(ImportCSVDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_WizardData_Key = "Wizard Data";
-  static inline constexpr StringLiteral k_TupleDims_Key = "Tuple Dimensions";
-  static inline constexpr StringLiteral k_UseExistingGroup_Key = "Use Existing Group";
-  static inline constexpr StringLiteral k_SelectedDataGroup_Key = "Selected Data Group";
-  static inline constexpr StringLiteral k_CreatedDataGroup_Key = "Created Data Group";
+  static inline constexpr StringLiteral k_WizardData_Key = "wizard_data";
+  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+  static inline constexpr StringLiteral k_UseExistingGroup_Key = "use_existing_group";
+  static inline constexpr StringLiteral k_SelectedDataGroup_Key = "selected_data_group";
+  static inline constexpr StringLiteral k_CreatedDataGroup_Key = "created_data_group";
 
   /**
    * @brief Returns the name of the filter.
