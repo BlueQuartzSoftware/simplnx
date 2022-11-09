@@ -93,8 +93,7 @@ std::vector<std::string> ImportHDF5Dataset::defaultTags() const
 Parameters ImportHDF5Dataset::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Comments"});
-  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
+
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<ImportHDF5DatasetParameter>(k_ImportHDF5File_Key, "Select HDF5 File", "The HDF5 file data to import", ImportHDF5DatasetParameter::ValueType{}));
 

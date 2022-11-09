@@ -40,8 +40,7 @@ std::string RenameDataObject::humanName() const
 Parameters RenameDataObject::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Comments"});
-  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
+
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_DataObject_Key, "DataObject to Rename", "DataPath pointing to the target DataObject", DataPath()));

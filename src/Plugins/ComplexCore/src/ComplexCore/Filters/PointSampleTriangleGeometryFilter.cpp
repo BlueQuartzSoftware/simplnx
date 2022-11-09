@@ -53,8 +53,7 @@ std::vector<std::string> PointSampleTriangleGeometryFilter::defaultTags() const
 Parameters PointSampleTriangleGeometryFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Comments"});
-  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
+
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   // Create the parameter descriptors that are needed for this filter

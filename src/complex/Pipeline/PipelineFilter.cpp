@@ -18,6 +18,7 @@ constexpr StringLiteral k_ArgsKey = "args";
 constexpr StringLiteral k_FilterKey = "filter";
 constexpr StringLiteral k_FilterNameKey = "name";
 constexpr StringLiteral k_FilterUuidKey = "uuid";
+constexpr StringLiteral k_FilterCommentsKey = "comments";
 } // namespace
 
 std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handle, const Arguments& args, FilterList* filterList)
@@ -78,6 +79,16 @@ void PipelineFilter::setArguments(const Arguments& args)
 void PipelineFilter::setIndex(int32 index)
 {
   m_Index = index;
+}
+
+std::string PipelineFilter::getComments() const
+{
+  return m_Comments;
+}
+
+void PipelineFilter::setComments(const std::string& comments)
+{
+  m_Comments = comments;
 }
 
 // -----------------------------------------------------------------------------
@@ -422,6 +433,7 @@ nlohmann::json PipelineFilter::toJsonImpl() const
 
   json[k_FilterKey] = std::move(filterObjectJson);
   json[k_ArgsKey] = std::move(argsJsonArray);
+  json[k_FilterCommentsKey] = m_Comments;
 
   return json;
 }
@@ -488,6 +500,11 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
 
   auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter), std::move(argsResult.value()));
   pipelineFilter->setDisabled(isDisabled);
+
+  if(json.contains(k_FilterCommentsKey.view()))
+  {
+    pipelineFilter->setComments(json[k_FilterCommentsKey]);
+  }
 
   Result<std::unique_ptr<PipelineFilter>> result{std::move(pipelineFilter)};
   result.warnings() = std::move(argsResult.warnings());

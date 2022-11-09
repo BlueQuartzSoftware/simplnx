@@ -315,8 +315,7 @@ std::vector<std::string> ImportCSVDataFilter::defaultTags() const
 Parameters ImportCSVDataFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Comments"});
-  params.insert(std::make_unique<CommentParameter>(k_FilterComment_Key, "Comments", "User notes/comments", ""));
+
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
