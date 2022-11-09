@@ -33,9 +33,9 @@
 using namespace complex;
 namespace
 {
-constexpr StringLiteral k_DataPathsKey = "datapaths";
-constexpr StringLiteral k_InputFileKey = "inputfile";
-constexpr StringLiteral k_ParentGroupKey = "parentgroup";
+constexpr StringLiteral k_DataPathsKey = "data_paths";
+constexpr StringLiteral k_InputFileKey = "input_file";
+constexpr StringLiteral k_ParentGroupKey = "parent_group";
 } // namespace
 
 namespace complex

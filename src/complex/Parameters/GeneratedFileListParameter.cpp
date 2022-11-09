@@ -20,15 +20,15 @@ namespace
 {
 using OrderingUnderlyingT = std::underlying_type_t<GeneratedFileListParameter::Ordering>;
 
-constexpr StringLiteral k_StartIndex = "startIndex";
-constexpr StringLiteral k_EndIndex = "endIndex";
-constexpr StringLiteral k_PaddingDigits = "paddingDigits";
+constexpr StringLiteral k_StartIndex = "start_index";
+constexpr StringLiteral k_EndIndex = "end_index";
+constexpr StringLiteral k_PaddingDigits = "padding_digits";
 constexpr StringLiteral k_Ordering = "ordering";
-constexpr StringLiteral k_IncrementIndex = "incrementIndex";
-constexpr StringLiteral k_InputPath = "inputPath";
-constexpr StringLiteral k_FilePrefix = "filePrefix";
-constexpr StringLiteral k_FileSuffix = "fileSuffix";
-constexpr StringLiteral k_FileExtension = "fileExtension";
+constexpr StringLiteral k_IncrementIndex = "increment_index";
+constexpr StringLiteral k_InputPath = "input_path";
+constexpr StringLiteral k_FilePrefix = "file_prefix";
+constexpr StringLiteral k_FileSuffix = "file_suffix";
+constexpr StringLiteral k_FileExtension = "file_extension";
 } // namespace
 
 //-----------------------------------------------------------------------------

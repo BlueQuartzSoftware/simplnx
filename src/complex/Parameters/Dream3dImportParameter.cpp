@@ -15,8 +15,8 @@ using namespace complex;
 
 namespace
 {
-constexpr StringLiteral k_FilePathKey = "filepath";
-constexpr StringLiteral k_DataPathsKey = "datapaths";
+constexpr StringLiteral k_FilePathKey = "file_path";
+constexpr StringLiteral k_DataPathsKey = "data_paths";
 } // namespace
 
 namespace complex

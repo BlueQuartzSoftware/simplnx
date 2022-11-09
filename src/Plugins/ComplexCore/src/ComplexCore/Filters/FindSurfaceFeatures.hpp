@@ -39,7 +39,7 @@ public:
   FindSurfaceFeatures& operator=(FindSurfaceFeatures&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MarkFeature0Neighbors = "MarkFeature0Neighbors";
+  static inline constexpr StringLiteral k_MarkFeature0Neighbors = "mark_feature_0_neighbors";
   static inline constexpr StringLiteral k_FeatureGeometryPath_Key = "feature_geometry_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "surface_features_array_path";
@@ -110,4 +110,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindSurfaceFeatures, "d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindSurfaceFeatures, "0893e490-5d24-4c21-95e7-e8372baa8948");
