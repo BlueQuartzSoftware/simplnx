@@ -151,13 +151,11 @@ Pipeline CreateExportPipeline()
   Pipeline pipeline("Export DREAM3D Pipeline 1");
   {
     Arguments args;
-    args.insert(IFilter::k_FilterComment_Key, std::make_any<std::string>(""));
     args.insert("Data_Object_Path", DataPath({DataNames::k_Group1Name}));
     pipeline.push_back(k_CreateDataGroupHandle, args);
   }
   {
     Arguments args;
-    args.insert(IFilter::k_FilterComment_Key, std::make_any<std::string>(""));
     args.insert("numeric_type", std::make_any<NumericType>(NumericType::int8));
     args.insert("component_count", std::make_any<uint64>(3));
 
@@ -168,7 +166,6 @@ Pipeline CreateExportPipeline()
   }
   {
     Arguments args;
-    args.insert(IFilter::k_FilterComment_Key, std::make_any<std::string>(""));
     args.insert("export_file_path", GetExportDataPath());
     args.insert("write_xdmf_file", true);
     pipeline.push_back(k_ExportD3DHandle, args);
