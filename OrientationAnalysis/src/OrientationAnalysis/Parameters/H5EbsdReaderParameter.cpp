@@ -25,12 +25,12 @@ namespace complex
 {
 namespace
 {
-constexpr StringLiteral k_InputFilePath = "inputFilePath";
-constexpr StringLiteral k_StartSlice = "startSlice";
-constexpr StringLiteral k_EndSlice = "endSlice";
-constexpr StringLiteral k_UseRecommendedTransform = "useRecommendedTransform";
-constexpr StringLiteral k_EulerRepresentation = "eulerRepresentation";
-constexpr StringLiteral k_HDF5DataPaths = "hdf5DataPaths";
+constexpr StringLiteral k_InputFilePath = "input_file_path";
+constexpr StringLiteral k_StartSlice = "start_slice";
+constexpr StringLiteral k_EndSlice = "end_slice";
+constexpr StringLiteral k_UseRecommendedTransform = "use_recommended_transform";
+constexpr StringLiteral k_EulerRepresentation = "euler_representation";
+constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
 
 } // namespace
 
