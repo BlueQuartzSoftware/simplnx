@@ -217,7 +217,6 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
 
-
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplingGridType_Key, "Sampling Grid Type", "Specifies how data is saved or accessed", 0,
                                                                     std::vector<std::string>{"Manual", "Use Existing Image Geometry"}));

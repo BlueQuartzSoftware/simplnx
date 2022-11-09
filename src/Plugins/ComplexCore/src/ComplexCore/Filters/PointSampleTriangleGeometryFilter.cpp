@@ -54,7 +54,6 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 {
   Parameters params;
 
-
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   // Create the parameter descriptors that are needed for this filter
   // params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplesNumberType_Key, "Source for Number of Samples", "", 0, ChoicesParameter::Choices{"Manual", "Other Geometry"}));

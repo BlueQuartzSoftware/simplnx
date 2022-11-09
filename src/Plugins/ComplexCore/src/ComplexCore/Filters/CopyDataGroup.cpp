@@ -36,7 +36,6 @@ Parameters CopyDataGroup::parameters() const
 {
   Parameters params;
 
-
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataPath_Key, "Group to copy", "DataPath to BaseGroup", DataPath{}, BaseGroup::GetAllGroupTypes()));
 

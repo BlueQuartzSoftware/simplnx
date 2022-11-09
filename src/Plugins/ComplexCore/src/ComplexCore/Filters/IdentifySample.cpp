@@ -271,7 +271,6 @@ Parameters IdentifySample::parameters() const
 {
   Parameters params;
 
-
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_FillHoles_Key, "Fill Holes in Largest Feature", "Fill Holes in Largest Feature", true));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geometry", "DataPath to the target ImageGeom", DataPath(),

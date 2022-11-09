@@ -135,7 +135,6 @@ Parameters RobustAutomaticThreshold::parameters() const
 {
   Parameters params;
 
-
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   // Input cannot be bool array
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath, "Input Array", "DataArray to Threshold", DataPath(), complex::GetAllNumericTypes(),

@@ -38,7 +38,6 @@ Parameters CreateAttributeMatrixFilter::parameters() const
 {
   Parameters params;
 
-
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataObjectPath, "DataObject Path", "The complete path to the Attribute Matrix being created", DataPath{}));
   DynamicTableInfo tableInfo;
