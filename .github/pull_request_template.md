@@ -47,12 +47,11 @@ Naming of variables should descriptive where needed. Loop Control Variables can 
 
 ## Filter Checklist
 
-- [ ] Parameters should be generally broken down into "Comments", "Input Parameters", "Required Data Objects", "Created Data Objects". There can be exceptions to this.
+- [ ] Parameters should be generally broken down into "Input Parameters", "Required Data Objects", "Created Data Objects". There can be exceptions to this.
 - [ ] ChoicesParameter selections should be an enumeration defined in the filer header
 - [ ] Documentation copied from SIMPL Repo and updated (if necessary)
 - [ ] Parameter argument variables are k_CamelCase_Key
 - [ ] Parameter argument strings are lower_snake_case
-- [ ] CommentParameter placed underneath the Comments separator as the first parameter
 ```
 static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 ```
