@@ -41,8 +41,7 @@ struct PrintNeighborList
       {
         outputStrm << "Feature_IDs" << delimiter;
       }
-      outputStrm << "Element Count" << delimiter << "NeighborList"
-                 << "\n";
+      outputStrm << "Element Count" << delimiter << inputNeighborList->getName() << "\n";
     }
     if(hasIndex)
     {
@@ -293,7 +292,14 @@ public:
   {
     for(size_t index = 0; index < m_NumComps; index++)
     {
-      outputStrm << m_DataArray.getName() << "_" << index;
+      if(index == 0)
+      {
+        outputStrm << m_DataArray.getName();
+      }
+      else
+      {
+        outputStrm << m_DataArray.getName() << "_" << index;
+      }
       if(index < m_NumComps - 1)
       {
         outputStrm << m_Delimiter;
@@ -347,7 +353,7 @@ std::string DelimiterToString(uint64 delim)
  * @param componentsPerLine The amount of elements to be inserted before newline character | leave blank if binary is end output
  */
 void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& directoryPath, const IFilter::MessageHandler& mesgHandler,
-                                  const std::atomic_bool& shouldCancel, std::string fileExtension, bool exportToBinary, const std::string& delimiter, bool includeIndex, bool includeHeaders,
+                                  const std::atomic_bool& shouldCancel, const std::string& fileExtension, bool exportToBinary, const std::string& delimiter, bool includeIndex, bool includeHeaders,
                                   size_t componentsPerLine)
 {
   fs::path dirPath(directoryPath);
@@ -453,8 +459,8 @@ void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath,
  * @param neighborLists The list of dataPaths of neighborlists to include
  */
 void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
-                               const std::atomic_bool& shouldCancel, const std::string& delimiter, bool includeIndex, bool includeHeaders, size_t componentsPerLine,
-                               const std::vector<DataPath>& neighborLists)
+                               const std::atomic_bool& shouldCancel, const std::string& delimiter, bool includeIndex, bool includeHeaders, const std::vector<DataPath>& neighborLists,
+                               bool writeNumOfFeatures)
 {
   const auto& firstDataArray = dataStructure.getDataRefAs<IDataArray>(objectPaths[0]);
   usize numTuples = firstDataArray.getNumberOfTuples();
@@ -472,6 +478,20 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   if(shouldCancel)
   {
     return;
+  }
+
+  if(writeNumOfFeatures)
+  {
+    size_t featureCount = 0;
+    if(includeHeaders)
+    {
+      featureCount++;
+    }
+    for(const auto& path : objectPaths)
+    {
+      featureCount += dataStructure.getDataRefAs<IArray>(path).getNumberOfComponents();
+    }
+    outputStrm << featureCount << "\n";
   }
 
   // Write out the header line
@@ -526,7 +546,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
     outputStrm << '\n';
   }
 
-  if(neighborLists.size() != 0)
+  if(!neighborLists.empty())
   {
     for(const auto& dataPath : neighborLists)
     {

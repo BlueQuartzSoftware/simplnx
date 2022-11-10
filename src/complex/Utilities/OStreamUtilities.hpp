@@ -48,7 +48,7 @@ COMPLEX_EXPORT std::string DelimiterToString(uint64 delim);
  * @param componentsPerLine The amount of elements to be inserted before newline character | leave blank if binary is end output
  */
 COMPLEX_EXPORT void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const std::string& directoryPath, const IFilter::MessageHandler& mesgHandler,
-                                                 const std::atomic_bool& shouldCancel, std::string fileExtension = ".txt", bool exportToBinary = false, const std::string& delimiter = "",
+                                                 const std::atomic_bool& shouldCancel, const std::string& fileExtension = ".txt", bool exportToBinary = false, const std::string& delimiter = "",
                                                  bool includeIndex = false, bool includeHeaders = false, size_t componentsPerLine = 0);
 
 /**
@@ -77,12 +77,12 @@ COMPLEX_EXPORT void PrintSingleDataObject(std::ostream& outputStrm, const DataPa
  * @param delimiter The delimiter to be inserted into string
  * @param includeIndex The boolean that determines if "Feature_IDs" are printed
  * @param includeHeaders The boolean that determines if headers are printed
- * @param componentsPerLine The amount of elements to be inserted before newline character
  * @param neighborLists The list of dataPaths of neighborlists to include
+ * @param writeNumOfFeatures The amount of elements per tuple printed at top
  */
 COMPLEX_EXPORT void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
                                               const std::atomic_bool& shouldCancel, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,
-                                              size_t componentsPerLine = 0, const std::vector<DataPath>& neighborLists = {});
+                                              const std::vector<DataPath>& neighborLists = {}, bool writeNumOfFeatures = false);
 } // namespace OStreamUtilities
 
 } // namespace complex
