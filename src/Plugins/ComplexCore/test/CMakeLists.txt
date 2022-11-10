@@ -21,7 +21,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CropVertexGeometryTest.cpp
   CopyFeatureArrayToElementArrayTest.cpp
   CreateImageGeometryTest.cpp
-  CropImageGeomTest.cpp
+  CropImageGeometryTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   FindDifferencesMapTest.cpp
   FindFeaturePhasesFilterTest.cpp

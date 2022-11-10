@@ -3,6 +3,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "complex/Filter/Actions/CopyDataObjectAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -16,13 +17,23 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+using namespace complex;
+
 namespace
 {
+/**
+ * @brief
+ * @param dims
+ * @param spacing
+ * @param origin
+ * @return
+ */
 std::string GenerateGeometryInfo(const complex::SizeVec3& dims, const complex::FloatVec3& spacing, const complex::FloatVec3& origin)
 {
   std::stringstream description;
@@ -32,86 +43,34 @@ std::string GenerateGeometryInfo(const complex::SizeVec3& dims, const complex::F
   description << "Z Range: " << origin[2] << " to " << (origin[2] + (dims[2] * spacing[2])) << " (Delta: " << (dims[2] * spacing[2]) << ") " << 0 << "-" << dims[2] - 1 << " Voxels\n";
   return description.str();
 }
-} // namespace
 
-namespace complex
-{
-namespace
-{
-template <typename T>
-void copyDataTuple(const IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
-{
-  const auto& oldArrayCast = static_cast<const DataArray<T>&>(oldArray);
-  auto& newArrayCast = static_cast<DataArray<T>&>(newArray);
-
-  auto numComponents = oldArrayCast.getNumberOfComponents();
-
-  for(usize i = 0; i < numComponents; i++)
-  {
-    usize newOffset = newIndex * numComponents;
-    usize oldOffset = oldIndex * numComponents;
-    newArrayCast[newOffset + i] = oldArrayCast[oldOffset + i];
-  }
-}
-
-void copyDataArrayTuple(const IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
-{
-  auto dataType = oldArray.getDataType();
-  switch(dataType)
-  {
-  case DataType::boolean:
-    copyDataTuple<bool>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::float32:
-    copyDataTuple<float32>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::float64:
-    copyDataTuple<float64>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::int8:
-    copyDataTuple<int8>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::int16:
-    copyDataTuple<int16>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::int32:
-    copyDataTuple<int32>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::int64:
-    copyDataTuple<int64>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::uint8:
-    copyDataTuple<uint8>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::uint16:
-    copyDataTuple<uint16>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::uint32:
-    copyDataTuple<uint32>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  case DataType::uint64:
-    copyDataTuple<uint64>(oldArray, newArray, oldIndex, newIndex);
-    break;
-  default:
-    break;
-  }
-}
-
-USizeVec3 getCurrentVolumeDataContainerDimensions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
+/**
+ * @brief
+ * @param dataStructure
+ * @param imageGeomPath
+ * @return
+ */
+USizeVec3 GetCurrentVolumeDataContainerDimensions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
 {
   USizeVec3 data = {0, 0, 0};
 
   const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
   if(image != nullptr)
   {
-    data[0] = image->getNumXCells();
+    data[2] = image->getNumXCells();
     data[1] = image->getNumYCells();
-    data[2] = image->getNumZCells();
+    data[0] = image->getNumZCells();
   }
   return data;
 }
 
-FloatVec3 getCurrentVolumeDataContainerResolutions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
+/**
+ * @brief
+ * @param dataStructure
+ * @param imageGeomPath
+ * @return
+ */
+FloatVec3 GetCurrentVolumeDataContainerResolutions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
 {
   FloatVec3 data = {0, 0, 0};
   const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
@@ -122,6 +81,33 @@ FloatVec3 getCurrentVolumeDataContainerResolutions(const DataStructure& dataStru
   return data;
 }
 
+/**
+ * @brief
+ * @tparam ArrayType
+ * @param dataStructure
+ * @param sourceDataPath
+ * @param destDataPath
+ * @return
+ */
+template <typename ArrayType>
+Result<> DeepCopy(DataStructure& dataStructure, const DataPath& sourceDataPath, const DataPath& destDataPath)
+{
+  ArrayType& iDataArray = dataStructure.getDataRefAs<ArrayType>(sourceDataPath);
+  if(dataStructure.removeData(destDataPath))
+  {
+    iDataArray.deepCopy(destDataPath);
+  }
+  else
+  {
+    return MakeErrorResult(-34600, fmt::format("Could not remove data array at path '{}' which would be replaced through a deep copy.", destDataPath.toString()));
+  }
+  return {};
+}
+
+/**
+ * @brief
+ * @tparam T
+ */
 template <typename T>
 class CropImageGeomDataArray
 {
@@ -145,41 +131,24 @@ protected:
   {
     size_t numComps = m_OldCellArray.getNumberOfComponents();
 
-    uint64 col = 0;
-    uint64 row = 0;
-    uint64 plane = 0;
+    auto& dataStore = m_NewCellArray.getDataStoreRef();
+    std::fill(dataStore.begin(), dataStore.end(), static_cast<T>(-1));
 
-    uint64 colold = 0;
-    uint64 rowold = 0;
-    uint64 planeold = 0;
-    uint64 index = 0;
-    uint64 index_old = 0;
+    auto srcDims = m_SrcImageGeom.getDimensions();
 
-    // Loop over every tuple in this array
-    for(int64 i = 0; i < m_Bounds[5]; i++)
+    uint64 destTupleIndex = 0;
+    for(uint64 zIndex = m_Bounds[4]; zIndex < m_Bounds[5]; zIndex++)
     {
-      if(m_ShouldCancel)
+      for(uint64 yIndex = m_Bounds[2]; yIndex < m_Bounds[3]; yIndex++)
       {
-        return;
-      }
-
-      planeold = (i + m_Bounds[4]) * (m_SrcImageGeom.getNumXCells() * m_SrcImageGeom.getNumYCells());
-      plane = (i * m_Bounds[1] * m_Bounds[3]);
-      for(int64 j = 0; j < m_Bounds[3]; j++)
-      {
-        rowold = (j + m_Bounds[2]) * m_SrcImageGeom.getNumXCells();
-        row = (j * m_Bounds[1]);
-        for(int64 k = 0; k < m_Bounds[1]; k++)
+        for(uint64 xIndex = m_Bounds[0]; xIndex < m_Bounds[1]; xIndex++)
         {
-          colold = (k + m_Bounds[0]);
-          col = k;
-          index_old = planeold + rowold + colold;
-          index = plane + row + col;
-
+          uint64 srcIndex = (srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex) + xIndex;
           for(size_t compIndex = 0; compIndex < numComps; compIndex++)
           {
-            m_NewCellArray[index * numComps + compIndex] = m_OldCellArray[index_old * numComps + compIndex];
+            m_NewCellArray[destTupleIndex * numComps + compIndex] = m_OldCellArray[srcIndex * numComps + compIndex];
           }
+          destTupleIndex++;
         }
       }
     }
@@ -193,7 +162,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
-void cropDataArray(ParallelTaskAlgorithm& taskRunner, const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds,
+void CropDataArray(ParallelTaskAlgorithm& taskRunner, const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds,
                    const std::atomic_bool& shouldCancel)
 {
   DataType type = oldCellArray.getDataType();
@@ -327,7 +296,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
-  auto cellFeatureAMPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
+  auto cellFeatureAmPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
   auto pRemoveOriginalGeometry = args.value<bool>(k_RemoveOriginalGeometry_Key);
 
   auto xMin = minVoxels[0];
@@ -359,8 +328,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
   // Provides {0, 0, 0} or {1, 1, 1} respectfully if the geometry could not be found.
-  auto srcDimensions = getCurrentVolumeDataContainerDimensions(data, srcImagePath);
-  auto srcSpacing = getCurrentVolumeDataContainerResolutions(data, srcImagePath);
+  auto srcDimensions = GetCurrentVolumeDataContainerDimensions(data, srcImagePath);
+  auto srcSpacing = GetCurrentVolumeDataContainerResolutions(data, srcImagePath);
 
   const auto* srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
   auto srcOrigin = srcImageGeom->getOrigin();
@@ -383,9 +352,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
-  const usize requiredTupleCount = srcDimensions[0] * srcDimensions[1] * srcDimensions[2];
-
-  std::vector<usize> tDims(3, 0);
+  std::vector<usize> geomDims(3, 0);
   if(static_cast<int>(xMax) - static_cast<int>(xMin) < 0)
   {
     xMax = xMin + 1;
@@ -399,9 +366,12 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     zMax = zMin + 1;
   }
 
-  tDims[0] = (xMax - xMin) + 1;
-  tDims[1] = (yMax - yMin) + 1;
-  tDims[2] = (zMax - zMin) + 1;
+  // The ImageGeometryDimensions go from Fastest to Slowest, XYZ.
+  geomDims[0] = (xMax - xMin) + 1;
+  geomDims[1] = (yMax - yMin) + 1;
+  geomDims[2] = (zMax - zMin) + 1;
+
+  std::vector<usize> dataArrayShape = {geomDims[2], geomDims[1], geomDims[0]}; // The DataArray shape goes slowest to fastest (ZYX)
 
   FloatVec3 targetSpacing;
   targetSpacing = srcSpacing;
@@ -437,7 +407,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
     std::string cellDataName = cellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
-    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, tDims, targetOrigin, spacingVec, cellDataName);
+    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, targetOrigin, spacingVec, cellDataName);
     resultOutputActions.value().actions.push_back(std::move(geomAction));
 
     DataPath newCellFeaturesPath = destImagePath.createChildPath(cellDataName);
@@ -448,19 +418,19 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       DataType dataType = srcArray.getDataType();
       IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellFeaturesPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
+      resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
     }
 
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using
     // the appropriate methods.
     // These values should have been updated during the preflightImpl(...) method
     preflightUpdatedValues.push_back({"Input Geometry Info", ::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
-    preflightUpdatedValues.push_back({"Cropped Image Geometry Info", ::GenerateGeometryInfo(tDims, spacingVec, targetOrigin)});
+    preflightUpdatedValues.push_back({"Cropped Image Geometry Info", ::GenerateGeometryInfo(geomDims, spacingVec, targetOrigin)});
   }
 
   if(shouldRenumberFeatures)
   {
-    ignorePaths.push_back(cellFeatureAMPath);
+    ignorePaths.push_back(cellFeatureAmPath);
     auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
     if(nullptr == featureIdsPtr)
     {
@@ -472,17 +442,17 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       std::string errMsg = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
       return {MakeErrorResult<OutputActions>(-55501, errMsg)};
     }
-    const AttributeMatrix* srcCellFeaturData = data.getDataAs<AttributeMatrix>(cellFeatureAMPath);
-    if(nullptr == srcCellFeaturData)
+    const AttributeMatrix* srcCellFeatureData = data.getDataAs<AttributeMatrix>(cellFeatureAmPath);
+    if(nullptr == srcCellFeatureData)
     {
-      std::string errMsg = fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAMPath.toString());
+      std::string errMsg = fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString());
       return {MakeErrorResult<OutputActions>(-55502, errMsg)};
     }
-    std::string warningMsg = "";
-    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
-    tDims = srcCellFeaturData->getShape();
+    std::string warningMsg;
+    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
+    auto tDims = srcCellFeatureData->getShape();
     resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
-    for(const auto& [id, object] : *srcCellFeaturData)
+    for(const auto& [id, object] : *srcCellFeatureData)
     {
       if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
       {
@@ -493,7 +463,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       }
       else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
       {
-        warningMsg += "\n" + cellFeatureAMPath.toString() + "/" + srcNeighborListArray->getName();
+        warningMsg += "\n" + cellFeatureAmPath.toString() + "/" + srcNeighborListArray->getName();
       }
     }
     if(!warningMsg.empty())
@@ -542,7 +512,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel) const
 {
   auto srcImagePath = args.value<DataPath>(k_ImageGeom_Key);
@@ -560,8 +530,8 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   uint64 zMax = maxVoxels[2];
   uint64 zMin = minVoxels[2];
 
-  auto& srcImageGeom = data.getDataRefAs<ImageGeom>(srcImagePath);
-  auto& destImageGeom = data.getDataRefAs<ImageGeom>(destImagePath);
+  auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+  auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(destImagePath);
 
   // No matter where the AM is (same DC or new DC), we have the correct DC and AM pointers...now it's time to crop
 
@@ -585,32 +555,33 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
   // Check to make sure the new dimensions are not "out of bounds" and warn the user if they are
   if(dims[0] <= xMax)
   {
-    std::string errMsg = fmt::format("The Max X value ({}) is greater than the Image Geometry X entent ({})."
-                                     " This may lead to junk data being filled into the extra space.",
+    std::string errMsg = fmt::format("The Max X value ({}) is greater than the Image Geometry X extent ({})."
+                                     " This may lead to junk dataStructure being filled into the extra space.",
                                      xMax, dims[0]);
     return MakeErrorResult(-950, errMsg);
   }
   if(dims[1] <= yMax)
   {
-    std::string errMsg = fmt::format("The Max Y value ({}) is greater than the Image Geometry Y entent ({})."
-                                     " This may lead to junk data being filled into the extra space.",
+    std::string errMsg = fmt::format("The Max Y value ({}) is greater than the Image Geometry Y extent ({})."
+                                     " This may lead to junk dataStructure being filled into the extra space.",
                                      yMax, dims[1]);
     return MakeErrorResult(-951, errMsg);
   }
   if(dims[2] <= zMax)
   {
-    std::string errMsg = fmt::format("The Max Z value ({}) is greater than the Image Geometry Z entent ({})."
-                                     " This may lead to junk data being filled into the extra space.",
+    std::string errMsg = fmt::format("The Max Z value ({}) is greater than the Image Geometry Z extent ({})."
+                                     " This may lead to junk dataStructure being filled into the extra space.",
                                      zMax, dims[2]);
     return MakeErrorResult(-952, errMsg);
   }
 
-  std::array<uint64, 6> bounds = {xMin, ((xMax - xMin) + 1), yMin, ((yMax - yMin) + 1), zMin, ((zMax - zMin) + 1)};
+  std::array<uint64, 6> bounds = {xMin, xMax + 1, yMin, yMax + 1, zMin, zMax + 1};
 
+  // The actual cropping of the dataStructure arrays is done in parallel where parallel here
+  // refers to the cropping of each DataArray being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
-
   for(const auto& [dataId, oldDataObject] : srcCellDataAM)
   {
     if(shouldCancel)
@@ -625,48 +596,65 @@ Result<> CropImageGeometry::executeImpl(DataStructure& data, const Arguments& ar
 
     std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", srcName);
     messageHandler(progMsg);
-
-    cropDataArray(taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
+    CropDataArray(taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
   }
-
-  // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-  taskRunner.wait();
+  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
   if(shouldCancel)
   {
     return {};
   }
 
-  std::vector<usize> tDims(3, 0);
-  tDims[0] = bounds[1];
-  tDims[1] = bounds[3];
-  tDims[2] = bounds[5];
-
+  // Careful with this next section. We purposefully copy in the original dataStructure arrays
+  // into the destination feature attribute matrix so that we have somewhere to start.
+  // During the renumbering phase is when those copied arrays will get potentially resized
+  // to their proper number of tuples.
   if(shouldRenumberFeatures)
   {
-    const AttributeMatrix* srcCellFeaturData = data.getDataAs<AttributeMatrix>(cellFeatureAMPath);
-    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
-    AttributeMatrix* cellFeaturData = data.getDataAs<AttributeMatrix>(destCellFeatureAMPath);
-    for(const auto& [id, object] : *cellFeaturData)
+    std::vector<DataPath> sourceFeatureDataPaths;
+    auto childPathsResult = GetAllChildArrayDataPaths(dataStructure, cellFeatureAMPath);
+    if(childPathsResult.has_value())
     {
-      if(shouldCancel)
-      {
-        return {};
-      }
-      auto& newDataArray = dynamic_cast<IDataArray&>(*object);
-      const auto& oldDataArray = data.getDataRefAs<const IDataArray>(cellFeatureAMPath.createChildPath(newDataArray.getName()));
+      sourceFeatureDataPaths = childPathsResult.value();
+    }
 
-      for(usize i = 0; i < oldDataArray.getNumberOfTuples(); ++i)
+    std::vector<DataPath> destFeatureDataPaths = sourceFeatureDataPaths;
+    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAMPath.getTargetName());
+
+    for(auto& dataPath : destFeatureDataPaths)
+    {
+      dataPath = destCellFeatureAMPath.createChildPath(dataPath.getTargetName());
+    }
+
+    // Loop over all the DataPaths and do a deep copy on each DataArray|StringArray
+    // so that the updating of the Feature level data can happen. We do a bit of
+    // under-the-covers where we actually remove the existing array that preflight
+    // created so we can use the convenience of the DataArray.deepCopy() function.
+    for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
+    {
+      DataObject* dataObject = dataStructure.getData(sourceFeatureDataPaths[index]);
+      if(dataObject->getDataObjectType() == DataObject::Type::DataArray)
       {
-        copyDataArrayTuple(oldDataArray, newDataArray, i, i);
+        auto result = DeepCopy<IDataArray>(dataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
+        if(result.invalid())
+        {
+          return result;
+        }
+      }
+      else if(dataObject->getDataObjectType() == DataObject::Type::StringArray)
+      {
+        auto result = DeepCopy<StringArray>(dataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
+        if(result.invalid())
+        {
+          return result;
+        }
       }
     }
-    // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-    // taskRunner.wait();
+
+    // NOW DO THE ACTUAL RENUMBERING and updating.
     DataPath destFeatureIdsPath = destImagePath.createChildPath(srcCellDataAM.getName()).createChildPath(featureIdsArrayPath.getTargetName());
-    return Sampling::RenumberFeatures(data, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, shouldCancel);
+    return Sampling::RenumberFeatures(dataStructure, destImagePath, destCellFeatureAMPath, featureIdsArrayPath, destFeatureIdsPath, shouldCancel);
   }
 
   return {};
 }
-} // namespace complex

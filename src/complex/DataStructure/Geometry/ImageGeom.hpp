@@ -193,13 +193,14 @@ public:
   usize getDimensionality() const;
 
   /**
-   * @brief
+   * @brief Returns the dimensions of the image geometry in the order of X, Y, Z
    * @return SizeVec3
    */
   SizeVec3 getDimensions() const override;
 
   /**
-   * @brief
+   * @brief Sets the dimensions of the Image Geometry. Ordering is X (Fastest), then Y, then Z (Slowest). These values
+   * become important when calculating things like an index based off of the Dimension values.
    * @param dims
    */
   void setDimensions(const SizeVec3& dims) override;
