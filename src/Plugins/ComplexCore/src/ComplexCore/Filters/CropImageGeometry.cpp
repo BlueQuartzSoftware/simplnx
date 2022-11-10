@@ -17,6 +17,7 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
@@ -83,29 +84,6 @@ FloatVec3 GetCurrentVolumeDataContainerResolutions(const DataStructure& dataStru
 
 /**
  * @brief
- * @tparam ArrayType
- * @param dataStructure
- * @param sourceDataPath
- * @param destDataPath
- * @return
- */
-template <typename ArrayType>
-Result<> DeepCopy(DataStructure& dataStructure, const DataPath& sourceDataPath, const DataPath& destDataPath)
-{
-  ArrayType& iDataArray = dataStructure.getDataRefAs<ArrayType>(sourceDataPath);
-  if(dataStructure.removeData(destDataPath))
-  {
-    iDataArray.deepCopy(destDataPath);
-  }
-  else
-  {
-    return MakeErrorResult(-34600, fmt::format("Could not remove data array at path '{}' which would be replaced through a deep copy.", destDataPath.toString()));
-  }
-  return {};
-}
-
-/**
- * @brief
  * @tparam T
  */
 template <typename T>
@@ -120,6 +98,13 @@ public:
   , m_ShouldCancel(shouldCancel)
   {
   }
+
+  ~CropImageGeomDataArray() = default;
+
+  CropImageGeomDataArray(const CropImageGeomDataArray&) = default;
+  CropImageGeomDataArray(CropImageGeomDataArray&&) noexcept = default;
+  CropImageGeomDataArray& operator=(const CropImageGeomDataArray&) = delete;
+  CropImageGeomDataArray& operator=(CropImageGeomDataArray&&) noexcept = delete;
 
   void operator()() const
   {
@@ -162,8 +147,8 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
-void CropDataArray(ParallelTaskAlgorithm& taskRunner, const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds,
-                   const std::atomic_bool& shouldCancel)
+void ExecuteCropImageGeomDataArray(ParallelTaskAlgorithm& taskRunner, const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds,
+                                   const std::atomic_bool& shouldCancel)
 {
   DataType type = oldCellArray.getDataType();
   switch(type)
@@ -519,7 +504,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
   auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
   auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
+  auto renumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
   auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
   auto cellFeatureAMPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
 
@@ -596,7 +581,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
 
     std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", srcName);
     messageHandler(progMsg);
-    CropDataArray(taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
+    ExecuteCropImageGeomDataArray(taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
@@ -609,7 +594,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
   // into the destination feature attribute matrix so that we have somewhere to start.
   // During the renumbering phase is when those copied arrays will get potentially resized
   // to their proper number of tuples.
-  if(shouldRenumberFeatures)
+  if(renumberFeatures)
   {
     std::vector<DataPath> sourceFeatureDataPaths;
     auto childPathsResult = GetAllChildArrayDataPaths(dataStructure, cellFeatureAMPath);
