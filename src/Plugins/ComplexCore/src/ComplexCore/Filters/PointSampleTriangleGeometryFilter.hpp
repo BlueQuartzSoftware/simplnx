@@ -102,4 +102,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, PointSampleTriangleGeometryFilter, "ee34ef95-aa04-5ad3-8232-5783a880d279");
+COMPLEX_DEF_FILTER_TRAITS(complex, PointSampleTriangleGeometryFilter, "ee34ef95-aa04-4ad3-8232-5783a880d279");
