@@ -114,6 +114,8 @@ public:
    */
   virtual H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const = 0;
 
+  virtual std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const = 0;
+
   static ShapeType ReadTupleShape(const H5::DatasetReader& datasetReader)
   {
     H5::AttributeReader tupleShapeAttribute = datasetReader.getAttribute(complex::H5::k_TupleShapeTag);

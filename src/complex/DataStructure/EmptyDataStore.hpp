@@ -225,6 +225,11 @@ public:
     return dataStore;
   }
 
+  std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
+  {
+    return {-10175, fmt::format("EmptyDataStore cannot read or write files", absoluteFilePath)};
+  }
+
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
