@@ -1,14 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "Core/Filters/WriteBinaryDataFilter.hpp"
-#include "complex/Core/Application.hpp"
 
-#include "complex/Common/ScopeGuard.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
-#include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
@@ -17,9 +10,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <functional>
-#include <regex>
-#include <stdexcept>
 
 #include "Core/Core_test_dirs.hpp"
 
@@ -204,7 +194,7 @@ private:
   }
 };
 
-TEST_CASE("Processing::WriteBinaryData: Valid filter execution")
+TEST_CASE("Core::WriteBinaryData: Valid filter execution")
 {
   DataStructure dataStructure;
   DataStructure& dsRef = dataStructure;

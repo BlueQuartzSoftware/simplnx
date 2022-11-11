@@ -15,6 +15,7 @@ This **Filter** accepts DataArray(s) as input, extracts the data, creates the fi
 |-------|---------------|------------|-----------------|----------------|----------|
 | Output Type | OutputSytle enum class | Whether data is printed to one file or multiple |
 | Output Path | Filesystem::path | Directory to store printed array files |
+| File Name | string | The file name used for generated file in single file mode |
 | File Extension | string | The file extension used for generated files |
 | Maximum Tuples Per Line | int32 | Number of tuples printed before newline character is printed |
 | Delimiter | Delimiter enum class | ASCII character used to seperate values |

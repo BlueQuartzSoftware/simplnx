@@ -89,6 +89,7 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
     constexpr StringLiteral k_ImageGeom_Key = "image_geom";
     constexpr StringLiteral k_NewImageGeom_Key = "new_image_geom";
     constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
+    constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
     //    constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
 
     Arguments args;
@@ -102,6 +103,7 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
     args.insertOrAssign(k_MaxVoxel_Key, std::make_any<VectorUInt64Parameter::ValueType>(maxValues));
     args.insertOrAssign(k_UpdateOrigin_Key, std::make_any<BoolParameter::ValueType>(false));
     args.insertOrAssign(k_RenumberFeatures_Key, std::make_any<BoolParameter::ValueType>(false));
+    args.insertOrAssign(k_RemoveOriginalGeometry_Key, std::make_any<BoolParameter::ValueType>(false));
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
@@ -111,14 +113,6 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
     auto executeResult = filter->execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
-
-  // Move the Ensemble AttributeMatrix from the original Image Geometry to the cropped Image Geometry
-  auto origDataContainerId = dataStructure.getId(k_OrigDataContainerPath).value();
-  auto ensembleGroupId = dataStructure.getId(k_OrigDataContainerPath.createChildPath(k_EnsembleAttributeMatrix)).value();
-  auto dataContainerId = dataStructure.getId(k_DataContainerPath).value();
-
-  dataStructure.setAdditionalParent(ensembleGroupId, dataContainerId);
-  dataStructure.removeParent(ensembleGroupId, origDataContainerId);
 
   // Write the DataStructure to an output file
   WriteTestDataStructure(dataStructure, fmt::format("{}/test/data/erode_dilate_bad_data.dream3d", unit_test::k_BinaryTestOutputDir));
