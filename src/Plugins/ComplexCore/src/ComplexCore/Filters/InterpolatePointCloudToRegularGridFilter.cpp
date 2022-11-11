@@ -20,6 +20,7 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Common/TypesUtility.hpp"
 
 namespace complex
 {
@@ -68,36 +69,45 @@ void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::
 
 void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
 {
-  switch(source->getDataType())
+  // Because we are using INeighborList we CANNOT accept Boolean template parameters. So we convert
+  // to a NumericType from DataType and switch on that. This will stop the compiler warning but
+  // silently skip over the boolean types. Not really sure if this is a problem.
+  auto numericTypeResult = ConvertDataTypeToNumericType(source->getDataType());
+  if(!numericTypeResult.has_value())
   {
-  case DataType::int8:
+    return;
+  }
+
+  switch(numericTypeResult.value())
+  {
+  case NumericType::int8:
     mapPointCloudDataByKernel<int8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::int16:
+  case NumericType::int16:
     mapPointCloudDataByKernel<int16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::int32:
+  case NumericType::int32:
     mapPointCloudDataByKernel<int32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::int64:
+  case NumericType::int64:
     mapPointCloudDataByKernel<int64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::uint8:
+  case NumericType::uint8:
     mapPointCloudDataByKernel<uint8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::uint16:
+  case NumericType::uint16:
     mapPointCloudDataByKernel<uint16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::uint32:
+  case NumericType::uint32:
     mapPointCloudDataByKernel<uint32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::uint64:
+  case NumericType::uint64:
     mapPointCloudDataByKernel<uint64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::float32:
+  case NumericType::float32:
     mapPointCloudDataByKernel<float32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
-  case DataType::float64:
+  case NumericType::float64:
     mapPointCloudDataByKernel<float64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
     break;
   }
