@@ -93,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CalculateTriangleAreasFilter, "a9900cc3-169e-5a1b-bcf4-7569e1950d41");
+COMPLEX_DEF_FILTER_TRAITS(complex, CalculateTriangleAreasFilter, "b149addd-c0c8-4010-a264-596005eaf2a5");
