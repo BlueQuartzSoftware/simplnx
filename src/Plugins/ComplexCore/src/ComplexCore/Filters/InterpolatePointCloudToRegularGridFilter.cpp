@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
@@ -20,7 +21,6 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Common/TypesUtility.hpp"
 
 namespace complex
 {
