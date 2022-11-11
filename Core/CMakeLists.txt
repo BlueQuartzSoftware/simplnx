@@ -31,6 +31,7 @@ set(FilterList
   CalculateArrayHistogramFilter
   RemoveFlaggedFeaturesFilter
   SplitAttributeArrayFilter
+  FeatureDataCSVWriterFilter
 )
 
 set(STUB_FILTERS
@@ -104,8 +105,6 @@ set(filter_algorithms
   FindShapes
   ResampleImageGeom
   ErodeDilateBadData
-  WriteASCIIData
-  WriteBinaryData
   FindEuclideanDistMap
   FindNeighborhoods
   FindSurfaceAreaToVolume

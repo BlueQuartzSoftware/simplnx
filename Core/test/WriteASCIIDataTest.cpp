@@ -1,25 +1,14 @@
 #include <catch2/catch.hpp>
 
 #include "Core/Filters/WriteASCIIDataFilter.hpp"
-#include "complex/Core/Application.hpp"
 
-#include "complex/Common/ScopeGuard.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
-#include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 #include <fstream>
-#include <functional>
-#include <regex>
 #include <stdexcept>
 
 #include "Core/Core_test_dirs.hpp"
@@ -35,7 +24,7 @@ namespace
 const fs::path k_TestOutput = fs::path(fmt::format("{}", unit_test::k_BinaryTestOutputDir));
 constexpr int32 k_NumOfDataArrays = 3;      // used for generation
 constexpr int32 k_NumOfTuples = 10;         // used for generation
-constexpr int32 k_NumComponents = 16;       // used for generation
+constexpr int32 k_NumComponents = 2;        // used for generation
 constexpr uint64 k_OutputStyleElements = 2; // pull enum # of elements
 constexpr uint64 k_DelimiterElements = 5;   // pull enum # of elements
 constexpr uint64 k_MultipleFiles = 0;       // enum representation
@@ -45,20 +34,20 @@ constexpr uint64 k_TabDelimiter = 4;        // enum representation
 
 // -----------------------------------------------------------------------------
 template <class T>
-class RunTest
+class RunASCIIDataTest
 {
 public:
   // ctor
-  RunTest(DataStructure& dataStructure)
+  RunASCIIDataTest(DataStructure& dataStructure)
   : m_DataStructure(dataStructure)
   {
   }
   // virtual dtor
-  ~RunTest() = default;
+  ~RunASCIIDataTest() = default;
 
   void execute()
   {
-    setMemb(); // set up member variables according to template type (glorified if switch)
+    setMemb(); // set up member variables according to template type (if switch)
 
     // double for loop for each choice possibility
     for(uint64 fValue = 0; fValue < k_OutputStyleElements; fValue++)
@@ -74,6 +63,7 @@ private:
   DataStructure& m_DataStructure;
   fs::path m_ExemplarsPath = fs::path("");
   std::vector<T> m_FillValue = std::vector<T>{};
+  std::string m_SingleFileName = "";
 
   void setMemb()
   {
@@ -125,7 +115,7 @@ private:
     else if(std::is_same<T, float64>::value)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestDataSourceDir, "float64"));
-      setFillValue(65.000001, 67.000001, 69.000001);
+      setFillValue(65.000001, 67.543351, 69.000001);
     }
   }
 
@@ -159,10 +149,20 @@ private:
   {
     std::hash<std::string> str_hash;
     fs::path writtenFilePath = fs::path(k_TestOutput.string() + "/" + selectedArray.getName() + ".txt");
+    if(!fs::exists(writtenFilePath))
+    {
+      writtenFilePath = fs::path(k_TestOutput.string() + "/" + m_SingleFileName + ".txt");
+    }
     REQUIRE(fs::exists(writtenFilePath));
     std::string exemplarStr = selectedArray.getName();
     exemplarStr.replace(exemplarStr.find("array"), 5, "exemplar");
     fs::path exemplarFilePath = fs::path(m_ExemplarsPath.string() + "/" + exemplarStr + ".txt");
+    if(!fs::exists(exemplarFilePath))
+    {
+      exemplarStr = m_SingleFileName;
+      exemplarStr.replace(exemplarStr.find("array"), 5, "exemplar");
+      exemplarFilePath = fs::path(m_ExemplarsPath.string() + "/" + exemplarStr + ".txt");
+    }
     REQUIRE(fs::exists(exemplarFilePath));
     REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
   }
@@ -187,12 +187,18 @@ private:
     WriteASCIIDataFilter filter;
     Arguments args;
 
+    if(fileType == 1) // single file
+    {
+      m_SingleFileName = std::to_string(fileType) + "_" + std::to_string(delimiter) + "_" + "array";
+    }
     // Create default Parameters for the filter.
     args.insertOrAssign(WriteASCIIDataFilter::k_OutputStyle_Key, std::make_any<ChoicesParameter::ValueType>(fileType)); // uint64 0 and 1
     args.insertOrAssign(WriteASCIIDataFilter::k_OutputPath_Key, std::make_any<fs::path>(k_TestOutput));
+    args.insertOrAssign(WriteASCIIDataFilter::k_FileName_Key, std::make_any<std::string>(m_SingleFileName));
     args.insertOrAssign(WriteASCIIDataFilter::k_FileExtension_Key, std::make_any<std::string>(".txt"));
-    args.insertOrAssign(WriteASCIIDataFilter::k_MaxValPerLine_Key, std::make_any<int32>(1));
+    args.insertOrAssign(WriteASCIIDataFilter::k_MaxValPerLine_Key, std::make_any<int32>(0));
     args.insertOrAssign(WriteASCIIDataFilter::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(delimiter)); // uint64 0 - 4 inclusive
+    args.insertOrAssign(WriteASCIIDataFilter::k_Includes_Key, std::make_any<ChoicesParameter::ValueType>(1));
     args.insertOrAssign(WriteASCIIDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(daps1));
 
     // Preflight the filter and check result
@@ -218,19 +224,19 @@ private:
   }
 };
 
-TEST_CASE("Processing::WriteASCIIData: Valid filter execution")
+TEST_CASE("Core::WriteASCIIData: Valid filter execution")
 {
   DataStructure dataStructure;
   DataStructure& dsRef = dataStructure;
 
-  RunTest<int8>(dsRef).execute();
-  RunTest<int16>(dsRef).execute();
-  RunTest<int32>(dsRef).execute();
-  RunTest<int64>(dsRef).execute();
-  RunTest<uint8>(dsRef).execute();
-  RunTest<uint16>(dsRef).execute();
-  RunTest<uint32>(dsRef).execute();
-  RunTest<uint64>(dsRef).execute();
-  RunTest<float32>(dsRef).execute();
-  RunTest<float64>(dsRef).execute();
+  RunASCIIDataTest<int8>(dsRef).execute();
+  RunASCIIDataTest<int16>(dsRef).execute();
+  RunASCIIDataTest<int32>(dsRef).execute();
+  RunASCIIDataTest<int64>(dsRef).execute();
+  RunASCIIDataTest<uint8>(dsRef).execute();
+  RunASCIIDataTest<uint16>(dsRef).execute();
+  RunASCIIDataTest<uint32>(dsRef).execute();
+  RunASCIIDataTest<uint64>(dsRef).execute();
+  RunASCIIDataTest<float32>(dsRef).execute();
+  RunASCIIDataTest<float64>(dsRef).execute();
 } // end of test case

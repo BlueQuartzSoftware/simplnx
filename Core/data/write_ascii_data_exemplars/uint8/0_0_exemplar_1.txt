@@ -1,10 +1,10 @@
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
-C C C C C C C C C C C C C C C C
+67 67
+67 67
+67 67
+67 67
+67 67
+67 67
+67 67
+67 67
+67 67
+67 67
