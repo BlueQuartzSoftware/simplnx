@@ -290,16 +290,17 @@ public:
 
   void writeHeader(std::ostream& outputStrm) const override
   {
+    // If there is only 1 component then write the name of the array and return
+    if(m_NumComps == 1)
+    {
+      outputStrm << m_DataArray.getName();
+      return;
+    }
+
     for(size_t index = 0; index < m_NumComps; index++)
     {
-      if(index == 0)
-      {
-        outputStrm << m_DataArray.getName();
-      }
-      else
-      {
-        outputStrm << m_DataArray.getName() << "_" << index;
-      }
+      outputStrm << m_DataArray.getName() << "_" << index;
+
       if(index < m_NumComps - 1)
       {
         outputStrm << m_Delimiter;
