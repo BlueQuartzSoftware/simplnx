@@ -11,13 +11,13 @@
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <cstring>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <vector>
-
-#include <cstring>
 
 namespace complex
 {
@@ -377,6 +377,25 @@ public:
     }
 
     return dataStore;
+  }
+
+  std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
+  {
+    FILE* file = fopen(absoluteFilePath.c_str(), "wb");
+    if(nullptr == file)
+    {
+      return {-10170, fmt::format("File could not be opened for writing:\n  '{}'", absoluteFilePath)};
+    }
+
+    usize totalElements = getNumberOfComponents() * getNumberOfTuples();
+    usize elementsWritten = fwrite(m_Data.get(), sizeof(T), totalElements, file);
+    fclose(file);
+    if(totalElements != elementsWritten)
+    {
+      return {-10175, fmt::format("Error writing binary file:\n  Total Elements:'{}'\n  Elements Written:'{}'", absoluteFilePath, totalElements, elementsWritten)};
+    }
+
+    return {0, ""};
   }
 
 private:
