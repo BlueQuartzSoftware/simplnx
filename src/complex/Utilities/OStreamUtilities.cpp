@@ -299,14 +299,7 @@ public:
 
     for(size_t index = 0; index < m_NumComps; index++)
     {
-      if(index == 0)
-      {
-        outputStrm << m_DataArray.getName();
-      }
-      else
-      {
-        outputStrm << m_DataArray.getName() << "_" << index;
-      }
+      outputStrm << m_DataArray.getName() << "_" << (index + 1);
 
       if(index < m_NumComps - 1)
       {
