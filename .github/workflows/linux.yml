@@ -57,14 +57,6 @@ jobs:
           -name "GitHub"
           -username "BlueQuartzSoftware"
           -password "${{secrets.GITHUB_TOKEN}}"
-      - name: Download Test Files
-        shell: bash
-        run: >
-          wget --quiet "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_11/TestFiles_6_11.tar.gz" -O ${{github.workspace}}/DREAM3D_Data/TestFiles.tar.gz
-      - name: Extract Test Files
-        shell: bash
-        run: >
-          cd ${{github.workspace}}/DREAM3D_Data/ && tar -xvzf TestFiles.tar.gz
       - name: Configure
         env:
           CC: ${{matrix.cc}}
