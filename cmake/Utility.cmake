@@ -90,7 +90,7 @@ include(FetchContent)
 
 function(download_test_data)
   set(optionsArgs)
-  set(oneValueArgs DREAM3D_DATA_DIR)
+  set(oneValueArgs DREAM3D_DATA_DIR VERSION ARCHIVE_NAME)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -101,11 +101,12 @@ function(download_test_data)
     return()
   endif()
 
+  set(archive_file_name "${ARGS_ARCHIVE_NAME}_${ARGS_VERSION}.tar.gz")
   message(STATUS "DREAM3D_Data: Found at '${ARGS_DREAM3D_DATA_DIR}'")
-  message(STATUS "Downloading DREAM3D_Data/TestFiles")
+  message(STATUS "Downloading DREAM3D_Data/${archive_file_name}")
   FetchContent_Declare(download_DREAM3D_Data
-    URL https://github.com/dream3d/DREAM3D_Data/releases/download/v6_10/TestFiles_6_10.tar.gz
-    URL_HASH SHA512=340cae8716d9bb3edf64bce893fd584ac08ffcb9f4758ce5347f24c79d2cfbc8ebadd16b6596c47ad8e14a2c9581f1b3ebb8bc267e7f0a774c85d20ddc210586
+    URL https://github.com/dream3d/DREAM3D_Data/releases/download/v${ARGS_VERSION}/${archive_file_name}
+    URL_HASH SHA512=7fd506ed225c610c4cb154b95ded9b289f10246bf2643689bfada54f81cf91c9a65a62d6f794bab2cb4ff7319137ecf4d8f08088502d32b5619726937e759372
     SOURCE_DIR "${ARGS_DREAM3D_DATA_DIR}/TestFiles"
     DOWNLOAD_DIR "${ARGS_DREAM3D_DATA_DIR}"
   )

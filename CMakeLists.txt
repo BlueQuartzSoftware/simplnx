@@ -567,7 +567,7 @@ if("${DREAM3D_DATA_DIR}" STREQUAL "")
 endif()
 
 if(EXISTS "${DREAM3D_DATA_DIR}") 
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR})
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} VERSION 6_11 ARCHIVE_NAME TestFIles)
   create_data_copy_rules(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR})
 else()
   message(WARNING "DREAM3D_DATA_DIR is not set. Any unit test that depends on an external data file will fail.")
