@@ -63,6 +63,7 @@ set(FilterList
   MinNeighbors
   MoveData
   MultiThresholdObjects
+  PartitionGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RawBinaryReaderFilter
@@ -148,6 +149,7 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 # can use the target_sources(...) cmake call
 
 set(PLUGIN_EXTRA_SOURCES
+<<<<<<< HEAD
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
@@ -213,6 +215,19 @@ set(PLUGIN_EXTRA_SOURCES
 	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FloorOperator.cpp"
 	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CeilOperator.hpp"
 	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CeilOperator.cpp"
+=======
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PSInfoGenerator.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PSInfoGenerator.cpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PSImageGeomInfoGenerator.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PSImageGeomInfoGenerator.cpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PSRectGridGeomInfoGenerator.hpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PSRectGridGeomInfoGenerator.cpp
+  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PSNodeBasedGeomInfoGenerator.hpp
+>>>>>>> 109a068f (In the process of bringing over PartitionGeometry to complex...)
 )
 
 target_sources(${PLUGIN_NAME}

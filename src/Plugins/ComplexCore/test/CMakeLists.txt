@@ -62,6 +62,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
   MoveDataTest.cpp
+  PartitionGeometryTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   RawBinaryReaderTest.cpp
