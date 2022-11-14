@@ -128,6 +128,7 @@ set(CoreParameters
   AttributeMatrixSelectionParameter
   NeighborListSelectionParameter
   BoolParameter
+  CalculatorParameter
   ChoicesParameter
   DataGroupCreationParameter
   DataGroupSelectionParameter
