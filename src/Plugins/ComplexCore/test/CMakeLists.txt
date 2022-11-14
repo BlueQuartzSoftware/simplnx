@@ -40,6 +40,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
   MoveDataTest.cpp
+  PartitionGeometryTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   ImportCSVDataTest.cpp
@@ -57,6 +58,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindNumFeaturesTest.cpp
   FindVolFractionsTest.cpp
   ExtractComponentAsArrayTest.cpp
+  CopyDataGroupTest.cpp
+  CropImageGeomTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
