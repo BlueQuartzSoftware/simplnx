@@ -1,4 +1,4 @@
-# TriangleDihedralAngleFilter #
+# TriangleDihedralAngleFilter
 
 
 ## Group (Subgroup) ##

@@ -1,4 +1,4 @@
-# Set Origin & Resolution (Image Geometry)   #
+# Set Origin & Resolution (Image Geometry)  
 
 
 ## Group (Subgroup) ##

@@ -1,4 +1,4 @@
-# Quick Surface Mesh #
+# Quick Surface Mesh
 
 
 ## Group (Subgroup) ##

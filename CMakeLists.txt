@@ -577,23 +577,26 @@ endif()
 # Complex Plugins Section
 #------------------------------------------------------------------------------
 get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
-if("${ComplexPluginTargets}" STREQUAL "")
+if(NOT "${ComplexPluginTargets}" STREQUAL "")
   set_property(GLOBAL PROPERTY ComplexPluginTargets "")
 endif()
 
-#------------------------------------------------------------------------------
-# Add in the ComplexCore Plugin
-set(P_PLUGIN_NAME "ComplexCore")
-add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/${P_PLUGIN_NAME} ${complex_BINARY_DIR}/Plugins/${P_PLUGIN_NAME})
-get_property(PluginNumFilters GLOBAL PROPERTY ${P_PLUGIN_NAME}_filter_count)
-message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
-set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 1)
+include(${complex_SOURCE_DIR}/cmake/Plugin.cmake)
+
+# add_subdirectory(${complex_SOURCE_DIR}/src/Plugins/${P_PLUGIN_NAME} ${complex_BINARY_DIR}/Plugins/${P_PLUGIN_NAME})
+# get_property(PluginNumFilters GLOBAL PROPERTY ${P_PLUGIN_NAME}_filter_count)
+# message(STATUS "${P_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
+set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 0)
 
 #------------------------------------------------------------------------------
 # Add user defined Plugin Dirs based on the COMPLEX_PLUGIN_SEARCH_DIRS variable
 # and falling back to complex_SOURCE_DIR/../complex_plugins if not defined
 # Use 'COMPLEX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
-foreach(plugin ${COMPLEX_EXTRA_PLUGINS})
+set(COMPLEX_PLUGIN_LIST ComplexCore;${COMPLEX_EXTRA_PLUGINS})
+foreach(plugin ${COMPLEX_PLUGIN_LIST})
+  if(NOT DEFINED COMPLEX_PLUGIN_ENABLE_${plugin})
+    set(COMPLEX_PLUGIN_ENABLE_${plugin} ON)
+  endif()
   complex_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()
 
