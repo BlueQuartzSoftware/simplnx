@@ -61,35 +61,35 @@ namespace
 /**
  * @brief loadInfo Reads the values for the phase type, crystal structure
  * and precipitate fractions from the EBSD file.
- * @param m_InputValues
- * @param m_DataStructure
+ * @param mInputValues
+ * @param mDataStructure
  * @param reader EbsdReader instance pointer
  * @return
  */
 template <typename EbsdReaderType, typename EbsdPhase>
-complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* m_InputValues, complex::DataStructure& m_DataStructure, std::shared_ptr<EbsdReaderType>& reader)
+complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* mInputValues, complex::DataStructure& mDataStructure, std::shared_ptr<EbsdReaderType>& reader)
 {
-  reader->setFileName(m_InputValues->inputFilePath);
-  reader->setSliceStart(m_InputValues->startSlice);
-  reader->setSliceEnd(m_InputValues->endSlice);
+  reader->setFileName(mInputValues->inputFilePath);
+  reader->setSliceStart(mInputValues->startSlice);
+  reader->setSliceEnd(mInputValues->endSlice);
 
   std::vector<typename EbsdPhase::Pointer> phases = reader->getPhases();
   if(phases.size() == 0)
   {
-    return {complex::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", m_InputValues->inputFilePath))};
+    return {complex::MakeErrorResult(-50027, fmt::format("Error reading phase information from file '{}'.", mInputValues->inputFilePath))};
   }
 
   // Resize the Ensemble Attribute Matrix to be the correct number of phases.
   std::vector<size_t> tDims = {phases.size() + 1};
 
-  complex::DataPath cellEnsembleMatrixPath = m_InputValues->cellEnsembleMatrixPath;
+  complex::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
 
   complex::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
-  complex::UInt32Array& xtalData = m_DataStructure.getDataRefAs<complex::UInt32Array>(xtalDataPath);
+  complex::UInt32Array& xtalData = mDataStructure.getDataRefAs<complex::UInt32Array>(xtalDataPath);
   xtalData.getIDataStore()->reshapeTuples(tDims);
 
   complex::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
-  complex::Float32Array& latticData = m_DataStructure.getDataRefAs<complex::Float32Array>(latticeDataPath);
+  complex::Float32Array& latticData = mDataStructure.getDataRefAs<complex::Float32Array>(latticeDataPath);
   latticData.getIDataStore()->reshapeTuples(tDims);
 
   // Reshape the Material Names here also.
@@ -145,10 +145,10 @@ void CopyData(complex::DataStructure& dataStructure, H5EbsdReaderType* ebsdReade
 
 /**
  * @brief LoadEbsdData
- * @param m_InputValues
+ * @param mInputValues
  * @param dataStructure
  * @param eulerNames
- * @param m_MessageHandler
+ * @param mMessageHandler
  * @param selectedArrayNames
  * @param dcDims
  * @param floatArrays
@@ -156,8 +156,8 @@ void CopyData(complex::DataStructure& dataStructure, H5EbsdReaderType* ebsdReade
  * @return
  */
 template <typename H5EbsdReaderType, typename PhaseType>
-complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValues, complex::DataStructure& dataStructure, const std::vector<std::string>& eulerNames,
-                               const complex::IFilter::MessageHandler& m_MessageHandler, std::set<std::string> selectedArrayNames, const std::array<size_t, 3>& dcDims,
+complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* mInputValues, complex::DataStructure& dataStructure, const std::vector<std::string>& eulerNames,
+                               const complex::IFilter::MessageHandler& mMessageHandler, std::set<std::string> selectedArrayNames, const std::array<size_t, 3>& dcDims,
                                const std::vector<std::string>& floatArrayNames, const std::vector<std::string>& intArrayNames)
 {
   int32_t err = 0;
@@ -166,8 +166,8 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValu
   {
     return {complex::MakeErrorResult(-50006, fmt::format("Error instantiating H5EbsdVolumeReader"))};
   }
-  ebsdReader->setFileName(m_InputValues->inputFilePath);
-  complex::Result<> result = LoadInfo<H5EbsdReaderType, PhaseType>(m_InputValues, dataStructure, ebsdReader);
+  ebsdReader->setFileName(mInputValues->inputFilePath);
+  complex::Result<> result = LoadInfo<H5EbsdReaderType, PhaseType>(mInputValues, dataStructure, ebsdReader);
   if(result.invalid())
   {
     return result;
@@ -187,26 +187,26 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValu
   }
 
   // Initialize all the arrays with some default values
-  m_MessageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", m_InputValues->inputFilePath)});
-  uint32_t m_RefFrameZDir = ebsdReader->getStackingOrder();
+  mMessageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath)});
+  uint32_t mRefFrameZDir = ebsdReader->getStackingOrder();
 
-  ebsdReader->setSliceStart(m_InputValues->startSlice);
-  ebsdReader->setSliceEnd(m_InputValues->endSlice);
+  ebsdReader->setSliceStart(mInputValues->startSlice);
+  ebsdReader->setSliceEnd(mInputValues->endSlice);
   ebsdReader->readAllArrays(false);
   ebsdReader->setArraysToRead(selectedArrayNames);
-  err = ebsdReader->loadData(dcDims[0], dcDims[1], dcDims[2], m_RefFrameZDir);
+  err = ebsdReader->loadData(dcDims[0], dcDims[1], dcDims[2], mRefFrameZDir);
   if(err < 0)
   {
-    return {complex::MakeErrorResult(-50003, fmt::format("Error loading data from H5Ebsd file '{}'", m_InputValues->inputFilePath))};
+    return {complex::MakeErrorResult(-50003, fmt::format("Error loading data from H5Ebsd file '{}'", mInputValues->inputFilePath))};
   }
 
-  complex::DataPath geometryPath = m_InputValues->dataContainerPath;
-  complex::DataPath cellAttributeMatrixPath = m_InputValues->cellAttributeMatrixPath;
+  complex::DataPath geometryPath = mInputValues->dataContainerPath;
+  complex::DataPath cellAttributeMatrixPath = mInputValues->cellAttributeMatrixPath;
 
   size_t totalPoints = dcDims[0] * dcDims[1] * dcDims[2];
 
   // Get the Crystal Structure data which should have already been read from the file and copied to the array
-  complex::DataPath cellEnsembleMatrixPath = m_InputValues->cellEnsembleMatrixPath;
+  complex::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
   complex::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
   complex::UInt32Array& xtalData = dataStructure.getDataRefAs<complex::UInt32Array>(xtalDataPath);
 
@@ -230,7 +230,7 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* m_InputValu
     auto& eulerData = dataStructure.getDataRefAs<complex::Float32Array>(eulerDataPath);
 
     float degToRad = 1.0f;
-    if(m_InputValues->eulerRepresentation != EbsdLib::AngleRepresentation::Radians && m_InputValues->useRecommendedTransform)
+    if(mInputValues->eulerRepresentation != EbsdLib::AngleRepresentation::Radians && mInputValues->useRecommendedTransform)
     {
       degToRad = complex::numbers::pi_v<float> / 180.0F;
     }
@@ -302,7 +302,7 @@ Result<> ReadH5Ebsd::operator()()
   dcDims[2] = m_InputValues->endSlice - m_InputValues->startSlice + 1;
 
   std::string manufacturer = volumeInfoReader->getManufacturer();
-  uint32_t m_RefFrameZDir = volumeInfoReader->getStackingOrder();
+  uint32_t mRefFrameZDir = volumeInfoReader->getStackingOrder();
 
   std::array<float, 3> sampleTransAxis = volumeInfoReader->getSampleTransformationAxis();
   float sampleTransAngle = volumeInfoReader->getSampleTransformationAngle();
@@ -316,10 +316,10 @@ Result<> ReadH5Ebsd::operator()()
   // Now create the specific reader that we need.
   H5EbsdVolumeReader::Pointer ebsdReader;
 
-  std::set<std::string> m_SelectedArrayNames;
+  std::set<std::string> mSelectedArrayNames;
   for(const auto& selectedArrayName : m_InputValues->hdf5DataPaths)
   {
-    m_SelectedArrayNames.insert(selectedArrayName);
+    mSelectedArrayNames.insert(selectedArrayName);
   }
 
   if(manufacturer == EbsdLib::Ang::Manufacturer)
@@ -327,7 +327,7 @@ Result<> ReadH5Ebsd::operator()()
     std::vector<std::string> eulerPhaseArrays = {EbsdLib::Ang::Phi1, EbsdLib::Ang::Phi, EbsdLib::Ang::Phi2, EbsdLib::Ang::PhaseData};
     std::vector<std::string> floatArrays = {EbsdLib::Ang::ImageQuality, EbsdLib::Ang::ConfidenceIndex, EbsdLib::Ang::SEMSignal, EbsdLib::Ang::Fit, EbsdLib::Ang::XPosition, EbsdLib::Ang::YPosition};
     std::vector<std::string> intArrays = {};
-    Result<> result = LoadEbsdData<H5AngVolumeReader, AngPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, m_SelectedArrayNames, dcDims, floatArrays, intArrays);
+    Result<> result = LoadEbsdData<H5AngVolumeReader, AngPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, mSelectedArrayNames, dcDims, floatArrays, intArrays);
     if(result.invalid())
     {
       return result;
@@ -338,7 +338,7 @@ Result<> ReadH5Ebsd::operator()()
     std::vector<std::string> eulerPhaseArrays = {EbsdLib::Ctf::Euler1, EbsdLib::Ctf::Euler2, EbsdLib::Ctf::Euler3, EbsdLib::Ctf::Phase};
     std::vector<std::string> floatArrays = {EbsdLib::Ctf::MAD, EbsdLib::Ctf::X, EbsdLib::Ctf::Y};
     std::vector<std::string> intArrays = {EbsdLib::Ctf::Bands, EbsdLib::Ctf::Error, EbsdLib::Ctf::BC, EbsdLib::Ctf::BS};
-    Result<> result = LoadEbsdData<H5CtfVolumeReader, CtfPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, m_SelectedArrayNames, dcDims, floatArrays, intArrays);
+    Result<> result = LoadEbsdData<H5CtfVolumeReader, CtfPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, mSelectedArrayNames, dcDims, floatArrays, intArrays);
     if(result.invalid())
     {
       return result;
@@ -356,7 +356,7 @@ Result<> ReadH5Ebsd::operator()()
 
     if(eulerTransAngle > 0)
     {
-      RotateEulerRefFrameFilter rot_Euler;
+      RotateEulerRefFrameFilter rotEuler;
       Arguments args;
       args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAngle_Key, std::make_any<Float32Parameter::ValueType>(eulerTransAngle));
       args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxis_Key,
@@ -365,7 +365,7 @@ Result<> ReadH5Ebsd::operator()()
       complex::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
       args.insertOrAssign(RotateEulerRefFrameFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerDataPath));
       // Preflight the filter and check result
-      auto preflightResult = rot_Euler.preflight(m_DataStructure, args);
+      auto preflightResult = rotEuler.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
         for(const auto& error : preflightResult.outputActions.errors())
@@ -375,7 +375,7 @@ Result<> ReadH5Ebsd::operator()()
       }
 
       // Execute the filter and check the result
-      auto executeResult = rot_Euler.execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
+      auto executeResult = rotEuler.execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
     }
 
     if(sampleTransAngle > 0)

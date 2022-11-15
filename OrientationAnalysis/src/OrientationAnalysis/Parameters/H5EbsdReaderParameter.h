@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
@@ -10,7 +9,6 @@
 #include "complex/Utilities/FilePathGenerator.hpp"
 
 #include <string>
-
 
 namespace complex
 {
@@ -29,9 +27,7 @@ public:
     int32 eulerRepresentation = EbsdLib::AngleRepresentation::Radians;
     std::vector<std::string> hdf5DataPaths = {};
     bool useRecommendedTransform = {true};
-
   };
-
 
   H5EbsdReaderParameter() = delete;
 
@@ -90,7 +86,6 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
-
 };
 } // namespace complex
 
