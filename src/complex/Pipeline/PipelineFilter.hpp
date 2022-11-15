@@ -106,7 +106,7 @@ public:
   /**
    * @brief Gets the node's filter comments.
    */
-  std::string getComments() const;
+  const std::string& getComments() const;
 
   /**
    * @brief Sets the node's filter comments.

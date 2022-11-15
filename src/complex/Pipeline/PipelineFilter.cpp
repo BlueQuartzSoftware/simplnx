@@ -81,7 +81,7 @@ void PipelineFilter::setIndex(int32 index)
   m_Index = index;
 }
 
-std::string PipelineFilter::getComments() const
+const std::string& PipelineFilter::getComments() const
 {
   return m_Comments;
 }
