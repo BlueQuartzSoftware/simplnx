@@ -23,6 +23,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindSchmidsTest.cpp
   ReadAngDataTest.cpp
   ReadCtfDataTest.cpp
+  EbsdToH5EbsdTest.cpp
 )
 set(DISABLED_TESTS
 

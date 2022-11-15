@@ -8,23 +8,27 @@
 namespace complex
 {
 /**
- * @class EbsdToH5Ebsd
+ * @class EbsdToH5EbsdFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT EbsdToH5Ebsd : public IFilter
+class ORIENTATIONANALYSIS_EXPORT EbsdToH5EbsdFilter : public IFilter
 {
 public:
-  EbsdToH5Ebsd() = default;
-  ~EbsdToH5Ebsd() noexcept override = default;
+  EbsdToH5EbsdFilter() = default;
+  ~EbsdToH5EbsdFilter() noexcept override = default;
 
-  EbsdToH5Ebsd(const EbsdToH5Ebsd&) = delete;
-  EbsdToH5Ebsd(EbsdToH5Ebsd&&) noexcept = delete;
+  EbsdToH5EbsdFilter(const EbsdToH5EbsdFilter&) = delete;
+  EbsdToH5EbsdFilter(EbsdToH5EbsdFilter&&) noexcept = delete;
 
-  EbsdToH5Ebsd& operator=(const EbsdToH5Ebsd&) = delete;
-  EbsdToH5Ebsd& operator=(EbsdToH5Ebsd&&) noexcept = delete;
+  EbsdToH5EbsdFilter& operator=(const EbsdToH5EbsdFilter&) = delete;
+  EbsdToH5EbsdFilter& operator=(EbsdToH5EbsdFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OrientationData_Key = "orientation_data";
+  static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
+  static inline constexpr StringLiteral k_StackingOrder_Key = "stacking_order";
+  static inline constexpr StringLiteral k_ReferenceFrame_Key = "reference_frame";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_file_path";
+  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_info";
 
   /**
    * @brief Returns the name of the filter.
@@ -92,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, EbsdToH5Ebsd, "2d05ca72-0a1b-4aec-b9b0-bc470845c448");
+COMPLEX_DEF_FILTER_TRAITS(complex, EbsdToH5EbsdFilter, "2d05ca72-0a1b-4aec-b9b0-bc470845c448");
