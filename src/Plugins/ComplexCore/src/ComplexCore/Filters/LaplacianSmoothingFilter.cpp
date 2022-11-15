@@ -60,12 +60,12 @@ Parameters LaplacianSmoothingFilter::parameters() const
 
   params.insert(std::make_unique<Int32Parameter>(
       k_IterationSteps_Key, "Iteration Steps",
-      "Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. Inreasing this number too high may cause collapse of points!", 25));
+      "Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. Increasing this number too high may cause collapse of points!", 25));
   params.insert(std::make_unique<Float32Parameter>(k_Lambda_Key, "Default Lambda",
                                                    "Value of λ to apply to general internal nodes that are not triple lines, quadruple points or on the surface of the volume", 0.2F));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseTaubinSmoothing_Key, "Use Taubin Smoothing", "Use Taubin's Lambda-Mu algorithm.", false));
   params.insert(std::make_unique<Float32Parameter>(k_MuFactor_Key, "Mu Factor",
-                                                   "A value that is multipied by Lambda the result of which is the mu in Taubin's paper. The value should be a negative value.", 0.2F));
+                                                   "A value that is multiplied by Lambda the result of which is the mu in Taubin's paper. The value should be a negative value.", 0.2F));
   params.insert(std::make_unique<Float32Parameter>(k_TripleLineLambda_Key, "Triple Line Lambda", "Value of λ to apply to nodes designated as triple line nodes.", 0.1f));
   params.insert(std::make_unique<Float32Parameter>(k_QuadPointLambda_Key, "Quadruple Points Lambda", "Value of λ to apply to nodes designated as quadruple points.", 0.1f));
   params.insert(std::make_unique<Float32Parameter>(k_SurfacePointLambda_Key, "Outer Points Lambda", "The value of λ to apply to nodes that lie on the outer surface of the volume", 0.0f));

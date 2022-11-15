@@ -129,27 +129,30 @@ std::vector<std::string> ApplyTransformationToGeometryFilter::defaultTags() cons
 Parameters ApplyTransformationToGeometryFilter::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryToTransform_Key, "Geometry to Transform", "", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryToTransform_Key, "Geometry to Transform", "The complete path to the geometry to transform", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
                                                                                                       IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
   params.insertLinkableParameter(
-      std::make_unique<ChoicesParameter>(k_TransformType_Key, "Transformation Type", "", 0,
+      std::make_unique<ChoicesParameter>(k_TransformType_Key, "Transformation Type", "Type of transformation to be used", 0,
                                          ChoicesParameter::Choices{"No Transformation", "Pre-Computed Transformation Matrix", "Manual Transformation Matrix", "Rotation", "Translation", "Scale"}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Pre-Computed Transformation Matrix",
+                                                          "A 4x4 transformation matrix, supplied by an Attribute Array in row major order", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
   DynamicTableInfo tableInfo;
   tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo{{"C0", "C1", "C2", "C3"}});
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo{{"R0", "R1", "R2", "R3"}});
 
-  params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "DynamicTableParameter", "DynamicTableParameter Example Help Text", tableInfo));
+  params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "Manual Transformation Matrix", "Manually entered 4x4 transformation matrix", tableInfo));
 
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxisAngle_Key, "Rotation Axis-Angle (Degrees)", "", std::vector<float>{0.0F, 0.0F, 1.0F, 90.0F},
-                                                         std::vector<std::string>{"X", "Y", "Z", "Angle"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxisAngle_Key, "Rotation Axis-Angle (Degrees)", "Rotation about the supplied axis-angle",
+                                                         std::vector<float>{0.0F, 0.0F, 1.0F, 90.0F}, std::vector<std::string>{"X", "Y", "Z", "Angle"}));
 
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Translation_Key, "Translation", "", std::vector<float>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Scale_Key, "Scale Factor", "2 = 2x Size. 0.5 is half the size", std::vector<float>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+      std::make_unique<VectorFloat32Parameter>(k_Translation_Key, "Translation", "x, y, z translation values", std::vector<float>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Scale_Key, "Scale Factor", "x, y, z scale values (2 = 2x Size. 0.5 is half the size)", std::vector<float>{1.0F, 1.0F, 1.0F},
+                                                         std::vector<std::string>{"X", "Y", "Z"}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_TransformType_Key, k_ComputedTransformationMatrix_Key, std::make_any<ChoicesParameter::ValueType>(1));

@@ -66,7 +66,7 @@ Parameters StlFileReaderFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ScaleOutput, "Scale Output Geometry", "Scale the output Triangle Geometry by the Scaling Factor", false));
-  params.insert(std::make_unique<Float32Parameter>(k_ScaleFactor, "Scale Factor", "", 1.0F));
+  params.insert(std::make_unique<Float32Parameter>(k_ScaleFactor, "Scale Factor", "The factor by which to scale the geometry", 1.0F));
   params.linkParameters(k_ScaleOutput, k_ScaleFactor, true);
 
   params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilePath_Key, "STL File", "Input STL File", fs::path("*.stl"), FileSystemPathParameter::ExtensionsType{".stl"},

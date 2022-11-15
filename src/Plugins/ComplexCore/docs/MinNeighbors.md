@@ -1,4 +1,4 @@
-# Minimum Number of Neighbors #
+# Minimum Number of Neighbors
 
 
 ## Group (Subgroup) ##

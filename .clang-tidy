@@ -5,6 +5,7 @@ Checks: '
   -boost-*,
   -cert-*,
   clang-diagnostic-*,
+  -clang-diagnostic-documentation,
   clang-analyzer-*,
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-magic-numbers,

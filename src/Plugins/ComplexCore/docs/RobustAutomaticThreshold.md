@@ -1,4 +1,4 @@
-# Robust Automatic Threshold #
+# Robust Automatic Threshold
 
 ## Group (Subgroup) ##
 

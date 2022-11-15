@@ -39,7 +39,7 @@ std::vector<std::string> DeleteData::defaultTags() const
 Parameters DeleteData::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_DataPath_Key, "DataPath to remove", "DataPath to DataObject", DataPath{}));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_DataPath_Key, "DataPath to remove", "The complete path to the DataObject to be removed", DataPath{}));
   return params;
 }
 

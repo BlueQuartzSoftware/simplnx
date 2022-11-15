@@ -228,11 +228,14 @@ Parameters FindSurfaceFeatures::parameters() const
                                                 "Marks features that are neighbors with feature 0.  If this option is off, only features that reside on the edge of the geometry will be marked.",
                                                 true));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_FeatureGeometryPath_Key, "Feature Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "", DataPath({"CellData", "FeatureIds"}),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_FeatureGeometryPath_Key, "Feature Geometry", "The geometry in which to find surface features", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created  Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeaturesArrayPath_Key, "Surface Features", "", DataPath({"CellFeatureData", "SurfaceFeatures"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeaturesArrayPath_Key, "Surface Features",
+                                                         "The path to the created surface features array. Flag of 1 if Feature touches an outer surface or of 0 if it does not",
+                                                         DataPath({"CellFeatureData", "SurfaceFeatures"})));
 
   return params;
 }

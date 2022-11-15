@@ -1,4 +1,4 @@
-# Crop Geometry (Image) #
+# Crop Geometry (Image)
 
 ## Description ##
 
