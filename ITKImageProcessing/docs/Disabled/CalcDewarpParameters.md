@@ -1,4 +1,4 @@
-# Calculate Dewarp Parameters #
+# Calculate Dewarp Parameters
 
 
 ## Group (Subgroup) ##

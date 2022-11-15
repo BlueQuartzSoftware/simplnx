@@ -1,4 +1,4 @@
-# ItkConvertArrayTo8BitImage #
+# ItkConvertArrayTo8BitImage
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|

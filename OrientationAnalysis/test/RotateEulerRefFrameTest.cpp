@@ -1,6 +1,6 @@
 /**
 
-# Test Plan #
+# Test Plan
 
 Read the following data from DREAM3D_Data:
 

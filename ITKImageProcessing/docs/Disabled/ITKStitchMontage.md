@@ -1,4 +1,4 @@
-# Stitch Montage #
+# Stitch Montage
 
 ## Group (Subgroup) ##
 

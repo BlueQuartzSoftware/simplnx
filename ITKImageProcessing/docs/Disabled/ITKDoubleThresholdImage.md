@@ -1,4 +1,4 @@
-# ITK::Double Threshold Image Filter (KW)  #
+# ITK::Double Threshold Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

@@ -1,4 +1,4 @@
-# Import AxioVision V4 Montage #
+# Import AxioVision V4 Montage
 
 ## Group (Subgroup) ##
 

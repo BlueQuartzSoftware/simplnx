@@ -1,4 +1,4 @@
-# ITK::Exp Image Filter (KW)  #
+# ITK::Exp Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

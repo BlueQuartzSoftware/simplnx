@@ -47,7 +47,7 @@ Parameters CreateEnsembleInfo::parameters() const
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
   /*[x]*/ params.insert(std::make_unique<EnsembleInfoFilterParameter>(k_Ensemble_Key, "Created Ensemble Info", "", {}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellEnsembleAttributeMatrixName_Key, "Ensemble Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CrystalStructuresArrayName_Key, "Crystal Structures", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_CrystalStructuresArrayName_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_PhaseTypesArrayName_Key, "Phase Types", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_PhaseNamesArrayName_Key, "Phase Names", "", DataPath{}));
 

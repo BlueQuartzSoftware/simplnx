@@ -1,4 +1,4 @@
-# ITK::Regional Minima Image Filter (KW)  #
+# ITK::Regional Minima Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

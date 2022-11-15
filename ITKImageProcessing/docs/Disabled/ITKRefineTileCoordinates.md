@@ -1,4 +1,4 @@
-# ITKRefineTileCoordinates.h  #
+# ITKRefineTileCoordinates.h 
 
 ## Group (Subgroup) ##
 

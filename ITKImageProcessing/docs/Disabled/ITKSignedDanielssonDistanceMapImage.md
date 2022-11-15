@@ -1,4 +1,4 @@
-# ITK::Signed Danielsson Distance Map Image Filter (KW)  #
+# ITK::Signed Danielsson Distance Map Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

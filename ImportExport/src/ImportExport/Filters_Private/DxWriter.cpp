@@ -51,8 +51,7 @@ Parameters DxWriter::parameters() const
                                                           FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<BoolParameter>(k_AddSurfaceLayer_Key, "Add Surface Layer", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
 
   return params;
 }

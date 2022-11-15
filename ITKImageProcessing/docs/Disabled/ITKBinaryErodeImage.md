@@ -1,4 +1,4 @@
-# ITK::Binary Erode Image Filter (KW)  #
+# ITK::Binary Erode Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

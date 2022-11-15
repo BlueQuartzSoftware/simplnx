@@ -60,19 +60,21 @@ Parameters WriteASCIIDataFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputStyle_Key, "Output Type", "", to_underlying(OutputStyle::MultipleFiles),
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputStyle_Key, "Output Type", "Whether to output a folder of files or a single file with all the data in column form",
+                                                                    to_underlying(OutputStyle::MultipleFiles),
                                                                     ChoicesParameter::Choices{"Multiple Files", "Single File"})); // sequence dependent DO NOT REORDER
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "", fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
-  params.insert(std::make_unique<StringParameter>(k_FileName_Key, "Name of Output File", "", "Data"));
-  params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "", ".csv"));
-  params.insert(std::make_unique<Int32Parameter>(k_MaxValPerLine_Key, "Maximum Elements Per Line", "", 0));
-  params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "Default Delimiter is Comma", to_underlying(OStreamUtilities::Delimiter::Comma),
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path("<default output directory>"), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputDir, true));
+  params.insert(std::make_unique<StringParameter>(k_FileName_Key, "Name of Output File", "The name of the output file(s)", "Data"));
+  params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "The file extension for the output file(s)", ".csv"));
+  params.insert(std::make_unique<Int32Parameter>(k_MaxValPerLine_Key, "Maximum Elements Per Line", "Number of tuples to print on each line", 0));
+  params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "The delimiter separating the data", to_underlying(OStreamUtilities::Delimiter::Comma),
                                                    ChoicesParameter::Choices{"Space", "Semicolon", "Comma", "Colon", "Tab"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<ChoicesParameter>(k_Includes_Key, "Header and Index Options", "Default Include is Headers only", to_underlying(Includes::Headers),
                                                    ChoicesParameter::Choices{"Neither", "Headers", "Index", "Both"})); // sequence dependent DO NOT REORDER
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "", MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "Output arrays to be written as ASCII representations",
+                                                               MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_OutputStyle_Key, k_MaxValPerLine_Key, std::make_any<uint64>(to_underlying(OutputStyle::MultipleFiles)));

@@ -1,4 +1,4 @@
-# ITK::Intensity Windowing Image Filter (KW)  #
+# ITK::Intensity Windowing Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

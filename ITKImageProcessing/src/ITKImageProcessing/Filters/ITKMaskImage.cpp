@@ -145,8 +145,9 @@ Parameters ITKMaskImage::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "The image data that will be processed by this filter.", DataPath{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "The result of the processing will be stored in this Data Array.", DataPath{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskImageDataPath_Key, "MaskImage", "", DataPath{}, complex::GetAllDataTypes()));
-  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "OutsideValue", "", 0));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskImageDataPath_Key, "MaskImage", "The path to the image data to be used as the mask (should be the same size as the input image)",
+                                                          DataPath{}, complex::GetAllDataTypes()));
+  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "OutsideValue", "Method to explicitly set the outside value of the mask.", 0));
 
   return params;
 }

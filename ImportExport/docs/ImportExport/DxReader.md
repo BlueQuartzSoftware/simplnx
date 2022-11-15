@@ -1,4 +1,4 @@
-# DxReader #
+# DxReader
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|

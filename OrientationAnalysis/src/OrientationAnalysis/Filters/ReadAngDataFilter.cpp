@@ -55,7 +55,7 @@ Parameters ReadAngDataFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", fs::path("input.ang"), FileSystemPathParameter::ExtensionsType{".ang"},
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The input .ang file path", fs::path("input.ang"), FileSystemPathParameter::ExtensionsType{".ang"},
                                                           FileSystemPathParameter::PathType::InputFile));
   params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Created Image Geometry", "The complete path to the Geometry being created.", DataPath({"DataContainer"})));

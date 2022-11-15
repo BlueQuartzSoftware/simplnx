@@ -1,4 +1,4 @@
-# Export3dSolidMesh #
+# Export3dSolidMesh
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|

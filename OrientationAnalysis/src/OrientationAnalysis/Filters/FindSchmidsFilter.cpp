@@ -51,28 +51,38 @@ Parameters FindSchmidsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Parameters"});
 
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_LoadingDirection_Key, "Loading Direction", "", std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreAngleComponents_Key, "Store Angle Components of Schmid Factor", "", false));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_LoadingDirection_Key, "Loading Direction", "The loading axis for the sample", std::vector<float32>({1.0F, 1.0F, 1.0F}),
+                                                         std::vector<std::string>({"X", "Y", "Z"})));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_StoreAngleComponents_Key, "Store Angle Components of Schmid Factor", "Whether to store the angle components for each Feature", false));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_OverrideSystem_Key, "Override Default Slip System", "", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipPlane_Key, "Slip Plane", "", std::vector<float32>({0.0F, 0.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipDirection_Key, "Slip Direction", "", std::vector<float32>({1.0F, 0.0F, 0.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_OverrideSystem_Key, "Override Default Slip System", "Allows the user to manually input the slip plane and slip direction", false));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipPlane_Key, "Slip Plane", "Vector defining the slip plane normal.", std::vector<float32>({0.0F, 0.0F, 1.0F}),
+                                                         std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_SlipDirection_Key, "Slip Direction", "Vector defining the slip direction.", std::vector<float32>({1.0F, 0.0F, 0.0F}),
+                                                         std::vector<std::string>({"X", "Y", "Z"})));
 
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath({"CellFeatureData", "Phases"}),
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath({"CellFeatureData", "Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{complex::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "", DataPath({"CellFeatureData", "AvgQuats"}),
-                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orienation of each Feature in quaternion representation",
+                                                          DataPath({"CellFeatureData", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{complex::DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insertSeparator(Parameters::Separator{"Required Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"Ensemble Data", "CrystalStructures"}),
-                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{complex::DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SchmidsArrayName_Key, "Schmids", "", "Schmids"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SlipSystemsArrayName_Key, "Slip Systems", "", "SlipSystems"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_PolesArrayName_Key, "Poles", "", "Poles"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_PhisArrayName_Key, "Phis", "", "Schmid_Phis"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_LambdasArrayName_Key, "Lambdas", "", "Schmid_Lambdas"));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_SchmidsArrayName_Key, "Schmids", "The name of the array containing the value of the Schmid factor for the most favorably oriented slip system (i.e., the one with the highest Schmid factor)",
+      "Schmids"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SlipSystemsArrayName_Key, "Slip Systems",
+                                                          "The name of the array containing the enumeration of the slip system that has the highest Schmid factor", "SlipSystems"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_PolesArrayName_Key, "Poles",
+                                                          "The name of the array specifying the crystallographic pole that points along the user defined loading direction", "Poles"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_PhisArrayName_Key, "Phis", "The name of the array containing the angle between tensile axis and slip plane normal. ", "Schmid_Phis"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_LambdasArrayName_Key, "Lambdas", "The name of the array containing the angle between tensile axis and slip direction.", "Schmid_Lambdas"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_StoreAngleComponents_Key, k_PhisArrayName_Key, true);
   params.linkParameters(k_StoreAngleComponents_Key, k_LambdasArrayName_Key, true);

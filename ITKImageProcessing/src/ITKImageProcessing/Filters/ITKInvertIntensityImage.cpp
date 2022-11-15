@@ -69,7 +69,7 @@ Parameters ITKInvertIntensityImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
-  params.insert(std::make_unique<Float64Parameter>(k_Maximum_Key, "Maximum", "", 255));
+  params.insert(std::make_unique<Float64Parameter>(k_Maximum_Key, "Maximum", "The maximum intensity value for the inversion.", 255));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

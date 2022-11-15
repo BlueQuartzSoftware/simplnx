@@ -1,4 +1,4 @@
-# ITK::Dilate Object Morphology Image Filter (KW)  #
+# ITK::Dilate Object Morphology Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

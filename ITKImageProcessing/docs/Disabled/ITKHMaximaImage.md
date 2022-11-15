@@ -1,4 +1,4 @@
-# ITK::H Maxima Image Filter (KW)  #
+# ITK::H Maxima Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

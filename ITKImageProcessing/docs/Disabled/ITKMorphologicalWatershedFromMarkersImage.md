@@ -1,4 +1,4 @@
-# ITK::Morphological Watershed From Markers Image Filter (KW)  #
+# ITK::Morphological Watershed From Markers Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

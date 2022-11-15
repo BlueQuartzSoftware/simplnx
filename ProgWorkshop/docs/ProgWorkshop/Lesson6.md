@@ -1,4 +1,4 @@
-# Lesson6 #
+# Lesson6
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|

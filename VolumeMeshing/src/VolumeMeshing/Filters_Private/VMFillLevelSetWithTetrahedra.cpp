@@ -52,14 +52,13 @@ Parameters VMFillLevelSetWithTetrahedra::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_AngleThreshold_Key, "Angle Threshold", "", 2.3456789));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_TriangleDataContainerName_Key, "Triangle Data Container", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_LevelSetArrayPath_Key, "Level Set", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_TetrahedralDataContainerName_Key, "Tetrahedral Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Vertex Data"});
   params.insert(std::make_unique<StringParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "", "SomeString"));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", "SomeString"));
-  params.insert(std::make_unique<StringParameter>(k_TetFeatureIdsName_Key, "Feature Ids", "", "SomeString"));
+  params.insert(std::make_unique<StringParameter>(k_TetFeatureIdsName_Key, "Feature Ids", "Specifies to which Feature each Element belongs", "SomeString"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_AutoDetectFeatures_Key, k_TriangleDataContainerName_Key, true);
   params.linkParameters(k_AutoDetectFeatures_Key, k_AngleThreshold_Key, true);

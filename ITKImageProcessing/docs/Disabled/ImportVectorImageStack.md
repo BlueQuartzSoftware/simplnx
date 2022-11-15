@@ -1,4 +1,4 @@
-# Import Image Stack Filter #
+# Import Image Stack Filter
 
 
 ## Group (Subgroup) ##

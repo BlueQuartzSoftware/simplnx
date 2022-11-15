@@ -1,4 +1,4 @@
-# KMeans #
+# KMeans
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|

@@ -1,4 +1,4 @@
-# PCM Tile Registration #
+# PCM Tile Registration
 
 
 ## Group (Subgroup) ##

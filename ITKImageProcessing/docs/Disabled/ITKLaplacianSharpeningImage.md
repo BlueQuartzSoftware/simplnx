@@ -1,4 +1,4 @@
-# ITK::Laplacian Sharpening Image Filter (KW)  #
+# ITK::Laplacian Sharpening Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

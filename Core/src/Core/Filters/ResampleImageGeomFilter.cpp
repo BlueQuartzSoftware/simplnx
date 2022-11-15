@@ -77,16 +77,20 @@ Parameters ResampleImageGeomFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "New Spacing", "", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>(3)));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Remove Original Image Geometry Group", "", true));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "New Spacing", "The new resolution values (dx, dy, dz)", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>(3)));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Remove Original Image Geometry Group", "Whether or not to remove the original geometry after resampling", true));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry to resample", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Renumber feature Ids to ensure continuous values starting at 0.", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "", DataPath({"Cell Feature Data"})));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(
+      std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix", "The cell feature attribute matrix", DataPath({"Cell Feature Data"})));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrixPath_Key, true);

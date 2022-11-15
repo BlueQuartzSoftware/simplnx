@@ -50,18 +50,21 @@ Parameters CalculateArrayHistogramFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
-  params.insert(std::make_unique<Int32Parameter>(k_NumberOfBins_Key, "Number of Bins", "", 1));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UserDefinedRange_Key, "Use Custom Min & Max Range", "", false));
-  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Min Value", "", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Max Value", "", 1.0));
+  params.insert(std::make_unique<Int32Parameter>(k_NumberOfBins_Key, "Number of Bins", "Specifies number of histogram bins (greater than zero)", 1));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_UserDefinedRange_Key, "Use Custom Min & Max Range", "Whether the user can set the min and max values to consider for the histogram", false));
+  params.insert(std::make_unique<Float64Parameter>(k_MinRange_Key, "Min Value", "Specifies the lower bound of the histogram.", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Max Value", "Specifies the upper bound of the histogram.", 1.0));
   params.insertSeparator(Parameters::Separator{"Input Arrays"});
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "", MultiArraySelectionParameter::ValueType{}, complex::GetAllNumericTypes()));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
+                                                               MultiArraySelectionParameter::ValueType{}, complex::GetAllNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Set Up"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_NewDataGroup_Key, "Create New DataGroup for Histograms", "", true));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupName_Key, "New DataGroup Path", "", DataPath{}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataGroupName_Key, "Output DataGroup Path", "", DataPath{},
-                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
-  params.insert(std::make_unique<StringParameter>(k_HistoName_Key, "Suffix for created Histograms", "", " Histogram"));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_NewDataGroup_Key, "Create New DataGroup for Histograms", "Whether or not to store the calculated histogram(s) in a new DataGroup", true));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupName_Key, "New DataGroup Path", "The path to the new DataGroup in which to store the calculated histogram(s)", DataPath{}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataGroupName_Key, "Output DataGroup Path", "The complete path to the DataGroup in which to store the calculated histogram(s)",
+                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix, BaseGroup::GroupType::DataGroup}));
+  params.insert(std::make_unique<StringParameter>(k_HistoName_Key, "Suffix for created Histograms", "String appended to the end of the histogram array names", " Histogram"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UserDefinedRange_Key, k_MinRange_Key, true);
   params.linkParameters(k_UserDefinedRange_Key, k_MaxRange_Key, true);

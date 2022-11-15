@@ -57,10 +57,9 @@ Parameters ExportDAMASKFiles::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_HomogenizationIndex_Key, "Homogenization Index", "", 1234356));
   params.insert(std::make_unique<BoolParameter>(k_CompressGeomFile_Key, "Compress Geom File", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_DataFormat_Key, k_CompressGeomFile_Key, 0);
 
