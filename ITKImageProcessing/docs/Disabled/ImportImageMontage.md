@@ -1,4 +1,4 @@
-# Import Image Montage #
+# Import Image Montage
 
 
 ## Group (Subgroup) ##

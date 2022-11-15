@@ -1,4 +1,4 @@
-# Lesson3 #
+# Lesson3
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|

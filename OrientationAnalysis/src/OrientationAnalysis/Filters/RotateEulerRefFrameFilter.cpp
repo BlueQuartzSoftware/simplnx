@@ -47,12 +47,14 @@ Parameters RotateEulerRefFrameFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "", 0.0f));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "", std::vector<float32>{0.0F, 0.0F, 1.0F}, std::vector<std::string>{"i", "j", "k"}));
+  params.insert(
+      std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "Angle (in degrees) that the Euler reference frame will be rotated around the rotation axis", 0.0f));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "Axis that the Euler reference frame will be rotated about", std::vector<float32>{0.0F, 0.0F, 1.0F},
+                                                         std::vector<std::string>{"i", "j", "k"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z)", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
 
   return params;
 }

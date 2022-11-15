@@ -73,9 +73,11 @@ Parameters ITKBinaryContourImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected", "", false));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "", 1.0));
+  params.insert(std::make_unique<BoolParameter>(
+      k_FullyConnected_Key, "FullyConnected",
+      "Whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. For objects that are 1 pixel wide, use FullyConnectedOn.", false));
+  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set/Get the background value used to mark the pixels not on the border of the objects.", 0.0));
+  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "ForegroundValue", "Set/Get the foreground value used to identify the objects in the input and output images.", 1.0));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

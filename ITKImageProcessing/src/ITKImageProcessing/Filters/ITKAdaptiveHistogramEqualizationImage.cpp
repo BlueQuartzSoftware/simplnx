@@ -79,8 +79,10 @@ Parameters ITKAdaptiveHistogramEqualizationImage::parameters() const
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Radius_Key, "Radius", "Radius Dimensions XYZ", std::vector<float>(3, 5.0F), std::vector<std::string>{"X", "Y", "Z"}));
 
-  params.insert(std::make_unique<Float32Parameter>(k_Alpha_Key, "Alpha", "", 0.3f));
-  params.insert(std::make_unique<Float32Parameter>(k_Beta_Key, "Beta", "", 0.3f));
+  params.insert(std::make_unique<Float32Parameter>(k_Alpha_Key, "Alpha",
+                                                   "Set/Get the value of alpha. Alpha = 0 produces the adaptive histogram equalization (provided beta=0). Alpha = 1 produces an unsharp mask.", 0.3f));
+  params.insert(std::make_unique<Float32Parameter>(
+      k_Beta_Key, "Beta", "Set/Get the value of beta. If beta = 1 (and alpha = 1), then the output image matches the input image. As beta approaches 0, the filter behaves as an unsharp mask.", 0.3f));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

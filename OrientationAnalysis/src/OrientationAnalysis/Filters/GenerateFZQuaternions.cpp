@@ -153,15 +153,18 @@ Parameters GenerateFZQuaternions::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Input Phases", "The phases of the data. The data should be the indices into the Crystal Structures Data Array.",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Apply to Good Elements Only (Bad Elements Will Be Black)", "", false));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Apply to Good Elements Only (Bad Elements Will Be Black)", "Whether to assign a black color to 'bad' Elements", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Input Mask [Optional]", "Optional Mask array where valid data is TRUE or 1.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int8, DataType::uint8, DataType::boolean},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"Ensemble Data", "CrystalStructures"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Element Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FZQuatsArrayPath_Key, "Created FZ Quaternions", "", ""));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FZQuatsArrayPath_Key, "Created FZ Quaternions",
+                                                          "The name of the array containing the Quaternion that represents an orientation within the fundamental zone for each Element", ""));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsArrayPath_Key, true);
   return params;

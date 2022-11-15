@@ -1,4 +1,4 @@
-# Import Fiji Montage #
+# Import Fiji Montage
 
 ## Group (Subgroup) ##
 

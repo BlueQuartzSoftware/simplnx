@@ -1,4 +1,4 @@
-# Apply Dewarp Parameters #
+# Apply Dewarp Parameters
 
 
 ## Group (Subgroup) ##

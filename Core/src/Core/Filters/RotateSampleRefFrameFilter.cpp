@@ -410,23 +410,25 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   params.insertSeparator({"Filter Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_RotateSliceBySlice_Key, "Perform Slice By Slice Transform", "This option is specific to EBSD Data and is not generally used.", false));
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentation_Key, "Rotation Representation", "", to_underlying(RotationRepresentation::AxisAngle),
-                                                                    ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
-  params.insert(std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "", 0.0f));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 0.0f}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentation_Key, "Rotation Representation", "Which form used to represent rotation (axis angle or rotation matrix)",
+                                                                    to_underlying(RotationRepresentation::AxisAngle), ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
+  params.insert(std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "Magnitude of rotation (in degrees) about the rotation axis", 0.0f));
+  params.insert(
+      std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "Axis in sample reference frame to rotate about", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 0.0f}));
   DynamicTableInfo tableInfo;
   tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo(3));
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(3));
-  params.insert(std::make_unique<DynamicTableParameter>(k_RotationMatrix_Key, "Rotation Matrix", "", tableInfo));
+  params.insert(std::make_unique<DynamicTableParameter>(k_RotationMatrix_Key, "Rotation Matrix", "Axis in sample reference frame to rotate about", tableInfo));
   params.linkParameters(k_RotationRepresentation_Key, k_RotationAngle_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
   params.linkParameters(k_RotationRepresentation_Key, k_RotationAxis_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
   params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));
 
   params.insertSeparator({"Input Geometry and Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry on which to perform the rotation", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator({"Output Geometry and Data"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the rotated geometry", DataPath{}));
 
   return params;
 }

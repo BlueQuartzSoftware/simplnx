@@ -57,14 +57,16 @@ Parameters ReadH5EbsdFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<H5EbsdReaderParameter>(k_ReadH5EbsdFilter_Key, "Import H5Ebsd File", "", H5EbsdReaderParameter::ValueType{}));
+  params.insert(std::make_unique<H5EbsdReaderParameter>(k_ReadH5EbsdFilter_Key, "Import H5Ebsd File", "The input .h5ebsd file path", H5EbsdReaderParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Created Image Geometry", "", DataPath({"DataContainer"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Created Image Geometry", "The complete path to the imported Image Geometry", DataPath({"DataContainer"})));
   // params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Created Cell Attribute Matrix", "", "CellData"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Created Cell Attribute Matrix",
+                                                          "The name of the created cell attribute matrix associated with the imported geometry", "CellData"));
   // params.insertSeparator(Parameters::Separator{"Cell Ensemble Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Created Cell Ensemble Attribute Matrix", "", "CellEnsembleData"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellEnsembleAttributeMatrixName_Key, "Created Cell Ensemble Attribute Matrix",
+                                                          "The name of the created cell ensemble attribute matrix associated with the imported geometry", "CellEnsembleData"));
 
   return params;
 }

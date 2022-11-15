@@ -57,17 +57,19 @@ Parameters ConvertColorToGrayScaleFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertLinkableParameter(
-      std::make_unique<ChoicesParameter>(k_ConversionAlgorithm_Key, "Conversion Algorithm", "", 0, ChoicesParameter::Choices{"Luminosity", "Average", "Lightness", "SingleChannel"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "", std::vector<float32>{0.2125F, 0.7154F, 0.0721F}, std::vector<std::string>{"Red", "Green", "Blue"}));
-  params.insert(std::make_unique<Int32Parameter>(k_ColorChannel_Key, "Color Channel", "", 0));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ConversionAlgorithm_Key, "Conversion Algorithm", "Which method to use when flattening the RGB array", 0,
+                                                                    ChoicesParameter::Choices{"Luminosity", "Average", "Lightness", "SingleChannel"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "The weightings for each R|G|B component when using the luminosity conversion algorithm",
+                                                         std::vector<float32>{0.2125F, 0.7154F, 0.0721F}, std::vector<std::string>{"Red", "Green", "Blue"}));
+  params.insert(std::make_unique<Int32Parameter>(k_ColorChannel_Key, "Color Channel", "The specific R|G|B channel to use as the GrayScale values", 0));
   params.linkParameters(k_ConversionAlgorithm_Key, k_ColorWeights_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_ConversionAlgorithm_Key, k_ColorChannel_Key, std::make_any<ChoicesParameter::ValueType>(3));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputDataArrayVector_Key, "Input Data Arrays", "Select all DataArrays that need to be converted to GrayScale",
                                                                MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{DataType::uint8}));
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
-  params.insert(std::make_unique<StringParameter>(k_OutputArrayPrefix_Key, "Output Data Array Prefix", "", "Grayscale_"));
+  params.insert(std::make_unique<StringParameter>(k_OutputArrayPrefix_Key, "Output Data Array Prefix",
+                                                  "This prefix will be added to each array name that is selected for conversion to form the new array name", "Grayscale_"));
 
   return params;
 }

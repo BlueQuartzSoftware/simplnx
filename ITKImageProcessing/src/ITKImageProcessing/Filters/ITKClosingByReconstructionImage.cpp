@@ -78,8 +78,12 @@ Parameters ITKClosingByReconstructionImage::parameters() const
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
   params.insert(std::make_unique<VectorParameter<uint32>>(k_KernelRadius_Key, "KernelRadius", "", std::vector<uint32>(3, 1), std::vector<std::string>(3)));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "", static_cast<uint64>(itk::simple::sitkBall), ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));
-  params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "FullyConnected", "", false));
-  params.insert(std::make_unique<BoolParameter>(k_PreserveIntensities_Key, "PreserveIntensities", "", false));
+  params.insert(std::make_unique<BoolParameter>(
+      k_FullyConnected_Key, "FullyConnected",
+      "whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. For objects that are 1 pixel wide, use FullyConnectedOn.", false));
+  params.insert(std::make_unique<BoolParameter>(
+      k_PreserveIntensities_Key, "PreserveIntensities",
+      "Whether the original intensities of the image retained for those pixels unaffected by the closing by reconstrcution. If Off, the output pixel contrast will be reduced.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

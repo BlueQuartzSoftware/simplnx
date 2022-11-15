@@ -1,4 +1,4 @@
-# ITK::Cast Image Filter (KW)  #
+# ITK::Cast Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

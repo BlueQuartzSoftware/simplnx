@@ -1,4 +1,4 @@
-# ITK::Binary Closing By Reconstruction Image Filter (KW)  #
+# ITK::Binary Closing By Reconstruction Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

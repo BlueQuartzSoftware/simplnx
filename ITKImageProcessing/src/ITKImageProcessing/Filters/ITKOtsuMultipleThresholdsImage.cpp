@@ -84,10 +84,10 @@ Parameters ITKOtsuMultipleThresholdsImage::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image", "The image data that will be processed by this filter.", DataPath{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image", "The result of the processing will be stored in this Data Array.", DataPath{}));
-  params.insert(std::make_unique<UInt8Parameter>(k_NumberOfThresholds_Key, "NumberOfThresholds", "", 1u));
-  params.insert(std::make_unique<UInt8Parameter>(k_LabelOffset_Key, "LabelOffset", "", 0u));
-  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfHistogramBins_Key, "NumberOfHistogramBins", "", 128u));
-  params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "ValleyEmphasis", "", false));
+  params.insert(std::make_unique<UInt8Parameter>(k_NumberOfThresholds_Key, "NumberOfThresholds", "The number of thresholds", 1u));
+  params.insert(std::make_unique<UInt8Parameter>(k_LabelOffset_Key, "LabelOffset", "The offset which labels have to start from", 0u));
+  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfHistogramBins_Key, "NumberOfHistogramBins", "The number of histogram bins.", 128u));
+  params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "ValleyEmphasis", "Whether or not to use the valley emphasis algorithm", false));
   params.insert(std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "", false));
 
   return params;

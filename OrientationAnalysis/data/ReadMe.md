@@ -1,4 +1,4 @@
-# Descriptions #
+# Descriptions
 
 
 | FileName | Type | Dims | Notes | MD5 |

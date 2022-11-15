@@ -1,4 +1,4 @@
-# Import Zeiss ZenInfo Montage #
+# Import Zeiss ZenInfo Montage
 
 ## Group (Subgroup) ##
 

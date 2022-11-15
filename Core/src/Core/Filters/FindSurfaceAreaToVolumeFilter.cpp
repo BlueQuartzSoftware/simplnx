@@ -50,18 +50,21 @@ Parameters FindSurfaceAreaToVolumeFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CalculateSphericity_Key, "Calculate Sphericity", "", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CalculateSphericity_Key, "Calculate Sphericity", "Whether or not to calculate the sphericity of each Feature", false));
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insertSeparator(Parameters::Separator{"Required Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NumCellsArrayPath_Key, "Number of Cells", "", DataPath({"CellFeatureData", "NumElements"}),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insertSeparator(Parameters::Separator{"Required Feature Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(
+      k_NumCellsArrayPath_Key, "Number of Cells", "Number of Cells that are owned by the Feature. This value does not place any distinction between Cells that may be of a different size",
+      DataPath({"CellFeatureData", "NumElements"}), ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceAreaVolumeRatioArrayName_Key, "Surface Area to Volume Ratio", "", DataPath({"CellFeatureData", "SurfaceAreaVolumeRatio"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SphericityArrayName_Key, "Sphericity Array Name", "", DataPath({"CellFeatureData", "Sphericity"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceAreaVolumeRatioArrayName_Key, "Surface Area to Volume Ratio",
+                                                         "Ratio of surface area to volume for each Feature. The units are inverse length", DataPath({"CellFeatureData", "SurfaceAreaVolumeRatio"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_SphericityArrayName_Key, "Sphericity Array Name", "The sphericity of each feature", DataPath({"CellFeatureData", "Sphericity"})));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_CalculateSphericity_Key, k_SphericityArrayName_Key, true);
 

@@ -52,23 +52,30 @@ Parameters FindMisorientationsFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindAvgMisors_Key, "Find Average Misorientation Per Feature", "", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindAvgMisors_Key, "Find Average Misorientation Per Feature",
+                                                                 "Specifies if the average of the misorienations with the neighboring Features should be stored for each Feature", false));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
-  params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Feature Neighbor List", "", DataPath({"DataContainer", "FeatureData", "NeighborList"}),
-                                                                 NeighborListSelectionParameter::AllowedTypes{complex::DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Feature Average Quaternions", "", DataPath({"DataContainer", "FeatureData", "AvgQuats"}),
-                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "", DataPath({"DataContainer", "FeatureData", "Phases"}),
-                                                          ArraySelectionParameter::AllowedTypes{complex::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Feature Neighbor List", "List of the contiguous neighboring Features for a given Feature",
+                                                                 DataPath({"DataContainer", "FeatureData", "NeighborList"}), NeighborListSelectionParameter::AllowedTypes{complex::DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Feature Average Quaternions", "Defines the average orientation of the Feature in quaternion representation",
+                                                          DataPath({"DataContainer", "FeatureData", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{complex::DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{4}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Specifies to which Ensemble each Feature belongs",
+                                                          DataPath({"DataContainer", "FeatureData", "Phases"}), ArraySelectionParameter::AllowedTypes{complex::DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "", DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
+                                                          DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationListArrayName_Key, "Misorientation List", "", "MisorientationList"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgMisorientationsArrayName_Key, "Average Misorientations", "", "AvgMisorientations"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationListArrayName_Key, "Misorientation List",
+                                                          "The name of the data object containing the list of the misorientation angles with the contiguous neighboring Features for a given Feature",
+                                                          "MisorientationList"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgMisorientationsArrayName_Key, "Average Misorientations",
+                                                          "The name of the array containing the number weighted average of neighbor misorientations.", "AvgMisorientations"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FindAvgMisors_Key, k_AvgMisorientationsArrayName_Key, true);
 

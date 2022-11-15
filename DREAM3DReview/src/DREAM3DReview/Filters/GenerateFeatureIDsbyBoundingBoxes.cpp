@@ -46,7 +46,7 @@ Parameters GenerateFeatureIDsbyBoundingBoxes::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIDsArrayPath_Key, "Feature IDs", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIDsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath{}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_FeatureAttributeMatrixArrayPath_Key, "Feature Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_BoxCenterArrayPath_Key, "Box Corner", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_BoxDimensionsArrayPath_Key, "Box Dimensions", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));

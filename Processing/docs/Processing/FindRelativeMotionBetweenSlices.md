@@ -1,4 +1,4 @@
-# FindRelativeMotionBetweenSlices #
+# FindRelativeMotionBetweenSlices
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|

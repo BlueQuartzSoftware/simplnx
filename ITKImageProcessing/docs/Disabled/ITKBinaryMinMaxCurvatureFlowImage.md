@@ -1,4 +1,4 @@
-# ITK::Binary Min Max Curvature Flow Image Filter (KW)  #
+# ITK::Binary Min Max Curvature Flow Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

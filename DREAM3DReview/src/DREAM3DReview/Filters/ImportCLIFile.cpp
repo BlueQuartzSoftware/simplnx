@@ -55,7 +55,7 @@ Parameters ImportCLIFile::parameters() const
   params.insertSeparator(Parameters::Separator{"Edge Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_EdgeAttributeMatrixName_Key, "Edge Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_LayerIdsArrayName_Key, "Layer Ids", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath{}));
 
   return params;
 }

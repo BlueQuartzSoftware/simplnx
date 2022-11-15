@@ -1,5 +1,5 @@
 /*
-# Test Plan #
+# Test Plan
 
 Input Files:
 DREAM3D_Data/TestFiles/ASCII_Data/EulerAngles.csv

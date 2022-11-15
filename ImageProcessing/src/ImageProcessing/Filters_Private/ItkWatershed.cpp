@@ -47,7 +47,7 @@ Parameters ItkWatershed::parameters() const
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Image Data", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath{}));
   params.insert(std::make_unique<Float32Parameter>(k_Threshold_Key, "Threshold", "", 1.23345f));
   params.insert(std::make_unique<Float32Parameter>(k_Level_Key, "Level", "", 1.23345f));
 

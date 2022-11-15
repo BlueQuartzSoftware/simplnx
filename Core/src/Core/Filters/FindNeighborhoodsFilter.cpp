@@ -51,21 +51,28 @@ Parameters FindNeighborhoodsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insert(std::make_unique<Float32Parameter>(k_MultiplesOfAverage_Key, "Multiples of Average Diameter", "", 1.0F));
+  params.insert(std::make_unique<Float32Parameter>(k_MultiplesOfAverage_Key, "Multiples of Average Diameter", "Defines the search radius to use when looking for 'neighboring' Features", 1.0F));
 
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath({"Data Container"}),
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath({"Data Container"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters", "", DataPath({"CellFeatureData", "EquivalentDiameters"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath({"CellFeatureData", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
+  params.insert(std::make_unique<ArraySelectionParameter>(
+      k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters", "Path to the array specifying the diameter of a sphere with the same volume as the Feature",
+      DataPath({"CellFeatureData", "EquivalentDiameters"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Path to the array specifying to which Ensemble each Feature belongs",
+                                                          DataPath({"CellFeatureData", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "", DataPath({"CellFeatureData", "Centroids"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "Path to the array specifying the X, Y, Z coordinates of Feature center of mass",
+                                                          DataPath({"CellFeatureData", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods", "", DataPath({"CellFeatureData", "Neighborhoods"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborhoodListArrayName_Key, "NeighborhoodList", "", DataPath({"CellFeatureData", "NeighborhoodList"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods",
+                                                         "Number of Features that have their centroid within the user specified multiple of equivalent sphere diameters from each Feature",
+                                                         DataPath({"CellFeatureData", "Neighborhoods"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborhoodListArrayName_Key, "NeighborhoodList",
+                                                         "List of the Features whose centroids are within the user specified multiple of equivalent sphere diameter from each Feature",
+                                                         DataPath({"CellFeatureData", "NeighborhoodList"})));
 
   return params;
 }

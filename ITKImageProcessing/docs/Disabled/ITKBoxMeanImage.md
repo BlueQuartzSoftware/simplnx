@@ -1,4 +1,4 @@
-# ITK::Box Mean Image Filter (KW)  #
+# ITK::Box Mean Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

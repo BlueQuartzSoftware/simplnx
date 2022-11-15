@@ -1,4 +1,4 @@
-# Illumination Correction #
+# Illumination Correction
 
 ## Group (Subgroup) ##
 

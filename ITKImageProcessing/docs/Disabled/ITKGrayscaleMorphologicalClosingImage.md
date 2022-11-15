@@ -1,4 +1,4 @@
-# ITK::Grayscale Morphological Closing Image Filter (KW)  #
+# ITK::Grayscale Morphological Closing Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

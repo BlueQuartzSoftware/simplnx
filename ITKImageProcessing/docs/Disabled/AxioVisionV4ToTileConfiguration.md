@@ -1,4 +1,4 @@
-# AxioVision V4 To Tile Configuration #
+# AxioVision V4 To Tile Configuration
 
 
 ## Group (Subgroup) ##

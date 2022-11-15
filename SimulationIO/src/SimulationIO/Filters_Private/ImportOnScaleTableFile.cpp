@@ -56,7 +56,7 @@ Parameters ImportOnScaleTableFile::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_VolumeDataContainerName_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Material Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_PhaseAttributeMatrixName_Key, "Phase Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_MaterialNameArrayName_Key, "Material Names", "", DataPath{}));

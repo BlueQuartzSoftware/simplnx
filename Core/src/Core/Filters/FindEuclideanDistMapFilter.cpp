@@ -54,21 +54,30 @@ Parameters FindEuclideanDistMapFilter::parameters() const
 
   params.insert(std::make_unique<BoolParameter>(k_CalcManhattanDist_Key, "Output arrays are Manhattan distance (int32)",
                                                 "If Manhattan distance is used then results are stored as int32 otherwise results are stored as float32", true));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_DoBoundaries_Key, "Calculate Distance to Boundaries", "", true));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_DoTripleLines_Key, "Calculate Distance to Triple Lines", "", true));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_DoQuadPoints_Key, "Calculate Distance to Quadruple Points", "", true));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveNearestNeighbors_Key, "Store the Nearest Boundary Cells", "", false));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_DoBoundaries_Key, "Calculate Distance to Boundaries", "Whether the distance of each Cell to a Feature boundary is calculated", true));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_DoTripleLines_Key, "Calculate Distance to Triple Lines", "Whether the distance of each Cell to a triple line between Features is calculated", true));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_DoQuadPoints_Key, "Calculate Distance to Quadruple Points", "Whether the distance of each Cell to a quadruple point between Features is calculated", true));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveNearestNeighbors_Key, "Store the Nearest Boundary Cells", "Whether to store the nearest neighbors of Cell", false));
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "", DataPath({"CellData", "FeatureIds"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_GBDistancesArrayName_Key, "Boundary Distances", "", "GBManhattanDistances"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_TJDistancesArrayName_Key, "Triple Line Distances", "", "TJManhattanDistances"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_QPDistancesArrayName_Key, "Quadruple Point Distances", "", "QPManhattanDistances"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NearestNeighborsArrayName_Key, "Nearest Boundary Cells", "", "NearestNeighbors"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_GBDistancesArrayName_Key, "Boundary Distances",
+                                                          "The name of the array with the distance the cells are from the boundary of the Feature they belong to.", "GBManhattanDistances"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_TJDistancesArrayName_Key, "Triple Line Distances",
+                                                          "The name of the array with the distance the cells are from a triple junction of Features.", "TJManhattanDistances"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_QPDistancesArrayName_Key, "Quadruple Point Distances",
+                                                          "The name of the array with the distance the cells are from a quadruple point of Features.", "QPManhattanDistances"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NearestNeighborsArrayName_Key, "Nearest Boundary Cells",
+                                                          "The name of the array with the indices of the closest cell that touches a boundary, triple and quadruple point for each cell.",
+                                                          "NearestNeighbors"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_DoBoundaries_Key, k_GBDistancesArrayName_Key, std::make_any<bool>(true));

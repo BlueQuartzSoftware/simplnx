@@ -1,4 +1,4 @@
-# Import Robomet Montage #
+# Import Robomet Montage
 
 ## Group (Subgroup) ##
 

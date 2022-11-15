@@ -1,4 +1,4 @@
-# ITK::Speckle Noise Image Filter (KW)  #
+# ITK::Speckle Noise Image Filter (KW) 
 
 
 ## Group (Subgroup) ##

@@ -59,10 +59,11 @@ Parameters ReadCtfDataFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "", fs::path("input.ctf"), FileSystemPathParameter::ExtensionsType{".ctf"},
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The input .ctf file path", fs::path("input.ctf"), FileSystemPathParameter::ExtensionsType{".ctf"},
                                                           FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "", false));
-  params.insert(std::make_unique<BoolParameter>(k_EdaxHexagonalAlignment_Key, "Convert Hexagonal X-Axis to EDAX Standard", "", false));
+  params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "Whether or not to convert the Euler angles to Radians", false));
+  params.insert(std::make_unique<BoolParameter>(k_EdaxHexagonalAlignment_Key, "Convert Hexagonal X-Axis to EDAX Standard",
+                                                "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", false));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Created Image Geometry", "The complete path to the Geometry being created.", DataPath({"DataContainer"})));

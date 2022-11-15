@@ -1,4 +1,4 @@
-# MultiThresholdObjects2 #
+# MultiThresholdObjects2
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|

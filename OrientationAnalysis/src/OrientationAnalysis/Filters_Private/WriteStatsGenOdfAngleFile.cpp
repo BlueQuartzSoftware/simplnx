@@ -58,7 +58,7 @@ Parameters WriteStatsGenOdfAngleFile::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Only Write Good Elements", "", false));
   params.insertSeparator(Parameters::Separator{"Element Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseGoodVoxels_Key, k_GoodVoxelsArrayPath_Key, true);

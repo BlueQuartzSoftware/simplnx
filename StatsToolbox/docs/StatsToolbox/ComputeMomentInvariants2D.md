@@ -1,4 +1,4 @@
-# ComputeMomentInvariants2D #
+# ComputeMomentInvariants2D
 
 | Ready | Parameter Key | Human Name | Parameter Type | Parameter Class |
 |-------|---------------|------------|-----------------|----------------|
