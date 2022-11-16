@@ -31,4 +31,14 @@ std::vector<complex::H5::IDataFactory*> ComplexCorePlugin::getDataFactories() co
   return {};
 }
 
+std::map<std::string, std::string> ComplexCorePlugin::getSimplToComplexMap() const
+{
+  return complex::k_SIMPL_to_ComplexCore;
+}
+
+std::map<std::string, std::string> ComplexCorePlugin::getComplexToSimplMap() const
+{
+  return complex::k_ComplexCore_to_SIMPL;
+}
+
 COMPLEX_DEF_PLUGIN(ComplexCorePlugin)

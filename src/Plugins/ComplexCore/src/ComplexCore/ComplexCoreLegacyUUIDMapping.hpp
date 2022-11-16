@@ -2,7 +2,7 @@
 
 #include <map>
 #include <string>
-
+// clang-format off
 namespace complex
 {
   // Regex to grep UUIDs : {\"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\",\s\"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\s,\s[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})*)\"},\s\/\/\s(\w+)
@@ -122,3 +122,4 @@ namespace complex
   };
 
 } // namespace complex
+// clang-format on

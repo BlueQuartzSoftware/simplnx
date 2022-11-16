@@ -115,40 +115,40 @@ std::filesystem::path Application::getCurrentDir() const
 std::optional<Uuid> Application::getComplexUuid(const Uuid& simplUuid)
 {
   std::string searchUuid = simplUuid.str();
-  if(m_SIMPL_To_Complex.count(searchUuid) == 1)
+  if(m_SIMPL_To_Complex.count(searchUuid) == 0)
   {
-    return Uuid::FromString(m_SIMPL_To_Complex[searchUuid]);
+    return {};
   }
-  return std::nullopt;
+  return Uuid::FromString(m_SIMPL_To_Complex[searchUuid]);
 }
 
 std::optional<std::vector<Uuid>> Application::getSimplUuid(const Uuid& complexUuid)
 {
   std::string searchUuid = complexUuid.str();
-  std::vector<Uuid> uuidList;
-  if(m_Complex_To_SIMPL.count(searchUuid) == 1)
+  if(m_Complex_To_SIMPL.count(searchUuid) == 0)
   {
-    std::string uuidString = m_Complex_To_SIMPL[searchUuid];
-    std::string delimiter = " , ";
-    size_t pos = 0;
-    while((pos = uuidString.find(delimiter)) != std::string::npos)
-    {
-      std::string token = uuidString.substr(0, pos);
-      std::optional<Uuid> uuid = Uuid::FromString(token);
-      if(uuid != std::nullopt)
-      {
-        uuidList.emplace_back(Uuid::FromString(token).value());
-      }
-      uuidString.erase(0, pos + delimiter.length());
-    }
-    std::optional<Uuid> uuid = Uuid::FromString(uuidString);
+    return {};
+  }
+  std::vector<Uuid> uuidList;
+  std::string uuidString = m_Complex_To_SIMPL[searchUuid];
+  std::string delimiter = " , ";
+  size_t pos = 0;
+  while((pos = uuidString.find(delimiter)) != std::string::npos)
+  {
+    std::string token = uuidString.substr(0, pos);
+    std::optional<Uuid> uuid = Uuid::FromString(token);
     if(uuid != std::nullopt)
     {
-      uuidList.emplace_back(Uuid::FromString(uuidString).value());
+      uuidList.emplace_back(Uuid::FromString(token).value());
     }
-    return uuidList;
+    uuidString.erase(0, pos + delimiter.length());
   }
-  return std::nullopt;
+  std::optional<Uuid> uuid = Uuid::FromString(uuidString);
+  if(uuid != std::nullopt)
+  {
+    uuidList.emplace_back(Uuid::FromString(uuidString).value());
+  }
+  return uuidList;
 }
 
 void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbose)

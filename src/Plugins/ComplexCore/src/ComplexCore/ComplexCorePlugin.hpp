@@ -32,18 +32,12 @@ public:
    * their complex counterpart
    * @return std::map<std::string, std::string>
    */
-  std::map<std::string, std::string> getSimplToComplexMap() const override
-  {
-    return complex::k_SIMPL_to_ComplexCore;
-  }
+  std::map<std::string, std::string> getSimplToComplexMap() const override;
 
   /**
    * @brief Returns a map of UUIDs as strings, where Complex UUIDs are keys to
    * their SIMPL counterpart(s)
    * @return std::map<std::string, std::string>
    */
-  std::map<std::string, std::string> getComplexToSimplMap() const override
-  {
-    return complex::k_ComplexCore_to_SIMPL;
-  }
+  std::map<std::string, std::string> getComplexToSimplMap() const override;
 };
