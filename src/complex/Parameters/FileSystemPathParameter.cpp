@@ -9,6 +9,17 @@
 #include <nlohmann/json.hpp>
 
 #include <stdexcept>
+#ifdef _MSC_VER
+#include <io.h>
+#define FSPP_ACCESS _access
+#define FSPP_CHECK_WRITABLE 02
+
+#else
+#include <unistd.h>
+#define FSPP_ACCESS access
+#define FSPP_CHECK_WRITABLE W_OK
+
+#endif
 
 namespace fs = std::filesystem;
 
@@ -17,6 +28,7 @@ using namespace complex;
 namespace
 {
 constexpr StringLiteral k_PathKey = "path";
+constexpr int k_HasAccess = 0;
 
 //-----------------------------------------------------------------------------
 Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
@@ -48,8 +60,31 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 }
 
 //-----------------------------------------------------------------------------
+Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueType& path)
+{
+  auto checkedPath = path;
+  while(!fs::exists(checkedPath))
+  {
+    checkedPath = checkedPath.parent_path();
+  }
+  // We should be at the top of the tree with an existing directory.
+  int accessPerms = FSPP_ACCESS(checkedPath.c_str(), FSPP_CHECK_WRITABLE);
+
+  if(accessPerms == k_HasAccess)
+  {
+    return {};
+  }
+  return MakeErrorResult(-8, fmt::format("User does not have write permissions to path '{}'", path.string()));
+}
+
+//-----------------------------------------------------------------------------
 Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 {
+  auto result = ValidateDirectoryWritePermission(path);
+  if(result.invalid())
+  {
+    return result;
+  }
   if(!fs::exists(path))
   {
     return MakeWarningVoidResult(-6, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
@@ -60,6 +95,11 @@ Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 //-----------------------------------------------------------------------------
 Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 {
+  auto result = ValidateDirectoryWritePermission(path);
+  if(result.invalid())
+  {
+    return result;
+  }
   if(!fs::exists(path))
   {
     return MakeWarningVoidResult(-7, fmt::format("File System Path '{}' does not exist. It will be created during execution.", path.string()));
