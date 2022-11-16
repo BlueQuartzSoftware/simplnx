@@ -48,6 +48,8 @@ std::string ImportTextFilter::humanName() const
 Parameters ImportTextFilter::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFileKey, "Input File", "File path that points to the imported file", fs::path("<file to import goes here>"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarTypeKey, "Scalar Type", "Data Type to interpret and store data into.", NumericType::int8));

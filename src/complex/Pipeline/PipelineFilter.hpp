@@ -104,6 +104,17 @@ public:
   void setIndex(int32 index);
 
   /**
+   * @brief Gets the node's filter comments.
+   */
+  const std::string& getComments() const;
+
+  /**
+   * @brief Sets the node's filter comments.
+   * @param comments
+   */
+  void setComments(const std::string& comments);
+
+  /**
    * @brief Attempts to preflight the node using the provided DataStructure.
    * Returns true if preflighting succeeded. Otherwise, this returns false.
    * @param data
@@ -204,7 +215,7 @@ private:
   IFilter::UniquePointer m_Filter;
   Arguments m_Arguments;
   int32 m_Index = 0;
-
+  std::string m_Comments;
   std::vector<complex::Warning> m_Warnings;
   std::vector<complex::Error> m_Errors;
   std::vector<IFilter::PreflightValue> m_PreflightValues;

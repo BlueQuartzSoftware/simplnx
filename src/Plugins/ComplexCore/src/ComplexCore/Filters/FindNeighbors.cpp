@@ -41,6 +41,7 @@ std::string FindNeighbors::humanName() const
 Parameters FindNeighbors::parameters() const
 {
   Parameters params;
+
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreBoundary_Key, "Store Boundary Cells Array", "Whether to store the boundary Cells array", false));

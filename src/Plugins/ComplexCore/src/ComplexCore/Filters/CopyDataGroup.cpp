@@ -35,7 +35,11 @@ std::string CopyDataGroup::humanName() const
 Parameters CopyDataGroup::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_DataPath_Key, "Group to copy", "DataPath to BaseGroup", DataPath{}, BaseGroup::GetAllGroupTypes()));
+
+  params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewPath_Key, "Copied Group", "DataPath to new BaseGroup", DataPath{}));
   return params;
 }

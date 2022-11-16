@@ -37,6 +37,8 @@ std::string MoveData::humanName() const
 Parameters MoveData::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_Data_Key, "Data to Move", "The complete path to the data object to be moved", DataPath()));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_NewParent_Key, "New Parent", "The complete path to the parent data object to which the data will be moved", DataPath()));
   return params;

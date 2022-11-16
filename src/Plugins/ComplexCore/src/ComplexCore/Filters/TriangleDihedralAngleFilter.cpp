@@ -142,7 +142,9 @@ std::vector<std::string> TriangleDihedralAngleFilter::defaultTags() const
 Parameters TriangleDihedralAngleFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the dihedral angles", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Created Face Data"});

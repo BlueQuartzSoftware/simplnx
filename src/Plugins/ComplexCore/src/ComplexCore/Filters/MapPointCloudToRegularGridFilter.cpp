@@ -216,6 +216,8 @@ std::string MapPointCloudToRegularGridFilter::humanName() const
 Parameters MapPointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplingGridType_Key, "Sampling Grid Type", "Specifies how data is saved or accessed", 0,
                                                                     std::vector<std::string>{"Manual", "Use Existing Image Geometry"}));
   params.insert(std::make_unique<VectorInt32Parameter>(k_GridDimensions_Key, "Grid Dimensions", "Target grid size", std::vector<int32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));

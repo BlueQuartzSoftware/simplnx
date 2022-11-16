@@ -105,7 +105,9 @@ std::vector<std::string> CalculateTriangleAreasFilter::defaultTags() const
 Parameters CalculateTriangleAreasFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the face areas", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
