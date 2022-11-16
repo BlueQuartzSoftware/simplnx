@@ -118,6 +118,18 @@ public:
    */
   std::filesystem::path getCurrentDir() const;
 
+  /**
+   * @brief Returns the Complex filter UUID [v4] from the SIMPL filter UUID [v5]
+   * @return std::optional<Uuid>
+   */
+  std::optional<Uuid> getComplexUuid(const Uuid& simplUuid);
+
+  /**
+   * @brief Returns the SIMPL filter UUID(s) [v5] from the Complex filter UUID [v4]
+   * @return std::optional<std::vector<Uuid>>
+   */
+  std::optional<std::vector<Uuid>> getSimplUuid(const Uuid& complexUuid);
+
 private:
   /**
    * @brief Assigns Application as the current instance and sets the current
@@ -141,5 +153,7 @@ private:
   std::unique_ptr<complex::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
   std::unique_ptr<H5::DataFactoryManager> m_DataReader;
+  std::map<std::string, std::string> m_SIMPL_To_Complex; // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID}, // dream3d-class-name
+  std::map<std::string, std::string> m_Complex_To_SIMPL; // syntax std::make_pair {Dream3dnx UUID , Dream3d UUID}, // dream3dnx-class-name
 };
 } // namespace complex
