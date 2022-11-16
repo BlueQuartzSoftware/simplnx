@@ -288,9 +288,8 @@ std::string FindNeighborListStatistics::humanName() const
 Parameters FindNeighborListStatistics::parameters() const
 {
   Parameters params;
-  params.insert(
-      std::make_unique<NeighborListSelectionParameter>(k_InputArray_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(), complex::GetAllDataTypes()));
 
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Specifies whether or not the filter creates the Length array during calculations", true));
   params.insert(std::make_unique<BoolParameter>(k_FindMinimum_Key, "Find Minimum", "Specifies whether or not the filter creates the Minimum array during calculations", true));
   params.insert(std::make_unique<BoolParameter>(k_FindMaximum_Key, "Find Maximum", "Specifies whether or not the filter creates the Maximum array during calculations", true));
@@ -300,6 +299,11 @@ Parameters FindNeighborListStatistics::parameters() const
       std::make_unique<BoolParameter>(k_FindStandardDeviation_Key, "Find Standard Deviation", "Specifies whether or not the filter creates the Standard Deviation array during calculations", true));
   params.insert(std::make_unique<BoolParameter>(k_FindSummation_Key, "Find Summation", "Specifies whether or not the filter creates the Summation array during calculations", true));
 
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insert(
+      std::make_unique<NeighborListSelectionParameter>(k_InputArray_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(), complex::GetAllDataTypes()));
+
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_Length_Key, "Length", "Path to create the Length array during calculations", DataPath({"Length"})));
   params.insert(std::make_unique<ArrayCreationParameter>(k_Minimum_Key, "Minimum", "Path to create the Minimum array during calculations", DataPath({"Minimum"})));
   params.insert(std::make_unique<ArrayCreationParameter>(k_Maximum_Key, "Maximum", "Path to create the Maximum array during calculations", DataPath({"Maximum"})));

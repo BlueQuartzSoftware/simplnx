@@ -222,6 +222,7 @@ std::vector<std::string> FindSurfaceFeatures::defaultTags() const
 Parameters FindSurfaceFeatures::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_MarkFeature0Neighbors, "Mark Feature 0 Neighbors",

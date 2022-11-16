@@ -63,8 +63,9 @@ std::vector<std::string> StlFileReaderFilter::defaultTags() const
 Parameters StlFileReaderFilter::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
 
+  // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ScaleOutput, "Scale Output Geometry", "Scale the output Triangle Geometry by the Scaling Factor", false));
   params.insert(std::make_unique<Float32Parameter>(k_ScaleFactor, "Scale Factor", "The factor by which to scale the geometry", 1.0F));
   params.linkParameters(k_ScaleOutput, k_ScaleFactor, true);

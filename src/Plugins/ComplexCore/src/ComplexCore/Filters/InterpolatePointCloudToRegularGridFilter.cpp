@@ -202,13 +202,16 @@ std::string InterpolatePointCloudToRegularGridFilter::humanName() const
 Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Specifies whether or not to use a mask array", true));
   params.insert(std::make_unique<BoolParameter>(k_StoreKernelDistances_Key, "Store Kernel Distances", "Specifies whether or not to store kernel distances", true));
   params.insert(std::make_unique<ChoicesParameter>(k_InterpolationTechnique_Key, "Interpolation Technique", "Selected Interpolation Technique", 0, std::vector<std::string>{"Uniform", "Gaussian"}));
-
   params.insert(std::make_unique<VectorFloat32Parameter>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"x", "y", "z"}));
+
+  params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeom_Key, "Vertex Geometry to Interpolate", "DataPath to geometry to interpolate", DataPath{}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_ImageGeom_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndices_Key, "Voxel Indices", "DataPath to voxel indices", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64},
@@ -218,6 +221,8 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insert(
       std::make_unique<MultiArraySelectionParameter>(k_InterpolateArrays_Key, "Attribute Arrays to Interpolate", "DataPaths to interpolate", std::vector<DataPath>(), complex::GetAllNumericTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyArrays_Key, "Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>(), complex::GetAllDataTypes()));
+
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_InterpolatedGroup_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", DataPath()));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_KernelDistancesGroup_Key, "Kernel Distances Group", "DataPath to created DataGroup for kernel distances data", DataPath()));
 

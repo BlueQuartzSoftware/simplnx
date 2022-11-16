@@ -43,6 +43,8 @@ std::string SetImageGeomOriginScalingFilter::humanName() const
 Parameters SetImageGeomOriginScalingFilter::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Path to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "Specifies if the origin should be changed", true));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Origin_Key, "Origin", "Specifies the new origin values", std::vector<float64>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));

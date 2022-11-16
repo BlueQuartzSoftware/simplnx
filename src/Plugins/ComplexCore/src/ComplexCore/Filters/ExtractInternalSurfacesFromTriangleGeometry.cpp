@@ -114,6 +114,7 @@ std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 {
   Parameters params;
+
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeom_Key, "Triangle Geometry", "Path to the existing Triangle Geometry", DataPath(),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));

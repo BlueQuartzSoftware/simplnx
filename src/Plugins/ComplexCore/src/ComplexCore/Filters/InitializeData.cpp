@@ -165,11 +165,9 @@ std::string InitializeData::humanName() const
 Parameters InitializeData::parameters() const
 {
   Parameters params;
+
   // TODO: restrict types
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "The cell data arrays in which to initialize a subvolume to zeros", std::vector<DataPath>{},
-                                                               complex::GetAllDataTypes()));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The geometry containing the cell data for which to initialize", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MinPoint_Key, "Min Point", "The minimum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxPoint_Key, "Max Point", "The maximum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
@@ -181,6 +179,13 @@ Parameters InitializeData::parameters() const
                                                          VectorFloat64Parameter::ValueType{0.0, 0.0}));
   params.linkParameters(k_InitType_Key, k_InitValue_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_InitType_Key, k_InitRange_Key, std::make_any<ChoicesParameter::ValueType>(2));
+
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "The cell data arrays in which to initialize a subvolume to zeros", std::vector<DataPath>{},
+                                                               complex::GetAllDataTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The geometry containing the cell data for which to initialize", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   return params;
 }
 

@@ -52,6 +52,7 @@ std::vector<std::string> CombineAttributeArraysFilter::defaultTags() const
 Parameters CombineAttributeArraysFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 

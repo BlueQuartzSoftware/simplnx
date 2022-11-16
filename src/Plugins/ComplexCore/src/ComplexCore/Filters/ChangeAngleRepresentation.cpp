@@ -86,6 +86,8 @@ std::vector<std::string> ChangeAngleRepresentation::defaultTags() const
 Parameters ChangeAngleRepresentation::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<ChoicesParameter>(k_ConversionType_Key, "Conversion Type", "Tells the Filter which conversion is being made", 0,
                                                    ChoicesParameter::Choices{"Degrees to Radians", "Radians to Degrees"}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AnglesArrayPath_Key, "Angles", "The DataArray containing the angles to be converted.", DataPath{},

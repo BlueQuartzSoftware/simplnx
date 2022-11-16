@@ -316,6 +316,8 @@ Parameters ImportCSVDataFilter::parameters() const
 {
   Parameters params;
 
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+
   params.insert(std::make_unique<ImportCSVDataParameter>(k_WizardData_Key, "CSV Wizard Data", "Holds all relevant csv file data collected from the wizard", CSVWizardData()));
 
   DynamicTableInfo tableInfo;

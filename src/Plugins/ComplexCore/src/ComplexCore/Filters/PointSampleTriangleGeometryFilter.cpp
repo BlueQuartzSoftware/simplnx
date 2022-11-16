@@ -53,6 +53,8 @@ std::vector<std::string> PointSampleTriangleGeometryFilter::defaultTags() const
 Parameters PointSampleTriangleGeometryFilter::parameters() const
 {
   Parameters params;
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   // Create the parameter descriptors that are needed for this filter
   // params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_SamplesNumberType_Key, "Source for Number of Samples", "", 0, ChoicesParameter::Choices{"Manual", "Other Geometry"}));
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfSamples_Key, "Number of Sample Points", "The number of sample points to use", 1000));

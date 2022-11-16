@@ -88,12 +88,15 @@ Parameters IterativeClosestPointFilter::parameters() const
 {
   Parameters params;
 
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<UInt64Parameter>(k_NumIterations_Key, "Number of Iterations", "Number of components", 1));
   params.insert(std::make_unique<BoolParameter>(k_ApplyTransformation_Key, "Apply Transformation to Moving Geometry", "Number of components", false));
 
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_MovingVertexPath_Key, "Moving Vertex Geometry", "Numeric Type of data to create", DataPath()));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_TargetVertexPath_Key, "Target Vertex Geometry", "Number of components", DataPath()));
 
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_TransformArrayPath_Key, "Output Transform Array", "Number of tuples", DataPath()));
   return params;
 }
