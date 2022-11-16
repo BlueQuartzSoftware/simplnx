@@ -267,4 +267,27 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
   return {childDataObjects};
 }
 
+bool ContainsArrayName(const DataStructure& dataStructure, const DataPath& parentGroup, const std::string& arrayName)
+{
+  try
+  {
+    const auto& featureAttributeMatrix = dataStructure.getDataRefAs<BaseGroup>(parentGroup); // this may throw.
+    std::vector<std::string> childrenNames = featureAttributeMatrix.getDataMap().getNames();
+
+    for(const auto& childName : childrenNames)
+    {
+      DataPath childPath = parentGroup.createChildPath(childName);
+      const DataObject* dataObject = dataStructure.getData(childPath);
+      if(dynamic_cast<const IArray*>(dataObject) != nullptr && childName == arrayName)
+      {
+        return true;
+      }
+    }
+  } catch(std::exception& e)
+  {
+    return false;
+  }
+  return false;
+}
+
 } // namespace complex
