@@ -75,6 +75,7 @@ std::vector<std::string> ITKClosingByReconstructionImage::defaultTags() const
 Parameters ITKClosingByReconstructionImage::parameters() const
 {
   Parameters params;
+
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
   params.insert(std::make_unique<VectorParameter<uint32>>(k_KernelRadius_Key, "KernelRadius", "", std::vector<uint32>(3, 1), std::vector<std::string>(3)));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "KernelType", "", static_cast<uint64>(itk::simple::sitkBall), ChoicesParameter::Choices{"Annulus", "Ball", "Box", "Cross"}));

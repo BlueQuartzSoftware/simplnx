@@ -48,6 +48,7 @@ std::vector<std::string> FindSchmidsFilter::defaultTags() const
 Parameters FindSchmidsFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Parameters"});
 

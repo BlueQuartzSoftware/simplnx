@@ -23,8 +23,8 @@ namespace
 const std::string k_TestOutput = fmt::format("{}", unit_test::k_BinaryTestOutputDir);
 const std::string k_CSVExemplarFileName = "CSV_Exemplar.csv";
 const usize k_NumTuples = 3;
-const  std::vector<usize> k_VertexTupleDims = { k_NumTuples };
-const std::vector<usize> k_VertexCompDims = { 2 };
+const std::vector<usize> k_VertexTupleDims = {k_NumTuples};
+const std::vector<usize> k_VertexCompDims = {2};
 } // namespace
 
 std::vector<char> readIn(fs::path filePath)

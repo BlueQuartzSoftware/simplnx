@@ -50,6 +50,7 @@ std::vector<std::string> ErodeDilateBadDataFilter::defaultTags() const
 Parameters ErodeDilateBadDataFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 

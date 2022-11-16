@@ -52,6 +52,7 @@ std::vector<std::string> MergeTwinsFilter::defaultTags() const
 Parameters MergeTwinsFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Parameters"});
 

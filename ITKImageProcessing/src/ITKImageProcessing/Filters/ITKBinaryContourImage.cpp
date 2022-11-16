@@ -72,6 +72,7 @@ std::vector<std::string> ITKBinaryContourImage::defaultTags() const
 Parameters ITKBinaryContourImage::parameters() const
 {
   Parameters params;
+
   params.insertSeparator(Parameters::Separator{"Filter Parameters"});
   params.insert(std::make_unique<BoolParameter>(
       k_FullyConnected_Key, "FullyConnected",

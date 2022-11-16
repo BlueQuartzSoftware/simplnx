@@ -55,6 +55,7 @@ std::vector<std::string> NeighborOrientationCorrelationFilter::defaultTags() con
 Parameters NeighborOrientationCorrelationFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<Float32Parameter>(k_MinConfidence_Key, "Minimum Confidence Index", "Sets the minimum value of 'confidence' a Cell must have", 0.1f));

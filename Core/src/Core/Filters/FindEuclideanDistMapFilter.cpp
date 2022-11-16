@@ -49,6 +49,7 @@ std::vector<std::string> FindEuclideanDistMapFilter::defaultTags() const
 Parameters FindEuclideanDistMapFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 

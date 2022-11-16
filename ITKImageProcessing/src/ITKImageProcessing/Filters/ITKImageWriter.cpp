@@ -249,6 +249,7 @@ std::vector<std::string> ITKImageWriter::defaultTags() const
 Parameters ITKImageWriter::parameters() const
 {
   Parameters params;
+
   using ExtensionListType = std::unordered_set<std::string>;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "Selection for plane normal for writing the images (XY, XZ, or YZ)", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
