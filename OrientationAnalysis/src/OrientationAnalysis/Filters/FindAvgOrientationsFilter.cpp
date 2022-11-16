@@ -58,6 +58,7 @@ std::vector<std::string> FindAvgOrientationsFilter::defaultTags() const
 Parameters FindAvgOrientationsFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Element Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", DataPath({"CellData", "FeatureIds"}),

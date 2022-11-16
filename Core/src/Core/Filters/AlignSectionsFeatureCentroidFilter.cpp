@@ -63,6 +63,7 @@ Parameters AlignSectionsFeatureCentroidFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReferenceSlice_Key, "Use Reference Slice",
                                                                  "Whether the centroids of each section should be compared to a reference slice instead of their neighboring section", false));
   params.insert(std::make_unique<Int32Parameter>(k_ReferenceSlice_Key, "Reference Slice", "Slice number to use as reference", 0));

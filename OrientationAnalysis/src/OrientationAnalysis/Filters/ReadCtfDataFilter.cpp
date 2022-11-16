@@ -59,6 +59,7 @@ Parameters ReadCtfDataFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The input .ctf file path", fs::path("input.ctf"), FileSystemPathParameter::ExtensionsType{".ctf"},
                                                           FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "Whether or not to convert the Euler angles to Radians", false));

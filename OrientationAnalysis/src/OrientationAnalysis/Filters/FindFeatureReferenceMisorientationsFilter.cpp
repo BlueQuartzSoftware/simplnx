@@ -49,6 +49,7 @@ std::vector<std::string> FindFeatureReferenceMisorientationsFilter::defaultTags(
 Parameters FindFeatureReferenceMisorientationsFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 

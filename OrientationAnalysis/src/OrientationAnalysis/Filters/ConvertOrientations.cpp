@@ -205,6 +205,7 @@ Parameters ConvertOrientations::parameters() const
 
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "Specifies the incoming orientation representation", 0,
                                                    OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
   params.insert(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Orientation Type", "Specifies to which orientation representation to convert the incoming data", 1,

@@ -133,6 +133,7 @@ Parameters ITKImportImageStack::parameters() const
 {
   Parameters params;
 
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(
       std::make_unique<GeneratedFileListParameter>(k_InputFileListInfo_Key, "Input File List", "The list of 2D image files to be read in to a 3D volume", GeneratedFileListParameter::ValueType{}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the 3D volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "y", "Z"}));

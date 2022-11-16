@@ -50,6 +50,7 @@ std::vector<std::string> FindMisorientationsFilter::defaultTags() const
 Parameters FindMisorientationsFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindAvgMisors_Key, "Find Average Misorientation Per Feature",

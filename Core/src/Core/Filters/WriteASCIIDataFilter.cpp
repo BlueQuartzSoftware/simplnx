@@ -58,6 +58,7 @@ std::vector<std::string> WriteASCIIDataFilter::defaultTags() const
 Parameters WriteASCIIDataFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputStyle_Key, "Output Type", "Whether to output a folder of files or a single file with all the data in column form",

@@ -96,7 +96,6 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
     return {MakePreflightErrorResult(-60801, "Generated file list is empty.")};
   }
 
-
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

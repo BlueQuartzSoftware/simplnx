@@ -48,6 +48,7 @@ std::vector<std::string> FindNeighborhoodsFilter::defaultTags() const
 Parameters FindNeighborhoodsFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 

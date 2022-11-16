@@ -59,8 +59,8 @@ std::vector<std::string> EBSDSegmentFeaturesFilter::defaultTags() const
 Parameters EBSDSegmentFeaturesFilter::parameters() const
 {
   Parameters params;
-  // Create the parameter descriptors that are needed for this filter
 
+  // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Segmentation Parameters"});
   params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)",
                                                    "Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature", 5.0f));

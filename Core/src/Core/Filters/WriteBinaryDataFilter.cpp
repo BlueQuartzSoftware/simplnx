@@ -70,6 +70,7 @@ std::vector<std::string> WriteBinaryDataFilter::defaultTags() const
 Parameters WriteBinaryDataFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<ChoicesParameter>(k_Endianess_Key, "Endianess", "Default is little endian", to_underlying(Endianess::Little),

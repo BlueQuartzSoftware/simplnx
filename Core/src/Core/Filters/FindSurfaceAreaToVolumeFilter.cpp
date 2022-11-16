@@ -48,6 +48,7 @@ std::vector<std::string> FindSurfaceAreaToVolumeFilter::defaultTags() const
 Parameters FindSurfaceAreaToVolumeFilter::parameters() const
 {
   Parameters params;
+
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CalculateSphericity_Key, "Calculate Sphericity", "Whether or not to calculate the sphericity of each Feature", false));

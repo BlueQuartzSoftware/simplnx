@@ -81,11 +81,10 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Remove Original Image Geometry Group", "Whether or not to remove the original geometry after resampling", true));
 
-  params.insertSeparator(Parameters::Separator{"Input Data"});
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry to resample", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
-  params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Renumber feature Ids to ensure continuous values starting at 0.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}));

@@ -48,6 +48,7 @@ std::vector<std::string> RemoveFlaggedFeaturesFilter::defaultTags() const
 Parameters RemoveFlaggedFeaturesFilter::parameters() const
 {
   Parameters params;
+
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_FillRemovedFeatures_Key, "Fill-in Removed Features", "Whether or not to fill in the gaps left by the removed Features", false));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
