@@ -68,7 +68,7 @@ Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueTy
     checkedPath = checkedPath.parent_path();
   }
   // We should be at the top of the tree with an existing directory.
-  int accessPerms = FSPP_ACCESS(checkedPath.c_str(), FSPP_CHECK_WRITABLE);
+  int accessPerms = FSPP_ACCESS(checkedPath.string().c_str(), FSPP_CHECK_WRITABLE);
 
   if(accessPerms == k_HasAccess)
   {
