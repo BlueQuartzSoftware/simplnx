@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "ComplexCoreLegacyUUIDMapping.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
@@ -30,14 +29,8 @@ public:
   /**
    * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
    * their complex counterpart
-   * @return std::map<std::string, std::string>
+   * @return std::map<complex::Uuid, complex::Uuid>
    */
-  std::map<std::string, std::string> getSimplToComplexMap() const override;
+  std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const override;
 
-  /**
-   * @brief Returns a map of UUIDs as strings, where Complex UUIDs are keys to
-   * their SIMPL counterpart(s)
-   * @return std::map<std::string, std::string>
-   */
-  std::map<std::string, std::string> getComplexToSimplMap() const override;
 };

@@ -114,39 +114,31 @@ std::filesystem::path Application::getCurrentDir() const
 
 std::optional<Uuid> Application::getComplexUuid(const Uuid& simplUuid)
 {
-  std::string searchUuid = simplUuid.str();
-  if(m_SIMPL_To_Complex.count(searchUuid) == 0)
+  for(usize index = 0; index < m_Simpl_Uuids.size(); index++)
   {
-    return {};
+    if(m_Simpl_Uuids[index] == simplUuid)
+    {
+      return m_Complex_Uuids[index];
+    }
   }
-  return Uuid::FromString(m_SIMPL_To_Complex[searchUuid]);
+
+  return {};
 }
 
-std::optional<std::vector<Uuid>> Application::getSimplUuid(const Uuid& complexUuid)
+std::vector<Uuid> Application::getSimplUuid(const Uuid& complexUuid)
 {
-  std::string searchUuid = complexUuid.str();
-  if(m_Complex_To_SIMPL.count(searchUuid) == 0)
+  std::vector<usize> indices;
+  for(usize index = 0; index < m_Complex_Uuids.size(); index++)
   {
-    return {};
+    if(m_Complex_Uuids[index] == complexUuid)
+    {
+      indices.push_back(index);
+    }
   }
   std::vector<Uuid> uuidList;
-  std::string uuidString = m_Complex_To_SIMPL[searchUuid];
-  std::string delimiter = " , ";
-  size_t pos = 0;
-  while((pos = uuidString.find(delimiter)) != std::string::npos)
+  for(const auto& index : indices)
   {
-    std::string token = uuidString.substr(0, pos);
-    std::optional<Uuid> uuid = Uuid::FromString(token);
-    if(uuid != std::nullopt)
-    {
-      uuidList.emplace_back(Uuid::FromString(token).value());
-    }
-    uuidString.erase(0, pos + delimiter.length());
-  }
-  std::optional<Uuid> uuid = Uuid::FromString(uuidString);
-  if(uuid != std::nullopt)
-  {
-    uuidList.emplace_back(Uuid::FromString(uuidString).value());
+    uuidList.push_back(m_Simpl_Uuids[index]);
   }
   return uuidList;
 }
@@ -212,8 +204,24 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
 
   auto plugin = pluginLoader->getPlugin();
 
-  m_SIMPL_To_Complex.merge(plugin->getSimplToComplexMap());
-  m_Complex_To_SIMPL.merge(plugin->getComplexToSimplMap());
+  std::map<Uuid, Uuid> simplToComplexUuids = plugin->getSimplToComplexMap();
+  for(auto const& [simplUuid, complexUuid] : simplToComplexUuids)
+  {
+    for(const auto& uuid : m_Simpl_Uuids)
+    {
+      if(uuid == simplUuid)
+      {
+        throw std::runtime_error(fmt::format("Duplicate UUIDs found in the SIMPL UUID maps! UUID: {} Plugin: {}", simplUuid.str(), plugin->getName()));
+      }
+    }
+    m_Simpl_Uuids.push_back(simplUuid);
+    m_Complex_Uuids.push_back(complexUuid);
+  }
+
+  if(m_Simpl_Uuids.size() != m_Complex_Uuids.size())
+  {
+    throw std::runtime_error(fmt::format("UUID maps are not of the same size! SIMPL UUID Vector size: {} Complex UUID Vector size: {}", m_Simpl_Uuids.size(), m_Complex_Uuids.size()));
+  }
 
   if((plugin != nullptr) && (m_DataReader != nullptr))
   {

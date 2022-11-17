@@ -96,16 +96,9 @@ public:
   /**
    * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
    * their complex counterpart
-   * @return std::map<std::string, std::string>
+   * @return std::map<complex::Uuid, complex::Uuid>
    */
-  virtual std::map<std::string, std::string> getSimplToComplexMap() const = 0;
-
-  /**
-   * @brief Returns a map of UUIDs as strings, where Complex UUIDs are keys to
-   * their SIMPL counterpart(s)
-   * @return std::map<std::string, std::string>
-   */
-  virtual std::map<std::string, std::string> getComplexToSimplMap() const = 0;
+  virtual std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const = 0;
 
 protected:
   /**
