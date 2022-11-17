@@ -2,13 +2,14 @@
 
 #include <string>
 
+#include "complex/DataStructure/DataPath.hpp"
+#include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
-#include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
 
 namespace complex
 {
-class COMPLEX_EXPORT CalculatorParameter : public ValueParameter
+class COMPLEX_EXPORT CalculatorParameter : public MutableDataParameter
 {
 public:
   enum AngleUnits : uint8
@@ -19,6 +20,7 @@ public:
 
   struct ValueType
   {
+    DataPath m_SelectedGroup;
     std::string m_Equation;
     AngleUnits m_Units = Radians;
   };
@@ -80,7 +82,16 @@ public:
    * @param value
    * @return
    */
-  Result<> validate(const std::any& value) const override;
+  Result<> validate(const DataStructure& dataStructure, const std::any& value) const override;
+
+  /**
+   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
+   * Returns any warnings/errors.
+   * @param dataStructure
+   * @param value
+   * @return
+   */
+  Result<std::any> resolve(DataStructure& dataStructure, const std::any& value) const override;
 
 private:
   ValueType m_DefaultValue = {};

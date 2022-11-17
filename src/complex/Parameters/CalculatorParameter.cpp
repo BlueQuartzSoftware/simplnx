@@ -6,6 +6,7 @@
 
 #include "complex/Common/Any.hpp"
 #include "complex/Common/TypeTraits.hpp"
+#include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
@@ -15,10 +16,11 @@ namespace
 {
 constexpr StringLiteral k_Equation = "equation";
 constexpr StringLiteral k_Units = "units";
+constexpr StringLiteral k_SelectedGroup = "selected_group";
 } // namespace
 
 CalculatorParameter::CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
-: ValueParameter(name, humanName, helpText)
+: MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 {
 }
@@ -39,6 +41,7 @@ nlohmann::json CalculatorParameter::toJson(const std::any& value) const
   nlohmann::json json;
   json[k_Equation] = structValue.m_Equation;
   json[k_Units] = structValue.m_Units;
+  json[k_SelectedGroup] = structValue.m_SelectedGroup.toString();
   return json;
 }
 
@@ -48,6 +51,11 @@ Result<std::any> CalculatorParameter::fromJson(const nlohmann::json& json) const
   if(!json.is_object())
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a object", prefix, name()));
+  }
+  if(!json.contains(k_SelectedGroup))
+  {
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry,
+                                     fmt::format("{}The JSON data does not contain an entry with a key of '{}'", prefix.view(), k_SelectedGroup.view()));
   }
   if(!json.contains(k_Equation))
   {
@@ -66,6 +74,7 @@ Result<std::any> CalculatorParameter::fromJson(const nlohmann::json& json) const
   ValueType value;
   value.m_Equation = json[k_Equation].get<std::string>();
   value.m_Units = static_cast<AngleUnits>(units);
+  value.m_SelectedGroup = DataPath({json[k_SelectedGroup].get<std::string>()});
   return {{std::move(value)}};
 }
 
@@ -84,14 +93,37 @@ typename CalculatorParameter::ValueType CalculatorParameter::defaultString() con
   return m_DefaultValue;
 }
 
-Result<> CalculatorParameter::validate(const std::any& value) const
+Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
-  [[maybe_unused]] const auto& stringValue = GetAnyRef<ValueType>(value);
-  if(StringUtilities::trimmed(stringValue.m_Equation).empty())
+  [[maybe_unused]] const auto& structValue = GetAnyRef<ValueType>(value);
+  if(StringUtilities::trimmed(structValue.m_Equation).empty())
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", prefix));
   }
+  if(structValue.m_SelectedGroup.empty())
+  {
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+  }
+  const DataObject* dataObject = dataStructure.getData(structValue.m_SelectedGroup);
+  if(dataObject == nullptr)
+  {
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue,
+                                    fmt::format("{}Object does not exist at path '{}'", prefix, structValue.m_SelectedGroup.toString()));
+  }
+  const auto baseGroupObj = dataStructure.getDataAs<BaseGroup>(structValue.m_SelectedGroup);
+  if(baseGroupObj == nullptr)
+  {
+    return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, structValue.m_SelectedGroup.toString()));
+  }
+
   return {};
+}
+
+Result<std::any> CalculatorParameter::resolve(DataStructure& dataStructure, const std::any& value) const
+{
+  const auto& structValue = GetAnyRef<ValueType>(value);
+  DataObject* object = dataStructure.getData(structValue.m_SelectedGroup);
+  return {{object}};
 }
 } // namespace complex
