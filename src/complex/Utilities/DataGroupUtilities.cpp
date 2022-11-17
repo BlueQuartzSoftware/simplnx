@@ -267,7 +267,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
   return {childDataObjects};
 }
 
-bool ContainsArrayName(const DataStructure& dataStructure, const DataPath& parentGroup, const std::string& arrayName)
+bool ContainsDataArrayName(const DataStructure& dataStructure, const DataPath& parentGroup, const std::string& arrayName)
 {
   try
   {
@@ -278,7 +278,7 @@ bool ContainsArrayName(const DataStructure& dataStructure, const DataPath& paren
     {
       DataPath childPath = parentGroup.createChildPath(childName);
       const DataObject* dataObject = dataStructure.getData(childPath);
-      if(dynamic_cast<const IArray*>(dataObject) != nullptr && childName == arrayName)
+      if(dynamic_cast<const IDataArray*>(dataObject) != nullptr && childName == arrayName)
       {
         return true;
       }

@@ -56,12 +56,12 @@ COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(co
 COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths = {});
 
 /**
- * @brief This function will return true if the arrayName is in the list of children of type IArray for the given parentGroup
+ * @brief This function will return true if the arrayName is in the list of children of type IDataArray for the given parentGroup
  * @param dataStructure The DataStructure to use
  * @param parentGroup The parent group whose children you want to check against
  * @param arrayName The target name of the array you want to check for in the parentGroup
  * @return bool Whether or not the arrayName exists as a child of the parentGroup
  */
-COMPLEX_EXPORT bool ContainsArrayName(const DataStructure& dataStructure, const DataPath& parentGroup, const std::string& arrayName);
+COMPLEX_EXPORT bool ContainsDataArrayName(const DataStructure& dataStructure, const DataPath& parentGroup, const std::string& arrayName);
 
 } // namespace complex
