@@ -74,7 +74,14 @@ Result<std::any> CalculatorParameter::fromJson(const nlohmann::json& json) const
   ValueType value;
   value.m_Equation = json[k_Equation].get<std::string>();
   value.m_Units = static_cast<AngleUnits>(units);
-  value.m_SelectedGroup = DataPath({json[k_SelectedGroup].get<std::string>()});
+  auto selectedGroupString = json[k_SelectedGroup].get<std::string>();
+  auto selectedGroupPath = DataPath::FromString(selectedGroupString);
+  if(!selectedGroupPath.has_value())
+  {
+    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type,
+                                     fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", prefix, selectedGroupString, k_SelectedGroup));
+  }
+  value.m_SelectedGroup = selectedGroupPath.value();
   return {{std::move(value)}};
 }
 
