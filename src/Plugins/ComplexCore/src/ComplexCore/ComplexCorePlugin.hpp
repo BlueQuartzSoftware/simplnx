@@ -32,5 +32,4 @@ public:
    * @return std::map<complex::Uuid, complex::Uuid>
    */
   std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const override;
-
 };
