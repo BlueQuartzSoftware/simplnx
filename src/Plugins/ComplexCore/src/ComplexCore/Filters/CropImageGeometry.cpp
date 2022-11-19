@@ -39,9 +39,12 @@ std::string GenerateGeometryInfo(const complex::SizeVec3& dims, const complex::F
 {
   std::stringstream description;
 
-  description << "X Range: " << origin[0] << " to " << (origin[0] + (dims[0] * spacing[0])) << " (Delta: " << (dims[0] * spacing[0]) << ") " << 0 << "-" << dims[0] - 1 << " Voxels\n";
-  description << "Y Range: " << origin[1] << " to " << (origin[1] + (dims[1] * spacing[1])) << " (Delta: " << (dims[1] * spacing[1]) << ") " << 0 << "-" << dims[1] - 1 << " Voxels\n";
-  description << "Z Range: " << origin[2] << " to " << (origin[2] + (dims[2] * spacing[2])) << " (Delta: " << (dims[2] * spacing[2]) << ") " << 0 << "-" << dims[2] - 1 << " Voxels\n";
+  description << "X Range: " << origin[0] << " to " << (origin[0] + (static_cast<float>(dims[0]) * spacing[0])) << " (Delta: " << (dims[0] * spacing[0]) << ") " << 0 << "-" << dims[0] - 1
+              << " Voxels\n";
+  description << "Y Range: " << origin[1] << " to " << (origin[1] + (static_cast<float>(dims[1]) * spacing[1])) << " (Delta: " << (dims[1] * spacing[1]) << ") " << 0 << "-" << dims[1] - 1
+              << " Voxels\n";
+  description << "Z Range: " << origin[2] << " to " << (origin[2] + (static_cast<float>(dims[2]) * spacing[2])) << " (Delta: " << (dims[2] * spacing[2]) << ") " << 0 << "-" << dims[2] - 1
+              << " Voxels\n";
   return description.str();
 }
 
@@ -124,6 +127,10 @@ protected:
     uint64 destTupleIndex = 0;
     for(uint64 zIndex = m_Bounds[4]; zIndex < m_Bounds[5]; zIndex++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       for(uint64 yIndex = m_Bounds[2]; yIndex < m_Bounds[3]; yIndex++)
       {
         for(uint64 xIndex = m_Bounds[0]; xIndex < m_Bounds[1]; xIndex++)
@@ -312,9 +319,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   }
 
   // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
-  // Provides {0, 0, 0} or {1, 1, 1} respectfully if the geometry could not be found.
-  auto srcDimensions = GetCurrentVolumeDataContainerDimensions(data, srcImagePath);
-  auto srcSpacing = GetCurrentVolumeDataContainerResolutions(data, srcImagePath);
+  const auto spacing = GetCurrentVolumeDataContainerResolutions(data, srcImagePath);
 
   const auto* srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
   auto srcOrigin = srcImageGeom->getOrigin();
@@ -358,15 +363,12 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   std::vector<usize> dataArrayShape = {geomDims[2], geomDims[1], geomDims[0]}; // The DataArray shape goes slowest to fastest (ZYX)
 
-  FloatVec3 targetSpacing;
-  targetSpacing = srcSpacing;
-
   std::vector<float32> targetOrigin(3);
   if(shouldUpdateOrigin)
   {
-    targetOrigin[0] = static_cast<float>(xMin) * targetSpacing[0] + srcOrigin[0];
-    targetOrigin[1] = static_cast<float>(yMin) * targetSpacing[1] + srcOrigin[1];
-    targetOrigin[2] = static_cast<float>(zMin) * targetSpacing[2] + srcOrigin[2];
+    targetOrigin[0] = static_cast<float>(xMin) * spacing[0] + srcOrigin[0];
+    targetOrigin[1] = static_cast<float>(yMin) * spacing[1] + srcOrigin[1];
+    targetOrigin[2] = static_cast<float>(zMin) * spacing[2] + srcOrigin[2];
   }
   else
   {
@@ -379,12 +381,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   // saveAsNewImage
   {
-    auto spacing = srcImageGeom->getSpacing();
-    std::vector<float32> spacingVec(3);
-    for(usize i = 0; i < 3; i++)
-    {
-      spacingVec[i] = spacing[i];
-    }
+
     const AttributeMatrix* cellData = srcImageGeom->getCellData();
     if(cellData == nullptr)
     {
@@ -392,7 +389,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
     std::string cellDataName = cellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
-    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, targetOrigin, spacingVec, cellDataName);
+    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, targetOrigin, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, cellDataName);
     resultOutputActions.value().actions.push_back(std::move(geomAction));
 
     DataPath newCellFeaturesPath = destImagePath.createChildPath(cellDataName);
@@ -410,13 +407,13 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     // the appropriate methods.
     // These values should have been updated during the preflightImpl(...) method
     preflightUpdatedValues.push_back({"Input Geometry Info", ::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
-    preflightUpdatedValues.push_back({"Cropped Image Geometry Info", ::GenerateGeometryInfo(geomDims, spacingVec, targetOrigin)});
+    preflightUpdatedValues.push_back({"Cropped Image Geometry Info", ::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin)});
   }
 
   if(shouldRenumberFeatures)
   {
     ignorePaths.push_back(cellFeatureAmPath);
-    auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
+    const auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
     if(nullptr == featureIdsPtr)
     {
       std::string errMsg = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
@@ -427,7 +424,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       std::string errMsg = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
       return {MakeErrorResult<OutputActions>(-55501, errMsg)};
     }
-    const AttributeMatrix* srcCellFeatureData = data.getDataAs<AttributeMatrix>(cellFeatureAmPath);
+    const auto* srcCellFeatureData = data.getDataAs<AttributeMatrix>(cellFeatureAmPath);
     if(nullptr == srcCellFeatureData)
     {
       std::string errMsg = fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString());
@@ -579,8 +576,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
 
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
 
-    std::string progMsg = fmt::format("Cropping Volume || Copying Data Array {}", srcName);
-    messageHandler(progMsg);
+    messageHandler(fmt::format("Cropping Volume || Copying Data Array {}", srcName));
     ExecuteCropImageGeomDataArray(taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
@@ -614,7 +610,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
     // Loop over all the DataPaths and do a deep copy on each DataArray|StringArray
     // so that the updating of the Feature level data can happen. We do a bit of
     // under-the-covers where we actually remove the existing array that preflight
-    // created so we can use the convenience of the DataArray.deepCopy() function.
+    // created, so we can use the convenience of the DataArray.deepCopy() function.
     for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
     {
       DataObject* dataObject = dataStructure.getData(sourceFeatureDataPaths[index]);
