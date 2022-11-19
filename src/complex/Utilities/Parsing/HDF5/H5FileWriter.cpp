@@ -13,9 +13,17 @@ Result<H5::FileWriter> H5::FileWriter::CreateFile(const std::filesystem::path& f
   auto parentPath = filepath.parent_path();
   if(!std::filesystem::exists(parentPath))
   {
-    if(!std::filesystem::create_directories(parentPath))
+    try
     {
-      return MakeErrorResult<H5::FileWriter>(-300, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
+      bool directoriesCreated = std::filesystem::create_directories(parentPath);
+      if(!directoriesCreated)
+      {
+        return MakeErrorResult<H5::FileWriter>(-300, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created.", filepath.string()));
+      }
+    } catch(std::filesystem::filesystem_error& fsError)
+    {
+      return MakeErrorResult<H5::FileWriter>(
+          -300, fmt::format("Error creating Output HDF5 file at path '{}'. Parent path could not be created. C++ error reported was\n'{}'", filepath.string(), fsError.what()));
     }
   }
 
