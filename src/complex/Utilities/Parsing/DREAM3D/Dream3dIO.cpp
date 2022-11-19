@@ -47,6 +47,7 @@ namespace Legacy
 constexpr StringLiteral DCATag = "DataContainers";
 constexpr StringLiteral GeometryTag = "_SIMPL_GEOMETRY";
 constexpr StringLiteral GeometryNameTag = "GeometryName";
+constexpr StringLiteral GeometryTypeNameTag = "GeometryTypeName";
 constexpr StringLiteral PipelineName = "Pipeline";
 constexpr StringLiteral CompDims = "ComponentDimensions";
 constexpr StringLiteral TupleDims = "TupleDimensions";
@@ -1221,7 +1222,7 @@ void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, 
   auto geomGroup = dcGroup.openGroup(Legacy::GeometryTag.c_str());
   if(geomGroup.isValid())
   {
-    auto geomNameAttribute = geomGroup.getAttribute(Legacy::GeometryNameTag);
+    auto geomNameAttribute = geomGroup.getAttribute(Legacy::GeometryTypeNameTag);
     const std::string geomName = geomNameAttribute.readAsString();
     if(geomName == Legacy::Type::ImageGeom)
     {
