@@ -68,6 +68,9 @@ void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::
 
 void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
 {
+  // Because we are using INeighborList we CANNOT accept Boolean template parameters.
+  // We silently skip over the boolean types. Not really sure if this is a problem.
+
   switch(source->getDataType())
   {
   case DataType::int8:
@@ -99,6 +102,8 @@ void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::
     break;
   case DataType::float64:
     mapPointCloudDataByKernel<float64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
+    break;
+  case DataType::boolean:
     break;
   }
 }
