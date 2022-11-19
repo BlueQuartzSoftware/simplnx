@@ -9,16 +9,12 @@
 #include <nlohmann/json.hpp>
 
 #include <stdexcept>
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <io.h>
-#define FSPP_ACCESS _access
-#define FSPP_CHECK_WRITABLE 02
-
+#define FSPP_ACCESS_FUNC_NAME _access
 #else
 #include <unistd.h>
-#define FSPP_ACCESS access
-#define FSPP_CHECK_WRITABLE W_OK
-
+#define FSPP_ACCESS_FUNC_NAME access
 #endif
 
 namespace fs = std::filesystem;
@@ -27,8 +23,20 @@ using namespace complex;
 
 namespace
 {
+#ifdef _WIN32
+constexpr int k_CheckWritable = 2;
+#else
+constexpr int k_CheckWritable = W_OK;
+#endif
+
 constexpr StringLiteral k_PathKey = "path";
 constexpr int k_HasAccess = 0;
+
+//-----------------------------------------------------------------------------
+bool HasWriteAccess(const std::string& path)
+{
+  return FSPP_ACCESS_FUNC_NAME(path.c_str(), k_CheckWritable) == k_HasAccess;
+}
 
 //-----------------------------------------------------------------------------
 Result<> ValidateInputFile(const FileSystemPathParameter::ValueType& path)
@@ -68,9 +76,7 @@ Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueTy
     checkedPath = checkedPath.parent_path();
   }
   // We should be at the top of the tree with an existing directory.
-  int accessPerms = FSPP_ACCESS(checkedPath.string().c_str(), FSPP_CHECK_WRITABLE);
-
-  if(accessPerms == k_HasAccess)
+  if(HasWriteAccess(checkedPath.string()))
   {
     return {};
   }
