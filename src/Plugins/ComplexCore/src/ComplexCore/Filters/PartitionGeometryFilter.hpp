@@ -1,8 +1,12 @@
 #pragma once
 
+#include "Algorithms/PartitionGeometry.hpp"
+
 #include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/Common/Array.hpp"
+#include "complex/DataStructure/AttributeMatrix.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
@@ -37,6 +41,14 @@ public:
 
   PartitionGeometryFilter& operator=(const PartitionGeometryFilter&) = delete;
   PartitionGeometryFilter& operator=(PartitionGeometryFilter&&) noexcept = delete;
+
+  enum class PartitioningMode
+  {
+    Basic = 0,
+    Advanced = 1,
+    BoundingBox = 2,
+    ExistingPartitioningScheme = 3
+  };
 
   // Parameter Keys
   static inline constexpr StringLiteral k_PartitioningMode_Key = "partitioning_mode";
@@ -122,26 +134,31 @@ protected:
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
-  Result<> dataCheckPartitioningMode(PartitionGeometry::PartitioningMode partitioningMode);
+  template <typename GeomType>
+  Result<> dataCheckPartitioningMode(const DataStructure& dataStructure, const Arguments& filterArgs, const GeomType& geometryToPartition) const;
 
   template <typename GeomType>
-  void dataCheckBasicMode();
+  Result<> dataCheckBasicMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix) const;
 
   template <typename GeomType>
-  void dataCheckAdvancedMode();
+  Result<> dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& lengthPerPartition, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix) const;
 
   template <typename GeomType>
-  Result<> dataCheckBoundingBoxMode();
+  Result<> dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition,
+                                    const AttributeMatrix& attrMatrix) const;
 
-  void dataCheckExistingGeometryMode();
+  Result<> dataCheckExistingGeometryMode() const;
 
   template <typename GeomType>
-  Result<> dataCheckPartitioningScheme();
+  Result<> dataCheckPartitioningScheme(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix) const;
 
   /**
    * @brief Helper method that data checks the Number Of Partitions Per Axis variable.
    */
-  Result<> dataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis);
+  Result<> dataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis) const;
+
+  Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
+                                                                    const DataPath& attrMatrixPath, const SizeVec3& numberOfPartitionsPerAxis) const;
 };
 } // namespace complex
 

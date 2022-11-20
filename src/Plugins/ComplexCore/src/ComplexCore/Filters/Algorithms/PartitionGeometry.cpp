@@ -31,23 +31,16 @@ const std::atomic_bool& PartitionGeometry::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSchemeInfo(const PSInfoGenerator& psInfoGen, const Arguments& filterArgs)
+Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSchemeInfo(const PSInfoGenerator& psInfoGen, const DataStructure& ds, const Arguments& filterArgs)
 {
   auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(PartitionGeometryFilter::k_PartitioningMode_Key);
   auto pNumberOfPartitionsPerAxisValue = filterArgs.value<VectorInt32Parameter::ValueType>(PartitionGeometryFilter::k_NumberOfPartitionsPerAxis_Key);
-  auto pPartitioningSchemeOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_PartitioningSchemeOrigin_Key);
-  auto pLengthPerPartitionValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_LengthPerPartition_Key);
-  auto pLowerLeftCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_LowerLeftCoord_Key);
-  auto pUpperRightCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_UpperRightCoord_Key);
 
   PartitionGeometry::PSGeomInfo psGeomMetadata;
-  psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
-                                 static_cast<usize>(pNumberOfPartitionsPerAxisValue[2])};
-  psGeomMetadata.geometryUnits = psInfoGen.getUnits();
 
-  switch(static_cast<PartitioningMode>(pPartitioningModeValue))
+  switch(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue))
   {
-  case PartitioningMode::Basic:
+  case PartitionGeometryFilter::PartitioningMode::Basic:
   {
     IntVec3 vec3 = IntVec3(pNumberOfPartitionsPerAxisValue);
 
@@ -55,21 +48,46 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSch
     std::optional<FloatVec3> pLengthResult = psInfoGen.getPartitionLength();
     if(originResult.has_value() && pLengthResult.has_value())
     {
+      psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
+                                     static_cast<usize>(pNumberOfPartitionsPerAxisValue[2])};
       psGeomMetadata.geometryOrigin = *originResult;
       psGeomMetadata.geometrySpacing = *pLengthResult;
+      psGeomMetadata.geometryUnits = psInfoGen.getUnits();
     }
     break;
   }
-  case PartitioningMode::Advanced:
+  case PartitionGeometryFilter::PartitioningMode::Advanced:
   {
+    auto pPartitioningSchemeOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_PartitioningSchemeOrigin_Key);
+    auto pLengthPerPartitionValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_LengthPerPartition_Key);
+
+    psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
+                                   static_cast<usize>(pNumberOfPartitionsPerAxisValue[2])};
     psGeomMetadata.geometryOrigin = pPartitioningSchemeOriginValue;
     psGeomMetadata.geometrySpacing = pLengthPerPartitionValue;
+    psGeomMetadata.geometryUnits = psInfoGen.getUnits();
     break;
   }
-  case PartitioningMode::BoundingBox:
+  case PartitionGeometryFilter::PartitioningMode::BoundingBox:
   {
+    auto pLowerLeftCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_LowerLeftCoord_Key);
+    auto pUpperRightCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_UpperRightCoord_Key);
+
+    psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
+                                   static_cast<usize>(pNumberOfPartitionsPerAxisValue[2])};
     psGeomMetadata.geometryOrigin = pLowerLeftCoordValue;
     psGeomMetadata.geometrySpacing = psInfoGen.calculatePartitionLengthsUsingBounds(pLowerLeftCoordValue, pUpperRightCoordValue);
+    psGeomMetadata.geometryUnits = psInfoGen.getUnits();
+    break;
+  }
+  case PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme:
+  {
+    auto pExistingPartitioningSchemePathValue = filterArgs.value<DataPath>(PartitionGeometryFilter::k_ExistingPartitioningSchemePath_Key);
+    const ImageGeom& psGeom = ds.getDataRefAs<ImageGeom>(pExistingPartitioningSchemePathValue);
+    psGeomMetadata.geometryDims = psGeom.getDimensions();
+    psGeomMetadata.geometryOrigin = psGeom.getOrigin();
+    psGeomMetadata.geometrySpacing = psGeom.getSpacing();
+    psGeomMetadata.geometryUnits = psGeom.getUnits();
     break;
   }
   default:
@@ -151,18 +169,36 @@ std::string PartitionGeometry::GeneratePartitioningSchemeDisplayText(const SizeV
 // -----------------------------------------------------------------------------
 Result<> PartitionGeometry::operator()()
 {
-  PartitioningMode partitioningMode = static_cast<PartitioningMode>(m_InputValues->PartitioningMode);
-
+  PartitionGeometryFilter::PartitioningMode partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
   std::optional<int> outOfBoundsValue = {};
-  if(partitioningMode == PartitioningMode::Advanced || partitioningMode == PartitioningMode::BoundingBox)
+
+  DataPath psGeometryPath;
+  if(partitioningMode == PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme)
   {
-    outOfBoundsValue = m_InputValues->OutOfBoundsValue;
+    psGeometryPath = m_InputValues->ExistingPartitioningSchemePath;
+  }
+  else
+  {
+    psGeometryPath = m_InputValues->PSGeometryPath;
+    DataPath psPartitionIdsPath = m_InputValues->PSGeometryPath.createChildPath(m_InputValues->PSGeometryAMName).createChildPath(m_InputValues->PSGeometryDataArrayName);
+    Int32Array& psPartitionIds = m_DataStructure.getDataRefAs<Int32Array>({psPartitionIdsPath});
+
+    for(usize i = 0; i < psPartitionIds.getNumberOfTuples(); i++)
+    {
+      psPartitionIds[i] = i + m_InputValues->StartingPartitionID;
+    }
+  }
+
+  const ImageGeom& psImageGeom = m_DataStructure.getDataRefAs<ImageGeom>({psGeometryPath});
+
+  std::optional<BoolArray> vertexMask = {};
+  if(m_InputValues->UseVertexMask)
+  {
+    vertexMask = m_DataStructure.getDataRefAs<BoolArray>({m_InputValues->VertexMaskPath});
   }
 
   DataPath partitionIdsPath = m_InputValues->AttributeMatrixPath.createChildPath(m_InputValues->PartitionIdsArrayName);
   Int32Array& partitionIds = m_DataStructure.getDataRefAs<Int32Array>({partitionIdsPath});
-
-  const ImageGeom& psImageGeom = m_DataStructure.getDataRefAs<ImageGeom>({m_InputValues->PSGeometryPath});
 
   const IGeometry& iGeom = m_DataStructure.getDataRefAs<IGeometry>({m_InputValues->GeometryToPartition});
   Result<> result;
@@ -171,55 +207,55 @@ Result<> PartitionGeometry::operator()()
   case IGeometry::Type::Image:
   {
     const ImageGeom& geometry = m_DataStructure.getDataRefAs<ImageGeom>({m_InputValues->GeometryToPartition});
-    result = partitionCellBasedGeometry(geometry, partitionIds, psImageGeom, outOfBoundsValue);
+    result = partitionCellBasedGeometry(geometry, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue);
     break;
   }
   case IGeometry::Type::RectGrid:
   {
     const RectGridGeom& geometry = m_DataStructure.getDataRefAs<RectGridGeom>({m_InputValues->GeometryToPartition});
-    result = partitionCellBasedGeometry(geometry, partitionIds, psImageGeom, outOfBoundsValue);
+    result = partitionCellBasedGeometry(geometry, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue);
     break;
   }
   case IGeometry::Type::Vertex:
   {
     const VertexGeom& geometry = m_DataStructure.getDataRefAs<VertexGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
-    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, outOfBoundsValue);
+    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
   case IGeometry::Type::Edge:
   {
     const EdgeGeom& geometry = m_DataStructure.getDataRefAs<EdgeGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
-    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, outOfBoundsValue);
+    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
   case IGeometry::Type::Triangle:
   {
     const TriangleGeom& geometry = m_DataStructure.getDataRefAs<TriangleGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
-    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, outOfBoundsValue);
+    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
   case IGeometry::Type::Quad:
   {
     const QuadGeom& geometry = m_DataStructure.getDataRefAs<QuadGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
-    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, outOfBoundsValue);
+    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
   case IGeometry::Type::Tetrahedral:
   {
     const TetrahedralGeom& geometry = m_DataStructure.getDataRefAs<TetrahedralGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
-    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, outOfBoundsValue);
+    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
   case IGeometry::Type::Hexahedral:
   {
     const HexahedralGeom& geometry = m_DataStructure.getDataRefAs<HexahedralGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
-    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, outOfBoundsValue);
+    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
   default:
@@ -233,21 +269,13 @@ Result<> PartitionGeometry::operator()()
     return result;
   }
 
-  DataPath psPartitionIdsPath = m_InputValues->PSGeometryPath.createChildPath(m_InputValues->PSGeometryAMName).createChildPath(m_InputValues->PSGeometryDataArrayName);
-  Int32Array& psPartitionIds = m_DataStructure.getDataRefAs<Int32Array>({psPartitionIdsPath});
-
-  for(usize i = 0; i < psImageGeom.getNumberOfCells(); i++)
-  {
-    psPartitionIds[i] = i + static_cast<usize>(m_InputValues->StartingPartitionID);
-  }
-
   return {};
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32Array& partitionIds, const ImageGeom& psImageGeom, const std::optional<int>& outOfBoundsValue)
+Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue)
 {
   SizeVec3 dims = inputGeometry.getDimensions();
   AbstractDataStore<int32>& partitionIdsStore = partitionIds.getDataStoreRef();
@@ -266,13 +294,9 @@ Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inpu
         {
           partitionIdsStore.setValue(index, *partitionIndexResult + m_InputValues->StartingPartitionID);
         }
-        else if(outOfBoundsValue.has_value())
-        {
-          partitionIdsStore.setValue(index, *outOfBoundsValue);
-        }
         else
         {
-          return {MakeErrorResult(-3020, fmt::format("Coordinate (%1, %2, %3) is out-of-bounds of geometry '%4'.", x, y, z, inputGeometry.getName())), {}};
+          partitionIdsStore.setValue(index, outOfBoundsValue);
         }
       }
     }
@@ -285,7 +309,7 @@ Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inpu
 //
 // -----------------------------------------------------------------------------
 Result<> PartitionGeometry::partitionNodeBasedGeometry(const std::string& geomName, const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom,
-                                                       const std::optional<int>& outOfBoundsValue)
+                                                       int outOfBoundsValue, const std::optional<const BoolArray>& maskArrayOpt)
 {
   AbstractDataStore<int32>& partitionIdsStore = partitionIds.getDataStoreRef();
   const AbstractDataStore<float32>& verticesStore = vertexList.getDataStoreRef();
@@ -296,18 +320,19 @@ Result<> PartitionGeometry::partitionNodeBasedGeometry(const std::string& geomNa
     float x = verticesStore[idx * 3];
     float y = verticesStore[idx * 3 + 1];
     float z = verticesStore[idx * 3 + 2];
+
     auto partitionIndexResult = psImageGeom.getIndex(x, y, z);
-    if(partitionIndexResult.has_value())
+    if(maskArrayOpt.has_value() && !(*maskArrayOpt)[idx])
+    {
+      partitionIdsStore.setValue(idx, outOfBoundsValue);
+    }
+    else if(partitionIndexResult.has_value())
     {
       partitionIdsStore.setValue(idx, *partitionIndexResult + m_InputValues->StartingPartitionID);
     }
-    else if(outOfBoundsValue.has_value())
-    {
-      partitionIdsStore.setValue(idx, *outOfBoundsValue);
-    }
     else
     {
-      return {MakeErrorResult(-3021, fmt::format("Coordinate (%1, %2, %3) is out-of-bounds of geometry '%4'.", x, y, z, geomName)), {}};
+      partitionIdsStore.setValue(idx, outOfBoundsValue);
     }
   }
 

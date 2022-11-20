@@ -30,6 +30,10 @@ struct COMPLEXCORE_EXPORT PartitionGeometryInputValues
   std::string PSGeometryDataArrayName;
   DataPath GeometryToPartition;
   std::string PartitionIdsArrayName;
+  DataPath ExistingPartitioningSchemePath;
+  bool UseVertexMask;
+  DataPath VertexMaskPath;
+  std::string FeatureAttrMatrixName;
 };
 
 /**
@@ -67,14 +71,6 @@ public:
     IGeometry::LengthUnit geometryUnits;
   };
 
-  enum class PartitioningMode
-  {
-    Basic = 0,
-    Advanced = 1,
-    BoundingBox = 2,
-    ExistingPartitioningScheme = 3
-  };
-
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
@@ -88,7 +84,7 @@ public:
    * @return Returns a result that either contains a PSGeomInfo object with the data inside,
    * or an error describing what went wrong during the generation process.
    */
-  static Result<PSGeomInfo> GeneratePartitioningSchemeInfo(const PSInfoGenerator& psInfoGen, const Arguments& filterArgs);
+  static Result<PSGeomInfo> GeneratePartitioningSchemeInfo(const PSInfoGenerator& psInfoGen, const DataStructure& ds, const Arguments& filterArgs);
 
   /**
    * @brief Generates the display text that describes the input geometry,
@@ -133,12 +129,12 @@ private:
    * @param partitionIds The partition ids array that stores the results.
    * @param psImageGeom The partitioning scheme image geometry that is used
    * to partition the cell-based input geometry.
-   * @param outOfBoundsValue Optional value that out-of-bounds cells will be
+   * @param outOfBoundsValue Value that out-of-bounds cells will be
    * labeled with
    * @return The result of the partitioning algorithm.  Valid if successful, invalid
    * if there was an error.
    */
-  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32Array& partitionIds, const ImageGeom& psImageGeom, const std::optional<int>& outOfBoundsValue);
+  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue);
 
   /**
    * @brief Partitions a vertex list (typically from a node-based geometry) according to
@@ -154,13 +150,14 @@ private:
    * @param partitionIds The partition ids array that stores the results.
    * @param psImageGeom The partitioning scheme image geometry that is used
    * to partition the vertex list.
-   * @param outOfBoundsValue Optional value that out-of-bounds vertices will be
+   * @param outOfBoundsValue Value that out-of-bounds vertices will be
    * labeled with
+   * @param maskArrayOpt Optional mask array
    * @return The result of the partitioning algorithm.  Valid if successful, invalid
    * if there was an error.
    */
-  Result<> partitionNodeBasedGeometry(const std::string& geomName, const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom,
-                                      const std::optional<int>& outOfBoundsValue);
+  Result<> partitionNodeBasedGeometry(const std::string& geomName, const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue,
+                                      const std::optional<const BoolArray>& maskArrayOpt);
 };
 
 } // namespace complex
