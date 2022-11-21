@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/CosOperator.h"
+#include "ComplexCore/utils/CosOperator.hpp"
 
 #include <cmath>
 

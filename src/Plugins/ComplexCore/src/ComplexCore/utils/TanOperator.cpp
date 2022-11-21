@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/TanOperator.h"
+#include "ComplexCore/utils/TanOperator.hpp"
 
 #include <cmath>
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ComplexCore/ComplexCore_export.hpp"
-#include "ComplexCore/utils/ICalculatorArray.h"
+#include "ComplexCore/utils/ICalculatorArray.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Utilities/StringUtilities.hpp"

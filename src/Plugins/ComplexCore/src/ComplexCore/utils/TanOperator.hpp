@@ -1,20 +1,21 @@
 #pragma once
 
 #include <memory>
+
 #include <stack>
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.hpp"
 
 namespace complex
 {
 class CalculatorNumber;
 
-class COMPLEXCORE_EXPORT CeilOperator : public UnaryOperator
+class COMPLEXCORE_EXPORT TanOperator : public UnaryOperator
 {
 public:
-  using Self = CeilOperator;
+  using Self = TanOperator;
   using Pointer = std::shared_ptr<Self>;
   using ConstPointer = std::shared_ptr<const Self>;
   using WeakPointer = std::weak_ptr<Self>;
@@ -23,22 +24,23 @@ public:
 
   static Pointer New()
   {
-    return Pointer(new CeilOperator());
+    return Pointer(new TanOperator());
   }
 
-  ~CeilOperator() override;
+  ~TanOperator() override;
 
   void calculate(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath, std::stack<ICalculatorArray::Pointer>& executionStack) override;
 
 protected:
-  CeilOperator();
+  TanOperator();
 
 public:
-  CeilOperator(const CeilOperator&) = delete;            // Copy Constructor Not Implemented
-  CeilOperator(CeilOperator&&) = delete;                 // Move Constructor Not Implemented
-  CeilOperator& operator=(const CeilOperator&) = delete; // Copy Assignment Not Implemented
-  CeilOperator& operator=(CeilOperator&&) = delete;      // Move Assignment Not Implemented
+  TanOperator(const TanOperator&) = delete;            // Copy Constructor Not Implemented
+  TanOperator(TanOperator&&) = delete;                 // Move Constructor Not Implemented
+  TanOperator& operator=(const TanOperator&) = delete; // Copy Assignment Not Implemented
+  TanOperator& operator=(TanOperator&&) = delete;      // Move Assignment Not Implemented
 
 private:
 };
+
 } // namespace complex

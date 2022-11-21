@@ -5,16 +5,16 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.hpp"
 
 namespace complex
 {
 class CalculatorNumber;
 
-class COMPLEXCORE_EXPORT Log10Operator : public UnaryOperator
+class COMPLEXCORE_EXPORT CeilOperator : public UnaryOperator
 {
 public:
-  using Self = Log10Operator;
+  using Self = CeilOperator;
   using Pointer = std::shared_ptr<Self>;
   using ConstPointer = std::shared_ptr<const Self>;
   using WeakPointer = std::weak_ptr<Self>;
@@ -23,23 +23,22 @@ public:
 
   static Pointer New()
   {
-    return Pointer(new Log10Operator());
+    return Pointer(new CeilOperator());
   }
 
-  ~Log10Operator() override;
+  ~CeilOperator() override;
 
   void calculate(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath, std::stack<ICalculatorArray::Pointer>& executionStack) override;
 
 protected:
-  Log10Operator();
+  CeilOperator();
 
 public:
-  Log10Operator(const Log10Operator&) = delete;            // Copy Constructor Not Implemented
-  Log10Operator(Log10Operator&&) = delete;                 // Move Constructor Not Implemented
-  Log10Operator& operator=(const Log10Operator&) = delete; // Copy Assignment Not Implemented
-  Log10Operator& operator=(Log10Operator&&) = delete;      // Move Assignment Not Implemented
+  CeilOperator(const CeilOperator&) = delete;            // Copy Constructor Not Implemented
+  CeilOperator(CeilOperator&&) = delete;                 // Move Constructor Not Implemented
+  CeilOperator& operator=(const CeilOperator&) = delete; // Copy Assignment Not Implemented
+  CeilOperator& operator=(CeilOperator&&) = delete;      // Move Assignment Not Implemented
 
 private:
 };
-
 } // namespace complex

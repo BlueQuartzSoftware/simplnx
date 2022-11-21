@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ComplexCore/ComplexCore_export.hpp"
-#include "ComplexCore/utils/CalculatorItem.h"
+#include "ComplexCore/utils/CalculatorItem.hpp"
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"

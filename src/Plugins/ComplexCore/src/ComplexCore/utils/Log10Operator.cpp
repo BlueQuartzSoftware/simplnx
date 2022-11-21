@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/Log10Operator.h"
+#include "ComplexCore/utils/Log10Operator.hpp"
 
 #include <cmath>
 

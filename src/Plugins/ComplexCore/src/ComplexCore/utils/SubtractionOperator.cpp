@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/SubtractionOperator.h"
+#include "ComplexCore/utils/SubtractionOperator.hpp"
 
 #include <cmath>
 

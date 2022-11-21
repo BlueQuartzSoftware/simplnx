@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/PowOperator.h"
+#include "ComplexCore/utils/PowOperator.hpp"
 
 #include <cmath>
 

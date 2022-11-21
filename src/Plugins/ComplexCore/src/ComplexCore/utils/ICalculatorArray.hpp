@@ -5,7 +5,7 @@
 #include "ComplexCore/ComplexCore_export.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 
-#include "ComplexCore/utils/CalculatorItem.h"
+#include "ComplexCore/utils/CalculatorItem.hpp"
 
 namespace complex
 {

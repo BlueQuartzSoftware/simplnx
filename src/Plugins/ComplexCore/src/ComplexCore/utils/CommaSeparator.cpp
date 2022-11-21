@@ -1,7 +1,7 @@
-#include "ComplexCore/utils/CommaSeparator.h"
+#include "ComplexCore/utils/CommaSeparator.hpp"
 
-#include "ComplexCore/utils/ICalculatorArray.h"
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/ICalculatorArray.hpp"
+#include "ComplexCore/utils/UnaryOperator.hpp"
 
 using namespace complex;
 

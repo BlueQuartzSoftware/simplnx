@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/MultiplicationOperator.h"
+#include "ComplexCore/utils/MultiplicationOperator.hpp"
 
 #include <cmath>
 

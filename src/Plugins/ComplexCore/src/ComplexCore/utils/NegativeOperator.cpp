@@ -1,10 +1,10 @@
-#include "ComplexCore/utils/NegativeOperator.h"
+#include "ComplexCore/utils/NegativeOperator.hpp"
 
 #include <cmath>
 
-#include "ComplexCore/utils/BinaryOperator.h"
+#include "ComplexCore/utils/BinaryOperator.hpp"
 #include "ComplexCore/utils/CalculatorArray.hpp"
-#include "ComplexCore/utils/LeftParenthesisItem.h"
+#include "ComplexCore/utils/LeftParenthesisItem.hpp"
 
 using namespace complex;
 

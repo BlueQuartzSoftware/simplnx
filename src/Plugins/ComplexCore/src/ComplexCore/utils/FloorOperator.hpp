@@ -5,16 +5,16 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.hpp"
 
 namespace complex
 {
 class CalculatorNumber;
 
-class COMPLEXCORE_EXPORT ExpOperator : public UnaryOperator
+class COMPLEXCORE_EXPORT FloorOperator : public UnaryOperator
 {
 public:
-  using Self = ExpOperator;
+  using Self = FloorOperator;
   using Pointer = std::shared_ptr<Self>;
   using ConstPointer = std::shared_ptr<const Self>;
   using WeakPointer = std::weak_ptr<Self>;
@@ -23,21 +23,21 @@ public:
 
   static Pointer New()
   {
-    return Pointer(new ExpOperator());
+    return Pointer(new FloorOperator());
   }
 
-  ~ExpOperator() override;
+  ~FloorOperator() override;
 
   void calculate(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath, std::stack<ICalculatorArray::Pointer>& executionStack) override;
 
 protected:
-  ExpOperator();
+  FloorOperator();
 
 public:
-  ExpOperator(const ExpOperator&) = delete;            // Copy Constructor Not Implemented
-  ExpOperator(ExpOperator&&) = delete;                 // Move Constructor Not Implemented
-  ExpOperator& operator=(const ExpOperator&) = delete; // Copy Assignment Not Implemented
-  ExpOperator& operator=(ExpOperator&&) = delete;      // Move Assignment Not Implemented
+  FloorOperator(const FloorOperator&) = delete;            // Copy Constructor Not Implemented
+  FloorOperator(FloorOperator&&) = delete;                 // Move Constructor Not Implemented
+  FloorOperator& operator=(const FloorOperator&) = delete; // Copy Assignment Not Implemented
+  FloorOperator& operator=(FloorOperator&&) = delete;      // Move Assignment Not Implemented
 
 private:
 };

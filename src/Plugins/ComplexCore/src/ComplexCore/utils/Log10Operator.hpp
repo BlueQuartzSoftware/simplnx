@@ -5,16 +5,16 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.hpp"
 
 namespace complex
 {
 class CalculatorNumber;
 
-class COMPLEXCORE_EXPORT LnOperator : public UnaryOperator
+class COMPLEXCORE_EXPORT Log10Operator : public UnaryOperator
 {
 public:
-  using Self = LnOperator;
+  using Self = Log10Operator;
   using Pointer = std::shared_ptr<Self>;
   using ConstPointer = std::shared_ptr<const Self>;
   using WeakPointer = std::weak_ptr<Self>;
@@ -23,22 +23,23 @@ public:
 
   static Pointer New()
   {
-    return Pointer(new LnOperator());
+    return Pointer(new Log10Operator());
   }
 
-  ~LnOperator() override;
+  ~Log10Operator() override;
 
   void calculate(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath, std::stack<ICalculatorArray::Pointer>& executionStack) override;
 
 protected:
-  LnOperator();
+  Log10Operator();
 
 public:
-  LnOperator(const LnOperator&) = delete;            // Copy Constructor Not Implemented
-  LnOperator(LnOperator&&) = delete;                 // Move Constructor Not Implemented
-  LnOperator& operator=(const LnOperator&) = delete; // Copy Assignment Not Implemented
-  LnOperator& operator=(LnOperator&&) = delete;      // Move Assignment Not Implemented
+  Log10Operator(const Log10Operator&) = delete;            // Copy Constructor Not Implemented
+  Log10Operator(Log10Operator&&) = delete;                 // Move Constructor Not Implemented
+  Log10Operator& operator=(const Log10Operator&) = delete; // Copy Assignment Not Implemented
+  Log10Operator& operator=(Log10Operator&&) = delete;      // Move Assignment Not Implemented
 
 private:
 };
+
 } // namespace complex

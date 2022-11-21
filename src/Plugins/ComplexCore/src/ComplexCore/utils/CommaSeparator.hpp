@@ -4,7 +4,7 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/CalculatorSeparator.h"
+#include "ComplexCore/utils/CalculatorSeparator.hpp"
 
 namespace complex
 {

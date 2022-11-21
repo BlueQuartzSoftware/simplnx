@@ -6,7 +6,7 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/BinaryOperator.h"
+#include "ComplexCore/utils/BinaryOperator.hpp"
 
 namespace complex
 {

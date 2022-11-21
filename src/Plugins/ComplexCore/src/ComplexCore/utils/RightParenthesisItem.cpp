@@ -1,6 +1,6 @@
-#include "ComplexCore/utils/RightParenthesisItem.h"
+#include "ComplexCore/utils/RightParenthesisItem.hpp"
 
-#include "ComplexCore/utils/LeftParenthesisItem.h"
+#include "ComplexCore/utils/LeftParenthesisItem.hpp"
 
 using namespace complex;
 

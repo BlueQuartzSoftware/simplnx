@@ -1,20 +1,21 @@
 #pragma once
 
 #include <memory>
+
 #include <stack>
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.hpp"
 
 namespace complex
 {
 class CalculatorNumber;
 
-class COMPLEXCORE_EXPORT RootOperator : public UnaryOperator
+class COMPLEXCORE_EXPORT SinOperator : public UnaryOperator
 {
 public:
-  using Self = RootOperator;
+  using Self = SinOperator;
   using Pointer = std::shared_ptr<Self>;
   using ConstPointer = std::shared_ptr<const Self>;
   using WeakPointer = std::weak_ptr<Self>;
@@ -23,21 +24,21 @@ public:
 
   static Pointer New()
   {
-    return Pointer(new RootOperator());
+    return Pointer(new SinOperator());
   }
 
-  ~RootOperator() override;
+  ~SinOperator() override;
 
   void calculate(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath, std::stack<ICalculatorArray::Pointer>& executionStack) override;
 
 protected:
-  RootOperator();
+  SinOperator();
 
 public:
-  RootOperator(const RootOperator&) = delete;            // Copy Constructor Not Implemented
-  RootOperator(RootOperator&&) = delete;                 // Move Constructor Not Implemented
-  RootOperator& operator=(const RootOperator&) = delete; // Copy Assignment Not Implemented
-  RootOperator& operator=(RootOperator&&) = delete;      // Move Assignment Not Implemented
+  SinOperator(const SinOperator&) = delete;            // Copy Constructor Not Implemented
+  SinOperator(SinOperator&&) = delete;                 // Move Constructor Not Implemented
+  SinOperator& operator=(const SinOperator&) = delete; // Copy Assignment Not Implemented
+  SinOperator& operator=(SinOperator&&) = delete;      // Move Assignment Not Implemented
 
 private:
 };

@@ -12,7 +12,7 @@
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
-#include "ComplexCore/utils/CalculatorItem.h"
+#include "ComplexCore/utils/CalculatorItem.hpp"
 
 using namespace complex;
 

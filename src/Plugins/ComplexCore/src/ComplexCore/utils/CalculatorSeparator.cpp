@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/CalculatorSeparator.h"
+#include "ComplexCore/utils/CalculatorSeparator.hpp"
 
 using namespace complex;
 

@@ -1,7 +1,7 @@
 #include "ArrayCalculatorFilter.hpp"
 
 #include "ComplexCore/Filters/Algorithms/ArrayCalculator.hpp"
-#include "ComplexCore/utils/ICalculatorArray.h"
+#include "ComplexCore/utils/ICalculatorArray.hpp"
 
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"

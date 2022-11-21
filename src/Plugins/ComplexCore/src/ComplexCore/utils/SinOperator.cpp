@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/SinOperator.h"
+#include "ComplexCore/utils/SinOperator.hpp"
 
 #include <cmath>
 

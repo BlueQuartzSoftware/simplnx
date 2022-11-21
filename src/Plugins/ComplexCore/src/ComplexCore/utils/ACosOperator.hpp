@@ -5,17 +5,16 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.hpp"
 
 namespace complex
 {
-
 class CalculatorNumber;
 
-class COMPLEXCORE_EXPORT ATanOperator : public UnaryOperator
+class COMPLEXCORE_EXPORT ACosOperator : public UnaryOperator
 {
 public:
-  using Self = ATanOperator;
+  using Self = ACosOperator;
   using Pointer = std::shared_ptr<Self>;
   using ConstPointer = std::shared_ptr<const Self>;
   using WeakPointer = std::weak_ptr<Self>;
@@ -24,21 +23,21 @@ public:
 
   static Pointer New()
   {
-    return Pointer(new ATanOperator());
+    return Pointer(new ACosOperator());
   }
 
-  ~ATanOperator() override;
+  ~ACosOperator() override;
 
   void calculate(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath, std::stack<ICalculatorArray::Pointer>& executionStack) override;
 
 protected:
-  ATanOperator();
+  ACosOperator();
 
 public:
-  ATanOperator(const ATanOperator&) = delete;            // Copy Constructor Not Implemented
-  ATanOperator(ATanOperator&&) = delete;                 // Move Constructor Not Implemented
-  ATanOperator& operator=(const ATanOperator&) = delete; // Copy Assignment Not Implemented
-  ATanOperator& operator=(ATanOperator&&) = delete;      // Move Assignment Not Implemented
+  ACosOperator(const ACosOperator&) = delete;            // Copy Constructor Not Implemented
+  ACosOperator(ACosOperator&&) = delete;                 // Move Constructor Not Implemented
+  ACosOperator& operator=(const ACosOperator&) = delete; // Copy Assignment Not Implemented
+  ACosOperator& operator=(ACosOperator&&) = delete;      // Move Assignment Not Implemented
 
 private:
 };

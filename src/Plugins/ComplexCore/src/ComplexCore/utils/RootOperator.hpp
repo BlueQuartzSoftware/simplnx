@@ -5,16 +5,16 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.hpp"
 
 namespace complex
 {
 class CalculatorNumber;
 
-class COMPLEXCORE_EXPORT CosOperator : public UnaryOperator
+class COMPLEXCORE_EXPORT RootOperator : public UnaryOperator
 {
 public:
-  using Self = CosOperator;
+  using Self = RootOperator;
   using Pointer = std::shared_ptr<Self>;
   using ConstPointer = std::shared_ptr<const Self>;
   using WeakPointer = std::weak_ptr<Self>;
@@ -23,22 +23,23 @@ public:
 
   static Pointer New()
   {
-    return Pointer(new CosOperator());
+    return Pointer(new RootOperator());
   }
 
-  ~CosOperator() override;
+  ~RootOperator() override;
 
   void calculate(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath, std::stack<ICalculatorArray::Pointer>& executionStack) override;
 
 protected:
-  CosOperator();
+  RootOperator();
 
 public:
-  CosOperator(const CosOperator&) = delete;            // Copy Constructor Not Implemented
-  CosOperator(CosOperator&&) = delete;                 // Move Constructor Not Implemented
-  CosOperator& operator=(const CosOperator&) = delete; // Copy Assignment Not Implemented
-  CosOperator& operator=(CosOperator&&) = delete;      // Move Assignment Not Implemented
+  RootOperator(const RootOperator&) = delete;            // Copy Constructor Not Implemented
+  RootOperator(RootOperator&&) = delete;                 // Move Constructor Not Implemented
+  RootOperator& operator=(const RootOperator&) = delete; // Copy Assignment Not Implemented
+  RootOperator& operator=(RootOperator&&) = delete;      // Move Assignment Not Implemented
 
 private:
 };
+
 } // namespace complex

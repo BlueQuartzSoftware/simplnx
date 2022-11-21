@@ -1,7 +1,7 @@
-#include "ComplexCore/utils/BinaryOperator.h"
+#include "ComplexCore/utils/BinaryOperator.hpp"
 
-#include "ComplexCore/utils/LeftParenthesisItem.h"
-#include "ComplexCore/utils/RightParenthesisItem.h"
+#include "ComplexCore/utils/LeftParenthesisItem.hpp"
+#include "ComplexCore/utils/RightParenthesisItem.hpp"
 
 using namespace complex;
 

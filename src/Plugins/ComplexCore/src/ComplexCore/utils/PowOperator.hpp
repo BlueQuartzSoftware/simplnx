@@ -1,20 +1,21 @@
 #pragma once
 
 #include <memory>
+
 #include <stack>
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "ComplexCore/utils/UnaryOperator.h"
+#include "ComplexCore/utils/BinaryOperator.hpp"
 
 namespace complex
 {
 class CalculatorNumber;
 
-class COMPLEXCORE_EXPORT ACosOperator : public UnaryOperator
+class COMPLEXCORE_EXPORT PowOperator : public BinaryOperator
 {
 public:
-  using Self = ACosOperator;
+  using Self = PowOperator;
   using Pointer = std::shared_ptr<Self>;
   using ConstPointer = std::shared_ptr<const Self>;
   using WeakPointer = std::weak_ptr<Self>;
@@ -23,21 +24,21 @@ public:
 
   static Pointer New()
   {
-    return Pointer(new ACosOperator());
+    return Pointer(new PowOperator());
   }
 
-  ~ACosOperator() override;
+  ~PowOperator() override;
 
   void calculate(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath, std::stack<ICalculatorArray::Pointer>& executionStack) override;
 
 protected:
-  ACosOperator();
+  PowOperator();
 
 public:
-  ACosOperator(const ACosOperator&) = delete;            // Copy Constructor Not Implemented
-  ACosOperator(ACosOperator&&) = delete;                 // Move Constructor Not Implemented
-  ACosOperator& operator=(const ACosOperator&) = delete; // Copy Assignment Not Implemented
-  ACosOperator& operator=(ACosOperator&&) = delete;      // Move Assignment Not Implemented
+  PowOperator(const PowOperator&) = delete;            // Copy Constructor Not Implemented
+  PowOperator(PowOperator&&) = delete;                 // Move Constructor Not Implemented
+  PowOperator& operator=(const PowOperator&) = delete; // Copy Assignment Not Implemented
+  PowOperator& operator=(PowOperator&&) = delete;      // Move Assignment Not Implemented
 
 private:
 };

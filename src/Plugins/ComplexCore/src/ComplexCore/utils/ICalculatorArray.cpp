@@ -1,4 +1,4 @@
-#include "ComplexCore/utils/ICalculatorArray.h"
+#include "ComplexCore/utils/ICalculatorArray.hpp"
 
 using namespace complex;
 

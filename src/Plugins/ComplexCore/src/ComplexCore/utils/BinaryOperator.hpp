@@ -3,7 +3,7 @@
 #include <memory>
 #include <stack>
 
-#include "ComplexCore/utils/CalculatorOperator.h"
+#include "ComplexCore/utils/CalculatorOperator.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 

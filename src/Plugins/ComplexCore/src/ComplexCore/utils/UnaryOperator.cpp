@@ -1,11 +1,11 @@
-#include "UnaryOperator.h"
+#include "UnaryOperator.hpp"
 
 #include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
-#include "ComplexCore/utils/BinaryOperator.h"
-#include "ComplexCore/utils/CommaSeparator.h"
-#include "ComplexCore/utils/LeftParenthesisItem.h"
-#include "ComplexCore/utils/NegativeOperator.h"
-#include "ComplexCore/utils/RightParenthesisItem.h"
+#include "ComplexCore/utils/BinaryOperator.hpp"
+#include "ComplexCore/utils/CommaSeparator.hpp"
+#include "ComplexCore/utils/LeftParenthesisItem.hpp"
+#include "ComplexCore/utils/NegativeOperator.hpp"
+#include "ComplexCore/utils/RightParenthesisItem.hpp"
 
 using namespace complex;
 
