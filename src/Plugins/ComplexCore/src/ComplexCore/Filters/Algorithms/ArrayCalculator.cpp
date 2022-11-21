@@ -153,7 +153,7 @@ Result<> ArrayCalculator::operator()()
       // This is an operator
       CalculatorOperator::Pointer rpnOperator = std::dynamic_pointer_cast<CalculatorOperator>(rpnItem);
 
-      rpnOperator->calculate(m_DataStructure, m_InputValues->Units, temporaryCalculatedArrayPath, executionStack);
+      rpnOperator->calculate(parser.m_TemporaryDataStructure, m_InputValues->Units, temporaryCalculatedArrayPath, executionStack);
     }
 
     if(getCancel())

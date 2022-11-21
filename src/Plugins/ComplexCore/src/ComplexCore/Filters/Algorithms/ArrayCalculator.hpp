@@ -40,6 +40,8 @@ public:
 
   static Result<ArrayCalculatorParser::ParsedEquation> ToRPN(const std::string& unparsedInfixExpression, std::vector<CalculatorItem::Pointer> infixEquation);
 
+  friend class ArrayCalculator;
+
 protected:
   std::vector<std::string> getRegularExpressionMatches();
   Result<> parseNumericValue(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix, double number);
