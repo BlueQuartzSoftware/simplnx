@@ -86,14 +86,15 @@ protected:
 
   /**
    * @brief
-   * @param data
+   * @param dataStructure
    * @param args
    * @param pipelineNode
    * @param messageHandler
    * @param shouldCancel
    * @return Result<>
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

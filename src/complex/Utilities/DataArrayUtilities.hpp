@@ -151,7 +151,13 @@ Result<> CheckValuesUnsignedInt(const std::string& valueAsStr, const std::string
   return ConvertResult(std::move(conversionResult));
 }
 
-// -----------------------------------------------------------------------------
+/**
+ * @brief
+ * @tparam T
+ * @param valueAsStr
+ * @param strType
+ * @return
+ */
 template <class T>
 Result<> CheckValuesSignedInt(const std::string& valueAsStr, const std::string& strType)
 {
@@ -170,7 +176,13 @@ Result<> CheckValuesSignedInt(const std::string& valueAsStr, const std::string& 
   return ConvertResult(std::move(conversionResult));
 }
 
-// -----------------------------------------------------------------------------
+/**
+ * @brief
+ * @tparam T
+ * @param valueAsStr
+ * @param strType
+ * @return
+ */
 template <class T>
 Result<> CheckValuesFloatDouble(const std::string& valueAsStr, const std::string& strType)
 {
@@ -332,11 +344,6 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   {
     return MakeErrorResult(-261, fmt::format("CreateArray: Tuple Shape was empty. Please set the number of tuples."));
   }
-  //  size_t numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
-  //  if(numTuples == 0 && mode == IDataAction::Mode::Execute)
-  //  {
-  //    return MakeErrorResult(-263, fmt::format("CreateArrayAction: Number of tuples is ZERO. Please set the number of tuples."));
-  //  }
 
   // Validate Number of Components
   if(compShape.empty())
@@ -444,6 +451,13 @@ DataArray<T>* ArrayFromPath(DataStructure& dataStructure, const DataPath& path)
   return dataArray;
 }
 
+/**
+ * @brief
+ * @tparam T
+ * @param data
+ * @param path
+ * @return
+ */
 template <class T>
 DataArray<T>& ArrayRefFromPath(DataStructure& data, const DataPath& path)
 {
@@ -522,6 +536,32 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   fclose(inputFile);
 
   return dataArray;
+}
+
+/**
+ * @brief Creates a deep copy of an array into another location in the DataStructure.
+ *
+ * WARNING: If there is a DataObject already at the destination path then that data object
+ * is removed from the DataStructure and replaced with the new copy
+ * @tparam ArrayType The Type of DataArray to copy. IDataArray and StringArray are supported
+ * @param dataStructure The DataStructure object
+ * @param sourceDataPath The source path to copy from.
+ * @param destDataPath The destination path to copy into.
+ * @return Result<> object.
+ */
+template <typename ArrayType>
+Result<> DeepCopy(DataStructure& dataStructure, const DataPath& sourceDataPath, const DataPath& destDataPath)
+{
+  ArrayType& iDataArray = dataStructure.getDataRefAs<ArrayType>(sourceDataPath);
+  if(dataStructure.removeData(destDataPath))
+  {
+    iDataArray.deepCopy(destDataPath);
+  }
+  else
+  {
+    return MakeErrorResult(-34600, fmt::format("Could not remove data array at path '{}' which would be replaced through a deep copy.", destDataPath.toString()));
+  }
+  return {};
 }
 
 /**

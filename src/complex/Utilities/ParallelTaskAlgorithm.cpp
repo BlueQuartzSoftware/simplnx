@@ -7,8 +7,7 @@ using namespace complex;
 
 // -----------------------------------------------------------------------------
 ParallelTaskAlgorithm::ParallelTaskAlgorithm()
-: m_Parallelization(true)
-, m_MaxThreads(std::thread::hardware_concurrency())
+: m_MaxThreads(std::thread::hardware_concurrency())
 #ifdef COMPLEX_ENABLE_MULTICORE
 , m_TaskGroup(new tbb::task_group)
 #endif
@@ -26,13 +25,13 @@ ParallelTaskAlgorithm::~ParallelTaskAlgorithm()
 // -----------------------------------------------------------------------------
 bool ParallelTaskAlgorithm::getParallelizationEnabled() const
 {
-  return m_Parallelization;
+  return m_RunParallel;
 }
 
 // -----------------------------------------------------------------------------
 void ParallelTaskAlgorithm::setParallelizationEnabled(bool doParallel)
 {
-  m_Parallelization = doParallel;
+  m_RunParallel = doParallel;
 }
 
 // -----------------------------------------------------------------------------
