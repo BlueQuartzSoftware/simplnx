@@ -21,7 +21,7 @@ public:
   struct ValueType
   {
     DataPath m_SelectedGroup;
-    std::string m_Equation;
+    std::string m_Equation = "";
     AngleUnits m_Units = Radians;
   };
 
