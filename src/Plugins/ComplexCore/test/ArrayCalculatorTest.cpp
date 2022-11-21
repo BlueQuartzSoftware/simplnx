@@ -132,15 +132,13 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
 
   if(nullptr != expectedNumberOfTuples)
   {
-    REQUIRE(arrayPtr->getNumberOfTuples() == 1);
+    double expectedNumTuples = *expectedNumberOfTuples;
+    REQUIRE(arrayPtr->getNumberOfTuples() == expectedNumTuples);
   }
 
   if(nullptr != expectedValue && nullptr != expectedNumberOfTuples)
   {
     double value = *expectedValue;
-
-    REQUIRE(arrayPtr->getNumberOfTuples() == 1);
-
     for(size_t i = 0; i < arrayPtr->getNumberOfTuples(); i++)
     {
       REQUIRE(UnitTest::CloseEnough<double>(arrayPtr->at(i), value, 0.01));
@@ -319,10 +317,14 @@ void SingleComponentArrayCalculatorTest1()
     runTest("sin( abs( cos( abs(3)/4) + 7)^2)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::SUCCESS), CalculatorItem::WarningCode::NUMERIC_VALUE_WARNING, &numTuple, &value);
   }
 
-  SECTION("Single Array Tests (Force Incorrect Tuple Count Error)")
+  SECTION("Single Array Tests (Force Incorrect Tuple Counts)")
   {
     runTest("-InputArray1", k_NumericArrayPath, -264, CalculatorItem::WarningCode::NONE);
     runTest(k_InputArray2, k_NumericArrayPath, -264, CalculatorItem::WarningCode::NONE);
+
+    int numTuple = 10;
+    double value = 18;
+    runTest("12 + 6", k_AttributeArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::SUCCESS), CalculatorItem::WarningCode::NUMERIC_VALUE_WARNING, &numTuple, &value);
   }
 
   SECTION("Unrecognized Item Tests")
