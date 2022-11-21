@@ -18,7 +18,14 @@ public:
   using SpacingType = std::vector<float>;
 
   CreateImageGeometryAction() = delete;
-
+  /**
+   * @brief
+   * @param path
+   * @param dims The dimensions of the newly created Image Geometry: ORDERED: X, Y, Z.
+   * @param origin
+   * @param spacing
+   * @param cellAttributeMatrixName
+   */
   CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName);
 
   ~CreateImageGeometryAction() noexcept override;

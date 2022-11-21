@@ -1,48 +1,27 @@
 #include <catch2/catch.hpp>
 
-#include "ComplexCore/Filters/CropImageGeometry.hpp"
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/CropImageGeometry.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
 namespace
 {
-usize convertPositionToOffset(const SizeVec3& position, const IDataStore::ShapeType& dimensions)
-{
-  usize xOffset = position.getX();
-  usize yOffset = position.getY() * dimensions[0];
-  usize zOffset = position.getZ() * dimensions[0] * dimensions[1];
-  return xOffset + yOffset + zOffset;
-}
 
-template <typename T>
-void compareCellDataValues(const DataArray<T>& oldDataArray, const DataArray<T>& newDataArray)
+struct CompareDataArrayFunctor
 {
-  auto oldDimensions = oldDataArray.getDataStoreRef().getTupleShape();
-  auto newDimensions = newDataArray.getDataStoreRef().getTupleShape();
-
-  for(usize z = 0; z < oldDimensions[2] && z < newDimensions[2]; z++)
+  template <typename T>
+  void operator()(const IDataArray& left, const IDataArray& right, usize start = 0)
   {
-    for(usize y = 0; y < oldDimensions[1] && y < newDimensions[1]; y++)
-    {
-      for(usize x = 0; x < oldDimensions[0] && x < newDimensions[0]; x++)
-      {
-        SizeVec3 position{x, y, z};
-        auto newOffset = convertPositionToOffset(position, newDimensions);
-        auto oldOffset = convertPositionToOffset(position, oldDimensions);
-
-        auto oldData = oldDataArray[oldOffset];
-        auto newData = newDataArray[newOffset];
-        REQUIRE(oldData == newData);
-      }
-    }
+    UnitTest::CompareDataArrays<T>(left, right, start);
   }
-}
+};
 
 DataStructure CreateDataStructure()
 {
@@ -95,17 +74,19 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
-TEST_CASE("ComplexCore::CropImageGeometry(Valid Parameters)", "[ComplexCore][CropImageGeometry]")
+TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropImageGeometry]")
 {
-  const std::vector<uint64> k_MinVector{0, 0, 0};
-  const std::vector<uint64> k_MaxVector{2, 3, 4};
+  const std::vector<uint64> k_MinVector{10, 15, 0};
+  const std::vector<uint64> k_MaxVector{60, 40, 50};
 
   static constexpr bool k_UpdateOrigin = false;
   const DataPath k_ImageGeomPath({Constants::k_DataContainer});
-  const DataPath k_NewImageGeomPath({"New Image Geom"});
+  const DataPath k_NewImageGeomPath({"7_0_Cropped_ImageGeom"});
+  DataPath destCellDataPath = k_NewImageGeomPath.createChildPath(Constants::k_CellData);
   static constexpr bool k_RenumberFeatures = true;
   const DataPath k_FeatureIdsPath({Constants::k_DataContainer, Constants::k_CellData, Constants::k_FeatureIds});
   const DataPath k_CellFeatureAMPath({Constants::k_DataContainer, Constants::k_CellFeatureData});
+  DataPath k_DestCellFeatureDataPath = k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData);
 
   CropImageGeometry filter;
   // Read the Small IN100 Data set
@@ -128,21 +109,6 @@ TEST_CASE("ComplexCore::CropImageGeometry(Valid Parameters)", "[ComplexCore][Cro
   auto result = filter.execute(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
-  auto& newImageGeom = ds.getDataRefAs<ImageGeom>(k_NewImageGeomPath);
-  auto newDimensions = newImageGeom.getDimensions();
-
-  for(usize i = 0; i < 3; i++)
-  {
-    REQUIRE(newDimensions[i] == (k_MaxVector[i] - k_MinVector[i] + 1));
-  }
-
-  const usize targetSize = (newDimensions[0]) * (newDimensions[1]) * (newDimensions[2]);
-  const auto& oldPhasesDataArray = ds.getDataRefAs<Int32Array>(k_ImageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_Phases));
-  const auto& newPhasesDataArray = ds.getDataRefAs<Int32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_Phases));
-  const auto dataSize = newPhasesDataArray.getSize();
-  REQUIRE(dataSize == targetSize);
-  compareCellDataValues<int32>(oldPhasesDataArray, newPhasesDataArray);
-
   {
     // Write out the DataStructure for later viewing/debugging
     Result<H5::FileWriter> ioResult = H5::FileWriter::CreateFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
@@ -151,26 +117,34 @@ TEST_CASE("ComplexCore::CropImageGeometry(Valid Parameters)", "[ComplexCore][Cro
     REQUIRE(err >= 0);
   }
 
-  const auto& newCIDataArray = ds.getDataRefAs<Float32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath(Constants::k_ConfidenceIndex));
-  REQUIRE(std::fabs(newCIDataArray[0] - 0.0) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(newCIDataArray[1] - 0.8) < UnitTest::EPSILON);
+  auto& newImageGeom = ds.getDataRefAs<ImageGeom>(k_NewImageGeomPath);
+  auto newDimensions = newImageGeom.getDimensions();
 
-  const auto& newIPFDataArray = ds.getDataRefAs<UInt8Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath(Constants::k_IPFColors));
-  REQUIRE(newIPFDataArray[0] == 0);
-  REQUIRE(newIPFDataArray[1] == 0);
-  REQUIRE(newIPFDataArray[2] == 0);
-  REQUIRE(newIPFDataArray[3] == 128);
-  REQUIRE(newIPFDataArray[4] == 255);
-  REQUIRE(newIPFDataArray[5] == 189);
+  for(usize i = 0; i < 3; i++)
+  {
+    REQUIRE(newDimensions[i] == (k_MaxVector[i] - k_MinVector[i] + 1));
+  }
 
-  const auto& newEqDiamDataArray = ds.getDataRefAs<Float32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath("EquivalentDiameters"));
-  REQUIRE(std::fabs(newEqDiamDataArray[0] - 0.0) < UnitTest::EPSILON);
-  REQUIRE(std::fabs(newEqDiamDataArray[1] - 16.661926) < UnitTest::EPSILON);
+  DataPath exemplarGeoPath({"6_5_Cropped_ImageGeom"});
+  DataPath exemplarCellDataPath = exemplarGeoPath.createChildPath(Constants::k_CellData);
+  DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_CellFeatureData);
 
-  const auto& newNumEltsDataArray = ds.getDataRefAs<Int32Array>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath("NumElements"));
-  REQUIRE(newNumEltsDataArray[0] == 0);
-  REQUIRE(newNumEltsDataArray[1] == 2422);
+  // check the data arrays
+  const auto exemplarCellDataArrays = GetAllChildArrayDataPaths(ds, exemplarCellDataPath).value();
+  const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(ds, destCellDataPath).value();
+  for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
+  {
+    const IDataArray& exemplarArray = ds.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
+    const IDataArray& calculatedArray = ds.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
+  }
 
-  const auto* newNeighborListArray = ds.getDataAs<INeighborList>(k_NewImageGeomPath.createChildPath(Constants::k_CellFeatureData).createChildPath("NeighborList"));
-  REQUIRE(newNeighborListArray == nullptr);
+  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(ds, exemplarCellFeatureDataPath).value();
+  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(ds, k_DestCellFeatureDataPath).value();
+  for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
+  {
+    const IDataArray& exemplarArray = ds.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
+    const IDataArray& calculatedArray = ds.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
+  }
 }
