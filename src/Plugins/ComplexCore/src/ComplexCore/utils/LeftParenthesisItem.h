@@ -3,13 +3,13 @@
 #include <memory>
 #include <vector>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "Core/Utilities/CalculatorItem.h"
+#include "ComplexCore/utils/CalculatorItem.h"
 
 namespace complex
 {
-class CORE_EXPORT LeftParenthesisItem : public CalculatorItem
+class COMPLEXCORE_EXPORT LeftParenthesisItem : public CalculatorItem
 {
 public:
   using Self = LeftParenthesisItem;

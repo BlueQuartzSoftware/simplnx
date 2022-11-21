@@ -1,8 +1,8 @@
-#include "Core/Utilities/Log10Operator.h"
+#include "ComplexCore/utils/Log10Operator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

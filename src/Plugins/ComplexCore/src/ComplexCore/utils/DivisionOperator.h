@@ -4,13 +4,13 @@
 
 #include <stack>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "Core/Utilities/BinaryOperator.h"
+#include "ComplexCore/utils/BinaryOperator.h"
 
 namespace complex
 {
-class CORE_EXPORT DivisionOperator : public BinaryOperator
+class COMPLEXCORE_EXPORT DivisionOperator : public BinaryOperator
 {
 public:
   using Self = DivisionOperator;

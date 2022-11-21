@@ -2,14 +2,14 @@
 
 #include <memory>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 
-#include "Core/Utilities/CalculatorItem.h"
+#include "ComplexCore/utils/CalculatorItem.h"
 
 namespace complex
 {
-class CORE_EXPORT ICalculatorArray : public CalculatorItem
+class COMPLEXCORE_EXPORT ICalculatorArray : public CalculatorItem
 {
 public:
   enum ValueType

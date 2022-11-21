@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core/Core_export.hpp"
-#include "Core/Utilities/ICalculatorArray.h"
+#include "ComplexCore/ComplexCore_export.hpp"
+#include "ComplexCore/utils/ICalculatorArray.h"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -10,7 +10,7 @@ namespace complex
 {
 
 template <typename T>
-class CORE_EXPORT CalculatorArray : public ICalculatorArray
+class COMPLEXCORE_EXPORT CalculatorArray : public ICalculatorArray
 {
 public:
   using Self = CalculatorArray<T>;

@@ -4,9 +4,9 @@
 
 #include <stack>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/CalculatorParameter.hpp"
@@ -14,7 +14,7 @@
 namespace complex
 {
 
-class CORE_EXPORT CalculatorOperator : public CalculatorItem
+class COMPLEXCORE_EXPORT CalculatorOperator : public CalculatorItem
 {
 public:
   enum OperatorType

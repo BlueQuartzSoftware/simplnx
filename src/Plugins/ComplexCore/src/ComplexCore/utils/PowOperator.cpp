@@ -1,8 +1,8 @@
-#include "Core/Utilities/PowOperator.h"
+#include "ComplexCore/utils/PowOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

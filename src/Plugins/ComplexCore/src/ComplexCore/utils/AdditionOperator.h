@@ -3,16 +3,16 @@
 #include <memory>
 #include <stack>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "Core/Utilities/BinaryOperator.h"
+#include "ComplexCore/utils/BinaryOperator.h"
 
 namespace complex
 {
 
 class CalculatorNumber;
 
-class CORE_EXPORT AdditionOperator : public BinaryOperator
+class COMPLEXCORE_EXPORT AdditionOperator : public BinaryOperator
 {
 public:
   using Self = AdditionOperator;

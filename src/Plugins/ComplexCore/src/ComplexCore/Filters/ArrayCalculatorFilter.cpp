@@ -1,14 +1,13 @@
 #include "ArrayCalculatorFilter.hpp"
 
-#include "Core/Filters/Algorithms/ArrayCalculator.hpp"
-#include "Core/Utilities/ICalculatorArray.h"
+#include "ComplexCore/Filters/Algorithms/ArrayCalculator.hpp"
+#include "ComplexCore/utils/ICalculatorArray.h"
 
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-// #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/CalculatorParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 

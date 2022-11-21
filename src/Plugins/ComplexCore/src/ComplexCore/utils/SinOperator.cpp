@@ -1,8 +1,8 @@
-#include "Core/Utilities/SinOperator.h"
+#include "ComplexCore/utils/SinOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

@@ -1,8 +1,8 @@
-#include "Core/Utilities/TanOperator.h"
+#include "ComplexCore/utils/TanOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

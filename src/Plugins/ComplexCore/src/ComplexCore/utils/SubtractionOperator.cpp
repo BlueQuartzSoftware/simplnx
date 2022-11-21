@@ -1,8 +1,8 @@
-#include "Core/Utilities/SubtractionOperator.h"
+#include "ComplexCore/utils/SubtractionOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

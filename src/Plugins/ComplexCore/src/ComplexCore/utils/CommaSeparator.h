@@ -2,13 +2,13 @@
 
 #include <memory>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "Core/Utilities/CalculatorSeparator.h"
+#include "ComplexCore/utils/CalculatorSeparator.h"
 
 namespace complex
 {
-class CORE_EXPORT CommaSeparator : public CalculatorSeparator
+class COMPLEXCORE_EXPORT CommaSeparator : public CalculatorSeparator
 {
 public:
   using Self = CommaSeparator;

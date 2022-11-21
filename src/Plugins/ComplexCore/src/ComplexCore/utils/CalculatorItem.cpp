@@ -1,6 +1,6 @@
-#include "Core/Utilities/CalculatorItem.h"
+#include "ComplexCore/utils/CalculatorItem.h"
 
-#include "Core/Utilities/ICalculatorArray.h"
+#include "ComplexCore/utils/ICalculatorArray.h"
 #include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;

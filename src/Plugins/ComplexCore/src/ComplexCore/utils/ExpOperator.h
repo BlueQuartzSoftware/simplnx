@@ -3,15 +3,15 @@
 #include <memory>
 #include <stack>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "Core/Utilities/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.h"
 
 namespace complex
 {
 class CalculatorNumber;
 
-class CORE_EXPORT ExpOperator : public UnaryOperator
+class COMPLEXCORE_EXPORT ExpOperator : public UnaryOperator
 {
 public:
   using Self = ExpOperator;

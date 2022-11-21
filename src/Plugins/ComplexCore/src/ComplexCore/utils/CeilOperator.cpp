@@ -1,8 +1,8 @@
-#include "Core/Utilities/CeilOperator.h"
+#include "ComplexCore/utils/CeilOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

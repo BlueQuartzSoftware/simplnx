@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
 namespace complex
 {
@@ -14,7 +14,7 @@ class DataPath;
 /**
  * @brief The CalculatorItem class
  */
-class CORE_EXPORT CalculatorItem
+class COMPLEXCORE_EXPORT CalculatorItem
 {
 public:
   using Self = CalculatorItem;

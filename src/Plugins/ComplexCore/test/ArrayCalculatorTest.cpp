@@ -10,9 +10,9 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "Core/Core_test_dirs.hpp"
-#include "Core/Filters/ArrayCalculatorFilter.hpp"
-#include "Core/Utilities/CalculatorItem.h"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
+#include "ComplexCore/utils/CalculatorItem.h"
 
 using namespace complex;
 

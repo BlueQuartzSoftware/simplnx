@@ -1,11 +1,11 @@
-#include "Core/Utilities/DivisionOperator.h"
+#include "ComplexCore/utils/DivisionOperator.h"
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Eigen>
 
-#include "Core/Utilities/LeftParenthesisItem.h"
-#include "Core/Utilities/RightParenthesisItem.h"
+#include "ComplexCore/utils/LeftParenthesisItem.h"
+#include "ComplexCore/utils/RightParenthesisItem.h"
 
 using namespace complex;
 

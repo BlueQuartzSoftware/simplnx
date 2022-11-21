@@ -1,8 +1,8 @@
-#include "Core/Utilities/SqrtOperator.h"
+#include "ComplexCore/utils/SqrtOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

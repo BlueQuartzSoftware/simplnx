@@ -3,14 +3,14 @@
 #include <memory>
 #include <stack>
 
-#include "Core/Utilities/CalculatorOperator.h"
+#include "ComplexCore/utils/CalculatorOperator.h"
 
 #include "complex/DataStructure/DataPath.hpp"
 
 namespace complex
 {
 
-class CORE_EXPORT BinaryOperator : public CalculatorOperator
+class COMPLEXCORE_EXPORT BinaryOperator : public CalculatorOperator
 {
 public:
   using Self = BinaryOperator;

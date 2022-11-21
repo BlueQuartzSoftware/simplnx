@@ -1,8 +1,8 @@
-#include "Core/Utilities/ATanOperator.h"
+#include "ComplexCore/utils/ATanOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

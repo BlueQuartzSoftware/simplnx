@@ -4,13 +4,13 @@
 
 #include <stack>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "Core/Utilities/UnaryOperator.h"
+#include "ComplexCore/utils/UnaryOperator.h"
 
 namespace complex
 {
-class CORE_EXPORT NegativeOperator : public CalculatorOperator
+class COMPLEXCORE_EXPORT NegativeOperator : public CalculatorOperator
 {
 public:
   using Self = NegativeOperator;

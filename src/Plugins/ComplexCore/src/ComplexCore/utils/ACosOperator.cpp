@@ -1,8 +1,8 @@
-#include "Core/Utilities/ACosOperator.h"
+#include "ComplexCore/utils/ACosOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

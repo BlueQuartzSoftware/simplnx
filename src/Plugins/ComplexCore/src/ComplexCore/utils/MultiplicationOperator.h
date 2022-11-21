@@ -3,13 +3,13 @@
 #include <memory>
 #include <stack>
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
-#include "Core/Utilities/BinaryOperator.h"
+#include "ComplexCore/utils/BinaryOperator.h"
 
 namespace complex
 {
-class CORE_EXPORT MultiplicationOperator : public BinaryOperator
+class COMPLEXCORE_EXPORT MultiplicationOperator : public BinaryOperator
 {
 public:
   using Self = MultiplicationOperator;

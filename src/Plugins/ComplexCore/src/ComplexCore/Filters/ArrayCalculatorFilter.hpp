@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -11,7 +11,7 @@ namespace complex
  * @class ArrayCalculatorFilter
  * @brief This filter will ....
  */
-class CORE_EXPORT ArrayCalculatorFilter : public IFilter
+class COMPLEXCORE_EXPORT ArrayCalculatorFilter : public IFilter
 {
 public:
   ArrayCalculatorFilter() = default;

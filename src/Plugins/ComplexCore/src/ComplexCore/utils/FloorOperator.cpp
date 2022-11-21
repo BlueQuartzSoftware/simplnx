@@ -1,8 +1,8 @@
-#include "Core/Utilities/FloorOperator.h"
+#include "ComplexCore/utils/FloorOperator.h"
 
 #include <cmath>
 
-#include "Core/Utilities/CalculatorArray.hpp"
+#include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;
 

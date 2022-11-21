@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core/Core_export.hpp"
-#include "Core/Utilities/CalculatorItem.h"
+#include "ComplexCore/ComplexCore_export.hpp"
+#include "ComplexCore/utils/CalculatorItem.h"
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -13,7 +13,7 @@
 namespace complex
 {
 
-struct CORE_EXPORT ArrayCalculatorInputValues
+struct COMPLEXCORE_EXPORT ArrayCalculatorInputValues
 {
   DataPath SelectedGroup;
   std::string InfixEquation;
@@ -22,7 +22,7 @@ struct CORE_EXPORT ArrayCalculatorInputValues
   DataPath CalculatedArray;
 };
 
-class CORE_EXPORT ArrayCalculatorParser
+class COMPLEXCORE_EXPORT ArrayCalculatorParser
 {
 public:
   using ParsedEquation = std::vector<CalculatorItem::Pointer>;
@@ -67,7 +67,7 @@ private:
  * where a bool mask array specifies.
  */
 
-class CORE_EXPORT ArrayCalculator
+class COMPLEXCORE_EXPORT ArrayCalculator
 {
 public:
   ArrayCalculator(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ArrayCalculatorInputValues* inputValues);
