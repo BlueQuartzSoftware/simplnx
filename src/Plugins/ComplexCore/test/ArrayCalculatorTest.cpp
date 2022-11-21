@@ -42,7 +42,6 @@ const DataPath k_NumericArrayPath({k_NumericMatrix, k_CalculatedArray});
 const DataPath k_AttributeArrayPath({k_AttributeMatrix, k_CalculatedArray});
 
 const std::string k_Pi_Str = StringUtilities::number(numbers::pi);
-const double M_E = 2.7182818284590452354;
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -662,7 +661,7 @@ void SingleComponentArrayCalculatorTest1()
     runTest("exp(,)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::TOO_MANY_ARGUMENTS), CalculatorItem::WarningCode::NONE);
 
     int numTuple = 1;
-    double value = M_E;
+    double value = 2.7182818284590452354; // M_E
     runTest("exp(1)", k_NumericArrayPath, static_cast<int32>(CalculatorItem::ErrorCode::SUCCESS), CalculatorItem::WarningCode::NUMERIC_VALUE_WARNING, &numTuple, &value);
 
     value = 1;
