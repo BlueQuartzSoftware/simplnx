@@ -40,8 +40,7 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSch
 
   switch(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue))
   {
-  case PartitionGeometryFilter::PartitioningMode::Basic:
-  {
+  case PartitionGeometryFilter::PartitioningMode::Basic: {
     IntVec3 vec3 = IntVec3(pNumberOfPartitionsPerAxisValue);
 
     std::optional<FloatVec3> originResult = psInfoGen.getOrigin();
@@ -56,8 +55,7 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSch
     }
     break;
   }
-  case PartitionGeometryFilter::PartitioningMode::Advanced:
-  {
+  case PartitionGeometryFilter::PartitioningMode::Advanced: {
     auto pPartitioningSchemeOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_PartitioningSchemeOrigin_Key);
     auto pLengthPerPartitionValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_LengthPerPartition_Key);
 
@@ -68,8 +66,7 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSch
     psGeomMetadata.geometryUnits = psInfoGen.getUnits();
     break;
   }
-  case PartitionGeometryFilter::PartitioningMode::BoundingBox:
-  {
+  case PartitionGeometryFilter::PartitioningMode::BoundingBox: {
     auto pLowerLeftCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_LowerLeftCoord_Key);
     auto pUpperRightCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_UpperRightCoord_Key);
 
@@ -80,8 +77,7 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSch
     psGeomMetadata.geometryUnits = psInfoGen.getUnits();
     break;
   }
-  case PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme:
-  {
+  case PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme: {
     auto pExistingPartitioningSchemePathValue = filterArgs.value<DataPath>(PartitionGeometryFilter::k_ExistingPartitioningSchemePath_Key);
     const ImageGeom& psGeom = ds.getDataRefAs<ImageGeom>(pExistingPartitioningSchemePathValue);
     psGeomMetadata.geometryDims = psGeom.getDimensions();
@@ -90,8 +86,7 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSch
     psGeomMetadata.geometryUnits = psGeom.getUnits();
     break;
   }
-  default:
-  {
+  default: {
     return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3011, "Unable to create partitioning scheme geometry - Unknown partitioning mode.")};
   }
   }
@@ -204,62 +199,53 @@ Result<> PartitionGeometry::operator()()
   Result<> result;
   switch(iGeom.getGeomType())
   {
-  case IGeometry::Type::Image:
-  {
+  case IGeometry::Type::Image: {
     const ImageGeom& geometry = m_DataStructure.getDataRefAs<ImageGeom>({m_InputValues->GeometryToPartition});
     result = partitionCellBasedGeometry(geometry, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue);
     break;
   }
-  case IGeometry::Type::RectGrid:
-  {
+  case IGeometry::Type::RectGrid: {
     const RectGridGeom& geometry = m_DataStructure.getDataRefAs<RectGridGeom>({m_InputValues->GeometryToPartition});
     result = partitionCellBasedGeometry(geometry, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue);
     break;
   }
-  case IGeometry::Type::Vertex:
-  {
+  case IGeometry::Type::Vertex: {
     const VertexGeom& geometry = m_DataStructure.getDataRefAs<VertexGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
     result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
-  case IGeometry::Type::Edge:
-  {
+  case IGeometry::Type::Edge: {
     const EdgeGeom& geometry = m_DataStructure.getDataRefAs<EdgeGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
     result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
-  case IGeometry::Type::Triangle:
-  {
+  case IGeometry::Type::Triangle: {
     const TriangleGeom& geometry = m_DataStructure.getDataRefAs<TriangleGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
     result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
-  case IGeometry::Type::Quad:
-  {
+  case IGeometry::Type::Quad: {
     const QuadGeom& geometry = m_DataStructure.getDataRefAs<QuadGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
     result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
-  case IGeometry::Type::Tetrahedral:
-  {
+  case IGeometry::Type::Tetrahedral: {
     const TetrahedralGeom& geometry = m_DataStructure.getDataRefAs<TetrahedralGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
     result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
-  case IGeometry::Type::Hexahedral:
-  {
+  case IGeometry::Type::Hexahedral: {
     const HexahedralGeom& geometry = m_DataStructure.getDataRefAs<HexahedralGeom>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
     result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
-  default:
-  {
+  default: {
     return {MakeErrorResult(-3012, "Unable to partition geometry - Unknown geometry type detected.")};
   }
   }

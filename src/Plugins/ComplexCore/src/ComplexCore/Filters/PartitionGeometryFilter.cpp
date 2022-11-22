@@ -165,8 +165,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   Result<PartitionGeometry::PSGeomInfo> psInfo;
   switch(iGeom.getGeomType())
   {
-  case IGeometry::Type::Image:
-  {
+  case IGeometry::Type::Image: {
     const ImageGeom& geometry = dataStructure.getDataRefAs<ImageGeom>({pGeometryToPartitionValue});
     Result<> result = dataCheckPartitioningMode<ImageGeom>(dataStructure, filterArgs, geometry);
     if(result.invalid())
@@ -178,8 +177,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     inputGeometryInformation = PartitionGeometry::GenerateInputGeometryDisplayText(geometry.getDimensions(), geometry.getOrigin(), geometry.getSpacing(), geometry.getUnits());
     break;
   }
-  case IGeometry::Type::RectGrid:
-  {
+  case IGeometry::Type::RectGrid: {
     const RectGridGeom& geometry = dataStructure.getDataRefAs<RectGridGeom>({pGeometryToPartitionValue});
     if(attrMatrix.getNumTuples() != geometry.getNumberOfCells())
     {
@@ -191,8 +189,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     inputGeometryInformation = "Rectilinear grid geometry space unknown during preflight.";
     break;
   }
-  case IGeometry::Type::Vertex:
-  {
+  case IGeometry::Type::Vertex: {
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
     if(psInfo.invalid())
     {
@@ -201,8 +198,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     inputGeometryInformation = "Vertex geometry space unknown during preflight.";
     break;
   }
-  case IGeometry::Type::Edge:
-  {
+  case IGeometry::Type::Edge: {
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
     if(psInfo.invalid())
     {
@@ -211,8 +207,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     inputGeometryInformation = "Edge geometry space unknown during preflight.";
     break;
   }
-  case IGeometry::Type::Triangle:
-  {
+  case IGeometry::Type::Triangle: {
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
     if(psInfo.invalid())
     {
@@ -221,8 +216,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     inputGeometryInformation = "Triangle geometry space unknown during preflight.";
     break;
   }
-  case IGeometry::Type::Quad:
-  {
+  case IGeometry::Type::Quad: {
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
     if(psInfo.invalid())
     {
@@ -231,8 +225,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     inputGeometryInformation = "Quad geometry space unknown during preflight.";
     break;
   }
-  case IGeometry::Type::Tetrahedral:
-  {
+  case IGeometry::Type::Tetrahedral: {
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
     if(psInfo.invalid())
     {
@@ -241,8 +234,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     inputGeometryInformation = "Tetrahedral geometry space unknown during preflight.";
     break;
   }
-  case IGeometry::Type::Hexahedral:
-  {
+  case IGeometry::Type::Hexahedral: {
     psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
     if(psInfo.invalid())
     {
@@ -251,8 +243,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     inputGeometryInformation = "Hexahedral geometry space unknown during preflight.";
     break;
   }
-  default:
-  {
+  default: {
     return {MakeErrorResult<OutputActions>(-3017, fmt::format("{}: Unable to partition geometry - Unknown geometry type detected.", humanName()))};
   }
   }
