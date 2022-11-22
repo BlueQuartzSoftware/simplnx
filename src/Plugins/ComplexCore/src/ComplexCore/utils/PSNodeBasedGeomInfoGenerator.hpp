@@ -91,20 +91,17 @@ public:
     if(m_YZPlane)
     {
       return {MakeErrorResult(-3040, "Unable to create a partitioning scheme with a X dimension size of 0.  Vertices are in an YZ plane.  Use the Advanced or Bounding Box "
-                                     "partitioning modes to manually create a partitioning scheme."),
-              {}};
+                                     "partitioning modes to manually create a partitioning scheme.")};
     }
     if(m_XZPlane)
     {
       return {MakeErrorResult(-3041, "Unable to create a partitioning scheme with a Y dimension size of 0.  Vertices are in an XZ plane.  Use the Advanced or Bounding Box "
-                                     "partitioning modes to manually create a partitioning scheme."),
-              {}};
+                                     "partitioning modes to manually create a partitioning scheme.")};
     }
     if(m_XYPlane)
     {
       return {MakeErrorResult(-3042, "Unable to create a partitioning scheme with a Z dimension size of 0.  Vertices are in an XY plane.  Use the Advanced or Bounding Box "
-                                     "partitioning modes to manually create a partitioning scheme."),
-              {}};
+                                     "partitioning modes to manually create a partitioning scheme.")};
     }
 
     return {};
