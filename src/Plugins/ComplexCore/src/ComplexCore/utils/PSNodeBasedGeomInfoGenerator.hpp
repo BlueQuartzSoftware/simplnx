@@ -5,7 +5,6 @@
 #include "ComplexCore/utils/PSInfoGenerator.hpp"
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -13,7 +12,7 @@ namespace complex
  * @class ImageGeom
  * @brief
  */
-class COMPLEX_EXPORT PSNodeBasedGeomInfoGenerator : public PSInfoGenerator
+class COMPLEXCORE_EXPORT PSNodeBasedGeomInfoGenerator : public PSInfoGenerator
 {
 public:
   PSNodeBasedGeomInfoGenerator(const INodeGeometry0D& geometry, const SizeVec3& numOfPartitionsPerAxis)
@@ -84,6 +83,23 @@ public:
     m_Origin = ll;
     m_PartitionLength = calculatePartitionLengthsUsingBounds(ll, ur);
   }
+
+  ~PSNodeBasedGeomInfoGenerator() noexcept override = default;
+
+  /**
+   * @brief
+   * @param other
+   */
+  PSNodeBasedGeomInfoGenerator(const PSNodeBasedGeomInfoGenerator& other) = default;
+
+  /**
+   * @brief
+   * @param other
+   */
+  PSNodeBasedGeomInfoGenerator(PSNodeBasedGeomInfoGenerator&& other) = default;
+
+  PSNodeBasedGeomInfoGenerator& operator=(const PSNodeBasedGeomInfoGenerator&) = delete;
+  PSNodeBasedGeomInfoGenerator& operator=(PSNodeBasedGeomInfoGenerator&&) noexcept = delete;
 
   // -----------------------------------------------------------------------------
   Result<> checkDimensionality() const
