@@ -92,7 +92,7 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometry::GeneratePartitioningSch
   }
   default:
   {
-    return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3011, "Unable to create partitioning scheme geometry - Unknown partitioning mode."), {}};
+    return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3011, "Unable to create partitioning scheme geometry - Unknown partitioning mode.")};
   }
   }
 
@@ -260,7 +260,7 @@ Result<> PartitionGeometry::operator()()
   }
   default:
   {
-    return {MakeErrorResult(-3012, "Unable to partition geometry - Unknown geometry type detected."), {}};
+    return {MakeErrorResult(-3012, "Unable to partition geometry - Unknown geometry type detected.")};
   }
   }
 
