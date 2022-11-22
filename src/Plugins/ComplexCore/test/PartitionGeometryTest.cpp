@@ -41,7 +41,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-const fs::path k_TestFilesPath = fs::path(complex::unit_test::k_TestDataSourceDir) / fs::path("PartitionGeometryTest");
+const fs::path k_TestFilesPath = fs::path(complex::unit_test::k_TestDataSourceDir.str()) / fs::path("PartitionGeometryTest");
 const fs::path k_ImageGeomTestFilePath = k_TestFilesPath / fs::path("image_geom.dream3d");
 const fs::path k_RectGridGeomTestFilePath = k_TestFilesPath / fs::path("rectgrid_geom.dream3d");
 const fs::path k_EdgeGeomTestFilePath = k_TestFilesPath / fs::path("edge_geom.dream3d");
