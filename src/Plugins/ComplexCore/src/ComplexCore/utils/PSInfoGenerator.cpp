@@ -3,7 +3,7 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-PSInfoGenerator::PSInfoGenerator(SizeVec3 numOfPartitionsPerAxis)
+PSInfoGenerator::PSInfoGenerator(const SizeVec3& numOfPartitionsPerAxis)
 : m_NumberOfPartitionsPerAxis(numOfPartitionsPerAxis)
 {
 }
