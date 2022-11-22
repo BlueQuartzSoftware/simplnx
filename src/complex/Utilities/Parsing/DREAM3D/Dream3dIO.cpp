@@ -1088,7 +1088,6 @@ DataObject* readLegacyVertexGeom(DataStructure& ds, const H5::GroupReader& geomG
   auto* geom = VertexGeom::Create(ds, name);
   readGenericGeomDims(geom, geomGroup);
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
-  auto* verts = readLegacyGeomArray(ds, geom, geomGroup, Legacy::VerticesName);
 
   geom->setVertices(*sharedVertexList);
   return geom;
