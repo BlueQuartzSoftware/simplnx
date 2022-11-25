@@ -40,7 +40,7 @@ CalculatorItem::ErrorCode BinaryOperator::checkValidity(std::vector<CalculatorIt
      nullptr != std::dynamic_pointer_cast<LeftParenthesisItem>(infixVector[leftValue]))
   {
     errMsg = fmt::format("The operator '{}' does not have a valid 'left' value.", getInfixToken());
-    return CalculatorItem::ErrorCode::OPERATOR_NO_LEFT_VALUE;
+    return CalculatorItem::ErrorCode::OperatorNoLeftValue;
   }
 
   // Check that there is a valid value to the right of the operator
@@ -49,10 +49,10 @@ CalculatorItem::ErrorCode BinaryOperator::checkValidity(std::vector<CalculatorIt
      nullptr != std::dynamic_pointer_cast<RightParenthesisItem>(infixVector[rightValue]))
   {
     errMsg = fmt::format("The operator '{}' does not have a valid 'right' value.", getInfixToken());
-    return CalculatorItem::ErrorCode::OPERATOR_NO_RIGHT_VALUE;
+    return CalculatorItem::ErrorCode::OperatorNoRightValue;
   }
 
-  return CalculatorItem::ErrorCode::SUCCESS;
+  return CalculatorItem::ErrorCode::Success;
 }
 
 // -----------------------------------------------------------------------------

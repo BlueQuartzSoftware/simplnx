@@ -30,43 +30,43 @@ public:
 
   enum class ErrorCode : EnumType
   {
-    SUCCESS = 0,
-    INVALID_EQUATION = -4009,
-    INVALID_COMPONENT = -4010,
-    EMPTY_EQUATION = -4011,
-    EMPTY_CAL_ARRAY = -4012,
-    EMPTY_SEL_MATRIX = -4013,
-    LOST_ATTR_MATRIX = -4014,
-    INCORRECT_TUPLE_COUNT = -4015,
-    INCONSISTENT_TUPLES = -4016,
-    UNRECOGNIZED_ITEM = -4017,
-    MISMATCHED_PARENTHESES = -4018,
-    UNEXPECTED_OUTPUT = -4019,
-    COMPONENT_OUT_OF_RANGE = -4020,
-    INVALID_ARRAY_NAME = -4022,
-    INCONSISTENT_INDEXING = -4023,
-    INCONSISTENT_COMP_DIMS = -4024,
-    ATTRARRAY_ZEROTUPLES_WARNING = -4025,
-    ORPHANED_COMPONENT = -4026,
-    OPERATOR_NO_LEFT_VALUE = -4027,
-    OPERATOR_NO_RIGHT_VALUE = -4028,
-    OPERATOR_NO_OPENING_PAREN = -4029,
-    OPERATOR_NO_CLOSING_PAREN = -4030,
-    NO_NUMERIC_ARGUMENTS = -4031,
-    MISSING_ARGUMENTS = -4032,
-    NOT_ENOUGH_ARGUMENTS = -4033,
-    TOO_MANY_ARGUMENTS = -4034,
-    INVALID_SYMBOL = -4035,
-    NO_PRECEDING_UNARY_OPERATOR = -4036,
+    Success = 0,
+    InvalidEquation = -4009,
+    InvalidComponent = -4010,
+    EmptyEquation = -4011,
+    EmptyCalArray = -4012,
+    EmptySelMatrix = -4013,
+    LostAttrMatrix = -4014,
+    IncorrectTupleCount = -4015,
+    InconsistentTuples = -4016,
+    UnrecognizedItem = -4017,
+    MismatchedParentheses = -4018,
+    UnexpectedOutput = -4019,
+    ComponentOutOfRange = -4020,
+    InvalidArrayName = -4022,
+    InconsistentIndexing = -4023,
+    InconsistentCompDims = -4024,
+    AttrArrayZeroTuplesWarning = -4025,
+    OrphanedComponent = -4026,
+    OperatorNoLeftValue = -4027,
+    OperatorNoRightValue = -4028,
+    OperatorNoOpeningParen = -4029,
+    OperatorNoClosingParen = -4030,
+    NoNumericArguments = -4031,
+    MissingArguments = -4032,
+    NotEnoughArguments = -4033,
+    TooManyArguments = -4034,
+    InvalidSymbol = -4035,
+    NoPrecedingUnaryOperator = -4036,
     InvalidOutputArrayType = -4037,
     AttributeMatrixInsertionError = -4038
   };
 
   enum class WarningCode : EnumType
   {
-    NONE = 0,
-    NUMERIC_VALUE_WARNING = -5010,
-    AMBIGUOUS_NAME_WARNING = -5011
+    None = 0,
+    NumericValueWarning = -5010,
+    AmbiguousNameWarning = -5011
   };
 
   std::string getInfixToken();
@@ -87,7 +87,7 @@ protected:
   void setInfixToken(const std::string& token);
 
 private:
-  std::string m_InfixToken = "";
+  std::string m_InfixToken = {};
 
 public:
   CalculatorItem(const CalculatorItem&) = delete;            // Copy Constructor Not Implemented

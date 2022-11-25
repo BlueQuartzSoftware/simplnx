@@ -62,7 +62,7 @@ CalculatorItem::ErrorCode NegativeOperator::checkValidity(std::vector<Calculator
   {
     // The symbol to the left of the negative sign is not a binary operator or left parenthesis
     errMsg = fmt::format("The negative operator '{}' does not have a valid 'left' value.", getInfixToken());
-    return NegativeOperator::ErrorCode::OPERATOR_NO_LEFT_VALUE;
+    return NegativeOperator::ErrorCode::OperatorNoLeftValue;
   }
   if(currentIndex + 1 >= infixVector.size() || (currentIndex + 1 < infixVector.size() && (nullptr == std::dynamic_pointer_cast<ICalculatorArray>(infixVector[currentIndex + 1]) &&
                                                                                           nullptr == std::dynamic_pointer_cast<LeftParenthesisItem>(infixVector[currentIndex + 1]) &&
@@ -70,10 +70,10 @@ CalculatorItem::ErrorCode NegativeOperator::checkValidity(std::vector<Calculator
   {
     // The symbol to the right of the negative sign is not an array, left parenthesis, or unary operator
     errMsg = fmt::format("The negative operator '{}' does not have a valid 'right' value.", getInfixToken());
-    return NegativeOperator::ErrorCode::OPERATOR_NO_RIGHT_VALUE;
+    return NegativeOperator::ErrorCode::OperatorNoRightValue;
   }
 
-  return NegativeOperator::ErrorCode::SUCCESS;
+  return NegativeOperator::ErrorCode::Success;
 }
 
 // -----------------------------------------------------------------------------

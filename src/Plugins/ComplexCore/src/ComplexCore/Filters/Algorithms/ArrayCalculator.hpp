@@ -27,14 +27,7 @@ class COMPLEXCORE_EXPORT ArrayCalculatorParser
 public:
   using ParsedEquation = std::vector<CalculatorItem::Pointer>;
 
-  ArrayCalculatorParser(const DataStructure& dataStruct, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight)
-  : m_DataStructure(dataStruct)
-  , m_SelectedGroupPath(selectedGroupPath)
-  , m_InfixEquation(infixEquation)
-  , m_IsPreflight(isPreflight)
-  {
-    createSymbolMap();
-  }
+  ArrayCalculatorParser(const DataStructure& dataStruct, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight);
 
   Result<> parseInfixEquation(ParsedEquation& parsedInfix);
 

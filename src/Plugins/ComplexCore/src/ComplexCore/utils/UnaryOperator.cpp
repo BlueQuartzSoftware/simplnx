@@ -49,7 +49,7 @@ CalculatorItem::ErrorCode UnaryOperator::checkValidity(std::vector<CalculatorIte
         if(nullptr == std::dynamic_pointer_cast<NegativeOperator>(infixVector[currentIndex - 1]))
         {
           errMsg = fmt::format("The operator '{}' does not have a valid 'left' value.", getInfixToken());
-          return CalculatorItem::ErrorCode::OPERATOR_NO_LEFT_VALUE;
+          return CalculatorItem::ErrorCode::OperatorNoLeftValue;
         }
       }
     }
@@ -71,15 +71,15 @@ CalculatorItem::ErrorCode UnaryOperator::checkValidity(std::vector<CalculatorIte
         if(commaCount < m_NumOfArguments - 1)
         {
           errMsg = fmt::format("The operator '{}' needs {} arguments.  {} arguments were found.", getInfixToken(), m_NumOfArguments, commaCount + 1);
-          return CalculatorItem::ErrorCode::NOT_ENOUGH_ARGUMENTS;
+          return CalculatorItem::ErrorCode::NotEnoughArguments;
         }
         if(!hasArray)
         {
           errMsg = fmt::format("The operator '{}' does not have any arguments that simplify down to a number.", getInfixToken());
-          return CalculatorItem::ErrorCode::NO_NUMERIC_ARGUMENTS;
+          return CalculatorItem::ErrorCode::NoNumericArguments;
         }
 
-        return CalculatorItem::ErrorCode::SUCCESS;
+        return CalculatorItem::ErrorCode::Success;
       }
       if(nullptr != std::dynamic_pointer_cast<LeftParenthesisItem>(infixVector[index]))
       {
@@ -114,7 +114,7 @@ CalculatorItem::ErrorCode UnaryOperator::checkValidity(std::vector<CalculatorIte
         {
           // We found too many commas (meaning that there are too many arguments), so return false
           errMsg = fmt::format("The operator '{}' needs {} arguments.  {} arguments were found.", getInfixToken(), m_NumOfArguments, commaCount + 1);
-          return CalculatorItem::ErrorCode::TOO_MANY_ARGUMENTS;
+          return CalculatorItem::ErrorCode::TooManyArguments;
         }
       }
       else if(nullptr != std::dynamic_pointer_cast<ICalculatorArray>(infixVector[index]))
@@ -126,11 +126,11 @@ CalculatorItem::ErrorCode UnaryOperator::checkValidity(std::vector<CalculatorIte
   else
   {
     errMsg = fmt::format("The operator '{}' does not have an opening parenthesis.", getInfixToken());
-    return CalculatorItem::ErrorCode::OPERATOR_NO_OPENING_PAREN;
+    return CalculatorItem::ErrorCode::OperatorNoOpeningParen;
   }
 
   errMsg = fmt::format("The operator '{}' does not have a closing parenthesis.", getInfixToken());
-  return CalculatorItem::ErrorCode::OPERATOR_NO_CLOSING_PAREN;
+  return CalculatorItem::ErrorCode::OperatorNoClosingParen;
 }
 
 // -----------------------------------------------------------------------------

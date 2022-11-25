@@ -38,10 +38,10 @@ CalculatorItem::ErrorCode CommaSeparator::checkValidity(std::vector<CalculatorIt
   if(!foundUnaryOperator)
   {
     errMsg = "A comma in the expression does not have a corresponding operator preceding it.";
-    return CalculatorItem::ErrorCode::NO_PRECEDING_UNARY_OPERATOR;
+    return CalculatorItem::ErrorCode::NoPrecedingUnaryOperator;
   }
 
-  return CalculatorItem::ErrorCode::SUCCESS;
+  return CalculatorItem::ErrorCode::Success;
 }
 
 // -----------------------------------------------------------------------------

@@ -4,7 +4,6 @@
 #include <stack>
 
 #include "ComplexCore/ComplexCore_export.hpp"
-
 #include "ComplexCore/utils/BinaryOperator.hpp"
 
 namespace complex

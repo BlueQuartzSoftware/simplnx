@@ -87,7 +87,7 @@ public:
     return m_Type;
   }
 
-  Float64Array* reduceToOneComponent(int c, bool allocate = true) override
+  Float64Array* reduceToOneComponent(int c, bool allocate) override
   {
     if(!m_ArrayId.has_value())
     {
@@ -118,7 +118,7 @@ public:
 
   CalculatorItem::ErrorCode checkValidity(std::vector<CalculatorItem::Pointer> infixVector, int currentIndex, std::string& msg) override
   {
-    return CalculatorItem::ErrorCode::SUCCESS;
+    return CalculatorItem::ErrorCode::Success;
   }
 
 protected:
@@ -156,7 +156,7 @@ protected:
 
 private:
   std::optional<DataObject::IdType> m_ArrayId = {};
-  ValueType m_Type;
+  ValueType m_Type = Unknown;
   DataStructure& m_DataStructure;
 
 public:

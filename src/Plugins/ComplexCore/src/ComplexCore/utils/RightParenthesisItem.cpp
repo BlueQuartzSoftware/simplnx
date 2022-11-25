@@ -39,12 +39,12 @@ CalculatorItem::ErrorCode RightParenthesisItem::checkValidity(std::vector<Calcul
       }
       else
       {
-        return RightParenthesisItem::ErrorCode::SUCCESS;
+        return RightParenthesisItem::ErrorCode::Success;
       }
     }
   }
 
-  return RightParenthesisItem::ErrorCode::MISMATCHED_PARENTHESES;
+  return RightParenthesisItem::ErrorCode::MismatchedParentheses;
 }
 
 // -----------------------------------------------------------------------------

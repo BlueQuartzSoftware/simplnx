@@ -166,7 +166,7 @@ Result<> ArrayCalculator::operator()()
   ICalculatorArray::Pointer arrayItem = ICalculatorArray::NullPointer();
   if(executionStack.size() != 1)
   {
-    results.errors().push_back(Error{static_cast<int>(CalculatorItem::ErrorCode::INVALID_EQUATION), "The chosen infix equation is not a valid equation."});
+    results.errors().push_back(Error{static_cast<int>(CalculatorItem::ErrorCode::InvalidEquation), "The chosen infix equation is not a valid equation."});
     return results;
   }
   if(!executionStack.empty())
@@ -189,12 +189,21 @@ Result<> ArrayCalculator::operator()()
   }
   else
   {
-    results.errors().push_back(Error{static_cast<int>(CalculatorItem::ErrorCode::UNEXPECTED_OUTPUT), "Unexpected output item from chosen infix expression; the output item must be an array\n"
-                                                                                                     "Please contact the DREAM.3D developers for more information"});
+    results.errors().push_back(Error{static_cast<int>(CalculatorItem::ErrorCode::UnexpectedOutput), "Unexpected output item from chosen infix expression; the output item must be an array\n"
+                                                                                                    "Please contact the DREAM.3D developers for more information"});
     return results;
   }
 
   return {};
+}
+
+ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStruct, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight)
+: m_DataStructure(dataStruct)
+, m_SelectedGroupPath(selectedGroupPath)
+, m_InfixEquation(infixEquation)
+, m_IsPreflight(isPreflight)
+{
+  createSymbolMap();
 }
 
 // -----------------------------------------------------------------------------
@@ -294,7 +303,7 @@ Result<> ArrayCalculatorParser::parseInfixEquation(ParsedEquation& parsedInfix)
       {
         parsedInfix.clear();
         std::string ss = fmt::format("An unrecognized or invalid item '{}' was found in the chosen infix expression", strItem);
-        return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::UNRECOGNIZED_ITEM), ss);
+        return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::UnrecognizedItem), ss);
       }
     }
   }
@@ -373,7 +382,7 @@ Result<> ArrayCalculatorParser::parseIndexOperator(std::string token, std::vecto
   int idx = parsedInfix.size() - 1;
 
   std::string errorMsg = fmt::format("Index operator '{}' is not paired with a valid array name.", token);
-  int errCode = static_cast<int>(CalculatorItem::ErrorCode::ORPHANED_COMPONENT);
+  int errCode = static_cast<int>(CalculatorItem::ErrorCode::OrphanedComponent);
   if(idx < 0)
   {
     return MakeErrorResult(errCode, errorMsg);
@@ -397,14 +406,14 @@ Result<> ArrayCalculatorParser::parseIndexOperator(std::string token, std::vecto
   } catch(std::exception& e)
   {
     std::string ss = "The chosen infix expression is not a valid expression";
-    return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::INVALID_COMPONENT), ss);
+    return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InvalidComponent), ss);
   }
 
   ICalculatorArray::Pointer calcArray = std::dynamic_pointer_cast<ICalculatorArray>(parsedInfix.back());
   if(nullptr != calcArray && index >= calcArray->getArray()->getNumberOfComponents())
   {
     std::string ss = fmt::format("'{}' has an component index that is out of range", calcArray->getArray()->getName());
-    return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::COMPONENT_OUT_OF_RANGE), ss);
+    return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::ComponentOutOfRange), ss);
   }
 
   parsedInfix.pop_back();
@@ -461,7 +470,7 @@ Result<> ArrayCalculatorParser::parseArray(std::string token, std::vector<Calcul
   if(!ContainsDataArrayName(m_DataStructure, m_SelectedGroupPath, token))
   {
     std::string ss = fmt::format("The item '{}' is not the name of any valid array in the selected Attribute Matrix", token);
-    return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::INVALID_ARRAY_NAME), ss);
+    return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InvalidArrayName), ss);
   }
 
   const IDataArray* dataArray = m_DataStructure.getDataAs<IDataArray>(m_SelectedGroupPath.createChildPath(token));
@@ -473,7 +482,7 @@ Result<> ArrayCalculatorParser::parseArray(std::string token, std::vector<Calcul
   else if(dataArray->getNumberOfTuples() != firstArray_NumTuples)
   {
     std::string ss = fmt::format("Arrays '{}' and '{}' in the infix expression have an inconsistent number of tuples", firstArray_Name, dataArray->getName());
-    return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::INCONSISTENT_TUPLES), ss);
+    return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentTuples), ss);
   }
 
   CalculatorItem::Pointer itemPtr = ExecuteDataFunction(CreateCalculatorArrayFunctor{}, dataArray->getDataType(), m_TemporaryDataStructure, !m_IsPreflight, dataArray);
@@ -487,7 +496,7 @@ Result<> ArrayCalculatorParser::checkForAmbiguousArrayName(std::string strItem, 
   if(m_IsPreflight && ContainsDataArrayName(m_DataStructure, m_SelectedGroupPath, strItem))
   {
     warningMsg.append("\nTo treat this item as an array name, please add double quotes around the item (i.e. \"" + strItem + "\").");
-    return MakeWarningVoidResult(static_cast<int>(CalculatorItem::WarningCode::AMBIGUOUS_NAME_WARNING), warningMsg);
+    return MakeWarningVoidResult(static_cast<int>(CalculatorItem::WarningCode::AmbiguousNameWarning), warningMsg);
   }
   return {};
 }
@@ -671,7 +680,7 @@ Result<ArrayCalculatorParser::ParsedEquation> ArrayCalculatorParser::ToRPN(const
     if(nullptr != std::dynamic_pointer_cast<LeftParenthesisItem>(item))
     {
       std::string ss = fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'", unparsedInfixExpression);
-      return MakeErrorResult<ParsedEquation>(static_cast<int>(CalculatorItem::ErrorCode::MISMATCHED_PARENTHESES), ss);
+      return MakeErrorResult<ParsedEquation>(static_cast<int>(CalculatorItem::ErrorCode::MismatchedParentheses), ss);
     }
 
     rpnEquation.push_back(item);

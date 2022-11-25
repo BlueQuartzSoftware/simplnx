@@ -120,11 +120,11 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
       {
         if(!calculatedComponentShape.empty() && resultType == ICalculatorArray::ValueType::Array && calculatedComponentShape != array1->getArray()->getComponentShape())
         {
-          return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::INCONSISTENT_COMP_DIMS), "Attribute Array symbols in the infix expression have mismatching component dimensions");
+          return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentCompDims), "Attribute Array symbols in the infix expression have mismatching component dimensions");
         }
         if(!calculatedTupleShape.empty() && resultType == ICalculatorArray::ValueType::Array && calculatedTupleShape[0] != array1->getArray()->getNumberOfTuples())
         {
-          return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::INCONSISTENT_TUPLES), "Attribute Array symbols in the infix expression have mismatching number of tuples");
+          return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentTuples), "Attribute Array symbols in the infix expression have mismatching number of tuples");
         }
 
         resultType = ICalculatorArray::ValueType::Array;
@@ -141,7 +141,7 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
   }
   if(resultType == ICalculatorArray::ValueType::Unknown)
   {
-    return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::NO_NUMERIC_ARGUMENTS), "The expression does not have any arguments that simplify down to a number.");
+    return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::NoNumericArguments), "The expression does not have any arguments that simplify down to a number.");
   }
 
   if(resultType == ICalculatorArray::ValueType::Number)
@@ -149,14 +149,14 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
     if(const auto* attributeMatrix = dataStructure.getDataAs<AttributeMatrix>(outputGroupPath); attributeMatrix != nullptr)
     {
       calculatedTupleShape = attributeMatrix->getShape();
-      resultOutputActions.warnings().push_back(Warning{static_cast<int>(CalculatorItem::WarningCode::NUMERIC_VALUE_WARNING),
+      resultOutputActions.warnings().push_back(Warning{static_cast<int>(CalculatorItem::WarningCode::NumericValueWarning),
                                                        "The result of the chosen expression will be a numeric value. This numeric value will be used to initialize an "
                                                        "array with the number of tuples equal to the number of tuples in the destination group."});
     }
     else
     {
       resultOutputActions.warnings().push_back(
-          Warning{static_cast<int>(CalculatorItem::WarningCode::NUMERIC_VALUE_WARNING),
+          Warning{static_cast<int>(CalculatorItem::WarningCode::NumericValueWarning),
                   "The result of the chosen expression will be a numeric value or contain one tuple. This numeric value will be stored in an array with the number of tuples equal to 1"});
     }
   }
