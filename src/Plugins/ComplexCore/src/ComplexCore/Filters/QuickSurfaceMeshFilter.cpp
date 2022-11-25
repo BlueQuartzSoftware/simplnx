@@ -88,8 +88,7 @@ Parameters QuickSurfaceMeshFilter::parameters() const
                                                          DataPath({"TriangleDataContainer", "FaceData", "FaceLabels"})));
   params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceFeatureAttributeMatrixName_Key, "Face Feature Data [AttributeMatrix]",
-                                                          "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created",
-                                                          INodeGeometry1D::k_FaceFeatureAttributeMatrix));
+                                                          "The complete path to the DataGroup where the Feature Data will be stored.", INodeGeometry1D::k_FaceFeatureAttributeMatrix));
   return params;
 }
 
@@ -177,6 +176,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     auto faceFeatureAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FaceFeatureAttributeMatrixName_Key);
     DataPath pFaceFeatureAttrMatrixPath = pTriangleGeometryPath.createChildPath(faceFeatureAttributeMatrixName);
     auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(pFaceFeatureAttrMatrixPath, std::vector<usize>{1});
+    resultOutputActions.value().actions.push_back(std::move(createFeatureGroupAction));
   }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
