@@ -13,37 +13,59 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # These are all the filters in the plugin. All filters should be kept in the
 # Core/src/Core/Filters/ directory.
 set(FilterList
-  AlignSectionsFeatureCentroidFilter
-  CreateGeometryFilter
-  ConvertColorToGrayScaleFilter
-  ConvertDataFilter
-  FillBadDataFilter
-  FindFeatureCentroidsFilter
-  FindShapesFilter
-  ResampleImageGeomFilter
-  RotateSampleRefFrameFilter
-  ErodeDilateBadDataFilter
-  WriteASCIIDataFilter
-  WriteBinaryDataFilter
-  FindEuclideanDistMapFilter
-  FindNeighborhoodsFilter
-  FindSurfaceAreaToVolumeFilter
-  CalculateArrayHistogramFilter
-  RemoveFlaggedFeaturesFilter
-  SplitAttributeArrayFilter
-  FeatureDataCSVWriterFilter
-)
-
-set(STUB_FILTERS
+    AlignSectionsFeatureCentroidFilter
+    ConvertColorToGrayScaleFilter
+    ConvertDataFilter
+    FillBadDataFilter
+    FindFeatureCentroidsFilter
+    FindShapesFilter
+    ResampleImageGeomFilter
+    RotateSampleRefFrameFilter
+    ErodeDilateBadDataFilter
+    WriteASCIIDataFilter
+    WriteBinaryDataFilter
+    FindEuclideanDistMapFilter
+    FindNeighborhoodsFilter
+    FindSurfaceAreaToVolumeFilter
+    CalculateArrayHistogramFilter
+    RemoveFlaggedFeaturesFilter
+    SplitAttributeArrayFilter
+    FindTriangleGeomSizesFilter
+    FindTriangleGeomCentroidsFilter
+    SharedFeatureFaceFilter
+    FeatureDataCSVWriterFilter
+    )
+# ------------------------------------------------------------------------------
+# Algorithms
+# This should be integrated with the `create_complex_plugin` function call
+# ------------------------------------------------------------------------------
+set(AlgorithmList
+  AlignSectionsFeatureCentroid
+  ConvertColorToGrayScale
+  ConvertData
+  FillBadData
+  FindFeatureCentroids
+  FindShapes
+  ResampleImageGeom
+  ErodeDilateBadData
+  FindEuclideanDistMap
+  FindNeighborhoods
+  FindSurfaceAreaToVolume
+  CalculateArrayHistogram
+  RemoveFlaggedFeatures
+  SplitAttributeArray
+  FindTriangleGeomCentroids
+  FindTriangleGeomSizes
+  SharedFeatureFace
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
-  FILTER_LIST ${FilterList}
-  DESCRIPTION "Plugin for ${PLUGIN_NAME}"
-  VERSION "0.1.0"
-  DOC_CHECK
-  ADD_TO_GLOBAL_LIST
-  )
+                      FILTER_LIST ${FilterList}
+                      ACTION_LIST ${ActionList}
+                      ALGORITHM_LIST ${AlgorithmList}                      
+                      DESCRIPTION "Plugin for ${PLUGIN_NAME}"
+                      VERSION "0.1.0"
+                      )
 
 # ------------------------------------------------------------------------------
 # If there are additional library packages that need to be found, this is where
@@ -59,13 +81,13 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 # If there are additional source files that need to be compiled for this plugin
 # can use the target_sources(...) cmake call
 target_sources(${PLUGIN_NAME}
-  PUBLIC
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Utilities/CoreUtilities.hpp"
-)
+               PUBLIC
+               "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Utilities/CoreUtilities.hpp"
+               )
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}"
-  PREFIX ${PLUGIN_NAME}
-  FILES "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Utilities/CoreUtilities.hpp"
-)
+             PREFIX ${PLUGIN_NAME}
+             FILES "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Utilities/CoreUtilities.hpp"
+             )
 
 # ------------------------------------------------------------------------------
 # Include filters that need to be compiled but not available to the general user
@@ -74,51 +96,17 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}"
 # ------------------------------------------------------------------------------
 foreach(file_name ${STUB_FILTERS})
   list(APPEND hidden_filter_HDRS
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.hpp"
-  )
+       "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.hpp"
+       )
   list(APPEND hidden_filter_SRCS
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.cpp"
-  )
+       "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.cpp"
+       )
 endforeach()
 
 target_sources(${PLUGIN_NAME}
-  PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
-)
+               PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
+               )
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${hidden_filter_HDRS} ${hidden_filter_SRCS})
-
-# ------------------------------------------------------------------------------
-# Algorithms
-# This should be integrated with the `create_complex_plugin` function call
-# ------------------------------------------------------------------------------
-set(filter_algorithms
-  AlignSectionsFeatureCentroid
-  ConvertColorToGrayScale
-  ConvertData
-  FillBadData
-  FindFeatureCentroids
-  FindShapes
-  ResampleImageGeom
-  ErodeDilateBadData
-  FindEuclideanDistMap
-  FindNeighborhoods
-  FindSurfaceAreaToVolume
-  CalculateArrayHistogram
-  RemoveFlaggedFeatures
-  SplitAttributeArray
-)
-
-
-foreach(algorithm ${filter_algorithms})
-  target_sources(${PLUGIN_NAME}
-    PRIVATE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/${algorithm}.cpp"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/${algorithm}.hpp"
-  )
-  source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME}
-    FILES "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/${algorithm}.cpp"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/${algorithm}.hpp"
-  )
-endforeach()
-
 
 # ------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
@@ -129,10 +117,10 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC EbsdLib::EbsdLib)
 # ------------------------------------------------------------------------------
 # If there are additional include directories that are needed for this plugin
 # you can use the target_include_directories(.....) cmake call
- target_include_directories(${PLUGIN_NAME}
-  PUBLIC
-    ${Eigen_INCLUDE_DIRS} ${EbsdLib_INCLUDE_DIRS}
- )
+target_include_directories(${PLUGIN_NAME}
+                           PUBLIC
+                           ${Eigen_INCLUDE_DIRS} ${EbsdLib_INCLUDE_DIRS}
+                           )
 
 # ------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin

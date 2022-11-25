@@ -24,6 +24,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadAngDataTest.cpp
   ReadCtfDataTest.cpp
   EbsdToH5EbsdTest.cpp
+  FindTriangleGeomShapesTest.cpp
 )
 set(DISABLED_TESTS
 

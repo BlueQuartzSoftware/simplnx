@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class FindTriangleGeomShapes
+ * @class FindTriangleGeomShapesFilter
  * @brief This filter will ....
  */
-class SURFACEMESHING_EXPORT FindTriangleGeomShapes : public IFilter
+class ORIENTATIONANALYSIS_EXPORT FindTriangleGeomShapesFilter : public IFilter
 {
 public:
-  FindTriangleGeomShapes() = default;
-  ~FindTriangleGeomShapes() noexcept override = default;
+  FindTriangleGeomShapesFilter() = default;
+  ~FindTriangleGeomShapesFilter() noexcept override = default;
 
-  FindTriangleGeomShapes(const FindTriangleGeomShapes&) = delete;
-  FindTriangleGeomShapes(FindTriangleGeomShapes&&) noexcept = delete;
+  FindTriangleGeomShapesFilter(const FindTriangleGeomShapesFilter&) = delete;
+  FindTriangleGeomShapesFilter(FindTriangleGeomShapesFilter&&) noexcept = delete;
 
-  FindTriangleGeomShapes& operator=(const FindTriangleGeomShapes&) = delete;
-  FindTriangleGeomShapes& operator=(FindTriangleGeomShapes&&) noexcept = delete;
+  FindTriangleGeomShapesFilter& operator=(const FindTriangleGeomShapesFilter&) = delete;
+  FindTriangleGeomShapesFilter& operator=(FindTriangleGeomShapesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
@@ -32,6 +32,7 @@ public:
   static inline constexpr StringLiteral k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
   static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
   static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
+  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "triangle_geometry_path";
 
   /**
    * @brief Returns the name of the filter.
@@ -99,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomShapes, "e8f0fed3-d0d8-456e-b5a1-7961cc17b739");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomShapesFilter, "e8f0fed3-d0d8-456e-b5a1-7961cc17b739");

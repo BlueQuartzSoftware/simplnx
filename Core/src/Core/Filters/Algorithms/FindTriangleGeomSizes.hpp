@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -8,23 +8,18 @@
 
 /**
 * This is example code to put in the Execute Method of the filter.
-  FindTriangleGeomSizesInputValues inputValues;
 
-  inputValues.FaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixName = filterArgs.value<DataPath>(k_FeatureAttributeMatrixName_Key);
-  inputValues.VolumesArrayName = filterArgs.value<DataPath>(k_VolumesArrayName_Key);
-
-  return FindTriangleGeomSizes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 */
 
 namespace complex
 {
 
-struct SURFACEMESHING_EXPORT FindTriangleGeomSizesInputValues
+struct CORE_EXPORT FindTriangleGeomSizesInputValues
 {
+  DataPath TriangleGeometryPath;
   DataPath FaceLabelsArrayPath;
-  DataPath FeatureAttributeMatrixName;
-  DataPath VolumesArrayName;
+  DataPath FeatureAttributeMatrixPath;
+  DataPath VolumesArrayPath;
 };
 
 /**
@@ -33,7 +28,7 @@ struct SURFACEMESHING_EXPORT FindTriangleGeomSizesInputValues
  * where a bool mask array specifies.
  */
 
-class SURFACEMESHING_EXPORT FindTriangleGeomSizes
+class CORE_EXPORT FindTriangleGeomSizes
 {
 public:
   FindTriangleGeomSizes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindTriangleGeomSizesInputValues* inputValues);
