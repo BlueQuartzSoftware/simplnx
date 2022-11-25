@@ -12,7 +12,7 @@ ParallelTaskAlgorithm::ParallelTaskAlgorithm() = default;
 ParallelTaskAlgorithm::~ParallelTaskAlgorithm()
 {
 #ifdef COMPLEX_ENABLE_MULTICORE
-  m_TaskGroup->wait();
+  m_TaskGroup.wait();
 #endif
 }
 
@@ -49,7 +49,7 @@ void ParallelTaskAlgorithm::wait()
 {
 #ifdef COMPLEX_ENABLE_MULTICORE
   // This will spill over if the number of files to process does not divide evenly by the number of threads.
-  m_TaskGroup->wait();
+  m_TaskGroup.wait();
   m_CurThreads = 0;
 #endif
 }
