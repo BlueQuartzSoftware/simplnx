@@ -70,8 +70,8 @@ public:
         wait();
       }
     }
+    else
 #endif
-    // Run non-parallel operation
     {
       body();
     }
@@ -84,12 +84,14 @@ public:
 
 private:
 #ifdef COMPLEX_ENABLE_MULTICORE
+  uint32_t m_MaxThreads = std::thread::hardware_concurrency();
   bool m_RunParallel = true;
+  std::shared_ptr<tbb::task_group> m_TaskGroup = std::make_shared<tbb::task_group>();
   uint32_t m_CurThreads = 0;
-  std::shared_ptr<tbb::task_group> m_TaskGroup;
+
 #else
+  uint32_t m_MaxThreads = 1;
   bool m_RunParallel = false;
 #endif
-  uint32_t m_MaxThreads = 1;
 };
 } // namespace complex
