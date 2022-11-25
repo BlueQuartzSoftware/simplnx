@@ -13,6 +13,8 @@
 #include "complex_plugins/Utilities/TestUtilities.hpp"
 
 using namespace complex;
+using namespace complex::UnitTest;
+
 namespace fs = std::filesystem;
 
 namespace

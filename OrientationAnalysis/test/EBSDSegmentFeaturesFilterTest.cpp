@@ -24,6 +24,7 @@
 namespace fs = std::filesystem;
 
 using namespace complex;
+using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Instantiation and Parameter Check", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
@@ -33,7 +34,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Instantiation and Parameter
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_ebsd_segment_features.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = complex::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));

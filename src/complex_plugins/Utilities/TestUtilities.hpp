@@ -131,47 +131,9 @@ const FilterHandle k_FindNFeaturePhasesFilterHandle(k_FindFeaturePhasesObjectsId
 const Uuid k_FindNeighborsObjectsId = *Uuid::FromString("7177e88c-c3ab-4169-abe9-1fdaff20e598");
 const FilterHandle k_FindNeighborsFilterHandle(k_FindNeighborsObjectsId, k_ComplexCorePluginId);
 
-template <typename T>
-void CompareDataArrays(const IDataArray& left, const IDataArray& right)
-{
-  const auto& oldDataStore = left.getIDataStoreRefAs<AbstractDataStore<T>>();
-  const auto& newDataStore = right.getIDataStoreRefAs<AbstractDataStore<T>>();
-  usize start = 0;
-  usize end = oldDataStore.getSize();
-  for(usize i = start; i < end; i++)
-  {
-    if(oldDataStore[i] != newDataStore[i])
-    {
-      auto oldVal = oldDataStore[i];
-      auto newVal = newDataStore[i];
-      float diff = std::fabs(static_cast<float>(oldVal - newVal));
-      REQUIRE(diff < EPSILON);
-      break;
-    }
-  }
-}
-
 struct make_shared_enabler : public complex::Application
 {
 };
-
-inline DataStructure LoadDataStructure(const fs::path& filepath)
-{
-  DataStructure exemplarDataStructure;
-  REQUIRE(fs::exists(filepath));
-  auto result = DREAM3D::ImportDataStructureFromFile(filepath);
-  REQUIRE(result.valid());
-  return result.value();
-}
-
-inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
-{
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filepath);
-  H5::FileWriter fileWriter = std::move(result.value());
-
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
-}
 
 inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath attributeMatrix, const std::string& exemplarDataContainerName)
 {
@@ -212,47 +174,47 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
     switch(type)
     {
     case DataType::boolean: {
-      CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::int8: {
-      CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::int16: {
-      CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::int32: {
-      CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::int64: {
-      CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::uint8: {
-      CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::uint16: {
-      CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::uint32: {
-      CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::uint64: {
-      CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::float32: {
-      CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
       break;
     }
     case DataType::float64: {
-      CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
       break;
     }
     default: {

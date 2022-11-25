@@ -24,6 +24,7 @@ namespace fs = std::filesystem;
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace complex;
+using namespace complex::UnitTest;
 
 /**
  * Read H5Ebsd File
@@ -50,7 +51,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/neighbor_orientation_correlation.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = complex::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
@@ -140,47 +141,47 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
       switch(type)
       {
       case DataType::boolean: {
-        CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int8: {
-        CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int16: {
-        CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int32: {
-        CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int64: {
-        CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint8: {
-        CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint16: {
-        CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint32: {
-        CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint64: {
-        CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::float32: {
-        CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::float64: {
-        CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
+        complex::UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
         break;
       }
       default: {
