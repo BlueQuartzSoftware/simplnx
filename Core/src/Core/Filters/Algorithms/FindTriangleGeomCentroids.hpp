@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -8,23 +8,18 @@
 
 /**
 * This is example code to put in the Execute Method of the filter.
-  FindTriangleGeomCentroidsInputValues inputValues;
 
-  inputValues.FaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixName = filterArgs.value<DataPath>(k_FeatureAttributeMatrixName_Key);
-  inputValues.CentroidsArrayName = filterArgs.value<DataPath>(k_CentroidsArrayName_Key);
-
-  return FindTriangleGeomCentroids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 */
 
 namespace complex
 {
 
-struct SURFACEMESHING_EXPORT FindTriangleGeomCentroidsInputValues
+struct CORE_EXPORT FindTriangleGeomCentroidsInputValues
 {
+  DataPath TriangleGeometryPath;
   DataPath FaceLabelsArrayPath;
-  DataPath FeatureAttributeMatrixName;
-  DataPath CentroidsArrayName;
+  DataPath FeatureAttributeMatrixPath;
+  DataPath CentroidsArrayPath;
 };
 
 /**
@@ -33,7 +28,7 @@ struct SURFACEMESHING_EXPORT FindTriangleGeomCentroidsInputValues
  * where a bool mask array specifies.
  */
 
-class SURFACEMESHING_EXPORT FindTriangleGeomCentroids
+class CORE_EXPORT FindTriangleGeomCentroids
 {
 public:
   FindTriangleGeomCentroids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindTriangleGeomCentroidsInputValues* inputValues);

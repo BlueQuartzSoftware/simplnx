@@ -45,6 +45,7 @@ set(FilterList
   ReadAngDataFilter
   ReadCtfDataFilter
   EbsdToH5EbsdFilter
+  FindTriangleGeomShapesFilter
 )
   
 set(STUB_FILTERS
@@ -167,6 +168,7 @@ set(filter_algorithms
   ReadAngData
   ReadCtfData
   EbsdToH5Ebsd
+  FindTriangleGeomShapes
 )
 
 

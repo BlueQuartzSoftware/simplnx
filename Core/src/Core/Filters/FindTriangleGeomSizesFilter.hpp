@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,27 +8,26 @@
 namespace complex
 {
 /**
- * @class SharedFeatureFaceFilter
+ * @class FindTriangleGeomSizesFilter
  * @brief This filter will ....
  */
-class SURFACEMESHING_EXPORT SharedFeatureFaceFilter : public IFilter
+class CORE_EXPORT FindTriangleGeomSizesFilter : public IFilter
 {
 public:
-  SharedFeatureFaceFilter() = default;
-  ~SharedFeatureFaceFilter() noexcept override = default;
+  FindTriangleGeomSizesFilter() = default;
+  ~FindTriangleGeomSizesFilter() noexcept override = default;
 
-  SharedFeatureFaceFilter(const SharedFeatureFaceFilter&) = delete;
-  SharedFeatureFaceFilter(SharedFeatureFaceFilter&&) noexcept = delete;
+  FindTriangleGeomSizesFilter(const FindTriangleGeomSizesFilter&) = delete;
+  FindTriangleGeomSizesFilter(FindTriangleGeomSizesFilter&&) noexcept = delete;
 
-  SharedFeatureFaceFilter& operator=(const SharedFeatureFaceFilter&) = delete;
-  SharedFeatureFaceFilter& operator=(SharedFeatureFaceFilter&&) noexcept = delete;
+  FindTriangleGeomSizesFilter& operator=(const FindTriangleGeomSizesFilter&) = delete;
+  FindTriangleGeomSizesFilter& operator=(FindTriangleGeomSizesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceIdsArrayName_Key = "surface_mesh_feature_face_ids_array_name";
-  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName_Key = "face_feature_attribute_matrix_name";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceLabelsArrayName_Key = "surface_mesh_feature_face_labels_array_name";
-  static inline constexpr StringLiteral k_SurfaceMeshFeatureFaceNumTrianglesArrayName_Key = "surface_mesh_feature_face_num_triangles_array_name";
+  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
+  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "triangle_geometry_path";
 
   /**
    * @brief Returns the name of the filter.
@@ -96,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, SharedFeatureFaceFilter, "aaf7a258-fc92-48d7-9d06-ba317a3769e8");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomSizesFilter, "a979bd9b-834e-4497-84b0-ab7a8add341a");

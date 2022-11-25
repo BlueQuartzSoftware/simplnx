@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SurfaceMeshing/SurfaceMeshing_export.hpp"
+#include "Core/Core_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,25 +8,26 @@
 namespace complex
 {
 /**
- * @class FindTriangleGeomCentroids
+ * @class FindTriangleGeomCentroidsFilter
  * @brief This filter will ....
  */
-class SURFACEMESHING_EXPORT FindTriangleGeomCentroids : public IFilter
+class CORE_EXPORT FindTriangleGeomCentroidsFilter : public IFilter
 {
 public:
-  FindTriangleGeomCentroids() = default;
-  ~FindTriangleGeomCentroids() noexcept override = default;
+  FindTriangleGeomCentroidsFilter() = default;
+  ~FindTriangleGeomCentroidsFilter() noexcept override = default;
 
-  FindTriangleGeomCentroids(const FindTriangleGeomCentroids&) = delete;
-  FindTriangleGeomCentroids(FindTriangleGeomCentroids&&) noexcept = delete;
+  FindTriangleGeomCentroidsFilter(const FindTriangleGeomCentroidsFilter&) = delete;
+  FindTriangleGeomCentroidsFilter(FindTriangleGeomCentroidsFilter&&) noexcept = delete;
 
-  FindTriangleGeomCentroids& operator=(const FindTriangleGeomCentroids&) = delete;
-  FindTriangleGeomCentroids& operator=(FindTriangleGeomCentroids&&) noexcept = delete;
+  FindTriangleGeomCentroidsFilter& operator=(const FindTriangleGeomCentroidsFilter&) = delete;
+  FindTriangleGeomCentroidsFilter& operator=(FindTriangleGeomCentroidsFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
   static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "feature_attribute_matrix_name";
   static inline constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
+  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "triangle_geometry_path";
 
   /**
    * @brief Returns the name of the filter.
@@ -94,4 +95,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomCentroids, "074c0523-ab7a-4097-b0c3-c4dcbfb9a05e");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindTriangleGeomCentroidsFilter, "074c0523-ab7a-4097-b0c3-c4dcbfb9a05e");
