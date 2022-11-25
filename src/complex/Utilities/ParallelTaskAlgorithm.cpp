@@ -6,13 +6,7 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-ParallelTaskAlgorithm::ParallelTaskAlgorithm()
-: m_MaxThreads(std::thread::hardware_concurrency())
-#ifdef COMPLEX_ENABLE_MULTICORE
-, m_TaskGroup(new tbb::task_group)
-#endif
-{
-}
+ParallelTaskAlgorithm::ParallelTaskAlgorithm() = default;
 
 // -----------------------------------------------------------------------------
 ParallelTaskAlgorithm::~ParallelTaskAlgorithm()
