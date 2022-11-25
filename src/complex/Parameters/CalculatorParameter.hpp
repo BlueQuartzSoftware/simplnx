@@ -98,4 +98,4 @@ private:
 };
 } // namespace complex
 
-COMPLEX_DEF_PARAMETER_TRAITS(complex::CalculatorParameter, "5d6d1868-05f8-11ec-9a03-0242ac130003");
+COMPLEX_DEF_PARAMETER_TRAITS(complex::CalculatorParameter, "ba2d4937-dbec-5536-8c5c-c0a406e80f77");
