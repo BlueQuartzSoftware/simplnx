@@ -63,7 +63,7 @@ public:
 #ifdef COMPLEX_ENABLE_MULTICORE
     if(m_RunParallel)
     {
-      m_TaskGroup->run(body);
+      m_TaskGroup.run(body);
       m_CurThreads++;
       if(m_CurThreads >= m_MaxThreads)
       {
@@ -86,9 +86,8 @@ private:
 #ifdef COMPLEX_ENABLE_MULTICORE
   uint32_t m_MaxThreads = std::thread::hardware_concurrency();
   bool m_RunParallel = true;
-  std::shared_ptr<tbb::task_group> m_TaskGroup = std::make_shared<tbb::task_group>();
+  tbb::task_group m_TaskGroup;
   uint32_t m_CurThreads = 0;
-
 #else
   uint32_t m_MaxThreads = 1;
   bool m_RunParallel = false;
