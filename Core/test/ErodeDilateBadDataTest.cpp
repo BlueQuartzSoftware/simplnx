@@ -13,7 +13,6 @@
 namespace fs = std::filesystem;
 
 #include "complex_plugins/Utilities/SmallIN100Utilties.hpp"
-#include "complex_plugins/Utilities/TestUtilities.hpp"
 
 #include "Core/Core_test_dirs.hpp"
 #include "Core/Filters/ErodeDilateBadDataFilter.hpp"
@@ -31,6 +30,7 @@ namespace fs = std::filesystem;
  */
 
 using namespace complex;
+using namespace complex::UnitTest;
 
 TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeDilateBadDataFilter]")
 {
@@ -40,7 +40,7 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_erode_dilate_bad_data.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = complex::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));

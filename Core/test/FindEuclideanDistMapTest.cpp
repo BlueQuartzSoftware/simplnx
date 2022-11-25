@@ -4,6 +4,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "Core/Core_test_dirs.hpp"
 #include "Core/Filters/FindEuclideanDistMapFilter.hpp"
@@ -11,6 +12,7 @@
 #include "complex_plugins/Utilities/TestUtilities.hpp"
 
 using namespace complex;
+using namespace complex::UnitTest;
 
 TEST_CASE("Core::FindEuclideanDistMap", "[Core][FindEuclideanDistMap]")
 {

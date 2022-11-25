@@ -12,6 +12,9 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
 
+using namespace complex;
+using namespace complex::UnitTest;
+
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Instantiation and Parameter Check", "[OrientationAnalysis][ReadH5Ebsd]")
 {
   ReadH5EbsdFilter filter;
@@ -42,7 +45,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = complex::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // ReadH5EbsdFilter
   DataStructure dataStructure;

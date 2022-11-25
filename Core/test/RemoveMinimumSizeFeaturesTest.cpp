@@ -25,7 +25,7 @@ TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[Comp
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_min_size_output.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = complex::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_min_size_input.dream3d", unit_test::k_DREAM3DDataDir));

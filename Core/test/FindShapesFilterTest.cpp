@@ -12,6 +12,7 @@
 namespace fs = std::filesystem;
 
 using namespace complex;
+using namespace complex::UnitTest;
 
 TEST_CASE("Core::FindShapesFilter", "[Core][FindShapesFilter]")
 {

@@ -24,7 +24,7 @@ namespace fs = std::filesystem;
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace complex;
-
+using namespace complex::UnitTest;
 /**
  * Read H5Ebsd File
  * MultiThreshold Objects
@@ -50,7 +50,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Small IN1
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/bad_data_neighbor_orientation_check.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = complex::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
