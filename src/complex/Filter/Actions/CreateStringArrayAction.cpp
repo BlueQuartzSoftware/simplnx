@@ -50,7 +50,20 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
   StringArray* array = StringArray::CreateWithValues(dataStructure, name, values, dataObjectId);
   if(array == nullptr)
   {
-    return MakeErrorResult(-382, fmt::format("CreateStringArrayAction: Unable to create StringArray at '{}'", path().toString()));
+    if(parentObject != nullptr && parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    {
+      auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
+      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
+      std::string arrayShape = fmt::format("String Array Tuple Shape: {}", fmt::join(m_Dims, " x "));
+      return MakeErrorResult(
+          -382, fmt::format("CreateStringArrayAction: Unable to create String Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created String Array must have the same tuple "
+                            "dimensions or the same total number of tuples.\n{}\n{}",
+                            name, parentPath.toString(), amShape, arrayShape));
+    }
+    else
+    {
+      return MakeErrorResult(-382, fmt::format("CreateStringArrayAction: Unable to create StringArray at '{}'", path().toString()));
+    }
   }
   return {};
 }
