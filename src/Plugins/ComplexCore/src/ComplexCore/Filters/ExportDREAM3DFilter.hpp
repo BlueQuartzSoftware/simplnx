@@ -91,4 +91,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ExportDREAM3DFilter, "b3a95784-2ced-11ec-8d3d-0242ac130003");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExportDREAM3DFilter, "b3a95784-2ced-41ec-8d3d-0242ac130003");

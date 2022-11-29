@@ -1,5 +1,6 @@
 #include "Application.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -111,6 +112,37 @@ std::filesystem::path Application::getCurrentDir() const
   return m_CurrentPath.parent_path();
 }
 
+std::optional<Uuid> Application::getComplexUuid(const Uuid& simplUuid)
+{
+  for(usize index = 0; index < m_Simpl_Uuids.size(); index++)
+  {
+    if(m_Simpl_Uuids[index] == simplUuid)
+    {
+      return m_Complex_Uuids[index];
+    }
+  }
+
+  return {};
+}
+
+std::vector<Uuid> Application::getSimplUuid(const Uuid& complexUuid)
+{
+  std::vector<usize> indices;
+  for(usize index = 0; index < m_Complex_Uuids.size(); index++)
+  {
+    if(m_Complex_Uuids[index] == complexUuid)
+    {
+      indices.push_back(index);
+    }
+  }
+  std::vector<Uuid> uuidList;
+  for(const auto& index : indices)
+  {
+    uuidList.push_back(m_Simpl_Uuids[index]);
+  }
+  return uuidList;
+}
+
 void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbose)
 {
   if(verbose)
@@ -171,6 +203,26 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
   getFilterList()->addPlugin(pluginLoader);
 
   auto plugin = pluginLoader->getPlugin();
+
+  std::map<Uuid, Uuid> simplToComplexUuids = plugin->getSimplToComplexMap();
+  for(auto const& [simplUuid, complexUuid] : simplToComplexUuids)
+  {
+    for(const auto& uuid : m_Simpl_Uuids)
+    {
+      if(uuid == simplUuid)
+      {
+        throw std::runtime_error(fmt::format("Duplicate UUIDs found in the SIMPL UUID maps! UUID: {} Plugin: {}", simplUuid.str(), plugin->getName()));
+      }
+    }
+    m_Simpl_Uuids.push_back(simplUuid);
+    m_Complex_Uuids.push_back(complexUuid);
+  }
+
+  if(m_Simpl_Uuids.size() != m_Complex_Uuids.size())
+  {
+    throw std::runtime_error(fmt::format("UUID maps are not of the same size! SIMPL UUID Vector size: {} Complex UUID Vector size: {}", m_Simpl_Uuids.size(), m_Complex_Uuids.size()));
+  }
+
   if((plugin != nullptr) && (m_DataReader != nullptr))
   {
     auto factories = plugin->getDataFactories();

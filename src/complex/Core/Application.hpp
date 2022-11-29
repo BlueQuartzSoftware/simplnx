@@ -118,6 +118,18 @@ public:
    */
   std::filesystem::path getCurrentDir() const;
 
+  /**
+   * @brief Returns the Complex filter UUID [v4] from the SIMPL filter UUID [v5]
+   * @return std::optional<Uuid>
+   */
+  std::optional<Uuid> getComplexUuid(const Uuid& simplUuid);
+
+  /**
+   * @brief Returns the SIMPL filter UUID(s) [v5] from the Complex filter UUID [v4]
+   * @return std::optional<std::vector<Uuid>>
+   */
+  std::vector<Uuid> getSimplUuid(const Uuid& complexUuid);
+
 private:
   /**
    * @brief Assigns Application as the current instance and sets the current
@@ -141,5 +153,7 @@ private:
   std::unique_ptr<complex::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
   std::unique_ptr<H5::DataFactoryManager> m_DataReader;
+  std::vector<Uuid> m_Simpl_Uuids;   // no duplicates; index must match m_Complex_Uuids
+  std::vector<Uuid> m_Complex_Uuids; // duplicate allowed conditionally; index must match m_Simpl_Uuids
 };
 } // namespace complex

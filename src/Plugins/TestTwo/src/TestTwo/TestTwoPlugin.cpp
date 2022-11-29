@@ -25,4 +25,9 @@ std::vector<complex::H5::IDataFactory*> TestTwoPlugin::getDataFactories() const
   return {};
 }
 
+std::map<complex::Uuid, complex::Uuid> TestTwoPlugin::getSimplToComplexMap() const
+{
+  return {};
+}
+
 COMPLEX_DEF_PLUGIN(TestTwoPlugin)

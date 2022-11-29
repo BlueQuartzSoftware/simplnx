@@ -93,6 +93,13 @@ public:
    */
   virtual std::vector<H5::IDataFactory*> getDataFactories() const = 0;
 
+  /**
+   * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
+   * their complex counterpart
+   * @return std::map<complex::Uuid, complex::Uuid>
+   */
+  virtual std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const = 0;
+
 protected:
   /**
    * @brief Constructs a new AbstractPlugin. Takes an ID, name, description,
