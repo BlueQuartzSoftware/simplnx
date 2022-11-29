@@ -11,9 +11,10 @@ using namespace complex;
 
 namespace complex
 {
-CreateStringArrayAction::CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path)
+CreateStringArrayAction::CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path, const std::string& initializeValue)
 : IDataCreationAction(path)
 , m_Dims(tDims)
+, m_InitializeValue(initializeValue)
 {
 }
 
@@ -46,7 +47,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
 
   usize totalTuples = std::accumulate(m_Dims.cbegin(), m_Dims.cend(), static_cast<usize>(1), std::multiplies<>());
 
-  std::vector<std::string> values(totalTuples);
+  std::vector<std::string> values(totalTuples, m_InitializeValue);
   StringArray* array = StringArray::CreateWithValues(dataStructure, name, values, dataObjectId);
   if(array == nullptr)
   {
