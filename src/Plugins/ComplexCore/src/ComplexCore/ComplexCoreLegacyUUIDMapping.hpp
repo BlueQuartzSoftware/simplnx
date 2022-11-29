@@ -55,7 +55,7 @@
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
-// #include "Filters/FilterName.hpp"
+// @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
 {
@@ -115,7 +115,7 @@ namespace complex
     {complex::Uuid::FromString("980c7bfd-20b2-5711-bc3b-0190b9096c34").value(), complex::FilterTraits<StlFileReaderFilter>::uuid}, // ReadStlFile
     {complex::Uuid::FromString("0541c5eb-1976-5797-9468-be50a93d44e2").value(), complex::FilterTraits<TriangleDihedralAngleFilter>::uuid}, // TriangleDihedralAngleFilter
     {complex::Uuid::FromString("8133d419-1919-4dbf-a5bf-1c97282ba63f").value(), complex::FilterTraits<TriangleNormalFilter>::uuid}, // TriangleNormalFilter
-    // {complex::Uuid::FromString(insert DREAM3D UUID string here).value(), complex::FilterTraits<insert DREAM3DNX filter name here>::uuid}, // dream3d-class-name
+    // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
 } // namespace complex
