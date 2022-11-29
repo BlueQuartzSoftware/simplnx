@@ -20,10 +20,12 @@ public:
   using ValueType = std::vector<RowType>;
 
   // The lists here are IN ORDER of the enumerations from the EBSDLib. DO NOT CHANGE THE ORDER.
-  static inline const std::vector<std::string> s_CrystalStructures = {"Hexagonal-High 6/mmm",  "Cubic-High m-3m", "Hexagonal-Low 6/m", "Cubic-Low m-3 (Tetrahedral)",
+  static inline const std::vector<std::string> k_CrystalStructures = {"Hexagonal-High 6/mmm",  "Cubic-High m-3m", "Hexagonal-Low 6/m", "Cubic-Low m-3 (Tetrahedral)",
                                                                       "Triclinic -1",          "Monoclinic 2/m",  "Orthorhombic mmm",  "Tetragonal-Low 4/m",
                                                                       "Tetragonal-High 4/mmm", "Trigonal-Low -3", "Trigonal-High -3m"};
-  static inline const std::vector<std::string> s_PhaseTypes = {"Primary", "Precipitate", "Transformation", "Matrix", "Boundary", "Unknown Phase Type"};
+  static inline const std::vector<std::string> k_PhaseTypes = {"Primary", "Precipitate", "Transformation", "Matrix", "Boundary"};
+
+  static inline constexpr StringLiteral k_DefaultPhaseName = "_PHASE_NAME_";
 
   EnsembleInfoParameter() = delete;
 
