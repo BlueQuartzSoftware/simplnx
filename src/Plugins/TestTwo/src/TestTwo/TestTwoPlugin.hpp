@@ -25,4 +25,11 @@ public:
    * @return std::vector<complex::H5::IDataFactory*>
    */
   std::vector<complex::H5::IDataFactory*> getDataFactories() const override;
+
+  /**
+   * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
+   * their complex counterpart
+   * @return std::map<complex::Uuid, complex::Uuid>
+   */
+  std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const override;
 };
