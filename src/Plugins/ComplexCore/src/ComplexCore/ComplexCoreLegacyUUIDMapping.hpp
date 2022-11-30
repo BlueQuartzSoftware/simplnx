@@ -29,7 +29,9 @@
 #include "ComplexCore/Filters/FindFeaturePhasesFilter.hpp"
 #include "ComplexCore/Filters/FindNeighborListStatistics.hpp"
 #include "ComplexCore/Filters/FindNeighbors.hpp"
+#include "ComplexCore/Filters/FindNumFeaturesFilter.hpp"
 #include "ComplexCore/Filters/FindSurfaceFeatures.hpp"
+#include "ComplexCore/Filters/FindVolFractionsFilter.hpp"
 #include "ComplexCore/Filters/IdentifySample.hpp"
 #include "ComplexCore/Filters/ImportCSVDataFilter.hpp"
 #include "ComplexCore/Filters/ImportDREAM3DFilter.hpp"
@@ -86,7 +88,9 @@ namespace complex
     {complex::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), complex::FilterTraits<FindFeaturePhasesFilter>::uuid}, // FindFeaturePhases
     {complex::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), complex::FilterTraits<FindNeighborListStatistics>::uuid}, // FindNeighborListStatistics
     {complex::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), complex::FilterTraits<FindNeighbors>::uuid}, // FindNeighbors
+    {complex::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), complex::FilterTraits<FindNumFeaturesFilter>::uuid}, // FindNumFeatures
     {complex::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), complex::FilterTraits<FindSurfaceFeatures>::uuid}, // FindSurfaceFeatures
+    {complex::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), complex::FilterTraits<FindVolFractionsFilter>::uuid}, // FindVolFractions
     {complex::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), complex::FilterTraits<IdentifySample>::uuid}, // IdentifySample
     {complex::Uuid::FromString("bdb978bc-96bf-5498-972c-b509c38b8d50").value(), complex::FilterTraits<ImportCSVDataFilter>::uuid}, // ReadASCIIData
     {complex::Uuid::FromString("043cbde5-3878-5718-958f-ae75714df0df").value(), complex::FilterTraits<ImportDREAM3DFilter>::uuid}, // DataContainerReader
