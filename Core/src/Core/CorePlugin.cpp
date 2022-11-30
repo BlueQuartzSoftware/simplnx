@@ -1,5 +1,7 @@
 #include "CorePlugin.hpp"
+
 #include "Core/Core_filter_registration.hpp"
+#include "CoreLegacyUUIDMapping.hpp"
 
 using namespace complex;
 
@@ -26,6 +28,11 @@ CorePlugin::~CorePlugin() = default;
 std::vector<complex::H5::IDataFactory*> CorePlugin::getDataFactories() const
 {
   return {};
+}
+
+std::map<complex::Uuid, complex::Uuid> CorePlugin::getSimplToComplexMap() const
+{
+  return complex::k_SIMPL_to_Core;
 }
 
 COMPLEX_DEF_PLUGIN(CorePlugin)

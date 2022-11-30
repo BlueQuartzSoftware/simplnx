@@ -387,7 +387,7 @@ Result<> ReadH5Ebsd::operator()()
       /*************************************************************************
        * First rename the entire Generated Image Geometry to a temp name
        ************************************************************************/
-      const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6");
+      const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("911a3aa9-d3c2-4f66-9451-8861c4b726d5");
       const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_ComplexCorePluginId);
       auto filter = filterList->createFilter(k_RenameDataObjectFilterHandle);
       if(nullptr == filter)
@@ -420,7 +420,7 @@ Result<> ReadH5Ebsd::operator()()
       /*************************************************************************
        * Rotate Sample Ref Frame
        ************************************************************************/
-      const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("5efdf395-33fb-4dc0-986e-0dc0ae990f6a");
+      const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
       const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_CorePluginId);
 
       filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
