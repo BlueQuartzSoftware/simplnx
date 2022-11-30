@@ -85,7 +85,7 @@ const FilterHandle k_ImportTextFilterHandle(k_ImportTextFilterId, k_ComplexCoreP
 const Uuid k_ImportDream3dFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
 const FilterHandle k_ImportDream3dFilterHandle(k_ImportDream3dFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the Read RenameDataObject
-const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("d53c808f-004d-5fac-b125-0fffc8cc78d6");
+const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("911a3aa9-d3c2-4f66-9451-8861c4b726d5");
 const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the Crop Image Geometry
 const Uuid k_CropImageGeometryFilterId = *Uuid::FromString("e6476737-4aa7-48ba-a702-3dfab82c96e2");
@@ -97,10 +97,10 @@ const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_Comp
 const Uuid k_CopyDataGroupFilterId = *Uuid::FromString("ac8d51d8-9167-5628-a060-95a8863a76b1");
 const FilterHandle k_CopyDataGroupFilterHandle(k_CopyDataGroupFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the RemoveMinimumSizeFeaturesFilter
-const Uuid k_RemoveMinimumSizeFeaturesFilterId = *Uuid::FromString("53ac1638-8934-57b8-b8e5-4b91cdda23ec");
+const Uuid k_RemoveMinimumSizeFeaturesFilterId = *Uuid::FromString("074472d3-ba8d-4a1a-99f2-2d56a0d082a0");
 const FilterHandle k_RemoveMinimumSizeFeaturesFilterHandle(k_RemoveMinimumSizeFeaturesFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the CalculateFeatureSizesFilter
-const Uuid k_CalculateFeatureSizesFilterId = *Uuid::FromString("656f144c-a120-5c3b-bee5-06deab438588");
+const Uuid k_CalculateFeatureSizesFilterId = *Uuid::FromString("c666ee17-ca58-4969-80d0-819986c72485");
 const FilterHandle k_CalculateFeatureSizesFilterHandle(k_CalculateFeatureSizesFilterId, k_ComplexCorePluginId);
 
 const Uuid k_OrientationAnalysisPluginId = *Uuid::FromString("c09cf01b-014e-5adb-84eb-ea76fc79eeb1");

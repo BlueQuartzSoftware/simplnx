@@ -363,7 +363,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
       },
       "filter": {
         "name": "complex::ExportDREAM3DFilter",
-        "uuid": "b3a95784-2ced-11ec-8d3d-0242ac130003"
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
       },
       "isDisabled": false
     },

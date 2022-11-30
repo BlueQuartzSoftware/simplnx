@@ -1,5 +1,7 @@
 #include "ITKImageProcessingPlugin.hpp"
+
 #include "ITKImageProcessing/ITKImageProcessing_filter_registration.hpp"
+#include "ITKImageProcessingLegacyUUIDMapping.hpp"
 
 #include <itkBMPImageIOFactory.h>
 #include <itkBioRadImageIOFactory.h>
@@ -59,6 +61,11 @@ void ITKImageProcessingPlugin::RegisterITKImageIO()
 std::vector<complex::H5::IDataFactory*> ITKImageProcessingPlugin::getDataFactories() const
 {
   return {};
+}
+
+std::map<complex::Uuid, complex::Uuid> ITKImageProcessingPlugin::getSimplToComplexMap() const
+{
+  return complex::k_SIMPL_to_ITKImageProcessing;
 }
 
 std::vector<std::string> ITKImageProcessingPlugin::GetList2DSupportedFileExtensions()
