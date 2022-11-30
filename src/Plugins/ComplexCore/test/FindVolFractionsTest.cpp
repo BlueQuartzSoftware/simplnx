@@ -27,8 +27,6 @@ const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_volum
 
 TEST_CASE("ComplexCore::FindVolFractionsFilter: Instantiation and Parameter Check", "[ComplexCore]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindVolFractionsFilter filter;
   Arguments args;
@@ -50,8 +48,6 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Instantiation and Parameter Chec
 
 TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[ComplexCore]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindVolFractionsFilter filter;
   Arguments args;
@@ -75,15 +71,13 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[Compl
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {
-    float32 result = std::fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
+    float32 result = fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
     REQUIRE(result < UnitTest::EPSILON);
   }
 }
 
 TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[ComplexCore]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindVolFractionsFilter filter;
   Arguments args;
@@ -108,7 +102,7 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[Com
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {
-    float32 result = std::fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
+    float32 result = fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
     REQUIRE(result > UnitTest::EPSILON);
   }
 }

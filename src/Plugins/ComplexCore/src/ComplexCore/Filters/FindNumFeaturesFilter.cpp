@@ -49,10 +49,11 @@ Parameters FindNumFeaturesFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Required Objects: Feature Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "", DataPath({"DataContainer", "FeatureData", "Phases"}), complex::GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Array specifying which Ensemble each Feature belongs",
+                                                          DataPath({"DataContainer", "FeatureData", "Phases"}), complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Objects: Ensemble Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NumFeaturesArrayPath_Key, "Number of Features", "", DataPath({"Number of Features"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NumFeaturesArrayPath_Key, "Number of Features", "The number of Features that belong to each Ensemble", DataPath({"Number of Features"})));
 
   return params;
 }

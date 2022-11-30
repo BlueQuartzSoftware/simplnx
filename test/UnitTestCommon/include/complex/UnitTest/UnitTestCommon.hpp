@@ -117,10 +117,6 @@ namespace UnitTest
 
 inline constexpr float EPSILON = 0.0001;
 
-struct make_shared_enabler : public complex::Application
-{
-};
-
 /**
  * @brief Loads a .dream3d file into a DataStructure. Checks are made to ensure the filepath does exist
  * @param filepath
