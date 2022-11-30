@@ -328,7 +328,7 @@ Parameters ImportCSVDataFilter::parameters() const
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseExistingGroup_Key, "Use Existing Group", "Store the imported CSV data arrays in an existing group.", false));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_SelectedDataGroup_Key, "Existing Data Group", "Store the imported CSV data arrays in this existing group.", DataPath{},
-                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
+                                                              BaseGroup::GetAllGroupTypes()));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedDataGroup_Key, "New Data Group", "Store the imported CSV data arrays in a newly created group.", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
