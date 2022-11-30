@@ -27,8 +27,6 @@ const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_volum
 
 TEST_CASE("ComplexCore::FindNumFeaturesFilter: Instantiation and Parameter Check", "[ComplexCore][FindNumFeaturesFilter]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindNumFeaturesFilter filter;
   Arguments args;
@@ -50,8 +48,6 @@ TEST_CASE("ComplexCore::FindNumFeaturesFilter: Instantiation and Parameter Check
 
 TEST_CASE("ComplexCore::FindNumFeaturesFilter: Valid filter execution", "[ComplexCore][FindNumFeaturesFilter]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindNumFeaturesFilter filter;
   Arguments args;
@@ -81,8 +77,6 @@ TEST_CASE("ComplexCore::FindNumFeaturesFilter: Valid filter execution", "[Comple
 
 TEST_CASE("ComplexCore::FindNumFeaturesFilter: InValid filter execution", "[ComplexCore][FindNumFeaturesFilter]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindNumFeaturesFilter filter;
   Arguments args;
