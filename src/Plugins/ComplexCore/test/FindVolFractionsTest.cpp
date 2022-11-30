@@ -71,7 +71,7 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[Compl
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {
-    float32 result = std::fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
+    float32 result = fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
     REQUIRE(result < UnitTest::EPSILON);
   }
 }
@@ -102,7 +102,7 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[Com
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {
-    float32 result = std::fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
+    float32 result = fabsf(d3dVolumeFractionsArrayRef[index] - nxVolumeFractionsArrayRef[index]);
     REQUIRE(result > UnitTest::EPSILON);
   }
 }
