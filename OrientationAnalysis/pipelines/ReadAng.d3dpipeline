@@ -5,30 +5,30 @@
   "pipeline": [
     {
       "args": {
-        "CellAttributeMatrixName": "Cell Data",
-        "CellEnsembleAttributeMatrixName": "Cell Ensemble Data",
-        "DataContainerName": "DataContainer",
-        "InputFile": "Data/SmallIN100/Slice_1.ang"
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
+        "data_container_name": "DataContainer",
+        "input_file": "Data/SmallIN100/Slice_1.ang"
       },
       "filter": {
         "name": "complex::ReadAngDataFilter",
-        "uuid": "b8e128a8-c2a3-5e6c-a7ad-e4fb864e5d40"
+        "uuid": "5b062816-79ac-47ce-93cb-e7966896bcbd"
       },
       "isDisabled": false
     },
     {
       "args": {
-        "CellEulerAnglesArrayPath": "DataContainer/Cell Data/EulerAngles",
-        "CellIPFColorsArrayName": "IPFColors",
+        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+        "cell_ip_fcolors_array_name": "IPFColors",
         "CellPhasesArrayPath": "DataContainer/Cell Data/Phases",
-        "CrystalStructuresArrayPath": "DataContainer/Cell Ensemble Data/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "good_voxels_array_path": "",
-        "ReferenceDir": [
+        "reference_dir": [
           0.0,
           0.0,
           1.0
         ],
-        "UseGoodVoxels": false
+        "use_good_voxels": false
       },
       "filter": {
         "name": "complex::GenerateIPFColorsFilter",
