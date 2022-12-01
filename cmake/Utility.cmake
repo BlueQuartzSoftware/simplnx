@@ -87,30 +87,34 @@ endfunction()
 #
 #------------------------------------------------------------------------------
 include(FetchContent)
+include(ExternalProject)
 
 function(download_test_data)
   set(optionsArgs)
-  set(oneValueArgs DREAM3D_DATA_DIR VERSION ARCHIVE_NAME)
+  set(oneValueArgs DREAM3D_DATA_DIR ARCHIVE_NAME SHA512)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  message(STATUS "DREAM3D_DATA_DIR: ${ARGS_DREAM3D_DATA_DIR}")
-  # If the data directory does not exist then bail out now.
-  if(NOT EXISTS "${ARGS_DREAM3D_DATA_DIR}")
-    message(STATUS "DREAM3D_Data directory does not exist. *NOT* downloading test files.")
-    return()
+  message(STATUS "Downloading ${ARGS_ARCHIVE_NAME}")
+  file(DOWNLOAD https://github.com/BlueQuartzSoftware/complex/releases/download/Data_Archive/${ARGS_ARCHIVE_NAME}
+                "${ARGS_DREAM3D_DATA_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}"
+                EXPECTED_HASH SHA512=${ARGS_SHA512}
+                SHOW_PROGRESS
+                STATUS download_result
+                )
+
+  list(GET download_result 1 download_status)
+  if(${download_status} STREQUAL "No error")
+    get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME)
+    message(STATUS "  Decompressing ${ARGS_DREAM3D_DATA_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}")
+    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvzf "${ARGS_DREAM3D_DATA_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}"
+      WORKING_DIRECTORY "${ARGS_DREAM3D_DATA_DIR}/TestFiles"
+      RESULT_VARIABLE result
+      OUTPUT_VARIABLE output
+      ERROR_VARIABLE error
+    )
   endif()
 
-  set(archive_file_name "${ARGS_ARCHIVE_NAME}_${ARGS_VERSION}.tar.gz")
-  message(STATUS "DREAM3D_Data: Found at '${ARGS_DREAM3D_DATA_DIR}'")
-  message(STATUS "Downloading DREAM3D_Data/${archive_file_name}")
-  FetchContent_Declare(download_DREAM3D_Data
-    URL https://github.com/dream3d/DREAM3D_Data/releases/download/v${ARGS_VERSION}/${archive_file_name}
-    URL_HASH SHA512=7fd506ed225c610c4cb154b95ded9b289f10246bf2643689bfada54f81cf91c9a65a62d6f794bab2cb4ff7319137ecf4d8f08088502d32b5619726937e759372
-    SOURCE_DIR "${ARGS_DREAM3D_DATA_DIR}/TestFiles"
-    DOWNLOAD_DIR "${ARGS_DREAM3D_DATA_DIR}"
-  )
-  FetchContent_MakeAvailable(download_DREAM3D_Data)
 
 endfunction()
 
