@@ -5,12 +5,12 @@
   "pipeline": [
     {
       "args": {
-        "CellAttributeMatrixName": "Cell Data",
-        "CellEnsembleAttributeMatrixName": "CellEnsembleData",
-        "DataContainerName": "DataContainer",
-        "DegreesToRadians": true,
-        "EdaxHexagonalAlignment": false,
-        "InputFile": "Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "data_container_name": "DataContainer",
+        "degrees_to_radians": true,
+        "edax_hexagonal_alignment": false,
+        "input_file": "Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
       },
       "filter": {
         "name": "complex::ReadCtfDataFilter",
@@ -20,17 +20,17 @@
     },
     {
       "args": {
-        "CellEulerAnglesArrayPath": "DataContainer/Cell Data/EulerAngles",
-        "CellIPFColorsArrayName": "IPFColors",
+        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+        "cell_ip_fcolors_array_name": "IPFColors",
         "CellPhasesArrayPath": "DataContainer/Cell Data/Phases",
-        "CrystalStructuresArrayPath": "DataContainer/CellEnsembleData/CrystalStructures",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "good_voxels_array_path": "",
-        "ReferenceDir": [
+        "reference_dir": [
           0.0,
           0.0,
           1.0
         ],
-        "UseGoodVoxels": false
+        "use_good_voxels": false
       },
       "filter": {
         "name": "complex::GenerateIPFColorsFilter",
