@@ -108,20 +108,19 @@ Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", prefix));
   }
-  if(structValue.m_SelectedGroup.empty())
+  if(!structValue.m_SelectedGroup.empty()) // if empty then using root group
   {
-    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
-  }
-  const DataObject* dataObject = dataStructure.getData(structValue.m_SelectedGroup);
-  if(dataObject == nullptr)
-  {
-    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue,
-                                    fmt::format("{}Object does not exist at path '{}'", prefix, structValue.m_SelectedGroup.toString()));
-  }
-  const auto baseGroupObj = dataStructure.getDataAs<BaseGroup>(structValue.m_SelectedGroup);
-  if(baseGroupObj == nullptr)
-  {
-    return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, structValue.m_SelectedGroup.toString()));
+    const DataObject* dataObject = dataStructure.getData(structValue.m_SelectedGroup);
+    if(dataObject == nullptr)
+    {
+      return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_DuplicateValue,
+                                      fmt::format("{}Object does not exist at path '{}'", prefix, structValue.m_SelectedGroup.toString()));
+    }
+    const auto baseGroupObj = dataStructure.getDataAs<BaseGroup>(structValue.m_SelectedGroup);
+    if(baseGroupObj == nullptr)
+    {
+      return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, structValue.m_SelectedGroup.toString()));
+    }
   }
 
   return {};

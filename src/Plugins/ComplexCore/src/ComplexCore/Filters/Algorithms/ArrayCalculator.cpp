@@ -473,7 +473,8 @@ Result<> ArrayCalculatorParser::parseArray(std::string token, std::vector<Calcul
     return MakeErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InvalidArrayName), ss);
   }
 
-  const IDataArray* dataArray = m_DataStructure.getDataAs<IDataArray>(m_SelectedGroupPath.createChildPath(token));
+  DataPath tokenArrayPath = m_SelectedGroupPath.empty() ? DataPath({token}) : m_SelectedGroupPath.createChildPath(token);
+  const IDataArray* dataArray = m_DataStructure.getDataAs<IDataArray>(tokenArrayPath);
   if(firstArray_NumTuples < 0 && firstArray_Name.empty())
   {
     firstArray_NumTuples = dataArray->getNumberOfTuples();
