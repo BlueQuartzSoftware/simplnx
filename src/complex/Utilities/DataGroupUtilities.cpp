@@ -129,9 +129,23 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
 std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<DataPath>& ignoredDataPaths)
 {
   std::vector<std::shared_ptr<IDataArray>> arrays;
+  std::set<std::shared_ptr<IDataArray>> childArrays;
   DataPath parentPath = dataArrayPath.getParent();
-  const auto& parent = dataStructure.getDataRefAs<BaseGroup>(parentPath);
-  auto childArrays = parent.findAllChildrenOfType<IDataArray>();
+  if(parentPath.empty())
+  {
+    for(const auto& [key, object] : dataStructure.getDataMap())
+    {
+      if(auto typePtr = std::dynamic_pointer_cast<IDataArray>(object); typePtr != nullptr)
+      {
+        childArrays.insert(typePtr);
+      }
+    }
+  }
+  else
+  {
+    const auto& parent = dataStructure.getDataRefAs<BaseGroup>(parentPath);
+    childArrays = parent.findAllChildrenOfType<IDataArray>();
+  }
   for(const auto& childArray : childArrays)
   {
     bool ignore = false;
@@ -165,8 +179,15 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
   std::vector<DataPath> childDataObjects;
   try
   {
-    const auto& featureAttributeMatrix = dataStructure.getDataRefAs<BaseGroup>(parentGroup); // this may throw.
-    std::vector<std::string> childrenNames = featureAttributeMatrix.getDataMap().getNames();
+    std::vector<std::string> childrenNames;
+    if(parentGroup.empty())
+    {
+      childrenNames = dataStructure.getDataMap().getNames();
+    }
+    else
+    {
+      childrenNames = dataStructure.getDataRefAs<BaseGroup>(parentGroup).getDataMap().getNames();
+    }
 
     for(const auto& childName : childrenNames)
     {
@@ -198,8 +219,15 @@ std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructu
   std::vector<DataPath> childDataObjects;
   try
   {
-    const auto& featureAttributeMatrix = dataStructure.getDataRefAs<BaseGroup>(parentGroup); // this may throw.
-    std::vector<std::string> childrenNames = featureAttributeMatrix.getDataMap().getNames();
+    std::vector<std::string> childrenNames;
+    if(parentGroup.empty())
+    {
+      childrenNames = dataStructure.getDataMap().getNames();
+    }
+    else
+    {
+      childrenNames = dataStructure.getDataRefAs<BaseGroup>(parentGroup).getDataMap().getNames();
+    }
 
     for(const auto& childName : childrenNames)
     {
@@ -231,12 +259,20 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
   std::vector<DataPath> childDataObjects;
   try
   {
-    const auto* parent = dataStructure.getDataAs<BaseGroup>(parentGroup);
-    if(parent == nullptr)
+    std::vector<std::string> childrenNames;
+    if(parentGroup.empty())
     {
-      return {};
+      childrenNames = dataStructure.getDataMap().getNames();
     }
-    std::vector<std::string> childrenNames = parent->getDataMap().getNames();
+    else
+    {
+      const auto* parent = dataStructure.getDataAs<BaseGroup>(parentGroup);
+      if(parent == nullptr)
+      {
+        return {};
+      }
+      childrenNames = parent->getDataMap().getNames();
+    }
 
     for(const auto& childName : childrenNames)
     {
@@ -271,8 +307,15 @@ bool ContainsDataArrayName(const DataStructure& dataStructure, const DataPath& p
 {
   try
   {
-    const auto& featureAttributeMatrix = dataStructure.getDataRefAs<BaseGroup>(parentGroup); // this may throw.
-    std::vector<std::string> childrenNames = featureAttributeMatrix.getDataMap().getNames();
+    std::vector<std::string> childrenNames;
+    if(parentGroup.empty())
+    {
+      childrenNames = dataStructure.getDataMap().getNames();
+    }
+    else
+    {
+      childrenNames = dataStructure.getDataRefAs<BaseGroup>(parentGroup).getDataMap().getNames();
+    }
 
     for(const auto& childName : childrenNames)
     {
