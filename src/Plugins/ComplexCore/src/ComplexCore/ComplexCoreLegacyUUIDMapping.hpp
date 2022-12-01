@@ -5,6 +5,7 @@
 
 // clang-format off
 #include "ComplexCore/Filters/AlignGeometries.hpp"
+#include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
 #include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "ComplexCore/Filters/ApproximatePointCloudHull.hpp"
 #include "ComplexCore/Filters/CalculateFeatureSizesFilter.hpp"
@@ -65,6 +66,7 @@ namespace complex
   {
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID}, // dream3d-class-name
     {complex::Uuid::FromString("ce1ee404-0336-536c-8aad-f9641c9458be").value(), complex::FilterTraits<AlignGeometries>::uuid}, // AlignGeometries
+    {complex::Uuid::FromString("7ff0ebb3-7b0d-5ff7-b9d8-5147031aca10").value(), complex::FilterTraits<ArrayCalculatorFilter>::uuid}, // ArrayCalculatorFilter
     {complex::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), complex::FilterTraits<ApplyTransformationToGeometryFilter>::uuid}, // ApplyTransformationToGeometry
     {complex::Uuid::FromString("fab669ad-66c6-5a39-bdb7-fc47b94311ed").value(), complex::FilterTraits<ApproximatePointCloudHull>::uuid}, // ApproximatePointCloudHull
     {complex::Uuid::FromString("656f144c-a120-5c3b-bee5-06deab438588").value(), complex::FilterTraits<CalculateFeatureSizesFilter>::uuid}, // FindSizes
