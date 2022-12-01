@@ -95,26 +95,23 @@ function(download_test_data)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  message(STATUS "Downloading ${ARGS_ARCHIVE_NAME}")
-  file(DOWNLOAD https://github.com/BlueQuartzSoftware/complex/releases/download/Data_Archive/${ARGS_ARCHIVE_NAME}
-                "${ARGS_DREAM3D_DATA_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}"
-                EXPECTED_HASH SHA512=${ARGS_SHA512}
-                SHOW_PROGRESS
-                STATUS download_result
-                )
-
-  list(GET download_result 1 download_status)
-  if(${download_status} STREQUAL "No error")
-    get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME)
-    message(STATUS "  Decompressing ${ARGS_DREAM3D_DATA_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvzf "${ARGS_DREAM3D_DATA_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}"
-      WORKING_DIRECTORY "${ARGS_DREAM3D_DATA_DIR}/TestFiles"
-      RESULT_VARIABLE result
-      OUTPUT_VARIABLE output
-      ERROR_VARIABLE error
-    )
-  endif()
-
+  get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME)
+  #----------------------------------------------------------------------------
+  # Create the custom CMake File for this archive file
+  #----------------------------------------------------------------------------
+  set(fetch_data_file "${complex_BINARY_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}.cmake")
+  configure_file(${complex_SOURCE_DIR}/cmake/FetchDataFile.cmake.in
+                ${fetch_data_file}
+                @ONLY
+  )
+  #----------------------------------------------------------------------------
+  # Add the custom target to run mkdocs
+  #----------------------------------------------------------------------------
+  add_custom_target(Fetch_${archive_base_name} ALL
+    COMMAND "${CMAKE_COMMAND}" -P "${fetch_data_file}"
+    COMMENT "Fetching Test Data File ${ARGS_ARCHIVE_NAME}"
+  )
+  set_target_properties(Fetch_${archive_base_name} PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
 
 endfunction()
 

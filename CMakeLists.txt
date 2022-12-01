@@ -566,6 +566,16 @@ if("${DREAM3D_DATA_DIR}" STREQUAL "")
   endif()
 endif()
 
+# -----------------------------------------------------------------------------
+# Here we are going to setup to download and decompress the test files. In order
+# to add your own test files you will need to tar.gz the test file, compute the
+# SHA 512 Hash of the file and then upload the file to 
+# https://github.com/BlueQuartzSoftware/complex/releases/tag/Data_Archive.
+#
+# Go to the web site above, "edit" the release, add the filename and SHA 512 to
+# the table and then upload your compressed file.
+# Save the release so that the repo is updated
+# -----------------------------------------------------------------------------
 if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_BUILD_TESTS) 
   if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
