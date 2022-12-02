@@ -3,24 +3,9 @@
 #include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  ExtractVertexGeometryInputValues inputValues;
-
-  inputValues.ArrayHandling = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.SelectedDataContainerName = filterArgs.value<DataPath>(k_SelectedDataContainerName_Key);
-  inputValues.IncludedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IncludedDataArrayPaths_Key);
-  inputValues.VertexDataContainerName = filterArgs.value<DataPath>(k_VertexDataContainerName_Key);
-
-  return ExtractVertexGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
 
 namespace complex
 {
@@ -36,12 +21,6 @@ struct COMPLEXCORE_EXPORT ExtractVertexGeometryInputValues
   std::string VertexAttrMatrixName;
   std::string SharedVertexListName;
 };
-
-/**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
- */
 
 class COMPLEXCORE_EXPORT ExtractVertexGeometry
 {

@@ -1,7 +1,6 @@
 #include "ExtractVertexGeometry.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 
