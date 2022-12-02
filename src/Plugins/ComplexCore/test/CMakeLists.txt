@@ -52,6 +52,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindArrayStatisticsTest.cpp
   TriangleNormalFilterTest.cpp
   TriangleDihedralAngleFilterTest.cpp
+  FindNumFeaturesTest.cpp
+  FindVolFractionsTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
