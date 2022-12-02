@@ -121,8 +121,6 @@ Result<> ExtractVertexGeometry::operator()()
 
     for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)
     {
-      m_MessageHandler.m_Callback({IFilter::Message::Type::Info, fmt::format("Copying '{}' data from cell data array to vertex data array.", dataArrayPath.toString())});
-
       const IDataArray& srcIDataArray = m_DataStructure.getDataRefAs<IDataArray>(dataArrayPath);
 
       DataPath destDataArrayPath = vertexAttrMatrixPath.createChildPath(srcIDataArray.getName());

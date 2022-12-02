@@ -102,10 +102,6 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
 
   complex::Result<OutputActions> resultOutputActions;
 
-  if(pArrayHandlingValue < 0)
-  {
-    return {MakeErrorResult<OutputActions>(-2002, fmt::format("{}: 'Array Handling' has not been selected.", humanName()))};
-  }
   ArrayHandlingType arrayHandlingType = static_cast<ArrayHandlingType>(pArrayHandlingValue);
 
   const IGridGeometry& geometry = dataStructure.getDataRefAs<IGridGeometry>({pInputGeometryPathValue});
