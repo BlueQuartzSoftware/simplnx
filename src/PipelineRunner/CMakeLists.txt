@@ -15,6 +15,13 @@ set(PipelineRunner_SRCS
 
 add_executable(PipelineRunner)
 
+
+set_target_properties(PipelineRunner
+  PROPERTIES
+    DEBUG_POSTFIX "_d"
+)
+
+
 target_sources(PipelineRunner
   PRIVATE
     ${PipelineRunner_HDRS}

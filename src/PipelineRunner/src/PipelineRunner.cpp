@@ -20,7 +20,7 @@ using namespace complex;
 #undef TEST_PIPELINE
 #endif
 
-void loadApp(complex::Application& app)
+void LoadApp(complex::Application& app)
 {
 #if(__APPLE__)
   {
@@ -70,14 +70,14 @@ Pipeline createTestPipeline()
 }
 #endif
 
-bool shouldPreflight(int argc, char* argv[])
+bool ShouldPreflight(int argc, char* argv[])
 {
   if(argc < 3)
   {
     return false;
   }
 
-  std::string arg(argv[2]);
+  const std::string arg(argv[2]);
   if(arg == "-p" || arg == "--preflight")
   {
     return true;
@@ -85,71 +85,86 @@ bool shouldPreflight(int argc, char* argv[])
   return false;
 }
 
-int preflightPipeline(Pipeline& pipeline)
+int PreflightPipeline(Pipeline& pipeline)
 {
-  PipelineRunner::PipelineObserver obs(&pipeline);
+  const PipelineRunner::PipelineObserver obs(&pipeline);
+  std::cout << "\n-------------------------" << std::endl;
+
   if(!pipeline.preflight())
   {
-    std::cout << "\n-------------------------" << std::endl;
     std::cout << "Error preflighting pipeline" << std::endl;
     return -2;
   }
 
-  std::cout << "\n---------------------------" << std::endl;
   std::cout << "Finished preflighting pipeline" << std::endl;
   return 0;
 }
 
-int preflightPipelinePath(const fs::path& pipelinePath)
+bool PrintPipelineLoadMessages(const fs::path& pipelinePath, const Result<Pipeline>& result)
 {
-  auto result = Pipeline::FromFile(pipelinePath);
   if(result.invalid())
   {
     std::cout << fmt::format("Could not load pipeline at path: '{}'", pipelinePath.string()) << std::endl;
+    for(const auto& warning : result.warnings())
+    {
+      std::cout << fmt::format("Warning {}: {}", warning.code, warning.message) << std::endl;
+    }
+    for(const auto& error : result.errors())
+    {
+      std::cout << fmt::format("Error {}: {}", error.code, error.message) << std::endl;
+    }
+    return false;
+  }
+  return true;
+}
+
+int PreflightPipelinePath(const fs::path& pipelinePath)
+{
+  auto result = Pipeline::FromFile(pipelinePath);
+  if(!PrintPipelineLoadMessages(pipelinePath, result))
+  {
     return -1;
   }
 
   std::cout << fmt::format("Preflighting pipeline at path: '{}'\n", pipelinePath.string()) << std::endl;
 
   Pipeline pipeline = result.value();
-  return preflightPipeline(pipeline);
+  return PreflightPipeline(pipeline);
 }
 
-int executePipeline(Pipeline& pipeline)
+int ExecutePipeline(Pipeline& pipeline)
 {
-  PipelineRunner::PipelineObserver obs(&pipeline);
+  const PipelineRunner::PipelineObserver obs(&pipeline);
+  std::cout << "\n-------------------------" << std::endl;
+
   if(!pipeline.execute())
   {
-    std::cout << "\n-------------------------" << std::endl;
     std::cout << "Error executing pipeline" << std::endl;
     return -2;
   }
-
-  std::cout << "\n---------------------------" << std::endl;
   std::cout << "Finished executing pipeline" << std::endl;
   return 0;
 }
 
-int executePipelinePath(const fs::path& pipelinePath)
+int ExecutePipelinePath(const fs::path& pipelinePath)
 {
   auto result = Pipeline::FromFile(pipelinePath);
-  if(result.invalid())
+  if(!PrintPipelineLoadMessages(pipelinePath, result))
   {
-    std::cout << fmt::format("Could not load pipeline at path: '{}'", pipelinePath.string()) << std::endl;
     return -1;
   }
 
   std::cout << fmt::format("Executing pipeline at path: '{}'\n", pipelinePath.string()) << std::endl;
 
   Pipeline pipeline = result.value();
-  return executePipeline(pipeline);
+  return ExecutePipeline(pipeline);
 }
 
 int main(int argc, char* argv[])
 {
   std::cout << "PipelineRunner Version 7" << std::endl;
   complex::Application app;
-  loadApp(app);
+  LoadApp(app);
 
 #ifdef TEST_PIPELINE
   Pipeline pipeline = createTestPipeline();
@@ -161,19 +176,16 @@ int main(int argc, char* argv[])
     return 0;
   }
 
-  fs::path targetPath = argv[1];
+  const fs::path targetPath = argv[1];
   if(!fs::exists(targetPath))
   {
     fmt::print("Input file does not exist.\n  '{}'\n", targetPath.string());
     return -1;
   }
 
-  if(shouldPreflight(argc, argv))
+  if(ShouldPreflight(argc, argv))
   {
-    return preflightPipelinePath(targetPath);
+    return PreflightPipelinePath(targetPath);
   }
-  else
-  {
-    return executePipelinePath(targetPath);
-  }
+  return ExecutePipelinePath(targetPath);
 }
