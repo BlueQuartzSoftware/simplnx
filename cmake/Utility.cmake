@@ -87,30 +87,31 @@ endfunction()
 #
 #------------------------------------------------------------------------------
 include(FetchContent)
+include(ExternalProject)
 
 function(download_test_data)
   set(optionsArgs)
-  set(oneValueArgs DREAM3D_DATA_DIR VERSION ARCHIVE_NAME)
+  set(oneValueArgs DREAM3D_DATA_DIR ARCHIVE_NAME SHA512)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  message(STATUS "DREAM3D_DATA_DIR: ${ARGS_DREAM3D_DATA_DIR}")
-  # If the data directory does not exist then bail out now.
-  if(NOT EXISTS "${ARGS_DREAM3D_DATA_DIR}")
-    message(STATUS "DREAM3D_Data directory does not exist. *NOT* downloading test files.")
-    return()
-  endif()
-
-  set(archive_file_name "${ARGS_ARCHIVE_NAME}_${ARGS_VERSION}.tar.gz")
-  message(STATUS "DREAM3D_Data: Found at '${ARGS_DREAM3D_DATA_DIR}'")
-  message(STATUS "Downloading DREAM3D_Data/${archive_file_name}")
-  FetchContent_Declare(download_DREAM3D_Data
-    URL https://github.com/dream3d/DREAM3D_Data/releases/download/v${ARGS_VERSION}/${archive_file_name}
-    URL_HASH SHA512=7fd506ed225c610c4cb154b95ded9b289f10246bf2643689bfada54f81cf91c9a65a62d6f794bab2cb4ff7319137ecf4d8f08088502d32b5619726937e759372
-    SOURCE_DIR "${ARGS_DREAM3D_DATA_DIR}/TestFiles"
-    DOWNLOAD_DIR "${ARGS_DREAM3D_DATA_DIR}"
+  get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME)
+  #----------------------------------------------------------------------------
+  # Create the custom CMake File for this archive file
+  #----------------------------------------------------------------------------
+  set(fetch_data_file "${complex_BINARY_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}.cmake")
+  configure_file(${complex_SOURCE_DIR}/cmake/FetchDataFile.cmake.in
+                ${fetch_data_file}
+                @ONLY
   )
-  FetchContent_MakeAvailable(download_DREAM3D_Data)
+  #----------------------------------------------------------------------------
+  # Add the custom target to run mkdocs
+  #----------------------------------------------------------------------------
+  add_custom_target(Fetch_${archive_base_name} ALL
+    COMMAND "${CMAKE_COMMAND}" -P "${fetch_data_file}"
+    COMMENT "Fetching Test Data File ${ARGS_ARCHIVE_NAME}"
+  )
+  set_target_properties(Fetch_${archive_base_name} PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
 
 endfunction()
 

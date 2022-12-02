@@ -1,0 +1,27 @@
+cmake_policy(SET CMP0054 NEW)
+# message(STATUS "Downloading @ARGS_ARCHIVE_NAME@")
+file(DOWNLOAD https://github.com/BlueQuartzSoftware/complex/releases/download/Data_Archive/@ARGS_ARCHIVE_NAME@
+              "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@"
+              EXPECTED_HASH SHA512=@ARGS_SHA512@
+              SHOW_PROGRESS
+              STATUS result
+              )
+# message(STATUS "result: '${result}'")
+list(GET result 1 status)
+string(REPLACE "\"" "" status "${status}")
+# message(STATUS "status: '${status}'")
+
+# --------------------------------------------------------------------------------------------------
+# Oddly, if the status comes back as "No Error", that actually means that something got downloaded
+# If the file was downloaded then we should also decompress it.
+# --------------------------------------------------------------------------------------------------
+if("${status}" STREQUAL "No error")
+  get_filename_component(archive_base_name "@ARGS_ARCHIVE_NAME@" NAME)
+  message(STATUS "  Decompressing @ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvzf "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@"
+    WORKING_DIRECTORY "@ARGS_DREAM3D_DATA_DIR@/TestFiles"
+    RESULT_VARIABLE result
+    OUTPUT_VARIABLE output
+    ERROR_VARIABLE error
+  )
+endif()
