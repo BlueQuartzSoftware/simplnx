@@ -9,7 +9,9 @@ namespace complex
 {
 /**
  * @class ExtractVertexGeometryFilter
- * @brief This filter will ....
+ * @brief This filter will extract all the voxel centers of an Image Geometry or a RectilinearGrid
+ * geometry into a new VertexGeometry. The user is given the option to copy or move cell arrays
+ * over to the newly created VertexGeometry.
  */
 class COMPLEXCORE_EXPORT ExtractVertexGeometryFilter : public IFilter
 {
