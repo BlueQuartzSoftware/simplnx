@@ -2,6 +2,7 @@
 
 #include "complex/Common/Result.hpp"
 #include "complex/Common/StringLiteral.hpp"
+#include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStore.hpp"
@@ -47,9 +48,10 @@ namespace complex
 {
 namespace Constants
 {
-
 inline constexpr StringLiteral k_DataContainer("DataContainer");
 inline constexpr StringLiteral k_CellData("CellData");
+inline constexpr StringLiteral k_GrainData("GrainData");
+inline constexpr StringLiteral k_FeatureData("FeatureData");
 inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
 

@@ -58,6 +58,8 @@ set(FilterList
   StlFileReaderFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
+  FindNumFeaturesFilter
+  FindVolFractionsFilter
 )
 
 set(ActionList
