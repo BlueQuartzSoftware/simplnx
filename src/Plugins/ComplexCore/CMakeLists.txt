@@ -10,6 +10,7 @@ set(FilterList
   AlignGeometries
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHull
+  ArrayCalculatorFilter
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
   ChangeAngleRepresentation
@@ -67,6 +68,7 @@ set(ActionList
 
 set(AlgorithmList
   ApplyTransformationToGeometry
+  ArrayCalculator
   StlFileReader
   LaplacianSmoothing
   QuickSurfaceMesh
@@ -109,10 +111,71 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 # can use the target_sources(...) cmake call
 
 set(PLUGIN_EXTRA_SOURCES
-  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CSVDataParser.hpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorItem.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorItem.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ICalculatorArray.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ICalculatorArray.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorArray.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/UnaryOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/UnaryOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/BinaryOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/BinaryOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ABSOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ABSOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PowOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PowOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ExpOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ExpOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/SinOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/SinOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CosOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CosOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/TanOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/TanOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ASinOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ASinOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ACosOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ACosOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ATanOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/ATanOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/SqrtOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/SqrtOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/RootOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/RootOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/LogOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/LogOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/Log10Operator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/Log10Operator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/LnOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/LnOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AdditionOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AdditionOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/SubtractionOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/SubtractionOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NegativeOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NegativeOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/MultiplicationOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/MultiplicationOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/DivisionOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/DivisionOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/LeftParenthesisItem.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/LeftParenthesisItem.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/RightParenthesisItem.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/RightParenthesisItem.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorSeparator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CalculatorSeparator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CommaSeparator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CommaSeparator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FloorOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/FloorOperator.cpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CeilOperator.hpp"
+	"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CeilOperator.cpp"
 )
 
 target_sources(${PLUGIN_NAME}
@@ -132,3 +195,22 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 #     PUBLIC
 #     additional include directories here
 # )
+
+# -----------------------------------------------------------------------
+# Install example pipelines
+# -----------------------------------------------------------------------
+if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
+  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
+  add_custom_target(${PLUGIN_NAME}PipelineFolderCopy ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
+    ${PIPELINE_DEST_DIR}
+    COMMENT "Copying Pipeline Folder into Binary Directory")
+  set_target_properties(${PLUGIN_NAME}PipelineFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
+
+  set(INSTALL_DESTINATION "Pipelines/${PLUGIN_NAME}")
+  install(DIRECTORY
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
+    DESTINATION "${INSTALL_DESTINATION}"
+    COMPONENT Applications
+  )
+endif()
