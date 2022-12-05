@@ -13,7 +13,7 @@ class COMPLEX_EXPORT CreateStringArrayAction : public IDataCreationAction
 public:
   CreateStringArrayAction() = delete;
 
-  CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path);
+  CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path, const std::string& initializeValue = "");
 
   ~CreateStringArrayAction() noexcept override;
 
@@ -50,5 +50,6 @@ public:
 
 private:
   std::vector<usize> m_Dims;
+  std::string m_InitializeValue;
 };
 } // namespace complex

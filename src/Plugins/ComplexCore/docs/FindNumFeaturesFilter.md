@@ -7,7 +7,7 @@ Statistics (Morphological)
 
 ## Description ##
 
-This **Filter** determines the number of **Features** in each **Ensemble**.
+This **Filter** determines the number of **Features** in each **Ensemble** by summing the total number of rows in the feature attribute matrix belonging to each phase.
 
 ## Parameters ##
 

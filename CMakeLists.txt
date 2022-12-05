@@ -134,6 +134,7 @@ set(CoreParameters
   DataObjectNameParameter
   DataPathSelectionParameter
   DynamicTableParameter
+  EnsembleInfoParameter
   FileSystemPathParameter
   GeneratedFileListParameter
   GeometrySelectionParameter

@@ -11,9 +11,10 @@ using namespace complex;
 
 namespace complex
 {
-CreateStringArrayAction::CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path)
+CreateStringArrayAction::CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path, const std::string& initializeValue)
 : IDataCreationAction(path)
 , m_Dims(tDims)
+, m_InitializeValue(initializeValue)
 {
 }
 
@@ -46,11 +47,24 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
 
   usize totalTuples = std::accumulate(m_Dims.cbegin(), m_Dims.cend(), static_cast<usize>(1), std::multiplies<>());
 
-  std::vector<std::string> values(totalTuples);
+  std::vector<std::string> values(totalTuples, m_InitializeValue);
   StringArray* array = StringArray::CreateWithValues(dataStructure, name, values, dataObjectId);
   if(array == nullptr)
   {
-    return MakeErrorResult(-382, fmt::format("CreateStringArrayAction: Unable to create StringArray at '{}'", path().toString()));
+    if(parentObject != nullptr && parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    {
+      auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
+      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
+      std::string arrayShape = fmt::format("String Array Tuple Shape: {}", fmt::join(m_Dims, " x "));
+      return MakeErrorResult(
+          -382, fmt::format("CreateStringArrayAction: Unable to create String Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created String Array must have the same tuple "
+                            "dimensions or the same total number of tuples.\n{}\n{}",
+                            name, parentPath.toString(), amShape, arrayShape));
+    }
+    else
+    {
+      return MakeErrorResult(-382, fmt::format("CreateStringArrayAction: Unable to create StringArray at '{}'", path().toString()));
+    }
   }
   return {};
 }
