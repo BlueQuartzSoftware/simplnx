@@ -8,23 +8,22 @@
 namespace complex
 {
 /**
- * @class CreateEnsembleInfo
+ * @class CreateEnsembleInfoFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfo : public IFilter
+class ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfoFilter : public IFilter
 {
 public:
-  CreateEnsembleInfo() = default;
-  ~CreateEnsembleInfo() noexcept override = default;
+  CreateEnsembleInfoFilter() = default;
+  ~CreateEnsembleInfoFilter() noexcept override = default;
 
-  CreateEnsembleInfo(const CreateEnsembleInfo&) = delete;
-  CreateEnsembleInfo(CreateEnsembleInfo&&) noexcept = delete;
+  CreateEnsembleInfoFilter(const CreateEnsembleInfoFilter&) = delete;
+  CreateEnsembleInfoFilter(CreateEnsembleInfoFilter&&) noexcept = delete;
 
-  CreateEnsembleInfo& operator=(const CreateEnsembleInfo&) = delete;
-  CreateEnsembleInfo& operator=(CreateEnsembleInfo&&) noexcept = delete;
+  CreateEnsembleInfoFilter& operator=(const CreateEnsembleInfoFilter&) = delete;
+  CreateEnsembleInfoFilter& operator=(CreateEnsembleInfoFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
   static inline constexpr StringLiteral k_Ensemble_Key = "ensemble";
   static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
   static inline constexpr StringLiteral k_CrystalStructuresArrayName_Key = "crystal_structures_array_name";
@@ -97,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CreateEnsembleInfo, "8ce3d70c-49fe-4812-a1eb-7ce4c962a59d");
+COMPLEX_DEF_FILTER_TRAITS(complex, CreateEnsembleInfoFilter, "8ce3d70c-49fe-4812-a1eb-7ce4c962a59d");

@@ -6,6 +6,7 @@
 #include "OrientationAnalysis/Filters/AlignSectionsMisorientationFilter.hpp"
 #include "OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.hpp"
 #include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
+#include "OrientationAnalysis/Filters/CreateEnsembleInfoFilter.hpp"
 #include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
 #include "OrientationAnalysis/Filters/FindAvgOrientationsFilter.hpp"
 #include "OrientationAnalysis/Filters/FindFeatureReferenceMisorientationsFilter.hpp"
@@ -22,7 +23,6 @@
 #include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
 // #include "OrientationAnalysis/Filters/ConvertHexGridToSquareGrid.hpp"
 // #include "OrientationAnalysis/Filters/ConvertQuaternion.hpp"
-// #include "OrientationAnalysis/Filters/CreateEnsembleInfo.hpp"
 // #include "OrientationAnalysis/Filters/CreateLambertSphere.hpp"
 // #include "OrientationAnalysis/Filters/EbsdToH5Ebsd.hpp"
 // #include "OrientationAnalysis/Filters/EMsoftSO3Sampler.hpp"
@@ -63,6 +63,7 @@ namespace complex
     {complex::Uuid::FromString("4fb2b9de-3124-534b-b914-dbbbdbc14604").value(), complex::FilterTraits<AlignSectionsMisorientationFilter>::uuid}, // AlignSectionsMisorientation
     {complex::Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value(), complex::FilterTraits<BadDataNeighborOrientationCheckFilter>::uuid}, // BadDataNeighborOrientationCheck
     {complex::Uuid::FromString("e5629880-98c4-5656-82b8-c9fe2b9744de").value(), complex::FilterTraits<ConvertOrientations>::uuid}, // ConvertOrientations
+    {complex::Uuid::FromString("2a0bfcd3-2517-5117-b164-964dfac8fe22").value(), complex::FilterTraits<CreateEnsembleInfoFilter>::uuid}, // CreateEnsembleInfoFilter
     {complex::Uuid::FromString("7861c691-b821-537b-bd25-dc195578e0ea").value(), complex::FilterTraits<EBSDSegmentFeaturesFilter>::uuid}, // EBSDSegmentFeatures
     {complex::Uuid::FromString("bf7036d8-25bd-540e-b6de-3a5ab0e42c5f").value(), complex::FilterTraits<FindAvgOrientationsFilter>::uuid}, // FindAvgOrientations
     {complex::Uuid::FromString("428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c").value(), complex::FilterTraits<FindFeatureReferenceMisorientationsFilter>::uuid}, // FindFeatureReferenceMisorientations

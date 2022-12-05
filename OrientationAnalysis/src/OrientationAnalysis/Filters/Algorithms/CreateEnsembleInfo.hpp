@@ -5,32 +5,29 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  CreateEnsembleInfoInputValues inputValues;
-
-  inputValues.DataContainerName = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  inputValues.Ensemble = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_Ensemble_Key);
-  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixName_Key);
-  inputValues.CrystalStructuresArrayName = filterArgs.value<DataPath>(k_CrystalStructuresArrayName_Key);
-  inputValues.PhaseTypesArrayName = filterArgs.value<DataPath>(k_PhaseTypesArrayName_Key);
-  inputValues.PhaseNamesArrayName = filterArgs.value<DataPath>(k_PhaseNamesArrayName_Key);
-
-  return CreateEnsembleInfo(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/EnsembleInfoParameter.hpp"
 
 namespace complex
 {
+// The lists here are IN ORDER of the enumerations from the EBSDLib. DO NOT CHANGE THE ORDER.
+enum class PhaseType : uint32
+{
+  Primary = 0,        //!<
+  Precipitate = 1,    //!<
+  Transformation = 2, //!<
+  Matrix = 3,         //!<
+  Boundary = 4,       //!<
+  Unknown = 999,      //!<
+  Any = 4294967295U
+};
 
 struct ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfoInputValues
 {
-  DataPath DataContainerName;
-  <<<NOT_IMPLEMENTED>>> Ensemble;
-  /*[x]*/ DataPath CellEnsembleAttributeMatrixName;
-  DataPath CrystalStructuresArrayName;
-  DataPath PhaseTypesArrayName;
-  DataPath PhaseNamesArrayName;
+  EnsembleInfoParameter::ValueType Ensemble;
+  DataPath CellEnsembleAttributeMatrixName;
+  std::string CrystalStructuresArrayName;
+  std::string PhaseTypesArrayName;
+  std::string PhaseNamesArrayName;
 };
 
 /**

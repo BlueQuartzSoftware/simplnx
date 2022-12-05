@@ -30,6 +30,7 @@ set(FilterList
   AlignSectionsMisorientationFilter
   GenerateFZQuaternions
   ConvertOrientations
+  CreateEnsembleInfoFilter
   ReadH5EbsdFilter
   RotateEulerRefFrameFilter
   EBSDSegmentFeaturesFilter
@@ -169,6 +170,7 @@ set(filter_algorithms
   ReadCtfData
   EbsdToH5Ebsd
   FindTriangleGeomShapes
+  CreateEnsembleInfo
 )
 
 
