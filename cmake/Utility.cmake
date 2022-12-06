@@ -133,26 +133,28 @@ function(create_data_copy_rules)
 
 
   set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
-  add_custom_target(DataFolderCopy ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARGS_DREAM3D_DATA_DIR}/Data ${DATA_DEST_DIR}
-    COMMENT "Copying Data Folder into Binary Directory")
-  set_target_properties(DataFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
+  if(EXISTS "${ARGS_DREAM3D_DATA_DIR}/Data")
+    add_custom_target(DataFolderCopy ALL
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARGS_DREAM3D_DATA_DIR}/Data ${DATA_DEST_DIR}
+      COMMENT "Copying Data Folder into Binary Directory")
+    set_target_properties(DataFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
 
-  set(DREAM3D_DATA_DIRECTORIES
-    ${ARGS_DREAM3D_DATA_DIR}/Data/Image
-    ${ARGS_DREAM3D_DATA_DIR}/Data/Models
-  )
+    set(DREAM3D_DATA_DIRECTORIES
+      ${ARGS_DREAM3D_DATA_DIR}/Data/Image
+      ${ARGS_DREAM3D_DATA_DIR}/Data/Models
+    )
 
-  set(INSTALL_DESTINATION "Data")
+    set(COMPLEX_DATA_INSTALL_DIR "Data")
 
-  # NOTE: If we are creating an Anaconda install the install directory WILL be different
-  foreach(data_dir ${DREAM3D_DATA_DIRECTORIES})
-    if(EXISTS ${data_dir})
-      install(DIRECTORY
-        ${data_dir}
-        DESTINATION ${INSTALL_DESTINATION}
-        COMPONENT Applications
-      )
-    endif()
-  endforeach()
+    # NOTE: If we are creating an Anaconda install the install directory WILL be different
+    foreach(data_dir ${DREAM3D_DATA_DIRECTORIES})
+      if(EXISTS ${data_dir})
+        install(DIRECTORY
+          ${data_dir}
+          DESTINATION ${COMPLEX_DATA_INSTALL_DIR}
+          COMPONENT Applications
+        )
+      endif()
+    endforeach()
+  endif()
 endfunction()
