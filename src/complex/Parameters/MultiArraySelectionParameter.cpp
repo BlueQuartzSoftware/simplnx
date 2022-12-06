@@ -80,7 +80,7 @@ Result<std::any> MultiArraySelectionParameter::fromJson(const nlohmann::json& js
 
 IParameter::UniquePointer MultiArraySelectionParameter::clone() const
 {
-  return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
+  return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowedDataTypes, m_RequiredComponentShapes);
 }
 
 std::any MultiArraySelectionParameter::defaultValue() const
