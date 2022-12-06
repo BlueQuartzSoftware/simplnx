@@ -13,12 +13,13 @@ class COMPLEX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = std::vector<DataPath>;
-  using AllowedTypes = std::set<DataType>;
+  using AllowedTypes = std::set<IArray::ArrayType>;
+  using AllowedDataTypes = std::set<DataType>;
   using AllowedComponentShapes = std::vector<IArray::ShapeType>;
 
   MultiArraySelectionParameter() = delete;
   MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                               AllowedComponentShapes requiredComps = {});
+                               const AllowedDataTypes& allowedDataTypes, AllowedComponentShapes requiredComps = {});
   ~MultiArraySelectionParameter() override = default;
 
   MultiArraySelectionParameter(const MultiArraySelectionParameter&) = delete;
@@ -72,10 +73,16 @@ public:
   ValueType defaultPath() const;
 
   /**
-   * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
+   * @brief Returns the set of allowed IArray types. An empty set means all are allowed.
    * @return
    */
   AllowedTypes allowedTypes() const;
+
+  /**
+   * @brief Returns the set of allowed DataTypes. An empty set means all are allowed.
+   * @return
+   */
+  AllowedDataTypes allowedDataTypes() const;
 
   /**
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
@@ -111,6 +118,7 @@ public:
 private:
   ValueType m_DefaultValue = {};
   AllowedTypes m_AllowedTypes = {};
+  AllowedDataTypes m_AllowedDataTypes = {};
   AllowedComponentShapes m_RequiredComponentShapes = {};
 };
 } // namespace complex

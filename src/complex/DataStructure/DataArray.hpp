@@ -181,6 +181,15 @@ public:
   }
 
   /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  ArrayType getArrayType() const
+  {
+    return ArrayType::DataArray;
+  }
+
+  /**
    * @brief Returns a shallow copy of the DataArray without copying data. THE CALLING CODE
    * MUST DISPOSE OF THE RETURNED OBJECT.
    * @return DataObject*

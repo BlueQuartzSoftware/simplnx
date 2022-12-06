@@ -5,16 +5,18 @@
 #include <nlohmann/json.hpp>
 
 #include "complex/Common/Any.hpp"
+#include "complex/DataStructure/IArray.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
 {
 MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                           const AllowedTypes& allowedTypes, AllowedComponentShapes requiredComps)
+                                                           const AllowedTypes& allowedTypes, const AllowedDataTypes& allowedDataTypes, AllowedComponentShapes requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
 , m_DefaultValue(defaultValue)
 , m_AllowedTypes(allowedTypes)
+, m_AllowedDataTypes(allowedDataTypes)
 , m_RequiredComponentShapes(requiredComps)
 {
 }
@@ -96,6 +98,11 @@ MultiArraySelectionParameter::AllowedTypes MultiArraySelectionParameter::allowed
   return m_AllowedTypes;
 }
 
+MultiArraySelectionParameter::AllowedDataTypes MultiArraySelectionParameter::allowedDataTypes() const
+{
+  return m_AllowedDataTypes;
+}
+
 MultiArraySelectionParameter::AllowedComponentShapes MultiArraySelectionParameter::requiredComponentShapes() const
 {
   return m_RequiredComponentShapes;
@@ -128,10 +135,16 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(path);
+    const auto* dataArray = dataStructure.getDataAs<IArray>(path);
     if(dataArray == nullptr)
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not a DataArray", prefix, path.toString())});
+      errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not an IArray type", prefix, path.toString())});
+      continue;
+    }
+    if(m_AllowedTypes.count(dataArray->getArrayType()) == 0)
+    {
+      errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(),
+                                                                                            dataArray->getTypeName(), IArray::StringListFromArrayType(m_AllowedTypes))});
       continue;
     }
     if(!m_RequiredComponentShapes.empty())
