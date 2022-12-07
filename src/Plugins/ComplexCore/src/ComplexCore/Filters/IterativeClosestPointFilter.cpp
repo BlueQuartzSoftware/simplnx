@@ -97,7 +97,8 @@ Parameters IterativeClosestPointFilter::parameters() const
   params.insert(std::make_unique<DataPathSelectionParameter>(k_TargetVertexPath_Key, "Target Vertex Geometry", "Number of components", DataPath()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_TransformArrayPath_Key, "Output Transform Array", "Number of tuples", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_TransformArrayPath_Key, "Output Transform Array", "Number of tuples", DataPath(),
+                                                         ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
   return params;
 }
 

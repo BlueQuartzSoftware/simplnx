@@ -357,7 +357,8 @@ Parameters MultiThresholdObjects::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(
       std::make_unique<ArrayThresholdsParameter>(k_ArrayThresholds_Key, "Data Thresholds", "DataArray thresholds to mask", ArrayThresholdSet{}, ArrayThresholdsParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedDataPath_Key, "Mask Array", "DataPath to the created Mask Array", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedDataPath_Key, "Mask Array", "DataPath to the created Mask Array", DataPath{},
+                                                         ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
   return params;
 }
 

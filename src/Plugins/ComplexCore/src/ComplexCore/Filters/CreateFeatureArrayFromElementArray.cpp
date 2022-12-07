@@ -110,7 +110,8 @@ Parameters CreateFeatureArrayFromElementArray::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedArrayName_Key, "Copied Attribute Array", "The path to the copied AttributeArray", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedArrayName_Key, "Copied Attribute Array", "The path to the copied AttributeArray", DataPath{},
+                                                         ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   return params;
 }

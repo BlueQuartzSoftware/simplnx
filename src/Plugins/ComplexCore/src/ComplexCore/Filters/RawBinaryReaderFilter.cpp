@@ -77,7 +77,7 @@ Parameters RawBinaryReaderFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_Endian_Key, "Endian", "The endianness of the data", 0, ChoicesParameter::Choices{"Little", "Big"}));
   params.insert(std::make_unique<UInt64Parameter>(k_SkipHeaderBytes_Key, "Skip Header Bytes", "Number of bytes to skip before reading data", 0));
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedAttributeArrayPath_Key, "Output Attribute Array", "The complete path to the created Attribute Array",
-                                                         DataPath(std::vector<std::string>{"Imported Array"})));
+                                                         DataPath(std::vector<std::string>{"Imported Array"}), ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   return params;
 }

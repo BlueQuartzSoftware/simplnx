@@ -54,7 +54,8 @@ Parameters FindVolFractionsFilter::parameters() const
                                                           DataPath({"DataContainer", "CellData", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Objects: Ensemble Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_VolFractionsArrayPath_Key, "Volume Fractions", "Fraction of volume that belongs to each Ensemble", DataPath({"Volume Fractions"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_VolFractionsArrayPath_Key, "Volume Fractions", "Fraction of volume that belongs to each Ensemble", DataPath({"Volume Fractions"}),
+                                                         ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   return params;
 }

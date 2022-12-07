@@ -236,7 +236,7 @@ Parameters FindSurfaceFeatures::parameters() const
   params.insertSeparator(Parameters::Separator{"Created  Feature Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeaturesArrayPath_Key, "Surface Features",
                                                          "The path to the created surface features array. Flag of 1 if Feature touches an outer surface or of 0 if it does not",
-                                                         DataPath({"CellFeatureData", "SurfaceFeatures"})));
+                                                         DataPath({"CellFeatureData", "SurfaceFeatures"}), ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   return params;
 }

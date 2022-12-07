@@ -54,7 +54,8 @@ Parameters ArrayCalculatorFilter::parameters() const
   params.insert(std::make_unique<CalculatorParameter>(k_InfixEquation_Key, "Infix Expression", "The mathematical expression used to calculate the output array", CalculatorParameter::ValueType{}));
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Output Scalar Type", "The data type of the calculated array", NumericType::float64));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CalculatedArray_Key, "Output Calculated Array", "The path to the calculated array", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_CalculatedArray_Key, "Output Calculated Array", "The path to the calculated array", DataPath{},
+                                                         ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   return params;
 }

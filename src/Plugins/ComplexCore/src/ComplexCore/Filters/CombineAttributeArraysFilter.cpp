@@ -65,7 +65,7 @@ Parameters CombineAttributeArraysFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_StackedDataArrayName_Key, "Created Data Array", "This is the DataPath to the created output array of the combined attribute arrays.",
-                                                         DataPath({"Combined DataArray"})));
+                                                         DataPath({"Combined DataArray"}), ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   return params;
 }

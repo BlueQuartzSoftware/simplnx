@@ -88,7 +88,8 @@ Parameters ExampleFilter2::parameters() const
 
   // These should show up under the "Created Objects" section in the GUI
   params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroupCreationParameter", "Example data group creation help text", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "Example array creation help text", ArrayCreationParameter::ValueType{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "Example array creation help text", ArrayCreationParameter::ValueType{},
+                                                         ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::AttributeMatrix}));
 
   return params;
 }
