@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "ComplexCore/Filters/CopyDataGroup.hpp"
+#include "ComplexCore/Filters/CopyDataObjectFilter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
@@ -8,17 +8,17 @@
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::CopyDataGroup(Instantiate)", "[ComplexCore][CopyDataGroup]")
+TEST_CASE("ComplexCore::CopyDataObjectFilter(Instantiate)", "[ComplexCore][CopyDataObjectFilter]")
 {
   static const DataPath k_DataPath({Constants::k_SmallIN100, "Phase Data"});
   static const DataPath k_CopyPath({Constants::k_SmallIN100, "Copy Data Bar"});
 
-  CopyDataGroup filter;
+  CopyDataObjectFilter filter;
   DataStructure ds = UnitTest::CreateDataStructure();
   Arguments args;
 
-  args.insert(CopyDataGroup::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
-  args.insert(CopyDataGroup::k_NewPath_Key, std::make_any<DataPath>(k_CopyPath));
+  args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+  args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(k_CopyPath));
 
   auto preflightResult = filter.preflight(ds, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -30,9 +30,9 @@ TEST_CASE("ComplexCore::CopyDataGroup(Instantiate)", "[ComplexCore][CopyDataGrou
   REQUIRE(copiedDataGroup != nullptr);
 }
 
-TEST_CASE("ComplexCore::CopyDataGroup(Invalid Parameters)", "[ComplexCore][CopyDataGroup]")
+TEST_CASE("ComplexCore::CopyDataObjectFilter(Invalid Parameters)", "[ComplexCore][CopyDataObjectFilter]")
 {
-  CopyDataGroup filter;
+  CopyDataObjectFilter filter;
   DataStructure ds = UnitTest::CreateDataStructure();
   Arguments args;
 
@@ -41,8 +41,8 @@ TEST_CASE("ComplexCore::CopyDataGroup(Invalid Parameters)", "[ComplexCore][CopyD
     const DataPath dataPath({Constants::k_SmallIN100, "Bad Data Foo"});
     const DataPath copyPath({Constants::k_SmallIN100, "Copy Data"});
 
-    args.insert(CopyDataGroup::k_DataPath_Key, std::make_any<DataPath>(dataPath));
-    args.insert(CopyDataGroup::k_NewPath_Key, std::make_any<DataPath>(copyPath));
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<DataPath>(dataPath));
+    args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(copyPath));
 
     auto result = filter.preflight(ds, args);
     COMPLEX_RESULT_REQUIRE_INVALID(result.outputActions);
@@ -52,8 +52,8 @@ TEST_CASE("ComplexCore::CopyDataGroup(Invalid Parameters)", "[ComplexCore][CopyD
     const DataPath dataPath({Constants::k_SmallIN100, "Phase Data"});
     const DataPath copyPath({Constants::k_SmallIN100, Constants::k_EbsdScanData});
 
-    args.insert(CopyDataGroup::k_DataPath_Key, std::make_any<DataPath>(dataPath));
-    args.insert(CopyDataGroup::k_NewPath_Key, std::make_any<DataPath>(copyPath));
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<DataPath>(dataPath));
+    args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(copyPath));
 
     auto result = filter.preflight(ds, args);
     COMPLEX_RESULT_REQUIRE_INVALID(result.outputActions);

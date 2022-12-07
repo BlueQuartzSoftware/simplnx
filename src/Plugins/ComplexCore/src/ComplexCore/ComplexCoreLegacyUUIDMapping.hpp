@@ -13,7 +13,7 @@
 #include "ComplexCore/Filters/ChangeAngleRepresentation.hpp"
 #include "ComplexCore/Filters/CombineAttributeArraysFilter.hpp"
 #include "ComplexCore/Filters/ConditionalSetValue.hpp"
-#include "ComplexCore/Filters/CopyDataGroup.hpp"
+#include "ComplexCore/Filters/CopyDataObjectFilter.hpp"
 #include "ComplexCore/Filters/CopyFeatureArrayToElementArray.hpp"
 #include "ComplexCore/Filters/CreateAttributeMatrixFilter.hpp"
 #include "ComplexCore/Filters/CreateDataArray.hpp"

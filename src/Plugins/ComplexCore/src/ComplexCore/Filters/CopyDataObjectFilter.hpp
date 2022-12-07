@@ -8,17 +8,17 @@
 
 namespace complex
 {
-class COMPLEXCORE_EXPORT CopyDataGroup : public IFilter
+class COMPLEXCORE_EXPORT CopyDataObjectFilter : public IFilter
 {
 public:
-  CopyDataGroup() = default;
-  ~CopyDataGroup() noexcept override = default;
+  CopyDataObjectFilter() = default;
+  ~CopyDataObjectFilter() noexcept override = default;
 
-  CopyDataGroup(const CopyDataGroup&) = delete;
-  CopyDataGroup(CopyDataGroup&&) noexcept = delete;
+  CopyDataObjectFilter(const CopyDataObjectFilter&) = delete;
+  CopyDataObjectFilter(CopyDataObjectFilter&&) noexcept = delete;
 
-  CopyDataGroup& operator=(const CopyDataGroup&) = delete;
-  CopyDataGroup& operator=(CopyDataGroup&&) noexcept = delete;
+  CopyDataObjectFilter& operator=(const CopyDataObjectFilter&) = delete;
+  CopyDataObjectFilter& operator=(CopyDataObjectFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_DataPath_Key = "existing_data_path";
@@ -82,4 +82,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, CopyDataGroup, "ac8d51d8-9167-5628-a060-95a8863a76b1");
+COMPLEX_DEF_FILTER_TRAITS(complex, CopyDataObjectFilter, "ac8d51d8-9167-5628-a060-95a8863a76b1");
