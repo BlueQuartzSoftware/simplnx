@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/complex_export.hpp"
@@ -12,9 +13,10 @@ class COMPLEX_EXPORT ArrayCreationParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
+  using AllowedParentGroupType = std::set<BaseGroup::GroupType>;
 
   ArrayCreationParameter() = delete;
-  ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedParentGroupType& allowedParentGroup);
   ~ArrayCreationParameter() override = default;
 
   ArrayCreationParameter(const ArrayCreationParameter&) = delete;
@@ -67,6 +69,12 @@ public:
 
   /**
    * @brief
+   * @return
+   */
+  AllowedParentGroupType allowedParentGroupType() const;
+
+  /**
+   * @brief
    * @param value
    * @return
    */
@@ -89,6 +97,7 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+  AllowedParentGroupType m_AllowedParentGroupType = {};
 };
 } // namespace complex
 
