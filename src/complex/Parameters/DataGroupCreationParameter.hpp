@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
@@ -13,9 +14,10 @@ class COMPLEX_EXPORT DataGroupCreationParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
+  using AllowedParentGroupType = std::set<BaseGroup::GroupType>;
 
   DataGroupCreationParameter() = delete;
-  DataGroupCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DataGroupCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedParentGroupType& allowedParentGroup);
   ~DataGroupCreationParameter() override = default;
 
   DataGroupCreationParameter(const DataGroupCreationParameter&) = delete;
@@ -69,6 +71,12 @@ public:
   ValueType defaultPath() const;
 
   /**
+   * @brief Returns to the user the allowed group types of the parent group
+   * @return std::set<BaseGroup::GroupType>
+   */
+  AllowedParentGroupType allowedParentGroupType() const;
+
+  /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
@@ -95,6 +103,7 @@ public:
 
 private:
   ValueType m_DefaultValue = {};
+  AllowedParentGroupType m_AllowedParentGroupType = {};
 };
 } // namespace complex
 
