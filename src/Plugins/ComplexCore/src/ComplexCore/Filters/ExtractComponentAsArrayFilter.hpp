@@ -8,28 +8,27 @@
 namespace complex
 {
 /**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
+ * @class ExtractComponentAsArrayFilter
+ * @brief This filter will extract components of an array either to a new array or
+ * delete it.
  */
-class COMPLEXCORE_EXPORT ConditionalSetValue : public IFilter
+class COMPLEXCORE_EXPORT ExtractComponentAsArrayFilter : public IFilter
 {
 public:
-  ConditionalSetValue() = default;
-  ~ConditionalSetValue() noexcept override = default;
+  ExtractComponentAsArrayFilter() = default;
+  ~ExtractComponentAsArrayFilter() noexcept override = default;
 
-  ConditionalSetValue(const ConditionalSetValue&) = delete;
-  ConditionalSetValue(ConditionalSetValue&&) noexcept = delete;
+  ExtractComponentAsArrayFilter(const ExtractComponentAsArrayFilter&) = delete;
+  ExtractComponentAsArrayFilter(ExtractComponentAsArrayFilter&&) noexcept = delete;
 
-  ConditionalSetValue& operator=(const ConditionalSetValue&) = delete;
-  ConditionalSetValue& operator=(ConditionalSetValue&&) noexcept = delete;
+  ExtractComponentAsArrayFilter& operator=(const ExtractComponentAsArrayFilter&) = delete;
+  ExtractComponentAsArrayFilter& operator=(ExtractComponentAsArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseConditional_Key = "use_conditional";
-  static inline constexpr StringLiteral k_RemoveValue_Key = "remove_value";
-  static inline constexpr StringLiteral k_ReplaceValue_Key = "replace_value";
-  static inline constexpr StringLiteral k_ConditionalArrayPath_Key = "conditional_array_path";
+  static inline constexpr StringLiteral k_MoveToNewArray_Key = "move_to_new_array";
+  static inline constexpr StringLiteral k_CompNumber_Key = "comp_number";
   static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_NewArrayPath_Key = "new_array_path";
 
   /**
    * @brief Returns the name of the filter.
@@ -78,25 +77,24 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param dataStructure The input DataStructure instance
+   * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param dataStructure The input DataStructure instance
+   * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
-   * @param pipelineNode
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                       const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ConditionalSetValue, "bad9b7bd-1dc9-4f21-a889-6520e7a41881");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExtractComponentAsArrayFilter, "fcc1c1cc-c37a-40fc-97fa-ce40201d34e3");
+/* LEGACY UUID FOR THIS FILTER 79d59b85-01e8-5c4a-a6e1-3fd3e2ceffb4 */
