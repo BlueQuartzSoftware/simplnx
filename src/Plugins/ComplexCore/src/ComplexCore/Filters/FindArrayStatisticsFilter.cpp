@@ -143,8 +143,8 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
                                                           complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed statistics", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed statistics", DataPath{},
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   params.insertSeparator(Parameters::Separator{"Histogram Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindHistogram_Key, "Find Histogram", "Whether to compute the histogram of the input array", false));

@@ -224,7 +224,8 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<DataPathSelectionParameter>(k_ExistingImageGeometry_Key, "Image Geometry", "Path to the target Image Geometry", DataPath()));
 
   params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeometry_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath()));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Image Geometry", "Path to create the Image Geometry", DataPath()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Image Geometry", "Path to create the Image Geometry", DataPath(),
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_ArraysToMap_Key, "Arrays to Map", "Paths to map to the grid geometry", std::vector<DataPath>(), complex::GetAllDataTypes()));
 

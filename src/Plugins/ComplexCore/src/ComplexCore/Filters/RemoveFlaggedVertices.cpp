@@ -88,8 +88,8 @@ Parameters RemoveFlaggedVertices::parameters() const
                                                                complex::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskPath_Key, "Mask Array", "DataPath to the conditional array that will be used to decide which vertices are removed.", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(k_ReducedVertexPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.", DataPath()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_ReducedVertexPath_Key, "Reduced Vertex Geometry", "Created Vertex Geometry DataPath. This will be created during the filter.",
+                                                             DataPath(), DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexDataName));
   return params;
 }

@@ -69,7 +69,8 @@ Parameters CropVertexGeometry::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexGeom_Key, "Vertex Geometry to Crop", "DataPath to target VertexGeom", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_CroppedGeom_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_CroppedGeom_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{},
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));

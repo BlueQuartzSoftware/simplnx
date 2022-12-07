@@ -87,7 +87,8 @@ Parameters ExampleFilter2::parameters() const
   params.linkParameters(k_Param3, k_Param11, std::make_any<ChoicesParameter::ValueType>(2));
 
   // These should show up under the "Created Objects" section in the GUI
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroupCreationParameter", "Example data group creation help text", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_Param8, "DataGroupCreationParameter", "Example data group creation help text", DataPath{},
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "Example array creation help text", ArrayCreationParameter::ValueType{},
                                                          ArrayCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::AttributeMatrix}));
 

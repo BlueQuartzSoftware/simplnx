@@ -123,7 +123,8 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Create Data Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_InternalTriangleGeom_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath(),
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name", INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceDataName));
 

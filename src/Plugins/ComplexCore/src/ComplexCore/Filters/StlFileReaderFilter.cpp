@@ -76,7 +76,7 @@ Parameters StlFileReaderFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Objects"});
 
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryDataPath_Key, "Geometry Name [Data Group]", "The complete path to the DataGroup containing the created Geometry data",
-                                                             DataPath({"[Triangle Geometry]"})));
+                                                             DataPath({"[Triangle Geometry]"}), DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   return params;
 }

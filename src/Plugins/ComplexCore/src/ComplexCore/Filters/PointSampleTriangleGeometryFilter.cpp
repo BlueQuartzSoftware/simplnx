@@ -77,7 +77,8 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
   // params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexParentGroup_Key, "Created Vertex Geometry Parent [Data Group]", "", DataPath{},
   // DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Vertex Geometry Name",
-                                                             "The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points", DataPath({"[Vertex Geometry]"})));
+                                                             "The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points", DataPath({"[Vertex Geometry]"}),
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_VertexDataGroupPath_Key, "Vertex Data", "The complete path to the vertex data arrays for the Vertex Geometry", INodeGeometry0D::k_VertexDataName));
 

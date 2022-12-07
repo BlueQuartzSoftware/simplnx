@@ -71,8 +71,8 @@ Parameters QuickSurfaceMeshFilter::parameters() const
                                                                MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Triangle Geometry"});
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(k_TriangleGeometryName_Key, "Created Triangle Geometry", "The name of the created Triangle Geometry", DataPath({"TriangleDataContainer"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_TriangleGeometryName_Key, "Created Triangle Geometry", "The name of the created Triangle Geometry", DataPath({"TriangleDataContainer"}),
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   params.insertSeparator(Parameters::Separator{"Created Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data [AttributeMatrix]",

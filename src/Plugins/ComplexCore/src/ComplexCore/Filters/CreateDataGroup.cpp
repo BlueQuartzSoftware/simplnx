@@ -38,7 +38,8 @@ Parameters CreateDataGroup::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataObjectPath, "DataObject Path", "The complete path to the DataObject being created", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataObjectPath, "DataObject Path", "The complete path to the DataObject being created", DataPath{},
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
   return params;
 }
 

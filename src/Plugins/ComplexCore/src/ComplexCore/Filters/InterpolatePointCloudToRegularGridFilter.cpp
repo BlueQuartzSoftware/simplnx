@@ -228,8 +228,10 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyArrays_Key, "Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>(), complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_InterpolatedGroup_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", DataPath()));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_KernelDistancesGroup_Key, "Kernel Distances Group", "DataPath to created DataGroup for kernel distances data", DataPath()));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_InterpolatedGroup_Key, "Interpolated Group", "DataPath to created DataGroup for interpolated data", DataPath(),
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_KernelDistancesGroup_Key, "Kernel Distances Group", "DataPath to created DataGroup for kernel distances data", DataPath(),
+                                                             DataGroupCreationParameter::AllowedParentGroupType{BaseGroup::GroupType::BaseGroup}));
 
   params.linkParameters(k_UseMask_Key, k_Mask_Key, std::make_any<bool>(true));
 
