@@ -93,6 +93,11 @@ Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure
   }
 
   DataPath parentPath = value.getParent();
+  if(parentPath.empty())
+  {
+    return {};
+  }
+
   const auto* parentGroup = dataStructure.getDataAs<BaseGroup>(parentPath);
   if(parentGroup == nullptr)
   {

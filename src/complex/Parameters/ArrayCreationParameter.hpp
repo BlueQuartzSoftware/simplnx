@@ -68,8 +68,8 @@ public:
   ValueType defaultPath() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns to the user the allowed group types of the parent group
+   * @return std::set<BaseGroup::GroupType>
    */
   AllowedParentGroupType allowedParentGroupType() const;
 
