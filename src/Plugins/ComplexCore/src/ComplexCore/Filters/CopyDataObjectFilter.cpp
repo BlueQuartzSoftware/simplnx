@@ -64,6 +64,11 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
   auto useNewParent = args.value<bool>(k_UseNewParent_Key);
   auto suffix = args.value<std::string>(k_NewPathSuffix_Key);
 
+  if(!useNewParent && suffix.empty())
+  {
+    return {MakeErrorResult<OutputActions>(-27360, "Copied Object(s) have the same parent as original data but the suffix is empty."), {}};
+  }
+
   OutputActions actions;
 
   for(const auto& dataArrayPath : dataArrayPaths)
