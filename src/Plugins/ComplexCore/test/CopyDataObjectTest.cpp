@@ -4,30 +4,57 @@
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
+#include "complex/Parameters/MultiPathSelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 using namespace complex;
 
 TEST_CASE("ComplexCore::CopyDataObjectFilter(Instantiate)", "[ComplexCore][CopyDataObjectFilter]")
 {
-  static const DataPath k_DataPath({Constants::k_SmallIN100, "Phase Data"});
-  static const DataPath k_CopyPath({Constants::k_SmallIN100, "Copy Data Bar"});
+  static const DataPath k_DataPath1({Constants::k_SmallIN100, "Phase Data"});
+  static const DataPath k_DataPath2({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
 
   CopyDataObjectFilter filter;
   DataStructure ds = UnitTest::CreateDataStructure();
   Arguments args;
 
-  args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
-  args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(k_CopyPath));
+  SECTION("Copy to Same Parent")
+  {
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({k_DataPath1, k_DataPath2}));
+    args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(false));
+    args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
 
-  auto preflightResult = filter.preflight(ds, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto preflightResult = filter.preflight(ds, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto result = filter.execute(ds, args);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result);
+    auto result = filter.execute(ds, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
-  DataGroup* copiedDataGroup = ds.getDataAs<DataGroup>(k_CopyPath);
-  REQUIRE(copiedDataGroup != nullptr);
+    const auto* path1Copy = ds.getDataAs<DataGroup>(DataPath({Constants::k_SmallIN100, "Phase Data_COPY"}));
+    const auto* path2Copy = ds.getDataAs<Int32Array>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases_COPY"}));
+    REQUIRE(path1Copy != nullptr);
+    REQUIRE(path2Copy != nullptr);
+  }
+  SECTION("Copy to New Parent")
+  {
+    static const DataPath k_CopyPath({Constants::k_SmallIN100});
+
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({k_DataPath1, k_DataPath2}));
+    args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(true));
+    args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(k_CopyPath));
+    args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
+
+    auto preflightResult = filter.preflight(ds, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto result = filter.execute(ds, args);
+    COMPLEX_RESULT_REQUIRE_VALID(result.result);
+
+    DataGroup* copiedDataGroup = ds.getDataAs<DataGroup>(k_CopyPath.createChildPath(k_DataPath1.getTargetName() + "_COPY"));
+    Int32Array* copiedArray = ds.getDataAs<Int32Array>(k_CopyPath.createChildPath(k_DataPath2.getTargetName() + "_COPY"));
+    REQUIRE(copiedDataGroup != nullptr);
+    REQUIRE(copiedArray != nullptr);
+  }
 }
 
 TEST_CASE("ComplexCore::CopyDataObjectFilter(Invalid Parameters)", "[ComplexCore][CopyDataObjectFilter]")
@@ -36,26 +63,41 @@ TEST_CASE("ComplexCore::CopyDataObjectFilter(Invalid Parameters)", "[ComplexCore
   DataStructure ds = UnitTest::CreateDataStructure();
   Arguments args;
 
-  SECTION("Section1")
+  SECTION("Data to be copied does not exist")
   {
     const DataPath dataPath({Constants::k_SmallIN100, "Bad Data Foo"});
-    const DataPath copyPath({Constants::k_SmallIN100, "Copy Data"});
 
-    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<DataPath>(dataPath));
-    args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(copyPath));
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({dataPath}));
 
     auto result = filter.preflight(ds, args);
     COMPLEX_RESULT_REQUIRE_INVALID(result.outputActions);
   }
-  SECTION("Section2")
+  SECTION("Same parent copy data suffix is empty")
   {
     const DataPath dataPath({Constants::k_SmallIN100, "Phase Data"});
     const DataPath copyPath({Constants::k_SmallIN100, Constants::k_EbsdScanData});
 
-    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<DataPath>(dataPath));
-    args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(copyPath));
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({dataPath}));
+    args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(false));
+    args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>(""));
 
     auto result = filter.preflight(ds, args);
     COMPLEX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+  SECTION("Copy data new parent tuple mimatch")
+  {
+    auto* attributeMatrix = AttributeMatrix::Create(ds, "TestAttributeMatrix");
+    attributeMatrix->setShape({10, 5, 1});
+
+    const DataPath dataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
+    const DataPath copyPath({"TestAttributeMatrix"});
+
+    args.insert(CopyDataObjectFilter::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({dataPath}));
+    args.insert(CopyDataObjectFilter::k_UseNewParent_Key, std::make_any<bool>(true));
+    args.insert(CopyDataObjectFilter::k_NewPath_Key, std::make_any<DataPath>(copyPath));
+    args.insert(CopyDataObjectFilter::k_NewPathSuffix_Key, std::make_any<std::string>("_COPY"));
+
+    auto result = filter.execute(ds, args);
+    COMPLEX_RESULT_REQUIRE_INVALID(result.result);
   }
 }
