@@ -141,6 +141,7 @@ set(CoreParameters
   GeometrySelectionParameter
   Dream3dImportParameter
   MultiArraySelectionParameter
+  MultiPathSelectionParameter
   NumberParameter
   NumericTypeParameter
   ImportCSVDataParameter
