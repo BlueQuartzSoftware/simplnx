@@ -22,7 +22,9 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_DataPath_Key = "existing_data_path";
+  static inline constexpr StringLiteral k_UseNewParent_Key = "use_new_parent";
   static inline constexpr StringLiteral k_NewPath_Key = "new_data_path";
+  static inline constexpr StringLiteral k_NewPathSuffix_Key = "new_path_suffix";
 
   /**
    * @brief
