@@ -1,4 +1,4 @@
-# Copy Data Group
+# Copy Data Object
 
 
 ## Group (Subgroup) ##
@@ -7,7 +7,7 @@ Core (Generation)
 
 ## Description ##
 
-This **Filter** copies a DataGroup
+This **Filter** copies one or more DataObjects
 
 ## Parameters ##
 
@@ -19,14 +19,16 @@ Not Applicable
 
 ## Required Objects ##
 
-Not Applicable
+| Kind | Default Name | Type | Component Dimensions | Description |
+|------|--------------|-------------|---------|----------------|
+| DataObject | N/A | N/A | N/A | The list of DataObjects to copy. |
+| bool | false | N/A | N/A | Whether to copy the DataObjects to a new parent or not. |
+| DataGroup | N/A | N/A | N/A | The group to be used as the parent for all the DataObject copies if the Copy to New Parent option is selected |
+| string | _COPY | N/A | N/A | The suffix string to be appended to each copy's name |
 
 ## Created Objects ##
 
-| Kind | Default Name | Type | Component Dimensions | Description |
-|------|--------------|-------------|---------|----------------|
-| DataGroup | DataContainer | N/A | N/A | Created Group name |
-
+A deep copy of the DataObjects selected in the input.
 
 ## Example Pipelines ##
 

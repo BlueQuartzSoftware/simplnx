@@ -40,7 +40,6 @@ Parameters CopyDataObjectFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
   params.insert(std::make_unique<MultiPathSelectionParameter>(k_DataPath_Key, "Objects to copy", "A list of DataPaths to the DataObjects to be copied", MultiPathSelectionParameter::ValueType{}));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNewParent_Key, "Copy to New Parent", "Copy all the DataObjects to a new BaseGroup", false));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_NewPath_Key, "Copied Parent Group", "DataPath to parent BaseGroup in which to store the copied DataObject(s)", DataPath{},
                                                               BaseGroup::GetAllGroupTypes()));
