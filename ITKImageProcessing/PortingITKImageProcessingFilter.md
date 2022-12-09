@@ -5,22 +5,22 @@
 This **Plugin** contains three folders of filters instructions for porting to 
 and moving to ***Filters Folder*** are below:
 
-> ### If Porting From ***SIMPL*** to ***Filters Folder*** ###
-> Use the **ComplexFilterGen** module distributed in ***SIMPL DREAM3D***. This 
+### If Porting From ***SIMPL*** to ***Filters Folder*** ###
+ Use the **ComplexFilterGen** module distributed in ***SIMPL DREAM3D***. This 
 module will automatically update the LegacyUUIDMapping for this **Plugin**.
->
-> ### If Moving to ***Filters*** ###
-> <ol>
+
+ ### If Moving to ***Filters*** ###
+ <ol>
   <li> Open the LegacyUUIDMapping header file for this Plugin </li>
   <li> Uncomment the include statement for the filter being moved </li>
   <li> Uncomment the map entry for the filter being moved </li>
-  </ol>
+</ol>
   
  When working with the ***LegacyUUIDMapping*** header file in this **Plugin** 
  be sure to make sure the commented out tokens are not removed. Their syntax is 
  one of the following:
- > ***@@__HEADER__TOKEN__DO__NOT__DELETE__@@***
+  ***@@__HEADER__TOKEN__DO__NOT__DELETE__@@***
  
  or
  
- > ***@@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@***
+  ***@@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@***
