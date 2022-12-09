@@ -40,7 +40,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  ArrayType getArrayType() const;
+  ArrayType getArrayType() const override;
 
   DataObject* shallowCopy() override;
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
