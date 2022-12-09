@@ -19,6 +19,7 @@ void ConditionalSetValueOverFlowTest(DataStructure& dataGraph, const DataPath& s
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(value));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(conditionalPath));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(selectedDataPath));
@@ -52,6 +53,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Instantiate Filter", "[ConditionalS
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
@@ -72,6 +74,8 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Missing/Empty DataPaths", "[Conditi
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
   ConditionalSetValue filter;
+
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
 
   // Preflight the filter and check result with empty values
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(""));
@@ -123,6 +127,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
@@ -167,6 +172,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[Conditiona
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
@@ -203,6 +209,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Int8", "[Conditional
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));

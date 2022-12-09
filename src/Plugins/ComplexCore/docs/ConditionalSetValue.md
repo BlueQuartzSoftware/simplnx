@@ -1,4 +1,4 @@
-# Replace Value in Array (Conditional) 
+# Replace Value in Array (Conditional) #
 
 
 ## Group (Subgroup) ##
@@ -29,7 +29,9 @@ This **Filter** replaces values in a user specified **Attribute Array** with a u
 
 | Name             | Type | Description |
 |------------------|------|-------------|
-| New Value | double | Value to replace the removed values in the array |
+| Use Conditional | bool | The bool that determines whether a conditional mask will be used or just a value |
+| Value to Replace | std::string | The numeric value to replace in the array [will be typecasted to appropriate value later] |
+| New Value | std::string | Value to replace the removed values in the array [will be typecasted to appropriate value later] |
 
 ## Required Geometry ##
 
@@ -45,10 +47,6 @@ Not Applicable
 ## Created Objects ##
 
 None
-
-## Example Pipelines ##
-
-
 
 ## License & Copyright ##
 

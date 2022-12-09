@@ -162,7 +162,6 @@ Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Ar
                                           const std::atomic_bool& shouldCancel) const
 {
   auto useConditionalValue = filterArgs.value<bool>(k_ConditionalArrayPath_Key);
-  auto removeValueString = filterArgs.value<std::string>(k_RemoveValue_Key);
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
   auto conditionalArrayPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
@@ -180,6 +179,7 @@ Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Ar
   else
   {
     auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(selectedArrayPath);
+    auto removeValueString = filterArgs.value<std::string>(k_RemoveValue_Key);
     ExecuteDataFunction(ReplaceValueInArrayFunctor{}, inputDataArray.getDataType(), inputDataArray, removeValueString, replaceValueString);
   }
   return {};
