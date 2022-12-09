@@ -30,7 +30,7 @@ nlohmann::json MultiPathSelectionParameter::toJson(const std::any& value) const
   nlohmann::json json = nlohmann::json::array();
   for(const auto& path : paths)
   {
-    json.push_back(path.toString());
+    json.push_back(std::move(path.toString()));
   }
   return json;
 }
@@ -100,7 +100,7 @@ Result<> MultiPathSelectionParameter::validatePaths(const DataStructure& dataStr
   std::vector<Error> errors;
   for(usize i = 0; i < value.size(); i++)
   {
-    const auto& path = value.at(i);
+    const auto& path = value[i];
 
     if(path.empty())
     {
