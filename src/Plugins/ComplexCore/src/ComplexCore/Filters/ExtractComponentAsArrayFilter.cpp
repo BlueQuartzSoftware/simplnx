@@ -104,7 +104,8 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   }
   if(selectedArrayComp < pCompNumberValue)
   {
-    return {MakeErrorResult<OutputActions>(-45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ", pCompNumberValue, 0, (selectedArrayComp - 1)))};
+    return {MakeErrorResult<OutputActions>(
+        -45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ", pCompNumberValue, 0, (selectedArrayComp - 1)))};
   }
 
   if(pMoveComponentsToNewArrayValue)
