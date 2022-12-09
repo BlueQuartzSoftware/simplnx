@@ -7,7 +7,7 @@
 namespace complex
 {
 /**
- * @brief This Filter Parameter represents multiple DataArrays as input.
+ * @brief This Filter Parameter represents multiple DataObjects as input.
  */
 class COMPLEX_EXPORT MultiPathSelectionParameter : public MutableDataParameter
 {
