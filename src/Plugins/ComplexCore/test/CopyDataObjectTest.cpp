@@ -9,7 +9,7 @@
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::CopyDataObjectFilter(Instantiate)", "[ComplexCore][CopyDataObjectFilter]")
+TEST_CASE("ComplexCore::CopyDataObjectFilter(Valid Execution)", "[ComplexCore][CopyDataObjectFilter]")
 {
   static const DataPath k_DataPath1({Constants::k_SmallIN100, "Phase Data"});
   static const DataPath k_DataPath2({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
