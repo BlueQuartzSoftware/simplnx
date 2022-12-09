@@ -61,6 +61,7 @@ set(FilterList
   TriangleNormalFilter
   FindNumFeaturesFilter
   FindVolFractionsFilter
+  ExtractComponentAsArrayFilter
 )
 
 set(ActionList
@@ -78,6 +79,7 @@ set(AlgorithmList
   ScalarSegmentFeatures
   FindArrayStatistics
   CombineAttributeArrays
+  ExtractComponentAsArray
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
