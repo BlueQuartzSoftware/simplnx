@@ -121,13 +121,4 @@ inline constexpr T byteswap(T value) noexcept
   }
 }
 
-template <class T>
-static void FromSystemToBigEndian(T& t)
-{
-  if(endian::COMPLEX_BYTE_ORDER == endian::little)
-  {
-    byteswap(t);
-  }
-}
-
 } // namespace complex
