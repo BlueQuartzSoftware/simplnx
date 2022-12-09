@@ -15,8 +15,8 @@ struct RemoveComponentsFunctor
     const auto& originalArrayRef = dynamic_cast<const DataArray<ScalarType>&>(originalArray);
     auto& resizedArrayRef = dynamic_cast<DataArray<ScalarType>&>(resizedArray);
 
-    usize originalTupleCount = originalArrayRef.getNumberOfTuples();
-    usize originalCompCount = originalArrayRef.getNumberOfComponents();
+    const usize originalTupleCount = originalArrayRef.getNumberOfTuples();
+    const usize originalCompCount = originalArrayRef.getNumberOfComponents();
 
     usize distanceToShuffle = 0;
     for(usize tuple = 0; tuple < originalTupleCount; tuple++)
@@ -28,7 +28,7 @@ struct RemoveComponentsFunctor
           distanceToShuffle++;
           continue;
         }
-        usize index = tuple * originalCompCount + comp;
+        const usize index = tuple * originalCompCount + comp;
         resizedArrayRef[index - distanceToShuffle] = originalArrayRef[index];
       }
     }
@@ -45,10 +45,10 @@ struct ExtractComponentsFunctor
     const auto& inputArrayRef = dynamic_cast<const DataArray<ScalarType>&>(inputArray);
     auto& extractedArrayRef = dynamic_cast<DataArray<ScalarType>&>(extractedCompArray);
 
-    usize inputTupleCount = inputArrayRef.getNumberOfTuples();
-    usize inputCompCount = inputArrayRef.getNumberOfComponents();
+    const usize inputTupleCount = inputArrayRef.getNumberOfTuples();
+    const usize inputCompCount = inputArrayRef.getNumberOfComponents();
 
-    usize extractedCompCount = extractedArrayRef.getNumberOfComponents();
+    const usize extractedCompCount = extractedArrayRef.getNumberOfComponents();
 
     for(usize tuple = 0; tuple < inputTupleCount; tuple++)
     {
@@ -90,16 +90,16 @@ Result<> ExtractComponentAsArray::operator()()
   /* tempArrayRef CANNOT be const because the functor has to be capable of handling both cases of remove components*/
   const bool moveComponentsToNewArrayBool = m_InputValues->MoveComponentsToNewArray;
   const bool removeComponentsFromArrayBool = m_InputValues->RemoveComponentsFromArray;
-  const usize compToRemoveNum = static_cast<usize>(abs(m_InputValues->CompNumber));
+  const auto compToRemoveNum = static_cast<usize>(abs(m_InputValues->CompNumber));
   // this will be the original array if components are not being removed, else it is resized array
-  IDataArray& baseArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->BaseArrayPath);
+  auto& baseArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->BaseArrayPath);
   if((!removeComponentsFromArrayBool) && moveComponentsToNewArrayBool)
   {
     ExecuteDataFunction(ExtractComponentsFunctor{}, baseArrayRef.getDataType(), baseArrayRef, m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->NewArrayPath), compToRemoveNum);
     return {};
   }
-  // will not exist if remove components isnt occuring, hence the early bailout ^
-  IDataArray& tempArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->TempArrayPath); // will not exist if remove components isnt true, hence the early bailout ^
+  // will not exist if remove components is not occurring, hence the early bailout ^
+  auto& tempArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->TempArrayPath); // will not exist if remove components is not true, hence the early bailout ^
 
   if(moveComponentsToNewArrayBool)
   {

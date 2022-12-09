@@ -56,17 +56,17 @@ Parameters ExtractComponentAsArrayFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_MoveComponentsToNewArray_Key, "Move Extracted Components to New Array", "If false the extracted components will not be placed in a new array", false));
-  params.insert(std::make_unique<BoolParameter>(k_RemoveComponentsFromArray_Key, "Remove Extracted Components from Old Array", "If true the extracted components will be deleted", false));
   params.insert(std::make_unique<Int32Parameter>(k_CompNumber_Key, "Component Index to Extract", "The index of the component in each tuple to be removed", 0));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_MoveComponentsToNewArray_Key, "Move Extracted Components to New Array", "If true the extracted components will be placed in a new array", false));
+  params.insert(std::make_unique<BoolParameter>(k_RemoveComponentsFromArray_Key, "Remove Extracted Components from Old Array", "If true the extracted components will be deleted", false));
 
   params.insertSeparator(Parameters::Separator{"Required Input DataArray"});
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Multicomponent Attribute Array", "The array to extract componenets from", DataPath{}, complex::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created DataArray"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NewArrayPath_Key, "Scalar Attribute Array", "The DataArray to store the extracted components", DataPath({"Extracted Components"})));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_NewArrayPath_Key, "Scalar Attribute Array", "The DataArray to store the extracted components", DataPath({"Extracted Component"})));
 
   params.linkParameters(k_MoveComponentsToNewArray_Key, k_NewArrayPath_Key, true);
   params.linkParameters(k_MoveComponentsToNewArray_Key, k_RemoveComponentsFromArray_Key, true);
@@ -104,7 +104,7 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   }
   if(selectedArrayComp < pCompNumberValue)
   {
-    return {MakeErrorResult<OutputActions>(-45631, fmt::format("The number to remove [{}] is larger than the array component count: {} ", pCompNumberValue, selectedArrayComp))};
+    return {MakeErrorResult<OutputActions>(-45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ", pCompNumberValue, 0, (selectedArrayComp - 1)))};
   }
 
   if(pMoveComponentsToNewArrayValue)
