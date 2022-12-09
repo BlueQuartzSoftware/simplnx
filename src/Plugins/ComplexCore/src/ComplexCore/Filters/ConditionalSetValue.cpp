@@ -24,7 +24,7 @@ ScalarType convertFromStringToType(const std::string& convertValue)
 
   if(convertResult.invalid())
   {
-    throw std::runtime_error(fmt::format("{}({}): Function {}: Error. Cannot convert {} to the type {}.", "ReplaceValueInArrayFunctor", __FILE__, __LINE__, convertValue, ScalarType));
+    throw std::runtime_error(fmt::format("{}({}): Function {}: Error. Cannot convert {} from string.", "ReplaceValueInArrayFunctor", __FILE__, __LINE__, convertValue));
   }
 
   return static_cast<ScalarType>(convertResult.value());
@@ -33,14 +33,14 @@ ScalarType convertFromStringToType(const std::string& convertValue)
 struct ReplaceValueInArrayFunctor
 {
   template <typename ScalarType>
-  void replaceValue(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue)
+  void operator()(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue)
   {
     DataArray<ScalarType>& dataArray = dynamic_cast<DataArray<ScalarType>&>(workingArray);
 
     auto removeVal = convertFromStringToType<ScalarType>(removeValue);
     auto replaceVal = convertFromStringToType<ScalarType>(replaceValue);
 
-    const size = dataArray.getNumberOfTuples() * dataArray.getNumberOfComponents();
+    const auto size = dataArray.getNumberOfTuples() * dataArray.getNumberOfComponents();
 
     for(usize index = 0; index < size; index++)
     {
@@ -182,5 +182,6 @@ Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Ar
     auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(selectedArrayPath);
     ExecuteDataFunction(ReplaceValueInArrayFunctor{}, inputDataArray.getDataType(), inputDataArray, removeValueString, replaceValueString);
   }
+  return {};
 }
 } // namespace complex

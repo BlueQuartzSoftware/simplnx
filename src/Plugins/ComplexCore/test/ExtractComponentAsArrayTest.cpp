@@ -1,47 +1,39 @@
-/**
- * This file is auto generated from the original ComplexCore/ExtractComponentAsArrayFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ExtractComponentAsArrayFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
 #include <catch2/catch.hpp>
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
 
+namespace fs = std::filesystem;
 using namespace complex;
 
-TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Instantiation and Parameter Check", "[ComplexCore][ExtractComponentAsArrayFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
+{
+const std::string k_ExtractedComponents("Extracted Components");
+
+const DataPath k_QuatsPath({Constants::k_DataContainer, Constants::k_EbsdScanData, Constants::k_Quats});
+const DataPath k_ExtractedComponentsPath({Constants::k_DataContainer, Constants::k_EbsdScanData, k_ExtractedComponents});
+
+const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_find_feature_centroids.dream3d", unit_test::k_DREAM3DDataDir));
+} // namespace
+
+TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Instantiation and Parameter Check", "[ComplexCore]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;
-  DataStructure ds;
+  DataStructure ds = UnitTest::LoadDataStructure(k_BaseDataFilePath);
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_MoveComponentsToNewArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_RemoveComponentsFromArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(1));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<DataPath>(k_ExtractedComponentsPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -52,12 +44,89 @@ TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Instantiation and Paramet
   REQUIRE(executeResult.result.valid());
 }
 
-// TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Valid filter execution")
-//{
-//
-// }
+TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Valid filter execution", "[ComplexCore]")
+{
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ExtractComponentAsArrayFilter filter;
 
-// TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: InValid filter execution")
-//{
-//
-// }
+  DataStructure alteredDs = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  const int32 removeCompIndex = 1;
+
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_MoveComponentsToNewArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_RemoveComponentsFromArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(removeCompIndex));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<DataPath>(k_ExtractedComponentsPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(alteredDs, args);
+  REQUIRE(preflightResult.outputActions.valid());
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(alteredDs, args);
+  REQUIRE(executeResult.result.valid());
+
+  // Load a clean copy of the datastructure prior to resize because original array is terminated after execution
+  DataStructure unalteredDs = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  const auto& originalQuatsArray = unalteredDs.getDataRefAs<Float32Array>(k_QuatsPath); // clean array [exemplar]
+
+  const auto& reducedQuatsArray = alteredDs.getDataRefAs<Float32Array>(k_QuatsPath);
+  const auto& extractedComponentsArray = alteredDs.getDataRefAs<Float32Array>(k_ExtractedComponentsPath);
+
+  const usize originalTupleCount = originalQuatsArray.getNumberOfTuples();
+  REQUIRE(originalTupleCount == reducedQuatsArray.getNumberOfTuples());
+  REQUIRE(originalTupleCount == extractedComponentsArray.getNumberOfTuples());
+
+  const usize originalCompCount = originalQuatsArray.getNumberOfComponents();
+  const usize reducedCompCount = reducedQuatsArray.getNumberOfComponents();
+  REQUIRE((originalCompCount - 1) == reducedCompCount);
+  REQUIRE(1 == extractedComponentsArray.getNumberOfComponents());
+
+  usize extractedIndex = 0;
+  for(usize tupleIndex = 0; tupleIndex < originalTupleCount; tupleIndex++)
+  {
+    for(usize compIndex = 0; compIndex < originalCompCount; compIndex++)
+    {
+      usize originalIndex = tupleIndex * originalCompCount + compIndex;
+      usize reducedIndex = tupleIndex * reducedCompCount + compIndex;
+      if(compIndex == removeCompIndex)
+      {
+        REQUIRE(originalQuatsArray[originalIndex] == extractedComponentsArray[extractedIndex]);
+        extractedIndex++;
+      }
+      else
+      {
+        if(compIndex > removeCompIndex)
+        {
+          REQUIRE(originalQuatsArray[originalIndex] == reducedQuatsArray[reducedIndex - 1]); // account for having one less comp
+        }
+        else
+        {
+          REQUIRE(originalQuatsArray[originalIndex] == reducedQuatsArray[reducedIndex]);
+        }
+      }
+    }
+  }
+}
+
+TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: InValid filter execution", "[ComplexCore]")
+{
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ExtractComponentAsArrayFilter filter;
+  DataStructure ds = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  Arguments args;
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_MoveComponentsToNewArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_RemoveComponentsFromArray_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(5)); // Invalid
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
+  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<DataPath>(k_ExtractedComponentsPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(ds, args);
+  REQUIRE(!preflightResult.outputActions.valid());
+}

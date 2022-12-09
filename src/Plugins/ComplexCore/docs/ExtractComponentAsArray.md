@@ -7,12 +7,17 @@ Core (Memory/Management)
 
 ## Description ##
 
-This **Filter** will create an **Attribute Array** from a single component of a user chosen array multicomponent array.
+This **Filter** will do one of the following to one component of a multicomponent **Attribute Array**:
+- Remove 1 component from multicomponent **Attribute Array** completely [This is done implicitly so long as **Move Extracted Components To New Array** is false]
+- Extract 1 component from multicomponent **Attribute Array** and store it in a new **DataArray** without removing from original
+- Extract 1 component from multicomponent **Attribute Array** and store it in a new **DataArray** and remove that component from the original
 
 ## Parameters ##
 
 | Name | Type | Description |
 |------|------| ----------- |
+| Move Extracted Components To New Array | bool | The bool that determines if extracted components will be stored in new array |
+| Remove Extracted Components from Old Array | bool | The bool that determines if extracted components will be deleted from original array |
 | Component Number to Extract | int32_t | The index of which component to extract |
 
 

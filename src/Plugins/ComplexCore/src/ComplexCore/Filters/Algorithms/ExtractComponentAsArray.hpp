@@ -14,9 +14,11 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT ExtractComponentAsArrayInputValues
 {
-  bool MoveToNewArray;
+  bool MoveComponentsToNewArray;
+  bool RemoveComponentsFromArray;
   int32 CompNumber;
-  DataPath SelectedArrayPath;
+  DataPath TempArrayPath;
+  DataPath BaseArrayPath;
   DataPath NewArrayPath;
 };
 

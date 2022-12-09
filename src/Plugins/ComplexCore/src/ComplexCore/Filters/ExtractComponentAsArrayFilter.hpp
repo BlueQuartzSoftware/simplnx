@@ -25,7 +25,8 @@ public:
   ExtractComponentAsArrayFilter& operator=(ExtractComponentAsArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MoveToNewArray_Key = "move_to_new_array";
+  static inline constexpr StringLiteral k_RemoveComponentsFromArray_Key = "remove_components_from_array";
+  static inline constexpr StringLiteral k_MoveComponentsToNewArray_Key = "move_components_to_new_array";
   static inline constexpr StringLiteral k_CompNumber_Key = "comp_number";
   static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
   static inline constexpr StringLiteral k_NewArrayPath_Key = "new_array_path";
