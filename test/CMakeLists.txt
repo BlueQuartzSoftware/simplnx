@@ -1,6 +1,11 @@
 file(TO_CMAKE_PATH "${PROJECT_SOURCE_DIR}" COMPLEX_SOURCE_DIR_NORM)
 file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}" COMPLEX_BINARY_DIR_NORM)
 
+#------------------------------------------------------------------------------
+# Create the targets to download the test files
+#------------------------------------------------------------------------------
+include("${CMAKE_CURRENT_LIST_DIR}/DownloadTestData.cmake")
+
 set(COMPLEX_TEST_DIRS_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/unit_test/complex_test_dirs.hpp)
 
 configure_file(${complex_SOURCE_DIR}/test/complex_test_dirs.hpp.in ${COMPLEX_TEST_DIRS_HEADER} @ONLY)
@@ -70,3 +75,5 @@ target_compile_options(complex_test
 target_include_directories(complex_test PRIVATE ${COMPLEX_GENERATED_DIR})
 
 catch_discover_tests(complex_test)
+
+
