@@ -12,9 +12,6 @@
 
 namespace complex
 {
-namespace
-{
-} // namespace
 
 std::string CopyDataObjectFilter::name() const
 {
