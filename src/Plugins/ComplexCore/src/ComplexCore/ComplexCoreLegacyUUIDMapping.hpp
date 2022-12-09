@@ -121,6 +121,7 @@ namespace complex
     {complex::Uuid::FromString("980c7bfd-20b2-5711-bc3b-0190b9096c34").value(), complex::FilterTraits<StlFileReaderFilter>::uuid}, // ReadStlFile
     {complex::Uuid::FromString("0541c5eb-1976-5797-9468-be50a93d44e2").value(), complex::FilterTraits<TriangleDihedralAngleFilter>::uuid}, // TriangleDihedralAngleFilter
     {complex::Uuid::FromString("8133d419-1919-4dbf-a5bf-1c97282ba63f").value(), complex::FilterTraits<TriangleNormalFilter>::uuid}, // TriangleNormalFilter
+    {complex::Uuid::FromString("088ef69b-ca98-51a9-97ac-369862015d71").value(), complex::FilterTraits<CopyDataObjectFilter>::uuid}, // CopyObject
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
