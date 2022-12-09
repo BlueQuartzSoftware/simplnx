@@ -63,7 +63,7 @@ public:
   std::any defaultValue() const override;
 
   /**
-   * @brief
+   * @brief Returns the default path.
    * @return
    */
   ValueType defaultPath() const;
@@ -77,7 +77,7 @@ public:
   Result<> validate(const DataStructure& dataStructure, const std::any& value) const override;
 
   /**
-   * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
+   * @brief Validates the given paths against the given DataStructure. Returns warnings/errors.
    * @param dataStructure The active DataStructure to use during validation
    * @param value The value to validate
    * @return
@@ -87,8 +87,8 @@ public:
   /**
    * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
    * Returns any warnings/errors.
-   * @param dataStructure
-   * @param value
+   * @param dataStructure The active DataStructure to use during resolution
+   * @param value The value to resolve
    * @return
    */
   Result<std::any> resolve(DataStructure& dataStructure, const std::any& value) const override;
