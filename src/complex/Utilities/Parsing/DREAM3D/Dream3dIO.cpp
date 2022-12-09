@@ -804,7 +804,6 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
     }
 
     cDims = compAttrib.readAsVector<usize>();
-    std::reverse(cDims.begin(), cDims.end());
   }
 
   {
