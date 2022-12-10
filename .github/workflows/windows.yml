@@ -1,4 +1,4 @@
-name: linux
+name: windows
 
 on:
   pull_request:
@@ -18,18 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-20.04
-        cxx:
-          - g++-9
-          - g++-10
-          - clang++-10
-        include:
-          - cxx: g++-9
-            cc: gcc-9
-          - cxx: g++-10
-            cc: gcc-10
-          - cxx: clang++-10
-            cc: clang-10
+          - windows-2022
+        toolset:
+          - v142
+          - v143
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
@@ -41,36 +33,33 @@ jobs:
         with:
           repository: DREAM3D/DREAM3D_Data
           path: DREAM3D_Data
-          submodules: true          
+          submodules: true
+      - name: Checkout DREAM3D_Data Repo
+        uses: actions/checkout@v2
+        with:
+          repository: DREAM3D/DREAM3D_Data
+          path: DREAM3D_Data
+          submodules: true
+
       - name: Add C++ Problem Matcher
-        uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
-      - name: Install Dependencies
-        run: |
-          sudo apt-get -y install ninja-build
+        uses: ammaraskar/msvc-problem-matcher@0.2.0
+      - name: Setup Build Environment
+        uses: ilammy/msvc-dev-cmd@v1.12.0
+        with:
+          vsversion: 2022
       - name: Setup NuGet Credentials
         shell: bash
         run: >
-          mono `vcpkg fetch nuget | tail -n 1`
+          `vcpkg fetch nuget | tail -n 1`
           sources add
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
           -storepasswordincleartext
           -name "GitHub"
           -username "BlueQuartzSoftware"
           -password "${{secrets.GITHUB_TOKEN}}"
-      - name: Download Test Files
-        shell: bash
-        run: >
-          wget --quiet "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_10/TestFiles_6_10.tar.gz" -O ${{github.workspace}}/DREAM3D_Data/TestFiles.tar.gz
-      - name: Extract Test Files
-        shell: bash
-        run: >
-          cd ${{github.workspace}}/DREAM3D_Data/ && tar -xvzf TestFiles.tar.gz
       - name: Configure
-        env:
-          CC: ${{matrix.cc}}
-          CXX: ${{matrix.cxx}}
         run: |
-          cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic
+          cmake --preset ci ${{github.workspace}} -G "Visual Studio 17 2022" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data
       - name: Build
         run: |
           cmake --build ${{github.workspace}}/complex/build
