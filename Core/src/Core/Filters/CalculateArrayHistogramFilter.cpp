@@ -57,7 +57,8 @@ Parameters CalculateArrayHistogramFilter::parameters() const
   params.insert(std::make_unique<Float64Parameter>(k_MaxRange_Key, "Max Value", "Specifies the upper bound of the histogram.", 1.0));
   params.insertSeparator(Parameters::Separator{"Input Arrays"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
-                                                               MultiArraySelectionParameter::ValueType{}, complex::GetAllNumericTypes()));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               complex::GetAllNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Set Up"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_NewDataGroup_Key, "Create New DataGroup for Histograms", "Whether or not to store the calculated histogram(s) in a new DataGroup", true));

@@ -66,7 +66,8 @@ Parameters ConvertColorToGrayScaleFilter::parameters() const
   params.linkParameters(k_ConversionAlgorithm_Key, k_ColorChannel_Key, std::make_any<ChoicesParameter::ValueType>(3));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputDataArrayVector_Key, "Input Data Arrays", "Select all DataArrays that need to be converted to GrayScale",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{DataType::uint8}));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::AllowedDataTypes{DataType::uint8}));
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<StringParameter>(k_OutputArrayPrefix_Key, "Output Data Array Prefix",
                                                   "This prefix will be added to each array name that is selected for conversion to form the new array name", "Grayscale_"));
