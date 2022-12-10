@@ -11,7 +11,21 @@ public:
 
   static inline constexpr StringLiteral k_TypeName = "IArray";
 
+  enum class ArrayType : EnumType
+  {
+    StringArray,
+    DataArray,
+    NeighborListArray,
+    Any
+  };
+
   ~IArray() override = default;
+
+  /**
+   * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
+   * @return
+   */
+  virtual ArrayType getArrayType() const = 0;
 
   /**
    * @brief Returns the number of elements.
@@ -47,6 +61,19 @@ public:
    * @brief Resizes the internal array to accomondate
    */
   virtual void reshapeTuples(const std::vector<usize>& tupleShape) = 0;
+
+  static std::set<std::string> StringListFromArrayType(const std::set<ArrayType>& arrayTypes)
+  {
+    static const std::map<ArrayType, std::string> k_TypeToStringMap = {
+        {ArrayType::StringArray, "StringArray"}, {ArrayType::DataArray, "DataArray"}, {ArrayType::NeighborListArray, "NeighborListArray"}, {ArrayType::Any, "Any"}};
+
+    std::set<std::string> stringValues;
+    for(auto arrayType : arrayTypes)
+    {
+      stringValues.insert(k_TypeToStringMap.at(arrayType));
+    }
+    return stringValues;
+  }
 
 protected:
   IArray() = delete;
