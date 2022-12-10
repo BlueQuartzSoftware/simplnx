@@ -28,6 +28,7 @@ set(FilterList
   DeleteData
   ExportDREAM3DFilter
   ExtractInternalSurfacesFromTriangleGeometry
+  ExtractVertexGeometryFilter
   FindArrayStatisticsFilter
   FindDifferencesMap
   FindFeaturePhasesFilter
@@ -80,6 +81,7 @@ set(AlgorithmList
   FindArrayStatistics
   CombineAttributeArrays
   ExtractComponentAsArray
+  ExtractVertexGeometry
   )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
