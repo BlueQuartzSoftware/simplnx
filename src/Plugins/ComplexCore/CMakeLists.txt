@@ -16,7 +16,7 @@ set(FilterList
   ChangeAngleRepresentation
   CombineAttributeArraysFilter
   ConditionalSetValue
-  CopyDataGroup
+  CopyDataObjectFilter
   CopyFeatureArrayToElementArray
   CreateAttributeMatrixFilter
   CreateDataArray

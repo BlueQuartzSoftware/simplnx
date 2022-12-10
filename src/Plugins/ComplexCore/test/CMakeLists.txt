@@ -15,7 +15,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   ConditionalSetValueTest.cpp
-  CopyDataGroupTest.cpp
+  CopyDataObjectTest.cpp
   CreateAttributeMatrixTest.cpp
   CreateDataArrayTest.cpp
   CreateFeatureArrayFromElementArrayTest.cpp
