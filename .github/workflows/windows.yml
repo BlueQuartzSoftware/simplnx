@@ -40,22 +40,7 @@ jobs:
           repository: DREAM3D/DREAM3D_Data
           path: DREAM3D_Data
           submodules: true
-      - name: Download Test Files
-        uses: suisei-cn/actions-download-file@v1.0.1
-        id: downloadfile  # Remember to give an ID if you need the output filename
-        with:
-          url: "https://github.com/dream3d/DREAM3D_Data/releases/download/v6_10/TestFiles_6_10.tar.gz"
-          target: ${{github.workspace}}/DREAM3D_Data
-      - name: Find TestFiles.tar.gz
-        shell: bash
-        run: >
-          find . -type f -name "TestFiles_6_10.tar.gz"
-      - name: Decompress TestFiles
-        run: |
-          cmake -E tar xvzf ${{github.workspace}}/DREAM3D_Data/TestFiles_6_10.tar.gz
-      - name: Move TestFiles Directory into location
-        run: |
-          cmake -E rename ${{github.workspace}}/TestFiles ${{github.workspace}}/DREAM3D_Data/TestFiles
+
       - name: Add C++ Problem Matcher
         uses: ammaraskar/msvc-problem-matcher@0.1
       - name: Setup Build Environment
