@@ -67,7 +67,8 @@ Parameters ErodeDilateBadDataFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when performing the algorithm",
-                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}, MultiArraySelectionParameter::AllowedTypes{}));
+                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()},
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypes{}));
 
   params.insertSeparator(Parameters::Separator{"Required Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedFeatureDataGroup_Key, "Feature Data Attribute Matrix", "Feature data Attribute Matrix", DataPath{}));
