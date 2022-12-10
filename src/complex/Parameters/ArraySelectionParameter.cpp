@@ -84,7 +84,7 @@ Result<std::any> ArraySelectionParameter::fromJson(const nlohmann::json& json) c
 
 IParameter::UniquePointer ArraySelectionParameter::clone() const
 {
-  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
+  return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_RequiredComponentShapes);
 }
 
 std::any ArraySelectionParameter::defaultValue() const

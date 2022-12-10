@@ -1,7 +1,5 @@
 #include "DataPathSelectionParameter.hpp"
 
-#include "complex/DataStructure/DataGroup.hpp"
-
 #include <fmt/core.h>
 
 #include <nlohmann/json.hpp>
