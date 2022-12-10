@@ -3,32 +3,41 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
 namespace
 {
-template <typename T>
-void copyData(const DataArray<T>& srcArray, DataArray<T>& destArray, std::optional<const BoolArray*> maskArray)
+struct CopyDataFunctor
 {
-  usize destIdx = 0;
-  usize srcSize = srcArray.getSize();
-  for(size_t idx = 0; idx < srcSize; idx++)
+  template <typename T>
+  void operator()(const IDataArray& srcIArray, IDataArray& destIArray, std::optional<const BoolArray*> maskArray)
   {
-    if(maskArray.has_value())
+    using DataArrayType = DataArray<T>;
+
+    const DataArrayType& srcArray = dynamic_cast<const DataArrayType&>(srcIArray);
+    DataArrayType& destArray = dynamic_cast<DataArrayType&>(destIArray);
+
+    usize destIdx = 0;
+    usize srcSize = srcArray.getSize();
+    for(size_t idx = 0; idx < srcSize; idx++)
     {
-      if((*maskArray)->at(idx))
+      if(maskArray.has_value())
       {
-        destArray[destIdx] = srcArray[idx];
-        destIdx++;
+        if((*maskArray)->at(idx))
+        {
+          destArray[destIdx] = srcArray[idx];
+          destIdx++;
+        }
+      }
+      else
+      {
+        destArray[idx] = srcArray[idx];
       }
     }
-    else
-    {
-      destArray[idx] = srcArray[idx];
-    }
   }
-}
+};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -123,76 +132,9 @@ Result<> ExtractVertexGeometry::operator()()
       const IDataArray& srcIDataArray = m_DataStructure.getDataRefAs<IDataArray>(dataArrayPath);
 
       DataPath destDataArrayPath = vertexAttrMatrixPath.createChildPath(srcIDataArray.getName());
+      IDataArray& destDataArray = m_DataStructure.getDataRefAs<IDataArray>(destDataArrayPath);
 
-      switch(srcIDataArray.getDataType())
-      {
-      case DataType::int8: {
-        const Int8Array& srcDataArray = m_DataStructure.getDataRefAs<Int8Array>(dataArrayPath);
-        Int8Array& destDataArray = m_DataStructure.getDataRefAs<Int8Array>(destDataArrayPath);
-        copyData<int8>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::uint8: {
-        const UInt8Array& srcDataArray = m_DataStructure.getDataRefAs<UInt8Array>(dataArrayPath);
-        UInt8Array& destDataArray = m_DataStructure.getDataRefAs<UInt8Array>(destDataArrayPath);
-        copyData<uint8>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::int16: {
-        const Int16Array& srcDataArray = m_DataStructure.getDataRefAs<Int16Array>(dataArrayPath);
-        Int16Array& destDataArray = m_DataStructure.getDataRefAs<Int16Array>(destDataArrayPath);
-        copyData<int16>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::uint16: {
-        const UInt16Array& srcDataArray = m_DataStructure.getDataRefAs<UInt16Array>(dataArrayPath);
-        UInt16Array& destDataArray = m_DataStructure.getDataRefAs<UInt16Array>(destDataArrayPath);
-        copyData<uint16>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::int32: {
-        const Int32Array& srcDataArray = m_DataStructure.getDataRefAs<Int32Array>(dataArrayPath);
-        Int32Array& destDataArray = m_DataStructure.getDataRefAs<Int32Array>(destDataArrayPath);
-        copyData<int32>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::uint32: {
-        const UInt32Array& srcDataArray = m_DataStructure.getDataRefAs<UInt32Array>(dataArrayPath);
-        UInt32Array& destDataArray = m_DataStructure.getDataRefAs<UInt32Array>(destDataArrayPath);
-        copyData<uint32>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::int64: {
-        const Int64Array& srcDataArray = m_DataStructure.getDataRefAs<Int64Array>(dataArrayPath);
-        Int64Array& destDataArray = m_DataStructure.getDataRefAs<Int64Array>(destDataArrayPath);
-        copyData<int64>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::uint64: {
-        const UInt64Array& srcDataArray = m_DataStructure.getDataRefAs<UInt64Array>(dataArrayPath);
-        UInt64Array& destDataArray = m_DataStructure.getDataRefAs<UInt64Array>(destDataArrayPath);
-        copyData<uint64>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::float32: {
-        const Float32Array& srcDataArray = m_DataStructure.getDataRefAs<Float32Array>(dataArrayPath);
-        Float32Array& destDataArray = m_DataStructure.getDataRefAs<Float32Array>(destDataArrayPath);
-        copyData<float32>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::float64: {
-        const Float64Array& srcDataArray = m_DataStructure.getDataRefAs<Float64Array>(dataArrayPath);
-        Float64Array& destDataArray = m_DataStructure.getDataRefAs<Float64Array>(destDataArrayPath);
-        copyData<float64>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      case DataType::boolean: {
-        const BoolArray& srcDataArray = m_DataStructure.getDataRefAs<BoolArray>(dataArrayPath);
-        BoolArray& destDataArray = m_DataStructure.getDataRefAs<BoolArray>(destDataArrayPath);
-        copyData<bool>(srcDataArray, destDataArray, maskArray);
-        break;
-      }
-      }
+      ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray.getDataType(), srcIDataArray, destDataArray, maskArray);
     }
   }
 

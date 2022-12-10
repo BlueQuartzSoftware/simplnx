@@ -59,9 +59,8 @@ Parameters ExtractVertexGeometryFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_InputGeometryPath_Key, "Input Geometry", "", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::ImageGeom, BaseGroup::GroupType::RectGridGeom}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "",
-                                                               MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()},
-                                                               MultiArraySelectionParameter::AllowedTypes{complex::GetAllDataTypes()}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "", MultiArraySelectionParameter::ValueType{},
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_VertexGeometryPath_Key, "Output Vertex Geometry", "The complete path to the vertex geometry that will be created",
                                                              DataPath({"[Vertex Geometry]"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttrMatrixName_Key, "Output Vertex Attribute Matrix Name", "The name of the vertex attribute matrix that will be created",

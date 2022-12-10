@@ -33,8 +33,10 @@ const std::string k_FeatureArrayName = "featureData";
 const int32 k_MoveArrays = 0;
 const int32 k_CopyArrays = 1;
 
+namespace ExtractVertexGeometryTest
+{
 // -----------------------------------------------------------------------------
-DataStructure createDataStructure()
+DataStructure CreateDataStructure()
 {
   DataStructure dataStructure;
 
@@ -73,22 +75,24 @@ DataStructure createDataStructure()
   AttributeMatrix* wrongTuplesAttrMatrix = AttributeMatrix::Create(dataStructure, k_WrongAttrMatName, imageGeom->getId());
   wrongTuplesAttrMatrix->setShape({3});
 
-  Float32Array* wrongTupleCountData = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {3}, {1}, wrongTuplesAttrMatrix->getId());
-  BoolArray* maskWrongTupleCountData = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_MaskArrayName, {3}, {1}, wrongTuplesAttrMatrix->getId());
+  Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {3}, {1}, wrongTuplesAttrMatrix->getId());
 
-  Float32Array* noParentData = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1});
+  BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_MaskArrayName, {3}, {1}, wrongTuplesAttrMatrix->getId());
 
-  Float32Array* wrongParentData = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1}, imageGeom->getId());
+  Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1});
+
+  Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1}, imageGeom->getId());
 
   return dataStructure;
 }
+} // namespace ExtractVertexGeometryTest
 } // namespace
 
-TEST_CASE("Core::ExtractVertexGeometry: Data Array With No Parent", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Data Array With No Parent", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -104,11 +108,11 @@ TEST_CASE("Core::ExtractVertexGeometry: Data Array With No Parent", "[Core][Extr
   REQUIRE(preflightResult.outputActions.errors()[0].code == -2004);
 }
 
-TEST_CASE("Core::ExtractVertexGeometry: Data Array With No AttributeMatrix Parent", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Data Array With No AttributeMatrix Parent", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -124,11 +128,11 @@ TEST_CASE("Core::ExtractVertexGeometry: Data Array With No AttributeMatrix Paren
   REQUIRE(preflightResult.outputActions.errors()[0].code == -2005);
 }
 
-TEST_CASE("Core::ExtractVertexGeometry: Data Array With Wrong Tuple Count", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -144,11 +148,11 @@ TEST_CASE("Core::ExtractVertexGeometry: Data Array With Wrong Tuple Count", "[Co
   REQUIRE(preflightResult.outputActions.errors()[0].code == -2006);
 }
 
-TEST_CASE("Core::ExtractVertexGeometry: Mask Array With Wrong Tuple Count", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -166,11 +170,11 @@ TEST_CASE("Core::ExtractVertexGeometry: Mask Array With Wrong Tuple Count", "[Co
   REQUIRE(preflightResult.outputActions.errors()[0].code == -2003);
 }
 
-TEST_CASE("Core::ExtractVertexGeometry: Conflicting Attribute Matrices", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Conflicting Attribute Matrices", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -187,11 +191,11 @@ TEST_CASE("Core::ExtractVertexGeometry: Conflicting Attribute Matrices", "[Core]
   REQUIRE(preflightResult.outputActions.errors()[0].code == -2007);
 }
 
-TEST_CASE("Core::ExtractVertexGeometry: Move cell data arrays", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Move cell data arrays", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -213,11 +217,11 @@ TEST_CASE("Core::ExtractVertexGeometry: Move cell data arrays", "[Core][ExtractV
   REQUIRE_NOTHROW(ds.getDataRefAs<Float32Array>(k_VertexDataContainerPath.createChildPath(k_CellAttrMatName).createChildPath(k_FloatArrayName)));
 }
 
-TEST_CASE("Core::ExtractVertexGeometry: Copy cell data arrays", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Copy cell data arrays", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -250,11 +254,11 @@ TEST_CASE("Core::ExtractVertexGeometry: Copy cell data arrays", "[Core][ExtractV
   }
 }
 
-TEST_CASE("Core::ExtractVertexGeometry: Move cell data arrays with mask", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Move cell data arrays with mask", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -279,11 +283,11 @@ TEST_CASE("Core::ExtractVertexGeometry: Move cell data arrays with mask", "[Core
   REQUIRE_NOTHROW(ds.getDataRefAs<BoolArray>(DataPath{{k_ImageGeometryName, k_CellAttrMatName, k_MaskArrayName}}));
 }
 
-TEST_CASE("Core::ExtractVertexGeometry: Copy cell data arrays with mask", "[Core][ExtractVertexGeometry]")
+TEST_CASE("ComplexCore::ExtractVertexGeometry: Copy cell data arrays with mask", "[ComplexCore][ExtractVertexGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ExtractVertexGeometryTest::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
