@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ConditionalSetValue.hpp"
@@ -19,6 +20,7 @@ void ConditionalSetValueOverFlowTest(DataStructure& dataGraph, const DataPath& s
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(value));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(conditionalPath));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(selectedDataPath));
@@ -52,6 +54,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Instantiate Filter", "[ConditionalS
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
@@ -72,6 +75,8 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Missing/Empty DataPaths", "[Conditi
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
   ConditionalSetValue filter;
+
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
 
   // Preflight the filter and check result with empty values
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(""));
@@ -123,6 +128,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
@@ -167,6 +173,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[Conditiona
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
@@ -203,6 +210,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Int8", "[Conditional
   ConditionalSetValue filter;
   Arguments args;
   // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
@@ -291,4 +299,46 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Overflow/Underflow", "[ConditionalS
   ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "1.79769e+309");  // overflow
   ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // underflow
   ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // overflow
+}
+
+TEST_CASE("ComplexCore::ConditionalSetValue: No Conditional", "[ConditionalSetValue]")
+{
+  ConditionalSetValue filter;
+  Arguments args;
+
+  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
+  DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
+  std::shared_ptr<ImageGeom> imageGeometry = dataGraph.getSharedDataAs<ImageGeom>(geomPath);
+  complex::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
+
+  DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
+  DataObject* ciDataObject = dataGraph.getData(ciDataPath);
+
+  DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
+  // Fill every value with 10.0 into the ciArray
+  ciDataArray->fill(10.0);
+
+  const std::string removeStr = "10.0";
+  const auto removeVal = static_cast<float32>(ConvertTo<float32>::convert(removeStr).value());
+
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ConditionalSetValue::k_RemoveValue_Key, std::make_any<std::string>(removeStr));
+  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataGraph, args);
+  REQUIRE(preflightResult.outputActions.valid());
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataGraph, args);
+  REQUIRE(executeResult.result.valid());
+
+  const auto& alteredArray = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
+
+  for(const auto& value : alteredArray)
+  {
+    REQUIRE(value != removeVal);
+  }
 }

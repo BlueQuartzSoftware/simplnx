@@ -78,6 +78,11 @@ std::string StringArray::getTypeName() const
   return GetTypeName();
 }
 
+IArray::ArrayType StringArray::getArrayType() const
+{
+  return ArrayType::StringArray;
+}
+
 DataObject* StringArray::shallowCopy()
 {
   return new StringArray(*this);

@@ -608,4 +608,61 @@ inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjTy
   }
   }
 }
+
+/**
+ * @brief Converts IArray::ArrayType to DataObject::Type. ArrayType is a subset of DataObject::Type so this function cannot fail.
+ * @param arrayType
+ * @return
+ */
+inline constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::ArrayType arrayType)
+{
+  switch(arrayType)
+  {
+  case IArray::ArrayType::DataArray: {
+    return DataObject::Type::DataArray;
+  }
+  case IArray::ArrayType::NeighborListArray: {
+    return DataObject::Type::NeighborList;
+  }
+  case IArray::ArrayType::StringArray: {
+    return DataObject::Type::StringArray;
+  }
+  case IArray::ArrayType::Any: {
+    return DataObject::Type::Any;
+  }
+  default: {
+    throw std::runtime_error("complex::ConvertArrayTypeToDataObjectType: Invalid ArrayType");
+  }
+  }
+}
+
+/**
+ * @brief Converts DataObject::Type to IArray::ArrayType.
+ * @param dataObjectType
+ * @return
+ */
+inline constexpr std::optional<IArray::ArrayType> ConvertDataObjectTypeToArrayType(DataObject::Type dataObjectType) noexcept
+{
+  switch(dataObjectType)
+  {
+  case DataObject::Type::IDataArray:
+  case DataObject::Type::DataArray: {
+    return IArray::ArrayType::DataArray;
+  }
+  case DataObject::Type::INeighborList:
+  case DataObject::Type::NeighborList: {
+    return IArray::ArrayType::NeighborListArray;
+  }
+  case DataObject::Type::StringArray: {
+    return IArray::ArrayType::StringArray;
+  }
+  case DataObject::Type::Any: {
+    return IArray::ArrayType::Any;
+  }
+  default: {
+    return {};
+  }
+  }
+}
+
 } // namespace complex

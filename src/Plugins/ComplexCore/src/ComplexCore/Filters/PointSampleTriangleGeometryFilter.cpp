@@ -70,7 +70,8 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Face Attribute Arrays to Transfer",
                                                                "The paths to the Face Attribute Arrays to transfer to the created Vertex Geometry where the mask is false, if Use Mask is checked",
-                                                               MultiArraySelectionParameter::ValueType{}, complex::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
 

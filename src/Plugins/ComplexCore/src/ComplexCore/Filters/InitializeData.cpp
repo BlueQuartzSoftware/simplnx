@@ -183,7 +183,7 @@ Parameters InitializeData::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "The cell data arrays in which to initialize a subvolume to zeros", std::vector<DataPath>{},
-                                                               complex::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The geometry containing the cell data for which to initialize", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   return params;

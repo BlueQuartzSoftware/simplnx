@@ -58,6 +58,7 @@
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
+#include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -74,6 +75,7 @@ namespace complex
     {complex::Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value(), complex::FilterTraits<ChangeAngleRepresentation>::uuid}, // ChangeAngleRepresentation
     {complex::Uuid::FromString("a6b50fb0-eb7c-5d9b-9691-825d6a4fe772").value(), complex::FilterTraits<CombineAttributeArraysFilter>::uuid}, // CombineAttributeArrays
     {complex::Uuid::FromString("47cafe63-83cc-5826-9521-4fb5bea684ef").value(), complex::FilterTraits<ConditionalSetValue>::uuid}, // ConditionalSetValue
+    {complex::Uuid::FromString("a37f2e24-7400-5005-b9a7-b2224570cbe9").value(), complex::FilterTraits<ConditionalSetValue>::uuid}, // ReplaceValueInArray
     {complex::Uuid::FromString("99836b75-144b-5126-b261-b411133b5e8a").value(), complex::FilterTraits<CopyFeatureArrayToElementArray>::uuid}, // CopyFeatureArrayToElementArray
     {complex::Uuid::FromString("93375ef0-7367-5372-addc-baa019b1b341").value(), complex::FilterTraits<CreateAttributeMatrixFilter>::uuid}, // CreateAttributeMatrix
     {complex::Uuid::FromString("77f392fb-c1eb-57da-a1b1-e7acf9239fb8").value(), complex::FilterTraits<CreateDataArray>::uuid}, // CreateDataArray
@@ -122,6 +124,8 @@ namespace complex
     {complex::Uuid::FromString("0541c5eb-1976-5797-9468-be50a93d44e2").value(), complex::FilterTraits<TriangleDihedralAngleFilter>::uuid}, // TriangleDihedralAngleFilter
     {complex::Uuid::FromString("8133d419-1919-4dbf-a5bf-1c97282ba63f").value(), complex::FilterTraits<TriangleNormalFilter>::uuid}, // TriangleNormalFilter
     {complex::Uuid::FromString("088ef69b-ca98-51a9-97ac-369862015d71").value(), complex::FilterTraits<CopyDataObjectFilter>::uuid}, // CopyObject
+    {complex::Uuid::FromString("79d59b85-01e8-5c4a-a6e1-3fd3e2ceffb4").value(), complex::FilterTraits<ExtractComponentAsArrayFilter>::uuid}, // ExtractComponentAsArray
+    {complex::Uuid::FromString("1b4b9941-62e4-52f2-9918-15d48147ab88").value(), complex::FilterTraits<ExtractComponentAsArrayFilter>::uuid}, // RemoveComponentFromArray
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
