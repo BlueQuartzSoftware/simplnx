@@ -282,8 +282,7 @@ IFilter::PreflightResult FindArrayStatisticsFilter::preflightImpl(const DataStru
     }
     inputDataArrayPaths.push_back(pFeatureIdsArrayPathValue);
 
-    usize numFeatures = FindArrayStatistics::FindNumFeatures(*featureIdsPtr);
-    tupleDims = {numFeatures};
+    tupleDims = {0};
   }
 
   if(pUseMaskValue)
