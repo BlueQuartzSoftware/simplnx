@@ -31,6 +31,11 @@ public:
   {
     for(usize triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
+      if(m_ShouldCancel)
+      {
+        break;
+      }
+
       std::array<Point3Df, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
