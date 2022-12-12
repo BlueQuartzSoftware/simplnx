@@ -238,6 +238,48 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
 }
 
 /**
+ * @brief Compares 2 DataArrays using an EPSILON value. Useful for floating point comparisons
+ * @tparam T
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+template <typename T>
+void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  static_assert(std::is_floating_point_v<T>);
+
+  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
+
+  const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
+  const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
+  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
+
+  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+
+  usize start = 0;
+  usize end = exemplaryDataArray.getSize();
+  for(usize i = start; i < end; i++)
+  {
+    auto oldVal = exemplaryDataArray[i];
+    auto newVal = generatedDataArray[i];
+    if(std::isnan(oldVal) && std::isnan(newVal))
+    {
+      // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
+      continue;
+    }
+    else if(oldVal != newVal)
+    {
+      float diff = std::fabs(static_cast<float>(oldVal - newVal));
+      REQUIRE(diff < EPSILON);
+      break;
+    }
+  }
+}
+
+/**
  * @brief
  * @tparam T
  * @param dataStructure
