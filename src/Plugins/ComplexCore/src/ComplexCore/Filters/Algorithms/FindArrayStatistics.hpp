@@ -64,7 +64,7 @@ public:
   const std::atomic_bool& getCancel();
 
   template <typename T>
-  Result<> findStats(const DataArray<T>& inputArray, std::vector<IDataArray*>& arrays, int32 numFeatures);
+  Result<> findStats(const DataArray<T>& inputArray, std::vector<IDataArray*>& arrays, usize numFeatures);
 
   static usize FindNumFeatures(const Int32Array& featureIds);
 

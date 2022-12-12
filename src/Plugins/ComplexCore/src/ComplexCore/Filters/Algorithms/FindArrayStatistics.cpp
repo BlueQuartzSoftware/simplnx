@@ -153,7 +153,7 @@ private:
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void findStatisticsByIndexImpl(std::unordered_map<int32, std::list<T>>& featureDataMap, std::vector<IDataArray*>& arrays, const FindArrayStatisticsInputValues* inputValues, int32 numFeatures)
+void findStatisticsByIndexImpl(std::unordered_map<int32, std::list<T>>& featureDataMap, std::vector<IDataArray*>& arrays, const FindArrayStatisticsInputValues* inputValues, usize numFeatures)
 {
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
@@ -256,14 +256,14 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
 // -----------------------------------------------------------------------------
 template <typename T>
 void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, const std::unique_ptr<MaskCompare>& mask, const FindArrayStatisticsInputValues* inputValues,
-                    std::vector<IDataArray*>& arrays, int32 numFeatures)
+                    std::vector<IDataArray*>& arrays, usize numFeatures)
 {
   usize numTuples = source.getNumberOfTuples();
   if(inputValues->ComputeByIndex)
   {
     std::unordered_map<int32, std::list<T>> featureValueMap;
 
-    for(size_t i = 0; i < numTuples; i++)
+    for(usize i = 0; i < numTuples; i++)
     {
       if(inputValues->UseMask)
       {
@@ -285,7 +285,7 @@ void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
   {
     std::vector<T> data;
     data.reserve(numTuples);
-    for(size_t i = 0; i < numTuples; i++)
+    for(usize i = 0; i < numTuples; i++)
     {
       if(inputValues->UseMask)
       {
@@ -312,8 +312,8 @@ template <typename T>
 void standardizeDataByIndex(const DataArray<T>& data, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const Float32Array& mu, const Float32Array& sig,
                             Float32Array& standardized)
 {
-  size_t numTuples = data.getNumberOfTuples();
-  for(size_t i = 0; i < numTuples; i++)
+  usize numTuples = data.getNumberOfTuples();
+  for(usize i = 0; i < numTuples; i++)
   {
     if(useMask)
     {
@@ -333,9 +333,9 @@ void standardizeDataByIndex(const DataArray<T>& data, bool useMask, const std::u
 template <typename T>
 void standardizeData(const DataArray<T>& data, bool useMask, const std::unique_ptr<MaskCompare>& mask, const Float32Array& mu, const Float32Array& sig, Float32Array& standardized)
 {
-  size_t numTuples = data.getNumberOfTuples();
+  usize numTuples = data.getNumberOfTuples();
 
-  for(size_t i = 0; i < numTuples; i++)
+  for(usize i = 0; i < numTuples; i++)
   {
     if(useMask)
     {
@@ -373,7 +373,7 @@ const std::atomic_bool& FindArrayStatistics::getCancel()
 
 // -----------------------------------------------------------------------------
 template <typename T>
-Result<> FindArrayStatistics::findStats(const DataArray<T>& inputArray, std::vector<IDataArray*>& arrays, int32 numFeatures)
+Result<> FindArrayStatistics::findStats(const DataArray<T>& inputArray, std::vector<IDataArray*>& arrays, usize numFeatures)
 {
   Int32Array* featureIds = nullptr;
   if(m_InputValues->ComputeByIndex)
@@ -498,6 +498,23 @@ Result<> FindArrayStatistics::operator()()
     arrays[7] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->HistogramArrayName);
   }
 
+  if(m_InputValues->ComputeByIndex)
+  {
+    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+    numFeatures = FindNumFeatures(featureIds);
+
+    auto* destAttrMat = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
+    destAttrMat->setShape({static_cast<usize>(numFeatures)});
+
+    for(const auto& array : arrays)
+    {
+      if(array != nullptr)
+      {
+        array->reshapeTuples({static_cast<usize>(numFeatures)});
+      }
+    }
+  }
+
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
   auto dataType = inputArray.getDataType();
   switch(dataType)
@@ -544,8 +561,8 @@ Result<> FindArrayStatistics::operator()()
 usize FindArrayStatistics::FindNumFeatures(const Int32Array& featureIds)
 {
   usize numFeatures = 0;
-  size_t totalPoints = featureIds.getNumberOfTuples();
-  for(size_t i = 0; i < totalPoints; i++)
+  usize totalPoints = featureIds.getNumberOfTuples();
+  for(usize i = 0; i < totalPoints; i++)
   {
     if(featureIds[i] > numFeatures)
     {
