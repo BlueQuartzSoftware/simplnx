@@ -87,3 +87,23 @@ target_include_directories(${PLUGIN_NAME}UnitTest
   PUBLIC
   ${complex_SOURCE_DIR}/test
 )
+
+# -----------------------------------------------------------------------------
+# Here we are going to setup to download and decompress the test files. In order
+# to add your own test files you will need to tar.gz the test file, compute the
+# SHA 512 Hash of the file and then upload the file to 
+# https://github.com/BlueQuartzSoftware/complex/releases/tag/Data_Archive.
+#
+# Go to the web site above, "edit" the release, add the filename and SHA 512 to
+# the table and then upload your compressed file.
+# Save the release so that the repo is updated
+# -----------------------------------------------------------------------------
+
+if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES) 
+  if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
+    file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
+  endif()
+
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME PartitionGeometryTest.tar.gz SHA512 8074dbcff86ed206d9185065a56258b766eb24367b3481e8600e9b48542de23dbd715ef8f9eca1c9718ca5e05a9c48997f613bde6f4357b8bba206241caecbbd)
+
+endif()
