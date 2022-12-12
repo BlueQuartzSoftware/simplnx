@@ -426,43 +426,6 @@ Result<> FindArrayStatistics::operator()()
     return {};
   }
 
-  int32 numFeatures = 0;
-  if(m_InputValues->ComputeByIndex)
-  {
-    const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-    const auto* destAttrMat = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
-    AttributeMatrix::ShapeType tupleShape = destAttrMat->getShape();
-    numFeatures = std::accumulate(tupleShape.begin(), tupleShape.end(), 1ULL, std::multiplies<>());
-    bool mismatchedFeatures = false;
-    int32 largestFeature = 0;
-    size_t totalPoints = featureIds.getNumberOfTuples();
-
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      if(featureIds[i] > largestFeature)
-      {
-        largestFeature = featureIds[i];
-        if(largestFeature >= numFeatures)
-        {
-          mismatchedFeatures = true;
-          break;
-        }
-      }
-    }
-
-    if(mismatchedFeatures)
-    {
-      return MakeErrorResult(-563500,
-                             fmt::format("The number of objects in the selected Attribute Matrix destination ('{}') is larger than the largest Id in the Feature/Ensemble Ids array", numFeatures));
-    }
-
-    if(largestFeature != (numFeatures - 1))
-    {
-      return MakeErrorResult(-563501,
-                             fmt::format("The number of objects in the selected Attribute Matrix destination ('{}') does not match the largest Id in the  Feature/Ensemble Ids array", numFeatures));
-    }
-  }
-
   std::vector<IDataArray*> arrays(8, nullptr);
 
   if(m_InputValues->FindLength)
@@ -498,6 +461,7 @@ Result<> FindArrayStatistics::operator()()
     arrays[7] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->HistogramArrayName);
   }
 
+  int32 numFeatures = 0;
   if(m_InputValues->ComputeByIndex)
   {
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
