@@ -292,7 +292,6 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
 {
   static_assert(std::is_floating_point_v<T>);
 
-  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
 
