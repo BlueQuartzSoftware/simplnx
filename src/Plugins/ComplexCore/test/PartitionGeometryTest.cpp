@@ -41,7 +41,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-const fs::path k_TestFilesPath = fs::path(unit_test::k_DREAM3DDataDir) / fs::path("TestFiles") / fs::path("PartitionGeometryTest");
+const fs::path k_TestFilesPath = fs::path(unit_test::k_DREAM3DDataDir.str()) / fs::path("TestFiles") / fs::path("PartitionGeometryTest");
 const fs::path k_ImageGeomTestFilePath = k_TestFilesPath / fs::path("image_geom.dream3d");
 const fs::path k_RectGridGeomTestFilePath = k_TestFilesPath / fs::path("rectgrid_geom.dream3d");
 const fs::path k_EdgeGeomTestFilePath = k_TestFilesPath / fs::path("edge_geom.dream3d");
@@ -118,7 +118,7 @@ Arguments createExistingPartitioningSchemeGeometryArguments(const DataPath& inpu
 }
 } // namespace
 
-TEST_CASE("Plugins::PartitionGeometryFilter: Valid filter execution", "[Plugins][PartitionGeometryFilter]")
+TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plugins][PartitionGeometryFilter]")
 {
   Arguments partitionGeometryArgs;
   Arguments importD3DArgs;
@@ -565,7 +565,7 @@ TEST_CASE("Plugins::PartitionGeometryFilter: Valid filter execution", "[Plugins]
   }
 }
 
-TEST_CASE("Plugins::PartitionGeometryFilter: Invalid filter execution")
+TEST_CASE("ComplexCore::PartitionGeometryFilter: Invalid filter execution")
 {
   Arguments partitionGeometryArgs;
   Arguments importD3DArgs;
