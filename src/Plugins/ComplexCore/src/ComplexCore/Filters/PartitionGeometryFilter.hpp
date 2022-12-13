@@ -7,6 +7,7 @@
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
@@ -156,6 +157,8 @@ protected:
    * @brief Helper method that data checks the Number Of Partitions Per Axis variable.
    */
   Result<> dataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis) const;
+
+  Result<> dataCheckDimensionality(const INodeGeometry0D& geometry) const;
 
   Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
                                                                 const DataPath& attrMatrixPath, const SizeVec3& numberOfPartitionsPerAxis) const;
