@@ -21,6 +21,8 @@ public:
 
   ~INodeGeometry0D() noexcept override = default;
 
+  using BoundingBox = std::pair<FloatVec3, FloatVec3>;
+
   /**
    * @brief Returns a shared pointer to the vertex coordinates array
    * @return
@@ -68,6 +70,33 @@ public:
    * @return
    */
   usize getNumberOfCells() const override;
+
+  /**
+   * @brief Calculates and returns the bounding box for this geometry
+   * @return
+   */
+  std::optional<BoundingBox> getBoundingBox() const;
+
+  /**
+   * @brief Returns whether or not this geometry is in a YZ plane.
+   * Returns empty if the vertex list does not exist.
+   * @return
+   */
+  std::optional<bool> isYZPlane() const;
+
+  /**
+   * @brief Returns whether or not this geometry is in a XY plane
+   * Returns empty if the vertex list does not exist.
+   * @return
+   */
+  std::optional<bool> isXYPlane() const;
+
+  /**
+   * @brief Returns whether or not this geometry is in a XZ plane
+   * Returns empty if the vertex list does not exist.
+   * @return
+   */
+  std::optional<bool> isXZPlane() const;
 
   /**
    * @brief Gets the coordinates at the target vertex ID.

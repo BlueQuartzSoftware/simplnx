@@ -191,6 +191,12 @@ public:
 
   /**
    * @brief
+   * @return FloatVec3
+   */
+  std::optional<FloatVec3> getOrigin() const;
+
+  /**
+   * @brief
    * @return usize
    */
   usize getNumXCells() const override;

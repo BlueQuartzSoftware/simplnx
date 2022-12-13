@@ -1,8 +1,5 @@
 #include "PartitionGeometryFilter.hpp"
 
-#include "ComplexCore/utils/PSImageGeomInfoGenerator.hpp"
-#include "ComplexCore/utils/PSNodeBasedGeomInfoGenerator.hpp"
-#include "ComplexCore/utils/PSRectGridGeomInfoGenerator.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
@@ -23,8 +20,179 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/GeometryUtilities.hpp"
 
 using namespace complex;
+
+namespace
+{
+/**
+ * @brief Generates the display text that describes the input geometry,
+ * shown as a preflight updated value in the user interface.
+ * @param dims The dimensions of the input geometry
+ * @param origin The origin of the input geometry
+ * @param spacing The spacing of the input geometry
+ * @param lengthUnits The length units of the input geometry
+ * @return The text description of the current input geometry.
+ */
+std::string GenerateInputGeometryDisplayText(const SizeVec3& dims, const FloatVec3& origin, const FloatVec3& spacing, const IGeometry::LengthUnit& lengthUnits)
+{
+  std::string lengthUnitStr = IGeometry::LengthUnitToString(lengthUnits);
+  if(lengthUnits == IGeometry::LengthUnit::Unspecified)
+  {
+    lengthUnitStr.append(" Units");
+  }
+  float32 xRangeMax = origin[0] + (static_cast<float32>(dims[0]) * spacing[0]);
+  float32 xDelta = static_cast<float32>(dims[0]) * spacing[0];
+  float32 yRangeMax = origin[1] + (static_cast<float32>(dims[1]) * spacing[1]);
+  float32 yDelta = static_cast<float32>(dims[1]) * spacing[1];
+  float32 zRangeMax = origin[2] + (static_cast<float32>(dims[2]) * spacing[2]);
+  float32 zDelta = static_cast<float32>(dims[2]) * spacing[2];
+
+  std::string desc = fmt::format("X Range: {0} to {1} [{4}] (Delta: {2} [{4}]) 0-{3} Voxels\n", origin[0], xRangeMax, xDelta, dims[0] - 1, lengthUnitStr);
+  desc.append(fmt::format("Y Range: {0} to {1} [{4}] (Delta: {2} [{4}]) 0-{3} Voxels\n", origin[1], yRangeMax, yDelta, dims[1] - 1, lengthUnitStr));
+  desc.append(fmt::format("Z Range: {0} to {1} [{4}] (Delta: {2} [{4}]) 0-{3} Voxels\n", origin[2], zRangeMax, zDelta, dims[2] - 1, lengthUnitStr));
+  return desc;
+}
+
+/**
+ * @brief Generates the display text that describes the partitioning scheme
+ * geometry, shown as a preflight updated value in the user interface.
+ * @param psDims The dimensions of the partitioning scheme geometry
+ * @param psOrigin The origin of the partitioning scheme geometry
+ * @param psSpacing The spacing of the partitioning scheme geometry
+ * @param lengthUnits The length units of the partitioning scheme geometry
+ * @param iGeom The input geometry, used to determine if the
+ * partitioning scheme geometry fits the input geometry or not.
+ * @return The text description of the partitioning scheme geometry.
+ */
+std::string GeneratePartitioningSchemeDisplayText(const SizeVec3& psDims, const FloatVec3& psOrigin, const FloatVec3& psSpacing, const IGeometry::LengthUnit& lengthUnits, const IGeometry& iGeom)
+{
+  float32 xRangeMax = (psOrigin[0] + (static_cast<float32>(psDims[0]) * psSpacing[0]));
+  float32 xDelta = static_cast<float32>(psDims[0]) * psSpacing[0];
+  float32 yRangeMax = (psOrigin[1] + (static_cast<float32>(psDims[1]) * psSpacing[1]));
+  float32 yDelta = static_cast<float32>(psDims[1]) * psSpacing[1];
+  float32 zRangeMax = (psOrigin[2] + (static_cast<float32>(psDims[2]) * psSpacing[2]));
+  float32 zDelta = static_cast<float32>(psDims[2]) * psSpacing[2];
+
+  std::string lengthUnitStr = IGeometry::LengthUnitToString(lengthUnits);
+  if(lengthUnits == IGeometry::LengthUnit::Unspecified)
+  {
+    lengthUnitStr.append(" Units");
+  }
+
+  std::string desc = fmt::format("X Partition Bounds: {0} to {1} [{3}].   Delta: {2} [{3}].\n", psOrigin[0], xRangeMax, xDelta, lengthUnitStr);
+  desc.append(fmt::format("Y Partition Bounds: {0} to {1} [{3}].   Delta: {2} [{3}].\n", psOrigin[1], yRangeMax, yDelta, lengthUnitStr));
+  desc.append(fmt::format("Z Partition Bounds: {0} to {1} [{3}].   Delta: {2} [{3}].\n", psOrigin[2], zRangeMax, zDelta, lengthUnitStr));
+
+  if(iGeom.getGeomType() == IGeometry::Type::Image)
+  {
+    const ImageGeom& geometry = dynamic_cast<const ImageGeom&>(iGeom);
+
+    SizeVec3 dims = geometry.getDimensions();
+    FloatVec3 origin = geometry.getOrigin();
+    FloatVec3 spacing = geometry.getSpacing();
+
+    float32 gxRangeMax = origin[0] + (dims[0] * spacing[0]);
+    float32 gyRangeMax = origin[1] + (dims[1] * spacing[1]);
+    float32 gzRangeMax = origin[2] + (dims[2] * spacing[2]);
+
+    if(origin[0] < psOrigin[0] || origin[1] < psOrigin[1] || origin[2] < psOrigin[2] || gxRangeMax > xRangeMax || gyRangeMax > yRangeMax || gzRangeMax > zRangeMax)
+    {
+      desc.append("Geometry size DOES NOT fit within the partitioning space!");
+    }
+    else
+    {
+      desc.append("Geometry size fits within partitioning space.");
+    }
+  }
+
+  return desc;
+}
+
+/**
+ * @brief Generates the partitioning scheme information (dimensions, origin, spacing, units)
+ * that the filter will use to create the partitioning scheme image geometry.
+ * @param geometry The input geometry
+ * @param filterArgs The arguments from the filter, some filter variables are needed.
+ * @return Returns a result that either contains a PSGeomInfo object with the data inside,
+ * or an error describing what went wrong during the generation process.
+ */
+template <typename Geom>
+Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom& geometry, const DataStructure& ds, const Arguments& filterArgs)
+{
+  auto pPartitioningModeValue = filterArgs.value<ChoicesParameter::ValueType>(PartitionGeometryFilter::k_PartitioningMode_Key);
+  auto pNumberOfPartitionsPerAxisValue = filterArgs.value<VectorInt32Parameter::ValueType>(PartitionGeometryFilter::k_NumberOfPartitionsPerAxis_Key);
+
+  SizeVec3 numOfPartitionsPerAxisValue = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
+                                          static_cast<usize>(pNumberOfPartitionsPerAxisValue[2])};
+
+  PartitionGeometry::PSGeomInfo psGeomMetadata;
+
+  switch(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue))
+  {
+  case PartitionGeometryFilter::PartitioningMode::Basic: {
+    std::optional<FloatVec3> originResult;
+    if constexpr(std::is_same_v<Geom, ImageGeom> || std::is_same_v<Geom, RectGridGeom>)
+    {
+      originResult = geometry.getOrigin();
+    }
+    else
+    {
+      originResult = CalculateNodeBasedPartitionSchemeOrigin<Geom>(geometry);
+    }
+
+    std::optional<FloatVec3> pLengthResult = CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
+    if(originResult.has_value() && pLengthResult.has_value())
+    {
+      psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
+                                     static_cast<usize>(pNumberOfPartitionsPerAxisValue[2])};
+      psGeomMetadata.geometryOrigin = *originResult;
+      psGeomMetadata.geometrySpacing = *pLengthResult;
+      psGeomMetadata.geometryUnits = geometry.getUnits();
+    }
+    break;
+  }
+  case PartitionGeometryFilter::PartitioningMode::Advanced: {
+    auto pPartitioningSchemeOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_PartitioningSchemeOrigin_Key);
+    auto pLengthPerPartitionValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_LengthPerPartition_Key);
+
+    psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
+                                   static_cast<usize>(pNumberOfPartitionsPerAxisValue[2])};
+    psGeomMetadata.geometryOrigin = pPartitioningSchemeOriginValue;
+    psGeomMetadata.geometrySpacing = pLengthPerPartitionValue;
+    psGeomMetadata.geometryUnits = geometry.getUnits();
+    break;
+  }
+  case PartitionGeometryFilter::PartitioningMode::BoundingBox: {
+    auto pLowerLeftCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_LowerLeftCoord_Key);
+    auto pUpperRightCoordValue = filterArgs.value<VectorFloat32Parameter::ValueType>(PartitionGeometryFilter::k_UpperRightCoord_Key);
+
+    psGeomMetadata.geometryDims = numOfPartitionsPerAxisValue;
+    psGeomMetadata.geometryOrigin = pLowerLeftCoordValue;
+    FloatVec3 llCoord(pLowerLeftCoordValue[0], pLowerLeftCoordValue[1], pLowerLeftCoordValue[2]);
+    FloatVec3 urCoord(pUpperRightCoordValue[0], pUpperRightCoordValue[1], pUpperRightCoordValue[2]);
+    psGeomMetadata.geometrySpacing = CalculatePartitionLengthsOfBoundingBox({llCoord, urCoord}, numOfPartitionsPerAxisValue);
+    psGeomMetadata.geometryUnits = geometry.getUnits();
+    break;
+  }
+  case PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme: {
+    auto pExistingPartitioningSchemePathValue = filterArgs.value<DataPath>(PartitionGeometryFilter::k_ExistingPartitioningSchemePath_Key);
+    const ImageGeom& psGeom = ds.getDataRefAs<ImageGeom>(pExistingPartitioningSchemePathValue);
+    psGeomMetadata.geometryDims = psGeom.getDimensions();
+    psGeomMetadata.geometryOrigin = psGeom.getOrigin();
+    psGeomMetadata.geometrySpacing = psGeom.getSpacing();
+    psGeomMetadata.geometryUnits = psGeom.getUnits();
+    break;
+  }
+  default: {
+    return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3011, "Unable to create partitioning scheme geometry - Unknown partitioning mode.")};
+  }
+  }
+
+  return {psGeomMetadata};
+}
+} // namespace
 
 namespace complex
 {
@@ -172,9 +340,8 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     {
       return {ConvertResultTo<OutputActions>(std::move(result), {})};
     }
-    PSImageGeomInfoGenerator pGeom(geometry, numberOfPartitionsPerAxis);
-    psInfo = PartitionGeometry::GeneratePartitioningSchemeInfo(pGeom, dataStructure, filterArgs);
-    inputGeometryInformation = PartitionGeometry::GenerateInputGeometryDisplayText(geometry.getDimensions(), geometry.getOrigin(), geometry.getSpacing(), geometry.getUnits());
+    psInfo = GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
+    inputGeometryInformation = GenerateInputGeometryDisplayText(geometry.getDimensions(), geometry.getOrigin(), geometry.getSpacing(), geometry.getUnits());
     break;
   }
   case IGeometry::Type::RectGrid: {
@@ -184,8 +351,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
       return {MakeErrorResult<OutputActions>(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s cell count ({}).", humanName(),
                                                                 attrMatrix.getName(), attrMatrix.getNumTuples(), geometry.getName(), geometry.getNumberOfCells()))};
     }
-    PSRectGridGeomInfoGenerator pGeom(geometry, numberOfPartitionsPerAxis);
-    psInfo = PartitionGeometry::GeneratePartitioningSchemeInfo(pGeom, dataStructure, filterArgs);
+    psInfo = GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
     inputGeometryInformation = "Rectilinear grid geometry space unknown during preflight.";
     break;
   }
@@ -279,7 +445,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   {
     psOrigin = {(*psMetadata.geometryOrigin)[0], (*psMetadata.geometryOrigin)[1], (*psMetadata.geometryOrigin)[2]};
     psSpacing = {(*psMetadata.geometrySpacing)[0], (*psMetadata.geometrySpacing)[1], (*psMetadata.geometrySpacing)[2]};
-    partitioningSchemeInformation = PartitionGeometry::GeneratePartitioningSchemeDisplayText(psDims, psOrigin, psSpacing, psMetadata.geometryUnits, iGeom);
+    partitioningSchemeInformation = GeneratePartitioningSchemeDisplayText(psDims, psOrigin, psSpacing, psMetadata.geometryUnits, iGeom);
   }
 
   if(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue) != PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme)
@@ -312,13 +478,39 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBased
     return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3014, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).",
                                                                               humanName(), attrMatrix.getName(), attrMatrix.getNumTuples(), geometry.getName(), geometry.getNumberOfVertices()))};
   }
-  PSNodeBasedGeomInfoGenerator pGeom(geometry, numberOfPartitionsPerAxis);
-  Result<> dimensionalityResult = pGeom.checkDimensionality();
+  Result<> dimensionalityResult = dataCheckDimensionality(geometry);
   if(dimensionalityResult.invalid())
   {
     return {ConvertResultTo<PartitionGeometry::PSGeomInfo>(std::move(dimensionalityResult), {})};
   }
-  return PartitionGeometry::GeneratePartitioningSchemeInfo(pGeom, dataStructure, filterArgs);
+  return GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
+}
+
+// -----------------------------------------------------------------------------
+Result<> PartitionGeometryFilter::dataCheckDimensionality(const INodeGeometry0D& geometry) const
+{
+  std::optional<bool> yzPlaneResult = geometry.isYZPlane();
+  if(yzPlaneResult.has_value() && *yzPlaneResult)
+  {
+    return {MakeErrorResult(-3040, "Unable to create a partitioning scheme with a X dimension size of 0.  Vertices are in an YZ plane.  Use the Advanced or Bounding Box "
+                                   "partitioning modes to manually create a partitioning scheme.")};
+  }
+
+  std::optional<bool> xzPlaneResult = geometry.isXZPlane();
+  if(xzPlaneResult.has_value() && *xzPlaneResult)
+  {
+    return {MakeErrorResult(-3041, "Unable to create a partitioning scheme with a Y dimension size of 0.  Vertices are in an XZ plane.  Use the Advanced or Bounding Box "
+                                   "partitioning modes to manually create a partitioning scheme.")};
+  }
+
+  std::optional<bool> xyPlaneResult = geometry.isXYPlane();
+  if(xyPlaneResult.has_value() && *xyPlaneResult)
+  {
+    return {MakeErrorResult(-3042, "Unable to create a partitioning scheme with a Z dimension size of 0.  Vertices are in an XY plane.  Use the Advanced or Bounding Box "
+                                   "partitioning modes to manually create a partitioning scheme.")};
+  }
+
+  return {};
 }
 
 // -----------------------------------------------------------------------------
