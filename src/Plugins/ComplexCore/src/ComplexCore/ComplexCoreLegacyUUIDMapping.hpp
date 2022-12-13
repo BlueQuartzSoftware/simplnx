@@ -70,6 +70,7 @@
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
+#include "ComplexCore/Filters/ExecuteProcessFilter.hpp"
 #include "ComplexCore/Filters/TriangleCentroidFilter.hpp"
 #include "ComplexCore/Filters/ResampleImageGeomFilter.hpp"
 #include "ComplexCore/Filters/RotateSampleRefFrameFilter.hpp"
@@ -151,6 +152,7 @@ namespace complex
     {complex::Uuid::FromString("8133d419-1919-4dbf-a5bf-1c97282ba63f").value(), complex::FilterTraits<TriangleNormalFilter>::uuid}, // TriangleNormalFilter
     {complex::Uuid::FromString("088ef69b-ca98-51a9-97ac-369862015d71").value(), complex::FilterTraits<CopyDataObjectFilter>::uuid}, // CopyObject
     {complex::Uuid::FromString("79d59b85-01e8-5c4a-a6e1-3fd3e2ceffb4").value(), complex::FilterTraits<ExtractComponentAsArrayFilter>::uuid}, // ExtractComponentAsArray
+    {complex::Uuid::FromString("8a2308ec-86cd-5636-9a0a-6c7d383e9e7f").value(), complex::FilterTraits<ExecuteProcessFilter>::uuid}, // ExecuteProcessFilter
     {complex::Uuid::FromString("1b4b9941-62e4-52f2-9918-15d48147ab88").value(), complex::FilterTraits<ExtractComponentAsArrayFilter>::uuid}, // RemoveComponentFromArray
     {complex::Uuid::FromString("7aa33007-4186-5d7f-ba9d-d0a561b3351d").value(), complex::FilterTraits<TriangleCentroidFilter>::uuid}, // TriangleCentroid
     {complex::Uuid::FromString("1966e540-759c-5798-ae26-0c6a3abc65c0").value(), complex::FilterTraits<ResampleImageGeomFilter>::uuid}, // ResampleImageGeom

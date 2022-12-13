@@ -31,6 +31,7 @@ set(FilterList
   CropImageGeometry
   CropVertexGeometry
   DeleteData
+  ExecuteProcessFilter
   ExportDREAM3DFilter
   ExtractComponentAsArrayFilter
   ExtractInternalSurfacesFromTriangleGeometry
@@ -97,7 +98,7 @@ set(AlgorithmList
   CombineAttributeArrays
   ConvertColorToGrayScale
   ConvertData
-  PartitionGeometry
+  ExecuteProcess
   ExtractComponentAsArray
   ExtractVertexGeometry
   FillBadData
@@ -109,6 +110,7 @@ set(AlgorithmList
   FindTriangleGeomSizes
   GenerateColorTable
   LaplacianSmoothing
+  PartitionGeometry
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   RawBinaryReader
