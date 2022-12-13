@@ -31,6 +31,7 @@
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ImportDREAM3DFilter.hpp"
@@ -542,11 +543,13 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
   DataStructure dataStructure;
   PartitionGeometryFilter filter;
 
+  // Preflight the filter and check result
   auto executeResult = importD3DFilter.execute(dataStructure, importD3DArgs);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
+  // Execute the filter and check the result
   executeResult = filter.execute(dataStructure, partitionGeometryArgs);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   DataPath attrMatrixPath = partitionGeometryArgs.value<DataPath>(PartitionGeometryFilter::k_AttributeMatrixPath_Key);
 
