@@ -55,6 +55,13 @@ inline constexpr StringLiteral k_FeatureData("FeatureData");
 inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
 
+inline constexpr StringLiteral k_Centroids("Centroids");
+inline constexpr StringLiteral k_EnsembleAttributeMatrix("CellEnsembleData");
+inline constexpr StringLiteral k_ExemplarDataContainer("Exemplar Data");
+inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
+inline constexpr StringLiteral k_Fit("Fit");
+inline constexpr StringLiteral k_SEMSignal("SEM Signal");
+
 inline constexpr StringLiteral k_SmallIN1002("Small IN1002");
 inline constexpr StringLiteral k_SmallIN100("Small IN100");
 inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
@@ -66,9 +73,11 @@ inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
 inline constexpr StringLiteral k_EulerAngles("EulerAngles");
 inline constexpr StringLiteral k_AxisAngles("AxisAngles");
 inline constexpr StringLiteral k_Quats("Quats");
+inline constexpr StringLiteral k_Mask("Mask");
 inline constexpr StringLiteral k_FZQuats("FZQuats");
 inline constexpr StringLiteral k_FeatureGroupName("Feature Data");
 inline constexpr StringLiteral k_ActiveName("Active");
+inline constexpr StringLiteral k_NumElements("NumElements");
 inline constexpr StringLiteral k_SlipVector("SlipVector");
 
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
@@ -110,12 +119,60 @@ inline constexpr StringLiteral k_Float64DataSet("float64 DataSet");
 
 inline constexpr StringLiteral k_ConditionalArray("Conditional [bool]");
 inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
+
+// Data Container DataPath
+const DataPath k_DataContainerPath({k_DataContainer});
+
+// Cell Attribute Matrix DataPaths
+const DataPath k_CellAttributeMatrix = k_DataContainerPath.createChildPath(k_CellData);
+const DataPath k_EulersArrayPath = k_CellAttributeMatrix.createChildPath(k_EulerAngles);
+const DataPath k_QuatsArrayPath = k_CellAttributeMatrix.createChildPath(k_Quats);
+const DataPath k_PhasesArrayPath = k_CellAttributeMatrix.createChildPath(k_Phases);
+const DataPath k_FeatureIdsArrayPath = k_CellAttributeMatrix.createChildPath(k_FeatureIds);
+const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_ConfidenceIndex);
+const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_ImageQuality);
+const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
+
+// Cell Ensemble Data DataPaths
+const DataPath k_CellEnsembleAttributeMatrixPath = k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix);
+const DataPath k_CrystalStructuresArrayPath = k_CellEnsembleAttributeMatrixPath.createChildPath(k_CrystalStructures);
+
+// Cell Feature Attribute Matrix DataPaths
+const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_GrainData);
+const DataPath k_ActiveArrayPath = k_CellFeatureAttributeMatrix.createChildPath(k_ActiveName);
+const DataPath k_NumCellsPath = k_CellFeatureAttributeMatrix.createChildPath(k_NumElements);
+const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPath(k_Phases);
+
+// Exemplar DataStructure
+const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
+
+// Oreintation Analysis Plugin List
+const Uuid k_OrientationAnalysisPluginId = *Uuid::FromString("c09cf01b-014e-5adb-84eb-ea76fc79eeb1");
+// Make sure we can instantiate the Convert Orientations
+const Uuid k_ConvertOrientationsFilterId = *Uuid::FromString("501e54e6-a66f-4eeb-ae37-00e649c00d4b");
+const FilterHandle k_ConvertOrientationsFilterHandle(k_ConvertOrientationsFilterId, k_OrientationAnalysisPluginId);
+// Make sure we can instantiate the EbsdSegmentFeatures
+const Uuid k_EbsdSegmentFeaturesFilterId = *Uuid::FromString("1810c2c7-63e3-41db-b204-a5821e6271c0");
+const FilterHandle k_EbsdSegmentFeaturesFilterHandle(k_EbsdSegmentFeaturesFilterId, k_OrientationAnalysisPluginId);
+// Make sure we can instantiate the Align Sections Misorientation
+const Uuid k_AlignSectionMisorientationFilterId = *Uuid::FromString("8df2135c-7079-49f4-9756-4f3c028a5ced");
+const FilterHandle k_AlignSectionMisorientationFilterHandle(k_AlignSectionMisorientationFilterId, k_OrientationAnalysisPluginId);
+// Make sure we can instantiate the NeighborOrientationCorrelation
+const Uuid k_NeighborOrientationCorrelationFilterId = *Uuid::FromString("4625c192-7e46-4333-a294-67a2eb64cb37");
+const FilterHandle k_NeighborOrientationCorrelationFilterHandle(k_NeighborOrientationCorrelationFilterId, k_OrientationAnalysisPluginId);
+// Make sure we can instantiate the
+const Uuid k_BadDataNeighborOrientationCheckFilterId = *Uuid::FromString("3f342977-aea1-49e1-a9c2-f73760eba0d3");
+const FilterHandle k_BadDataNeighborOrientationCheckFilterHandle(k_BadDataNeighborOrientationCheckFilterId, k_OrientationAnalysisPluginId);
+
 } // namespace Constants
 
 namespace UnitTest
 {
-
 inline constexpr float EPSILON = 0.0001;
+
+struct make_shared_enabler : public complex::Application
+{
+};
 
 /**
  * @brief closeEnough
@@ -513,5 +570,96 @@ inline void AddImageGeometry(DataStructure& dataGraph, const SizeVec3& imageGeom
   imageGeom->setSpacing(spacing);
   imageGeom->setOrigin(origin);
 }
+
+inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath attributeMatrix, const std::string& exemplarDataContainerName)
+{
+  auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
+  std::vector<DataPath> selectedCellArrays;
+
+  // Create the vector of selected cell DataPaths
+  for(auto& child : cellDataGroup)
+  {
+    selectedCellArrays.push_back(attributeMatrix.createChildPath(child.second->getName()));
+  }
+
+  for(const auto& cellArrayPath : selectedCellArrays)
+  {
+    const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
+    DataType type = generatedDataArray.getDataType();
+    // Now generate the path to the exemplar data set in the exemplar data structure.
+    std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
+    generatedPathVector[0] = exemplarDataContainerName;
+    DataPath exemplarDataArrayPath(generatedPathVector);
+
+    // Check to see if there is something to compare against in the exemplar file.
+    if(nullptr == exemplarDataStructure.getDataAs<IDataArray>(exemplarDataArrayPath))
+    {
+      continue;
+    }
+
+    auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath);
+    DataType exemplarType = exemplarDataArray.getDataType();
+
+    if(type != exemplarType)
+    {
+      std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray.getName(), exemplarDataArray.getName(), type, exemplarType)
+                << std::endl;
+      continue;
+    }
+
+    switch(type)
+    {
+    case DataType::boolean: {
+      complex::UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::int8: {
+      complex::UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::int16: {
+      complex::UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::int32: {
+      complex::UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::int64: {
+      complex::UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::uint8: {
+      complex::UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::uint16: {
+      complex::UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::uint32: {
+      complex::UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::uint64: {
+      complex::UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::float32: {
+      complex::UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    case DataType::float64: {
+      complex::UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
+      break;
+    }
+    default: {
+      throw std::runtime_error("Invalid DataType");
+    }
+    }
+  }
+}
+
 } // namespace UnitTest
+
 } // namespace complex

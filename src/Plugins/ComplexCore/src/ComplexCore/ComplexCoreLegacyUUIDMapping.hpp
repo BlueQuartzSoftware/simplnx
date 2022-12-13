@@ -13,6 +13,8 @@
 #include "ComplexCore/Filters/ChangeAngleRepresentation.hpp"
 #include "ComplexCore/Filters/CombineAttributeArraysFilter.hpp"
 #include "ComplexCore/Filters/ConditionalSetValue.hpp"
+#include "ComplexCore/Filters/ConvertColorToGrayScaleFilter.hpp"
+#include "ComplexCore/Filters/ConvertDataFilter.hpp"
 #include "ComplexCore/Filters/CopyDataObjectFilter.hpp"
 #include "ComplexCore/Filters/CopyFeatureArrayToElementArray.hpp"
 #include "ComplexCore/Filters/CreateAttributeMatrixFilter.hpp"
@@ -23,10 +25,13 @@
 #include "ComplexCore/Filters/CropImageGeometry.hpp"
 #include "ComplexCore/Filters/CropVertexGeometry.hpp"
 #include "ComplexCore/Filters/DeleteData.hpp"
+#include "ComplexCore/Filters/ErodeDilateBadDataFilter.hpp"
 #include "ComplexCore/Filters/ExportDREAM3DFilter.hpp"
 #include "ComplexCore/Filters/ExtractInternalSurfacesFromTriangleGeometry.hpp"
+#include "ComplexCore/Filters/FeatureDataCSVWriterFilter.hpp"
 #include "ComplexCore/Filters/FindArrayStatisticsFilter.hpp"
 #include "ComplexCore/Filters/FindDifferencesMap.hpp"
+#include "ComplexCore/Filters/FindFeatureCentroidsFilter.hpp"
 #include "ComplexCore/Filters/FindFeaturePhasesFilter.hpp"
 #include "ComplexCore/Filters/FindNeighborListStatistics.hpp"
 #include "ComplexCore/Filters/FindNeighbors.hpp"
@@ -75,6 +80,8 @@ namespace complex
     {complex::Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value(), complex::FilterTraits<ChangeAngleRepresentation>::uuid}, // ChangeAngleRepresentation
     {complex::Uuid::FromString("a6b50fb0-eb7c-5d9b-9691-825d6a4fe772").value(), complex::FilterTraits<CombineAttributeArraysFilter>::uuid}, // CombineAttributeArrays
     {complex::Uuid::FromString("47cafe63-83cc-5826-9521-4fb5bea684ef").value(), complex::FilterTraits<ConditionalSetValue>::uuid}, // ConditionalSetValue
+    {complex::Uuid::FromString("eb5a89c4-4e71-59b1-9719-d10a652d961e").value(), complex::FilterTraits<ConvertColorToGrayScaleFilter>::uuid}, // ConvertColorToGrayScale
+    {complex::Uuid::FromString("f4ba5fa4-bb5c-5dd1-9429-0dd86d0ecb37").value(), complex::FilterTraits<ConvertDataFilter>::uuid}, // ConvertData
     {complex::Uuid::FromString("a37f2e24-7400-5005-b9a7-b2224570cbe9").value(), complex::FilterTraits<ConditionalSetValue>::uuid}, // ReplaceValueInArray
     {complex::Uuid::FromString("99836b75-144b-5126-b261-b411133b5e8a").value(), complex::FilterTraits<CopyFeatureArrayToElementArray>::uuid}, // CopyFeatureArrayToElementArray
     {complex::Uuid::FromString("93375ef0-7367-5372-addc-baa019b1b341").value(), complex::FilterTraits<CreateAttributeMatrixFilter>::uuid}, // CreateAttributeMatrix
@@ -85,10 +92,13 @@ namespace complex
     {complex::Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf").value(), complex::FilterTraits<CropImageGeometry>::uuid}, // CropImageGeometry
     {complex::Uuid::FromString("f28cbf07-f15a-53ca-8c7f-b41a11dae6cc").value(), complex::FilterTraits<CropVertexGeometry>::uuid}, // CropVertexGeometry
     {complex::Uuid::FromString("7b1c8f46-90dd-584a-b3ba-34e16958a7d0").value(), complex::FilterTraits<DeleteData>::uuid}, // RemoveArrays
+    {complex::Uuid::FromString("3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254").value(), complex::FilterTraits<ErodeDilateBadDataFilter>::uuid}, // ErodeDilateBadData   
     {complex::Uuid::FromString("3fcd4c43-9d75-5b86-aad4-4441bc914f37").value(), complex::FilterTraits<ExportDREAM3DFilter>::uuid}, // DataContainerWriter
     {complex::Uuid::FromString("52a069b4-6a46-5810-b0ec-e0693c636034").value(), complex::FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid}, // ExtractInternalSurfacesFromTriangleGeometry
+    {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), complex::FilterTraits<FeatureDataCSVWriterFilter>::uuid}, // FeatureDataCSVWriter
     {complex::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), complex::FilterTraits<FindArrayStatisticsFilter>::uuid}, // FindArrayStatistics
     {complex::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), complex::FilterTraits<FindDifferencesMap>::uuid}, // FindDifferenceMap
+    {complex::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), complex::FilterTraits<FindFeatureCentroidsFilter>::uuid}, // FindFeatureCentroids
     {complex::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), complex::FilterTraits<FindFeaturePhasesFilter>::uuid}, // FindFeaturePhases
     {complex::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), complex::FilterTraits<FindNeighborListStatistics>::uuid}, // FindNeighborListStatistics
     {complex::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), complex::FilterTraits<FindNeighbors>::uuid}, // FindNeighbors
