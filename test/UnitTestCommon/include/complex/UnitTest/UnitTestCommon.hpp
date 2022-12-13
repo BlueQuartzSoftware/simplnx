@@ -256,7 +256,7 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
  * @param computedPath
  */
 template <typename T>
-void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON)
 {
   static_assert(std::is_floating_point_v<T>);
 
@@ -283,7 +283,7 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
     else if(oldVal != newVal)
     {
       float diff = std::fabs(static_cast<float>(oldVal - newVal));
-      REQUIRE(diff < EPSILON);
+      REQUIRE(diff < epsilon);
       break;
     }
   }
