@@ -620,7 +620,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Invalid filter execution")
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   executeResult = filter.execute(dataStructure, partitionGeometryArgs);
-  REQUIRE(executeResult.result.invalid());
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
 }
