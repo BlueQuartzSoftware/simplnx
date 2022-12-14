@@ -44,7 +44,12 @@ std::string ImportDREAM3DFilter::humanName() const
 Parameters ImportDREAM3DFilter::parameters() const
 {
   Parameters params;
-
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  // ! DO NOT REMOVE THIS SEPARATOR PARAMETER, ADD OR REMOVE ANY OTHER PARAMETER
+  // ! THE PARAMETERS NEED TO BE IN THIS EXACT ORDER FOR SOME GUI BITS TO WORK
+  // ! NXPipelineFilterListView::appendPipeline will also need to get updated
+  // ! if you update the order of parameters
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<Dream3dImportParameter>(k_ImportFileData, "Import File Path", "The HDF5 file path the DataStructure should be imported from.", Dream3dImportParameter::ImportData()));
   return params;
