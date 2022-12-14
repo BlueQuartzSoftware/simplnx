@@ -9,8 +9,8 @@ Range2D::Range2D()
 }
 
 // -----------------------------------------------------------------------------
-Range2D::Range2D(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd)
-: m_Range({{xStart, xEnd, yStart, yEnd}})
+Range2D::Range2D(size_t colStart, size_t colEnd, size_t rowStart, size_t rowEnd)
+: m_Range({{colStart, colEnd, rowStart, rowEnd}})
 {
 }
 
