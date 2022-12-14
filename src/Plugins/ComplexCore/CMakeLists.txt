@@ -29,7 +29,6 @@ set(FilterList
   CropImageGeometry
   CropVertexGeometry
   DeleteData
-  ErodeDilateBadDataFilter
   ExportDREAM3DFilter
   ExtractInternalSurfacesFromTriangleGeometry
   ExtractVertexGeometryFilter
@@ -93,7 +92,6 @@ set(AlgorithmList
   FindFeatureCentroids
   FindArrayStatistics
   CombineAttributeArrays
-  ErodeDilateBadData
   ExtractComponentAsArray
   ExtractVertexGeometry
   FindTriangleGeomCentroids

@@ -25,7 +25,6 @@
 #include "ComplexCore/Filters/CropImageGeometry.hpp"
 #include "ComplexCore/Filters/CropVertexGeometry.hpp"
 #include "ComplexCore/Filters/DeleteData.hpp"
-#include "ComplexCore/Filters/ErodeDilateBadDataFilter.hpp"
 #include "ComplexCore/Filters/ExportDREAM3DFilter.hpp"
 #include "ComplexCore/Filters/ExtractInternalSurfacesFromTriangleGeometry.hpp"
 #include "ComplexCore/Filters/FeatureDataCSVWriterFilter.hpp"
@@ -91,8 +90,7 @@ namespace complex
     {complex::Uuid::FromString("f2132744-3abb-5d66-9cd9-c9a233b5c4aa").value(), complex::FilterTraits<CreateImageGeometry>::uuid}, // CreateImageGeometry
     {complex::Uuid::FromString("baa4b7fe-31e5-5e63-a2cb-0bb9d844cfaf").value(), complex::FilterTraits<CropImageGeometry>::uuid}, // CropImageGeometry
     {complex::Uuid::FromString("f28cbf07-f15a-53ca-8c7f-b41a11dae6cc").value(), complex::FilterTraits<CropVertexGeometry>::uuid}, // CropVertexGeometry
-    {complex::Uuid::FromString("7b1c8f46-90dd-584a-b3ba-34e16958a7d0").value(), complex::FilterTraits<DeleteData>::uuid}, // RemoveArrays
-    {complex::Uuid::FromString("3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254").value(), complex::FilterTraits<ErodeDilateBadDataFilter>::uuid}, // ErodeDilateBadData   
+    {complex::Uuid::FromString("7b1c8f46-90dd-584a-b3ba-34e16958a7d0").value(), complex::FilterTraits<DeleteData>::uuid}, // RemoveArrays   
     {complex::Uuid::FromString("3fcd4c43-9d75-5b86-aad4-4441bc914f37").value(), complex::FilterTraits<ExportDREAM3DFilter>::uuid}, // DataContainerWriter
     {complex::Uuid::FromString("52a069b4-6a46-5810-b0ec-e0693c636034").value(), complex::FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid}, // ExtractInternalSurfacesFromTriangleGeometry
     {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), complex::FilterTraits<FeatureDataCSVWriterFilter>::uuid}, // FeatureDataCSVWriter

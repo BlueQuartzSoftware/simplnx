@@ -26,7 +26,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CopyFeatureArrayToElementArrayTest.cpp
   CreateImageGeometryTest.cpp
   CropImageGeometryTest.cpp
-  ErodeDilateBadDataTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
   FeatureDataCSVWriterTest.cpp

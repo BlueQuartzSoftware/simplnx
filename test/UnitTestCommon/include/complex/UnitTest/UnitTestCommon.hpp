@@ -51,6 +51,7 @@ namespace Constants
 inline constexpr StringLiteral k_DataContainer("DataContainer");
 inline constexpr StringLiteral k_CellData("CellData");
 inline constexpr StringLiteral k_GrainData("GrainData");
+inline constexpr StringLiteral k_Grain_Data("Grain Data");
 inline constexpr StringLiteral k_FeatureData("FeatureData");
 inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
