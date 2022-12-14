@@ -802,7 +802,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
     {
       throw std::runtime_error("Error reading legacy DataArray dimensions");
     }
-
+    // From SIMPL, the component dimensions are actually all ordered correctly in the HDF5 file. Somehow.
     cDims = compAttrib.readAsVector<usize>();
   }
 
@@ -812,9 +812,8 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
     {
       throw std::runtime_error("Error reading legacy DataArray dimensions");
     }
-
     tDims = tupleAttrib.readAsVector<usize>();
-    std::reverse(tDims.begin(), tDims.end());
+    std::reverse(tDims.begin(), tDims.end()); // SIMPL writes the Tuple Dimensions in reverse order to this attribute
   }
 }
 
