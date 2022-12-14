@@ -22,7 +22,6 @@ namespace complex
 class COMPLEX_EXPORT Range2D
 {
 public:
-
   /**
    * @brief The 4 values are stored in the order of Col Start, Col End, Row Start, Row End
    * with the assumption that the ordering of the data is Column moving the fastest
