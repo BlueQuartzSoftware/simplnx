@@ -2,8 +2,8 @@
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
