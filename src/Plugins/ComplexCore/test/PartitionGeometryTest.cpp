@@ -618,7 +618,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Invalid filter execution")
 
   auto executeResult = importD3DFilter.execute(dataStructure, importD3DArgs);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
-  
+
   executeResult = filter.execute(dataStructure, partitionGeometryArgs);
   REQUIRE(executeResult.result.invalid());
   REQUIRE(executeResult.result.errors().size() == 1);
