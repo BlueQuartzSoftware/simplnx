@@ -1,8 +1,8 @@
 #pragma once
 
+#include <chrono>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
-
 #include <string>
 
 namespace complex
@@ -16,10 +16,11 @@ namespace complex
  */
 inline std::string ConvertMillisToHrsMinSecs(unsigned long long int millis)
 {
-  const unsigned long long int hours = millis / (1000 * 60 * 60);
-  const unsigned long long intMinutes = (millis % (1000 * 60 * 60)) / (1000 * 60);
-  const unsigned long long intSeconds = ((millis % (1000 * 60 * 60)) % (1000 * 60)) / 1000;
-  std::string str = fmt::format("{:0>2}:{:0>2}:{:0>2}", hours, intMinutes, intSeconds);
+  std::chrono::duration<unsigned long long int, std::milli> millisDuration(millis);
+  auto hours = std::chrono::duration_cast<std::chrono::hours>(millisDuration);
+  auto intMinutes = std::chrono::duration_cast<std::chrono::minutes>(millisDuration);
+  auto intSeconds = std::chrono::duration_cast<std::chrono::seconds>(millisDuration);
+  std::string str = fmt::format("{:0>2}:{:0>2}:{:0>2}", hours.count(), intMinutes.count(), intSeconds.count());
   return str;
 }
 
