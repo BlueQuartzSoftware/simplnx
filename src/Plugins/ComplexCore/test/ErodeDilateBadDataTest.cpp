@@ -72,9 +72,9 @@ TEST_CASE("ComplexCore::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Compl
   {
     const DataPath k_OrigCellAttributeMatrix = k_OrigDataContainerPath.createChildPath(k_CellData);
 
-    const DataPath k_OrigConfidenceIndexArrayPath = k_OrigCellAttributeMatrix.createChildPath(k_ConfidenceIndex);
+    const DataPath k_OrigConfidenceIndexArrayPath = k_OrigCellAttributeMatrix.createChildPath(k_Confidence_Index);
     const DataPath k_OrigEulersArrayPath = k_OrigCellAttributeMatrix.createChildPath(k_EulerAngles);
-    const DataPath k_OrigImageQualityArrayPath = k_OrigCellAttributeMatrix.createChildPath(k_ImageQuality);
+    const DataPath k_OrigImageQualityArrayPath = k_OrigCellAttributeMatrix.createChildPath(k_Image_Quality);
     const DataPath k_OrigPhasesArrayPath = k_OrigCellAttributeMatrix.createChildPath(k_Phases);
 
     CropImageGeometry filter;

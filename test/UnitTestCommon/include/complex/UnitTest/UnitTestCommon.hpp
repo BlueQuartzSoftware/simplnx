@@ -129,8 +129,8 @@ const DataPath k_EulersArrayPath = k_CellAttributeMatrix.createChildPath(k_Euler
 const DataPath k_QuatsArrayPath = k_CellAttributeMatrix.createChildPath(k_Quats);
 const DataPath k_PhasesArrayPath = k_CellAttributeMatrix.createChildPath(k_Phases);
 const DataPath k_FeatureIdsArrayPath = k_CellAttributeMatrix.createChildPath(k_FeatureIds);
-const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_ConfidenceIndex);
-const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_ImageQuality);
+const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_Confidence_Index);
+const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_Image_Quality);
 const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
 
 // Cell Ensemble Data DataPaths
