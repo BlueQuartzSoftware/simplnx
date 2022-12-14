@@ -17,5 +17,4 @@ target_link_libraries(ComplexUnitTestCommon
 target_sources(ComplexUnitTestCommon
   INTERFACE
     ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/complex/UnitTest/UnitTestCommon.hpp
-    ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/complex/UnitTest/SmallIN100Utilities.hpp
 )
