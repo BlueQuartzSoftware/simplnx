@@ -356,7 +356,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Vertex: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
+    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue);
     if(psInfo.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -365,7 +365,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Edge: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
+    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue);
     if(psInfo.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -374,7 +374,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Triangle: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
+    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue);
     if(psInfo.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -383,7 +383,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Quad: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
+    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue);
     if(psInfo.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -392,7 +392,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Tetrahedral: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
+    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue);
     if(psInfo.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -401,7 +401,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     break;
   }
   case IGeometry::Type::Hexahedral: {
-    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue, numberOfPartitionsPerAxis);
+    psInfo = generateNodeBasedPSInfo(dataStructure, filterArgs, pGeometryToPartitionValue, pAttributeMatrixPathValue);
     if(psInfo.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(psInfo)), {})};
@@ -468,7 +468,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
 // -----------------------------------------------------------------------------
 Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
-                                                                                       const DataPath& attrMatrixPath, const SizeVec3& numberOfPartitionsPerAxis) const
+                                                                                       const DataPath& attrMatrixPath) const
 {
   const INodeGeometry0D& geometry = dataStructure.getDataRefAs<INodeGeometry0D>({geometryToPartitionPath});
   const IGeometry::SharedVertexList& vertexList = geometry.getVerticesRef();
@@ -541,7 +541,6 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningMode(const DataStructure&
     return dataCheckBoundingBoxMode<GeomType>(numOfPartitionsPerAxis, pLowerLeftCoordValue, pUpperRightCoordValue, geometryToPartition, attrMatrix);
   case PartitioningMode::ExistingPartitioningScheme:
     return dataCheckExistingGeometryMode();
-    break;
   }
 
   return {};

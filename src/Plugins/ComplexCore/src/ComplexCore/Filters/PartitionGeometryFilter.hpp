@@ -161,7 +161,7 @@ protected:
   Result<> dataCheckDimensionality(const INodeGeometry0D& geometry) const;
 
   Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
-                                                                const DataPath& attrMatrixPath, const SizeVec3& numberOfPartitionsPerAxis) const;
+                                                                const DataPath& attrMatrixPath) const;
 };
 } // namespace complex
 
