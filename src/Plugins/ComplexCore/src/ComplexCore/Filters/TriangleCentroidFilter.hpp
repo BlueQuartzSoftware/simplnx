@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class TriangleCentroidFilter
- * @brief This filter will ....
+ * @brief This **Filter** computes the centroid of each **Triangle** in a **Triangle Geometry** by calculating the average position of all 3 **Vertices** that make up the **Triangle**.
  */
 class COMPLEXCORE_EXPORT TriangleCentroidFilter : public IFilter
 {

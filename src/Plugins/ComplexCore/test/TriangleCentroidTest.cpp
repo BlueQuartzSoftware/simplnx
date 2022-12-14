@@ -23,6 +23,7 @@ constexpr usize k_VertexTupleCount = 11;
 constexpr usize k_VertexCompCount = 3;
 constexpr usize k_FaceTupleCount = 4;
 constexpr usize k_FaceCompCount = 3;
+constexpr StringLiteral k_CentroidsName = "Centroids";
 
 static const IGeometry::SharedVertexList* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
 {
@@ -46,11 +47,8 @@ static const IGeometry::SharedFaceList* CreateFaceList(IGeometry& geom, const Da
 
 TEST_CASE("ComplexCore::TriangleCentroidFilter", "[ComplexCore][TriangleCentroidFilter]")
 {
-  std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = "Face Data";
-  std::string dihedralAnglesDataArrayName = "DihedralAngles";
   DataStructure dataStructure;
-  TriangleGeom& acuteTriangle = *TriangleGeom::Create(dataStructure, triangleGeometryName);
+  TriangleGeom& acuteTriangle = *TriangleGeom::Create(dataStructure, k_TriangleGeometryName);
   AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceDataName, acuteTriangle.getId());
   faceData->setShape({k_FaceTupleCount});
   acuteTriangle.setFaceAttributeMatrix(*faceData);
@@ -80,16 +78,15 @@ TEST_CASE("ComplexCore::TriangleCentroidFilter", "[ComplexCore][TriangleCentroid
   acuteTriangle.setFaceList(*facesList);
   acuteTriangle.setVertices(*vertexList);
 
-  TriangleCentroidFilter filter;
+  const TriangleCentroidFilter filter;
   Arguments args;
-  std::string centroidsArrayName = "Centroids";
 
   DataPath geometryPath = dataStructure.getDataPathsForId(acuteTriangle.getId())[0];
-  DataPath triangleCentroidsDataPath = geometryPath.createChildPath(INodeGeometry2D::k_FaceDataName).createChildPath(centroidsArrayName);
+  DataPath triangleCentroidsDataPath = geometryPath.createChildPath(INodeGeometry2D::k_FaceDataName).createChildPath(k_CentroidsName);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(TriangleCentroidFilter::k_TriGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));
-  args.insertOrAssign(TriangleCentroidFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(centroidsArrayName));
+  args.insertOrAssign(TriangleCentroidFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -101,7 +98,7 @@ TEST_CASE("ComplexCore::TriangleCentroidFilter", "[ComplexCore][TriangleCentroid
 
   std::vector<Point3Df> centroids = {{0.5F, 0.333333F, 0.0F}, {3.0F, 0.333333, 0.0F}, {6.66667, 0.0F, 0.0F}, {9.0F, 0.0F, 0.0F}};
 
-  Float32Array& calculatedCentroids = dataStructure.getDataRefAs<Float32Array>(triangleCentroidsDataPath);
+  const auto& calculatedCentroids = dataStructure.getDataRefAs<Float32Array>(triangleCentroidsDataPath);
 
   for(size_t t = 0; t < 4; t++)
   {

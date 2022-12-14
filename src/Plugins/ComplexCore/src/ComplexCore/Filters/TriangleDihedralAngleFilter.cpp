@@ -205,7 +205,6 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
   auto& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
 
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setParallelizationEnabled(false); // <=== Why is this off?
   dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
   dataAlg.execute(CalculateDihedralAnglesImpl(triangleGeom, dihedralAngles, shouldCancel));
 
