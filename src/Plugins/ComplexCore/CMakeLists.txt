@@ -96,6 +96,7 @@ set(AlgorithmList
   CombineAttributeArrays
   ConvertColorToGrayScale
   ConvertData
+  PartitionGeometry
   ExtractComponentAsArray
   ExtractVertexGeometry
   FillBadData
