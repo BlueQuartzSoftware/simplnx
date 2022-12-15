@@ -16,12 +16,15 @@ set(FilterList
   ChangeAngleRepresentation
   CombineAttributeArraysFilter
   ConditionalSetValue
+  ConvertColorToGrayScaleFilter
+  ConvertDataFilter
   CopyDataObjectFilter
   CopyFeatureArrayToElementArray
   CreateAttributeMatrixFilter
   CreateDataArray
   CreateDataGroup
   CreateFeatureArrayFromElementArray
+  CreateGeometryFilter
   CreateImageGeometry
   CropImageGeometry
   CropVertexGeometry
@@ -29,12 +32,16 @@ set(FilterList
   ExportDREAM3DFilter
   ExtractInternalSurfacesFromTriangleGeometry
   ExtractVertexGeometryFilter
+  FeatureDataCSVWriterFilter
   FindArrayStatisticsFilter
   FindDifferencesMap
+  FindFeatureCentroidsFilter
   FindFeaturePhasesFilter
   FindNeighborListStatistics
   FindNeighbors
   FindSurfaceFeatures
+  FindTriangleGeomCentroidsFilter
+  FindTriangleGeomSizesFilter
   IdentifySample
   ImportCSVDataFilter
   ImportDREAM3DFilter
@@ -57,12 +64,14 @@ set(FilterList
   RobustAutomaticThreshold
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
+  SharedFeatureFaceFilter
   StlFileReaderFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
   FindNumFeaturesFilter
   FindVolFractionsFilter
   ExtractComponentAsArrayFilter
+  WriteBinaryDataFilter
 )
 
 set(ActionList
@@ -71,6 +80,8 @@ set(ActionList
 set(AlgorithmList
   ApplyTransformationToGeometry
   ArrayCalculator
+  ConvertColorToGrayScale
+  ConvertData
   StlFileReader
   LaplacianSmoothing
   QuickSurfaceMesh
@@ -78,11 +89,15 @@ set(AlgorithmList
   TupleTransfer
   RawBinaryReader
   ScalarSegmentFeatures
+  FindFeatureCentroids
   FindArrayStatistics
   CombineAttributeArrays
   ExtractComponentAsArray
   ExtractVertexGeometry
-  )
+  FindTriangleGeomCentroids
+  FindTriangleGeomSizes
+  SharedFeatureFace
+)
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}

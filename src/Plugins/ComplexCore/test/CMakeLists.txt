@@ -15,21 +15,28 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   ConditionalSetValueTest.cpp
+  ConvertColorToGrayScaleTest.cpp
+  ConvertDataTest.cpp
   CopyDataObjectTest.cpp
   CreateAttributeMatrixTest.cpp
   CreateDataArrayTest.cpp
   CreateFeatureArrayFromElementArrayTest.cpp
+  CreateGeometryTest.cpp
   CropVertexGeometryTest.cpp
   CopyFeatureArrayToElementArrayTest.cpp
   CreateImageGeometryTest.cpp
   CropImageGeometryTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
+  FeatureDataCSVWriterTest.cpp
   FindDifferencesMapTest.cpp
+  FindFeatureCentroidsFilterTest.cpp
   FindFeaturePhasesFilterTest.cpp
   FindNeighborListStatisticsTest.cpp
   FindNeighborsTest.cpp
   FindSurfaceFeaturesTest.cpp
+  FindTriangleGeomCentroidsTest.cpp
+  FindTriangleGeomSizesTest.cpp
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
   IterativeClosestPointTest.cpp
@@ -50,6 +57,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RawBinaryReaderTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
+  SharedFeatureFaceTest.cpp
   StlFileReaderTest.cpp
   FindArrayStatisticsTest.cpp
   TriangleNormalFilterTest.cpp
@@ -57,6 +65,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindNumFeaturesTest.cpp
   FindVolFractionsTest.cpp
   ExtractComponentAsArrayTest.cpp
+  WriteBinaryDataTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
