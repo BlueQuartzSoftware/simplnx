@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
