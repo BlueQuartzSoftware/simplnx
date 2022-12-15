@@ -8,13 +8,11 @@
 #include "OrientationAnalysis/Filters/FindKernelAvgMisorientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex_plugins/Utilities/TestUtilities.hpp"
-
 #include <filesystem>
 namespace fs = std::filesystem;
 
 using namespace complex;
-using namespace complex::UnitTest;
+using namespace complex::Constants;
 
 namespace
 {
@@ -65,5 +63,5 @@ TEST_CASE("OrientationAnalysis::FindKernelAvgMisorientationsFilter", "[Orientati
     UnitTest::CompareArrays<float>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
 
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_kernel_average_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_kernel_average_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

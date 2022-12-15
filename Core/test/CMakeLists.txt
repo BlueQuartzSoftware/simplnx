@@ -7,26 +7,18 @@
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsFeatureCentroidTest.cpp
-  ConvertColorToGrayScaleTest.cpp
   FillBadDataTest.cpp # NEEDS TEST IMPLEMENTED
-  FindFeatureCentroidsFilterTest.cpp
   FindShapesFilterTest.cpp
   ResampleImageGeomFilterTest.cpp
   RotateSampleRefFrameTest.cpp
-  ErodeDilateBadDataTest.cpp
   WriteASCIIDataTest.cpp
-  WriteBinaryDataTest.cpp
   FindEuclideanDistMapTest.cpp
   FindNeighborhoodsTest.cpp
   FindSurfaceAreaToVolumeTest.cpp
-  FeatureDataCSVWriterTest.cpp
   CalculateArrayHistogramTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   SplitAttributeArrayTest.cpp
-
-  FindTriangleGeomCentroidsTest.cpp
-  FindTriangleGeomSizesTest.cpp
-  SharedFeatureFaceTest.cpp
+  ErodeDilateBadDataTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

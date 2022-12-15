@@ -8,13 +8,11 @@
 #include "OrientationAnalysis/Filters/FindSchmidsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex_plugins/Utilities/TestUtilities.hpp"
-
 #include <filesystem>
 namespace fs = std::filesystem;
 
 using namespace complex;
-using namespace complex::UnitTest;
+using namespace complex::Constants;
 
 namespace
 {
@@ -93,5 +91,5 @@ TEST_CASE("OrientationAnalysis::FindSchmidsFilter", "[OrientationAnalysis][FindS
   }
 
   // Write the DataStructure out to the file system
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_schmids.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_schmids.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

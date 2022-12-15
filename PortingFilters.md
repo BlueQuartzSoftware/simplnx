@@ -104,7 +104,7 @@ Located at line 579 in the CMakeLists.text file in the ***complex*** repo, one m
 
 There will be times you may have to call upon filters from another repo. Typically this occurs in ***complex_plugins***. In order to do this one must create an application instance which is done so by wrapping it in a struct that gets nested in a shared pointer to make sure it cleans itself up after each test case. Here is the syntax for doing so:
 
-> std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+> std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
 > app->loadPlugins(unit_test::k_BuildDir.view(), true);
 > auto* filterList = Application::Instance()->getFilterList();
 

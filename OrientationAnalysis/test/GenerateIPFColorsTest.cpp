@@ -42,8 +42,6 @@ namespace fs = std::filesystem;
 namespace complex::Constants
 {
 inline constexpr StringLiteral k_ImageDataContainer("ImageDataContainer");
-inline constexpr StringLiteral k_Mask("Mask");
-inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
 inline constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
 } // namespace complex::Constants
 

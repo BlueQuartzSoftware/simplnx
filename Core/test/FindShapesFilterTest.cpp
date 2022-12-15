@@ -6,19 +6,17 @@
 #include "Core/Core_test_dirs.hpp"
 #include "Core/Filters/FindShapesFilter.hpp"
 
-#include "complex_plugins/Utilities/TestUtilities.hpp"
-
 #include <filesystem>
 namespace fs = std::filesystem;
 
 using namespace complex;
-using namespace complex::UnitTest;
+using namespace complex::Constants;
 
 TEST_CASE("Core::FindShapesFilter", "[Core][FindShapesFilter]")
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   const std::string k_Omega3sArrayName("Omega3s");
   const std::string k_AxisLengthsArrayName("AxisLengths");
@@ -74,10 +72,10 @@ TEST_CASE("Core::FindShapesFilter", "[Core][FindShapesFilter]")
       const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, comparisonName + "NX"});
       const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
       const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-      CompareDataArrays<float>(exemplarData, calculatedData);
+      UnitTest::CompareDataArrays<float>(exemplarData, calculatedData);
     }
   }
 
   // Write the DataStructure out to the file system
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_shapes.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_shapes.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

@@ -3,17 +3,16 @@
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "Core/Core_test_dirs.hpp"
 #include "Core/Filters/FindSurfaceAreaToVolumeFilter.hpp"
-
-#include "complex_plugins/Utilities/TestUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
 using namespace complex;
-using namespace complex::UnitTest;
+using namespace complex::Constants;
 
 namespace
 {
@@ -25,7 +24,7 @@ TEST_CASE("Core::FindSurfaceAreaToVolume", "[Core][FindSurfaceAreaToVolume]")
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   {
@@ -34,7 +33,7 @@ TEST_CASE("Core::FindSurfaceAreaToVolume", "[Core][FindSurfaceAreaToVolume]")
 
     const DataPath k_FeatureIdsArrayPath2({k_DataContainer, k_CellData, k_FeatureIds});
     const DataPath k_CellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
-    const DataPath k_NumElementsArrayPath({k_DataContainer, k_CellFeatureData, k_NumCells});
+    const DataPath k_NumElementsArrayPath({k_DataContainer, k_CellFeatureData, k_NumElements});
     const DataPath k_SelectedGeometryPath({k_DataContainer});
 
     // Create default Parameters for the filter.
@@ -63,10 +62,10 @@ TEST_CASE("Core::FindSurfaceAreaToVolume", "[Core][FindSurfaceAreaToVolume]")
       const DataPath calculatedPath({comparisonName});
       const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
       const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-      CompareDataArrays<float32>(exemplarData, calculatedData);
+      UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
     }
   }
 
   // Write the DataStructure out to the file system
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_surface_area_volume_ratio.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_surface_area_volume_ratio.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

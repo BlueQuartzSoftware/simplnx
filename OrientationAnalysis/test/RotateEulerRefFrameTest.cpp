@@ -36,17 +36,17 @@ of doing that.
 #include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "complex_plugins/Utilities/TestUtilities.hpp"
+
 #include <filesystem>
 namespace fs = std::filesystem;
-
-#include "complex_plugins/Utilities/TestUtilities.hpp"
 
 using namespace complex;
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
 {
   // Instantiate an "Application" instance to load plugins
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   const uint64 k_NumComponents = 3;
@@ -54,7 +54,7 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
   const complex::NumericType k_NumericType = complex::NumericType::float32;
 
   // Constant strings and DataPaths to be used later
-  const DataPath k_EulerAnglesDataPath({k_EulerAngles});
+  const DataPath k_EulerAnglesDataPath({Constants::k_EulerAngles});
 
   const std::string k_EulersRotated("EulersRotated");
   const DataPath k_EulersRotatedDataPath({k_EulersRotated});

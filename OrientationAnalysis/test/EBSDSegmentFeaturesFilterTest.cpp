@@ -17,28 +17,27 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex_plugins/EbsdLibConstants.hpp"
-#include "complex_plugins/Utilities/SmallIN100Utilties.hpp"
-#include "complex_plugins/Utilities/TestUtilities.hpp"
+#include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
 using namespace complex;
-using namespace complex::UnitTest;
+using namespace complex::Constants;
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Instantiation and Parameter Check", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_ebsd_segment_features.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // MultiThreshold Objects Filter (From ComplexCore Plugins)
   SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
@@ -75,8 +74,8 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Instantiation and Parameter
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_GoodVoxelsPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_FeatureIds));
-    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_GrainData));
-    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_Active));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_Grain_Data));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
@@ -91,8 +90,8 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Instantiation and Parameter
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
     const auto& generatedDataArray = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsArrayPath);
-    const auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<Int32Array>(DataPath({"Small IN100", k_SmallIN100ScanData, k_FeatureIds}));
+    const auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<Int32Array>(DataPath({"Small IN100", SmallIn100::k_SmallIN100ScanData, k_FeatureIds}));
 
-    CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+    UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
   }
 }

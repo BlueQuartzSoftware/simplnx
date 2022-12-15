@@ -9,11 +9,10 @@
 #include "Core/Core_test_dirs.hpp"
 #include "Core/Filters/FindNeighborhoodsFilter.hpp"
 
-#include "complex_plugins/Utilities/SmallIN100Utilties.hpp"
-#include "complex_plugins/Utilities/TestUtilities.hpp"
+#include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
 
 using namespace complex;
-using namespace complex::UnitTest;
+using namespace complex::Constants;
 
 namespace fs = std::filesystem;
 
@@ -21,19 +20,16 @@ namespace
 {
 const std::string k_Volumes("Volumes");
 const std::string k_EquivalentDiameters("EquivalentDiameters");
-const std::string k_NumElements("NumElements");
+const std::string k_Neighborhoods("Neighborhoods");
+const std::string k_NeighborhoodList("NeighborhoodList");
 } // namespace
 
 TEST_CASE("Core::FindNeighborhoods", "[Core][FindNeighborhoods]")
 {
-  //  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
-  //  app->loadPlugins(unit_test::k_BuildDir.view(), true);
-  //  auto* filterList = Application::Instance()->getFilterList();
-
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
-  const DataPath k_CellFeatureDataAM = k_DataContainerPath.createChildPath("CellFeatureData");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  const DataPath k_CellFeatureDataAM = k_DataContainerPath.createChildPath(k_CellFeatureData);
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -74,5 +70,5 @@ TEST_CASE("Core::FindNeighborhoods", "[Core][FindNeighborhoods]")
   }
 
   // Write the DataStructure out to the file system
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighborhoods.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighborhoods.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

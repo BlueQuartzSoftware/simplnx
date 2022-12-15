@@ -7,12 +7,11 @@
 #include "OrientationAnalysis/Filters/FindMisorientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex_plugins/Utilities/TestUtilities.hpp"
-
 #include <filesystem>
 namespace fs = std::filesystem;
 
 using namespace complex;
+using namespace complex::Constants;
 
 namespace
 {
