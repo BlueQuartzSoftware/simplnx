@@ -17,14 +17,14 @@
 namespace fs = std::filesystem;
 
 #include "complex_plugins/EbsdLibConstants.hpp"
-#include "complex_plugins/Utilities/SmallIN100Utilties.hpp"
+#include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
 #include "complex_plugins/Utilities/TestUtilities.hpp"
 
 #include "OrientationAnalysis/Filters/NeighborOrientationCorrelationFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace complex;
-using namespace complex::UnitTest;
+using namespace complex::Constants;
 
 /**
  * Read H5Ebsd File
@@ -45,17 +45,17 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN100 Pipeline", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/neighbor_orientation_correlation.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // MultiThreshold Objects Filter (From ComplexCore Plugins)
   SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
@@ -141,47 +141,47 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
       switch(type)
       {
       case DataType::boolean: {
-        complex::UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int8: {
-        complex::UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int16: {
-        complex::UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int32: {
-        complex::UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int64: {
-        complex::UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint8: {
-        complex::UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint16: {
-        complex::UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint32: {
-        complex::UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint64: {
-        complex::UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::float32: {
-        complex::UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::float64: {
-        complex::UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
+        UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
         break;
       }
       default: {
@@ -191,5 +191,5 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
     }
   }
 
-  WriteTestDataStructure(dataStructure, fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_BinaryTestOutputDir));
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_BinaryTestOutputDir));
 }

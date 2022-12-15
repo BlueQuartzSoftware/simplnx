@@ -9,20 +9,14 @@
 #include "Core/Core_test_dirs.hpp"
 #include "Core/Filters/FindEuclideanDistMapFilter.hpp"
 
-#include "complex_plugins/Utilities/TestUtilities.hpp"
-
 using namespace complex;
-using namespace complex::UnitTest;
+using namespace complex::Constants;
 
 TEST_CASE("Core::FindEuclideanDistMap", "[Core][FindEuclideanDistMap]")
 {
-  //  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
-  //  app->loadPlugins(unit_test::k_BuildDir.view(), true);
-  //  auto* filterList = Application::Instance()->getFilterList();
-
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath k_CellFeatureDataAM = k_DataContainerPath.createChildPath("CellFeatureData");
 
   const std::string k_CalculatedPrefix("Calculated_");
@@ -69,10 +63,10 @@ TEST_CASE("Core::FindEuclideanDistMap", "[Core][FindEuclideanDistMap]")
       const DataPath calculatedPath({k_DataContainer, k_CellData, k_CalculatedPrefix + comparisonName});
       const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
       const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-      CompareDataArrays<int32>(exemplarData, calculatedData);
+      UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
     }
   }
 
   // Write the DataStructure out to the file system
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_euclidean_dist_map.dream3d", unit_test::k_BinaryTestOutputDir)));
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_euclidean_dist_map.dream3d", unit_test::k_BinaryTestOutputDir)));
 }

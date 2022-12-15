@@ -41,10 +41,11 @@ namespace fs = std::filesystem;
 #include "complex_plugins/Utilities/TestUtilities.hpp"
 
 using namespace complex;
+using namespace complex::Constants;
 
 TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check", "[Reconstruction][MergeTwinsFilter][.][UNIMPLEMENTED][!mayfail]")
 {
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
@@ -118,7 +119,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_FeatureIds));
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_FeatureAttributeMatrix));
-    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_Active));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);

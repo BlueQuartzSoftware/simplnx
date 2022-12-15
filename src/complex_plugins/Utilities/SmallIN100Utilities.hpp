@@ -1,6 +1,13 @@
 #pragma once
 
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/ArrayThresholdsParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
+
 #include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex_plugins/Utilities/TestUtilities.hpp"
 
 #include <fmt/format.h>
@@ -12,6 +19,7 @@ using namespace complex;
 
 namespace SmallIn100
 {
+inline constexpr StringLiteral k_SmallIN100ScanData("EBSD Scan Data");
 
 //------------------------------------------------------------------------------
 inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList)
@@ -29,13 +37,13 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
   ArrayThresholdSet::CollectionType thresholds;
 
   std::shared_ptr<ArrayThreshold> ciThreshold = std::make_shared<ArrayThreshold>();
-  ciThreshold->setArrayPath(k_ConfidenceIndexArrayPath);
+  ciThreshold->setArrayPath(Constants::k_ConfidenceIndexArrayPath);
   ciThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
   ciThreshold->setComparisonValue(0.1);
   thresholds.push_back(ciThreshold);
 
   std::shared_ptr<ArrayThreshold> iqThreshold = std::make_shared<ArrayThreshold>();
-  iqThreshold->setArrayPath(k_ImageQualityArrayPath);
+  iqThreshold->setArrayPath(Constants::k_ImageQualityArrayPath);
   iqThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
   iqThreshold->setComparisonValue(120.0);
   thresholds.push_back(iqThreshold);
@@ -43,7 +51,7 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
   arrayThresholdset.setArrayThresholds(thresholds);
 
   args.insertOrAssign(k_ArrayThresholds_Key, std::make_any<ArrayThresholdsParameter::ValueType>(arrayThresholdset));
-  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
+  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -70,8 +78,8 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
   Arguments args;
   args.insertOrAssign(k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  args.insertOrAssign(k_InputOrientationArrayPath_Key, std::make_any<DataPath>(k_EulersArrayPath));
-  args.insertOrAssign(k_OutputOrientationArrayName_Key, std::make_any<std::string>(k_Quats));
+  args.insertOrAssign(k_InputOrientationArrayPath_Key, std::make_any<DataPath>(Constants::k_EulersArrayPath));
+  args.insertOrAssign(k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_Quats));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -96,8 +104,8 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
 
   Arguments args;
   args.insertOrAssign(k_FillHoles_Key, std::make_any<BoolParameter::ValueType>(false));
-  args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(k_DataContainerPath));
-  args.insertOrAssign(k_GoodVoxels_Key, std::make_any<ArraySelectionParameter::ValueType>(k_MaskArrayPath));
+  args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(Constants::k_DataContainerPath));
+  args.insertOrAssign(k_GoodVoxels_Key, std::make_any<ArraySelectionParameter::ValueType>(Constants::k_MaskArrayPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -133,14 +141,14 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
   // Create default Parameters for the filter.
   args.insertOrAssign(k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
   args.insertOrAssign(k_UseGoodVoxels_Key, std::make_any<bool>(true));
-  args.insertOrAssign(k_GridGeomPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-  args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
-  args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
-  args.insertOrAssign(k_GoodVoxelsPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
-  args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-  args.insertOrAssign(k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_FeatureIds));
-  args.insertOrAssign(k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_GrainData));
-  args.insertOrAssign(k_ActiveArrayName_Key, std::make_any<std::string>(k_Active));
+  args.insertOrAssign(k_GridGeomPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
+  args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
+  args.insertOrAssign(k_GoodVoxelsPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
+  args.insertOrAssign(k_FeatureIdsArrayName_Key, std::make_any<std::string>(Constants::k_FeatureIds));
+  args.insertOrAssign(k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Grain_Data));
+  args.insertOrAssign(k_ActiveArrayName_Key, std::make_any<std::string>(Constants::k_ActiveName));
   args.insertOrAssign(k_RandomizeFeatures_Key, std::make_any<bool>(false));
 
   // Preflight the filter and check result
@@ -183,14 +191,14 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
   args.insertOrAssign(k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
 
   args.insertOrAssign(k_GoodVoxels_Key, std::make_any<bool>(true));
-  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
+  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
 
-  args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
-  args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
+  args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
+  args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
 
-  args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
+  args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
 
-  args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -223,9 +231,9 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   args.insertOrAssign(k_AlignmentShiftFileName_Key, std::make_any<FileSystemPathParameter::ValueType>(shiftsFile));
   args.insertOrAssign(k_UseReferenceSlice_Key, std::make_any<bool>(true));
   args.insertOrAssign(k_ReferenceSlice_Key, std::make_any<int32>(0));
-  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
-  args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
-  args.insertOrAssign(k_SelectedCellDataGroup_Key, std::make_any<DataPath>(k_CellAttributeMatrix));
+  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(k_SelectedCellDataGroup_Key, std::make_any<DataPath>(Constants::k_CellAttributeMatrix));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -256,11 +264,11 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
   // Create default Parameters for the filter.
   args.insertOrAssign(k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
   args.insertOrAssign(k_NumberOfNeighbors_Key, std::make_any<int32>(4));
-  args.insertOrAssign(k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-  args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
-  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
-  args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
-  args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
+  args.insertOrAssign(k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+  args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
+  args.insertOrAssign(k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
+  args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -291,14 +299,14 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
 
   Arguments args;
   // Create default Parameters for the filter.
-  args.insertOrAssign(k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(k_MinConfidence_Key, std::make_any<float32>(0.2f));
   args.insertOrAssign(k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
   args.insertOrAssign(k_Level_Key, std::make_any<int32>(2));
-  args.insertOrAssign(k_ConfidenceIndexArrayPath_Key, std::make_any<DataPath>(k_ConfidenceIndexArrayPath));
-  args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
-  args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
-  args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
+  args.insertOrAssign(k_ConfidenceIndexArrayPath_Key, std::make_any<DataPath>(Constants::k_ConfidenceIndexArrayPath));
+  args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
+  args.insertOrAssign(k_QuatsArrayPath_Key, std::make_any<DataPath>(Constants::k_QuatsArrayPath));
+  args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
   args.insertOrAssign(k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>());
 
   // Preflight the filter and check result
@@ -309,5 +317,4 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
   auto executeResult = filter->execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 }
-
 } // namespace SmallIn100

@@ -16,12 +16,12 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include "complex_plugins/Utilities/SmallIN100Utilties.hpp"
-#include "complex_plugins/Utilities/TestUtilities.hpp"
+#include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
 
 #include "Core/Core_test_dirs.hpp"
 
 using namespace complex;
+using namespace complex::Constants;
 using namespace complex::UnitTest;
 
 /**
@@ -43,7 +43,7 @@ using namespace complex::UnitTest;
 
 TEST_CASE("Core::AlignSectionsFeatureCentroidFilter: Small IN100 Pipeline", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
 {
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
