@@ -70,9 +70,11 @@ inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
 inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
 inline constexpr StringLiteral k_Confidence_Index("Confidence Index");
 inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
+inline constexpr StringLiteral k_CalculatedShifts("Calculated Shifts");
 
 inline constexpr StringLiteral k_EulerAngles("EulerAngles");
 inline constexpr StringLiteral k_AxisAngles("AxisAngles");
+inline constexpr StringLiteral k_AvgQuats("AvgQuats");
 inline constexpr StringLiteral k_Quats("Quats");
 inline constexpr StringLiteral k_Mask("Mask");
 inline constexpr StringLiteral k_FZQuats("FZQuats");
@@ -137,9 +139,10 @@ const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
 // Cell Ensemble Data DataPaths
 const DataPath k_CellEnsembleAttributeMatrixPath = k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix);
 const DataPath k_CrystalStructuresArrayPath = k_CellEnsembleAttributeMatrixPath.createChildPath(k_CrystalStructures);
+const DataPath k_CalculatedShiftsPath = k_DataContainerPath.createChildPath(k_CalculatedShifts);
 
 // Cell Feature Attribute Matrix DataPaths
-const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_GrainData);
+const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_Grain_Data);
 const DataPath k_ActiveArrayPath = k_CellFeatureAttributeMatrix.createChildPath(k_ActiveName);
 const DataPath k_NumCellsPath = k_CellFeatureAttributeMatrix.createChildPath(k_NumElements);
 const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPath(k_Phases);
