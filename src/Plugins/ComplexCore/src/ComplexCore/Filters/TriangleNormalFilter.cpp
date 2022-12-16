@@ -25,37 +25,36 @@ constexpr complex::int32 k_MissingFeatureAttributeMatrix = -75969;
 class CalculateNormalsImpl
 {
 public:
-  CalculateNormalsImpl(const IGeometry::SharedVertexList& nodes, const IGeometry::SharedTriList& triangles, Float64Array& normals)
-  : m_Nodes(nodes)
-  , m_Triangles(triangles)
+  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64Array& normals, const std::atomic_bool& shouldCancel)
+  : m_TriangleGeom(triangleGeom)
   , m_Normals(normals)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   virtual ~CalculateNormalsImpl() = default;
 
   void generate(size_t start, size_t end) const
   {
-    IGeometry::MeshIndexType nIdx0 = 0, nIdx1 = 0, nIdx2 = 0;
-    std::array<float64, 3> vecA = {0.0f, 0.0f, 0.0f};
-    std::array<float64, 3> vecB = {0.0f, 0.0f, 0.0f};
-    std::array<float64, 3> normal = {0.0f, 0.0f, 0.0f};
-    for(size_t i = start; i < end; i++)
+    std::array<float32, 3> normal = {0.0f, 0.0f, 0.0f};
+    for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
-      nIdx0 = m_Triangles[i * 3];
-      nIdx1 = m_Triangles[i * 3 + 1];
-      nIdx2 = m_Triangles[i * 3 + 2];
-      std::array<float64, 3> n0 = {m_Nodes[nIdx0 * 3], m_Nodes[nIdx0 * 3 + 1], m_Nodes[nIdx0 * 3 + 2]};
-      std::array<float64, 3> n1 = {m_Nodes[nIdx1 * 3], m_Nodes[nIdx1 * 3 + 1], m_Nodes[nIdx1 * 3 + 2]};
-      std::array<float64, 3> n2 = {m_Nodes[nIdx2 * 3], m_Nodes[nIdx2 * 3 + 1], m_Nodes[nIdx2 * 3 + 2]};
 
-      MatrixMath::Subtract3x1s(n1.data(), n0.data(), vecA.data());
-      MatrixMath::Subtract3x1s(n2.data(), n0.data(), vecB.data());
+      if(m_ShouldCancel)
+      {
+        break;
+      }
+      std::array<Point3Df, 3> vertCoords;
+      m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
+
+      auto vecA = (vertCoords[1] - vertCoords[0]).toArray();
+      auto vecB = (vertCoords[2] - vertCoords[0]).toArray();
+
       MatrixMath::CrossProduct(vecA.data(), vecB.data(), normal.data());
       MatrixMath::Normalize3x1(normal.data());
-      for(int32 count = 0; count < normal.size(); count++)
-      {
-        m_Normals[i * 3 + count] = static_cast<float64>(normal[count]);
-      }
+
+      m_Normals[triangleIndex * 3] = static_cast<float64>(normal[0]);
+      m_Normals[triangleIndex * 3 + 1] = static_cast<float64>(normal[1]);
+      m_Normals[triangleIndex * 3 + 2] = static_cast<float64>(normal[2]);
     }
   }
 
@@ -65,9 +64,9 @@ public:
   }
 
 private:
-  const IGeometry::SharedVertexList& m_Nodes;
-  const IGeometry::SharedTriList& m_Triangles;
+  const TriangleGeom* m_TriangleGeom = nullptr;
   Float64Array& m_Normals;
+  const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
 
@@ -94,7 +93,7 @@ Uuid TriangleNormalFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string TriangleNormalFilter::humanName() const
 {
-  return "Generate Triangle Normals";
+  return "Calculate Triangle Normals";
 }
 
 //------------------------------------------------------------------------------
@@ -113,7 +112,8 @@ Parameters TriangleNormalFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshTriangleNormalsArrayPath_Key, "Face Normals", "The complete path to the array storing the calculated normals", "Face Normals"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_SurfaceMeshTriangleNormalsArrayPath_Key, "Created Face Normals", "The complete path to the array storing the calculated normals", "Face Normals"));
 
   return params;
 }
@@ -160,18 +160,18 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
                                            const std::atomic_bool& shouldCancel) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  auto pSurfaceMeshTriangleNormalsName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayPath_Key);
+  auto pNormalsName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayPath_Key);
 
-  const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix& faceAttributeMatrix = triangleGeom.getFaceAttributeMatrixRef();
+  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
 
-  DataPath pSurfaceMeshTriangleNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(pSurfaceMeshTriangleNormalsName);
-  auto& normals = dataStructure.getDataRefAs<Float64Array>(pSurfaceMeshTriangleNormalsArrayPath);
+  DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pNormalsName);
+  auto& normals = dataStructure.getDataRefAs<Float64Array>(pNormalsArrayPath);
 
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom.getNumberOfFaces()));
-  dataAlg.execute(::CalculateNormalsImpl(*(triangleGeom.getVertices()), *(triangleGeom.getFaces()), normals));
+  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
+  dataAlg.execute(CalculateNormalsImpl(triangleGeom, normals, shouldCancel));
 
   return {};
 }

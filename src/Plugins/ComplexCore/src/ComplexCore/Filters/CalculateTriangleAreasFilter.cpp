@@ -23,37 +23,32 @@ constexpr complex::int32 k_MissingFeatureAttributeMatrix = -75769;
 class CalculateAreasImpl
 {
 public:
-  CalculateAreasImpl(const IGeometry::SharedVertexList& nodes, const IGeometry::SharedTriList& triangles, Float64Array& Areas)
-  : m_Nodes(nodes)
-  , m_Triangles(triangles)
-  , m_Areas(Areas)
+  CalculateAreasImpl(const TriangleGeom* triangleGeom, Float64Array& areas, const std::atomic_bool& shouldCancel)
+  : m_TriangleGeom(triangleGeom)
+  , m_Areas(areas)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   virtual ~CalculateAreasImpl() = default;
 
   void convert(size_t start, size_t end) const
   {
-    IGeometry::MeshIndexType nIdx0 = 0;
-    IGeometry::MeshIndexType nIdx1 = 0;
-    IGeometry::MeshIndexType nIdx2 = 0;
-    std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
-    std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
     std::array<float, 3> cross = {0.0f, 0.0f, 0.0f};
-    for(size_t i = start; i < end; i++)
+    for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
-      nIdx0 = m_Triangles[i * 3];
-      nIdx1 = m_Triangles[i * 3 + 1];
-      nIdx2 = m_Triangles[i * 3 + 2];
+      if(m_ShouldCancel)
+      {
+        break;
+      }
+      std::array<Point3Df, 3> vertCoords;
+      m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
-      std::array<float, 3> A = {m_Nodes[nIdx0 * 3], m_Nodes[nIdx0 * 3 + 1], m_Nodes[nIdx0 * 3 + 2]};
-      std::array<float, 3> B = {m_Nodes[nIdx1 * 3], m_Nodes[nIdx1 * 3 + 1], m_Nodes[nIdx1 * 3 + 2]};
-      std::array<float, 3> C = {m_Nodes[nIdx2 * 3], m_Nodes[nIdx2 * 3 + 1], m_Nodes[nIdx2 * 3 + 2]};
+      auto vecA = (vertCoords[0] - vertCoords[1]).toArray();
+      auto vecB = (vertCoords[0] - vertCoords[2]).toArray();
 
-      MatrixMath::Subtract3x1s(A.data(), B.data(), vecA.data());
-      MatrixMath::Subtract3x1s(A.data(), C.data(), vecB.data());
       MatrixMath::CrossProduct(vecA.data(), vecB.data(), cross.data());
-      float area = 0.5F * MatrixMath::Magnitude3x1(cross.data());
-      m_Areas[i] = area;
+
+      m_Areas[triangleIndex] = 0.5F * MatrixMath::Magnitude3x1(cross.data());
     }
   }
 
@@ -63,9 +58,9 @@ public:
   }
 
 private:
-  const IGeometry::SharedVertexList& m_Nodes;
-  const IGeometry::SharedTriList& m_Triangles;
+  const TriangleGeom* m_TriangleGeom = nullptr;
   Float64Array& m_Areas;
+  const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
 
@@ -111,7 +106,7 @@ Parameters CalculateTriangleAreasFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the face areas", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CalculatedAreasDataPath_Key, "Calculated Face Areas", "The complete path to the array storing the calculated face areas", "Face Areas"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CalculatedAreasDataPath_Key, "Created Face Areas", "The complete path to the array storing the calculated face areas", "Face Areas"));
 
   return params;
 }
@@ -169,16 +164,16 @@ Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure,
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
-  const TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix& faceAttributeMatrix = triangleGeom.getFaceAttributeMatrixRef();
+  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
 
-  DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(pCalculatedAreasName);
+  DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
   auto& faceAreas = dataStructure.getDataRefAs<Float64Array>(pCalculatedAreasDataPath);
 
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom.getNumberOfFaces()));
-  dataAlg.execute(::CalculateAreasImpl(*(triangleGeom.getVertices()), *(triangleGeom.getFaces()), faceAreas));
+  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
+  dataAlg.execute(CalculateAreasImpl(triangleGeom, faceAreas, shouldCancel));
 
   return {};
 }
