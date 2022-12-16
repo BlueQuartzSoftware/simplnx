@@ -120,5 +120,4 @@ inline constexpr T byteswap(T value) noexcept
     }
   }
 }
-
 } // namespace complex
