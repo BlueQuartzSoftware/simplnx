@@ -35,7 +35,7 @@ DataStructure CreateTestDataStructure()
   return dataStructure;
 }
 
-TEST_CASE("Core::CombineAttributeArrays: Instantiation and Parameter Check", "[Core][CombineAttributeArrays]")
+TEST_CASE("ComplexCore::CombineAttributeArrays: Instantiation and Parameter Check", "[ComplexCore][CombineAttributeArrays]")
 {
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -115,7 +115,7 @@ Result<> ValidateFilterOutput(const DataStructure& dataStructure)
   return {};
 }
 
-TEST_CASE("Core::CombineAttributeArrays: Algorithm Validation", "[Core][CombineAttributeArrays]")
+TEST_CASE("ComplexCore::CombineAttributeArrays: Algorithm Validation", "[ComplexCore][CombineAttributeArrays]")
 {
   MultiArraySelectionParameter::ValueType inputArrays = {DataPath({k_Array1}), DataPath({k_Array2}), DataPath({k_Array3})};
 

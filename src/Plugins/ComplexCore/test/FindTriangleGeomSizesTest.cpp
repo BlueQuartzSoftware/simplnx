@@ -30,7 +30,7 @@ const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceDataName)
 
 using namespace FindTriangleGeomSizesFilterTest;
 
-TEST_CASE("Core::FindTriangleGeomSizes", "[Core][FindTriangleGeomSizes]")
+TEST_CASE("ComplexCore::FindTriangleGeomSizes", "[ComplexCore][FindTriangleGeomSizes]")
 {
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/12_IN625_GBCD/12_IN625_GBCD.dream3d", unit_test::k_DREAM3DDataDir));

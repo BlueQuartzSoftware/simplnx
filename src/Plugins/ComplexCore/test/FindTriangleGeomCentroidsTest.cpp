@@ -30,7 +30,7 @@ const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceDataName)
 
 using namespace FindTriangleGeomCentroidsFilterTest;
 
-TEST_CASE("Core::FindTriangleGeomCentroids", "[Core][FindTriangleGeomCentroids]")
+TEST_CASE("ComplexCore::FindTriangleGeomCentroids", "[ComplexCore][FindTriangleGeomCentroids]")
 {
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/12_IN625_GBCD/12_IN625_GBCD.dream3d", unit_test::k_DREAM3DDataDir));

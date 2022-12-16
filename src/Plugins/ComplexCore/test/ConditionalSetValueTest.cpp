@@ -144,7 +144,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
 
   // Write out the DataStructure for later viewing/debugging
-  std::string filePath = fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryDir);
+  std::string filePath = fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryTestOutputDir);
   // std::cout << "Writing file to: " << filePath << std::endl;
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
   H5::FileWriter fileWriter = std::move(result.value());
