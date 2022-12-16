@@ -91,7 +91,7 @@ TEST_CASE("ComplexCore::TriangleNormalFilter", "[ComplexCore][TriangleNormalFilt
     }
   }
 
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/TriangleNormals.dream3d", unit_test::k_BinaryDir));
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/TriangleNormals.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
   herr_t err = dataGraph.writeHdf5(fileWriter);

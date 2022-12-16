@@ -11,6 +11,7 @@ set(FilterList
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHull
   ArrayCalculatorFilter
+  CalculateArrayHistogramFilter
   CalculateFeatureSizesFilter
   CalculateTriangleAreasFilter
   ChangeAngleRepresentation
@@ -36,11 +37,14 @@ set(FilterList
   FeatureDataCSVWriterFilter
   FindArrayStatisticsFilter
   FindDifferencesMap
+  FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
   FindFeaturePhasesFilter
   FindNeighborListStatistics
   FindNeighbors
   FindNumFeaturesFilter
+  FindShapesFilter
+  FindSurfaceAreaToVolumeFilter
   FindSurfaceFeatures
   FindTriangleGeomCentroidsFilter
   FindTriangleGeomSizesFilter
@@ -68,10 +72,12 @@ set(FilterList
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
+  SplitAttributeArrayFilter
   StlFileReaderFilter
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
+  WriteASCIIDataFilter
   WriteBinaryDataFilter
 )
 
@@ -81,13 +87,17 @@ set(ActionList
 set(AlgorithmList
   ApplyTransformationToGeometry
   ArrayCalculator
+  CalculateArrayHistogram
   CombineAttributeArrays
   ConvertColorToGrayScale
   ConvertData
   ExtractComponentAsArray
   ExtractVertexGeometry
   FindArrayStatistics
+  FindEuclideanDistMap
   FindFeatureCentroids
+  FindShapes
+  FindSurfaceAreaToVolume
   FindTriangleGeomCentroids
   FindTriangleGeomSizes
   LaplacianSmoothing
@@ -96,10 +106,11 @@ set(AlgorithmList
   RawBinaryReader
   ScalarSegmentFeatures
   SharedFeatureFace
+  SplitAttributeArray
   StlFileReader
   TriangleCentroid
   TupleTransfer
-  )
+)
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}

@@ -16,7 +16,7 @@ using namespace complex;
 using namespace complex::UnitTest;
 using namespace complex::Constants;
 
-TEST_CASE("Core::FindFeatureCentroidsFilter", "[Core][FindFeatureCentroidsFilter]")
+TEST_CASE("ComplexCore::FindFeatureCentroidsFilter", "[ComplexCore][FindFeatureCentroidsFilter]")
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));

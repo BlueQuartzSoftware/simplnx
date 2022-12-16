@@ -42,7 +42,6 @@ const DataPath k_NumericArrayPath({k_NumericMatrix, k_CalculatedArray});
 const DataPath k_AttributeArrayPath({k_AttributeMatrix, k_CalculatedArray});
 
 const std::string k_Pi_Str = StringUtilities::number(numbers::pi);
-} // namespace
 
 // -----------------------------------------------------------------------------
 DataStructure createDataStructure()
@@ -81,6 +80,7 @@ DataStructure createDataStructure()
 
   return dataStructure;
 }
+} // namespace
 
 // -----------------------------------------------------------------------------
 IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units, DataStructure& ds,
@@ -103,7 +103,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
   std::cout << "  Testing equation: ==>" << equation << "<==" << std::endl;
 
   ArrayCalculatorFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ::createDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -150,7 +150,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
 void MultiComponentArrayCalculatorTest()
 {
   ArrayCalculatorFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure ds = ::createDataStructure();
 
   SECTION("Multi-Component All Components")
   {
@@ -810,7 +810,7 @@ void SingleComponentArrayCalculatorTest2()
   }
 }
 
-TEST_CASE("Core::ArrayCalculatorFilter: Instantiation and Parameter Check", "[Core][ArrayCalculatorFilter]")
+TEST_CASE("ComplexCore::ArrayCalculatorFilter: Instantiation and Parameter Check", "[ComplexCore][ArrayCalculatorFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ArrayCalculatorFilter filter;
@@ -831,7 +831,7 @@ TEST_CASE("Core::ArrayCalculatorFilter: Instantiation and Parameter Check", "[Co
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
-TEST_CASE("Core::ArrayCalculatorFilter: Filter Execution")
+TEST_CASE("ComplexCore::ArrayCalculatorFilter: Filter Execution")
 {
   std::cout << "#### ArrayCalculatorTest Starting ####" << std::endl;
 
