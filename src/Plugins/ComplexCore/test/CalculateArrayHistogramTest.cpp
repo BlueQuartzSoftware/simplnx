@@ -14,7 +14,6 @@
 
 #include "ComplexCore/Filters/CalculateArrayHistogramFilter.hpp"
 
-
 using namespace complex;
 
 namespace

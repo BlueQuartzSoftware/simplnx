@@ -134,7 +134,7 @@ TEST_CASE("ComplexCore::MinNeighbors", "[ComplexCore][MinNeighbors]")
 
   {
     // Write out the DataStructure for later viewing/debugging
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryDir));
+    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
     H5::FileWriter fileWriter = std::move(result.value());
     herr_t err = dataStructure.writeHdf5(fileWriter);
     REQUIRE(err >= 0);

@@ -57,6 +57,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& data, co
   auto action = std::make_unique<DeleteDataAction>(dataArrayPath);
 
   OutputActions actions;
+
   actions.actions.push_back(std::move(action));
 
   return {std::move(actions)};

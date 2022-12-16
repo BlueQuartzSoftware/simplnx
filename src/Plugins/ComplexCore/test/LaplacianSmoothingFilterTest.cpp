@@ -111,7 +111,7 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     REQUIRE(executeResult.result.valid());
   }
 
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/LaplacianSmoothing.dream3d", unit_test::k_BinaryDir));
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/LaplacianSmoothing.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
   herr_t err = dataGraph.writeHdf5(fileWriter);

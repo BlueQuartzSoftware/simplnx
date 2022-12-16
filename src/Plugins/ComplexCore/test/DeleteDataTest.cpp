@@ -80,5 +80,5 @@ TEST_CASE("ComplexCore::Delete Data Group", "[ComplexCore][DeleteData]")
   REQUIRE(executeResult.result.valid());
 
   DataObject* removedDataArray = dataGraph.getData(selectedDataGroupPath);
-  REQUIRE(removedDataArray != nullptr);
+  REQUIRE(removedDataArray == nullptr);
 }

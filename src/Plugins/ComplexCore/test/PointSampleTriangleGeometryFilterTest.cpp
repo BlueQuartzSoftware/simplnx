@@ -197,7 +197,7 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     {
       (*vertsArray)[i] = i;
     }
-    std::string outputFilePath = fmt::format("{}/{}", unit_test::k_BinaryDir, k_OutputFile);
+    std::string outputFilePath = fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, k_OutputFile);
     // std::cout << "Writing Output file to " << outputFilePath << std::endl;
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(outputFilePath);
     H5::FileWriter fileWriter = std::move(result.value());

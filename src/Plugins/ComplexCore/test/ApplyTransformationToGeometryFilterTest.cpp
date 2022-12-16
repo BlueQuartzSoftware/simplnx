@@ -148,7 +148,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_translation.dream3d", unit_test::k_BinaryDir));
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_translation.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
   herr_t err = dataGraph.writeHdf5(fileWriter);
@@ -201,7 +201,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_rotation.dream3d", unit_test::k_BinaryDir));
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
   herr_t err = dataGraph.writeHdf5(fileWriter);
@@ -254,7 +254,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_scale.dream3d", unit_test::k_BinaryDir));
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_scale.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
   herr_t err = dataGraph.writeHdf5(fileWriter);
@@ -310,7 +310,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_manual.dream3d", unit_test::k_BinaryDir));
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_manual.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
   herr_t err = dataGraph.writeHdf5(fileWriter);
@@ -388,7 +388,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[Comp
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryDir));
+  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
   herr_t err = dataGraph.writeHdf5(fileWriter);
