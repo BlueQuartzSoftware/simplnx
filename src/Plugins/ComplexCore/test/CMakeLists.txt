@@ -10,6 +10,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ApplyTransformationToGeometryFilterTest.cpp
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp
+  CalculateArrayHistogramTest.cpp
   CalculateFeatureSizesTest.cpp
   CalculateTriangleAreasFilterTest.cpp
   ChangeAngleRepresentationTest.cpp
@@ -26,17 +27,21 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateImageGeometryTest.cpp
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
+  DeleteDataTest.cpp
   ExtractComponentAsArrayTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
   FeatureDataCSVWriterTest.cpp
   FindArrayStatisticsTest.cpp
   FindDifferencesMapTest.cpp
+  FindEuclideanDistMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
   FindFeaturePhasesFilterTest.cpp
   FindNeighborListStatisticsTest.cpp
   FindNeighborsTest.cpp
   FindNumFeaturesTest.cpp
+  FindShapesFilterTest.cpp
+  FindSurfaceAreaToVolumeTest.cpp
   FindSurfaceFeaturesTest.cpp
   FindTriangleGeomCentroidsTest.cpp
   FindTriangleGeomSizesTest.cpp
@@ -62,10 +67,12 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
+  SplitAttributeArrayTest.cpp
   StlFileReaderTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
+  WriteASCIIDataTest.cpp
   WriteBinaryDataTest.cpp
 )
 

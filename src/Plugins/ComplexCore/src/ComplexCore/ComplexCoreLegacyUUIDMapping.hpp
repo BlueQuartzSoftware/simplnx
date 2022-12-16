@@ -8,6 +8,7 @@
 #include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
 #include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "ComplexCore/Filters/ApproximatePointCloudHull.hpp"
+#include "ComplexCore/Filters/CalculateArrayHistogramFilter.hpp"
 #include "ComplexCore/Filters/CalculateFeatureSizesFilter.hpp"
 #include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"
 #include "ComplexCore/Filters/ChangeAngleRepresentation.hpp"
@@ -30,11 +31,14 @@
 #include "ComplexCore/Filters/FeatureDataCSVWriterFilter.hpp"
 #include "ComplexCore/Filters/FindArrayStatisticsFilter.hpp"
 #include "ComplexCore/Filters/FindDifferencesMap.hpp"
+#include "ComplexCore/Filters/FindEuclideanDistMapFilter.hpp"
 #include "ComplexCore/Filters/FindFeatureCentroidsFilter.hpp"
 #include "ComplexCore/Filters/FindFeaturePhasesFilter.hpp"
 #include "ComplexCore/Filters/FindNeighborListStatistics.hpp"
 #include "ComplexCore/Filters/FindNeighbors.hpp"
 #include "ComplexCore/Filters/FindNumFeaturesFilter.hpp"
+#include "ComplexCore/Filters/FindShapesFilter.hpp"
+#include "ComplexCore/Filters/FindSurfaceAreaToVolumeFilter.hpp"
 #include "ComplexCore/Filters/FindSurfaceFeatures.hpp"
 #include "ComplexCore/Filters/FindVolFractionsFilter.hpp"
 #include "ComplexCore/Filters/IdentifySample.hpp"
@@ -59,7 +63,9 @@
 #include "ComplexCore/Filters/RobustAutomaticThreshold.hpp"
 #include "ComplexCore/Filters/ScalarSegmentFeaturesFilter.hpp"
 #include "ComplexCore/Filters/SetImageGeomOriginScalingFilter.hpp"
+#include "ComplexCore/Filters/SplitAttributeArrayFilter.hpp"
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include "ComplexCore/Filters/WriteASCIIDataFilter.hpp"
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
@@ -75,6 +81,7 @@ namespace complex
     {complex::Uuid::FromString("7ff0ebb3-7b0d-5ff7-b9d8-5147031aca10").value(), complex::FilterTraits<ArrayCalculatorFilter>::uuid}, // ArrayCalculatorFilter
     {complex::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), complex::FilterTraits<ApplyTransformationToGeometryFilter>::uuid}, // ApplyTransformationToGeometry
     {complex::Uuid::FromString("fab669ad-66c6-5a39-bdb7-fc47b94311ed").value(), complex::FilterTraits<ApproximatePointCloudHull>::uuid}, // ApproximatePointCloudHull
+    {complex::Uuid::FromString("289f0d8c-29ab-5fbc-91bd-08aac01e37c5").value(), complex::FilterTraits<CalculateArrayHistogramFilter>::uuid}, // CalculateArrayHistogram
     {complex::Uuid::FromString("656f144c-a120-5c3b-bee5-06deab438588").value(), complex::FilterTraits<CalculateFeatureSizesFilter>::uuid}, // FindSizes
     {complex::Uuid::FromString("a9900cc3-169e-5a1b-bcf4-7569e1950d41").value(), complex::FilterTraits<CalculateTriangleAreasFilter>::uuid}, // TriangleAreaFilter
     {complex::Uuid::FromString("f7bc0e1e-0f50-5fe0-a9e7-510b6ed83792").value(), complex::FilterTraits<ChangeAngleRepresentation>::uuid}, // ChangeAngleRepresentation
@@ -97,11 +104,14 @@ namespace complex
     {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), complex::FilterTraits<FeatureDataCSVWriterFilter>::uuid}, // FeatureDataCSVWriter
     {complex::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), complex::FilterTraits<FindArrayStatisticsFilter>::uuid}, // FindArrayStatistics
     {complex::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), complex::FilterTraits<FindDifferencesMap>::uuid}, // FindDifferenceMap
+    {complex::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), complex::FilterTraits<FindEuclideanDistMapFilter>::uuid}, // FindEuclideanDistMap
     {complex::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), complex::FilterTraits<FindFeatureCentroidsFilter>::uuid}, // FindFeatureCentroids
     {complex::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), complex::FilterTraits<FindFeaturePhasesFilter>::uuid}, // FindFeaturePhases
     {complex::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), complex::FilterTraits<FindNeighborListStatistics>::uuid}, // FindNeighborListStatistics
     {complex::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), complex::FilterTraits<FindNeighbors>::uuid}, // FindNeighbors
     {complex::Uuid::FromString("529743cf-d5d5-5d5a-a79f-95c84a5ddbb5").value(), complex::FilterTraits<FindNumFeaturesFilter>::uuid}, // FindNumFeatures
+    {complex::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), complex::FilterTraits<FindShapesFilter>::uuid}, // FindShapes
+    {complex::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), complex::FilterTraits<FindSurfaceAreaToVolumeFilter>::uuid}, // FindSurfaceAreaToVolume
     {complex::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), complex::FilterTraits<FindSurfaceFeatures>::uuid}, // FindSurfaceFeatures
     {complex::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), complex::FilterTraits<FindVolFractionsFilter>::uuid}, // FindVolFractions
     {complex::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), complex::FilterTraits<IdentifySample>::uuid}, // IdentifySample
@@ -129,7 +139,9 @@ namespace complex
     {complex::Uuid::FromString("3062fc2c-76b2-5c50-92b7-edbbb424c41d").value(), complex::FilterTraits<RobustAutomaticThreshold>::uuid}, // RobustAutomaticThreshold
     {complex::Uuid::FromString("2c5edebf-95d8-511f-b787-90ee2adf485c").value(), complex::FilterTraits<ScalarSegmentFeaturesFilter>::uuid}, // ScalarSegmentFeatures
     {complex::Uuid::FromString("6d3a3852-6251-5d2e-b749-6257fd0d8951").value(), complex::FilterTraits<SetImageGeomOriginScalingFilter>::uuid}, // SetOriginResolutionImageGeom
+    {complex::Uuid::FromString("5ecf77f4-a38a-52ab-b4f6-0fb8a9c5cb9c").value(), complex::FilterTraits<SplitAttributeArrayFilter>::uuid}, // SplitAttributeArray
     {complex::Uuid::FromString("980c7bfd-20b2-5711-bc3b-0190b9096c34").value(), complex::FilterTraits<StlFileReaderFilter>::uuid}, // ReadStlFile
+    {complex::Uuid::FromString("5fbf9204-2c6c-597b-856a-f4612adbac38").value(), complex::FilterTraits<WriteASCIIDataFilter>::uuid}, // WriteASCIIData
     {complex::Uuid::FromString("0541c5eb-1976-5797-9468-be50a93d44e2").value(), complex::FilterTraits<TriangleDihedralAngleFilter>::uuid}, // TriangleDihedralAngleFilter
     {complex::Uuid::FromString("8133d419-1919-4dbf-a5bf-1c97282ba63f").value(), complex::FilterTraits<TriangleNormalFilter>::uuid}, // TriangleNormalFilter
     {complex::Uuid::FromString("088ef69b-ca98-51a9-97ac-369862015d71").value(), complex::FilterTraits<CopyDataObjectFilter>::uuid}, // CopyObject
