@@ -13,13 +13,17 @@ H5::AttributeReader::AttributeReader() = default;
 H5::AttributeReader::AttributeReader(H5::IdType objectId, size_t attrIdx)
 : m_ObjectId(objectId)
 {
+  HDF_ERROR_HANDLER_OFF
   m_AttributeId = H5Aopen_idx(objectId, attrIdx);
+  HDF_ERROR_HANDLER_ON
 }
 
 H5::AttributeReader::AttributeReader(H5::IdType objectId, const std::string& attrName)
 : m_ObjectId(objectId)
 {
+  HDF_ERROR_HANDLER_OFF
   m_AttributeId = H5Aopen(objectId, attrName.c_str(), H5P_DEFAULT);
+  HDF_ERROR_HANDLER_ON
 }
 
 H5::AttributeReader::~AttributeReader()
