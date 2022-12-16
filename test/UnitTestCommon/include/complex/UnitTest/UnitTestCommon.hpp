@@ -55,7 +55,6 @@ inline constexpr StringLiteral k_Grain_Data("Grain Data");
 inline constexpr StringLiteral k_FeatureData("FeatureData");
 inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
-inline constexpr StringLiteral k_Grain_Data("Grain Data");
 inline constexpr StringLiteral k_Phase_Data("Phase Data");
 
 inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");
@@ -77,7 +76,6 @@ inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
 inline constexpr StringLiteral k_Confidence_Index("Confidence Index");
 inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
 inline constexpr StringLiteral k_CalculatedShifts("Calculated Shifts");
-inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
 inline constexpr StringLiteral k_FaceLabels("FaceLabels");
 inline constexpr StringLiteral k_FaceNormals("FaceNormals");
 inline constexpr StringLiteral k_FaceAreas("FaceAreas");
