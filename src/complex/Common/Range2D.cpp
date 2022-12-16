@@ -9,8 +9,8 @@ Range2D::Range2D()
 }
 
 // -----------------------------------------------------------------------------
-Range2D::Range2D(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd)
-: m_Range({{xStart, xEnd, yStart, yEnd}})
+Range2D::Range2D(size_t colStart, size_t colEnd, size_t rowStart, size_t rowEnd)
+: m_Range({{colStart, colEnd, rowStart, rowEnd}})
 {
 }
 
@@ -31,25 +31,25 @@ Range2D::RangeType Range2D::getRange() const
 // -----------------------------------------------------------------------------
 size_t Range2D::minRow() const
 {
-  return m_Range[0];
+  return m_Range[2];
 }
 
 // -----------------------------------------------------------------------------
 size_t Range2D::minCol() const
 {
-  return m_Range[1];
+  return m_Range[0];
 }
 
 // -----------------------------------------------------------------------------
 size_t Range2D::maxRow() const
 {
-  return m_Range[2];
+  return m_Range[3];
 }
 
 // -----------------------------------------------------------------------------
 size_t Range2D::maxCol() const
 {
-  return m_Range[3];
+  return m_Range[1];
 }
 
 // -----------------------------------------------------------------------------
