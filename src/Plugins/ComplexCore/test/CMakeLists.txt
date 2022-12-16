@@ -22,23 +22,15 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateAttributeMatrixTest.cpp
   CreateDataArrayTest.cpp
   CreateFeatureArrayFromElementArrayTest.cpp
-<<<<<<< HEAD
   CreateGeometryTest.cpp
-  CropVertexGeometryTest.cpp
-  CopyFeatureArrayToElementArrayTest.cpp
-=======
->>>>>>> 58f9fd5 (FILTER: TriangleCentroidFilter added with unit test.)
   CreateImageGeometryTest.cpp
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
   ExtractComponentAsArrayTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
-<<<<<<< HEAD
   FeatureDataCSVWriterTest.cpp
-=======
   FindArrayStatisticsTest.cpp
->>>>>>> 58f9fd5 (FILTER: TriangleCentroidFilter added with unit test.)
   FindDifferencesMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
   FindFeaturePhasesFilterTest.cpp
@@ -46,12 +38,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindNeighborsTest.cpp
   FindNumFeaturesTest.cpp
   FindSurfaceFeaturesTest.cpp
-<<<<<<< HEAD
   FindTriangleGeomCentroidsTest.cpp
   FindTriangleGeomSizesTest.cpp
-=======
   FindVolFractionsTest.cpp
->>>>>>> 58f9fd5 (FILTER: TriangleCentroidFilter added with unit test.)
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
   ImportCSVDataTest.cpp
@@ -76,14 +65,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   StlFileReaderTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
-<<<<<<< HEAD
-  FindNumFeaturesTest.cpp
-  FindVolFractionsTest.cpp
-  ExtractComponentAsArrayTest.cpp
-  WriteBinaryDataTest.cpp
-=======
   TriangleNormalFilterTest.cpp
->>>>>>> 58f9fd5 (FILTER: TriangleCentroidFilter added with unit test.)
+  WriteBinaryDataTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
