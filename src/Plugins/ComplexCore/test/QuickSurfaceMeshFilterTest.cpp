@@ -65,7 +65,7 @@ TEST_CASE("ComplexCore::QuickSurfaceMeshFilter", "[ComplexCore][QuickSurfaceMesh
     DataPath faceGroupDataPath = triangleGeometryPath.createChildPath(k_FaceDataGroupName);
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
 
-    DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabels);
+    DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<DataPath>(faceLabelsDataPath));
 
     // Preflight the filter and check result

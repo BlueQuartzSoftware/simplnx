@@ -317,6 +317,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp

@@ -55,6 +55,11 @@ inline constexpr StringLiteral k_Grain_Data("Grain Data");
 inline constexpr StringLiteral k_FeatureData("FeatureData");
 inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
+inline constexpr StringLiteral k_Phase_Data("Phase Data");
+
+inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");
+inline constexpr StringLiteral k_FaceData("FaceData");
+inline constexpr StringLiteral k_GBCD_Name("GBCD");
 
 inline constexpr StringLiteral k_Centroids("Centroids");
 inline constexpr StringLiteral k_EnsembleAttributeMatrix("CellEnsembleData");
@@ -71,6 +76,9 @@ inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
 inline constexpr StringLiteral k_Confidence_Index("Confidence Index");
 inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
 inline constexpr StringLiteral k_CalculatedShifts("Calculated Shifts");
+inline constexpr StringLiteral k_FaceLabels("FaceLabels");
+inline constexpr StringLiteral k_FaceNormals("FaceNormals");
+inline constexpr StringLiteral k_FaceAreas("FaceAreas");
 
 inline constexpr StringLiteral k_EulerAngles("EulerAngles");
 inline constexpr StringLiteral k_AxisAngles("AxisAngles");
@@ -82,6 +90,7 @@ inline constexpr StringLiteral k_FeatureGroupName("Feature Data");
 inline constexpr StringLiteral k_ActiveName("Active");
 inline constexpr StringLiteral k_NumElements("NumElements");
 inline constexpr StringLiteral k_SlipVector("SlipVector");
+inline constexpr StringLiteral k_AvgEulerAngles("AvgEulerAngles");
 
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
 inline constexpr StringLiteral k_Image_Quality("Image Quality");
@@ -97,7 +106,7 @@ inline constexpr StringLiteral k_TriangleGeometryName("[Triangle Geometry]");
 inline constexpr StringLiteral k_VertexDataGroupName("Vertex Data");
 inline constexpr StringLiteral k_NodeTypeArrayName("Node Type");
 inline constexpr StringLiteral k_FaceDataGroupName("Face Data");
-inline constexpr StringLiteral k_FaceLabels("Face Labels");
+inline constexpr StringLiteral k_Face_Labels("Face Labels");
 inline constexpr StringLiteral k_NormalsLabels("Normals");
 inline constexpr StringLiteral k_TriangleAreas("Triangle Areas");
 
@@ -275,6 +284,47 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
     {
       float diff = std::fabs(static_cast<float>(oldVal - newVal));
       REQUIRE(diff < EPSILON);
+      break;
+    }
+  }
+}
+
+/**
+ * @brief Compares 2 DataArrays using an EPSILON value. Useful for floating point comparisons
+ * @tparam T
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+template <typename T>
+void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON)
+{
+  static_assert(std::is_floating_point_v<T>);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
+
+  const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
+  const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
+  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
+
+  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+
+  usize start = 0;
+  usize end = exemplaryDataArray.getSize();
+  for(usize i = start; i < end; i++)
+  {
+    auto oldVal = exemplaryDataArray[i];
+    auto newVal = generatedDataArray[i];
+    if(std::isnan(oldVal) && std::isnan(newVal))
+    {
+      // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
+      continue;
+    }
+    else if(oldVal != newVal)
+    {
+      float diff = std::fabs(static_cast<float>(oldVal - newVal));
+      REQUIRE(diff < epsilon);
       break;
     }
   }
