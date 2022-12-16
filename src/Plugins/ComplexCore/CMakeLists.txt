@@ -43,7 +43,6 @@ set(FilterList
   FindNeighborListStatistics
   FindNeighbors
   FindNumFeaturesFilter
-  FindShapesFilter
   FindSurfaceAreaToVolumeFilter
   FindSurfaceFeatures
   FindTriangleGeomCentroidsFilter
@@ -96,7 +95,6 @@ set(AlgorithmList
   FindArrayStatistics
   FindEuclideanDistMap
   FindFeatureCentroids
-  FindShapes
   FindSurfaceAreaToVolume
   FindTriangleGeomCentroids
   FindTriangleGeomSizes

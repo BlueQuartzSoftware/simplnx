@@ -40,7 +40,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindNeighborListStatisticsTest.cpp
   FindNeighborsTest.cpp
   FindNumFeaturesTest.cpp
-  FindShapesFilterTest.cpp
   FindSurfaceAreaToVolumeTest.cpp
   FindSurfaceFeaturesTest.cpp
   FindTriangleGeomCentroidsTest.cpp
