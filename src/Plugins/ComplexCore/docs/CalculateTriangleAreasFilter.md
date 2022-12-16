@@ -35,6 +35,7 @@ None
 ## Example Pipelines ##
 
 + (03) SmallIN100 Mesh Statistics
++ Triangle_Face_Data_Demo.d3dpipeline
 
 ## License & Copyright ##
 

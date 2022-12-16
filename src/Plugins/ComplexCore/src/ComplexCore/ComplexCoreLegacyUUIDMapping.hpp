@@ -63,6 +63,7 @@
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
+#include "ComplexCore/Filters/TriangleCentroidFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -134,6 +135,7 @@ namespace complex
     {complex::Uuid::FromString("088ef69b-ca98-51a9-97ac-369862015d71").value(), complex::FilterTraits<CopyDataObjectFilter>::uuid}, // CopyObject
     {complex::Uuid::FromString("79d59b85-01e8-5c4a-a6e1-3fd3e2ceffb4").value(), complex::FilterTraits<ExtractComponentAsArrayFilter>::uuid}, // ExtractComponentAsArray
     {complex::Uuid::FromString("1b4b9941-62e4-52f2-9918-15d48147ab88").value(), complex::FilterTraits<ExtractComponentAsArrayFilter>::uuid}, // RemoveComponentFromArray
+    {complex::Uuid::FromString("7aa33007-4186-5d7f-ba9d-d0a561b3351d").value(), complex::FilterTraits<TriangleCentroidFilter>::uuid}, // TriangleCentroid
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

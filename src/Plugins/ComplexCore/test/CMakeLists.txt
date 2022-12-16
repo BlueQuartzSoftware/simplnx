@@ -6,65 +6,66 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  ArrayCalculatorTest.cpp
   AlignGeometriesTest.cpp
-  ApproximatePointCloudHullTest.cpp
   ApplyTransformationToGeometryFilterTest.cpp
-  CalculateTriangleAreasFilterTest.cpp
+  ApproximatePointCloudHullTest.cpp
+  ArrayCalculatorTest.cpp
   CalculateFeatureSizesTest.cpp
+  CalculateTriangleAreasFilterTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   ConditionalSetValueTest.cpp
   ConvertColorToGrayScaleTest.cpp
   ConvertDataTest.cpp
   CopyDataObjectTest.cpp
+  CopyFeatureArrayToElementArrayTest.cpp
   CreateAttributeMatrixTest.cpp
   CreateDataArrayTest.cpp
   CreateFeatureArrayFromElementArrayTest.cpp
   CreateGeometryTest.cpp
-  CropVertexGeometryTest.cpp
-  CopyFeatureArrayToElementArrayTest.cpp
   CreateImageGeometryTest.cpp
   CropImageGeometryTest.cpp
+  CropVertexGeometryTest.cpp
+  ExtractComponentAsArrayTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
   FeatureDataCSVWriterTest.cpp
+  FindArrayStatisticsTest.cpp
   FindDifferencesMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
   FindFeaturePhasesFilterTest.cpp
   FindNeighborListStatisticsTest.cpp
   FindNeighborsTest.cpp
+  FindNumFeaturesTest.cpp
   FindSurfaceFeaturesTest.cpp
   FindTriangleGeomCentroidsTest.cpp
   FindTriangleGeomSizesTest.cpp
+  FindVolFractionsTest.cpp
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
-  IterativeClosestPointTest.cpp
+  ImportCSVDataTest.cpp
+  ImportHDF5DatasetTest.cpp
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
-  ImportHDF5DatasetTest.cpp
+  IterativeClosestPointTest.cpp
   LaplacianSmoothingFilterTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
   MoveDataTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
-  ImportCSVDataTest.cpp
+  RawBinaryReaderTest.cpp
   RemoveFlaggedVerticesTest.cpp
   RemoveMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
   RobustAutomaticThresholdTest.cpp
-  RawBinaryReaderTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
   StlFileReaderTest.cpp
-  FindArrayStatisticsTest.cpp
-  TriangleNormalFilterTest.cpp
+  TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
-  FindNumFeaturesTest.cpp
-  FindVolFractionsTest.cpp
-  ExtractComponentAsArrayTest.cpp
+  TriangleNormalFilterTest.cpp
   WriteBinaryDataTest.cpp
 )
 
