@@ -15,16 +15,10 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(FilterList
     AlignSectionsFeatureCentroidFilter
     FillBadDataFilter
-    FindShapesFilter
     ResampleImageGeomFilter
     RotateSampleRefFrameFilter
-    WriteASCIIDataFilter
-    FindEuclideanDistMapFilter
     FindNeighborhoodsFilter
-    FindSurfaceAreaToVolumeFilter
-    CalculateArrayHistogramFilter
     RemoveFlaggedFeaturesFilter
-    SplitAttributeArrayFilter
     ErodeDilateBadDataFilter
     )
 # ------------------------------------------------------------------------------
@@ -34,14 +28,9 @@ set(FilterList
 set(AlgorithmList
   AlignSectionsFeatureCentroid
   FillBadData
-  FindShapes
   ResampleImageGeom
-  FindEuclideanDistMap
   FindNeighborhoods
-  FindSurfaceAreaToVolume
-  CalculateArrayHistogram
   RemoveFlaggedFeatures
-  SplitAttributeArray
   ErodeDilateBadData
 )
 

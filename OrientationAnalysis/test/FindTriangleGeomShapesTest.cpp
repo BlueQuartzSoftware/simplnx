@@ -1,4 +1,3 @@
-
 #include <catch2/catch.hpp>
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"

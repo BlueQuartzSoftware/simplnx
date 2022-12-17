@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -8,26 +8,10 @@
 
 #include <vector>
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  FindShapesInputValues inputValues;
-
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CellFeatureAttributeMatrixName = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixName_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.Omega3sArrayName = filterArgs.value<DataPath>(k_Omega3sArrayName_Key);
-  inputValues.AxisLengthsArrayName = filterArgs.value<DataPath>(k_AxisLengthsArrayName_Key);
-  inputValues.AxisEulerAnglesArrayName = filterArgs.value<DataPath>(k_AxisEulerAnglesArrayName_Key);
-  inputValues.AspectRatiosArrayName = filterArgs.value<DataPath>(k_AspectRatiosArrayName_Key);
-  inputValues.VolumesArrayName = filterArgs.value<DataPath>(k_VolumesArrayName_Key);
-
-  return FindShapes(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 
-struct CORE_EXPORT FindShapesInputValues
+struct ORIENTATIONANALYSIS_EXPORT FindShapesInputValues
 {
   DataPath FeatureIdsArrayPath;
   DataPath FeatureAttributeMatrixPath;
@@ -46,7 +30,7 @@ struct CORE_EXPORT FindShapesInputValues
  * where a bool mask array specifies.
  */
 
-class CORE_EXPORT FindShapes
+class ORIENTATIONANALYSIS_EXPORT FindShapes
 {
 public:
   FindShapes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindShapesInputValues* inputValues);
