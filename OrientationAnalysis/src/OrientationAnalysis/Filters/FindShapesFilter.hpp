@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,27 +8,30 @@
 namespace complex
 {
 /**
- * @class FindSurfaceAreaToVolumeFilter
+ * @class FindShapesFilter
+ *
  * @brief This filter will ....
  */
-class CORE_EXPORT FindSurfaceAreaToVolumeFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT FindShapesFilter : public IFilter
 {
 public:
-  FindSurfaceAreaToVolumeFilter() = default;
-  ~FindSurfaceAreaToVolumeFilter() noexcept override = default;
+  FindShapesFilter() = default;
+  ~FindShapesFilter() noexcept override = default;
 
-  FindSurfaceAreaToVolumeFilter(const FindSurfaceAreaToVolumeFilter&) = delete;
-  FindSurfaceAreaToVolumeFilter(FindSurfaceAreaToVolumeFilter&&) noexcept = delete;
+  FindShapesFilter(const FindShapesFilter&) = delete;
+  FindShapesFilter(FindShapesFilter&&) noexcept = delete;
 
-  FindSurfaceAreaToVolumeFilter& operator=(const FindSurfaceAreaToVolumeFilter&) = delete;
-  FindSurfaceAreaToVolumeFilter& operator=(FindSurfaceAreaToVolumeFilter&&) noexcept = delete;
+  FindShapesFilter& operator=(const FindShapesFilter&) = delete;
+  FindShapesFilter& operator=(FindShapesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_NumCellsArrayPath_Key = "num_cells_array_path";
-  static inline constexpr StringLiteral k_SurfaceAreaVolumeRatioArrayName_Key = "surface_area_volume_ratio_array_name";
-  static inline constexpr StringLiteral k_CalculateSphericity_Key = "calculate_sphericity";
-  static inline constexpr StringLiteral k_SphericityArrayName_Key = "sphericity_array_name";
+  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static inline constexpr StringLiteral k_Omega3sArrayName_Key = "omega3s_array_name";
+  static inline constexpr StringLiteral k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
+  static inline constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
+  static inline constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
+  static inline constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**
@@ -97,4 +100,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindSurfaceAreaToVolumeFilter, "94e83e4f-797d-4594-b130-3819b7676f01");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindShapesFilter, "036b17d5-23bb-4a24-9187-c4a8dd918792");

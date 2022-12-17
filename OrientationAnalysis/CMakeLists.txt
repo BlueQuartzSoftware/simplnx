@@ -28,25 +28,26 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # OrientationAnalysis/src/OrientationAnalysis/Filters/ directory.
 set(FilterList
   AlignSectionsMisorientationFilter
-  GenerateFZQuaternions
+  BadDataNeighborOrientationCheckFilter
   ConvertOrientations
   CreateEnsembleInfoFilter
-  ReadH5EbsdFilter
-  RotateEulerRefFrameFilter
   EBSDSegmentFeaturesFilter
+  EbsdToH5EbsdFilter
   FindAvgOrientationsFilter
-  GenerateIPFColorsFilter
-  BadDataNeighborOrientationCheckFilter
-  NeighborOrientationCorrelationFilter
-  MergeTwinsFilter
   FindFeatureReferenceMisorientationsFilter
   FindKernelAvgMisorientationsFilter
   FindMisorientationsFilter
   FindSchmidsFilter
+  FindShapesFilter
+  FindTriangleGeomShapesFilter
+  GenerateFZQuaternions
+  GenerateIPFColorsFilter
+  MergeTwinsFilter
+  NeighborOrientationCorrelationFilter
   ReadAngDataFilter
   ReadCtfDataFilter
-  EbsdToH5EbsdFilter
-  FindTriangleGeomShapesFilter
+  ReadH5EbsdFilter
+  RotateEulerRefFrameFilter
 )
   
 set(STUB_FILTERS
@@ -153,24 +154,25 @@ endif()
 # ------------------------------------------------------------------------------
 set(filter_algorithms
   AlignSectionsMisorientation
-  ReadH5Ebsd
-  RotateEulerRefFrame
-  EBSDSegmentFeatures
-  FindAvgOrientations
-  GenerateIPFColors
   BadDataNeighborOrientationCheck
-  NeighborOrientationCorrelation
-  MergeTwins
-  GroupFeatures
+  CreateEnsembleInfo
+  EBSDSegmentFeatures
+  EbsdToH5Ebsd
+  FindAvgOrientations
   FindFeatureReferenceMisorientations
   FindKernelAvgMisorientations
   FindMisorientations
   FindSchmids
+  FindShapes
+  FindTriangleGeomShapes
+  GenerateIPFColors
+  GroupFeatures
+  MergeTwins
+  NeighborOrientationCorrelation
   ReadAngData
   ReadCtfData
-  EbsdToH5Ebsd
-  FindTriangleGeomShapes
-  CreateEnsembleInfo
+  ReadH5Ebsd
+  RotateEulerRefFrame
 )
 
 

@@ -21,6 +21,7 @@
 #include "OrientationAnalysis/Filters/ReadCtfDataFilter.hpp"
 #include "OrientationAnalysis/Filters/ReadH5EbsdFilter.hpp"
 #include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
+#include "OrientationAnalysis/Filters/FindShapesFilter.hpp"
 // #include "OrientationAnalysis/Filters/ConvertHexGridToSquareGrid.hpp"
 // #include "OrientationAnalysis/Filters/ConvertQuaternion.hpp"
 // #include "OrientationAnalysis/Filters/CreateLambertSphere.hpp"
@@ -78,6 +79,7 @@ namespace complex
     {complex::Uuid::FromString("d1df969c-0428-53c3-b61d-99ea2bb6da28").value(), complex::FilterTraits<ReadCtfDataFilter>::uuid}, // ReadCtfData
     {complex::Uuid::FromString("4ef7f56b-616e-5a80-9e68-1da8f35ad235").value(), complex::FilterTraits<ReadH5EbsdFilter>::uuid}, // ReadH5Ebsd
     {complex::Uuid::FromString("ef9420b2-8c46-55f3-8ae4-f53790639de4").value(), complex::FilterTraits<RotateEulerRefFrameFilter>::uuid}, // RotateEulerRefFrame
+    {complex::Uuid::FromString("3b0ababf-9c8d-538d-96af-e40775c4f0ab").value(), complex::FilterTraits<FindShapesFilter>::uuid}, // FindShapes
     // {complex::Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value(), complex::FilterTraits<ConvertHexGridToSquareGrid>::uuid}, // ConvertHexGridToSquareGrid
     // {complex::Uuid::FromString("439e31b7-3198-5d0d-aef6-65a9e9c1a016").value(), complex::FilterTraits<ConvertQuaternion>::uuid}, // ConvertQuaternion
     // {complex::Uuid::FromString("2a0bfcd3-2517-5117-b164-964dfac8fe22").value(), complex::FilterTraits<CreateEnsembleInfo>::uuid}, // CreateEnsembleInfo

@@ -44,10 +44,10 @@ void InitApplicationAndPlugins()
 
 DataPath ConvertColorToGrayScale(DataStructure& dataStructure, DataPath inputGeometryPath, DataPath inputDataPath)
 {
-  const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313a69");
+  const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 
   const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
-  const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_CorePluginId);
+  const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
 
   // Parameter Keys
   constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm";
@@ -180,7 +180,7 @@ TEST_CASE("ITKAdaptiveHistogramEqualizationImageFilter(histo)", "[ITKImageProces
   }
 
   {
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryDir));
+    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryTestOutputDir));
     H5::FileWriter fileWriter = std::move(result.value());
 
     herr_t err = dataStructure.writeHdf5(fileWriter);

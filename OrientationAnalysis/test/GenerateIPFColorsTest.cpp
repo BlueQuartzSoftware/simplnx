@@ -91,7 +91,7 @@ TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][Gener
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
     {
-      Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/GenerateIPFColors_Test.dream3d", unit_test::k_BinaryDir));
+      Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/GenerateIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir));
       H5::FileWriter fileWriter = std::move(result.value());
       herr_t err = dataStructure.writeHdf5(fileWriter);
       REQUIRE(err >= 0);

@@ -11,21 +11,22 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ConvertOrientationsTest.cpp
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp   
+  EbsdToH5EbsdTest.cpp
   FindAvgOrientationsTest.cpp
-  GenerateFZQuaternionsTest.cpp
-  GenerateIPFColorsTest.cpp
-  NeighborOrientationCorrelationTest.cpp
-  RotateEulerRefFrameTest.cpp
-  MergeTwinsTest.cpp
-  ReadH5EbsdTest.cpp
   FindFeatureReferenceMisorientationsTest.cpp
   FindKernelAvgMisorientationsTest.cpp
   FindMisorientationsTest.cpp
   FindSchmidsTest.cpp
+  FindShapesFilterTest.cpp
+  FindTriangleGeomShapesTest.cpp
+  GenerateFZQuaternionsTest.cpp
+  GenerateIPFColorsTest.cpp
+  MergeTwinsTest.cpp
+  NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
   ReadCtfDataTest.cpp
-  EbsdToH5EbsdTest.cpp
-  FindTriangleGeomShapesTest.cpp
+  ReadH5EbsdTest.cpp
+  RotateEulerRefFrameTest.cpp
 )
 set(DISABLED_TESTS
 
