@@ -231,7 +231,6 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 
     for(const auto& childName : childrenNames)
     {
-      bool ignore = false;
       DataPath childPath = parent.createChildPath(childName);
       const DataObject* dataObject = dataStructure.getData(childPath);
       childDataObjects.push_back(childPath);
