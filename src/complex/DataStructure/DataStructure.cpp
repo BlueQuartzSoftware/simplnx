@@ -22,6 +22,11 @@
 
 #include <fmt/core.h>
 
+namespace
+{
+inline const std::string k_Delimiter = "|--";
+}
+
 namespace complex
 {
 
@@ -901,7 +906,7 @@ void DataStructure::dumpHierarchyToASCII(std::ostream& outputStream)
     auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
     auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
 
-    outputStream << "|-- " << topLevelPath.getTargetName() << "\n";
+    outputStream << k_Delimiter << topLevelPath.getTargetName() << "\n";
 
     if(optionalDataPaths.has_value() || optionalDataPaths.value().size() != 0)
     {
@@ -918,7 +923,7 @@ void DataStructure::recurseGraphToASCII(std::ostream& outputStream, const std::v
   for(const auto& path : paths)
   {
     // Output parent node, child node, and edge connecting them in .dot format
-    outputStream << indent << "|-- " << path.getTargetName() << "\n";
+    outputStream << indent << k_Delimiter << path.getTargetName() << "\n";
 
     // pull child paths or skip to next iteration
     auto optionalChildPaths = GetAllChildDataPaths(*this, path);
