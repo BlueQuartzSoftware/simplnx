@@ -893,4 +893,43 @@ void DataStructure::recurseGraphToDot(std::ostream& outputStream, const std::vec
   outputStream << "\n"; // for readability
 }
 
+void DataStructure::dumpHierarchyToASCII(std::ostream& outputStream)
+{
+  // set base case
+  for(const auto* object : getTopLevelData())
+  {
+    auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
+    auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
+
+    outputStream << "|-- " << topLevelPath.getTargetName() << "\n";
+
+    if(optionalDataPaths.has_value() || optionalDataPaths.value().size() != 0)
+    {
+      // Begin recursion
+      recurseGraphToASCII(outputStream, optionalDataPaths.value(), "");
+    }
+  }
+}
+
+void DataStructure::recurseGraphToASCII(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent)
+{
+  indent += "  ";
+
+  for(const auto& path : paths)
+  {
+    // Output parent node, child node, and edge connecting them in .dot format
+    outputStream << indent << "|-- " << path.getTargetName() << "\n";
+
+    // pull child paths or skip to next iteration
+    auto optionalChildPaths = GetAllChildDataPaths(*this, path);
+    if(!optionalChildPaths.has_value() || optionalChildPaths.value().size() == 0)
+    {
+      continue;
+    }
+
+    // recurse
+    recurseGraphToASCII(outputStream, optionalChildPaths.value(), indent);
+  }
+}
+
 } // namespace complex
