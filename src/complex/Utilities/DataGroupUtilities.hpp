@@ -45,6 +45,14 @@ COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const D
                                                                          const std::vector<DataPath>& ignoredDataPaths = {});
 
 /**
+ * @brief This function will return all the DataPaths within a BaseGroup that are of a certain type
+ * @param dataStructure The DataStructure to use
+ * @param parentGroup The parent group whose children you want to get
+ * @return std::optional<std::vector<DataPath>> of child paths if there no errors during the process.
+ */
+COMPLEX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parent);
+
+/**
  * @brief This function will return all the DataPaths within a BaseGroup that are of an IArray type
  * @param dataStructure The DataStructure to use
  * @param parentGroup The parent group whose children you want to get
