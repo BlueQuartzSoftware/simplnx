@@ -11,6 +11,7 @@
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 #include "complex/Filter/DataParameter.hpp"
 #include "complex/Filter/ValueParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
@@ -844,6 +845,52 @@ void DataStructure::resetIds(DataObject::IdType startingId)
       dataObjectPtr->checkUpdatedIds(updatedIds);
     }
   }
+}
+
+void DataStructure::dumpHierarchyToDotFile(std::ostream& outputStream)
+{
+  // initialize dot file
+  outputStream << "digraph DataGraph {\n"
+               << "\tlabelloc =\"t\"\n"
+               << "\trankdir=LR;\n\n";
+
+  // set base case
+  for(const auto* object : getTopLevelData())
+  {
+    auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
+    auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
+
+    if(!optionalDataPaths.has_value() || optionalDataPaths.value().size() == 0)
+    {
+      outputStream << topLevelPath.getTargetName() << ";\n\n";
+    }
+
+    // Begin recursion
+    recurseGraphToDot(outputStream, optionalDataPaths.value(), topLevelPath.getTargetName());
+  }
+
+  // close dot file
+  outputStream << "}\n";
+}
+
+void DataStructure::recurseGraphToDot(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent)
+{
+  for(const auto& path : paths)
+  {
+    // Output parent node, child node, and edge connecting them in .dot format
+    outputStream << parent << " -> " << path.getTargetName() << "\n";
+
+    // pull child paths or skip to next iteration
+    auto optionalChildPaths = GetAllChildDataPaths(*this, path);
+    if(!optionalChildPaths.has_value() || optionalChildPaths.value().size() == 0)
+    {
+      continue;
+    }
+
+    // recurse
+    recurseGraphToDot(outputStream, optionalChildPaths.value(), path.getTargetName());
+  }
+  outputStream << "\n"; // for readability
 }
 
 } // namespace complex

@@ -625,6 +625,13 @@ public:
   void resetIds(DataObject::IdType startingId);
 
   /**
+   * @brief Outputs data graph in .dot file format
+   * @param outputStream the child class of ostream to output dot syntax to
+   * @return
+   */
+  void dumpHierarchyToDotFile(std::ostream& outputStream);
+
+  /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
    * @param rhs
    * @return DataStructure&
@@ -727,6 +734,16 @@ private:
    * This method exists for methods that copy or move another DataStructure.
    */
   void applyAllDataStructure();
+
+  /**
+   * @brief The recursive function to parse graph and dump names to and output stream in
+   * dot file syntax
+   * @param outputStream ostream to write to
+   * @param paths list of paths to parse
+   * @param parent name of the calling parent to output
+   * @return
+   */
+  void recurseGraphToDot(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent);
 
   /**
    * @brief Notifies observers to the provided message.
