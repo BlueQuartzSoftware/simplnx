@@ -15,13 +15,12 @@ namespace fs = std::filesystem;
 
 namespace CreateImageGeometryUnitTest
 {
-
 const fs::path k_DataDir = "test/data";
 const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 
 } // namespace CreateImageGeometryUnitTest
 
-TEST_CASE("ComplexCore::DeleteDataArray", "[ComplexCore][DeleteData]")
+TEST_CASE("ComplexCore::Delete Singular Data Array", "[ComplexCore][DeleteData]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -52,7 +51,7 @@ TEST_CASE("ComplexCore::DeleteDataArray", "[ComplexCore][DeleteData]")
   REQUIRE(removedDataArray == nullptr);
 }
 
-TEST_CASE("ComplexCore::Delete Data Group", "[ComplexCore][DeleteData]")
+TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][DeleteData]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -81,4 +80,20 @@ TEST_CASE("ComplexCore::Delete Data Group", "[ComplexCore][DeleteData]")
 
   DataObject* removedDataArray = dataGraph.getData(selectedDataGroupPath);
   REQUIRE(removedDataArray == nullptr);
+}
+
+TEST_CASE("ComplexCore::Delete DataPath to Object (Edge removal)", "[ComplexCore][DeleteData]")
+{
+}
+
+TEST_CASE("ComplexCore::Attempt Delete Shared Node", "[ComplexCore][DeleteData]")
+{
+}
+
+TEST_CASE("ComplexCore::Delete Shared Node (Node removal)", "[ComplexCore][DeleteData]")
+{
+}
+
+TEST_CASE("ComplexCore::Delete Top Level with Multi-Parented Children", "[ComplexCore][DeleteData]")
+{
 }

@@ -132,6 +132,21 @@ inline constexpr StringLiteral k_Float64DataSet("float64 DataSet");
 inline constexpr StringLiteral k_ConditionalArray("Conditional [bool]");
 inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
 
+inline constexpr StringLiteral k_GroupAName("A");
+inline constexpr StringLiteral k_GroupBName("B");
+inline constexpr StringLiteral k_GroupCName("C");
+inline constexpr StringLiteral k_GroupDName("D");
+inline constexpr StringLiteral k_GroupEName("E");
+inline constexpr StringLiteral k_GroupFName("F");
+inline constexpr StringLiteral k_GroupGName("G");
+inline constexpr StringLiteral k_GroupHName("H");
+inline constexpr StringLiteral k_ArrayIName("I");
+inline constexpr StringLiteral k_ArrayJName("J");
+inline constexpr StringLiteral k_ArrayKName("K");
+inline constexpr StringLiteral k_ArrayLName("L");
+inline constexpr StringLiteral k_ArrayMName("M");
+inline constexpr StringLiteral k_ArrayNName("N");
+
 // Data Container DataPath
 const DataPath k_DataContainerPath({k_DataContainer});
 
@@ -694,6 +709,90 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
     }
     }
   }
+}
+
+/**
+ * Here's the DataStructure we will be working with:
+ *
+ *     A   B			Level Zero
+ *    / \ /|\
+ *   H   C | F		    Level One
+ *  /   / \|/ \
+ * N   D   E   G		Level Two
+ *    / \ /|  / \
+ *   I   J K L   M	    Level Three
+ */
+std::tuple<DataStructure, std::vector<DataPath>> CreateComplexMultiLevelDataGraph()
+{
+  DataStructure dataGraph;
+  std::vector<DataPath> paths;
+
+  // Level Zero //
+  auto* groupA = DataGroup::Create(dataGraph, Constants::k_GroupAName);
+  auto* groupB = DataGroup::Create(dataGraph, Constants::k_GroupBName);
+
+  paths.emplace_back(DataPath::FromString(groupA->getName()));
+  paths.emplace_back(DataPath::FromString(groupB->getName()));
+
+  // Level One //
+  auto* groupH = DataGroup::Create(dataGraph, Constants::k_GroupHName, groupA->getId());
+  auto* groupC = DataGroup::Create(dataGraph, Constants::k_GroupCName, groupA->getId());
+  groupB->insert(std::shared_ptr<DataGroup>(groupC));
+  auto* groupF = DataGroup::Create(dataGraph, Constants::k_GroupFName, groupB->getId());
+
+  paths.emplace_back(DataPath({groupA->getName(), groupH->getName()}));
+
+  paths.emplace_back(DataPath({groupA->getName(), groupC->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupC->getName()}));
+
+  paths.emplace_back(DataPath({groupB->getName(), groupF->getName()}));
+
+  // Level Two //
+  auto* groupD = DataGroup::Create(dataGraph, Constants::k_GroupDName, groupC->getId());
+  auto* groupE = DataGroup::Create(dataGraph, Constants::k_GroupEName, groupC->getId());
+  groupB->insert(std::shared_ptr<DataGroup>(groupE));
+  groupF->insert(std::shared_ptr<DataGroup>(groupE));
+  auto* groupG = DataGroup::Create(dataGraph, Constants::k_GroupGName, groupF->getId());
+  auto* arrayN = UnitTest::CreateTestDataArray<int8>(dataGraph, Constants::k_ArrayNName, {1ULL}, {1ULL}, groupH->getId());
+
+  paths.emplace_back(DataPath({groupA->getName(), groupH->getName(), arrayN->getName()}));
+
+  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupD->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupD->getName()}));
+
+  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupE->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupE->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupE->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupE->getName()}));
+
+  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupG->getName()}));
+
+  // Level Three //
+  auto* arrayI = UnitTest::CreateTestDataArray<uint8>(dataGraph, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupH->getId());
+  auto* arrayJ = UnitTest::CreateTestDataArray<float32>(dataGraph, Constants::k_ArrayJName, {1ULL}, {1ULL}, groupD->getId());
+  groupE->insert(std::shared_ptr<Float32Array>(arrayJ));
+  auto* arrayK = UnitTest::CreateTestDataArray<float64>(dataGraph, Constants::k_ArrayKName, {1ULL}, {1ULL}, groupE->getId());
+  auto* arrayL = UnitTest::CreateTestDataArray<uint32>(dataGraph, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupH->getId());
+  auto* arrayM = UnitTest::CreateTestDataArray<int64>(dataGraph, Constants::k_ArrayMName, {1ULL}, {1ULL}, groupG->getId());
+
+  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupD->getName(), arrayI->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupD->getName(), arrayI->getName()}));
+
+  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupD->getName(), arrayJ->getName()}));
+  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupE->getName(), arrayJ->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupE->getName(), arrayJ->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupE->getName(), arrayJ->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupE->getName(), arrayJ->getName()}));
+
+  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupE->getName(), arrayK->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupE->getName(), arrayK->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupE->getName(), arrayK->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupE->getName(), arrayK->getName()}));
+
+  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupG->getName(), arrayL->getName()}));
+  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupG->getName(), arrayM->getName()}));
+
+  return {std::move(dataGraph), std::move(paths)};
 }
 
 } // namespace UnitTest
