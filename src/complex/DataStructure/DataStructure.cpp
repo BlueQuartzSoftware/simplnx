@@ -852,7 +852,7 @@ void DataStructure::resetIds(DataObject::IdType startingId)
   }
 }
 
-void DataStructure::dumpHierarchyToDotFile(std::ostream& outputStream)
+void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
 {
   // initialize dot file
   outputStream << "digraph DataGraph {\n"
@@ -871,14 +871,14 @@ void DataStructure::dumpHierarchyToDotFile(std::ostream& outputStream)
     }
 
     // Begin recursion
-    recurseGraphToDot(outputStream, optionalDataPaths.value(), topLevelPath.getTargetName());
+    recurseHeirarchyToGraphViz(outputStream, optionalDataPaths.value(), topLevelPath.getTargetName());
   }
 
   // close dot file
   outputStream << "}\n";
 }
 
-void DataStructure::recurseGraphToDot(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent)
+void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent)
 {
   for(const auto& path : paths)
   {
@@ -893,12 +893,12 @@ void DataStructure::recurseGraphToDot(std::ostream& outputStream, const std::vec
     }
 
     // recurse
-    recurseGraphToDot(outputStream, optionalChildPaths.value(), path.getTargetName());
+    recurseHeirarchyToGraphViz(outputStream, optionalChildPaths.value(), path.getTargetName());
   }
   outputStream << "\n"; // for readability
 }
 
-void DataStructure::dumpHierarchyToASCII(std::ostream& outputStream)
+void DataStructure::exportHeirarchyAsText(std::ostream& outputStream)
 {
   // set base case
   for(const auto* object : getTopLevelData())
@@ -911,12 +911,12 @@ void DataStructure::dumpHierarchyToASCII(std::ostream& outputStream)
     if(optionalDataPaths.has_value() || optionalDataPaths.value().size() != 0)
     {
       // Begin recursion
-      recurseGraphToASCII(outputStream, optionalDataPaths.value(), "");
+      recurseHeirarchyToText(outputStream, optionalDataPaths.value(), "");
     }
   }
 }
 
-void DataStructure::recurseGraphToASCII(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent)
+void DataStructure::recurseHeirarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent)
 {
   indent += "  ";
 
@@ -933,7 +933,7 @@ void DataStructure::recurseGraphToASCII(std::ostream& outputStream, const std::v
     }
 
     // recurse
-    recurseGraphToASCII(outputStream, optionalChildPaths.value(), indent);
+    recurseHeirarchyToText(outputStream, optionalChildPaths.value(), indent);
   }
 }
 
