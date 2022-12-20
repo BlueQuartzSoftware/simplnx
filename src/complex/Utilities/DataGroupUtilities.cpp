@@ -214,6 +214,34 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
   return {childDataObjects};
 }
 
+std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parent)
+{
+  std::vector<DataPath> childDataObjects;
+  try
+  {
+    std::vector<std::string> childrenNames;
+    if(parent.empty())
+    {
+      childrenNames = dataStructure.getDataMap().getNames();
+    }
+    else
+    {
+      childrenNames = dataStructure.getDataRefAs<BaseGroup>(parent).getDataMap().getNames();
+    }
+
+    for(const auto& childName : childrenNames)
+    {
+      DataPath childPath = parent.createChildPath(childName);
+      const DataObject* dataObject = dataStructure.getData(childPath);
+      childDataObjects.push_back(childPath);
+    }
+  } catch(std::exception& e)
+  {
+    return {};
+  }
+  return {childDataObjects};
+}
+
 std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths)
 {
   std::vector<DataPath> childDataObjects;
