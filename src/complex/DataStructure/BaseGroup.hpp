@@ -317,6 +317,11 @@ public:
    */
   static std::set<std::string> StringListFromGroupType(const std::set<GroupType>& groupTypes);
 
+  /**
+   * @brief Querys the DataMap for the object names in m_DataMap
+   */
+  std::vector<std::string> GetChildrenNames();
+
 protected:
   /**
    * @brief Creates a BaseGroup with the target DataStructure and name.

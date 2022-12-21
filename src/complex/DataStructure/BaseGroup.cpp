@@ -228,6 +228,11 @@ std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupTyp
   return stringValues;
 }
 
+std::vector<std::string> BaseGroup::GetChildrenNames()
+{
+  return m_DataMap.getNames();
+}
+
 H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
 {
   return m_DataMap.readH5Group(dataStructureReader, groupReader, getId(), preflight);

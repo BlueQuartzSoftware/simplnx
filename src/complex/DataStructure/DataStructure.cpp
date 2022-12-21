@@ -867,7 +867,7 @@ void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
 
     if(!optionalDataPaths.has_value() || optionalDataPaths.value().size() == 0)
     {
-      outputStream << topLevelPath.getTargetName() << ";\n\n";
+      outputStream << "\"" << topLevelPath.getTargetName() << "\";\n\n";
     }
 
     // Begin recursion
@@ -875,7 +875,7 @@ void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
   }
 
   // close dot file
-  outputStream << "}\n";
+  outputStream << std::endl; // for readability
 }
 
 void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent)
@@ -883,7 +883,7 @@ void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const
   for(const auto& path : paths)
   {
     // Output parent node, child node, and edge connecting them in .dot format
-    outputStream << parent << " -> " << path.getTargetName() << "\n";
+    outputStream << "\"" << parent << "\" -> \"" << path.getTargetName() << "\"\n";
 
     // pull child paths or skip to next iteration
     auto optionalChildPaths = GetAllChildDataPaths(*this, path);
@@ -914,6 +914,7 @@ void DataStructure::exportHeirarchyAsText(std::ostream& outputStream)
       recurseHeirarchyToText(outputStream, optionalDataPaths.value(), "");
     }
   }
+  outputStream << std::endl; // for readability
 }
 
 void DataStructure::recurseHeirarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent)

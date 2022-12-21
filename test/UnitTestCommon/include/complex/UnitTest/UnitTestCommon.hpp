@@ -719,80 +719,81 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
  *   H   C | F		    Level One
  *  /   / \|/ \
  * N   D   E   G		Level Two
- *    / \ /|  / \
- *   I   J K L   M	    Level Three
+ *    / \ / \ /|\
+ *   I   J   K L M	    Level Three
  */
-std::tuple<DataStructure, std::vector<DataPath>> CreateComplexMultiLevelDataGraph()
+inline DataStructure CreateComplexMultiLevelDataGraph()
 {
   DataStructure dataGraph;
-  std::vector<DataPath> paths;
 
   // Level Zero //
   auto* groupA = DataGroup::Create(dataGraph, Constants::k_GroupAName);
   auto* groupB = DataGroup::Create(dataGraph, Constants::k_GroupBName);
 
-  paths.emplace_back(DataPath::FromString(groupA->getName()));
-  paths.emplace_back(DataPath::FromString(groupB->getName()));
+  auto groupAPath = DataPath({groupA->getName()});
+  auto groupBPath = DataPath({groupB->getName()});
 
   // Level One //
   auto* groupH = DataGroup::Create(dataGraph, Constants::k_GroupHName, groupA->getId());
   auto* groupC = DataGroup::Create(dataGraph, Constants::k_GroupCName, groupA->getId());
-  groupB->insert(std::shared_ptr<DataGroup>(groupC));
+  groupB->insert(dataGraph.getSharedData(groupC->getId()));
   auto* groupF = DataGroup::Create(dataGraph, Constants::k_GroupFName, groupB->getId());
 
-  paths.emplace_back(DataPath({groupA->getName(), groupH->getName()}));
+  auto groupAHPath = groupAPath.createChildPath(groupH->getName());
 
-  paths.emplace_back(DataPath({groupA->getName(), groupC->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupC->getName()}));
+  auto groupACPath = groupAPath.createChildPath(groupC->getName());
+  auto groupBCPath = groupBPath.createChildPath(groupC->getName());
 
-  paths.emplace_back(DataPath({groupB->getName(), groupF->getName()}));
+  auto groupBFPath = groupBPath.createChildPath(groupF->getName());
 
   // Level Two //
   auto* groupD = DataGroup::Create(dataGraph, Constants::k_GroupDName, groupC->getId());
   auto* groupE = DataGroup::Create(dataGraph, Constants::k_GroupEName, groupC->getId());
-  groupB->insert(std::shared_ptr<DataGroup>(groupE));
-  groupF->insert(std::shared_ptr<DataGroup>(groupE));
+  groupB->insert(dataGraph.getSharedData(groupE->getId()));
+  groupF->insert(dataGraph.getSharedData(groupE->getId()));
   auto* groupG = DataGroup::Create(dataGraph, Constants::k_GroupGName, groupF->getId());
-  auto* arrayN = UnitTest::CreateTestDataArray<int8>(dataGraph, Constants::k_ArrayNName, {1ULL}, {1ULL}, groupH->getId());
+  auto* arrayN = CreateTestDataArray<int8>(dataGraph, Constants::k_ArrayNName, {1ULL}, {1ULL}, groupH->getId());
 
-  paths.emplace_back(DataPath({groupA->getName(), groupH->getName(), arrayN->getName()}));
+  groupAHPath.createChildPath(arrayN->getName());
 
-  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupD->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupD->getName()}));
+  auto groupACDPath = groupACPath.createChildPath(groupD->getName());
+  auto groupBCDPath = groupBCPath.createChildPath(groupD->getName());
 
-  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupE->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupE->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupE->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupE->getName()}));
+  auto groupACEPath = groupACPath.createChildPath(groupE->getName());
+  auto groupBCEPath = groupBCPath.createChildPath(groupE->getName());
+  auto groupBEPath = groupBPath.createChildPath(groupE->getName());
+  auto groupBFEPath = groupBFPath.createChildPath(groupE->getName());
 
-  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupG->getName()}));
+  auto groupBFGPath = groupBFPath.createChildPath(groupG->getName());
 
   // Level Three //
-  auto* arrayI = UnitTest::CreateTestDataArray<uint8>(dataGraph, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupH->getId());
-  auto* arrayJ = UnitTest::CreateTestDataArray<float32>(dataGraph, Constants::k_ArrayJName, {1ULL}, {1ULL}, groupD->getId());
-  groupE->insert(std::shared_ptr<Float32Array>(arrayJ));
-  auto* arrayK = UnitTest::CreateTestDataArray<float64>(dataGraph, Constants::k_ArrayKName, {1ULL}, {1ULL}, groupE->getId());
-  auto* arrayL = UnitTest::CreateTestDataArray<uint32>(dataGraph, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupH->getId());
-  auto* arrayM = UnitTest::CreateTestDataArray<int64>(dataGraph, Constants::k_ArrayMName, {1ULL}, {1ULL}, groupG->getId());
+  auto* arrayI = CreateTestDataArray<uint8>(dataGraph, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupH->getId());
+  auto* arrayJ = CreateTestDataArray<float32>(dataGraph, Constants::k_ArrayJName, {1ULL}, {1ULL}, groupD->getId());
+  groupE->insert(dataGraph.getSharedData(arrayJ->getId()));
+  auto* arrayK = CreateTestDataArray<float64>(dataGraph, Constants::k_ArrayKName, {1ULL}, {1ULL}, groupE->getId());
+  groupG->insert(dataGraph.getSharedData(arrayK->getId()));
+  auto* arrayL = CreateTestDataArray<uint32>(dataGraph, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupH->getId());
+  auto* arrayM = CreateTestDataArray<int64>(dataGraph, Constants::k_ArrayMName, {1ULL}, {1ULL}, groupG->getId());
 
-  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupD->getName(), arrayI->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupD->getName(), arrayI->getName()}));
+  groupACDPath.createChildPath(arrayI->getName());
+  groupBCDPath.createChildPath(arrayI->getName());
 
-  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupD->getName(), arrayJ->getName()}));
-  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupE->getName(), arrayJ->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupE->getName(), arrayJ->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupE->getName(), arrayJ->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupE->getName(), arrayJ->getName()}));
+  groupBCDPath.createChildPath(arrayJ->getName());
+  groupACEPath.createChildPath(arrayJ->getName());
+  groupBCEPath.createChildPath(arrayJ->getName());
+  groupBEPath.createChildPath(arrayJ->getName());
+  groupBFEPath.createChildPath(arrayJ->getName());
 
-  paths.emplace_back(DataPath({groupA->getName(), groupC->getName(), groupE->getName(), arrayK->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupC->getName(), groupE->getName(), arrayK->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupE->getName(), arrayK->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupE->getName(), arrayK->getName()}));
+  groupACEPath.createChildPath(arrayK->getName());
+  groupBCEPath.createChildPath(arrayK->getName());
+  groupBEPath.createChildPath(arrayK->getName());
+  groupBFEPath.createChildPath(arrayK->getName());
 
-  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupG->getName(), arrayL->getName()}));
-  paths.emplace_back(DataPath({groupB->getName(), groupF->getName(), groupG->getName(), arrayM->getName()}));
+  groupBFGPath.createChildPath(arrayL->getName());
 
-  return {std::move(dataGraph), std::move(paths)};
+  groupBFGPath.createChildPath(arrayM->getName());
+
+  return dataGraph;
 }
 
 } // namespace UnitTest

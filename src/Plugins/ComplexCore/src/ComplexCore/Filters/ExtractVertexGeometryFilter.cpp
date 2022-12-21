@@ -160,7 +160,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
     {
       if(!pUseMaskValue)
       {
-        auto deleteDataAction = std::make_unique<DeleteDataAction>(dataPath);
+        auto deleteDataAction = std::make_unique<DeleteDataAction>(dataPath, DeleteDataAction::DeleteType::JustObject);
         resultOutputActions.value().deferredActions.push_back(std::move(deleteDataAction));
       }
     }

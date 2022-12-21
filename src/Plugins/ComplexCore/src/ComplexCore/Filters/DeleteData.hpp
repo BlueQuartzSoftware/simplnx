@@ -20,6 +20,13 @@ public:
   DeleteData& operator=(const DeleteData&) = delete;
   DeleteData& operator=(DeleteData&&) noexcept = delete;
 
+  enum class DeletionType : uint64
+  {
+    DeleteDataObjectSoft = 0,
+    DeleteDataObjectHard = 1,
+    DeleteDataPath = 2
+  };
+
   // Parameter Keys
   static inline constexpr StringLiteral k_DataPath_Key = "removed_data_path";
 

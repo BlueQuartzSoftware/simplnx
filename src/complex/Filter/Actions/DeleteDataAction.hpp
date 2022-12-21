@@ -11,9 +11,17 @@ namespace complex
 class COMPLEX_EXPORT DeleteDataAction : public IDataAction
 {
 public:
+  enum class DeleteType : uint64
+  {
+    IndependentChildren = 0,
+    AllChildren = 1,
+    JustObject = 2,
+    JustPath = 3,
+  };
+
   DeleteDataAction() = delete;
 
-  DeleteDataAction(const DataPath& path);
+  DeleteDataAction(const DataPath& path, DeleteType type = DeleteType::JustObject);
 
   ~DeleteDataAction() noexcept override;
 
@@ -36,7 +44,15 @@ public:
    */
   DataPath path() const;
 
+  /**
+   * @brief Returns the type to be used
+   * @return DeleteType
+   */
+  DeleteType type() const;
+
+
 private:
   DataPath m_Path;
+  DeleteType m_Type;
 };
 } // namespace complex

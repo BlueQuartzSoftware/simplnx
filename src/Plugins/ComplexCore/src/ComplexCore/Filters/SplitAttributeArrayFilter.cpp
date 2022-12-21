@@ -130,7 +130,7 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
 
   if(pRemoveOriginal)
   {
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(pInputArrayPath));
+    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(pInputArrayPath, DeleteDataAction::DeleteType::JustObject));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

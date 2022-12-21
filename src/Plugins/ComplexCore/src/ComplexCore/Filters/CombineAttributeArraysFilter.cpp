@@ -141,7 +141,7 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   {
     for(const auto& dataPath : selectedDataArrayPathsValue)
     {
-      auto action = std::make_unique<DeleteDataAction>(dataPath);
+      auto action = std::make_unique<DeleteDataAction>(dataPath, DeleteDataAction::DeleteType::JustObject);
       resultOutputActions.value().deferredActions.push_back(std::move(action));
     }
   }
