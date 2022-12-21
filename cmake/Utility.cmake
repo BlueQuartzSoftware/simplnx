@@ -96,10 +96,11 @@ function(download_test_data)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME)
+  file(TO_CMAKE_PATH "${complex_BINARY_DIR}/TestFiles" test_files_dir)
   #----------------------------------------------------------------------------
   # Create the custom CMake File for this archive file
   #----------------------------------------------------------------------------
-  set(fetch_data_file "${complex_BINARY_DIR}/TestFiles/${ARGS_ARCHIVE_NAME}.cmake")
+  set(fetch_data_file "${test_files_dir}/${ARGS_ARCHIVE_NAME}.cmake")
   configure_file(${complex_SOURCE_DIR}/cmake/FetchDataFile.cmake.in
                 ${fetch_data_file}
                 @ONLY
