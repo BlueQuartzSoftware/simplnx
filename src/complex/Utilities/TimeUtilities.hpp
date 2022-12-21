@@ -18,12 +18,10 @@ inline std::string ConvertMillisToHrsMinSecs(unsigned long long int millis)
 {
   constexpr unsigned long long int k_HoursConversion = 3600000;
   constexpr unsigned long long int k_MinutesConversion = 60000;
-
   unsigned long long int hours = millis / k_HoursConversion;
   unsigned long long minutes = (millis % k_HoursConversion) / k_MinutesConversion;
   unsigned long long seconds = ((millis % k_HoursConversion) % k_MinutesConversion) / 1000;
-  std::string str = fmt::format("{:0>2}:{:0>2}:{:0>2}", hours, minutes, seconds);
-  return str;
+  return fmt::format("{:0>2}:{:0>2}:{:0>2}", hours, minutes, seconds);
 }
 
 } // namespace complex
