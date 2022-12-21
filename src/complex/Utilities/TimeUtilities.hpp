@@ -16,11 +16,13 @@ namespace complex
  */
 inline std::string ConvertMillisToHrsMinSecs(unsigned long long int millis)
 {
-  std::chrono::duration<unsigned long long int, std::milli> millisDuration(millis);
-  auto hours = std::chrono::duration_cast<std::chrono::hours>(millisDuration);
-  auto intMinutes = std::chrono::duration_cast<std::chrono::minutes>(millisDuration);
-  auto intSeconds = std::chrono::duration_cast<std::chrono::seconds>(millisDuration);
-  std::string str = fmt::format("{:0>2}:{:0>2}:{:0>2}", hours.count(), intMinutes.count(), intSeconds.count());
+  constexpr unsigned long long int k_HoursConversion = 3600000;
+  constexpr unsigned long long int k_MinutesConversion = 60000;
+
+  unsigned long long int hours = millis / k_HoursConversion;
+  unsigned long long minutes = (millis % k_HoursConversion) / k_MinutesConversion;
+  unsigned long long seconds = ((millis % k_HoursConversion) % k_MinutesConversion) / 1000;
+  std::string str = fmt::format("{:0>2}:{:0>2}:{:0>2}", hours, minutes, seconds);
   return str;
 }
 
