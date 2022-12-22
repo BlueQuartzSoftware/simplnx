@@ -21,7 +21,7 @@
             "X Position",
             "Y Position"
           ],
-          "input_file_path": "Data/H5Ebsd/SmallIN100.h5ebsd",
+          "input_file_path": "Data/H5Ebsd/Small_IN100.h5ebsd",
           "start_slice": 1,
           "use_recommended_transform": true
         }
