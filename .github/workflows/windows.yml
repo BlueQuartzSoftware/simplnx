@@ -40,7 +40,6 @@ jobs:
           repository: DREAM3D/DREAM3D_Data
           path: DREAM3D_Data
           submodules: true
-
       - name: Add C++ Problem Matcher
         uses: ammaraskar/msvc-problem-matcher@0.2.0
       - name: Setup Build Environment
@@ -62,7 +61,7 @@ jobs:
           cmake --preset ci ${{github.workspace}} -G "Visual Studio 17 2022" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data
       - name: Build
         run: |
-          cmake --build ${{github.workspace}}/complex/build
+          cd ${{github.workspace}}/complex && cmake --build --preset ci
       - name: Test
         run: |
-          ctest --verbose --test-dir ${{github.workspace}}/complex/build
+          cd ${{github.workspace}}/complex && ctest --preset ci

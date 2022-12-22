@@ -8,31 +8,27 @@
 namespace complex
 {
 /**
- * @class FindGBCD
+ * @class ExportGBCDGMTFileFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT FindGBCD : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ExportGBCDGMTFileFilter : public IFilter
 {
 public:
-  FindGBCD() = default;
-  ~FindGBCD() noexcept override = default;
+  ExportGBCDGMTFileFilter() = default;
+  ~ExportGBCDGMTFileFilter() noexcept override = default;
 
-  FindGBCD(const FindGBCD&) = delete;
-  FindGBCD(FindGBCD&&) noexcept = delete;
+  ExportGBCDGMTFileFilter(const ExportGBCDGMTFileFilter&) = delete;
+  ExportGBCDGMTFileFilter(ExportGBCDGMTFileFilter&&) noexcept = delete;
 
-  FindGBCD& operator=(const FindGBCD&) = delete;
-  FindGBCD& operator=(FindGBCD&&) noexcept = delete;
+  ExportGBCDGMTFileFilter& operator=(const ExportGBCDGMTFileFilter&) = delete;
+  ExportGBCDGMTFileFilter& operator=(ExportGBCDGMTFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_GBCDRes_Key = "g_bc_dres";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceAreasArrayPath_Key = "surface_mesh_face_areas_array_path";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static inline constexpr StringLiteral k_PhaseOfInterest_Key = "phase_of_interest";
+  static inline constexpr StringLiteral k_MisorientationRotation_Key = "misorientation_rotation";
+  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static inline constexpr StringLiteral k_GBCDArrayPath_Key = "g_bc_darray_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_FaceEnsembleAttributeMatrixName_Key = "face_ensemble_attribute_matrix_name";
-  static inline constexpr StringLiteral k_GBCDArrayName_Key = "g_bc_darray_name";
 
   /**
    * @brief Returns the name of the filter.
@@ -100,4 +96,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindGBCD, "0cc592b7-a3d3-4c6a-8894-1533670a31b9");
+COMPLEX_DEF_FILTER_TRAITS(complex, ExportGBCDGMTFileFilter, "31710abf-b8a6-423f-a03f-4b8885bd3633");
