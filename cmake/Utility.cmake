@@ -95,7 +95,7 @@ function(download_test_data)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME)
+  get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME_WE)
   file(TO_CMAKE_PATH "${complex_BINARY_DIR}/TestFiles" test_files_dir)
   #----------------------------------------------------------------------------
   # Create the custom CMake File for this archive file
@@ -110,7 +110,7 @@ function(download_test_data)
   #----------------------------------------------------------------------------
   add_custom_target(Fetch_${archive_base_name} ALL
     COMMAND "${CMAKE_COMMAND}" -P "${fetch_data_file}"
-    COMMENT "Fetching Test Data File ${ARGS_ARCHIVE_NAME}"
+    COMMENT "Downloading Test Data File: ${ARGS_ARCHIVE_NAME}"
   )
   set_target_properties(Fetch_${archive_base_name} PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
 
