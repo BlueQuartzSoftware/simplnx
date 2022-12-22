@@ -235,7 +235,7 @@ set(Filters_Disabled
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
-  DESCRIPTION "Plugin for ${PLUGIN_NAME}"
+  DESCRIPTION "${PLUGIN_NAME} Plugin"
   VERSION "0.1.0"
   DOC_CHECK
   ADD_TO_GLOBAL_LIST

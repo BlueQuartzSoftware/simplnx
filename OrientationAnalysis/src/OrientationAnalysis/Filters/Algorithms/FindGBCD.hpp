@@ -6,29 +6,29 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  FindGBCDInputValues inputValues;
-
-  inputValues.GBCDRes = filterArgs.value<float32>(k_GBCDRes_Key);
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.SurfaceMeshFaceNormalsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);
-  inputValues.SurfaceMeshFaceAreasArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceAreasArrayPath_Key);
-  inputValues.FeatureEulerAnglesArrayPath = filterArgs.value<DataPath>(k_FeatureEulerAnglesArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FaceEnsembleAttributeMatrixName = filterArgs.value<DataPath>(k_FaceEnsembleAttributeMatrixName_Key);
-  inputValues.GBCDArrayName = filterArgs.value<DataPath>(k_GBCDArrayName_Key);
-
-  return FindGBCD(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
+
+struct SizeGBCD
+{
+  SizeGBCD(usize faceChunkSize, usize numMisoReps, float32 gbcdRes);
+
+  void initializeBinsWithValue(int32 value);
+
+  std::vector<float32> m_GbcdDeltas;
+  std::vector<float32> m_GbcdLimits;
+  std::vector<int32> m_GbcdSizes;
+  std::vector<int32> m_GbcdBins;
+  std::vector<bool> m_GbcdHemiCheck;
+
+  usize m_FaceChunkSize;
+  usize m_NumMisoReps;
+};
 
 struct ORIENTATIONANALYSIS_EXPORT FindGBCDInputValues
 {
   float32 GBCDRes;
+  DataPath TriangleGeometryPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath SurfaceMeshFaceNormalsArrayPath;
   DataPath SurfaceMeshFaceAreasArrayPath;

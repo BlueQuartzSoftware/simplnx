@@ -40,7 +40,6 @@ jobs:
           repository: DREAM3D/DREAM3D_Data
           path: DREAM3D_Data
           submodules: true
-
       - name: Add C++ Problem Matcher
         uses: ammaraskar/msvc-problem-matcher@0.1
       - name: Setup Build Environment
@@ -57,10 +56,10 @@ jobs:
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         run: |
-          cmake --preset ci ${{github.workspace}}/complex -S ${{github.workspace}}/complex -G "Visual Studio 16 2019" -T ${{matrix.toolset}} -DDREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DCOMPLEX_EXTRA_PLUGINS="Core;OrientationAnalysis" -DCOMPLEX_PLUGIN_SEARCH_DIRS=${{github.workspace}}
+          cd ${{github.workspace}}/complex && cmake --preset ci  -G "Visual Studio 16 2019" -T ${{matrix.toolset}} -DDREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DCOMPLEX_EXTRA_PLUGINS="Core;OrientationAnalysis" -DCOMPLEX_PLUGIN_SEARCH_DIRS=${{github.workspace}} -S ${{github.workspace}}/complex 
       - name: Build
         run: |
-          cmake --build ${{github.workspace}}/complex/build
+          cd ${{github.workspace}}/complex && cmake --build --preset ci
       - name: Test
         run: |
-          ctest --verbose --test-dir ${{github.workspace}}/complex/build
+          cd ${{github.workspace}}/complex && ctest --preset ci

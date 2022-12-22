@@ -35,6 +35,7 @@ set(FilterList
   EbsdToH5EbsdFilter
   FindAvgOrientationsFilter
   FindFeatureReferenceMisorientationsFilter
+  FindGBCDFilter
   FindKernelAvgMisorientationsFilter
   FindMisorientationsFilter
   FindSchmidsFilter
@@ -48,6 +49,9 @@ set(FilterList
   ReadCtfDataFilter
   ReadH5EbsdFilter
   RotateEulerRefFrameFilter
+  ExportGBCDGMTFileFilter
+  GenerateGBCDPoleFigureFilter
+  ExportGBCDTriangleDataFilter
 )
   
 set(STUB_FILTERS
@@ -67,7 +71,6 @@ set(STUB_FILTERS
   FindFeatureNeighborCAxisMisalignments
   FindFeatureReferenceCAxisMisorientations
 
-  FindGBCD
   FindGBCDMetricBased
   FindGBPDMetricBased
   FindKernelAvgMisorientations
@@ -101,7 +104,7 @@ set(STUB_FILTERS
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
-  DESCRIPTION "Plugin for ${PLUGIN_NAME}"
+  DESCRIPTION "${PLUGIN_NAME} Plugin"
   VERSION "0.2.0"
   DOC_CHECK
   ADD_TO_GLOBAL_LIST
@@ -160,6 +163,7 @@ set(filter_algorithms
   EbsdToH5Ebsd
   FindAvgOrientations
   FindFeatureReferenceMisorientations
+  FindGBCD
   FindKernelAvgMisorientations
   FindMisorientations
   FindSchmids
@@ -173,6 +177,9 @@ set(filter_algorithms
   ReadCtfData
   ReadH5Ebsd
   RotateEulerRefFrame
+  ExportGBCDGMTFile
+  GenerateGBCDPoleFigure
+  ExportGBCDTriangleData
 )
 
 
@@ -186,6 +193,19 @@ foreach(algorithm ${filter_algorithms})
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/${algorithm}.hpp"
   )
 endforeach()
+
+# ------------------------------------------------------------------------------
+# Extra Sources
+# ------------------------------------------------------------------------------
+target_sources(${PLUGIN_NAME}
+               PRIVATE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X3.hpp"
+               "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X1.hpp")
+source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math" PREFIX ${PLUGIN_NAME}
+             FILES "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X3.hpp"
+                    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X1.hpp"
+             )
+
+
 
 # ------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
