@@ -189,7 +189,7 @@ const int32 k_EndIndex = 2;
 const int32 k_IncrementIndex = 1;
 const uint32 k_PaddingDigits = 1;
 const GeneratedFileListParameter::Ordering k_Ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-const std::string k_InputPath = fmt::format("{}/Data/SmallIN100", unit_test::k_DREAM3DDataDir);
+const std::string k_InputPath = fmt::format("{}/TestFiles/Small_IN100", unit_test::k_DREAM3DDataDir);
 const std::string k_FilePrefix = "Slice_";
 const std::string k_FileSuffix;
 const std::string k_FileExtension = ".ang";
@@ -199,6 +199,9 @@ GeneratedFileListParameter::ValueType k_FileListInfo = {k_StartIndex, k_EndIndex
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
+  fs::path inputPath(k_InputPath);
+  REQUIRE(fs::exists(inputPath));
+
   // Set the global variable, so we have access to it later
   s_OutputFilePath = fmt::format("{}/ebsd_to_h5ebsd_test.h5ebsd", unit_test::k_BinaryTestOutputDir);
 
