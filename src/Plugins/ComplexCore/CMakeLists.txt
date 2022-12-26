@@ -57,6 +57,7 @@ set(FilterList
   ImportDREAM3DFilter
   ImportHDF5Dataset
   ImportTextFilter
+  ImportVolumeGraphicsFileFilter
   InitializeData
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
@@ -125,6 +126,7 @@ set(AlgorithmList
   StlFileReader
   TriangleCentroid
   TupleTransfer
+  ImportVolumeGraphicsFile
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

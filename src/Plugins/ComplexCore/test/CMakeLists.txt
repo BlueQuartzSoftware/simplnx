@@ -84,6 +84,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   TriangleNormalFilterTest.cpp
   WriteASCIIDataTest.cpp
   WriteBinaryDataTest.cpp
+  FindNumFeaturesTest.cpp
+  FindVolFractionsTest.cpp
+  ExtractComponentAsArrayTest.cpp
+  ImportVolumeGraphicsFileTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
