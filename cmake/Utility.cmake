@@ -108,12 +108,13 @@ function(download_test_data)
   #----------------------------------------------------------------------------
   # Add the custom target to run mkdocs
   #----------------------------------------------------------------------------
-  add_custom_target(Fetch_${archive_base_name} ALL
-    COMMAND "${CMAKE_COMMAND}" -P "${fetch_data_file}"
-    COMMENT "Downloading Test Data File: ${ARGS_ARCHIVE_NAME}"
-  )
-  set_target_properties(Fetch_${archive_base_name} PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
-
+  if(NOT TARGET Fetch_${archive_base_name})
+    add_custom_target(Fetch_${archive_base_name} ALL
+      COMMAND "${CMAKE_COMMAND}" -P "${fetch_data_file}"
+      COMMENT "Downloading Test Data File: ${ARGS_ARCHIVE_NAME}"
+    )
+    set_target_properties(Fetch_${archive_base_name} PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
+  endif()
 endfunction()
 
 #------------------------------------------------------------------------------
