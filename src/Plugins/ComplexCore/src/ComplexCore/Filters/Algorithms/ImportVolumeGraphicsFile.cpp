@@ -49,7 +49,7 @@ Result<> ImportVolumeGraphicsFile::operator()()
     return {MakeErrorResult(k_VolBinaryAllocateMismatch, fmt::format("Binary file size ({}) is smaller than the number of allocated bytes ({}).", filesize, allocatedBytes))};
   }
 
-  FILE* f = fopen(m_InputValues->VGDataFile.c_str(), "rb");
+  FILE* f = fopen(m_InputValues->VGDataFile.string().c_str(), "rb");
   if(nullptr == f)
   {
     return {MakeErrorResult(k_VolOpenError, fmt::format("Error opening binary input file: {}"))};
