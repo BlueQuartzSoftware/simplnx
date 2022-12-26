@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 /**
  * @brief Test Setup
  *
- * Read SmallIN100.dream3d
+ * Read 6_6_erode_dilate_bad_data.dream3d
  * Crop Image Geometry (X: 0-max, Y: 0-max. Z:0-1)
  * Threshold Objects (CI>01., IQ>120)
  * Convert Orientations Representation (Eulers->Quaternions)

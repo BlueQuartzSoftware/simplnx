@@ -246,38 +246,3 @@ if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
     COMPONENT Applications
   )
 endif()
-
-# -----------------------------------------------------------------------
-# Copy Example Data Files to binary directory
-# -----------------------------------------------------------------------
-set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
-if(EXISTS "${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd")
-  add_custom_target(H5EbsdDataCopy ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
-    ${DATA_DEST_DIR}/H5Ebsd/SmallIN100.h5ebsd
-    COMMENT "Copying Data Folder into Binary Directory")
-    set_target_properties(H5EbsdDataCopy PROPERTIES FOLDER ZZ_COPY_FILES
-  )
-
-  # -----------------------------------------------------------------------
-  # Install Example Data Files
-  # -----------------------------------------------------------------------
-  install(FILES 
-    ${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
-    DESTINATION Data/H5Ebsd/
-    COMPONENT Applications
-  )
-endif()
-
-# -----------------------------------------------------------------------
-# Ensure the DREAM3D_Data files are decompressed
-# -----------------------------------------------------------------------
-set(DREAM3D_DATA_ARCHIVES "SmallIN100;Image;T12-MAI-2010")
-foreach(archive ${DREAM3D_DATA_ARCHIVES})
-  message(STATUS "Decompressing ${archive}.tar.gz")
-  if(NOT EXISTS ${DREAM3D_DATA_DIR}/Data/${archive}/)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/Data/${archive}.tar.gz"
-      WORKING_DIRECTORY ${DREAM3D_DATA_DIR}/Data/
-    )
-  endif()
-endforeach()

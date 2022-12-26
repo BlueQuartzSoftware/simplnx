@@ -54,7 +54,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
     Arguments args;
 
     H5EbsdReaderParameter::ValueType h5ebsdParamVal;
-    h5ebsdParamVal.inputFilePath = fmt::format("{}/TestFiles/SmallIN100.h5ebsd", unit_test::k_DREAM3DDataDir);
+    h5ebsdParamVal.inputFilePath = fmt::format("{}/TestFiles/Small_IN100.h5ebsd", unit_test::k_DREAM3DDataDir);
     h5ebsdParamVal.startSlice = 1;
     h5ebsdParamVal.endSlice = 117;
     h5ebsdParamVal.eulerRepresentation = EbsdLib::AngleRepresentation::Radians;
