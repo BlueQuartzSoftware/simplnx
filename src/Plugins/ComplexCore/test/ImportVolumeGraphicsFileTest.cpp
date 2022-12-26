@@ -22,7 +22,7 @@ const SizeVec3 k_Dimensions = {50, 20, 80};
 void writeVolTestFile()
 {
   // Write out the data file
-  FILE* f = fopen(k_VolFile.c_str(), "wb");
+  FILE* f = fopen(k_VolFile.string().c_str(), "wb");
   size_t count = k_Dimensions[0] * k_Dimensions[1] * k_Dimensions[2];
   std::vector<float> data(count, 2.0F);
   usize bytesWritten = fwrite(data.data(), sizeof(float), count, f);
