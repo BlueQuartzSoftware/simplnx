@@ -502,7 +502,8 @@ IFilter::UniquePointer ImportVolumeGraphicsFileFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ImportVolumeGraphicsFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ImportVolumeGraphicsFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                       const std::atomic_bool& shouldCancel) const
 {
   auto pVGHeaderFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_VGHeaderFile_Key);
   auto pNewImageGeometryPathValue = filterArgs.value<DataPath>(k_NewImageGeometry_Key);
@@ -540,7 +541,8 @@ IFilter::PreflightResult ImportVolumeGraphicsFileFilter::preflightImpl(const Dat
 }
 
 //------------------------------------------------------------------------------
-Result<> ImportVolumeGraphicsFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ImportVolumeGraphicsFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel) const
 {
 
   ImportVolumeGraphicsFileInputValues inputValues;

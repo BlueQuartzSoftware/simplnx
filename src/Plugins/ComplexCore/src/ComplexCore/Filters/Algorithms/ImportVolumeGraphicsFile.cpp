@@ -9,13 +9,14 @@ namespace fs = std::filesystem;
 
 namespace
 {
-static inline constexpr int32 k_VolBinaryAllocateMismatch = -91504;
-static inline constexpr int32 k_VolOpenError = -91505;
-static inline constexpr int32 k_VolReadError = -91506;
+inline constexpr int32 k_VolBinaryAllocateMismatch = -91504;
+inline constexpr int32 k_VolOpenError = -91505;
+inline constexpr int32 k_VolReadError = -91506;
 } // namespace
 
 // -----------------------------------------------------------------------------
-ImportVolumeGraphicsFile::ImportVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportVolumeGraphicsFileInputValues* inputValues)
+ImportVolumeGraphicsFile::ImportVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                   ImportVolumeGraphicsFileInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
