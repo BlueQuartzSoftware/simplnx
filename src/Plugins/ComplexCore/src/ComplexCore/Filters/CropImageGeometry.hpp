@@ -76,13 +76,13 @@ public:
 protected:
   /**
    * @brief
-   * @param data
-   * @param args
+   * @param dataStructure
+   * @param filterArgs
    * @param messageHandler
    * @param shouldCancel
    * @return PreflightResult
    */
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief

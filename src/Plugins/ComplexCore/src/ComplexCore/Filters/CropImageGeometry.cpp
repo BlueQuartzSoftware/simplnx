@@ -247,10 +247,7 @@ Parameters CropImageGeometry::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Image Geom", "DataPath to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeom_Key, "New Image Geom", "DataPath to create the new ImageGeom at", DataPath()));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Remove Original Image Geometry Group", "Remove the original geometry after cropping", true));
+
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MinVoxel_Key, "Min Voxel", "Lower bound of the volume to crop out", std::vector<uint64>{0, 0, 0},
@@ -258,6 +255,7 @@ Parameters CropImageGeometry::parameters() const
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "Upper bound of the volume to crop out", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Remove Original Image Geometry Group", "Remove the original geometry after cropping", true));
 
   params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
@@ -265,6 +263,12 @@ Parameters CropImageGeometry::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the call feature Attribute Matrix",
                                                                     DataPath({"CellFeatureData"})));
+
+  params.insertSeparator({"Input Geometry and Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeom_Key, "Selected Image Geometry", "DataPath to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
+
+  params.insertSeparator({"Output Geometry and Data"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeom_Key, "Created Image Geometry", "The location of the cropped geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureIds_Key, true);
@@ -278,18 +282,18 @@ IFilter::UniquePointer CropImageGeometry::clone() const
   return std::make_unique<CropImageGeometry>();
 }
 
-IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
 
-  auto srcImagePath = args.value<DataPath>(k_ImageGeom_Key);
-  auto destImagePath = args.value<DataPath>(k_NewImageGeom_Key);
-  auto featureIdsArrayPath = args.value<DataPath>(k_FeatureIds_Key);
-  auto minVoxels = args.value<std::vector<uint64>>(k_MinVoxel_Key);
-  auto maxVoxels = args.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  auto shouldUpdateOrigin = args.value<bool>(k_UpdateOrigin_Key);
-  auto shouldRenumberFeatures = args.value<bool>(k_RenumberFeatures_Key);
-  auto cellFeatureAmPath = args.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
-  auto pRemoveOriginalGeometry = args.value<bool>(k_RemoveOriginalGeometry_Key);
+  auto srcImagePath = filterArgs.value<DataPath>(k_ImageGeom_Key);
+  auto destImagePath = filterArgs.value<DataPath>(k_NewImageGeom_Key);
+  auto featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIds_Key);
+  auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
+  auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
+  auto shouldUpdateOrigin = filterArgs.value<bool>(k_UpdateOrigin_Key);
+  auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
+  auto cellFeatureAmPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
+  auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
 
   auto xMin = minVoxels[0];
   auto xMax = maxVoxels[0];
@@ -304,41 +308,41 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
   if(xMax < xMin)
   {
-    std::string errMsg = fmt::format("X Max (%1) less than X Min (%2)", xMax, xMin);
+   const std::string errMsg = fmt::format("X Max (%1) less than X Min (%2)", xMax, xMin);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
   if(yMax < yMin)
   {
-    std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
+    const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
   if(zMax < zMin)
   {
-    std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
+    const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
   // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
-  const auto spacing = GetCurrentVolumeDataContainerResolutions(data, srcImagePath);
+  const auto spacing = GetCurrentVolumeDataContainerResolutions(dataStructure, srcImagePath);
 
-  const auto* srcImageGeom = data.getDataAs<ImageGeom>(srcImagePath);
+  const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
   auto srcOrigin = srcImageGeom->getOrigin();
 
   if(xMax > srcImageGeom->getNumXCells() - 1)
   {
-    std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXCells() - 1);
+    const std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXCells() - 1);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
   if(yMax > srcImageGeom->getNumYCells() - 1)
   {
-    std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYCells() - 1);
+    const std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYCells() - 1);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
   if(zMax > srcImageGeom->getNumZCells() - 1)
   {
-    std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZCells() - 1);
+    const std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZCells() - 1);
     return {MakeErrorResult<OutputActions>(-5550, errMsg)};
   }
 
@@ -382,12 +386,12 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   // saveAsNewImage
   {
 
-    const AttributeMatrix* cellData = srcImageGeom->getCellData();
-    if(cellData == nullptr)
+    const AttributeMatrix* selectedCellData = srcImageGeom->getCellData();
+    if(selectedCellData == nullptr)
     {
       return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
-    std::string cellDataName = cellData->getName();
+    std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
     auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, targetOrigin, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, cellDataName);
     resultOutputActions.value().actions.push_back(std::move(geomAction));
@@ -413,7 +417,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   if(shouldRenumberFeatures)
   {
     ignorePaths.push_back(cellFeatureAmPath);
-    const auto* featureIdsPtr = data.getDataAs<DataArray<int32>>(featureIdsArrayPath);
+    const auto* featureIdsPtr = dataStructure.getDataAs<DataArray<int32>>(featureIdsArrayPath);
     if(nullptr == featureIdsPtr)
     {
       std::string errMsg = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
@@ -424,7 +428,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       std::string errMsg = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
       return {MakeErrorResult<OutputActions>(-55501, errMsg)};
     }
-    const auto* srcCellFeatureData = data.getDataAs<AttributeMatrix>(cellFeatureAmPath);
+    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
     if(nullptr == srcCellFeatureData)
     {
       std::string errMsg = fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString());
@@ -457,17 +461,17 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   }
 
   // copy over the rest of the data
-  auto childPaths = GetAllChildDataPaths(data, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
   {
     for(const auto& childPath : childPaths.value())
     {
       std::string copiedChildName = complex::StringUtilities::replace(childPath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
       DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
-      if(data.getDataAs<BaseGroup>(childPath) != nullptr)
+      if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
       {
         std::vector<DataPath> allCreatedPaths = {copiedChildPath};
-        auto pathsToBeCopied = GetAllChildDataPathsRecursive(data, childPath);
+        auto pathsToBeCopied = GetAllChildDataPathsRecursive(dataStructure, childPath);
         if(pathsToBeCopied.has_value())
         {
           for(const auto& sourcePath : pathsToBeCopied.value())
@@ -572,7 +576,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
     }
 
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
-    std::string srcName = oldDataArray.getName();
+    const std::string srcName = oldDataArray.getName();
 
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
 
