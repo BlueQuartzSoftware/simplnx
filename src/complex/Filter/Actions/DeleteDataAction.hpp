@@ -50,7 +50,6 @@ public:
    */
   DeleteType type() const;
 
-
 private:
   DataPath m_Path;
   DeleteType m_Type;

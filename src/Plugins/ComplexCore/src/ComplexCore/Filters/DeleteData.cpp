@@ -1,8 +1,10 @@
 #include "DeleteData.hpp"
 
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 
 namespace complex
@@ -41,6 +43,11 @@ Parameters DeleteData::parameters() const
 {
   Parameters params;
 
+  params.insertSeparator(Parameters::Separator{"Required Parameters"});
+  params.insert(std::make_unique<ChoicesParameter>(k_DeletionType_Key, "Deletion Type", "", to_underlying(DeletionType::DeleteDataPath),
+                                                   ChoicesParameter::Choices{"Delete DataObject", "Delete Path to DataObject", "Delete DataObject and Unshared Child Objects",
+                                                                             "Delete DataObject and All Child Objects"})); // sequence dependent DO NOT REORDER
+
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_DataPath_Key, "DataPath to remove", "The complete path to the DataObject to be removed", DataPath({"DataStructure", "DataObject"})));
 
@@ -54,44 +61,120 @@ IFilter::UniquePointer DeleteData::clone() const
 
 IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataGraph, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
+  auto deletionType = static_cast<DeletionType>(args.value<ChoicesParameter::ValueType>(k_DeletionType_Key));
   auto dataObjectPath = args.value<DataPath>(k_DataPath_Key);
+  const auto* dataObject = dataGraph.getDataAs<DataObject>(dataObjectPath);
 
-  // original
-  if(auto iArray = dataGraph.getDataAs<IArray>(dataObjectPath); iArray != nullptr)
+  OutputActions deleteActions;
+  switch(deletionType)
   {
-    OutputActions arrayActions;
-    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
-    arrayActions.actions.push_back(std::move(action));
-    return {std::move(arrayActions)};
-  }
+  case DeletionType::DeleteDataObject: {
+    // original
+    // Remove Singular Node
+    // Rules:
+    // - If multiparented, throw warning of effects and recommend DataPath removal instead
+    // - Edges that point to node will all be deleted
+    // - Node will be deleted
 
-  OutputActions baseGroupActions;
-
-  auto baseGroup = dataGraph.getDataAs<BaseGroup>(dataObjectPath);
-  if(baseGroup == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-61501, fmt::format("The object type cannot be processed. Value given is '{}'", dataGraph.getData(dataObjectPath)->getTypeName()))};
-  }
-
-  // Remove Start Node and Children Recursively
-  // Rules:
-  // - If multiparented, any node and all children of that node will are kept
-  // - Edges that point to deleted nodes wil be removed
-  // - If start object is multiparented recommend edge removal instead
-  {
-    // check parent count (Base Case)
-    if(baseGroup->getParentIds().size() > 1)
+    if(dataObject->getParentIds().size() > 1)
     {
-      return {
-          ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61502, fmt::format("The object cannot be processed because it is multiparented. Consider using the Delete DataPath instead.")), {})};
+      return {ConvertResultTo<OutputActions>(
+          MakeWarningVoidResult(-61501, fmt::format("The object is multiparented, deleting this data could affect other unintended nodes. Consider using the Delete DataPath instead.")), {})};
     }
 
-    // recurse action
-    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::IndependentChildren);
-    baseGroupActions.actions.push_back(std::move(action));
+    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
+    deleteActions.actions.push_back(std::move(action));
+
+    break;
   }
 
-  return {std::move(baseGroupActions)};
+  case DeletionType::DeleteDataPath: {
+    // Remove Edge (DataPath)
+    // Rules:
+    // - Neither of the nodes (parent or child) should be deleted
+    // - The edge between the nodes should be removed from both the respective parent and child list
+
+    // check parent that its not a top level path [ie no parent] (can't be removed)
+    if(dataObjectPath.getLength() < 2)
+    {
+      return {MakeErrorResult<OutputActions>(
+          -61502, fmt::format("The DataPath [{}] cannot be processed because it is a top level datapath. Consider using an DataObject removal instead.", dataObjectPath.toString()))};
+    }
+
+    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustPath);
+    deleteActions.actions.push_back(std::move(action));
+
+    break;
+  }
+
+  case DeletionType::DeleteUnsharedChildren: {
+    // Remove Start Node and Children Recursively (Independent Removal Only)
+    // Rules:
+    // - If multiparented, any node and all children of that node will are kept
+    // - Edges that point to deleted nodes wil be removed
+    // - If start object is multiparented recommend edge removal instead
+
+    // check parent count (Base Case)
+    if(dataObject->getParentIds().size() > 1)
+    {
+      return {
+          ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61503, fmt::format("The object cannot be processed because it is multiparented. Consider using the Delete DataPath instead.")), {})};
+    }
+    else
+    {
+      const auto* baseGroup = dynamic_cast<const BaseGroup*>(dataObject);
+      if(baseGroup == nullptr) // Object is the lowest level in its path
+      {
+        auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
+        deleteActions.actions.push_back(std::move(action));
+        return {ConvertResultTo<OutputActions>(
+            MakeWarningVoidResult(-61504, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
+                                                      dataGraph.getData(dataObjectPath)->getTypeName())),
+            {})};
+      }
+      else
+      {
+        // recurse action
+        auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::IndependentChildren);
+        deleteActions.actions.push_back(std::move(action));
+      }
+    }
+
+    break;
+  }
+
+  case DeletionType::DeleteChildren: {
+    // Remove Start Node and Children Recursively (Complete Removal)
+    // Rules:
+    // - All children will be removed regardless of parent count
+    // - Edges that point to deleted nodes wil be removed
+    // - Warn of absolute deletion of data and effects
+
+    // This needs to be implemented down the line
+    // ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61505, fmt::format("This action will remove the underlying data which could affect other structures if it is multiparented")), {});
+
+    const auto* baseGroup = dynamic_cast<const BaseGroup*>(dataObject);
+    if(baseGroup == nullptr) // Object is the lowest level in its path
+    {
+      auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
+      deleteActions.actions.push_back(std::move(action));
+      return {ConvertResultTo<OutputActions>(
+          MakeWarningVoidResult(-61505, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
+                                                    dataGraph.getData(dataObjectPath)->getTypeName())),
+          {})};
+    }
+    else
+    {
+      // recurse action
+      auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::AllChildren);
+      deleteActions.actions.push_back(std::move(action));
+    }
+
+    break;
+  }
+  }
+
+  return {std::move(deleteActions)};
 }
 
 Result<> DeleteData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const

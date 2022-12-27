@@ -22,12 +22,14 @@ public:
 
   enum class DeletionType : uint64
   {
-    DeleteDataObjectSoft = 0,
-    DeleteDataObjectHard = 1,
-    DeleteDataPath = 2
+    DeleteDataObject = 0,
+    DeleteDataPath = 1,
+    DeleteUnsharedChildren = 2,
+    DeleteChildren = 3
   };
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_DeletionType_Key = "deletion_type";
   static inline constexpr StringLiteral k_DataPath_Key = "removed_data_path";
 
   /**

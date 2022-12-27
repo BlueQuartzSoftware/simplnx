@@ -767,12 +767,12 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   auto groupBFGPath = groupBFPath.createChildPath(groupG->getName());
 
   // Level Three //
-  auto* arrayI = CreateTestDataArray<uint8>(dataGraph, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupH->getId());
+  auto* arrayI = CreateTestDataArray<uint8>(dataGraph, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupD->getId());
   auto* arrayJ = CreateTestDataArray<float32>(dataGraph, Constants::k_ArrayJName, {1ULL}, {1ULL}, groupD->getId());
   groupE->insert(dataGraph.getSharedData(arrayJ->getId()));
   auto* arrayK = CreateTestDataArray<float64>(dataGraph, Constants::k_ArrayKName, {1ULL}, {1ULL}, groupE->getId());
   groupG->insert(dataGraph.getSharedData(arrayK->getId()));
-  auto* arrayL = CreateTestDataArray<uint32>(dataGraph, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupH->getId());
+  auto* arrayL = CreateTestDataArray<uint32>(dataGraph, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupG->getId());
   auto* arrayM = CreateTestDataArray<int64>(dataGraph, Constants::k_ArrayMName, {1ULL}, {1ULL}, groupG->getId());
 
   groupACDPath.createChildPath(arrayI->getName());
