@@ -64,8 +64,8 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
   args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
   args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
-  args.insert(CropImageGeometry::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insert(CropImageGeometry::k_NewImageGeom_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_NewImageGeomPath));
   args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometry::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
@@ -97,8 +97,8 @@ TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropI
   args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
   args.insert(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(k_MaxVector));
   args.insert(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(k_UpdateOrigin));
-  args.insert(CropImageGeometry::k_ImageGeom_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insert(CropImageGeometry::k_NewImageGeom_Key, std::make_any<DataPath>(k_NewImageGeomPath));
+  args.insert(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
+  args.insert(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_NewImageGeomPath));
   args.insert(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(k_RenumberFeatures));
   args.insert(CropImageGeometry::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometry::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
