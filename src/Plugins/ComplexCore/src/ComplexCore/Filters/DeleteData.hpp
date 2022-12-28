@@ -20,16 +20,16 @@ public:
   DeleteData& operator=(const DeleteData&) = delete;
   DeleteData& operator=(DeleteData&&) noexcept = delete;
 
-  //enum class DeletionType : uint64
+  // enum class DeletionType : uint64
   //{
-  //  DeleteDataObject = 0,
-  //  DeleteDataPath = 1,
-  //  DeleteUnsharedChildren = 2,
-  //  DeleteChildren = 3
-  //};
+  //   DeleteDataObject = 0,
+  //   DeleteDataPath = 1,
+  //   DeleteUnsharedChildren = 2,
+  //   DeleteChildren = 3
+  // };
 
   // Parameter Keys
-  //static inline constexpr StringLiteral k_DeletionType_Key = "deletion_type";
+  // static inline constexpr StringLiteral k_DeletionType_Key = "deletion_type";
   static inline constexpr StringLiteral k_DataPath_Key = "removed_data_path";
 
   /**

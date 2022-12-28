@@ -875,7 +875,7 @@ void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
   }
 
   // close dot file
-  outputStream << std::endl; // for readability
+  outputStream << "}" << std::endl; // for readability
 }
 
 void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent)

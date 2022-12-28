@@ -14,9 +14,9 @@ public:
   enum class DeleteType : uint64
   {
     JustObject = 0,
-    //IndependentChildren = 1,
-    //AllChildren = 2,
-    //JustPath = 3
+    // IndependentChildren = 1,
+    // AllChildren = 2,
+    // JustPath = 3
   };
 
   DeleteDataAction() = delete;
@@ -49,7 +49,6 @@ public:
    * @return DeleteType
    */
   DeleteType type() const;
-
 
 private:
   DataPath m_Path;
