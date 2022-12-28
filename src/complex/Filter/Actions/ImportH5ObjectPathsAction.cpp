@@ -13,7 +13,7 @@ using namespace complex;
 
 namespace
 {
-constexpr complex::int32 k_InsertFailureError = -2;
+constexpr complex::int32 k_InsertFailureError = -6202;
 
 void sortImportPaths(std::vector<DataPath>& importPaths)
 {
@@ -45,6 +45,7 @@ ImportH5ObjectPathsAction::~ImportH5ObjectPathsAction() noexcept = default;
 
 Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mode) const
 {
+  static constexpr StringLiteral prefix = "ImportH5ObjectPathsAction: ";
   bool preflighting = (mode == Mode::Preflight);
 
   H5::FileReader fileReader(m_H5FilePath);
@@ -63,7 +64,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   {
     if(!importStructure.containsData(targetPath))
     {
-      return MakeErrorResult(-5900, fmt::format("DataStructure Object Path '{}' does not exist for importing.", targetPath.toString()));
+      return MakeErrorResult(-6201, fmt::format("{}DataStructure Object Path '{}' does not exist for importing.", prefix, targetPath.toString()));
     }
     auto importObject = importStructure.getSharedData(targetPath);
     auto importData = std::shared_ptr<DataObject>(importObject->shallowCopy());
@@ -75,7 +76,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
 
     if(!dataStructure.insert(importData, targetPath.getParent()))
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("Unable to import DataObject at '{}'", targetPath.toString())}})};
+      return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, targetPath.toString())}})};
     }
   }
 

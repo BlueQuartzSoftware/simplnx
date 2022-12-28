@@ -58,7 +58,8 @@ Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
     return CreateArray<bool>(dataStructure, m_Dims, m_CDims, getCreatedPath(), mode);
   }
   default: {
-    throw std::runtime_error(fmt::format("CreateArrayAction: Invalid DataType '{}'", to_underlying(m_Type)));
+    static constexpr StringLiteral prefix = "CreateArrayAction: ";
+    throw std::runtime_error(fmt::format("{}CreateArrayAction: Invalid DataType '{}'", prefix, to_underlying(m_Type)));
   }
   }
 }

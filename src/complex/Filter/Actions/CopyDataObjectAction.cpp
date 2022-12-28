@@ -29,18 +29,20 @@ std::shared_ptr<DataObject> CopyDataObjectAction::copyData(DataStructure& dataSt
 
 Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode mode) const
 {
+  static constexpr StringLiteral prefix = "CopyDataObjectAction: ";
+
   if(dataStructure.getData(path()) == nullptr)
   {
-    return MakeErrorResult(-5, fmt::format("Cannot find data object at path '{}'", path().toString()));
+    return MakeErrorResult(-5100, fmt::format("{}Cannot find data object at path '{}'", prefix, path().toString()));
   }
   if(dataStructure.getData(newPath()) != nullptr)
   {
-    return MakeErrorResult(-6, fmt::format("Data already exists at path '{}'", newPath().toString()));
+    return MakeErrorResult(-5101, fmt::format("{}Data already exists at path '{}'", prefix, newPath().toString()));
   }
 
   if(copyData(dataStructure, path(), newPath()) == nullptr)
   {
-    return MakeErrorResult(-7, fmt::format("Failed to copy data from '{}' to '{}'", path().toString(), newPath().toString()));
+    return MakeErrorResult(-5102, fmt::format("{}Failed to copy data from '{}' to '{}'", prefix, path().toString(), newPath().toString()));
   }
 
   return {};

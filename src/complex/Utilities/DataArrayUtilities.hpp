@@ -324,6 +324,7 @@ std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
 template <class T>
 Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode)
 {
+
   auto parentPath = path.getParent();
 
   std::optional<DataObject::IdType> dataObjectId;
@@ -334,7 +335,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
     parentObject = dataStructure.getData(parentPath);
     if(parentObject == nullptr)
     {
-      return MakeErrorResult(-262, fmt::format("CreateArray: Parent object '{}' does not exist", parentPath.toString()));
+      return MakeErrorResult(-260, fmt::format("CreateArray: Parent object '{}' does not exist", parentPath.toString()));
     }
 
     dataObjectId = parentObject->getId();
@@ -348,7 +349,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   // Validate Number of Components
   if(compShape.empty())
   {
-    return MakeErrorResult(-261, fmt::format("CreateArray: Component Shape was empty. Please set the number of components."));
+    return MakeErrorResult(-262, fmt::format("CreateArray: Component Shape was empty. Please set the number of components."));
   }
   size_t numComponents = std::accumulate(compShape.cbegin(), compShape.cend(), static_cast<size_t>(1), std::multiplies<>());
   if(numComponents == 0 && mode == IDataAction::Mode::Execute)
@@ -373,14 +374,14 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
       auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
       std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(tupleShape, " x "));
-      return MakeErrorResult(-264,
+      return MakeErrorResult(-265,
                              fmt::format("CreateArray: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
                                          "dimensions or the same total number of tuples.\n{}\n{}",
                                          name, dataStructure.getDataPathsForId(parentObject->getId()).front().toString(), amShape, arrayShape));
     }
     else
     {
-      return MakeErrorResult(-264, fmt::format("CreateArray: Unable to create DataArray at '{}'", path.toString()));
+      return MakeErrorResult(-266, fmt::format("CreateArray: Unable to create DataArray at '{}'", path.toString()));
     }
   }
 
@@ -399,6 +400,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 template <class T>
 Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const DataPath& path, IDataAction::Mode mode)
 {
+  static constexpr StringLiteral prefix = "CreateNeighborListAction: ";
   auto parentPath = path.getParent();
 
   std::optional<DataObject::IdType> dataObjectId;
@@ -408,7 +410,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
     auto* parentObject = dataStructure.getData(parentPath);
     if(parentObject == nullptr)
     {
-      return MakeErrorResult(-262, fmt::format("Parent object \"{}\" does not exist", parentPath.toString()));
+      return MakeErrorResult(-5801, fmt::format("{}Parent object \"{}\" does not exist", prefix, parentPath.toString()));
     }
 
     dataObjectId = parentObject->getId();
@@ -421,7 +423,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
   auto neighborList = NeighborList<T>::Create(dataStructure, name, numTuples, dataObjectId);
   if(neighborList == nullptr)
   {
-    return MakeErrorResult(-264, fmt::format("Unable to create NeighborList at \"{}\"", path.toString()));
+    return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", prefix, path.toString()));
   }
 
   return {};
