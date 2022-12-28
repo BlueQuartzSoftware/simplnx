@@ -18,13 +18,13 @@ namespace
 {
 DataStructure CreateDataStructure()
 {
-  DataStructure dataGraph;
+  DataStructure dataStructure;
 
-  DataGroup* group = complex::DataGroup::Create(dataGraph, complex::Constants::k_SmallIN100);
-  DataGroup* scanData = complex::DataGroup::Create(dataGraph, complex::Constants::k_EbsdScanData, group->getId());
+  DataGroup* group = complex::DataGroup::Create(dataStructure, complex::Constants::k_SmallIN100);
+  DataGroup* scanData = complex::DataGroup::Create(dataStructure, complex::Constants::k_EbsdScanData, group->getId());
 
   // Create an Image Geometry grid for the Scan Data
-  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, k_SmallIn100ImageGeom, scanData->getId());
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_SmallIn100ImageGeom, scanData->getId());
   imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
   imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
   complex::SizeVec3 imageGeomDims = {100, 100, 2};
@@ -38,21 +38,21 @@ DataStructure CreateDataStructure()
   std::string filePath = complex::unit_test::k_DataDir.str();
 
   std::string fileName = "/quats.raw";
-  complex::ImportFromBinaryFile<float>(filePath + fileName, k_Quats, dataGraph, tupleDims, compDims, scanData->getId());
+  complex::ImportFromBinaryFile<float>(filePath + fileName, k_Quats, dataStructure, tupleDims, compDims, scanData->getId());
 
   fileName = "/fz_quats.raw";
-  complex::ImportFromBinaryFile<float>(filePath + fileName, "FZ_QUATS_EXEMPLAR", dataGraph, tupleDims, compDims, scanData->getId());
+  complex::ImportFromBinaryFile<float>(filePath + fileName, "FZ_QUATS_EXEMPLAR", dataStructure, tupleDims, compDims, scanData->getId());
 
-  Int32Array* phases_data = complex::UnitTest::CreateTestDataArray<int32>(dataGraph, k_Phases, tupleDims, {1}, scanData->getId());
+  Int32Array* phases_data = complex::UnitTest::CreateTestDataArray<int32>(dataStructure, k_Phases, tupleDims, {1}, scanData->getId());
   phases_data->fill(1);
 
   // Add in another group that is just information about the grid data.
-  DataGroup* phaseGroup = complex::DataGroup::Create(dataGraph, k_PhaseData, group->getId());
-  UInt32Array* laueClass = UInt32Array::CreateWithStore<UInt32DataStore>(dataGraph, k_LaueClass, {2}, {1}, phaseGroup->getId());
+  DataGroup* phaseGroup = complex::DataGroup::Create(dataStructure, k_PhaseData, group->getId());
+  UInt32Array* laueClass = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_LaueClass, {2}, {1}, phaseGroup->getId());
   (*laueClass)[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
   (*laueClass)[1] = EbsdLib::CrystalStructure::Cubic_High;
 
-  return dataGraph;
+  return dataStructure;
 }
 
 void MessageHandlerFunction(const IFilter::Message& message)

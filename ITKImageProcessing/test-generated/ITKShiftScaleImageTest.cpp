@@ -20,7 +20,7 @@ using namespace complex;
 
 TEST_CASE("ITKShiftScaleImageFilter(default)", "[ITKImageProcessing][ITKShiftScaleImage][default]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKShiftScaleImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -30,7 +30,7 @@ TEST_CASE("ITKShiftScaleImageFilter(default)", "[ITKImageProcessing][ITKShiftSca
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -39,19 +39,19 @@ TEST_CASE("ITKShiftScaleImageFilter(default)", "[ITKImageProcessing][ITKShiftSca
   args.insertOrAssign(ITKShiftScaleImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKShiftScaleImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "a963bd6a755b853103a2d195e01a50d3");
 }
 
 TEST_CASE("ITKShiftScaleImageFilter(params)", "[ITKImageProcessing][ITKShiftScaleImage][params]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKShiftScaleImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -61,7 +61,7 @@ TEST_CASE("ITKShiftScaleImageFilter(params)", "[ITKImageProcessing][ITKShiftScal
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -72,19 +72,19 @@ TEST_CASE("ITKShiftScaleImageFilter(params)", "[ITKImageProcessing][ITKShiftScal
   args.insertOrAssign(ITKShiftScaleImage::k_Shift_Key, std::make_any<Float64Parameter::ValueType>(100));
   args.insertOrAssign(ITKShiftScaleImage::k_Scale_Key, std::make_any<Float64Parameter::ValueType>(0.5));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "e3bee902dc9339d28359ebfb96a70186");
 }
 
 TEST_CASE("ITKShiftScaleImageFilter(OutputPixel)", "[ITKImageProcessing][ITKShiftScaleImage][OutputPixel]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKShiftScaleImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -94,7 +94,7 @@ TEST_CASE("ITKShiftScaleImageFilter(OutputPixel)", "[ITKImageProcessing][ITKShif
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -107,19 +107,19 @@ TEST_CASE("ITKShiftScaleImageFilter(OutputPixel)", "[ITKImageProcessing][ITKShif
   args.insertOrAssign(ITKShiftScaleImage::k_OutputPixelType_Key,
                       std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{itk::simple::sitkUInt8, itk::simple::sitkUInt8, itk::simple::sitkUInt8}));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "be9651a54b488ced65c15abc55b86c05");
 }
 
 TEST_CASE("ITKShiftScaleImageFilter(OutputOverflow)", "[ITKImageProcessing][ITKShiftScaleImage][OutputOverflow]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKShiftScaleImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -129,7 +129,7 @@ TEST_CASE("ITKShiftScaleImageFilter(OutputOverflow)", "[ITKImageProcessing][ITKS
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -142,12 +142,12 @@ TEST_CASE("ITKShiftScaleImageFilter(OutputOverflow)", "[ITKImageProcessing][ITKS
   args.insertOrAssign(ITKShiftScaleImage::k_OutputPixelType_Key,
                       std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{itk::simple::sitkInt8, itk::simple::sitkInt8, itk::simple::sitkInt8}));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "07273b18059cf2259cc6f0be2eb50d04");
 }

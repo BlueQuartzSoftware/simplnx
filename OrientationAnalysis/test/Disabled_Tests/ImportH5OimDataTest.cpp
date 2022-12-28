@@ -42,7 +42,7 @@ TEST_CASE("OrientationAnalysis::ImportH5OimData: Instantiation and Parameter Che
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportH5OimData filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -56,11 +56,11 @@ TEST_CASE("OrientationAnalysis::ImportH5OimData: Instantiation and Parameter Che
   args.insertOrAssign(ImportH5OimData::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
 

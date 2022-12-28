@@ -120,9 +120,9 @@ namespace complex
 namespace ITKTestBase
 {
 //------------------------------------------------------------------------------
-std::string ComputeMd5Hash(DataStructure& ds, const DataPath& outputDataPath)
+std::string ComputeMd5Hash(DataStructure& dataStructure, const DataPath& outputDataPath)
 {
-  const auto& outputDataArray = ds.getDataRefAs<IDataArray>(outputDataPath);
+  const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputDataPath);
   DataType outputDataType = outputDataArray.getDataType();
 
   switch(outputDataType)
@@ -167,7 +167,7 @@ std::string ComputeMd5Hash(DataStructure& ds, const DataPath& outputDataPath)
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& cellDataPath, const DataPath& imagePath)
+Result<> ReadImage(DataStructure& dataStructure, const fs::path& filePath, const DataPath& geometryPath, const DataPath& cellDataPath, const DataPath& imagePath)
 {
   ITKImageReader filter;
   Arguments args;
@@ -175,12 +175,12 @@ Result<> ReadImage(DataStructure& ds, const fs::path& filePath, const DataPath& 
   args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geometryPath);
   args.insertOrAssign(ITKImageReader::k_CellDataName_Key, cellDataPath.getTargetName());
   args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, imagePath);
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   return executeResult.result;
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
+Result<> WriteImage(DataStructure& dataStructure, const fs::path& filePath, const DataPath& geometryPath, const DataPath& imagePath)
 {
   ITKImageWriter filter;
   Arguments args;
@@ -191,36 +191,37 @@ Result<> WriteImage(DataStructure& ds, const fs::path& filePath, const DataPath&
   args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<uint64>(0));
   args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XYPlane));
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
 
   return executeResult.result;
 }
 
 //------------------------------------------------------------------------------
-Result<> CompareImages(DataStructure& ds, const DataPath& baselineGeometryPath, const DataPath& baselineDataPath, const DataPath& inputGeometryPath, const DataPath& outputDataPath, float64 tolerance)
+Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeometryPath, const DataPath& baselineDataPath, const DataPath& inputGeometryPath, const DataPath& outputDataPath,
+                       float64 tolerance)
 {
-  const auto* baselineImageGeom = ds.getDataAs<ImageGeom>(baselineGeometryPath);
+  const auto* baselineImageGeom = dataStructure.getDataAs<ImageGeom>(baselineGeometryPath);
   if(baselineImageGeom == nullptr)
   {
     return MakeErrorResult(-10, fmt::format("Could not get ImageGeometry for Baseline"));
   }
   SizeVec3 baselineDims = baselineImageGeom->getDimensions();
 
-  const auto* baselineDataArray = ds.getDataAs<IDataArray>(baselineDataPath);
+  const auto* baselineDataArray = dataStructure.getDataAs<IDataArray>(baselineDataPath);
   if(baselineDataArray == nullptr)
   {
     return MakeErrorResult(-11, fmt::format("Could not get DataArray for Baseline"));
   }
   DataType baseLineDataType = baselineDataArray->getDataType();
 
-  const auto* inputImageGeom = ds.getDataAs<ImageGeom>(inputGeometryPath);
+  const auto* inputImageGeom = dataStructure.getDataAs<ImageGeom>(inputGeometryPath);
   if(inputImageGeom == nullptr)
   {
     return MakeErrorResult(-12, fmt::format("Could not get ImageGeometry for Output"));
   }
   SizeVec3 outputDims = inputImageGeom->getDimensions();
 
-  const auto* outputDataArray = ds.getDataAs<IDataArray>(outputDataPath);
+  const auto* outputDataArray = dataStructure.getDataAs<IDataArray>(outputDataPath);
   if(outputDataArray == nullptr)
   {
     return MakeErrorResult(-13, fmt::format("Could not get DataArray for Output"));

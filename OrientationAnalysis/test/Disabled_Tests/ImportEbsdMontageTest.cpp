@@ -36,7 +36,7 @@ TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Instantiation and Parameter C
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportEbsdMontage filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -50,11 +50,11 @@ TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Instantiation and Parameter C
   args.insertOrAssign(ImportEbsdMontage::k_CellIPFColorsArrayName_Key, std::make_any<StringParameter::ValueType>("SomeString"));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
 

@@ -21,7 +21,7 @@ using namespace complex;
 
 TEST_CASE("ITKWhiteTopHatImageFilter(WhiteTopHatErode)", "[ITKImageProcessing][ITKWhiteTopHatImage][WhiteTopHatErode]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKWhiteTopHatImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -31,7 +31,7 @@ TEST_CASE("ITKWhiteTopHatImageFilter(WhiteTopHatErode)", "[ITKImageProcessing][I
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE1.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -42,12 +42,12 @@ TEST_CASE("ITKWhiteTopHatImageFilter(WhiteTopHatErode)", "[ITKImageProcessing][I
   args.insertOrAssign(ITKWhiteTopHatImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
   args.insertOrAssign(ITKWhiteTopHatImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "e784daff43d09a18e20556729afc0c9d");
 }

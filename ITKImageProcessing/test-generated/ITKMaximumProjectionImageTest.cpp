@@ -19,7 +19,7 @@ using namespace complex;
 
 TEST_CASE("ITKMaximumProjectionImageFilter(defaults)", "[ITKImageProcessing][ITKMaximumProjectionImage][defaults]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKMaximumProjectionImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -29,7 +29,7 @@ TEST_CASE("ITKMaximumProjectionImageFilter(defaults)", "[ITKImageProcessing][ITK
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Float.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -38,19 +38,19 @@ TEST_CASE("ITKMaximumProjectionImageFilter(defaults)", "[ITKImageProcessing][ITK
   args.insertOrAssign(ITKMaximumProjectionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKMaximumProjectionImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "fb78c55635b17fc9ff38ef0ef14f0948");
 }
 
 TEST_CASE("ITKMaximumProjectionImageFilter(another_dimension)", "[ITKImageProcessing][ITKMaximumProjectionImage][another_dimension]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKMaximumProjectionImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -60,7 +60,7 @@ TEST_CASE("ITKMaximumProjectionImageFilter(another_dimension)", "[ITKImageProces
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Float.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -70,19 +70,19 @@ TEST_CASE("ITKMaximumProjectionImageFilter(another_dimension)", "[ITKImageProces
   args.insertOrAssign(ITKMaximumProjectionImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
   args.insertOrAssign(ITKMaximumProjectionImage::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(2));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "f3f0d97c83c6b0d92df10c28e2481520");
 }
 
 TEST_CASE("ITKMaximumProjectionImageFilter(short_image)", "[ITKImageProcessing][ITKMaximumProjectionImage][short_image]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKMaximumProjectionImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -92,7 +92,7 @@ TEST_CASE("ITKMaximumProjectionImageFilter(short_image)", "[ITKImageProcessing][
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/Ramp-Up-Short.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -102,19 +102,19 @@ TEST_CASE("ITKMaximumProjectionImageFilter(short_image)", "[ITKImageProcessing][
   args.insertOrAssign(ITKMaximumProjectionImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
   args.insertOrAssign(ITKMaximumProjectionImage::k_ProjectionDimension_Key, std::make_any<UInt32Parameter::ValueType>(1));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "5390344262c91e83bc9208b0991a2fc9");
 }
 
 TEST_CASE("ITKMaximumProjectionImageFilter(rgb_image)", "[ITKImageProcessing][ITKMaximumProjectionImage][rgb_image]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKMaximumProjectionImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -124,7 +124,7 @@ TEST_CASE("ITKMaximumProjectionImageFilter(rgb_image)", "[ITKImageProcessing][IT
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGB.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -133,12 +133,12 @@ TEST_CASE("ITKMaximumProjectionImageFilter(rgb_image)", "[ITKImageProcessing][IT
   args.insertOrAssign(ITKMaximumProjectionImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKMaximumProjectionImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "92134e0dd38fccdf054ff23e67a72e75");
 }

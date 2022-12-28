@@ -19,7 +19,7 @@ using namespace complex;
 TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][ITKImageReader]")
 {
   ITKImageReader filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   fs::path filePath = fs::path(unit_test::k_SourceDir.view()) / "test/data/PngTest.png";
@@ -29,13 +29,13 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][
   args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, imagePath);
   args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto* imageGeom = ds.getDataAs<ImageGeom>(imagePath);
+  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imagePath);
   REQUIRE(imageGeom != nullptr);
 
   SizeVec3 imageDims = imageGeom->getDimensions();
@@ -50,7 +50,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][
   const FloatVec3 expectedImageSpacing = {1.0f, 1.0f, 1.0f};
   REQUIRE(imageSpacing == expectedImageSpacing);
 
-  const auto* dataArray = ds.getDataAs<DataArray<uint8>>(arrayPath);
+  const auto* dataArray = dataStructure.getDataAs<DataArray<uint8>>(arrayPath);
   REQUIRE(dataArray != nullptr);
 
   const auto& dataStore = dataArray->getIDataStoreRefAs<DataStore<uint8>>();

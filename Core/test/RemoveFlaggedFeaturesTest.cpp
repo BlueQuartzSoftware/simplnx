@@ -15,7 +15,7 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Instantiation", "[Core][RemoveFlaggedFea
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveFlaggedFeaturesFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -27,32 +27,32 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Instantiation", "[Core][RemoveFlaggedFea
                       std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
 TEST_CASE("Core::RemoveFlaggedFeatures: Test Algorithm", "[Core][RemoveFlaggedFeatures]")
 { // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveFlaggedFeaturesFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
-  ImageGeom* imageGeom = ImageGeom::Create(ds, Constants::k_DataContainer);
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_DataContainer);
   std::vector<size_t> dims = {4, 4, 1};
   imageGeom->setDimensions(dims);
   imageGeom->setOrigin(std::vector<float>{0, 0, 0});
   imageGeom->setSpacing(std::vector<float>{1, 1, 1});
 
-  auto* attributeMatrix = AttributeMatrix::Create(ds, Constants::k_CellData, imageGeom->getId());
+  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, Constants::k_CellData, imageGeom->getId());
   std::vector<size_t> tupleDims(dims.rbegin(), dims.rend());
   attributeMatrix->setShape(tupleDims);
   imageGeom->setCellData(*attributeMatrix);
 
-  Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(ds, Constants::k_FeatureIds, tupleDims, {1}, attributeMatrix->getId());
+  Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, tupleDims, {1}, attributeMatrix->getId());
   auto& testFeatIdsDataStore = featureIds->getDataStoreRef();
   testFeatIdsDataStore[0] = 0;
   testFeatIdsDataStore[1] = 1;
@@ -71,15 +71,15 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Test Algorithm", "[Core][RemoveFlaggedFe
   testFeatIdsDataStore[14] = 3;
   testFeatIdsDataStore[15] = 0;
 
-  auto* featureAttributeMatrix = AttributeMatrix::Create(ds, Constants::k_CellFeatureData, imageGeom->getId());
+  auto* featureAttributeMatrix = AttributeMatrix::Create(dataStructure, Constants::k_CellFeatureData, imageGeom->getId());
   featureAttributeMatrix->setShape({4});
-  BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(ds, Constants::k_ActiveName, {4}, {1}, featureAttributeMatrix->getId());
+  BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, Constants::k_ActiveName, {4}, {1}, featureAttributeMatrix->getId());
   auto& maskDataStore = maskArray->getDataStoreRef();
   maskDataStore[0] = false;
   maskDataStore[1] = false;
   maskDataStore[2] = false;
   maskDataStore[3] = true;
-  Int32Array* testArray = UnitTest::CreateTestDataArray<int32>(ds, Constants::k_Int32DataSet, {4}, {1}, featureAttributeMatrix->getId());
+  Int32Array* testArray = UnitTest::CreateTestDataArray<int32>(dataStructure, Constants::k_Int32DataSet, {4}, {1}, featureAttributeMatrix->getId());
   auto& testStore = testArray->getDataStoreRef();
   testStore[0] = 0;
   testStore[1] = 4041;
@@ -98,14 +98,14 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Test Algorithm", "[Core][RemoveFlaggedFe
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  Int32Array& featureIdsResult = ds.getDataRefAs<Int32Array>(featureIdsPath);
+  Int32Array& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   REQUIRE(featureIdsResult[0] == 0);
   REQUIRE(featureIdsResult[1] == 1);
   REQUIRE(featureIdsResult[2] == 1);
@@ -123,10 +123,10 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Test Algorithm", "[Core][RemoveFlaggedFe
   REQUIRE(featureIdsResult[14] == 0);
   REQUIRE(featureIdsResult[15] == 0);
 
-  AttributeMatrix& cellFeatureAMResult = ds.getDataRefAs<AttributeMatrix>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData}));
+  AttributeMatrix& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData}));
   REQUIRE(cellFeatureAMResult.getNumTuples() == 3);
 
-  Int32Array& testArrayResult = ds.getDataRefAs<Int32Array>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData, Constants::k_Int32DataSet}));
+  Int32Array& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData, Constants::k_Int32DataSet}));
   REQUIRE(testArrayResult[0] == 0);
   REQUIRE(testArrayResult[1] == 4041);
   REQUIRE(testArrayResult[2] == 10128);

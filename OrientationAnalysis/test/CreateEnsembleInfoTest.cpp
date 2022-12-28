@@ -13,7 +13,7 @@ TEST_CASE("Core::CreateEnsembleInfoFilter: Invalid filter execution", "[Core][Cr
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateEnsembleInfoFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   SECTION("Missing ensemble phase data")
@@ -26,7 +26,7 @@ TEST_CASE("Core::CreateEnsembleInfoFilter: Invalid filter execution", "[Core][Cr
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
 
@@ -40,7 +40,7 @@ TEST_CASE("Core::CreateEnsembleInfoFilter: Invalid filter execution", "[Core][Cr
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   }
 
@@ -54,7 +54,7 @@ TEST_CASE("Core::CreateEnsembleInfoFilter: Invalid filter execution", "[Core][Cr
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
 
@@ -68,12 +68,12 @@ TEST_CASE("Core::CreateEnsembleInfoFilter: Invalid filter execution", "[Core][Cr
     args.insertOrAssign(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key, std::make_any<std::string>("PhaseNames"));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 

@@ -104,7 +104,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   }
 
   std::string warningMsg = "";
-  for(const auto& [id, object] : *cellFeatureAM)
+  for(const auto& [identifier, object] : *cellFeatureAM)
   {
     if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
     {

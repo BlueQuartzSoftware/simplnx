@@ -33,18 +33,18 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: Instantiation and Pa
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertHexGridToSquareGrid filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
   /*[x]*/ args.insertOrAssign(ConvertHexGridToSquareGrid::k_HexGridStack_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
 

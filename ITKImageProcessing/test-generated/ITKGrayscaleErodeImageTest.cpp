@@ -20,7 +20,7 @@ using namespace complex;
 
 TEST_CASE("ITKGrayscaleErodeImageFilter(GrayscaleErode)", "[ITKImageProcessing][ITKGrayscaleErodeImage][GrayscaleErode]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKGrayscaleErodeImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -30,7 +30,7 @@ TEST_CASE("ITKGrayscaleErodeImageFilter(GrayscaleErode)", "[ITKImageProcessing][
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE1.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -41,12 +41,12 @@ TEST_CASE("ITKGrayscaleErodeImageFilter(GrayscaleErode)", "[ITKImageProcessing][
   args.insertOrAssign(ITKGrayscaleErodeImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
   args.insertOrAssign(ITKGrayscaleErodeImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "cb0f49738a99f3467b575bc95a0ace44");
 }
