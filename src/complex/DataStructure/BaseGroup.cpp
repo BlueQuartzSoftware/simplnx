@@ -7,13 +7,13 @@
 
 using namespace complex;
 
-BaseGroup::BaseGroup(DataStructure& ds, std::string name)
-: DataObject(ds, std::move(name))
+BaseGroup::BaseGroup(DataStructure& dataStructure, std::string name)
+: DataObject(dataStructure, std::move(name))
 {
 }
 
-BaseGroup::BaseGroup(DataStructure& ds, std::string name, IdType importId)
-: DataObject(ds, std::move(name), importId)
+BaseGroup::BaseGroup(DataStructure& dataStructure, std::string name, IdType importId)
+: DataObject(dataStructure, std::move(name), importId)
 {
 }
 
@@ -109,10 +109,10 @@ bool BaseGroup::canInsert(const DataObject* obj) const
   return true;
 }
 
-void BaseGroup::setDataStructure(DataStructure* ds)
+void BaseGroup::setDataStructure(DataStructure* dataStructure)
 {
-  DataObject::setDataStructure(ds);
-  m_DataMap.setDataStructure(ds);
+  DataObject::setDataStructure(dataStructure);
+  m_DataMap.setDataStructure(dataStructure);
 }
 
 BaseGroup::Iterator BaseGroup::find(const std::string& name)
@@ -226,6 +226,11 @@ std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupTyp
     stringValues.insert(k_TypeToStringMap.at(groupType));
   }
   return stringValues;
+}
+
+std::vector<std::string> BaseGroup::GetChildrenNames()
+{
+  return m_DataMap.getNames();
 }
 
 H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)

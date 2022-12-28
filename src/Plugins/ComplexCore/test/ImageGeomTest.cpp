@@ -8,10 +8,10 @@ using namespace complex;
 TEST_CASE("ComplexCore::ImageGeom: Test Index Calculation", "[Geometry][ImageGeom]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
-  ImageGeom* imageGeom = ImageGeom::Create(ds, "Image Geometry");
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
 
   SizeVec3 dims = {10, 20, 30};
   FloatVec3 res = {0.4f, 2.3f, 5.0f};
@@ -58,10 +58,10 @@ TEST_CASE("ComplexCore::ImageGeom: Test Index Calculation", "[Geometry][ImageGeo
 TEST_CASE("ComplexCore::ImageGeom: Test Coords To Index", "[Geometry][ImageGeom]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
-  ImageGeom* imageGeom = ImageGeom::Create(ds, "Image Geometry");
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, "Image Geometry");
 
   SizeVec3 dims = {10, 20, 30};
   FloatVec3 spacing = {0.5f, 0.5f, 0.5f};

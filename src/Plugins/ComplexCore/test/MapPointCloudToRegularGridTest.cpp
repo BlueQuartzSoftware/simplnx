@@ -14,7 +14,7 @@ using namespace complex::Constants;
 TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Instantiate Filter", "[MapPointCloudToRegularGridFilter]")
 {
   MapPointCloudToRegularGridFilter filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
   uint64 samplingGridType = 0;
@@ -37,18 +37,18 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Instantiate Filter", "
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<DataPath>(voxelIndicesPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid());
 }
 
 TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 1", "[MapPointCloudToRegularGridFilter]")
 {
   MapPointCloudToRegularGridFilter filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   uint64 samplingGridType = 0;
@@ -72,18 +72,18 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 1", "[M
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<DataPath>(voxelIndicesPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
 
 TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 2", "[MapPointCloudToRegularGridFilter]")
 {
   MapPointCloudToRegularGridFilter filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   uint64 samplingGridType = 1;
@@ -107,10 +107,10 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 2", "[M
   args.insertOrAssign(MapPointCloudToRegularGridFilter::k_VoxelIndices_Key, std::make_any<DataPath>(voxelIndicesPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }

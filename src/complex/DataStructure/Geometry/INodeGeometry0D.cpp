@@ -6,13 +6,13 @@
 
 namespace complex
 {
-INodeGeometry0D::INodeGeometry0D(DataStructure& ds, std::string name)
-: IGeometry(ds, std::move(name))
+INodeGeometry0D::INodeGeometry0D(DataStructure& dataStructure, std::string name)
+: IGeometry(dataStructure, std::move(name))
 {
 }
 
-INodeGeometry0D::INodeGeometry0D(DataStructure& ds, std::string name, IdType importId)
-: IGeometry(ds, std::move(name), importId)
+INodeGeometry0D::INodeGeometry0D(DataStructure& dataStructure, std::string name, IdType importId)
+: IGeometry(dataStructure, std::move(name), importId)
 {
 }
 

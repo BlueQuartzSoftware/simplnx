@@ -8,13 +8,13 @@
 
 using namespace complex;
 
-DataGroup::DataGroup(DataStructure& ds, std::string name)
-: BaseGroup(ds, std::move(name))
+DataGroup::DataGroup(DataStructure& dataStructure, std::string name)
+: BaseGroup(dataStructure, std::move(name))
 {
 }
 
-DataGroup::DataGroup(DataStructure& ds, std::string name, IdType importId)
-: BaseGroup(ds, std::move(name), importId)
+DataGroup::DataGroup(DataStructure& dataStructure, std::string name, IdType importId)
+: BaseGroup(dataStructure, std::move(name), importId)
 {
 }
 
@@ -40,20 +40,20 @@ BaseGroup::GroupType DataGroup::getGroupType() const
   return GroupType::DataGroup;
 }
 
-DataGroup* DataGroup::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+DataGroup* DataGroup::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<DataGroup>(new DataGroup(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-DataGroup* DataGroup::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+DataGroup* DataGroup::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<DataGroup>(new DataGroup(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -63,7 +63,7 @@ DataGroup* DataGroup::Import(DataStructure& ds, std::string name, IdType importI
 std::shared_ptr<DataObject> DataGroup::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   const auto copy = std::shared_ptr<DataGroup>(new DataGroup(dataStruct, copyPath.getTargetName()));
   copy->clear();
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))

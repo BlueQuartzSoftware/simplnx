@@ -12,13 +12,13 @@
 
 using namespace complex;
 
-ImageGeom::ImageGeom(DataStructure& ds, std::string name)
-: IGridGeometry(ds, std::move(name))
+ImageGeom::ImageGeom(DataStructure& dataStructure, std::string name)
+: IGridGeometry(dataStructure, std::move(name))
 {
 }
 
-ImageGeom::ImageGeom(DataStructure& ds, std::string name, IdType importId)
-: IGridGeometry(ds, std::move(name), importId)
+ImageGeom::ImageGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: IGridGeometry(dataStructure, std::move(name), importId)
 {
 }
 
@@ -37,20 +37,20 @@ BaseGroup::GroupType ImageGeom::getGroupType() const
   return GroupType::ImageGeom;
 }
 
-ImageGeom* ImageGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+ImageGeom* ImageGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-ImageGeom* ImageGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+ImageGeom* ImageGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -70,7 +70,7 @@ DataObject* ImageGeom::shallowCopy()
 std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<ImageGeom>(new ImageGeom(dataStruct, copyPath.getTargetName()));
   copy->setOrigin(m_Origin);
   copy->setSpacing(m_Spacing);

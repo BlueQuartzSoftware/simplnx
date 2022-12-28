@@ -18,13 +18,13 @@ bool DataObject::IsValidName(std::string_view name)
   return !name.empty() && name.find('/') == std::string_view::npos;
 }
 
-DataObject::DataObject(DataStructure& ds, std::string name)
-: DataObject(ds, std::move(name), ds.generateId())
+DataObject::DataObject(DataStructure& dataStructure, std::string name)
+: DataObject(dataStructure, std::move(name), dataStructure.generateId())
 {
 }
 
-DataObject::DataObject(DataStructure& ds, std::string name, IdType importId)
-: m_DataStructure(&ds)
+DataObject::DataObject(DataStructure& dataStructure, std::string name, IdType importId)
+: m_DataStructure(&dataStructure)
 , m_Id(importId)
 , m_Name(std::move(name))
 {
@@ -110,9 +110,9 @@ void DataObject::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>
 {
 }
 
-bool DataObject::AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
+bool DataObject::AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
 {
-  return ds.finishAddingObject(data, parentId);
+  return dataStructure.finishAddingObject(data, parentId);
 }
 
 DataObject::IdType DataObject::getId() const
@@ -150,9 +150,9 @@ const DataStructure& DataObject::getDataStructureRef() const
   return *m_DataStructure;
 }
 
-void DataObject::setDataStructure(DataStructure* ds)
+void DataObject::setDataStructure(DataStructure* dataStructure)
 {
-  m_DataStructure = ds;
+  m_DataStructure = dataStructure;
 }
 
 std::string DataObject::getName() const
@@ -250,12 +250,12 @@ std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Ty
 
 void DataObject::addParent(BaseGroup* parent)
 {
-  IdType id = parent->getId();
-  if(std::find(m_ParentList.cbegin(), m_ParentList.cend(), id) != m_ParentList.cend())
+  IdType identifier = parent->getId();
+  if(std::find(m_ParentList.cbegin(), m_ParentList.cend(), identifier) != m_ParentList.cend())
   {
     return;
   }
-  m_ParentList.push_back(id);
+  m_ParentList.push_back(identifier);
 }
 
 void DataObject::removeParent(BaseGroup* parent)

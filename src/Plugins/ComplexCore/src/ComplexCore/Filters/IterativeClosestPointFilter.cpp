@@ -218,14 +218,14 @@ Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arg
 
     for(usize j = 0; j < numMovingVerts; j++)
     {
-      usize id;
+      usize identifier;
       float dist;
       nanoflann::KNNResultSet<float> results(nn);
-      results.init(&id, &dist);
+      results.init(&identifier, &dist);
       index.findNeighbors(results, movingCopyPtr + (3 * j), nanoflann::SearchParams());
-      dynTargetPtr[3 * j + 0] = targetPtr[3 * id + 0];
-      dynTargetPtr[3 * j + 1] = targetPtr[3 * id + 1];
-      dynTargetPtr[3 * j + 2] = targetPtr[3 * id + 2];
+      dynTargetPtr[3 * j + 0] = targetPtr[3 * identifier + 0];
+      dynTargetPtr[3 * j + 1] = targetPtr[3 * identifier + 1];
+      dynTargetPtr[3 * j + 2] = targetPtr[3 * identifier + 2];
     }
 
     Eigen::Map<PointCloud> moving_(movingCopyPtr, 3, numMovingVerts);

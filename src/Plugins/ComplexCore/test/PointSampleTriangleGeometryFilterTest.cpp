@@ -78,7 +78,7 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
   std::string triangleAreasName = "Triangle Areas";
   std::string vertexGeometryName = "[Vertex Geometry]";
   std::string vertexNodeDataGroup = "Vertex Data";
-  DataStructure dataGraph;
+  DataStructure dataStructure;
 
   // Read in the STL File to load a Triangle Geometry to sample
   {
@@ -96,14 +96,14 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
@@ -120,18 +120,18 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataPath_Key, std::make_any<std::string>(triangleAreasName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    auto& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleGeom.getFaceAttributeMatrix()->getName()).createChildPath(triangleAreasName);
 
     // Let's sum up all the areas.
-    Float64Array& faceAreas = dataGraph.getDataRefAs<Float64Array>(triangleAreasDataPath);
+    Float64Array& faceAreas = dataStructure.getDataRefAs<Float64Array>(triangleAreasDataPath);
     double sumOfAreas = 0.0;
     for(const auto& area : faceAreas)
     {
@@ -170,29 +170,29 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     args.insertOrAssign(PointSampleTriangleGeometryFilter::k_VertexDataGroupPath_Key, std::make_any<std::string>(vertexNodeDataGroup));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    VertexGeom& vertGeom = dataGraph.getDataRefAs<VertexGeom>(vertGeometryDataPath);
+    VertexGeom& vertGeom = dataStructure.getDataRefAs<VertexGeom>(vertGeometryDataPath);
     usize numVerts = vertGeom.getNumberOfVertices();
     IGeometry::SharedVertexList* vertices = vertGeom.getVertices();
     std::array<float, 6> minMaxVerts = FindMinMaxCoord(vertices, numVerts);
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
     IGeometry::SharedVertexList* triVerts = triangleGeom.getVertices();
     usize triNumVerts = triangleGeom.getNumberOfVertices();
     std::array<float, 6> minMaxTriVerts = FindMinMaxCoord(triVerts, triNumVerts);
 
     // We need to insert this small data set for the XDMF to work correctly.
     DataPath xdmfVertsDataPath = vertGeometryDataPath.createChildPath("Verts");
-    DataObject::IdType parentId = dataGraph.getId(vertGeometryDataPath).value();
+    DataObject::IdType parentId = dataStructure.getId(vertGeometryDataPath).value();
     std::vector<usize> tupleShape = {vertGeom.getNumberOfVertices()};
     std::vector<usize> componentShape = {1};
-    DataArray<int64_t>* vertsArray = DataArray<int64_t>::CreateWithStore<DataStore<int64_t>>(dataGraph, "Verts", tupleShape, componentShape, parentId);
+    DataArray<int64_t>* vertsArray = DataArray<int64_t>::CreateWithStore<DataStore<int64_t>>(dataStructure, "Verts", tupleShape, componentShape, parentId);
     for(int64_t i = 0; i < tupleShape[0]; i++)
     {
       (*vertsArray)[i] = i;
@@ -202,7 +202,7 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(outputFilePath);
     H5::FileWriter fileWriter = std::move(result.value());
 
-    herr_t err = dataGraph.writeHdf5(fileWriter);
+    herr_t err = dataStructure.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
     //    for(size_t i = 0; i < 6; i++)
     //    {

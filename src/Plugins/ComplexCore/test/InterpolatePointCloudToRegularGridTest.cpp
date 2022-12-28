@@ -19,7 +19,7 @@ using namespace complex::Constants;
 TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Create Filter", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   InterpolatePointCloudToRegularGridFilter filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(false));
@@ -37,14 +37,14 @@ TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Create Filter"
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelDistancesGroup_Key, std::make_any<DataPath>(DataPath()));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Test Algorithm 1", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   InterpolatePointCloudToRegularGridFilter filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   bool useMask = true;
@@ -76,18 +76,18 @@ TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Test Algorithm
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelDistancesGroup_Key, std::make_any<DataPath>(kernelDistancesGroupPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
 TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Test Algorithm 2", "[DREAM3DReview][InterpolatePointCloudToRegularGridFilter]")
 {
   InterpolatePointCloudToRegularGridFilter filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   bool useMask = true;
@@ -119,10 +119,10 @@ TEST_CASE("ComplexCore::InterpolatePointCloudToRegularGridFilter: Test Algorithm
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelDistancesGroup_Key, std::make_any<DataPath>(kernelDistancesGroupPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }

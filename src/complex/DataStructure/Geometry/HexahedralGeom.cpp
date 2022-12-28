@@ -10,13 +10,13 @@
 
 using namespace complex;
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name)
-: INodeGeometry3D(ds, std::move(name))
+HexahedralGeom::HexahedralGeom(DataStructure& dataStructure, std::string name)
+: INodeGeometry3D(dataStructure, std::move(name))
 {
 }
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry3D(ds, std::move(name), importId)
+HexahedralGeom::HexahedralGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: INodeGeometry3D(dataStructure, std::move(name), importId)
 {
 }
 
@@ -25,20 +25,20 @@ DataObject::Type HexahedralGeom::getDataObjectType() const
   return DataObject::Type::HexahedralGeom;
 }
 
-HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+HexahedralGeom* HexahedralGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-HexahedralGeom* HexahedralGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+HexahedralGeom* HexahedralGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -68,7 +68,7 @@ DataObject* HexahedralGeom::shallowCopy()
 std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(dataStruct, copyPath.getTargetName()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {

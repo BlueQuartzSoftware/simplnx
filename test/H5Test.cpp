@@ -91,10 +91,10 @@ TEST_CASE("Read Legacy DREAM.3D Data")
   REQUIRE(exists(filepath));
   Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
   COMPLEX_RESULT_REQUIRE_VALID(result);
-  DataStructure ds = result.value();
+  DataStructure dataStructure = result.value();
 
   const std::string geomName = "Small IN100";
-  const auto* image = ds.getDataAs<ImageGeom>(DataPath({geomName}));
+  const auto* image = dataStructure.getDataAs<ImageGeom>(DataPath({geomName}));
   REQUIRE(image != nullptr);
   REQUIRE(equalsf(image->getOrigin(), FloatVec3(-47.0f, 0.0f, -29.0f)));
   REQUIRE(image->getDimensions() == SizeVec3(189, 201, 117));
@@ -103,72 +103,72 @@ TEST_CASE("Read Legacy DREAM.3D Data")
   {
     const std::string testDCName = "DataContainer";
     DataPath testDCPath({testDCName});
-    auto* testDC = ds.getDataAs<DataGroup>(testDCPath);
+    auto* testDC = dataStructure.getDataAs<DataGroup>(testDCPath);
     REQUIRE(testDC != nullptr);
 
     DataPath testAMPath = testDCPath.createChildPath("AttributeMatrix");
-    REQUIRE(ds.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
 
-    REQUIRE(ds.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
-    REQUIRE(ds.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
-    REQUIRE(ds.getDataAs<Float32Array>(testAMPath.createChildPath("Float32")) != nullptr);
-    REQUIRE(ds.getDataAs<Float64Array>(testAMPath.createChildPath("Float64")) != nullptr);
-    REQUIRE(ds.getDataAs<BoolArray>(testAMPath.createChildPath("Bool")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float32Array>(testAMPath.createChildPath("Float32")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Float64Array>(testAMPath.createChildPath("Float64")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<BoolArray>(testAMPath.createChildPath("Bool")) != nullptr);
   }
 
   {
     const std::string grainData = "Grain Data";
-    REQUIRE(ds.getData(DataPath({geomName, grainData})) != nullptr);
-    REQUIRE(ds.getDataAs<NeighborList<int32_t>>(DataPath({geomName, grainData, "NeighborList"})) != nullptr);
-    REQUIRE(ds.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumElements"})) != nullptr);
-    REQUIRE(ds.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumNeighbors"})) != nullptr);
+    REQUIRE(dataStructure.getData(DataPath({geomName, grainData})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<NeighborList<int32_t>>(DataPath({geomName, grainData, "NeighborList"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumElements"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumNeighbors"})) != nullptr);
   }
 }
 #endif
 
 DataStructure GetTestDataStructure()
 {
-  DataStructure ds;
-  auto group = DataGroup::Create(ds, "Group");
+  DataStructure dataStructure;
+  auto group = DataGroup::Create(dataStructure, "Group");
   REQUIRE(group != nullptr);
 
-  auto montage = GridMontage::Create(ds, "Montage", group->getId());
+  auto montage = GridMontage::Create(dataStructure, "Montage", group->getId());
   REQUIRE(montage != nullptr);
 
-  auto geom = ImageGeom::Create(ds, "Geometry", montage->getId());
+  auto geom = ImageGeom::Create(dataStructure, "Geometry", montage->getId());
   REQUIRE(geom != nullptr);
 
-  auto scalar = ScalarData<int32>::Create(ds, "Scalar", 7, geom->getId());
+  auto scalar = ScalarData<int32>::Create(dataStructure, "Scalar", 7, geom->getId());
   REQUIRE(scalar != nullptr);
 
   auto dataStore = std::make_unique<DataStore<uint8>>(std::vector<usize>{2}, std::vector<usize>{3}, 0);
-  auto dataArray = DataArray<uint8>::Create(ds, "DataArray", std::move(dataStore), geom->getId());
+  auto dataArray = DataArray<uint8>::Create(dataStructure, "DataArray", std::move(dataStore), geom->getId());
   REQUIRE(dataArray != nullptr);
 
-  return ds;
+  return dataStructure;
 }
 
 template <typename T>
-DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataGraph, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
+DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataStructure, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
                                   DataObject::IdType parentId)
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
 
   auto data_store = std::make_unique<DataStoreType>(tupleShape, componentShape, static_cast<T>(0));
-  ArrayType* dataArray = ArrayType::Create(dataGraph, name, std::move(data_store), parentId);
+  ArrayType* dataArray = ArrayType::Create(dataStructure, name, std::move(data_store), parentId);
 
   return dataArray;
 }
 
 DataStructure CreateDataStructure()
 {
-  DataStructure dataGraph;
-  DataGroup* group = DataGroup::Create(dataGraph, "Small IN100");
-  DataGroup* scanData = DataGroup::Create(dataGraph, "EBSD Scan Data", group->getId());
+  DataStructure dataStructure;
+  DataGroup* group = DataGroup::Create(dataStructure, "Small IN100");
+  DataGroup* scanData = DataGroup::Create(dataStructure, "EBSD Scan Data", group->getId());
 
   // Create an Image Geometry grid for the Scan Data
-  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, "Small IN100 Grid", scanData->getId());
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, "Small IN100 Grid", scanData->getId());
   imageGeom->setSpacing({0.25f, 0.25f, 0.25f});
   imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
   SizeVec3 imageGeomDims = {100, 100, 100};
@@ -179,23 +179,23 @@ DataStructure CreateDataStructure()
   usize numComponents = 1;
   std::vector<usize> tupleShape = {imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]};
 
-  Float32Array* ci_data = CreateTestDataArray<float>("Confidence Index", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* feature_ids_data = CreateTestDataArray<int32>("FeatureIds", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Float32Array* iq_data = CreateTestDataArray<float>("Image Quality", dataGraph, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* phases_data = CreateTestDataArray<int32>("Phases", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  Float32Array* ci_data = CreateTestDataArray<float>("Confidence Index", dataStructure, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* feature_ids_data = CreateTestDataArray<int32>("FeatureIds", dataStructure, tupleShape, {numComponents}, scanData->getId());
+  Float32Array* iq_data = CreateTestDataArray<float>("Image Quality", dataStructure, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* phases_data = CreateTestDataArray<int32>("Phases", dataStructure, tupleShape, {numComponents}, scanData->getId());
 
   numComponents = 3;
-  UInt8Array* ipf_color_data = CreateTestDataArray<uint8_t>("IPF Colors", dataGraph, tupleShape, {numComponents}, scanData->getId());
+  UInt8Array* ipf_color_data = CreateTestDataArray<uint8_t>("IPF Colors", dataStructure, tupleShape, {numComponents}, scanData->getId());
 
-  dataGraph.setAdditionalParent(ipf_color_data->getId(), group->getId());
+  dataStructure.setAdditionalParent(ipf_color_data->getId(), group->getId());
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
-  DataGroup* phase_group = DataGroup::Create(dataGraph, "Phase Data", group->getId());
+  DataGroup* phase_group = DataGroup::Create(dataStructure, "Phase Data", group->getId());
   numComponents = 1;
   usize numTuples = 2;
-  Int32Array* laue_data = CreateTestDataArray<int32>("Laue Class", dataGraph, {numTuples}, {numComponents}, phase_group->getId());
+  Int32Array* laue_data = CreateTestDataArray<int32>("Laue Class", dataStructure, {numTuples}, {numComponents}, phase_group->getId());
 
-  return dataGraph;
+  return dataStructure;
 }
 
 TEST_CASE("Image Geometry IO")
@@ -214,7 +214,7 @@ TEST_CASE("Image Geometry IO")
   // Write HDF5 file
   try
   {
-    DataStructure ds = CreateDataStructure();
+    DataStructure dataStructure = CreateDataStructure();
 
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
     REQUIRE(result.valid());
@@ -223,7 +223,7 @@ TEST_CASE("Image Geometry IO")
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileWriter);
+    err = dataStructure.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
@@ -237,7 +237,7 @@ TEST_CASE("Image Geometry IO")
     REQUIRE(fileReader.isValid());
 
     herr_t err;
-    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    auto dataStructure = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
     filePath = GetDataDir() / "image_geometry_io_2.h5";
@@ -251,7 +251,7 @@ TEST_CASE("Image Geometry IO")
       H5::FileWriter fileWriter = std::move(result.value());
       REQUIRE(fileWriter.isValid());
 
-      err = ds.writeHdf5(fileWriter);
+      err = dataStructure.writeHdf5(fileWriter);
       REQUIRE(err >= 0);
     } catch(const std::exception& e)
     {
@@ -274,13 +274,13 @@ const std::string k_EdgeFaceName = "SharedEdgeList";
 const std::string k_EdgeGroupName = "EDGE_GEOMETRY";
 const std::string k_NeighborGroupName = "NEIGHBORLIST_GROUP";
 
-void CreateVertexGeometry(DataStructure& dataGraph)
+void CreateVertexGeometry(DataStructure& dataStructure)
 {
-  DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_VertexGroupName);
+  DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_VertexGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto vertexGeometry = VertexGeom::Create(dataGraph, "[Geometry] Vertex", geometryGroup->getId());
+  auto vertexGeometry = VertexGeom::Create(dataStructure, "[Geometry] Vertex", geometryGroup->getId());
 
-  // DataGroup* scanData = DataGroup::Create(dataGraph, "AttributeMatrix", group->getId());
+  // DataGroup* scanData = DataGroup::Create(dataStructure, "AttributeMatrix", group->getId());
   uint64 skipLines = 1;
   char delimiter = ',';
 
@@ -289,9 +289,9 @@ void CreateVertexGeometry(DataStructure& dataGraph)
   std::string inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  complex::Result result = complex::CreateArray<float>(dataGraph, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  complex::Result result = complex::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
+  auto vertexArray = complex::ArrayFromPath<float>(dataStructure, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   vertexGeometry->setVertices(*vertexArray);
   REQUIRE(vertexGeometry->getNumberOfVertices() == 144);
@@ -299,9 +299,9 @@ void CreateVertexGeometry(DataStructure& dataGraph)
   // Now create some "Cell" data for the Vertex Geometry
   std::vector<usize> tupleShape = {vertexGeometry->getNumberOfVertices()};
   usize numComponents = 1;
-  Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
-  Float32Array* power_data = CreateTestDataArray<float>("Power", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
-  UInt32Array* laserTTL_data = CreateTestDataArray<uint32>("LaserTTL", dataGraph, tupleShape, {numComponents}, geometryGroup->getId());
+  Int16Array* ci_data = CreateTestDataArray<int16_t>("Area", dataStructure, tupleShape, {numComponents}, geometryGroup->getId());
+  Float32Array* power_data = CreateTestDataArray<float>("Power", dataStructure, tupleShape, {numComponents}, geometryGroup->getId());
+  UInt32Array* laserTTL_data = CreateTestDataArray<uint32>("LaserTTL", dataStructure, tupleShape, {numComponents}, geometryGroup->getId());
   for(usize i = 0; i < vertexGeometry->getNumberOfVertices(); i++)
   {
     ci_data->getDataStore()->setValue(i, static_cast<int16_t>(i * 10));
@@ -310,12 +310,12 @@ void CreateVertexGeometry(DataStructure& dataGraph)
   }
 }
 
-void CreateTriangleGeometry(DataStructure& dataGraph)
+void CreateTriangleGeometry(DataStructure& dataStructure)
 {
   // Create a Triangle Geometry
-  DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_TriangleGroupName);
+  DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_TriangleGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto triangleGeom = TriangleGeom::Create(dataGraph, "[Geometry] Triangle", geometryGroup->getId());
+  auto triangleGeom = TriangleGeom::Create(dataStructure, "[Geometry] Triangle", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
   DataPath path = DataPath({k_TriangleGroupName, k_TriangleFaceName});
@@ -326,9 +326,9 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   REQUIRE(faceCount == 242);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, {3}, path, IDataAction::Mode::Execute);
+  complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataStructure, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   triangleGeom->setFaceList(*dataArray);
 
@@ -337,19 +337,19 @@ void CreateTriangleGeometry(DataStructure& dataGraph)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = complex::CreateArray<float>(dataGraph, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = complex::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
+  auto vertexArray = complex::ArrayFromPath<float>(dataStructure, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   triangleGeom->setVertices(*vertexArray);
 }
 
-void CreateQuadGeometry(DataStructure& dataGraph)
+void CreateQuadGeometry(DataStructure& dataStructure)
 {
   // Create a Triangle Geometry
-  DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_QuadGroupName);
+  DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_QuadGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto geometry = QuadGeom::Create(dataGraph, "[Geometry] Quad", geometryGroup->getId());
+  auto geometry = QuadGeom::Create(dataStructure, "[Geometry] Quad", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
   DataPath path = DataPath({k_QuadGroupName, k_QuadFaceName});
@@ -360,9 +360,9 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   REQUIRE(faceCount == 121);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, {4}, path, IDataAction::Mode::Execute);
+  complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataStructure, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   geometry->setFaceList(*dataArray);
 
@@ -371,19 +371,19 @@ void CreateQuadGeometry(DataStructure& dataGraph)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = complex::CreateArray<float>(dataGraph, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = complex::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
+  auto vertexArray = complex::ArrayFromPath<float>(dataStructure, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
 
-void CreateEdgeGeometry(DataStructure& dataGraph)
+void CreateEdgeGeometry(DataStructure& dataStructure)
 {
   // Create a Triangle Geometry
-  DataGroup* geometryGroup = DataGroup::Create(dataGraph, k_EdgeGroupName);
+  DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_EdgeGroupName);
   using MeshIndexType = IGeometry::MeshIndexType;
-  auto geometry = EdgeGeom::Create(dataGraph, "[Geometry] Edge", geometryGroup->getId());
+  auto geometry = EdgeGeom::Create(dataStructure, "[Geometry] Edge", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
   DataPath path = DataPath({k_EdgeGroupName, k_EdgeFaceName});
@@ -394,9 +394,9 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   REQUIRE(faceCount == 264);
   // Create the default DataArray that will hold the FaceList and Vertices. We
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
-  complex::Result result = complex::CreateArray<MeshIndexType>(dataGraph, {faceCount}, {2}, path, IDataAction::Mode::Execute);
+  complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataGraph, path);
+  auto dataArray = complex::ArrayFromPath<MeshIndexType>(dataStructure, path);
   CsvParser::ReadFile<MeshIndexType, MeshIndexType>(inputFile, *dataArray, skipLines, delimiter);
   geometry->setEdgeList(*dataArray);
 
@@ -405,9 +405,9 @@ void CreateEdgeGeometry(DataStructure& dataGraph)
   inputFile = fmt::format("{}/test/Data/VertexCoordinates.csv", unit_test::k_SourceDir.view());
   uint64 vertexCount = CsvParser::LineCount(inputFile) - skipLines;
   REQUIRE(vertexCount == 144);
-  result = complex::CreateArray<float>(dataGraph, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
+  result = complex::CreateArray<float>(dataStructure, {vertexCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto vertexArray = complex::ArrayFromPath<float>(dataGraph, path);
+  auto vertexArray = complex::ArrayFromPath<float>(dataStructure, path);
   CsvParser::ReadFile<float, float>(inputFile, *vertexArray, skipLines, delimiter);
   geometry->setVertices(*vertexArray);
 }
@@ -458,14 +458,14 @@ void CreateArrayTypes(DataStructure& dataStructure)
 //------------------------------------------------------------------------------
 DataStructure CreateNodeBasedGeometries()
 {
-  DataStructure dataGraph;
+  DataStructure dataStructure;
 
-  CreateVertexGeometry(dataGraph);
-  CreateTriangleGeometry(dataGraph);
-  CreateQuadGeometry(dataGraph);
-  CreateEdgeGeometry(dataGraph);
+  CreateVertexGeometry(dataStructure);
+  CreateTriangleGeometry(dataStructure);
+  CreateQuadGeometry(dataStructure);
+  CreateEdgeGeometry(dataStructure);
 
-  return dataGraph;
+  return dataStructure;
 }
 
 struct VertexGeomData
@@ -588,8 +588,8 @@ TEST_CASE("Node Based Geometry IO")
   // Write HDF5 file
   try
   {
-    DataStructure ds = CreateNodeBasedGeometries();
-    nodeData = getNodeGeomData(ds);
+    DataStructure dataStructure = CreateNodeBasedGeometries();
+    nodeData = getNodeGeomData(dataStructure);
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
     REQUIRE(result.valid());
 
@@ -597,7 +597,7 @@ TEST_CASE("Node Based Geometry IO")
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileWriter);
+    err = dataStructure.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
@@ -611,9 +611,9 @@ TEST_CASE("Node Based Geometry IO")
     REQUIRE(fileReader.isValid());
 
     herr_t err;
-    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    auto dataStructure = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
-    checkNodeGeomData(ds, nodeData);
+    checkNodeGeomData(dataStructure, nodeData);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -638,8 +638,8 @@ TEST_CASE("NeighborList IO")
   // Write HDF5 file
   try
   {
-    DataStructure ds;
-    CreateNeighborList(ds);
+    DataStructure dataStructure;
+    CreateNeighborList(dataStructure);
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
     REQUIRE(result.valid());
 
@@ -647,7 +647,7 @@ TEST_CASE("NeighborList IO")
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileWriter);
+    err = dataStructure.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
@@ -661,11 +661,11 @@ TEST_CASE("NeighborList IO")
     REQUIRE(fileReader.isValid());
 
     herr_t err;
-    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    auto dataStructure = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
-    // auto neighborList = ds.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
-    auto neighborList = ds.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
+    // auto neighborList = dataStructure.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
+    auto neighborList = dataStructure.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
     REQUIRE(neighborList != nullptr);
   } catch(const std::exception& e)
   {
@@ -691,8 +691,8 @@ TEST_CASE("DataArray<bool> IO")
   // Write HDF5 file
   try
   {
-    DataStructure ds;
-    CreateArrayTypes(ds);
+    DataStructure dataStructure;
+    CreateArrayTypes(dataStructure);
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
     REQUIRE(result.valid());
 
@@ -700,7 +700,7 @@ TEST_CASE("DataArray<bool> IO")
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileWriter);
+    err = dataStructure.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
@@ -714,28 +714,28 @@ TEST_CASE("DataArray<bool> IO")
     REQUIRE(fileReader.isValid());
 
     herr_t err;
-    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    auto dataStructure = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
-    REQUIRE(ds.getDataAs<DataArray<int8>>(DataPath({"Int8Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<int16>>(DataPath({"Int16Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<int32>>(DataPath({"Int32Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<int64>>(DataPath({"Int64Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<uint8>>(DataPath({"UInt8Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<uint16>>(DataPath({"UInt16Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<uint32>>(DataPath({"UInt32Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<uint64>>(DataPath({"UInt64Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<float32>>(DataPath({"Float32Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<float64>>(DataPath({"Float64Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<StringArray>(DataPath({"StringArray"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<int8>>(DataPath({"Int8Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<int16>>(DataPath({"Int16Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<int32>>(DataPath({"Int32Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<int64>>(DataPath({"Int64Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<uint8>>(DataPath({"UInt8Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<uint16>>(DataPath({"UInt16Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<uint32>>(DataPath({"UInt32Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<uint64>>(DataPath({"UInt64Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<float32>>(DataPath({"Float32Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<DataArray<float64>>(DataPath({"Float64Array"})) != nullptr);
+    REQUIRE(dataStructure.getDataAs<StringArray>(DataPath({"StringArray"})) != nullptr);
 
-    BoolArray* boolArray = ds.getDataAs<BoolArray>(DataPath({"BoolArray"}));
+    BoolArray* boolArray = dataStructure.getDataAs<BoolArray>(DataPath({"BoolArray"}));
     REQUIRE(boolArray != nullptr);
     AbstractDataStore<bool>& boolStore = boolArray->getDataStoreRef();
     REQUIRE(boolStore[0] == false);
     REQUIRE(boolStore[1] == true);
 
-    StringArray* stringArray = ds.getDataAs<StringArray>(DataPath({"StringArray"}));
+    StringArray* stringArray = dataStructure.getDataAs<StringArray>(DataPath({"StringArray"}));
     REQUIRE(stringArray != nullptr);
     REQUIRE(stringArray->values() == std::vector<std::string>{"Foo", "Bar", "Bazz"});
   } catch(const std::exception& e)
@@ -746,8 +746,8 @@ TEST_CASE("DataArray<bool> IO")
 
 TEST_CASE("xmdf")
 {
-  DataStructure ds;
-  auto* vertexGeom = VertexGeom::Create(ds, "VertexGeom");
+  DataStructure dataStructure;
+  auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
   DataObject::IdType geomId = vertexGeom->getId();
   constexpr usize numVerts = 100;
   std::random_device randomDevice;
@@ -759,8 +759,8 @@ TEST_CASE("xmdf")
   {
     item = realDistribution(generator);
   }
-  auto* verts = DataArray<float32>::Create(ds, "Verts", std::move(vertsDataStore), geomId);
-  auto* vertexData = AttributeMatrix::Create(ds, "VertexData", geomId);
+  auto* verts = DataArray<float32>::Create(dataStructure, "Verts", std::move(vertsDataStore), geomId);
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "VertexData", geomId);
   vertexData->setShape({numVerts});
   vertexGeom->setVertexAttributeMatrix(*vertexData);
   vertexGeom->setVertices(*verts);
@@ -769,7 +769,7 @@ TEST_CASE("xmdf")
   {
     item = intDistribution(generator);
   }
-  auto* data = DataArray<int32>::Create(ds, "Data", std::move(vertexAssociatedData), vertexData->getId());
-  Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", ds, {}, true);
+  auto* data = DataArray<int32>::Create(dataStructure, "Data", std::move(vertexAssociatedData), vertexData->getId());
+  Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", dataStructure, {}, true);
   COMPLEX_RESULT_REQUIRE_VALID(result);
 }

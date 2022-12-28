@@ -162,7 +162,7 @@ void assign_badpoints(DataStructure& dataStructure, const DataPath& featureIdsPa
     DataPath attrMatPath = featureIdsPath.getParent();
     BaseGroup* parentGroup = dataStructure.getDataAs<BaseGroup>(attrMatPath);
     std::vector<std::string> voxelArrayNames;
-    for(const auto& [id, sharedChild] : *parentGroup)
+    for(const auto& [identifier, sharedChild] : *parentGroup)
     {
       if(std::dynamic_pointer_cast<IDataArray>(sharedChild))
       {

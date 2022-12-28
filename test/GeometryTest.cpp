@@ -156,8 +156,8 @@ void testGeomGrid(IGridGeometry* geom)
 /////////////////////////////////////
 TEST_CASE("EdgeGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<EdgeGeom>(ds);
+  DataStructure dataStructure;
+  auto geom = createGeom<EdgeGeom>(dataStructure);
 
   testAbstractGeometry(geom);
 
@@ -169,8 +169,8 @@ TEST_CASE("EdgeGeomTest")
 
 TEST_CASE("HexahedralGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<HexahedralGeom>(ds);
+  DataStructure dataStructure;
+  auto geom = createGeom<HexahedralGeom>(dataStructure);
 
   testGeom3D(geom);
 
@@ -182,8 +182,8 @@ TEST_CASE("HexahedralGeomTest")
 
 TEST_CASE("ImageGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<ImageGeom>(ds);
+  DataStructure dataStructure;
+  auto geom = createGeom<ImageGeom>(dataStructure);
 
   testGeomGrid(geom);
 
@@ -195,8 +195,8 @@ TEST_CASE("ImageGeomTest")
 
 TEST_CASE("QuadGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<QuadGeom>(ds);
+  DataStructure dataStructure;
+  auto geom = createGeom<QuadGeom>(dataStructure);
 
   testGeom2D(geom);
 
@@ -208,8 +208,8 @@ TEST_CASE("QuadGeomTest")
 
 TEST_CASE("RectGridGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<RectGridGeom>(ds);
+  DataStructure dataStructure;
+  auto geom = createGeom<RectGridGeom>(dataStructure);
 
   testGeomGrid(geom);
 
@@ -221,8 +221,8 @@ TEST_CASE("RectGridGeomTest")
 
 TEST_CASE("TetrahedralGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<TetrahedralGeom>(ds);
+  DataStructure dataStructure;
+  auto geom = createGeom<TetrahedralGeom>(dataStructure);
 
   testGeom3D(geom);
 
@@ -234,8 +234,8 @@ TEST_CASE("TetrahedralGeomTest")
 
 TEST_CASE("TriangleGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<TriangleGeom>(ds);
+  DataStructure dataStructure;
+  auto geom = createGeom<TriangleGeom>(dataStructure);
 
   testGeom2D(geom);
 
@@ -247,8 +247,8 @@ TEST_CASE("TriangleGeomTest")
 
 TEST_CASE("VertexGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<VertexGeom>(ds);
+  DataStructure dataStructure;
+  auto geom = createGeom<VertexGeom>(dataStructure);
 
   testAbstractGeometry(geom);
 

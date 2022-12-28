@@ -5,13 +5,13 @@
 
 namespace complex
 {
-IGeometry::IGeometry(DataStructure& ds, std::string name)
-: BaseGroup(ds, std::move(name))
+IGeometry::IGeometry(DataStructure& dataStructure, std::string name)
+: BaseGroup(dataStructure, std::move(name))
 {
 }
 
-IGeometry::IGeometry(DataStructure& ds, std::string name, IdType importId)
-: BaseGroup(ds, std::move(name), importId)
+IGeometry::IGeometry(DataStructure& dataStructure, std::string name, IdType importId)
+: BaseGroup(dataStructure, std::move(name), importId)
 {
 }
 
@@ -232,12 +232,12 @@ std::optional<IGeometry::IdType> IGeometry::ReadH5DataId(const H5::ObjectReader&
   }
 
   auto attribute = objectReader.getAttribute(attributeName);
-  auto id = attribute.readAsValue<IdType>();
-  if(id == 0)
+  auto identifier = attribute.readAsValue<IdType>();
+  if(identifier == 0)
   {
     return {};
   }
-  return id;
+  return identifier;
 }
 
 H5::ErrorType IGeometry::WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName)

@@ -145,7 +145,7 @@ TEST_CASE("ComplexCore::MinNeighbors", "[ComplexCore][MinNeighbors]")
 TEST_CASE("ComplexCore::MinNeighbors: Bad Phase Number", "[MinNeighbors]")
 {
   MinNeighbors filter;
-  DataStructure dataGraph = createTestData();
+  DataStructure dataStructure = createTestData();
   Arguments args;
 
   DataPath k_ImageGeomPath({k_ImageGeomName});
@@ -167,18 +167,18 @@ TEST_CASE("ComplexCore::MinNeighbors: Bad Phase Number", "[MinNeighbors]")
   args.insertOrAssign(MinNeighbors::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 
 TEST_CASE("ComplexCore::MinNeighbors: Phase Array", "[MinNeighbors]")
 {
   MinNeighbors filter;
-  DataStructure dataGraph = createTestData();
+  DataStructure dataStructure = createTestData();
   Arguments args;
 
   DataPath k_ImageGeomPath({k_ImageGeomName});
@@ -201,11 +201,11 @@ TEST_CASE("ComplexCore::MinNeighbors: Phase Array", "[MinNeighbors]")
   args.insertOrAssign(MinNeighbors::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(k_VoxelArrays));
   args.insertOrAssign(MinNeighbors::k_CellDataAttributeMatrix_Key, std::make_any<DataPath>(k_CellDataAttributeMatrixPath));
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 #endif

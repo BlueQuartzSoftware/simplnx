@@ -10,13 +10,13 @@
 
 using namespace complex;
 
-EdgeGeom::EdgeGeom(DataStructure& ds, std::string name)
-: INodeGeometry1D(ds, std::move(name))
+EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name)
+: INodeGeometry1D(dataStructure, std::move(name))
 {
 }
 
-EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry1D(ds, std::move(name), importId)
+EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: INodeGeometry1D(dataStructure, std::move(name), importId)
 {
 }
 
@@ -25,20 +25,20 @@ DataObject::Type EdgeGeom::getDataObjectType() const
   return DataObject::Type::EdgeGeom;
 }
 
-EdgeGeom* EdgeGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+EdgeGeom* EdgeGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-EdgeGeom* EdgeGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+EdgeGeom* EdgeGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -68,7 +68,7 @@ DataObject* EdgeGeom::shallowCopy()
 std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<EdgeGeom>(new EdgeGeom(dataStruct, copyPath.getTargetName()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {

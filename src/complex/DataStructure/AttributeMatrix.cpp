@@ -13,13 +13,13 @@
 
 using namespace complex;
 
-AttributeMatrix::AttributeMatrix(DataStructure& ds, std::string name)
-: BaseGroup(ds, std::move(name))
+AttributeMatrix::AttributeMatrix(DataStructure& dataStructure, std::string name)
+: BaseGroup(dataStructure, std::move(name))
 {
 }
 
-AttributeMatrix::AttributeMatrix(DataStructure& ds, std::string name, IdType importId)
-: BaseGroup(ds, std::move(name), importId)
+AttributeMatrix::AttributeMatrix(DataStructure& dataStructure, std::string name, IdType importId)
+: BaseGroup(dataStructure, std::move(name), importId)
 {
 }
 
@@ -39,20 +39,20 @@ BaseGroup::GroupType AttributeMatrix::getGroupType() const
   return GroupType::AttributeMatrix;
 }
 
-AttributeMatrix* AttributeMatrix::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+AttributeMatrix* AttributeMatrix::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-AttributeMatrix* AttributeMatrix::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+AttributeMatrix* AttributeMatrix::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -62,7 +62,7 @@ AttributeMatrix* AttributeMatrix::Import(DataStructure& ds, std::string name, Id
 std::shared_ptr<DataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStruct, copyPath.getTargetName()));
   copy->setShape(m_TupleShape);
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))

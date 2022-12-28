@@ -52,9 +52,9 @@ TEST_CASE("ComplexCore::CreateImageGeometry", "[ComplexCore]")
 
   VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
-  DataStructure dataGraph = complex::UnitTest::CreateAllPrimitiveTypes(imageDims);
-  //  DataGroup* levelZeroGroup = DataGroup::Create(dataGraph, Complexk_LevelZero);
-  //  DataGroup* levelOneGroup = DataGroup::Create(dataGraph, Complexk_LevelOne, levelZeroGroup->getId());
+  DataStructure dataStructure = complex::UnitTest::CreateAllPrimitiveTypes(imageDims);
+  //  DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Complexk_LevelZero);
+  //  DataGroup* levelOneGroup = DataGroup::Create(dataStructure, Complexk_LevelOne, levelZeroGroup->getId());
   const std::string k_ImageGeometryName("[Image Geometry]");
   DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne, k_ImageGeometryName});
   Arguments args;
@@ -67,15 +67,15 @@ TEST_CASE("ComplexCore::CreateImageGeometry", "[ComplexCore]")
   CreateImageGeometry filter;
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
   // Execute the filter and check the result
-  executeResult = filter.execute(dataGraph, args);
+  executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid() == false);
 
 #if 0
@@ -88,7 +88,7 @@ TEST_CASE("ComplexCore::CreateImageGeometry", "[ComplexCore]")
   REQUIRE(fileWriter.isValid());
 
   herr_t err;
-  err = dataGraph.writeHdf5(fileWriter);
+  err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 #endif
 }

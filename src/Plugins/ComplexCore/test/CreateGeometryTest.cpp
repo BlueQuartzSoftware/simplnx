@@ -18,9 +18,9 @@
 
 using namespace complex;
 
-void CreateVerticesArray(DataStructure& ds, const std::string& name, DataObject::IdType parentId)
+void CreateVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  Float32Array* verticesArray = UnitTest::CreateTestDataArray<float32>(ds, name, {144}, {3}, parentId);
+  Float32Array* verticesArray = UnitTest::CreateTestDataArray<float32>(dataStructure, name, {144}, {3}, parentId);
   (*verticesArray)[0] = -0.707107;
   (*verticesArray)[1] = -0.707107;
   (*verticesArray)[2] = 0;
@@ -455,9 +455,9 @@ void CreateVerticesArray(DataStructure& ds, const std::string& name, DataObject:
   (*verticesArray)[431] = 0;
 }
 
-void CreateEdgesArray(DataStructure& ds, const std::string& name, DataObject::IdType parentId)
+void CreateEdgesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* edgesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, name, {264}, {2}, parentId);
+  IGeometry::MeshIndexArrayType* edgesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {264}, {2}, parentId);
   (*edgesListArray)[0] = 12;
   (*edgesListArray)[1] = 0;
   (*edgesListArray)[2] = 0;
@@ -988,9 +988,9 @@ void CreateEdgesArray(DataStructure& ds, const std::string& name, DataObject::Id
   (*edgesListArray)[527] = 142;
 }
 
-void CreateTrianglesArray(DataStructure& ds, const std::string& name, DataObject::IdType parentId)
+void CreateTrianglesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* trianglesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, name, {242}, {3}, parentId);
+  IGeometry::MeshIndexArrayType* trianglesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {242}, {3}, parentId);
   (*trianglesListArray)[0] = 0;
   (*trianglesListArray)[1] = 1;
   (*trianglesListArray)[2] = 13;
@@ -1719,9 +1719,9 @@ void CreateTrianglesArray(DataStructure& ds, const std::string& name, DataObject
   (*trianglesListArray)[725] = 142;
 }
 
-void CreateQuadsArray(DataStructure& ds, const std::string& name, DataObject::IdType parentId)
+void CreateQuadsArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* quadsListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, name, {121}, {4}, parentId);
+  IGeometry::MeshIndexArrayType* quadsListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {121}, {4}, parentId);
   (*quadsListArray)[0] = 0;
   (*quadsListArray)[1] = 1;
   (*quadsListArray)[2] = 13;
@@ -2208,9 +2208,9 @@ void CreateQuadsArray(DataStructure& ds, const std::string& name, DataObject::Id
   (*quadsListArray)[483] = 142;
 }
 
-void CreateTetAndVerticesArrays(DataStructure& ds, const std::string& verticesName, const std::string& tetsName, DataObject::IdType parentId)
+void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& tetsName, DataObject::IdType parentId)
 {
-  Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(ds, verticesName, {5}, {3}, parentId);
+  Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStructure, verticesName, {5}, {3}, parentId);
   (*vertListArray)[0] = -1;
   (*vertListArray)[1] = 0.5;
   (*vertListArray)[2] = 0;
@@ -2226,7 +2226,7 @@ void CreateTetAndVerticesArrays(DataStructure& ds, const std::string& verticesNa
   (*vertListArray)[12] = 1;
   (*vertListArray)[13] = 0.5;
   (*vertListArray)[14] = 0;
-  IGeometry::MeshIndexArrayType* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, tetsName, {2}, {4}, parentId);
+  IGeometry::MeshIndexArrayType* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, tetsName, {2}, {4}, parentId);
   (*polyListArray)[0] = 0;
   (*polyListArray)[1] = 1;
   (*polyListArray)[2] = 2;
@@ -2237,9 +2237,9 @@ void CreateTetAndVerticesArrays(DataStructure& ds, const std::string& verticesNa
   (*polyListArray)[7] = 3;
 }
 
-void CreateHexAndVerticesArrays(DataStructure& ds, const std::string& verticesName, const std::string& hexsName, DataObject::IdType parentId)
+void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& hexsName, DataObject::IdType parentId)
 {
-  Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(ds, verticesName, {12}, {3}, parentId);
+  Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStructure, verticesName, {12}, {3}, parentId);
   (*vertListArray)[0] = -1;
   (*vertListArray)[1] = 1;
   (*vertListArray)[2] = 1;
@@ -2276,7 +2276,7 @@ void CreateHexAndVerticesArrays(DataStructure& ds, const std::string& verticesNa
   (*vertListArray)[33] = 1;
   (*vertListArray)[34] = -1;
   (*vertListArray)[35] = 1;
-  IGeometry::MeshIndexArrayType* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, hexsName, {2}, {8}, parentId);
+  IGeometry::MeshIndexArrayType* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, hexsName, {2}, {8}, parentId);
   (*polyListArray)[0] = 6;
   (*polyListArray)[1] = 7;
   (*polyListArray)[2] = 4;
@@ -2295,9 +2295,9 @@ void CreateHexAndVerticesArrays(DataStructure& ds, const std::string& verticesNa
   (*polyListArray)[15] = 3;
 }
 
-void CreateIncompatibleVerticesArray(DataStructure& ds, const std::string& name, DataObject::IdType parentId)
+void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
 {
-  Float32Array* verticesArray = UnitTest::CreateTestDataArray<float32>(ds, name, {2}, {3}, parentId);
+  Float32Array* verticesArray = UnitTest::CreateTestDataArray<float32>(dataStructure, name, {2}, {3}, parentId);
   (*verticesArray)[0] = -0.707107;
   (*verticesArray)[1] = -0.707107;
   (*verticesArray)[2] = 0;
@@ -2310,7 +2310,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateGeometryFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   const std::string geometryName = "[Geometry Test]";
@@ -2347,13 +2347,13 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
   const DataPath yBoundsPath({yBoundsName});
   const DataPath zBoundsPath({zBoundsName});
 
-  CreateVerticesArray(ds, vertexListName, 0);
-  CreateEdgesArray(ds, edgeListName, 0);
-  CreateTrianglesArray(ds, triangleListName, 0);
-  CreateQuadsArray(ds, quadListName, 0);
-  CreateTetAndVerticesArrays(ds, tetVertexListName, tetListName, 0);
-  CreateHexAndVerticesArrays(ds, hexVertexListName, hexListName, 0);
-  CreateIncompatibleVerticesArray(ds, incompatibleVertexListName, 0);
+  CreateVerticesArray(dataStructure, vertexListName, 0);
+  CreateEdgesArray(dataStructure, edgeListName, 0);
+  CreateTrianglesArray(dataStructure, triangleListName, 0);
+  CreateQuadsArray(dataStructure, quadListName, 0);
+  CreateTetAndVerticesArrays(dataStructure, tetVertexListName, tetListName, 0);
+  CreateHexAndVerticesArrays(dataStructure, hexVertexListName, hexListName, 0);
+  CreateIncompatibleVerticesArray(dataStructure, incompatibleVertexListName, 0);
 
   SECTION("Image Geometry Copy")
   {
@@ -2393,23 +2393,23 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<ImageGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<ImageGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
-    const auto cellAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
+    const auto cellAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(cellAm != nullptr);
     REQUIRE(createdGeom->getCellData() != nullptr);
   }
 
   SECTION("RectGrid Geometry Copy")
   {
-    Float32Array* xBoundsArray = UnitTest::CreateTestDataArray<float32>(ds, xBoundsName, {14}, {1}, 0);
+    Float32Array* xBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStructure, xBoundsName, {14}, {1}, 0);
     (*xBoundsArray)[0] = 0;
     (*xBoundsArray)[1] = 1;
     (*xBoundsArray)[2] = 2;
@@ -2424,7 +2424,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     (*xBoundsArray)[11] = 11;
     (*xBoundsArray)[12] = 12;
     (*xBoundsArray)[13] = 14;
-    Float32Array* yBoundsArray = UnitTest::CreateTestDataArray<float32>(ds, yBoundsName, {14}, {1}, 0);
+    Float32Array* yBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStructure, yBoundsName, {14}, {1}, 0);
     (*yBoundsArray)[0] = 0;
     (*yBoundsArray)[1] = 2;
     (*yBoundsArray)[2] = 4;
@@ -2439,7 +2439,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     (*yBoundsArray)[11] = 22;
     (*yBoundsArray)[12] = 24;
     (*yBoundsArray)[13] = 26;
-    Float32Array* zBoundsArray = UnitTest::CreateTestDataArray<float32>(ds, zBoundsName, {14}, {1}, 0);
+    Float32Array* zBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStructure, zBoundsName, {14}, {1}, 0);
     (*zBoundsArray)[0] = 0;
     (*zBoundsArray)[1] = 5;
     (*zBoundsArray)[2] = 10;
@@ -2488,29 +2488,29 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<RectGridGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<RectGridGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
     const auto dims = createdGeom->getDimensions();
     REQUIRE(dims == SizeVec3{13, 13, 13});
-    const auto cellAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
+    const auto cellAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(cellAm != nullptr);
     REQUIRE(createdGeom->getCellData() != nullptr);
-    const auto destXBounds = ds.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsName));
+    const auto destXBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsName));
     REQUIRE(destXBounds != nullptr);
-    UnitTest::CompareArrays<float32>(ds, xBoundsPath, geometryPath.createChildPath(xBoundsName));
-    const auto destYBounds = ds.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsName));
+    UnitTest::CompareArrays<float32>(dataStructure, xBoundsPath, geometryPath.createChildPath(xBoundsName));
+    const auto destYBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsName));
     REQUIRE(destYBounds != nullptr);
-    UnitTest::CompareArrays<float32>(ds, yBoundsPath, geometryPath.createChildPath(yBoundsName));
-    const auto destZBounds = ds.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsName));
+    UnitTest::CompareArrays<float32>(dataStructure, yBoundsPath, geometryPath.createChildPath(yBoundsName));
+    const auto destZBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsName));
     REQUIRE(destZBounds != nullptr);
-    UnitTest::CompareArrays<float32>(ds, zBoundsPath, geometryPath.createChildPath(zBoundsName));
+    UnitTest::CompareArrays<float32>(dataStructure, zBoundsPath, geometryPath.createChildPath(zBoundsName));
   }
 
   SECTION("Vertex Geometry Copy")
@@ -2548,22 +2548,22 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<VertexGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<VertexGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
-    const auto vertexAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    const auto vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    const auto destVertices = ds.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    const auto destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(ds, srcVerticesPath, geometryPath.createChildPath(vertexListName));
+    UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
   }
 
   SECTION("Edge Geometry Copy")
@@ -2601,31 +2601,31 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<EdgeGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<EdgeGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    const auto vertexAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    const auto vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    const auto destVertices = ds.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    const auto destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(ds, srcVerticesPath, geometryPath.createChildPath(vertexListName));
+    UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
-    const auto edgeAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(edgeAmName));
+    const auto edgeAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(edgeAmName));
     REQUIRE(edgeAm != nullptr);
     REQUIRE(createdGeom->getEdgeAttributeMatrix() != nullptr);
-    const auto destEdges = ds.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(edgeListName));
+    const auto destEdges = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(edgeListName));
     REQUIRE(destEdges != nullptr);
     REQUIRE(createdGeom->getEdges() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(ds, srcEdgesPath, geometryPath.createChildPath(edgeListName));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcEdgesPath, geometryPath.createChildPath(edgeListName));
   }
 
   SECTION("Triangle Geometry Copy")
@@ -2663,31 +2663,31 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<TriangleGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<TriangleGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    const auto vertexAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    const auto vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    const auto destVertices = ds.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    const auto destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(ds, srcVerticesPath, geometryPath.createChildPath(vertexListName));
+    UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
-    const auto faceAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
+    const auto faceAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(faceAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    const auto destFaces = ds.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
+    const auto destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(ds, srcTrianglesPath, geometryPath.createChildPath(triangleListName));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTrianglesPath, geometryPath.createChildPath(triangleListName));
   }
 
   SECTION("Quad Geometry Copy")
@@ -2725,31 +2725,31 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<QuadGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<QuadGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    const auto vertexAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    const auto vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    const auto destVertices = ds.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    const auto destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(ds, srcVerticesPath, geometryPath.createChildPath(vertexListName));
+    UnitTest::CompareArrays<float32>(dataStructure, srcVerticesPath, geometryPath.createChildPath(vertexListName));
 
-    const auto quadAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
+    const auto quadAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(quadAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    const auto destFaces = ds.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(quadListName));
+    const auto destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(quadListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(ds, srcQuadsPath, geometryPath.createChildPath(quadListName));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcQuadsPath, geometryPath.createChildPath(quadListName));
   }
 
   SECTION("Tetrahedral Geometry Copy")
@@ -2787,31 +2787,31 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<TetrahedralGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<TetrahedralGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    const auto vertexAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    const auto vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    const auto destVertices = ds.getDataAs<Float32Array>(geometryPath.createChildPath(tetVertexListName));
+    const auto destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(tetVertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(ds, srcTetVerticesPath, geometryPath.createChildPath(tetVertexListName));
+    UnitTest::CompareArrays<float32>(dataStructure, srcTetVerticesPath, geometryPath.createChildPath(tetVertexListName));
 
-    const auto tetAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
+    const auto tetAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(tetAm != nullptr);
     REQUIRE(createdGeom->getPolyhedraAttributeMatrix() != nullptr);
-    const auto destCells = ds.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(tetListName));
+    const auto destCells = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(tetListName));
     REQUIRE(destCells != nullptr);
     REQUIRE(createdGeom->getPolyhedra() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(ds, srcTetsPath, geometryPath.createChildPath(tetListName));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTetsPath, geometryPath.createChildPath(tetListName));
   }
 
   SECTION("Hexahedral Geometry Copy")
@@ -2849,31 +2849,31 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<HexahedralGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<HexahedralGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    const auto vertexAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    const auto vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    const auto destVertices = ds.getDataAs<Float32Array>(geometryPath.createChildPath(hexVertexListName));
+    const auto destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(hexVertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
-    UnitTest::CompareArrays<float32>(ds, srcHexVerticesPath, geometryPath.createChildPath(hexVertexListName));
+    UnitTest::CompareArrays<float32>(dataStructure, srcHexVerticesPath, geometryPath.createChildPath(hexVertexListName));
 
-    const auto hexAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
+    const auto hexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(hexAm != nullptr);
     REQUIRE(createdGeom->getPolyhedraAttributeMatrix() != nullptr);
-    const auto destCells = ds.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(hexListName));
+    const auto destCells = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(hexListName));
     REQUIRE(destCells != nullptr);
     REQUIRE(createdGeom->getPolyhedra() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(ds, srcHexsPath, geometryPath.createChildPath(hexListName));
+    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcHexsPath, geometryPath.createChildPath(hexListName));
   }
 
   SECTION("Triangle Geometry Move")
@@ -2911,32 +2911,32 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(""));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    const auto createdGeom = ds.getDataAs<TriangleGeom>(geometryPath);
+    const auto createdGeom = dataStructure.getDataAs<TriangleGeom>(geometryPath);
     REQUIRE(createdGeom != nullptr);
 
-    const auto vertexAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
+    const auto vertexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(vertexAmName));
     REQUIRE(vertexAm != nullptr);
     REQUIRE(createdGeom->getVertexAttributeMatrix() != nullptr);
-    const auto destVertices = ds.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
+    const auto destVertices = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(vertexListName));
     REQUIRE(destVertices != nullptr);
     REQUIRE(createdGeom->getVertices() != nullptr);
 
-    const auto faceAm = ds.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
+    const auto faceAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(faceAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    const auto destFaces = ds.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
+    const auto destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
 
-    REQUIRE(ds.getData(srcVerticesPath) == nullptr);
-    REQUIRE(ds.getData(srcTrianglesPath) == nullptr);
+    REQUIRE(dataStructure.getData(srcVerticesPath) == nullptr);
+    REQUIRE(dataStructure.getData(srcTrianglesPath) == nullptr);
   }
 
   SECTION("Tetrahedral Geometry Incompatible Arrays")
@@ -2974,17 +2974,17 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
   }
 
   SECTION("RectGrid Geometry Invalid Grid Bounds Resolution")
   {
-    Float32Array* xBoundsArray = UnitTest::CreateTestDataArray<float32>(ds, xBoundsName, {14}, {1}, 0);
+    Float32Array* xBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStructure, xBoundsName, {14}, {1}, 0);
     (*xBoundsArray)[0] = 0;
     (*xBoundsArray)[1] = 1;
     (*xBoundsArray)[2] = 2;
@@ -2999,7 +2999,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     (*xBoundsArray)[11] = 13;
     (*xBoundsArray)[12] = 12;
     (*xBoundsArray)[13] = 11;
-    Float32Array* yBoundsArray = UnitTest::CreateTestDataArray<float32>(ds, yBoundsName, {14}, {1}, 0);
+    Float32Array* yBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStructure, yBoundsName, {14}, {1}, 0);
     (*yBoundsArray)[0] = 0;
     (*yBoundsArray)[1] = 2;
     (*yBoundsArray)[2] = 4;
@@ -3014,7 +3014,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     (*yBoundsArray)[11] = 22;
     (*yBoundsArray)[12] = 24;
     (*yBoundsArray)[13] = 26;
-    Float32Array* zBoundsArray = UnitTest::CreateTestDataArray<float32>(ds, zBoundsName, {14}, {1}, 0);
+    Float32Array* zBoundsArray = UnitTest::CreateTestDataArray<float32>(dataStructure, zBoundsName, {14}, {1}, 0);
     (*zBoundsArray)[0] = 0;
     (*zBoundsArray)[1] = 5;
     (*zBoundsArray)[2] = 10;
@@ -3063,11 +3063,11 @@ TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[Co
     args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAmName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
   }
 }

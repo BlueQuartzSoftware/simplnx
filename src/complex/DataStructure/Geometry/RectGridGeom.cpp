@@ -11,13 +11,13 @@
 
 using namespace complex;
 
-RectGridGeom::RectGridGeom(DataStructure& ds, std::string name)
-: IGridGeometry(ds, std::move(name))
+RectGridGeom::RectGridGeom(DataStructure& dataStructure, std::string name)
+: IGridGeometry(dataStructure, std::move(name))
 {
 }
 
-RectGridGeom::RectGridGeom(DataStructure& ds, std::string name, IdType importId)
-: IGridGeometry(ds, std::move(name), importId)
+RectGridGeom::RectGridGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: IGridGeometry(dataStructure, std::move(name), importId)
 {
 }
 
@@ -36,20 +36,20 @@ BaseGroup::GroupType RectGridGeom::getGroupType() const
   return GroupType::RectGridGeom;
 }
 
-RectGridGeom* RectGridGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+RectGridGeom* RectGridGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-RectGridGeom* RectGridGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+RectGridGeom* RectGridGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -69,7 +69,7 @@ DataObject* RectGridGeom::shallowCopy()
 std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataStruct, copyPath.getTargetName()));
   copy->setDimensions(m_Dimensions);
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))

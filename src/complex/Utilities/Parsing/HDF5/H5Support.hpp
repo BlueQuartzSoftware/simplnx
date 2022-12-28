@@ -81,7 +81,7 @@ namespace Support
  * @brief Returns if a given hdf5 object is a group
  * @param objectId The hdf5 object that contains an object with name objectName
  * @param objectName The name of the object to check
- * @return True if the given hdf5 object id is a group
+ * @return True if the given hdf5 object identifier is a group
  */
 inline bool COMPLEX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName)
 {
@@ -282,7 +282,7 @@ inline std::string HdfTypeForPrimitiveAsStr()
  *
  * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
  * on the returned value or resource leaks will occur.
- * @param locationId A Valid H5 file or group id.
+ * @param locationId A Valid H5 file or group identifier.
  * @param datasetName Path to the dataset
  * @return
  */
@@ -291,7 +291,7 @@ hid_t COMPLEX_EXPORT getDatasetType(hid_t locationId, const std::string& dataset
 
 /**
  * @brief Returns the path to an object
- * @param objectId The HDF5 id of the object
+ * @param objectId The HDF5 identifier of the object
  * @return  The path to the object relative to the objectId
  */
 inline std::string COMPLEX_EXPORT GetObjectPath(hid_t locationId)
@@ -316,7 +316,7 @@ inline std::string COMPLEX_EXPORT GetObjectPath(hid_t locationId)
  *
  * Returns the type of data stored in the dataset. You MUST use H5Tclose(typeId)
  * on the returned value or resource leaks will occur.
- * @param locationId A Valid HDF5 file or group id.
+ * @param locationId A Valid HDF5 file or group identifier.
  * @param datasetName Path to the dataset
  * @return
  */

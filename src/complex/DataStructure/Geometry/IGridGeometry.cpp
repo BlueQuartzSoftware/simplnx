@@ -5,13 +5,13 @@
 
 namespace complex
 {
-IGridGeometry::IGridGeometry(DataStructure& ds, std::string name)
-: IGeometry(ds, std::move(name))
+IGridGeometry::IGridGeometry(DataStructure& dataStructure, std::string name)
+: IGeometry(dataStructure, std::move(name))
 {
 }
 
-IGridGeometry::IGridGeometry(DataStructure& ds, std::string name, IdType importId)
-: IGeometry(ds, std::move(name), importId)
+IGridGeometry::IGridGeometry(DataStructure& dataStructure, std::string name, IdType importId)
+: IGeometry(dataStructure, std::move(name), importId)
 {
 }
 

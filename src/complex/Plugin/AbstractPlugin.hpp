@@ -53,10 +53,10 @@ public:
   /**
    * @brief Checks if the plugin contains a filter with the given ID. Returns
    * true if the plugin contains the filter. Returns false otherwise.
-   * @param id
+   * @param identifier
    * @return bool
    */
-  bool containsFilterId(FilterHandle::FilterIdType id) const;
+  bool containsFilterId(FilterHandle::FilterIdType identifier) const;
 
   /**
    * @brief Create's an IFilter with the specified ID. If the plugin
@@ -104,11 +104,11 @@ protected:
   /**
    * @brief Constructs a new AbstractPlugin. Takes an ID, name, description,
    * and vendor.
-   * @param id
+   * @param identifier
    * @param name
    * @param description
    */
-  AbstractPlugin(IdType id, const std::string& name, const std::string& description, const std::string& vendor);
+  AbstractPlugin(IdType identifier, const std::string& name, const std::string& description, const std::string& vendor);
 
   /**
    * @brief Records information for creating a filter using the provided

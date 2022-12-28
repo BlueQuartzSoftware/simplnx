@@ -12,13 +12,13 @@
 
 using namespace complex;
 
-VertexGeom::VertexGeom(DataStructure& ds, std::string name)
-: INodeGeometry0D(ds, std::move(name))
+VertexGeom::VertexGeom(DataStructure& dataStructure, std::string name)
+: INodeGeometry0D(dataStructure, std::move(name))
 {
 }
 
-VertexGeom::VertexGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry0D(ds, std::move(name), importId)
+VertexGeom::VertexGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: INodeGeometry0D(dataStructure, std::move(name), importId)
 {
 }
 
@@ -38,20 +38,20 @@ BaseGroup::GroupType VertexGeom::getGroupType() const
   return GroupType::VertexGeom;
 }
 
-VertexGeom* VertexGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+VertexGeom* VertexGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-VertexGeom* VertexGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+VertexGeom* VertexGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -76,7 +76,7 @@ DataObject* VertexGeom::shallowCopy()
 std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<VertexGeom>(new VertexGeom(dataStruct, copyPath.getTargetName()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {

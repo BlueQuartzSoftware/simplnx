@@ -4,9 +4,9 @@
 
 using namespace complex;
 
-DataRenamedMessage::DataRenamedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& oldName, const std::string& newName)
-: AbstractDataStructureMessage(ds)
-, m_Id(id)
+DataRenamedMessage::DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& oldName, const std::string& newName)
+: AbstractDataStructureMessage(dataStructure)
+, m_Id(identifier)
 , m_OldName(oldName)
 , m_NewName(newName)
 {

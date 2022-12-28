@@ -9,8 +9,8 @@
 
 using namespace complex;
 
-AbstractPlugin::AbstractPlugin(IdType id, const std::string& name, const std::string& description, const std::string& vendor)
-: m_Id(id)
+AbstractPlugin::AbstractPlugin(IdType identifier, const std::string& name, const std::string& description, const std::string& vendor)
+: m_Id(identifier)
 , m_Name(name)
 , m_Description(description)
 , m_Vendor(vendor)
@@ -54,14 +54,14 @@ AbstractPlugin::FilterContainerType::size_type AbstractPlugin::getFilterCount() 
   return m_FilterHandles.size();
 }
 
-IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType id) const
+IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType identifier) const
 {
-  if(!containsFilterId(id))
+  if(!containsFilterId(identifier))
   {
     return nullptr;
   }
 
-  return m_InitializerMap.at(id)();
+  return m_InitializerMap.at(identifier)();
 }
 
 void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)

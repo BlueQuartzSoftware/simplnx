@@ -36,19 +36,19 @@ TEST_CASE("Test Loading Plugins")
   REQUIRE(plugins.size() == COMPLEX_PLUGIN_COUNT);
   REQUIRE(filterHandles.size() >= 2);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   {
 
     IFilter::UniquePointer filter = filterList->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
-    filter->execute(ds, {});
+    filter->execute(dataStructure, {});
   }
   {
     IFilter::UniquePointer filter2 = filterList->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
-    filter2->execute(ds, {});
+    filter2->execute(dataStructure, {});
   }
 }
 
@@ -70,18 +70,18 @@ TEST_CASE("Test Singleton")
   REQUIRE(filterHandles.size() >= 2);
 
   // Create and execute filters
-  DataStructure ds;
+  DataStructure dataStructure;
   {
     IFilter::UniquePointer filter = filterList->createFilter(k_TestFilterHandle);
     REQUIRE(filter != nullptr);
     REQUIRE(filter->humanName() == "Test Filter");
-    filter->execute(ds, {});
+    filter->execute(dataStructure, {});
   }
   {
     IFilter::UniquePointer filter2 = filterList->createFilter(k_Test2FilterHandle);
     REQUIRE(filter2 != nullptr);
     REQUIRE(filter2->humanName() == "Test Filter 2");
-    filter2->execute(ds, {});
+    filter2->execute(dataStructure, {});
   }
 
   delete Application::Instance();

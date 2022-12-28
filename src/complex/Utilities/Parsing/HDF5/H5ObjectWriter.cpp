@@ -50,9 +50,9 @@ H5::IdType H5::ObjectWriter::getId() const
   return m_Id;
 }
 
-void H5::ObjectWriter::setId(H5::IdType id)
+void H5::ObjectWriter::setId(H5::IdType identifier)
 {
-  m_Id = id;
+  m_Id = identifier;
 }
 
 std::string H5::ObjectWriter::getName() const

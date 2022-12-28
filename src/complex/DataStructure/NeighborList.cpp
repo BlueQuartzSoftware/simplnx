@@ -27,10 +27,10 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Create(DataStructure& ds, const std::string& name, usize numTuples, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, usize numTuples, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<NeighborList>(new NeighborList(ds, name, numTuples));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, numTuples));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -38,10 +38,10 @@ NeighborList<T>* NeighborList<T>::Create(DataStructure& ds, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Import(DataStructure& ds, const std::string& name, IdType importId, const std::vector<SharedVectorType>& dataVector, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::vector<SharedVectorType>& dataVector, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<NeighborList>(new NeighborList(ds, name, dataVector, importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, dataVector, importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -62,7 +62,7 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   {
     return nullptr;
   }
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getNumberOfTuples()));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
   copy->m_Array.reserve(m_Array.size());

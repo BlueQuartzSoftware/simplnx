@@ -10,13 +10,13 @@
 
 using namespace complex;
 
-QuadGeom::QuadGeom(DataStructure& ds, std::string name)
-: INodeGeometry2D(ds, std::move(name))
+QuadGeom::QuadGeom(DataStructure& dataStructure, std::string name)
+: INodeGeometry2D(dataStructure, std::move(name))
 {
 }
 
-QuadGeom::QuadGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry2D(ds, std::move(name), importId)
+QuadGeom::QuadGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: INodeGeometry2D(dataStructure, std::move(name), importId)
 {
 }
 
@@ -35,20 +35,20 @@ BaseGroup::GroupType QuadGeom::getGroupType() const
   return GroupType::QuadGeom;
 }
 
-QuadGeom* QuadGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+QuadGeom* QuadGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-QuadGeom* QuadGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+QuadGeom* QuadGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -68,7 +68,7 @@ DataObject* QuadGeom::shallowCopy()
 std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<QuadGeom>(new QuadGeom(dataStruct, copyPath.getTargetName()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {

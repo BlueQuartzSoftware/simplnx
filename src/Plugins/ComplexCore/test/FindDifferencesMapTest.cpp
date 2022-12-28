@@ -14,7 +14,7 @@ using namespace complex::Constants;
 TEST_CASE("ComplexCore::FindDifferencesMap: Instantiate Filter", "[FindDifferencesMap]")
 {
   FindDifferencesMap filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
   DataPath firstInputPath;
@@ -26,18 +26,18 @@ TEST_CASE("ComplexCore::FindDifferencesMap: Instantiate Filter", "[FindDifferenc
   args.insertOrAssign(FindDifferencesMap::k_DifferenceMapArrayPath_Key, std::make_any<DataPath>(createdArrayPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(!executeResult.result.valid());
 }
 
 TEST_CASE("ComplexCore::FindDifferencesMap: Test Algorithm", "[FindDifferencesMap]")
 {
   FindDifferencesMap filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   DataPath firstInputPath({k_SmallIN100, k_EbsdScanData, "Phases"});
@@ -47,21 +47,21 @@ TEST_CASE("ComplexCore::FindDifferencesMap: Test Algorithm", "[FindDifferencesMa
   args.insertOrAssign(FindDifferencesMap::k_FirstInputArrayPath_Key, std::make_any<DataPath>(firstInputPath));
   {
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
   args.insertOrAssign(FindDifferencesMap::k_SecondInputArrayPath_Key, std::make_any<DataPath>(secondInputPath));
   // Preflight the filter and check result
   {
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
   args.insertOrAssign(FindDifferencesMap::k_DifferenceMapArrayPath_Key, std::make_any<DataPath>(createdArrayPath));
   {
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
   }
 }

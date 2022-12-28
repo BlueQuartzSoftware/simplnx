@@ -73,7 +73,7 @@ const std::string normalsDataArrayName = "FaceNormals";
 
 } // namespace
 
-void ReadSTLFile(DataStructure& dataGraph)
+void ReadSTLFile(DataStructure& dataStructure)
 {
 
   Arguments args;
@@ -90,22 +90,22 @@ void ReadSTLFile(DataStructure& dataGraph)
   args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
+  TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
   REQUIRE(triangleGeom.getNumberOfFaces() == 92);
   REQUIRE(triangleGeom.getNumberOfVertices() == 48);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
-  DataStructure dataGraph;
-  ReadSTLFile(dataGraph);
+  DataStructure dataStructure;
+  ReadSTLFile(dataStructure);
   DataPath geometryPath = DataPath({triangleGeometryName});
 
   {
@@ -121,20 +121,20 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({100.0F, 100.0F, 100.0F}));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
   // Validate the output data
   {
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
     Float32Array* vertices = triangleGeom.getVertices();
     bool verticesEqual = true;
@@ -151,14 +151,14 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_translation.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataGraph.writeHdf5(fileWriter);
+  herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
-  DataStructure dataGraph;
-  ReadSTLFile(dataGraph);
+  DataStructure dataStructure;
+  ReadSTLFile(dataStructure);
   DataPath geometryPath = DataPath({triangleGeometryName});
 
   {
@@ -174,20 +174,20 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_RotationAxisAngle_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
   // Validate the output data
   {
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
     Float32Array* vertices = triangleGeom.getVertices();
     bool verticesEqual = true;
@@ -204,14 +204,14 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataGraph.writeHdf5(fileWriter);
+  herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
-  DataStructure dataGraph;
-  ReadSTLFile(dataGraph);
+  DataStructure dataStructure;
+  ReadSTLFile(dataStructure);
   DataPath geometryPath = DataPath({triangleGeometryName});
 
   {
@@ -227,20 +227,20 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({2.0F, 3.0F, 4.0F}));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
   // Validate the output data
   {
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
     Float32Array* vertices = triangleGeom.getVertices();
     bool verticesEqual = true;
@@ -257,14 +257,14 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_scale.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataGraph.writeHdf5(fileWriter);
+  herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
-  DataStructure dataGraph;
-  ReadSTLFile(dataGraph);
+  DataStructure dataStructure;
+  ReadSTLFile(dataStructure);
   DataPath geometryPath = DataPath({triangleGeometryName});
 
   {
@@ -283,20 +283,20 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key, std::make_any<complex::DynamicTableParameter::ValueType>(dynamicTable));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
   // Validate the output data
   {
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
     Float32Array* vertices = triangleGeom.getVertices();
     bool verticesEqual = true;
@@ -313,14 +313,14 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_manual.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataGraph.writeHdf5(fileWriter);
+  herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
-  DataStructure dataGraph;
-  ReadSTLFile(dataGraph);
+  DataStructure dataStructure;
+  ReadSTLFile(dataStructure);
   DataPath geometryPath = DataPath({triangleGeometryName});
 
   {
@@ -332,7 +332,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[Comp
     std::vector<size_t> tupleShape = {4, 4};
     std::vector<size_t> componentShape = {1};
     size_t i = 0;
-    Float32Array* precomputedData = complex::UnitTest::CreateTestDataArray<float32>(dataGraph, precomputedName, tupleShape, componentShape, 0);
+    Float32Array* precomputedData = complex::UnitTest::CreateTestDataArray<float32>(dataStructure, precomputedName, tupleShape, componentShape, 0);
     (*precomputedData)[i++] = -1.0F;
     (*precomputedData)[i++] = 0.0F;
     (*precomputedData)[i++] = 0.0F;
@@ -361,20 +361,20 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[Comp
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>({precomputedName}));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
   // Validate the output data
   {
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
     Float32Array* vertices = triangleGeom.getVertices();
     bool verticesEqual = true;
@@ -391,6 +391,6 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[Comp
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataGraph.writeHdf5(fileWriter);
+  herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }

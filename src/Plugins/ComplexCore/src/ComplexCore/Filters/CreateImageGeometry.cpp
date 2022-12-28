@@ -76,7 +76,8 @@ IFilter::UniquePointer CreateImageGeometry::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   /**
    * These are the values that were gathered from the UI or the pipeline file or

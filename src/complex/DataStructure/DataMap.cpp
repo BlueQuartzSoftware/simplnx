@@ -70,9 +70,9 @@ bool DataMap::remove(DataObject* obj)
   return remove(obj->getId());
 }
 
-bool DataMap::remove(IdType id)
+bool DataMap::remove(IdType identifier)
 {
-  auto iter = m_Map.find(id);
+  auto iter = m_Map.find(identifier);
   bool found = (iter != m_Map.end());
   erase(iter);
   return found;
@@ -136,7 +136,7 @@ std::map<DataMap::IdType, std::weak_ptr<DataObject>> DataMap::getAllItems() cons
 std::vector<std::string> DataMap::getNames() const
 {
   std::vector<std::string> names;
-  for(const auto& [id, data] : m_Map)
+  for(const auto& [identifier, data] : m_Map)
   {
     names.push_back(data->getName());
   }
@@ -165,9 +165,9 @@ bool DataMap::contains(const DataObject* obj) const
   return contains(obj->getId());
 }
 
-bool DataMap::contains(IdType id) const
+bool DataMap::contains(IdType identifier) const
 {
-  return m_Map.find(id) != m_Map.end();
+  return m_Map.find(identifier) != m_Map.end();
 }
 
 DataObject* DataMap::operator[](IdType key)
@@ -232,14 +232,14 @@ const DataObject& DataMap::at(const std::string& name) const
   return *object;
 }
 
-DataMap::Iterator DataMap::find(IdType id)
+DataMap::Iterator DataMap::find(IdType identifier)
 {
-  return m_Map.find(id);
+  return m_Map.find(identifier);
 }
 
-DataMap::ConstIterator DataMap::find(IdType id) const
+DataMap::ConstIterator DataMap::find(IdType identifier) const
 {
-  return m_Map.find(id);
+  return m_Map.find(identifier);
 }
 
 DataMap::Iterator DataMap::find(const std::string& name)
@@ -335,7 +335,7 @@ H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader,
 
 H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const
 {
-  for(const auto& [id, dataObject] : *this)
+  for(const auto& [identifier, dataObject] : *this)
   {
     herr_t err = dataStructureWriter.writeDataObject(dataObject.get(), groupWriter);
     if(err < 0)

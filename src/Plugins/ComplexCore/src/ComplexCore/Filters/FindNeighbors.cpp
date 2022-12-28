@@ -383,7 +383,7 @@ Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, 
     {
       float area = static_cast<float>(number) * spacing[0] * spacing[1];
 
-      // Push the neighbor feature id back onto the list, so we stay synced up
+      // Push the neighbor feature identifier back onto the list, so we stay synced up
       neighborlist[i].push_back(neigh);
       neighborsurfacearealist[i].push_back(area);
     }
