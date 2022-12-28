@@ -13,7 +13,7 @@ using namespace complex::Constants;
 TEST_CASE("ComplexCore::RobustAutomaticThreshold: Instantiate Filter", "[RobustAutomaticThreshold]")
 {
   RobustAutomaticThreshold filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
   DataPath inputPath;
@@ -25,18 +25,18 @@ TEST_CASE("ComplexCore::RobustAutomaticThreshold: Instantiate Filter", "[RobustA
   args.insertOrAssign(RobustAutomaticThreshold::k_ArrayCreationPath, std::make_any<DataPath>(createdArrayPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(!executeResult.result.valid());
 }
 
 TEST_CASE("ComplexCore::RobustAutomaticThreshold: Missing/Empty DataPaths", "[RobustAutomaticThreshold]")
 {
   RobustAutomaticThreshold filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   DataPath inputPath({k_SmallIN100, k_EbsdScanData, "Phases"});
@@ -46,21 +46,21 @@ TEST_CASE("ComplexCore::RobustAutomaticThreshold: Missing/Empty DataPaths", "[Ro
   args.insertOrAssign(RobustAutomaticThreshold::k_InputArrayPath, std::make_any<DataPath>(inputPath));
   {
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
   args.insertOrAssign(RobustAutomaticThreshold::k_GradientMagnitudePath, std::make_any<DataPath>(gradientMagnitudePath));
   // Preflight the filter and check result
   {
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
   args.insertOrAssign(RobustAutomaticThreshold::k_ArrayCreationPath, std::make_any<DataPath>(createdArrayPath));
   {
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
   }
 }
@@ -68,7 +68,7 @@ TEST_CASE("ComplexCore::RobustAutomaticThreshold: Missing/Empty DataPaths", "[Ro
 TEST_CASE("ComplexCore::RobustAutomaticThreshold: Test Algorithm", "[RobustAutomaticThreshold]")
 {
   RobustAutomaticThreshold filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   DataPath inputPath({k_SmallIN100, k_EbsdScanData, "Phases"});
@@ -80,10 +80,10 @@ TEST_CASE("ComplexCore::RobustAutomaticThreshold: Test Algorithm", "[RobustAutom
   args.insertOrAssign(RobustAutomaticThreshold::k_ArrayCreationPath, std::make_any<DataPath>(createdArrayPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }

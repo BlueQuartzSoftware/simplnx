@@ -27,18 +27,18 @@ constexpr StringLiteral k_CentroidsName = "Centroids";
 
 static const IGeometry::SharedVertexList* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
 {
-  auto ds = geom.getDataStructure();
+  auto dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{k_VertexTupleCount}, std::vector<usize>{k_VertexCompCount}, 0.0f);
-  auto* dataArr = IGeometry::SharedVertexList::Create(*ds, "Vertices", std::move(dataStore), parentId);
+  auto* dataArr = IGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), parentId);
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<IGeometry::SharedVertexList*>(dataArr);
 }
 
 static const IGeometry::SharedFaceList* CreateFaceList(IGeometry& geom, const DataObject::IdType parentId)
 {
-  auto ds = geom.getDataStructure();
+  auto dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{k_FaceTupleCount}, std::vector<usize>{k_FaceCompCount}, 0);
-  auto* dataArr = IGeometry::SharedFaceList::Create(*ds, "Faces", std::move(dataStore), parentId);
+  auto* dataArr = IGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), parentId);
   REQUIRE(dataArr != nullptr);
   return dynamic_cast<IGeometry::SharedFaceList*>(dataArr);
 }

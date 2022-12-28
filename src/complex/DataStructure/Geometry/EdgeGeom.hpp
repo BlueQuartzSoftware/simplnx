@@ -25,22 +25,22 @@ public:
 
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param parentId = {}
    * @return EdgeGeom*
    */
-  static EdgeGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static EdgeGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param importId
    * @param parentId = {}
    * @return EdgeGeom*
    */
-  static EdgeGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static EdgeGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -135,17 +135,17 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    */
-  EdgeGeom(DataStructure& ds, std::string name);
+  EdgeGeom(DataStructure& dataStructure, std::string name);
 
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param importId
    */
-  EdgeGeom(DataStructure& ds, std::string name, IdType importId);
+  EdgeGeom(DataStructure& dataStructure, std::string name, IdType importId);
 };
 } // namespace complex

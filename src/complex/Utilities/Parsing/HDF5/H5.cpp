@@ -95,15 +95,15 @@ std::string H5::GetNameFromBuffer(std::string_view buffer)
   return std::string(buffer.substr(substrIndex));
 }
 
-std::string H5::GetPathFromId(IdType id)
+std::string H5::GetPathFromId(IdType identifier)
 {
-  ssize_t nameLength = H5Iget_name(id, nullptr, 0);
+  ssize_t nameLength = H5Iget_name(identifier, nullptr, 0);
   if(nameLength <= 0)
   {
     throw std::runtime_error("complex::H5::Support::GetName failed: H5Iget_name call failed");
   }
   std::string buffer(nameLength, 'A');
-  ssize_t size = H5Iget_name(id, buffer.data(), buffer.size() + 1);
+  ssize_t size = H5Iget_name(identifier, buffer.data(), buffer.size() + 1);
   if(size <= 0)
   {
     throw std::runtime_error("complex::H5::Support::GetName failed: H5Iget_name call failed");
@@ -111,9 +111,9 @@ std::string H5::GetPathFromId(IdType id)
   return buffer;
 }
 
-std::string H5::GetNameFromId(IdType id)
+std::string H5::GetNameFromId(IdType identifier)
 {
-  return GetNameFromBuffer(GetPathFromId(id));
+  return GetNameFromBuffer(GetPathFromId(identifier));
 }
 
 std::string GetParentPath(const std::string& objectPath)

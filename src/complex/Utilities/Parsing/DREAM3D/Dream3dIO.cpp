@@ -639,7 +639,7 @@ void WriteXdmf(std::ostream& out, const DataStructure& dataStructure, std::strin
 
   WriteXdmfHeader(ss);
 
-  for(const auto& [id, object] : dataStructure)
+  for(const auto& [identifier, object] : dataStructure)
   {
     const auto* geometry = dynamic_cast<const IGeometry*>(object.get());
     if(geometry == nullptr)
@@ -757,7 +757,7 @@ Result<DataStructure> ImportDataStructureV8(const H5::FileReader& fileReader, bo
 /**
  * @brief
  * @tparam T
- * @param ds
+ * @param dataStructure
  * @param name
  * @param parentId
  * @param daId
@@ -765,7 +765,7 @@ Result<DataStructure> ImportDataStructureV8(const H5::FileReader& fileReader, bo
  * @param cDims
  */
 template <typename T>
-IDataArray* createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims,
+IDataArray* createLegacyDataArray(DataStructure& dataStructure, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims,
                                   bool preflight = false)
 {
   using DataArrayType = DataArray<T>;
@@ -776,7 +776,7 @@ IDataArray* createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId
 
   if(preflight)
   {
-    return DataArrayType::template CreateWithStore<EmptyDataStoreType>(ds, daName, tDims, cDims, parentId);
+    return DataArrayType::template CreateWithStore<EmptyDataStoreType>(dataStructure, daName, tDims, cDims, parentId);
   }
   auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims, static_cast<T>(0));
 
@@ -785,7 +785,7 @@ IDataArray* createLegacyDataArray(DataStructure& ds, DataObject::IdType parentId
     throw std::runtime_error(fmt::format("Error reading HDF5 Data set {}", complex::H5::Support::GetObjectPath(dataArrayReader.getId())));
   }
   // Insert the DataArray into the DataStructure
-  return DataArray<T>::Create(ds, daName, std::move(dataStore), parentId);
+  return DataArray<T>::Create(dataStructure, daName, std::move(dataStore), parentId);
 }
 
 /**
@@ -817,7 +817,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
   }
 }
 
-void readLegacyStringArray(DataStructure& ds, const H5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
+void readLegacyStringArray(DataStructure& dataStructure, const H5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
 {
   const std::string daName = dataArrayReader.getName();
 
@@ -829,16 +829,16 @@ void readLegacyStringArray(DataStructure& ds, const H5::DatasetReader& dataArray
     auto numElements =
         std::accumulate(tDims.cbegin(), tDims.cend(), static_cast<usize>(1), std::multiplies<>()) * std::accumulate(cDims.cbegin(), cDims.cend(), static_cast<usize>(1), std::multiplies<>());
     const std::vector<std::string> strings(numElements);
-    StringArray::CreateWithValues(ds, daName, strings, parentId);
+    StringArray::CreateWithValues(dataStructure, daName, strings, parentId);
   }
   else
   {
     const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
-    StringArray::CreateWithValues(ds, daName, strings, parentId);
+    StringArray::CreateWithValues(dataStructure, daName, strings, parentId);
   }
 }
 
-IDataArray* readLegacyDataArray(DataStructure& ds, const H5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
+IDataArray* readLegacyDataArray(DataStructure& dataStructure, const H5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
 {
   auto size = H5Dget_storage_size(dataArrayReader.getId());
   auto typeId = dataArrayReader.getTypeId();
@@ -851,51 +851,51 @@ IDataArray* readLegacyDataArray(DataStructure& ds, const H5::DatasetReader& data
 
   if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
   {
-    dataArray = createLegacyDataArray<float32>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<float32>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE) > 0)
   {
-    dataArray = createLegacyDataArray<float64>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<float64>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
   {
-    dataArray = createLegacyDataArray<int8>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<int8>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT16) > 0)
   {
-    dataArray = createLegacyDataArray<int16>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<int16>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT32) > 0)
   {
-    dataArray = createLegacyDataArray<int32>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<int32>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT64) > 0)
   {
-    dataArray = createLegacyDataArray<int64>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<int64>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT8) > 0)
   {
     const auto typeAttrib = dataArrayReader.getAttribute(complex::Constants::k_ObjectTypeTag);
     if(typeAttrib.isValid() && typeAttrib.readAsString() == "DataArray<bool>")
     {
-      dataArray = createLegacyDataArray<bool>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+      dataArray = createLegacyDataArray<bool>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
     }
     else
     {
-      dataArray = createLegacyDataArray<uint8>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+      dataArray = createLegacyDataArray<uint8>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
     }
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT16) > 0)
   {
-    dataArray = createLegacyDataArray<uint16>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<uint16>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT32) > 0)
   {
-    dataArray = createLegacyDataArray<uint32>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<uint32>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT64) > 0)
   {
-    dataArray = createLegacyDataArray<uint64>(ds, parentId, dataArrayReader, tDims, cDims, preflight);
+    dataArray = createLegacyDataArray<uint64>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
   }
 
   H5Tclose(typeId);
@@ -904,18 +904,19 @@ IDataArray* readLegacyDataArray(DataStructure& ds, const H5::DatasetReader& data
 }
 
 template <typename T>
-void createLegacyNeighborList(DataStructure& ds, DataObject ::IdType parentId, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::vector<usize>& tupleDims)
+void createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
+                              const std::vector<usize>& tupleDims)
 {
   auto numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
   auto data = NeighborList<T>::ReadHdf5Data(parentReader, datasetReader);
-  auto* neighborList = NeighborList<T>::Create(ds, datasetReader.getName(), numTuples, parentId);
+  auto* neighborList = NeighborList<T>::Create(dataStructure, datasetReader.getName(), numTuples, parentId);
   for(usize i = 0; i < data.size(); ++i)
   {
     neighborList->setList(i, data[i]);
   }
 }
 
-void readLegacyNeighborList(DataStructure& ds, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, DataObject::IdType parentId)
+void readLegacyNeighborList(DataStructure& dataStructure, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, DataObject::IdType parentId)
 {
   auto typeId = datasetReader.getTypeId();
 
@@ -929,43 +930,43 @@ void readLegacyNeighborList(DataStructure& ds, const H5::GroupReader& parentRead
 
   if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
   {
-    createLegacyNeighborList<float32>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<float32>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE) > 0)
   {
-    createLegacyNeighborList<float64>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<float64>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
   {
-    createLegacyNeighborList<int8>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<int8>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT16) > 0)
   {
-    createLegacyNeighborList<int16>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<int16>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT32) > 0)
   {
-    createLegacyNeighborList<int32>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<int32>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT64) > 0)
   {
-    createLegacyNeighborList<int64>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<int64>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT8) > 0)
   {
-    createLegacyNeighborList<uint8>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<uint8>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT16) > 0)
   {
-    createLegacyNeighborList<uint16>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<uint16>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT32) > 0)
   {
-    createLegacyNeighborList<uint32>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<uint32>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT64) > 0)
   {
-    createLegacyNeighborList<uint64>(ds, parentId, parentReader, datasetReader, tDims);
+    createLegacyNeighborList<uint64>(dataStructure, parentId, parentReader, datasetReader, tDims);
   }
 
   H5Tclose(typeId);
@@ -985,11 +986,11 @@ bool isLegacyStringArray(const H5::DatasetReader& arrayReader)
   return objectType == "StringDataArray";
 }
 
-void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroupReader, DataObject& parent, bool preflight = false)
+void readLegacyAttributeMatrix(DataStructure& dataStructure, const H5::GroupReader& amGroupReader, DataObject& parent, bool preflight = false)
 {
   DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
-  auto* attributeMatrix = AttributeMatrix::Create(ds, amName, parentId);
+  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, amName, parentId);
 
   auto tDimsReader = amGroupReader.getAttribute("TupleDimensions");
   auto tDims = tDimsReader.readAsVector<uint64>();
@@ -1004,15 +1005,15 @@ void readLegacyAttributeMatrix(DataStructure& ds, const H5::GroupReader& amGroup
 
     if(isLegacyNeighborList(dataArraySet))
     {
-      readLegacyNeighborList(ds, amGroupReader, dataArraySet, attributeMatrix->getId());
+      readLegacyNeighborList(dataStructure, amGroupReader, dataArraySet, attributeMatrix->getId());
     }
     else if(isLegacyStringArray(dataArraySet))
     {
-      readLegacyStringArray(ds, dataArraySet, attributeMatrix->getId(), preflight);
+      readLegacyStringArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight);
     }
     else
     {
-      readLegacyDataArray(ds, dataArraySet, attributeMatrix->getId(), preflight);
+      readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight);
     }
   }
 
@@ -1069,34 +1070,34 @@ void readGenericGeomDims(IGeometry* geom, const H5::GroupReader& geomGroup)
   geom->setUnitDimensionality(uDims);
 }
 
-IDataArray* readLegacyGeomArray(DataStructure& ds, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
+IDataArray* readLegacyGeomArray(DataStructure& dataStructure, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
 {
   auto dataArraySet = geomGroup.openDataset(arrayName);
-  return readLegacyDataArray(ds, dataArraySet, geometry->getId());
+  return readLegacyDataArray(dataStructure, dataArraySet, geometry->getId());
 }
 
 template <typename T>
-T* readLegacyGeomArrayAs(DataStructure& ds, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
+T* readLegacyGeomArrayAs(DataStructure& dataStructure, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
 {
-  return dynamic_cast<T*>(readLegacyGeomArray(ds, geometry, geomGroup, arrayName));
+  return dynamic_cast<T*>(readLegacyGeomArray(dataStructure, geometry, geomGroup, arrayName));
 }
 
-DataObject* readLegacyVertexGeom(DataStructure& ds, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyVertexGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
 {
-  auto* geom = VertexGeom::Create(ds, name);
+  auto* geom = VertexGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
 
   geom->setVertices(*sharedVertexList);
   return geom;
 }
 
-DataObject* readLegacyTriangleGeom(DataStructure& ds, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyTriangleGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
 {
-  auto geom = TriangleGeom::Create(ds, name);
+  auto geom = TriangleGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedTriList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TriListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
+  auto* sharedTriList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::TriListName);
 
   geom->setVertices(*sharedVertexList);
   geom->setFaceList(*sharedTriList);
@@ -1104,12 +1105,12 @@ DataObject* readLegacyTriangleGeom(DataStructure& ds, const H5::GroupReader& geo
   return geom;
 }
 
-DataObject* readLegacyTetrahedralGeom(DataStructure& ds, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyTetrahedralGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
 {
-  auto geom = TetrahedralGeom::Create(ds, name);
+  auto geom = TetrahedralGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedTetList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::TetraListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
+  auto* sharedTetList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::TetraListName);
 
   geom->setVertices(*sharedVertexList);
   geom->setPolyhedraList(*sharedTetList);
@@ -1117,9 +1118,9 @@ DataObject* readLegacyTetrahedralGeom(DataStructure& ds, const H5::GroupReader& 
   return geom;
 }
 
-DataObject* readLegacyRectGridGeom(DataStructure& ds, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
 {
-  auto geom = RectGridGeom::Create(ds, name);
+  auto geom = RectGridGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
 
   // DIMENSIONS array
@@ -1129,21 +1130,21 @@ DataObject* readLegacyRectGridGeom(DataStructure& ds, const H5::GroupReader& geo
     geom->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
   }
 
-  auto* xBoundsArray = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::XBoundsName);
-  auto* yBoundsArray = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::YBoundsName);
-  auto* zBoundsArray = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::ZBoundsName);
+  auto* xBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::XBoundsName);
+  auto* yBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::YBoundsName);
+  auto* zBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::ZBoundsName);
 
   geom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
 
   return geom;
 }
 
-DataObject* readLegacyQuadGeom(DataStructure& ds, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyQuadGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
 {
-  auto geom = QuadGeom::Create(ds, name);
+  auto geom = QuadGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedQuadList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::QuadListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
+  auto* sharedQuadList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::QuadListName);
 
   geom->setVertices(*sharedVertexList);
   geom->setFaceList(*sharedQuadList);
@@ -1151,12 +1152,12 @@ DataObject* readLegacyQuadGeom(DataStructure& ds, const H5::GroupReader& geomGro
   return geom;
 }
 
-DataObject* readLegacyHexGeom(DataStructure& ds, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyHexGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
 {
-  auto geom = HexahedralGeom::Create(ds, name);
+  auto geom = HexahedralGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedHexList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::HexListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
+  auto* sharedHexList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::HexListName);
 
   geom->setVertices(*sharedVertexList);
   geom->setPolyhedraList(*sharedHexList);
@@ -1164,13 +1165,13 @@ DataObject* readLegacyHexGeom(DataStructure& ds, const H5::GroupReader& geomGrou
   return geom;
 }
 
-DataObject* readLegacyEdgeGeom(DataStructure& ds, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyEdgeGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
 {
-  auto geom = EdgeGeom::Create(ds, name);
+  auto geom = EdgeGeom::Create(dataStructure, name);
   auto edge = dynamic_cast<EdgeGeom*>(geom);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(ds, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedEdgeList = readLegacyGeomArrayAs<UInt64Array>(ds, geom, geomGroup, Legacy::EdgeListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
+  auto* sharedEdgeList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::EdgeListName);
 
   geom->setVertices(*sharedVertexList);
   geom->setEdgeList(*sharedEdgeList);
@@ -1178,9 +1179,9 @@ DataObject* readLegacyEdgeGeom(DataStructure& ds, const H5::GroupReader& geomGro
   return geom;
 }
 
-DataObject* readLegacyImageGeom(DataStructure& ds, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyImageGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
 {
-  auto geom = ImageGeom::Create(ds, name);
+  auto geom = ImageGeom::Create(dataStructure, name);
   auto image = dynamic_cast<ImageGeom*>(geom);
 
   readGenericGeomDims(geom, geomGroup);
@@ -1210,7 +1211,7 @@ DataObject* readLegacyImageGeom(DataStructure& ds, const H5::GroupReader& geomGr
 }
 // End legacy Geometry importing
 
-void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, bool preflight = false)
+void readLegacyDataContainer(DataStructure& dataStructure, const H5::GroupReader& dcGroup, bool preflight = false)
 {
   DataObject* container = nullptr;
   const std::string dcName = dcGroup.getName();
@@ -1223,42 +1224,42 @@ void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, 
     const std::string geomName = geomNameAttribute.readAsString();
     if(geomName == Legacy::Type::ImageGeom)
     {
-      container = readLegacyImageGeom(ds, geomGroup, dcName);
+      container = readLegacyImageGeom(dataStructure, geomGroup, dcName);
     }
     else if(geomName == Legacy::Type::EdgeGeom)
     {
-      container = readLegacyEdgeGeom(ds, geomGroup, dcName);
+      container = readLegacyEdgeGeom(dataStructure, geomGroup, dcName);
     }
     else if(geomName == Legacy::Type::HexGeom)
     {
-      container = readLegacyHexGeom(ds, geomGroup, dcName);
+      container = readLegacyHexGeom(dataStructure, geomGroup, dcName);
     }
     else if(geomName == Legacy::Type::QuadGeom)
     {
-      container = readLegacyQuadGeom(ds, geomGroup, dcName);
+      container = readLegacyQuadGeom(dataStructure, geomGroup, dcName);
     }
     else if(geomName == Legacy::Type::RectGridGeom)
     {
-      container = readLegacyRectGridGeom(ds, geomGroup, dcName);
+      container = readLegacyRectGridGeom(dataStructure, geomGroup, dcName);
     }
     else if(geomName == Legacy::Type::TetrahedralGeom)
     {
-      container = readLegacyTetrahedralGeom(ds, geomGroup, dcName);
+      container = readLegacyTetrahedralGeom(dataStructure, geomGroup, dcName);
     }
     else if(geomName == Legacy::Type::TriangleGeom)
     {
-      container = readLegacyTriangleGeom(ds, geomGroup, dcName);
+      container = readLegacyTriangleGeom(dataStructure, geomGroup, dcName);
     }
     else if(geomName == Legacy::Type::VertexGeom)
     {
-      container = readLegacyVertexGeom(ds, geomGroup, dcName);
+      container = readLegacyVertexGeom(dataStructure, geomGroup, dcName);
     }
   }
 
   // No geometry found. Create a DataGroup instead
   if(!container)
   {
-    container = DataGroup::Create(ds, dcName);
+    container = DataGroup::Create(dataStructure, dcName);
   }
 
   auto attribMatrixNames = dcGroup.getChildNames();
@@ -1270,13 +1271,13 @@ void readLegacyDataContainer(DataStructure& ds, const H5::GroupReader& dcGroup, 
     }
 
     auto attributeMatrixGroup = dcGroup.openGroup(amName);
-    readLegacyAttributeMatrix(ds, attributeMatrixGroup, *container, preflight);
+    readLegacyAttributeMatrix(dataStructure, attributeMatrixGroup, *container, preflight);
   }
 }
 
 Result<DataStructure> ImportLegacyDataStructure(const H5::FileReader& fileReader, bool preflight)
 {
-  DataStructure ds;
+  DataStructure dataStructure;
 
   auto dcaGroup = fileReader.openGroup(k_LegacyDataStructureGroupTag);
 
@@ -1285,10 +1286,10 @@ Result<DataStructure> ImportLegacyDataStructure(const H5::FileReader& fileReader
   for(const auto& dcName : dcNames)
   {
     auto dcGroup = dcaGroup.openGroup(dcName);
-    readLegacyDataContainer(ds, dcGroup, preflight);
+    readLegacyDataContainer(dataStructure, dcGroup, preflight);
   }
 
-  return {std::move(ds)};
+  return {std::move(dataStructure)};
 }
 
 Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const H5::FileReader& fileReader, bool preflight)

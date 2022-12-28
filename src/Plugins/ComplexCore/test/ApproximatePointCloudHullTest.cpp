@@ -41,7 +41,7 @@ TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
   std::string normalsDataArrayName = "FaceNormals";
   DataPath hullVertexGeomPath({"[Point Cloud Hull]"});
 
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   DataPath triangleGeomDataPath({triangleGeometryName});
   DataPath triangleFaceDataGroupDataPath({triangleGeometryName, triangleFaceDataGroupName});
   DataPath normalsDataPath({triangleGeometryName, triangleFaceDataGroupName, normalsDataArrayName});
@@ -56,30 +56,30 @@ TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
     args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
 
   {
     // Create a Vertex Geometry from the vertices from the STL file
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     DataArray<float>* triangleVertices = triangleGeom.getVertices();
 
     DataPath vertexGeomPath({"[Vertex Geometry]"});
     CreateVertexGeometryAction createVertexGeometryAction(vertexGeomPath, triangleVertices->getNumberOfTuples(), INodeGeometry0D::k_VertexDataName, CreateVertexGeometryAction::k_SharedVertexListName);
-    Result<> createVertexResult = createVertexGeometryAction.apply(dataGraph, IDataAction::Mode::Execute);
+    Result<> createVertexResult = createVertexGeometryAction.apply(dataStructure, IDataAction::Mode::Execute);
     REQUIRE(createVertexResult.valid());
 
     // Copy the vertices into the new Vertex Geometry
-    VertexGeom& vertexGeom = dataGraph.getDataRefAs<VertexGeom>(vertexGeomPath);
+    VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
     Float32Array* vertices = vertexGeom.getVertices();
     for(size_t eIdx = 0; eIdx < triangleVertices->getSize(); eIdx++)
     {
@@ -98,16 +98,16 @@ TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
     args.insertOrAssign(ApproximatePointCloudHull::k_HullVertexGeomPath_Key, std::make_any<DataPath>(hullVertexGeomPath));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
   // Validate the output data
   {
-    VertexGeom& vertexGeom1 = dataGraph.getDataRefAs<VertexGeom>(hullVertexGeomPath);
+    VertexGeom& vertexGeom1 = dataStructure.getDataRefAs<VertexGeom>(hullVertexGeomPath);
     REQUIRE(vertexGeom1.getNumberOfVertices() == 48);
     Float32Array* vertices = vertexGeom1.getVertices();
     bool verticesEqual = true;
@@ -127,7 +127,7 @@ TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApproximatePointCloudHull.dream3d", unit_test::k_BinaryTestOutputDir));
     H5::FileWriter fileWriter = std::move(result.value());
 
-    herr_t err = dataGraph.writeHdf5(fileWriter);
+    herr_t err = dataStructure.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   }
 }

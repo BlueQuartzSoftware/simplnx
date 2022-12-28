@@ -97,10 +97,10 @@ public:
   /**
    * @brief Attempts to remove a DataObject with the target IdType from the map.
    * Returns true if it succeeded. Returns false otherwise.
-   * @param id
+   * @param identifier
    * @return bool
    */
-  bool remove(IdType id);
+  bool remove(IdType identifier);
 
   /**
    * @brief Attempts to remove a DataObject from the map using the target
@@ -191,10 +191,10 @@ public:
 
   /**
    * @brief Checks if the DataMap contains the specified IdType.
-   * @param id
+   * @param identifier
    * @return bool
    */
-  bool contains(IdType id) const;
+  bool contains(IdType identifier) const;
 
   /**
    * @brief Checks if the DataMap contains the specified DataObject.
@@ -212,25 +212,25 @@ public:
 
   /**
    * @brief Searches the DataMap for the target IdType.
-   * @param id
+   * @param identifier
    * @return Iterator
    */
-  Iterator find(IdType id);
+  Iterator find(IdType identifier);
 
   /**
    * @brief Searches the DataMap for the target IdType.
    *
    * Children are not expanded in this calculation.
-   * @param id
+   * @param identifier
    * @return ConstIterator
    */
-  ConstIterator find(IdType id) const;
+  ConstIterator find(IdType identifier) const;
 
   /**
    * @brief Searches the DataMap for the target name.
    *
    * Children are not expanded in this calculation.
-   * @param id
+   * @param identifier
    * @return Iterator
    */
   Iterator find(const std::string& name);
@@ -239,7 +239,7 @@ public:
    * @brief Searches the DataMap for the target name.
    *
    * Children are not expanded in this calculation.
-   * @param id
+   * @param identifier
    * @return ConstIterator
    */
   ConstIterator find(const std::string& name) const;

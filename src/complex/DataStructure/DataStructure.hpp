@@ -117,10 +117,10 @@ public:
   /**
    * @brief Returns true if the DataStructure contains a DataObject with the
    * given key. Returns false otherwise.
-   * @param id
+   * @param identifier
    * @return bool
    */
-  bool containsData(DataObject::IdType id) const;
+  bool containsData(DataObject::IdType identifier) const;
 
   /**
    * @brief Returns true if the DataStructure contains a DataObject with the
@@ -133,43 +133,43 @@ public:
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
-   * @param id
+   * @param identifier
    * @return DataObject*
    */
-  DataObject* getData(DataObject::IdType id);
+  DataObject* getData(DataObject::IdType identifier);
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
-   * @param id
+   * @param identifier
    * @return T*
    */
   template <class T>
-  inline T* getDataAs(DataObject::IdType id)
+  inline T* getDataAs(DataObject::IdType identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    return dynamic_cast<T*>(getData(id));
+    return dynamic_cast<T*>(getData(identifier));
   }
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
-   * @param id
+   * @param identifier
    * @return DataObject*
    */
-  DataObject* getData(const std::optional<DataObject::IdType>& id);
+  DataObject* getData(const std::optional<DataObject::IdType>& identifier);
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
-   * @param id
+   * @param identifier
    * @return T*
    */
   template <class T>
-  inline T* getDataAs(const std::optional<DataObject::IdType>& id)
+  inline T* getDataAs(const std::optional<DataObject::IdType>& identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    auto* object = getData(id);
+    auto* object = getData(identifier);
     return dynamic_cast<T*>(object);
   }
 
@@ -190,12 +190,12 @@ public:
   DataObject& getDataRef(const DataPath& path);
 
   /**
-   * @brief Returns a reference to the DataObject with the given id. If no
+   * @brief Returns a reference to the DataObject with the given identifier. If no
    * DataObject is found, this method throws std::out_of_range.
-   * @param id
+   * @param identifier
    * @return DataObject&
    */
-  DataObject& getDataRef(DataObject::IdType id);
+  DataObject& getDataRef(DataObject::IdType identifier);
 
   /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
@@ -224,16 +224,16 @@ public:
   }
 
   /**
-   * @brief Returns a reference to the DataObject with the given id. If no
+   * @brief Returns a reference to the DataObject with the given identifier. If no
    * DataObject is found, this method throws std::out_of_range.
-   * @param id
+   * @param identifier
    * @return T&
    */
   template <class T>
-  T& getDataRefAs(DataObject::IdType id)
+  T& getDataRefAs(DataObject::IdType identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    return dynamic_cast<T&>(getDataRef(id));
+    return dynamic_cast<T&>(getDataRef(identifier));
   }
 
   /**
@@ -260,43 +260,43 @@ public:
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
-   * @param id
+   * @param identifier
    * @return const DataObject*
    */
-  const DataObject* getData(DataObject::IdType id) const;
+  const DataObject* getData(DataObject::IdType identifier) const;
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
-   * @param id
+   * @param identifier
    * @return const T*
    */
   template <class T>
-  inline const T* getDataAs(DataObject::IdType id) const
+  inline const T* getDataAs(DataObject::IdType identifier) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    return dynamic_cast<const T*>(getData(id));
+    return dynamic_cast<const T*>(getData(identifier));
   }
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
-   * @param id
+   * @param identifier
    * @return const DataObject*
    */
-  const DataObject* getData(const std::optional<DataObject::IdType>& id) const;
+  const DataObject* getData(const std::optional<DataObject::IdType>& identifier) const;
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
-   * @param id
+   * @param identifier
    * @return const T*
    */
   template <class T>
-  inline const T* getDataAs(const std::optional<DataObject::IdType>& id) const
+  inline const T* getDataAs(const std::optional<DataObject::IdType>& identifier) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    return dynamic_cast<const T*>(getData(id));
+    return dynamic_cast<const T*>(getData(identifier));
   }
 
   /**
@@ -316,12 +316,12 @@ public:
   const DataObject& getDataRef(const DataPath& path) const;
 
   /**
-   * @brief Returns a reference to the DataObject with the given id. If no
+   * @brief Returns a reference to the DataObject with the given identifier. If no
    * DataObject is found, this method throws std::out_of_range.
-   * @param id
+   * @param identifier
    * @return const DataObject&
    */
-  const DataObject& getDataRef(DataObject::IdType id) const;
+  const DataObject& getDataRef(DataObject::IdType identifier) const;
 
   /**
    * @brief Returns a pointer to the DataObject at the given DataPath.
@@ -356,16 +356,16 @@ public:
   }
 
   /**
-   * @brief Returns a reference to the DataObject with the given id. If no
+   * @brief Returns a reference to the DataObject with the given identifier. If no
    * DataObject is found, this method throws std::out_of_range.
-   * @param id
+   * @param identifier
    * @return T&
    */
   template <class T>
-  const T& getDataRefAs(DataObject::IdType id) const
+  const T& getDataRefAs(DataObject::IdType identifier) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    return dynamic_cast<const T&>(getDataRef(id));
+    return dynamic_cast<const T&>(getDataRef(identifier));
   }
 
   /**
@@ -396,10 +396,10 @@ public:
    * Use getData(DataObject::IdType) instead. This was only made public for
    * use in visualization where select data might need to be preserved beyond
    * the rest of the DataStructure.
-   * @param id
+   * @param identifier
    * @return std::shared_ptr<DataObject>
    */
-  std::shared_ptr<DataObject> getSharedData(DataObject::IdType id) const;
+  std::shared_ptr<DataObject> getSharedData(DataObject::IdType identifier) const;
 
   /**
    * @brief Returns the shared pointer for the specified DataObject.
@@ -408,14 +408,14 @@ public:
    * Use getData(DataObject::IdType) instead. This was only made public for
    * use in visualization where select data might need to be preserved beyond
    * the rest of the DataStructure.
-   * @param id
+   * @param identifier
    * @return std::shared_ptr<DataObject>
    */
   template <class T>
-  inline std::shared_ptr<T> getSharedDataAs(DataObject::IdType id) const
+  inline std::shared_ptr<T> getSharedDataAs(DataObject::IdType identifier) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    return std::dynamic_pointer_cast<T>(getSharedData(id));
+    return std::dynamic_pointer_cast<T>(getSharedData(identifier));
   }
 
   /**
@@ -450,19 +450,19 @@ public:
   /**
    * @brief Removes the DataObject using the specified IdType. Returns true
    * if an object was found. Otherwise, returns false.
-   * @param id
+   * @param identifier
    * @return bool
    */
-  bool removeData(DataObject::IdType id);
+  bool removeData(DataObject::IdType identifier);
 
   /**
    * @brief Removes the DataObject using the specified IdType. Returns true
    * if an object was found. Otherwise, returns false. If no ID is provided,
    * this returns false.
-   * @param id
+   * @param identifier
    * @return bool
    */
-  bool removeData(const std::optional<DataObject::IdType>& id);
+  bool removeData(const std::optional<DataObject::IdType>& identifier);
 
   /**
    * @brief Removes the DataObject using the specified DataPath. Returns true
@@ -491,10 +491,10 @@ public:
   /**
    * @brief Returns a vector of DataPaths for the DataObject with the specified ID.
    * If no DataObject is found with the given ID, an empty vector is returned.
-   * @param id
+   * @param identifier
    * @return std::vector<DataPath>
    */
-  std::vector<DataPath> getDataPathsForId(DataObject::IdType id) const;
+  std::vector<DataPath> getDataPathsForId(DataObject::IdType identifier) const;
 
   /**
    * @brief Returns a collection of all DataPaths within the structure.
@@ -701,10 +701,10 @@ protected:
   /**
    * @brief Applies a new pointer to the DataObject at a specified ID. Removes
    * the data from the DataMap if no DataObject was provided.
-   * @param id
+   * @param identifier
    * @param dataObject
    */
-  void setData(DataObject::IdType id, std::shared_ptr<DataObject> dataObject);
+  void setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject);
 
 private:
   /**
@@ -731,10 +731,10 @@ private:
   /**
    * @brief Called when a DataObject is deleted from the DataStructure. This
    * notifies observers to the change.
-   * @param id
+   * @param identifier
    * @param name
    */
-  void dataDeleted(DataObject::IdType id, const std::string& name);
+  void dataDeleted(DataObject::IdType identifier, const std::string& name);
 
   /**
    * @brief Resets the DataStructure for all known DataObjecs in the DataStructure.

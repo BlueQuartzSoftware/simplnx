@@ -26,11 +26,11 @@ public:
    * @brief Constructs a DataRemovedMessage for the target DataStructure marking a
    * DataObject ID as being removed. The DataObject's name is also provided to
    * describe the object in a human-readable format.
-   * @param ds
-   * @param id
+   * @param dataStructure
+   * @param identifier
    * @param name
    */
-  DataRemovedMessage(const DataStructure* ds, DataObject::IdType id, const std::string& name);
+  DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& name);
 
   /**
    * @brief Creates a copy of the target DataRemovedMessage.

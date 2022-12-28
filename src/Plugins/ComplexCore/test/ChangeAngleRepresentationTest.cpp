@@ -13,7 +13,7 @@ TEST_CASE("ComplexCore::ChangeAngleRepresentation: Instantiation and Parameter C
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -22,12 +22,12 @@ TEST_CASE("ComplexCore::ChangeAngleRepresentation: Instantiation and Parameter C
   args.insertOrAssign(ChangeAngleRepresentation::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
   // This should fail because parameter is out of range
   args.insertOrAssign(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  preflightResult = filter.preflight(ds, args);
+  preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 }
 
@@ -35,16 +35,16 @@ TEST_CASE("ComplexCore::ChangeAngleRepresentation: Degrees To Radians")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataGraph, Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
   std::vector<size_t> tupleShape = {10};
   std::vector<size_t> componentShape = {3};
 
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataGraph, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
 
   for(size_t t = 0; t < tupleShape[0]; t++)
   {
@@ -60,11 +60,11 @@ TEST_CASE("ComplexCore::ChangeAngleRepresentation: Degrees To Radians")
   args.insertOrAssign(ChangeAngleRepresentation::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
   // Check the results
@@ -82,16 +82,16 @@ TEST_CASE("ComplexCore::ChangeAngleRepresentation: Radians To Degrees")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataGraph, Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
   std::vector<size_t> tupleShape = {10};
   std::vector<size_t> componentShape = {3};
 
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataGraph, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
 
   for(size_t t = 0; t < tupleShape[0]; t++)
   {
@@ -107,11 +107,11 @@ TEST_CASE("ComplexCore::ChangeAngleRepresentation: Radians To Degrees")
   args.insertOrAssign(ChangeAngleRepresentation::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
   // Check the results

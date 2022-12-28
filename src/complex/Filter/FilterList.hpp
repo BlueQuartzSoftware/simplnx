@@ -116,10 +116,10 @@ public:
    *
    * This plugin is owned by the FilterList and will be cleaned up when the
    * complex::Application closes.
-   * @param id
+   * @param identifier
    * @return AbstractPlugin*
    */
-  AbstractPlugin* getPluginById(const FilterHandle::PluginIdType& id) const;
+  AbstractPlugin* getPluginById(const FilterHandle::PluginIdType& identifier) const;
 
 private:
   ////////////

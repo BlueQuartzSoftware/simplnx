@@ -82,8 +82,8 @@ Result<DataType> H5::DatasetReader::getDataType() const
 
 H5::IdType H5::DatasetReader::getTypeId() const
 {
-  auto id = getId();
-  return H5Dget_type(id);
+  auto identifier = getId();
+  return H5Dget_type(identifier);
 }
 
 size_t H5::DatasetReader::getTypeSize() const

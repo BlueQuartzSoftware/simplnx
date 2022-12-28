@@ -32,12 +32,12 @@ public:
    * If the created montage cannot be placed under the target parent, then this
    * method returns nullptr. Otherwise, this method returns a pointer to the
    * created montage.
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param parentId = {}
    * @return GridMontage*
    */
-  static GridMontage* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static GridMontage* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Attempts to create a new GridMontage and insert it into the
@@ -51,13 +51,13 @@ public:
    *
    * Unlike Create, Import allows the DataObject ID to be set for use in
    * importing data.
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param importId
    * @param parentId = {}
    * @return GridMontage*
    */
-  static GridMontage* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static GridMontage* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Creates a copy of the specified GridMontage but does not add it to
@@ -249,18 +249,18 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    */
-  GridMontage(DataStructure& ds, std::string name);
+  GridMontage(DataStructure& dataStructure, std::string name);
 
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param importId
    */
-  GridMontage(DataStructure& ds, std::string name, IdType importId);
+  GridMontage(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
    * @brief Returns the appropriate linear offset from the provided

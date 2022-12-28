@@ -37,15 +37,15 @@ public:
    *
    * Returns a pointer to the created DynamicListArray if the operation succeeded.
    * Returns nullptr otherwise.
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param parentId = {}
    * @return DynamicListArray*
    */
-  static DynamicListArray* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+  static DynamicListArray* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
   {
-    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, std::move(name)));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(dataStructure, std::move(name)));
+    if(!AttemptToAddObject(dataStructure, data, parentId))
     {
       return nullptr;
     }
@@ -60,16 +60,16 @@ public:
    *
    * Returns a pointer to the created DynamicListArray if the operation succeeded.
    * Returns nullptr otherwise.
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param importId
    * @param parentId = {}
    * @return DynamicListArray*
    */
-  static DynamicListArray* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+  static DynamicListArray* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
   {
-    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, std::move(name), importId));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(dataStructure, std::move(name), importId));
+    if(!AttemptToAddObject(dataStructure, data, parentId))
     {
       return nullptr;
     }
@@ -156,7 +156,7 @@ public:
     {
       return nullptr;
     }
-    // Don't construct with id since it will get created when inserting into data structure
+    // Don't construct with identifier since it will get created when inserting into data structure
     std::shared_ptr<DynamicListArray<T, K>> copy = std::shared_ptr<DynamicListArray<T, K>>(new DynamicListArray<T, K>(dataStruct, copyPath.getTargetName()));
     std::vector<T> linkCounts(m_Size, 0);
 
@@ -201,7 +201,7 @@ public:
   }
 
   /**
-   * @brief Get a link structure given a point id.
+   * @brief Get a link structure given a point identifier.
    * @param pointId
    * @return ElementList&
    */
@@ -329,22 +329,22 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    */
-  DynamicListArray(DataStructure& ds, std::string name)
-  : DataObject(ds, std::move(name))
+  DynamicListArray(DataStructure& dataStructure, std::string name)
+  : DataObject(dataStructure, std::move(name))
   {
   }
 
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param importId
    */
-  DynamicListArray(DataStructure& ds, std::string name, IdType importId)
-  : DataObject(ds, std::move(name), importId)
+  DynamicListArray(DataStructure& dataStructure, std::string name, IdType importId)
+  : DataObject(dataStructure, std::move(name), importId)
   {
   }
 

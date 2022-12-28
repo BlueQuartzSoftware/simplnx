@@ -14,7 +14,7 @@ using namespace complex::Constants;
 TEST_CASE("ComplexCore::FindNeighborListStatistics: Instantiate Filter", "[FindNeighborListStatistics]")
 {
   FindNeighborListStatistics filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
   DataPath inputArrayPath;
@@ -44,11 +44,11 @@ TEST_CASE("ComplexCore::FindNeighborListStatistics: Instantiate Filter", "[FindN
   args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<DataPath>(summationOutputPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid());
 }
 

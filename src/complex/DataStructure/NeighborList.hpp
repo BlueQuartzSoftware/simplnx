@@ -43,25 +43,25 @@ public:
 
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param numTuples
    * @param parentId = {}
    * @tparam T
    * @return NeighborList<T>*
    */
-  static NeighborList* Create(DataStructure& ds, const std::string& name, usize numTuples, const std::optional<IdType>& parentId = {});
+  static NeighborList* Create(DataStructure& dataStructure, const std::string& name, usize numTuples, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param importId
    * @param data
    * @param parentId
    * @return NeighborList<T>*
    */
-  static NeighborList* Import(DataStructure& ds, const std::string& name, IdType importId, const std::vector<SharedVectorType>& data, const std::optional<IdType>& parentId = {});
+  static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::vector<SharedVectorType>& data, const std::optional<IdType>& parentId = {});
 
   ~NeighborList() override = default;
 

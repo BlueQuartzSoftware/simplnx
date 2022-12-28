@@ -66,9 +66,9 @@ H5::IdType H5::ObjectReader::getId() const
   return m_Id;
 }
 
-void H5::ObjectReader::setId(H5::IdType id)
+void H5::ObjectReader::setId(H5::IdType identifier)
 {
-  m_Id = id;
+  m_Id = identifier;
 }
 
 std::string H5::ObjectReader::getName() const

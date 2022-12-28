@@ -61,9 +61,9 @@ public:
    * @brief Starts observing the specified DataStructure.
    * Only one DataStructure can be observed at a time. This method replaces the
    * existing target, if there is one, with the new target.
-   * @param ds
+   * @param dataStructure
    */
-  void startObservingStructure(DataStructure* ds);
+  void startObservingStructure(DataStructure* dataStructure);
 
   /**
    * @brief Stops observing the current DataStructure and resets the observed

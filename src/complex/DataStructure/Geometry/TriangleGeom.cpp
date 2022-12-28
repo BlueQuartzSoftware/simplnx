@@ -11,13 +11,13 @@
 
 using namespace complex;
 
-TriangleGeom::TriangleGeom(DataStructure& ds, std::string name)
-: INodeGeometry2D(ds, std::move(name))
+TriangleGeom::TriangleGeom(DataStructure& dataStructure, std::string name)
+: INodeGeometry2D(dataStructure, std::move(name))
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry2D(ds, std::move(name), importId)
+TriangleGeom::TriangleGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: INodeGeometry2D(dataStructure, std::move(name), importId)
 {
 }
 
@@ -36,20 +36,20 @@ BaseGroup::GroupType TriangleGeom::getGroupType() const
   return GroupType::TriangleGeom;
 }
 
-TriangleGeom* TriangleGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+TriangleGeom* TriangleGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-TriangleGeom* TriangleGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+TriangleGeom* TriangleGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -69,7 +69,7 @@ DataObject* TriangleGeom::shallowCopy()
 std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataStruct, copyPath.getTargetName()));
   if(!dataStruct.containsData(copyPath) && dataStruct.insert(copy, copyPath.getParent()))
   {

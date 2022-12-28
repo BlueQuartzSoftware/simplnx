@@ -25,10 +25,10 @@ public:
 
   /**
    * @brief Creates a DataAddedMessage for the target DataStructure and DataObject ID.
-   * @param ds
+   * @param dataStructure
    * @param addedId
    */
-  DataAddedMessage(const DataStructure* ds, DataObject::IdType addedId);
+  DataAddedMessage(const DataStructure* dataStructure, DataObject::IdType addedId);
 
   /**
    * @brief Copy constructor

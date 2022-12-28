@@ -37,10 +37,10 @@ Result<> copyCellData(DataStructure& dataStructure, const DataPath& selectedCell
       return {};
     }
 
-    // Get the feature id (or what ever the user has selected as their "Feature" identifier
+    // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
     int32 featureIdx = featureIds[cellTupleIdx];
 
-    // Store the index of the first tuple with this feature id in the map
+    // Store the index of the first tuple with this feature identifier in the map
     if(featureMap.find(featureIdx) == featureMap.end())
     {
       featureMap[featureIdx] = totalCellArrayComponents * cellTupleIdx;
@@ -54,7 +54,7 @@ Result<> copyCellData(DataStructure& dataStructure, const DataPath& selectedCell
       T currentCellVal = selectedCellArray[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
       if(currentCellVal != firstInstanceCellVal && result.warnings().empty())
       {
-        // The values are inconsistent with the first values for this feature id, so throw a warning
+        // The values are inconsistent with the first values for this feature identifier, so throw a warning
         result.warnings().push_back(Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
       }
 

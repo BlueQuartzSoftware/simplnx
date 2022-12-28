@@ -107,17 +107,17 @@ void TestCase1_Execute(NumericType scalarType)
   RawBinaryReaderFilter filter;
   Arguments args = CreateFilterArguments(scalarType, N, tupleCount, skipHeaderBytes);
 
-  DataStructure ds;
+  DataStructure dataStructure;
 
   // Preflight, get the error condition, and check that there are no errors
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter, check that there are no errors, and compare the data
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const DataArray<T>& createdData = ds.getDataRefAs<DataArray<T>>(k_CreatedArrayPath);
+  const DataArray<T>& createdData = dataStructure.getDataRefAs<DataArray<T>>(k_CreatedArrayPath);
   const DataStore<T>& store = createdData.template getIDataStoreRefAs<DataStore<T>>();
   bool isSame = true;
   for(usize i = 0; i < dataArraySize; ++i)
@@ -165,10 +165,10 @@ void TestCase2_Execute()
   RawBinaryReaderFilter filter;
   Arguments args = CreateFilterArguments(scalarType, N, dataArraySize, skipHeaderBytes);
 
-  DataStructure ds;
+  DataStructure dataStructure;
 
   // Preflight, get the error condition, and check that there are no errors
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   const std::vector<Error>& errors = preflightResult.outputActions.errors();
@@ -201,10 +201,10 @@ void TestCase3_Execute()
   RawBinaryReaderFilter filter;
   Arguments args = CreateFilterArguments(scalarType, N, dataArraySize, skipHeaderBytes);
 
-  DataStructure ds;
+  DataStructure dataStructure;
 
   // Preflight, get the error condition, and check that there are no errors
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   const std::vector<Error>& errors = preflightResult.outputActions.errors();
@@ -238,17 +238,17 @@ void TestCase4_Execute(NumericType scalarType)
   RawBinaryReaderFilter filter;
   Arguments args = CreateFilterArguments(scalarType, N, tupleCount - skipHeaderTuples, skipHeaderBytes);
 
-  DataStructure ds;
+  DataStructure dataStructure;
 
   // Preflight, get the error condition, and check that there are no errors
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter, check that there are no errors, and compare the data
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  DataArray<T>* createdArray = ds.getDataAs<DataArray<T>>(k_CreatedArrayPath);
+  DataArray<T>* createdArray = dataStructure.getDataAs<DataArray<T>>(k_CreatedArrayPath);
   REQUIRE(createdArray != nullptr);
   DataStore<T>* createdStore = createdArray->template getIDataStoreAs<DataStore<T>>();
   REQUIRE(createdStore != nullptr);
@@ -292,10 +292,10 @@ void TestCase5_Execute(NumericType scalarType)
   RawBinaryReaderFilter filter;
   Arguments args = CreateFilterArguments(scalarType, N, dataArraySize, skipHeaderBytes);
 
-  DataStructure ds;
+  DataStructure dataStructure;
 
   // Preflight, get the error condition, and check that there are no errors
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   const std::vector<Error>& errors = preflightResult.outputActions.errors();

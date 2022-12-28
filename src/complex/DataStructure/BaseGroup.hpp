@@ -317,21 +317,26 @@ public:
    */
   static std::set<std::string> StringListFromGroupType(const std::set<GroupType>& groupTypes);
 
+  /**
+   * @brief Querys the DataMap for the object names in m_DataMap
+   */
+  std::vector<std::string> GetChildrenNames();
+
 protected:
   /**
    * @brief Creates a BaseGroup with the target DataStructure and name.
-   * @param ds
+   * @param dataStructure
    * @param name
    */
-  BaseGroup(DataStructure& ds, std::string name);
+  BaseGroup(DataStructure& dataStructure, std::string name);
 
   /**
    * @brief Creates a BaseGroup with the target DataStructure and name.
-   * @param ds
+   * @param dataStructure
    * @param name
    * @param importId
    */
-  BaseGroup(DataStructure& ds, std::string name, IdType importId);
+  BaseGroup(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
    * @brief Updates the DataMap IDs. Should only be called by DataObject::checkUpdatedIds.
@@ -356,9 +361,9 @@ protected:
   /**
    * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap
    * and its contained DataObjects as well.
-   * @param ds
+   * @param dataStructure
    */
-  void setDataStructure(DataStructure* ds) override;
+  void setDataStructure(DataStructure* dataStructure) override;
 
   /**
    * @brief Returns the underlying DataMap by reference.

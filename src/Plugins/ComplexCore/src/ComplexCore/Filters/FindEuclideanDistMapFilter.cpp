@@ -160,7 +160,7 @@ IFilter::PreflightResult FindEuclideanDistMapFilter::preflightImpl(const DataStr
   // If we are NOT saving the nearest neighbors then we need to delete this array that gets created.
   if(!pSaveNearestNeighborsValue)
   {
-    auto action = std::make_unique<DeleteDataAction>(pNearestNeighborsArrayPath);
+    auto action = std::make_unique<DeleteDataAction>(pNearestNeighborsArrayPath, DeleteDataAction::DeleteType::JustObject);
     resultOutputActions.value().deferredActions.push_back(std::move(action));
   }
 

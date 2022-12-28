@@ -806,22 +806,22 @@ TEST_CASE("DataStructureDuplicateNames")
 {
   static constexpr StringLiteral name = "foo";
 
-  DataStructure ds;
+  DataStructure dataStructure;
 
   // Top level test
 
-  DataGroup* group1 = DataGroup::Create(ds, name);
+  DataGroup* group1 = DataGroup::Create(dataStructure, name);
   REQUIRE(group1 != nullptr);
 
-  DataGroup* group2 = DataGroup::Create(ds, name);
+  DataGroup* group2 = DataGroup::Create(dataStructure, name);
   REQUIRE(group2 == nullptr);
 
   // Nested test
 
-  DataGroup* childGroup1 = DataGroup::Create(ds, name, group1->getId());
+  DataGroup* childGroup1 = DataGroup::Create(dataStructure, name, group1->getId());
   REQUIRE(group1 != nullptr);
 
-  DataGroup* childGroup2 = DataGroup::Create(ds, name, group1->getId());
+  DataGroup* childGroup2 = DataGroup::Create(dataStructure, name, group1->getId());
   REQUIRE(group2 == nullptr);
 }
 

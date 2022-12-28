@@ -12,26 +12,26 @@ std::string StringArray::GetTypeName()
   return k_TypeName;
 }
 
-StringArray* StringArray::Create(DataStructure& ds, const std::string_view& name, const std::optional<IdType>& parentId)
+StringArray* StringArray::Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId)
 {
-  return CreateWithValues(ds, name, {}, parentId);
+  return CreateWithValues(dataStructure, name, {}, parentId);
 }
 
-StringArray* StringArray::CreateWithValues(DataStructure& ds, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId)
+StringArray* StringArray::CreateWithValues(DataStructure& dataStructure, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<StringArray>(new StringArray(ds, name.data()));
+  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data()));
   data->m_Strings = std::move(strings);
-  if(!AttemptToAddObject(ds, data, parentId))
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-StringArray* StringArray::Import(DataStructure& ds, const std::string_view& name, IdType importId, collection_type strings, const std::optional<IdType>& parentId)
+StringArray* StringArray::Import(DataStructure& dataStructure, const std::string_view& name, IdType importId, collection_type strings, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<StringArray>(new StringArray(ds, name.data(), importId, std::move(strings)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<StringArray>(new StringArray(dataStructure, name.data(), importId, std::move(strings)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -95,7 +95,7 @@ std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
   {
     return nullptr;
   }
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), m_Strings));
   if(dataStruct.insert(copy, copyPath.getParent()))
   {

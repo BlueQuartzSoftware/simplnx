@@ -32,11 +32,11 @@ FilterList::SearchContainerType FilterList::search(const std::string& text) cons
   return handles;
 }
 
-AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& id) const
+AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& identifier) const
 {
-  if(m_PluginMap.find(id) != m_PluginMap.end())
+  if(m_PluginMap.find(identifier) != m_PluginMap.end())
   {
-    return m_PluginMap.at(id)->getPlugin();
+    return m_PluginMap.at(identifier)->getPlugin();
   }
   return nullptr;
 }
