@@ -2,24 +2,6 @@
 
 #include <catch2/catch.hpp>
 
-#include "complex/Core/Application.hpp"
-#include "complex/DataStructure/AbstractDataStore.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArrayThresholdsParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
-#include <cmath>
-#include <filesystem>
-namespace fs = std::filesystem;
-
 namespace complex
 {
 // Make sure we can load the needed filters from the plugins
