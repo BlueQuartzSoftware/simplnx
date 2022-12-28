@@ -213,7 +213,7 @@ public:
     }
     const std::shared_ptr<IDataStore> sharedStore = getDataStore()->deepCopy();
     std::shared_ptr<store_type> dataStore = std::dynamic_pointer_cast<store_type>(sharedStore);
-    // Don't construct with id since it will get created when inserting into data structure
+    // Don't construct with identifier since it will get created when inserting into data structure
     std::shared_ptr<DataArray<T>> copy = std::shared_ptr<DataArray<T>>(new DataArray<T>(dataStruct, copyPath.getTargetName(), dataStore));
     if(dataStruct.insert(copy, copyPath.getParent()))
     {

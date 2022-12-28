@@ -394,7 +394,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 
     DataPath newCellFeaturesPath = destImagePath.createChildPath(cellDataName);
 
-    for(const auto& [id, object] : *cellData)
+    for(const auto& [identifier, object] : *cellData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
@@ -434,7 +434,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
     auto tDims = srcCellFeatureData->getShape();
     resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
-    for(const auto& [id, object] : *srcCellFeatureData)
+    for(const auto& [identifier, object] : *srcCellFeatureData)
     {
       if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
       {

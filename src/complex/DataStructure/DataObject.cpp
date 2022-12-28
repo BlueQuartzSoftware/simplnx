@@ -250,12 +250,12 @@ std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Ty
 
 void DataObject::addParent(BaseGroup* parent)
 {
-  IdType id = parent->getId();
-  if(std::find(m_ParentList.cbegin(), m_ParentList.cend(), id) != m_ParentList.cend())
+  IdType identifier = parent->getId();
+  if(std::find(m_ParentList.cbegin(), m_ParentList.cend(), identifier) != m_ParentList.cend())
   {
     return;
   }
-  m_ParentList.push_back(id);
+  m_ParentList.push_back(identifier);
 }
 
 void DataObject::removeParent(BaseGroup* parent)

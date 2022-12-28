@@ -58,20 +58,20 @@ H5::IdType COMPLEX_EXPORT getIdForType(Type type);
 std::string COMPLEX_EXPORT GetNameFromBuffer(std::string_view buffer);
 
 /**
- * @brief Returns a std::string of a valid path to the object with the given id.
+ * @brief Returns a std::string of a valid path to the object with the given identifier.
  * Uses H5Iget_name internally.
- * @param id
+ * @param identifier
  * @return std::string
  */
-std::string COMPLEX_EXPORT GetPathFromId(IdType id);
+std::string COMPLEX_EXPORT GetPathFromId(IdType identifier);
 
 /**
  * @brief Returns a std::string of the name of the given object.
- * Equivalent to GetNameFromBuffer(GetPathFromId(id)).
- * @param id
+ * Equivalent to GetNameFromBuffer(GetPathFromId(identifier)).
+ * @param identifier
  * @return std::string
  */
-std::string COMPLEX_EXPORT GetNameFromId(IdType id);
+std::string COMPLEX_EXPORT GetNameFromId(IdType identifier);
 
 /**
  * @brief Returns the path to an object's parent

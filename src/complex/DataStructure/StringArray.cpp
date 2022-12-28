@@ -95,7 +95,7 @@ std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
   {
     return nullptr;
   }
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   const auto copy = std::shared_ptr<StringArray>(new StringArray(dataStruct, copyPath.getTargetName(), m_Strings));
   if(dataStruct.insert(copy, copyPath.getParent()))
   {

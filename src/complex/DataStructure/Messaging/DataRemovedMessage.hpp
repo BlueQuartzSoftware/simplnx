@@ -27,10 +27,10 @@ public:
    * DataObject ID as being removed. The DataObject's name is also provided to
    * describe the object in a human-readable format.
    * @param dataGraph
-   * @param id
+   * @param identifier
    * @param name
    */
-  DataRemovedMessage(const DataStructure* dataGraph, DataObject::IdType id, const std::string& name);
+  DataRemovedMessage(const DataStructure* dataGraph, DataObject::IdType identifier, const std::string& name);
 
   /**
    * @brief Creates a copy of the target DataRemovedMessage.

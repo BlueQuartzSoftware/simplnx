@@ -70,7 +70,7 @@ DataObject* ImageGeom::shallowCopy()
 std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<ImageGeom>(new ImageGeom(dataStruct, copyPath.getTargetName()));
   copy->setOrigin(m_Origin);
   copy->setSpacing(m_Spacing);

@@ -156,7 +156,7 @@ public:
     {
       return nullptr;
     }
-    // Don't construct with id since it will get created when inserting into data structure
+    // Don't construct with identifier since it will get created when inserting into data structure
     std::shared_ptr<DynamicListArray<T, K>> copy = std::shared_ptr<DynamicListArray<T, K>>(new DynamicListArray<T, K>(dataStruct, copyPath.getTargetName()));
     std::vector<T> linkCounts(m_Size, 0);
 
@@ -201,7 +201,7 @@ public:
   }
 
   /**
-   * @brief Get a link structure given a point id.
+   * @brief Get a link structure given a point identifier.
    * @param pointId
    * @return ElementList&
    */

@@ -639,7 +639,7 @@ void WriteXdmf(std::ostream& out, const DataStructure& dataStructure, std::strin
 
   WriteXdmfHeader(ss);
 
-  for(const auto& [id, object] : dataStructure)
+  for(const auto& [identifier, object] : dataStructure)
   {
     const auto* geometry = dynamic_cast<const IGeometry*>(object.get());
     if(geometry == nullptr)

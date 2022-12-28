@@ -278,7 +278,7 @@ void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
       }
     }
 
-    // compute the statistics by feature/ensemble id
+    // compute the statistics by feature/ensemble identifier
     findStatisticsByIndexImpl<T>(featureValueMap, arrays, inputValues, numFeatures);
   }
   else

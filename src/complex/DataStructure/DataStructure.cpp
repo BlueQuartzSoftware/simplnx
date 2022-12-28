@@ -49,14 +49,14 @@ DataStructure::DataStructure(const DataStructure& dataGraph)
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
-  for(const auto& [id, dataWkPtr] : dataGraph.m_DataObjects)
+  for(const auto& [identifier, dataWkPtr] : dataGraph.m_DataObjects)
   {
     auto dataPtr = dataWkPtr.lock();
     if(dataPtr != nullptr)
     {
       auto copy = std::shared_ptr<DataObject>(dataPtr->shallowCopy());
-      sharedData[id] = copy;
-      m_DataObjects[id] = copy;
+      sharedData[identifier] = copy;
+      m_DataObjects[identifier] = copy;
     }
   }
   // Updates all DataMaps with the corresponding m_DataObjects pointers.
@@ -76,7 +76,7 @@ DataStructure::DataStructure(DataStructure&& dataGraph) noexcept
 DataStructure::~DataStructure()
 {
   m_IsValid = false;
-  for(auto& [id, weakDataPtr] : m_DataObjects)
+  for(auto& [identifier, weakDataPtr] : m_DataObjects)
   {
     if(auto sharedDataPtr = weakDataPtr.lock())
     {
@@ -152,9 +152,9 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
   }
 }
 
-bool DataStructure::containsData(DataObject::IdType id) const
+bool DataStructure::containsData(DataObject::IdType identifier) const
 {
-  return getData(id) != nullptr;
+  return getData(identifier) != nullptr;
 }
 
 bool DataStructure::containsData(const DataPath& path) const
@@ -196,9 +196,9 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
   }
 }
 
-std::vector<DataPath> DataStructure::getDataPathsForId(DataObject::IdType id) const
+std::vector<DataPath> DataStructure::getDataPathsForId(DataObject::IdType identifier) const
 {
-  auto* dataObject = getData(id);
+  auto* dataObject = getData(identifier);
   if(dataObject == nullptr)
   {
     return {};
@@ -209,7 +209,7 @@ std::vector<DataPath> DataStructure::getDataPathsForId(DataObject::IdType id) co
 std::vector<DataPath> DataStructure::getAllDataPaths() const
 {
   std::vector<DataPath> dataPaths;
-  for(const auto& [id, weakPtr] : m_DataObjects)
+  for(const auto& [identifier, weakPtr] : m_DataObjects)
   {
     auto sharedPtr = weakPtr.lock();
     if(sharedPtr == nullptr)
@@ -227,16 +227,16 @@ std::vector<DataObject::IdType> DataStructure::getAllDataObjectIds() const
 {
   std::vector<DataObject::IdType> dataIds;
   dataIds.reserve(m_DataObjects.size());
-  for(const auto& [id, weakPtr] : m_DataObjects)
+  for(const auto& [identifier, weakPtr] : m_DataObjects)
   {
-    dataIds.push_back(id);
+    dataIds.push_back(identifier);
   }
   return dataIds;
 }
 
-DataObject* DataStructure::getData(DataObject::IdType id)
+DataObject* DataStructure::getData(DataObject::IdType identifier)
 {
-  auto iter = m_DataObjects.find(id);
+  auto iter = m_DataObjects.find(identifier);
   if(m_DataObjects.end() == iter)
   {
     return nullptr;
@@ -244,14 +244,14 @@ DataObject* DataStructure::getData(DataObject::IdType id)
   return iter->second.lock().get();
 }
 
-DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& id)
+DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& identifier)
 {
-  if(!id)
+  if(!identifier)
   {
     return nullptr;
   }
 
-  auto iter = m_DataObjects.find(id.value());
+  auto iter = m_DataObjects.find(identifier.value());
   if(m_DataObjects.end() == iter)
   {
     return nullptr;
@@ -305,12 +305,12 @@ DataObject& DataStructure::getDataRef(const DataPath& path)
   return *object;
 }
 
-DataObject& DataStructure::getDataRef(DataObject::IdType id)
+DataObject& DataStructure::getDataRef(DataObject::IdType identifier)
 {
-  DataObject* object = getData(id);
+  DataObject* object = getData(identifier);
   if(object == nullptr)
   {
-    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Id '{}' does not exist", id));
+    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Id '{}' does not exist", identifier));
   }
   return *object;
 }
@@ -320,9 +320,9 @@ DataObject* DataStructure::getData(const LinkedPath& path)
   return getData(path.getId());
 }
 
-const DataObject* DataStructure::getData(DataObject::IdType id) const
+const DataObject* DataStructure::getData(DataObject::IdType identifier) const
 {
-  auto iter = m_DataObjects.find(id);
+  auto iter = m_DataObjects.find(identifier);
   if(m_DataObjects.end() == iter)
   {
     return nullptr;
@@ -330,14 +330,14 @@ const DataObject* DataStructure::getData(DataObject::IdType id) const
   return iter->second.lock().get();
 }
 
-const DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& id) const
+const DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& identifier) const
 {
-  if(!id)
+  if(!identifier)
   {
     return nullptr;
   }
 
-  auto iter = m_DataObjects.find(id.value());
+  auto iter = m_DataObjects.find(identifier.value());
   if(m_DataObjects.end() == iter)
   {
     return nullptr;
@@ -377,12 +377,12 @@ const DataObject& DataStructure::getDataRef(const DataPath& path) const
   return *object;
 }
 
-const DataObject& DataStructure::getDataRef(DataObject::IdType id) const
+const DataObject& DataStructure::getDataRef(DataObject::IdType identifier) const
 {
-  const DataObject* object = getData(id);
+  const DataObject* object = getData(identifier);
   if(object == nullptr)
   {
-    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Id '{}' does not exist", id));
+    throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Id '{}' does not exist", identifier));
   }
   return *object;
 }
@@ -392,13 +392,13 @@ const DataObject* DataStructure::getData(const LinkedPath& path) const
   return path.getData();
 }
 
-std::shared_ptr<DataObject> DataStructure::getSharedData(DataObject::IdType id) const
+std::shared_ptr<DataObject> DataStructure::getSharedData(DataObject::IdType identifier) const
 {
-  if(m_DataObjects.find(id) == m_DataObjects.end())
+  if(m_DataObjects.find(identifier) == m_DataObjects.end())
   {
     return nullptr;
   }
-  return m_DataObjects.at(id).lock();
+  return m_DataObjects.at(identifier).lock();
 }
 
 std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path) const
@@ -411,32 +411,32 @@ std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path) c
   return m_DataObjects.at(dataObject->getId()).lock();
 }
 
-bool DataStructure::removeData(DataObject::IdType id)
+bool DataStructure::removeData(DataObject::IdType identifier)
 {
-  DataObject* data = getData(id);
+  DataObject* data = getData(identifier);
   return removeData(data);
 }
 
-void DataStructure::setData(DataObject::IdType id, std::shared_ptr<DataObject> dataObject)
+void DataStructure::setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject)
 {
   if(dataObject == nullptr)
   {
-    removeData(id);
+    removeData(identifier);
     return;
   }
 
-  m_DataObjects[id] = dataObject;
+  m_DataObjects[identifier] = dataObject;
 }
 
-bool DataStructure::removeData(const std::optional<DataObject::IdType>& id)
+bool DataStructure::removeData(const std::optional<DataObject::IdType>& identifier)
 {
-  if(!id)
+  if(!identifier)
   {
     return false;
   }
   else
   {
-    return removeData(id.value());
+    return removeData(identifier.value());
   }
 }
 
@@ -471,14 +471,14 @@ bool DataStructure::removeData(DataObject* data)
   return true;
 }
 
-void DataStructure::dataDeleted(DataObject::IdType id, const std::string& name)
+void DataStructure::dataDeleted(DataObject::IdType identifier, const std::string& name)
 {
   if(!m_IsValid)
   {
     return;
   }
 
-  auto msg = std::make_shared<DataRemovedMessage>(this, id, name);
+  auto msg = std::make_shared<DataRemovedMessage>(this, identifier, name);
   notify(msg);
 }
 
@@ -712,14 +712,14 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
-  for(auto& [id, dataWkPtr] : rhs.m_DataObjects)
+  for(auto& [identifier, dataWkPtr] : rhs.m_DataObjects)
   {
     auto dataPtr = dataWkPtr.lock();
     if(dataPtr != nullptr)
     {
       auto copy = std::shared_ptr<DataObject>(dataPtr->shallowCopy());
-      sharedData[id] = copy;
-      m_DataObjects[id] = copy;
+      sharedData[identifier] = copy;
+      m_DataObjects[identifier] = copy;
     }
   }
   // Updates all DataMaps with the corresponding m_DataObjects pointers.

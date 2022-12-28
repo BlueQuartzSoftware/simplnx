@@ -68,7 +68,7 @@ public:
    * @brief Sets the object's HDF5 ID.
    * @return H5::IdType
    */
-  void setId(H5::IdType id);
+  void setId(H5::IdType identifier);
 
   /**
    * @brief Returns the HDF5 object name. Returns an empty string if the writer
@@ -100,7 +100,7 @@ protected:
 
 private:
   H5::IdType m_ParentId = 0;
-  H5::IdType m_Id = 0; // the object, group, file, or dataset id
+  H5::IdType m_Id = 0; // the object, group, file, or dataset identifier
 };
 } // namespace H5
 } // namespace complex

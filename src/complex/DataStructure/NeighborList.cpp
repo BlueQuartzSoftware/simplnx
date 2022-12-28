@@ -62,7 +62,7 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   {
     return nullptr;
   }
-  // Don't construct with id since it will get created when inserting into data structure
+  // Don't construct with identifier since it will get created when inserting into data structure
   auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), getNumberOfTuples()));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
   copy->m_Array.reserve(m_Array.size());

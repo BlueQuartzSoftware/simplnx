@@ -232,12 +232,12 @@ std::optional<IGeometry::IdType> IGeometry::ReadH5DataId(const H5::ObjectReader&
   }
 
   auto attribute = objectReader.getAttribute(attributeName);
-  auto id = attribute.readAsValue<IdType>();
-  if(id == 0)
+  auto identifier = attribute.readAsValue<IdType>();
+  if(identifier == 0)
   {
     return {};
   }
-  return id;
+  return identifier;
 }
 
 H5::ErrorType IGeometry::WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName)

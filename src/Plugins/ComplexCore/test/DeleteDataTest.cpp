@@ -445,10 +445,10 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //
 //     // Verify deleted down to level Three
 //     std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths();
-//     for(const auto& [id, weakPtr] : removedValues)
+//     for(const auto& [identifier, weakPtr] : removedValues)
 //     {
 //       // Verify node is no longer in data lake
-//       REQUIRE(dataGraph.getData(id) == nullptr);
+//       REQUIRE(dataGraph.getData(identifier) == nullptr);
 //
 //       // Verify node's data has been destructed
 //       REQUIRE(weakPtr.expired());
@@ -497,10 +497,10 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //
 //     // Verify deleted down to level Three
 //     std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths();
-//     for(const auto& [id, weakPtr] : removedValues)
+//     for(const auto& [identifier, weakPtr] : removedValues)
 //     {
 //       // Verify node is no longer in data lake
-//       REQUIRE(dataGraph.getData(id) == nullptr);
+//       REQUIRE(dataGraph.getData(identifier) == nullptr);
 //
 //       // Verify node's data has been destructed
 //       REQUIRE(weakPtr.expired());

@@ -30,7 +30,7 @@ void copyData(DataStructure& dataStructure, const DataPath& selectedFeatureArray
       return;
     }
 
-    // Get the feature id (or what ever the user has selected as their "Feature" identifier
+    // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
     int32 featureIdx = featureIds[i];
 
     for(usize faComp = 0; faComp < totalFeatureArrayComponents; faComp++)
