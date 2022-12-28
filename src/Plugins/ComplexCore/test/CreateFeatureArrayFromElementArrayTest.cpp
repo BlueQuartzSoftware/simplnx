@@ -40,7 +40,7 @@ template <typename T>
 void testElementArray(const DataPath& cellDataPath)
 {
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_5_test_data_1/6_5_test_data_1.dream3d", complex::unit_test::k_DREAM3DDataDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
 

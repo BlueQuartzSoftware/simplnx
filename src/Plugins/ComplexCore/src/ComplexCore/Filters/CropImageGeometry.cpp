@@ -420,7 +420,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     // Create the Cell AttributeMatrix in the Destination Geometry
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
 
-    for(const auto& [identifier, object] : *cellData)
+    for(const auto& [identifier, object] : *selectedCellData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
