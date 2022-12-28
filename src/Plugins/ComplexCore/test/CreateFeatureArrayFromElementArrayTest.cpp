@@ -94,7 +94,7 @@ TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Instantiation and Pa
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateFeatureArrayFromElementArray filter;
-  DataStructure ds;
+  DataStructure dataGraph;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -103,11 +103,11 @@ TEST_CASE("ComplexCore::CreateFeatureArrayFromElementArray: Instantiation and Pa
   args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 

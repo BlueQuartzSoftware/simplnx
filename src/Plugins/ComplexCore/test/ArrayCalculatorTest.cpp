@@ -83,7 +83,7 @@ DataStructure createDataStructure()
 } // namespace
 
 // -----------------------------------------------------------------------------
-IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units, DataStructure& ds,
+IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& equation, const DataPath& calculatedPath, const CalculatorParameter::AngleUnits& units, DataStructure& dataGraph,
                                                              ArrayCalculatorFilter& filter)
 {
   Arguments args;
@@ -93,7 +93,7 @@ IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& 
   args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(calculatedPath));
 
-  return filter.execute(ds, args);
+  return filter.execute(dataGraph, args);
 }
 
 // -----------------------------------------------------------------------------
@@ -103,7 +103,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
   std::cout << "  Testing equation: ==>" << equation << "<==" << std::endl;
 
   ArrayCalculatorFilter filter;
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataGraph = ::createDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -112,7 +112,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(targetArrayPath));
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   if(expectedErrorCondition == static_cast<int32>(CalculatorItem::ErrorCode::Success))
   {
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -128,7 +128,7 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
     REQUIRE(executeResult.result.warnings()[0].code == static_cast<int32>(expectedWarningCondition));
   }
 
-  Float64Array* arrayPtr = ds.getDataAs<Float64Array>(targetArrayPath);
+  Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(targetArrayPath);
 
   if(nullptr != expectedNumberOfTuples)
   {
@@ -150,15 +150,15 @@ void runTest(const std::string& equation, const DataPath& targetArrayPath, int32
 void MultiComponentArrayCalculatorTest()
 {
   ArrayCalculatorFilter filter;
-  DataStructure ds = ::createDataStructure();
+  DataStructure dataGraph = ::createDataStructure();
 
   SECTION("Multi-Component All Components")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("MultiComponent Array1 + MultiComponent Array2", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("MultiComponent Array1 + MultiComponent Array2", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    UInt32Array* mcArray1 = ds.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
-    UInt32Array* mcArray2 = ds.getDataAs<UInt32Array>(k_MultiComponentArray2Path);
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    UInt32Array* mcArray1 = dataGraph.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
+    UInt32Array* mcArray2 = dataGraph.getDataAs<UInt32Array>(k_MultiComponentArray2Path);
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == mcArray1->getNumberOfTuples());
@@ -175,11 +175,11 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Single Component")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("MultiComponent Array1[1] + MultiComponent Array2[0]", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("MultiComponent Array1[1] + MultiComponent Array2[0]", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    UInt32Array* mcArray1 = ds.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
-    UInt32Array* mcArray2 = ds.getDataAs<UInt32Array>(k_MultiComponentArray2Path);
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    UInt32Array* mcArray1 = dataGraph.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
+    UInt32Array* mcArray2 = dataGraph.getDataAs<UInt32Array>(k_MultiComponentArray2Path);
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == mcArray1->getNumberOfTuples());
@@ -195,11 +195,11 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component With Scalar")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + 2", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + 2", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    UInt32Array* nArray = ds.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = ds.getDataAs<UInt32Array>(k_SignArrayPath);
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    UInt32Array* nArray = dataGraph.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArray = dataGraph.getDataAs<UInt32Array>(k_SignArrayPath);
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == nArray->getNumberOfTuples());
@@ -216,11 +216,11 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component All Components Number/Sign Array Names")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + \"*\"", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + \"*\"", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    UInt32Array* nArray = ds.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = ds.getDataAs<UInt32Array>(k_SignArrayPath);
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    UInt32Array* nArray = dataGraph.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArray = dataGraph.getDataAs<UInt32Array>(k_SignArrayPath);
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == nArray->getNumberOfTuples());
@@ -237,11 +237,11 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Single Components Number/Sign Array Names")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\"[0] + \"*\"[1]", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\"[0] + \"*\"[1]", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    UInt32Array* nArray = ds.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = ds.getDataAs<UInt32Array>(k_SignArrayPath);
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    UInt32Array* nArray = dataGraph.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArray = dataGraph.getDataAs<UInt32Array>(k_SignArrayPath);
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == nArray->getNumberOfTuples());
@@ -256,10 +256,10 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Inconsistent indexing error")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + \"*\"[1]", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\" + \"*\"[1]", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    UInt32Array* nArray = ds.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = ds.getDataAs<UInt32Array>(k_SignArrayPath);
+    UInt32Array* nArray = dataGraph.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArray = dataGraph.getDataAs<UInt32Array>(k_SignArrayPath);
 
     COMPLEX_RESULT_REQUIRE_INVALID(results.result);
     REQUIRE(results.result.errors()[0].code == static_cast<int32>(CalculatorItem::ErrorCode::InconsistentCompDims));
@@ -267,10 +267,10 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Out of bounds error")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\"[0] + \"*\"[3]", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("\"4\"[0] + \"*\"[3]", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    UInt32Array* nArray = ds.getDataAs<UInt32Array>(k_NumberArrayPath);
-    UInt32Array* sArray = ds.getDataAs<UInt32Array>(k_SignArrayPath);
+    UInt32Array* nArray = dataGraph.getDataAs<UInt32Array>(k_NumberArrayPath);
+    UInt32Array* sArray = dataGraph.getDataAs<UInt32Array>(k_SignArrayPath);
 
     COMPLEX_RESULT_REQUIRE_INVALID(results.result);
     REQUIRE(results.result.errors()[0].code == static_cast<int32>(CalculatorItem::ErrorCode::ComponentOutOfRange));
@@ -742,15 +742,15 @@ void SingleComponentArrayCalculatorTest1()
 void SingleComponentArrayCalculatorTest2()
 {
   ArrayCalculatorFilter filter;
-  DataStructure ds = createDataStructure();
+  DataStructure dataGraph = createDataStructure();
 
   // Single Array Tests
   SECTION("Single Array Negative Operator")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("-InputArray1", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("-InputArray1", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    Float32Array* inputArray1 = ds.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    Float32Array* inputArray1 = dataGraph.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == inputArray1->getNumberOfTuples());
@@ -762,10 +762,10 @@ void SingleComponentArrayCalculatorTest2()
 
   SECTION("Single Array No Operator")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(k_InputArray2, k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter(k_InputArray2, k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    UInt32Array* inputArray2 = ds.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_InputArray2}));
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    UInt32Array* inputArray2 = dataGraph.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_InputArray2}));
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == inputArray2->getNumberOfTuples());
@@ -778,11 +778,11 @@ void SingleComponentArrayCalculatorTest2()
   // Multiple Array Tests
   SECTION("Multiple Array Addition")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("Spaced Array + InputArray1", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("Spaced Array + InputArray1", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    Float32Array* inputArray1 = ds.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
-    UInt32Array* spacedArray = ds.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_SpacedArray}));
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    Float32Array* inputArray1 = dataGraph.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
+    UInt32Array* spacedArray = dataGraph.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_SpacedArray}));
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == spacedArray->getNumberOfTuples());
@@ -793,11 +793,11 @@ void SingleComponentArrayCalculatorTest2()
   }
   SECTION("Multiple Array Multiple Operators")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("sqrt((InputArray1^2)+(InputArray2^2))", k_AttributeArrayPath, CalculatorParameter::Radians, ds, filter);
+    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("sqrt((InputArray1^2)+(InputArray2^2))", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
-    Float32Array* inputArray1 = ds.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
-    UInt32Array* inputArray2 = ds.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_InputArray2}));
-    Float64Array* arrayPtr = ds.getDataAs<Float64Array>(k_AttributeArrayPath);
+    Float32Array* inputArray1 = dataGraph.getDataAs<Float32Array>(DataPath({k_AttributeMatrix, k_InputArray1}));
+    UInt32Array* inputArray2 = dataGraph.getDataAs<UInt32Array>(DataPath({k_AttributeMatrix, k_InputArray2}));
+    Float64Array* arrayPtr = dataGraph.getDataAs<Float64Array>(k_AttributeArrayPath);
 
     COMPLEX_RESULT_REQUIRE_VALID(results.result);
     REQUIRE(arrayPtr->getNumberOfTuples() == inputArray2->getNumberOfTuples());
@@ -814,7 +814,7 @@ TEST_CASE("ComplexCore::ArrayCalculatorFilter: Instantiation and Parameter Check
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ArrayCalculatorFilter filter;
-  DataStructure ds;
+  DataStructure dataGraph;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -823,11 +823,11 @@ TEST_CASE("ComplexCore::ArrayCalculatorFilter: Instantiation and Parameter Check
   args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(DataPath({k_CalculatedArray})));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 

@@ -40,16 +40,16 @@ DataStructure::DataStructure()
 {
 }
 
-DataStructure::DataStructure(const DataStructure& ds)
-: m_DataObjects(ds.m_DataObjects)
-, m_RootGroup(ds.m_RootGroup)
-, m_IsValid(ds.m_IsValid)
-, m_NextId(ds.m_NextId)
+DataStructure::DataStructure(const DataStructure& dataGraph)
+: m_DataObjects(dataGraph.m_DataObjects)
+, m_RootGroup(dataGraph.m_RootGroup)
+, m_IsValid(dataGraph.m_IsValid)
+, m_NextId(dataGraph.m_NextId)
 {
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
   std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
-  for(const auto& [id, dataWkPtr] : ds.m_DataObjects)
+  for(const auto& [id, dataWkPtr] : dataGraph.m_DataObjects)
   {
     auto dataPtr = dataWkPtr.lock();
     if(dataPtr != nullptr)
@@ -64,11 +64,11 @@ DataStructure::DataStructure(const DataStructure& ds)
   m_RootGroup.setDataStructure(this);
 }
 
-DataStructure::DataStructure(DataStructure&& ds) noexcept
-: m_DataObjects(std::move(ds.m_DataObjects))
-, m_RootGroup(std::move(ds.m_RootGroup))
-, m_IsValid(ds.m_IsValid)
-, m_NextId(ds.m_NextId)
+DataStructure::DataStructure(DataStructure&& dataGraph) noexcept
+: m_DataObjects(std::move(dataGraph.m_DataObjects))
+, m_RootGroup(std::move(dataGraph.m_RootGroup))
+, m_IsValid(dataGraph.m_IsValid)
+, m_NextId(dataGraph.m_NextId)
 {
   m_RootGroup.setDataStructure(this);
 }

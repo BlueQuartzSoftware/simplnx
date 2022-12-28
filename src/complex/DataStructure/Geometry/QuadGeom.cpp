@@ -10,13 +10,13 @@
 
 using namespace complex;
 
-QuadGeom::QuadGeom(DataStructure& ds, std::string name)
-: INodeGeometry2D(ds, std::move(name))
+QuadGeom::QuadGeom(DataStructure& dataGraph, std::string name)
+: INodeGeometry2D(dataGraph, std::move(name))
 {
 }
 
-QuadGeom::QuadGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry2D(ds, std::move(name), importId)
+QuadGeom::QuadGeom(DataStructure& dataGraph, std::string name, IdType importId)
+: INodeGeometry2D(dataGraph, std::move(name), importId)
 {
 }
 
@@ -35,20 +35,20 @@ BaseGroup::GroupType QuadGeom::getGroupType() const
   return GroupType::QuadGeom;
 }
 
-QuadGeom* QuadGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+QuadGeom* QuadGeom::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(dataGraph, std::move(name)));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-QuadGeom* QuadGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+QuadGeom* QuadGeom::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<QuadGeom>(new QuadGeom(dataGraph, std::move(name), importId));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }

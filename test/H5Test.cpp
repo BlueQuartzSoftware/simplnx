@@ -91,10 +91,10 @@ TEST_CASE("Read Legacy DREAM.3D Data")
   REQUIRE(exists(filepath));
   Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
   COMPLEX_RESULT_REQUIRE_VALID(result);
-  DataStructure ds = result.value();
+  DataStructure dataGraph = result.value();
 
   const std::string geomName = "Small IN100";
-  const auto* image = ds.getDataAs<ImageGeom>(DataPath({geomName}));
+  const auto* image = dataGraph.getDataAs<ImageGeom>(DataPath({geomName}));
   REQUIRE(image != nullptr);
   REQUIRE(equalsf(image->getOrigin(), FloatVec3(-47.0f, 0.0f, -29.0f)));
   REQUIRE(image->getDimensions() == SizeVec3(189, 201, 117));
@@ -103,49 +103,49 @@ TEST_CASE("Read Legacy DREAM.3D Data")
   {
     const std::string testDCName = "DataContainer";
     DataPath testDCPath({testDCName});
-    auto* testDC = ds.getDataAs<DataGroup>(testDCPath);
+    auto* testDC = dataGraph.getDataAs<DataGroup>(testDCPath);
     REQUIRE(testDC != nullptr);
 
     DataPath testAMPath = testDCPath.createChildPath("AttributeMatrix");
-    REQUIRE(ds.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<AttributeMatrix>(DataPath({testAMPath})) != nullptr);
 
-    REQUIRE(ds.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
-    REQUIRE(ds.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
-    REQUIRE(ds.getDataAs<Float32Array>(testAMPath.createChildPath("Float32")) != nullptr);
-    REQUIRE(ds.getDataAs<Float64Array>(testAMPath.createChildPath("Float64")) != nullptr);
-    REQUIRE(ds.getDataAs<BoolArray>(testAMPath.createChildPath("Bool")) != nullptr);
+    REQUIRE(dataGraph.getDataAs<Int8Array>(testAMPath.createChildPath("Int8")) != nullptr);
+    REQUIRE(dataGraph.getDataAs<UInt8Array>(testAMPath.createChildPath("UInt8")) != nullptr);
+    REQUIRE(dataGraph.getDataAs<Float32Array>(testAMPath.createChildPath("Float32")) != nullptr);
+    REQUIRE(dataGraph.getDataAs<Float64Array>(testAMPath.createChildPath("Float64")) != nullptr);
+    REQUIRE(dataGraph.getDataAs<BoolArray>(testAMPath.createChildPath("Bool")) != nullptr);
   }
 
   {
     const std::string grainData = "Grain Data";
-    REQUIRE(ds.getData(DataPath({geomName, grainData})) != nullptr);
-    REQUIRE(ds.getDataAs<NeighborList<int32_t>>(DataPath({geomName, grainData, "NeighborList"})) != nullptr);
-    REQUIRE(ds.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumElements"})) != nullptr);
-    REQUIRE(ds.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumNeighbors"})) != nullptr);
+    REQUIRE(dataGraph.getData(DataPath({geomName, grainData})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<NeighborList<int32_t>>(DataPath({geomName, grainData, "NeighborList"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumElements"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumNeighbors"})) != nullptr);
   }
 }
 #endif
 
 DataStructure GetTestDataStructure()
 {
-  DataStructure ds;
-  auto group = DataGroup::Create(ds, "Group");
+  DataStructure dataGraph;
+  auto group = DataGroup::Create(dataGraph, "Group");
   REQUIRE(group != nullptr);
 
-  auto montage = GridMontage::Create(ds, "Montage", group->getId());
+  auto montage = GridMontage::Create(dataGraph, "Montage", group->getId());
   REQUIRE(montage != nullptr);
 
-  auto geom = ImageGeom::Create(ds, "Geometry", montage->getId());
+  auto geom = ImageGeom::Create(dataGraph, "Geometry", montage->getId());
   REQUIRE(geom != nullptr);
 
-  auto scalar = ScalarData<int32>::Create(ds, "Scalar", 7, geom->getId());
+  auto scalar = ScalarData<int32>::Create(dataGraph, "Scalar", 7, geom->getId());
   REQUIRE(scalar != nullptr);
 
   auto dataStore = std::make_unique<DataStore<uint8>>(std::vector<usize>{2}, std::vector<usize>{3}, 0);
-  auto dataArray = DataArray<uint8>::Create(ds, "DataArray", std::move(dataStore), geom->getId());
+  auto dataArray = DataArray<uint8>::Create(dataGraph, "DataArray", std::move(dataStore), geom->getId());
   REQUIRE(dataArray != nullptr);
 
-  return ds;
+  return dataGraph;
 }
 
 template <typename T>
@@ -214,7 +214,7 @@ TEST_CASE("Image Geometry IO")
   // Write HDF5 file
   try
   {
-    DataStructure ds = CreateDataStructure();
+    DataStructure dataGraph = CreateDataStructure();
 
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
     REQUIRE(result.valid());
@@ -223,7 +223,7 @@ TEST_CASE("Image Geometry IO")
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileWriter);
+    err = dataGraph.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
@@ -237,7 +237,7 @@ TEST_CASE("Image Geometry IO")
     REQUIRE(fileReader.isValid());
 
     herr_t err;
-    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    auto dataGraph = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
     filePath = GetDataDir() / "image_geometry_io_2.h5";
@@ -251,7 +251,7 @@ TEST_CASE("Image Geometry IO")
       H5::FileWriter fileWriter = std::move(result.value());
       REQUIRE(fileWriter.isValid());
 
-      err = ds.writeHdf5(fileWriter);
+      err = dataGraph.writeHdf5(fileWriter);
       REQUIRE(err >= 0);
     } catch(const std::exception& e)
     {
@@ -588,8 +588,8 @@ TEST_CASE("Node Based Geometry IO")
   // Write HDF5 file
   try
   {
-    DataStructure ds = CreateNodeBasedGeometries();
-    nodeData = getNodeGeomData(ds);
+    DataStructure dataGraph = CreateNodeBasedGeometries();
+    nodeData = getNodeGeomData(dataGraph);
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
     REQUIRE(result.valid());
 
@@ -597,7 +597,7 @@ TEST_CASE("Node Based Geometry IO")
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileWriter);
+    err = dataGraph.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
@@ -611,9 +611,9 @@ TEST_CASE("Node Based Geometry IO")
     REQUIRE(fileReader.isValid());
 
     herr_t err;
-    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    auto dataGraph = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
-    checkNodeGeomData(ds, nodeData);
+    checkNodeGeomData(dataGraph, nodeData);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -638,8 +638,8 @@ TEST_CASE("NeighborList IO")
   // Write HDF5 file
   try
   {
-    DataStructure ds;
-    CreateNeighborList(ds);
+    DataStructure dataGraph;
+    CreateNeighborList(dataGraph);
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
     REQUIRE(result.valid());
 
@@ -647,7 +647,7 @@ TEST_CASE("NeighborList IO")
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileWriter);
+    err = dataGraph.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
@@ -661,11 +661,11 @@ TEST_CASE("NeighborList IO")
     REQUIRE(fileReader.isValid());
 
     herr_t err;
-    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    auto dataGraph = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
-    // auto neighborList = ds.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
-    auto neighborList = ds.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
+    // auto neighborList = dataGraph.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
+    auto neighborList = dataGraph.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
     REQUIRE(neighborList != nullptr);
   } catch(const std::exception& e)
   {
@@ -691,8 +691,8 @@ TEST_CASE("DataArray<bool> IO")
   // Write HDF5 file
   try
   {
-    DataStructure ds;
-    CreateArrayTypes(ds);
+    DataStructure dataGraph;
+    CreateArrayTypes(dataGraph);
     Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
     REQUIRE(result.valid());
 
@@ -700,7 +700,7 @@ TEST_CASE("DataArray<bool> IO")
     REQUIRE(fileWriter.isValid());
 
     herr_t err;
-    err = ds.writeHdf5(fileWriter);
+    err = dataGraph.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   } catch(const std::exception& e)
   {
@@ -714,28 +714,28 @@ TEST_CASE("DataArray<bool> IO")
     REQUIRE(fileReader.isValid());
 
     herr_t err;
-    auto ds = DataStructure::readFromHdf5(fileReader, err);
+    auto dataGraph = DataStructure::readFromHdf5(fileReader, err);
     REQUIRE(err >= 0);
 
-    REQUIRE(ds.getDataAs<DataArray<int8>>(DataPath({"Int8Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<int16>>(DataPath({"Int16Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<int32>>(DataPath({"Int32Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<int64>>(DataPath({"Int64Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<uint8>>(DataPath({"UInt8Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<uint16>>(DataPath({"UInt16Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<uint32>>(DataPath({"UInt32Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<uint64>>(DataPath({"UInt64Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<float32>>(DataPath({"Float32Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<DataArray<float64>>(DataPath({"Float64Array"})) != nullptr);
-    REQUIRE(ds.getDataAs<StringArray>(DataPath({"StringArray"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<int8>>(DataPath({"Int8Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<int16>>(DataPath({"Int16Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<int32>>(DataPath({"Int32Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<int64>>(DataPath({"Int64Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<uint8>>(DataPath({"UInt8Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<uint16>>(DataPath({"UInt16Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<uint32>>(DataPath({"UInt32Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<uint64>>(DataPath({"UInt64Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<float32>>(DataPath({"Float32Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<DataArray<float64>>(DataPath({"Float64Array"})) != nullptr);
+    REQUIRE(dataGraph.getDataAs<StringArray>(DataPath({"StringArray"})) != nullptr);
 
-    BoolArray* boolArray = ds.getDataAs<BoolArray>(DataPath({"BoolArray"}));
+    BoolArray* boolArray = dataGraph.getDataAs<BoolArray>(DataPath({"BoolArray"}));
     REQUIRE(boolArray != nullptr);
     AbstractDataStore<bool>& boolStore = boolArray->getDataStoreRef();
     REQUIRE(boolStore[0] == false);
     REQUIRE(boolStore[1] == true);
 
-    StringArray* stringArray = ds.getDataAs<StringArray>(DataPath({"StringArray"}));
+    StringArray* stringArray = dataGraph.getDataAs<StringArray>(DataPath({"StringArray"}));
     REQUIRE(stringArray != nullptr);
     REQUIRE(stringArray->values() == std::vector<std::string>{"Foo", "Bar", "Bazz"});
   } catch(const std::exception& e)
@@ -746,8 +746,8 @@ TEST_CASE("DataArray<bool> IO")
 
 TEST_CASE("xmdf")
 {
-  DataStructure ds;
-  auto* vertexGeom = VertexGeom::Create(ds, "VertexGeom");
+  DataStructure dataGraph;
+  auto* vertexGeom = VertexGeom::Create(dataGraph, "VertexGeom");
   DataObject::IdType geomId = vertexGeom->getId();
   constexpr usize numVerts = 100;
   std::random_device randomDevice;
@@ -759,8 +759,8 @@ TEST_CASE("xmdf")
   {
     item = realDistribution(generator);
   }
-  auto* verts = DataArray<float32>::Create(ds, "Verts", std::move(vertsDataStore), geomId);
-  auto* vertexData = AttributeMatrix::Create(ds, "VertexData", geomId);
+  auto* verts = DataArray<float32>::Create(dataGraph, "Verts", std::move(vertsDataStore), geomId);
+  auto* vertexData = AttributeMatrix::Create(dataGraph, "VertexData", geomId);
   vertexData->setShape({numVerts});
   vertexGeom->setVertexAttributeMatrix(*vertexData);
   vertexGeom->setVertices(*verts);
@@ -769,7 +769,7 @@ TEST_CASE("xmdf")
   {
     item = intDistribution(generator);
   }
-  auto* data = DataArray<int32>::Create(ds, "Data", std::move(vertexAssociatedData), vertexData->getId());
-  Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", ds, {}, true);
+  auto* data = DataArray<int32>::Create(dataGraph, "Data", std::move(vertexAssociatedData), vertexData->getId());
+  Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", dataGraph, {}, true);
   COMPLEX_RESULT_REQUIRE_VALID(result);
 }

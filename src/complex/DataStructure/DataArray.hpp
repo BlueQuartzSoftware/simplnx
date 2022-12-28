@@ -57,16 +57,16 @@ public:
    *
    * +++ The created DataArray takes ownership of the provided DataStore. +++
    *
-   * @param ds The parent DataStructure that will own the DataArray
+   * @param dataGraph The parent DataStructure that will own the DataArray
    * @param name The name of the DataArray
    * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of the DataStore Pointer.
    * @param parentId = {}
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
-  static DataArray* Create(DataStructure& ds, std::string name, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
+  static DataArray* Create(DataStructure& dataGraph, std::string name, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), std::move(store)));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<DataArray>(new DataArray(dataGraph, std::move(name), std::move(store)));
+    if(!AttemptToAddObject(dataGraph, data, parentId))
     {
       return nullptr;
     }
@@ -76,7 +76,7 @@ public:
   /**
    * @brief Creates a DataArray instance backed by the IDataStore type from the template argument
    * @tparam DataStoreType The concrete implementation of an IDataStore class
-   * @param ds The parent DataStructure that will own the DataArray
+   * @param dataGraph The parent DataStructure that will own the DataArray
    * @param name The name of the DataArray
    * @param tupleShape  The tuple dimensions of the data. If you want to mimic an image then your shape should be {height, width} slowest to fastest dimension
    * @param componentShape The component dimensions of the data. If you want to mimic an RGB image then your component would be {3},
@@ -85,7 +85,7 @@ public:
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
   template <typename DataStoreType>
-  static DataArray* CreateWithStore(DataStructure& ds, const std::string& name, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape,
+  static DataArray* CreateWithStore(DataStructure& dataGraph, const std::string& name, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape,
                                     const std::optional<IdType>& parentId = {})
   {
     static_assert(std::is_base_of_v<AbstractDataStore<T>, DataStoreType>);
@@ -101,8 +101,8 @@ public:
       dataStore = std::make_shared<DataStoreType>(tupleShape, componentShape);
     }
 
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, name, std::move(dataStore)));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<DataArray>(new DataArray(dataGraph, name, std::move(dataStore)));
+    if(!AttemptToAddObject(dataGraph, data, parentId))
     {
       return nullptr;
     }
@@ -128,16 +128,16 @@ public:
    * Returns nullptr otherwise.
    *
    * The created DataArray takes ownership of the provided DataStore.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param store
    * @param parentId = {}
    * @return DataArray<T>*
    */
-  static DataArray* Import(DataStructure& ds, std::string name, IdType importId, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
+  static DataArray* Import(DataStructure& dataGraph, std::string name, IdType importId, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<DataArray>(new DataArray(ds, std::move(name), importId, std::move(store)));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<DataArray>(new DataArray(dataGraph, std::move(name), importId, std::move(store)));
+    if(!AttemptToAddObject(dataGraph, data, parentId))
     {
       return nullptr;
     }
@@ -655,12 +655,12 @@ protected:
    *
    * The DataArray takes ownership of the DataStore. If none is provided,
    * an EmptyDataStore is used instead.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param store
    */
-  DataArray(DataStructure& ds, std::string name, std::shared_ptr<store_type> store = nullptr)
-  : IDataArray(ds, std::move(name))
+  DataArray(DataStructure& dataGraph, std::string name, std::shared_ptr<store_type> store = nullptr)
+  : IDataArray(dataGraph, std::move(name))
   {
     setDataStore(std::move(store));
   }
@@ -670,13 +670,13 @@ protected:
    *
    * The DataArray takes ownership of the DataStore. If none is provided,
    * an EmptyDataStore is used instead.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param store
    */
-  DataArray(DataStructure& ds, std::string name, IdType importId, std::shared_ptr<store_type> store = nullptr)
-  : IDataArray(ds, std::move(name), importId)
+  DataArray(DataStructure& dataGraph, std::string name, IdType importId, std::shared_ptr<store_type> store = nullptr)
+  : IDataArray(dataGraph, std::move(name), importId)
   {
     setDataStore(std::move(store));
   }

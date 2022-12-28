@@ -28,14 +28,14 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSurfaceFeatures filter;
-  DataStructure ds;
+  DataStructure dataGraph;
   Arguments cigArgs;
 
   CreateImageGeometry cigFilter;
   cigArgs.insertOrAssign(CreateImageGeometry::k_GeometryDataPath_Key, std::make_any<DataPath>(k_FeatureGeometryPath));
   cigArgs.insertOrAssign(CreateImageGeometry::k_Dimensions_Key, geometryDims);
 
-  auto result = cigFilter.execute(ds, cigArgs);
+  auto result = cigFilter.execute(dataGraph, cigArgs);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   RawBinaryReaderFilter rbrFilter;
@@ -46,12 +46,12 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{static_cast<double>(featureIdsSize)}}));
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
 
-  result = rbrFilter.execute(ds, rbrArgs);
+  result = rbrFilter.execute(dataGraph, rbrArgs);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   // Change Feature 470 to 0
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int32Array>(k_FeatureIDsPath));
-  Int32Array& featureIds = ds.getDataRefAs<Int32Array>(k_FeatureIDsPath);
+  REQUIRE_NOTHROW(dataGraph.getDataRefAs<Int32Array>(k_FeatureIDsPath));
+  Int32Array& featureIds = dataGraph.getDataRefAs<Int32Array>(k_FeatureIDsPath);
   std::replace(featureIds.begin(), featureIds.end(), 470, 0);
 
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir.str()).append(exemplaryFileName));
@@ -59,7 +59,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{796}}));
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesExemplaryPath));
 
-  result = rbrFilter.execute(ds, rbrArgs);
+  result = rbrFilter.execute(dataGraph, rbrArgs);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   // Create default Parameters for the filter.
@@ -69,18 +69,18 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesArrayPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(ds.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath));
-  REQUIRE_NOTHROW(ds.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath));
+  REQUIRE_NOTHROW(dataGraph.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath));
+  REQUIRE_NOTHROW(dataGraph.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath));
 
-  BoolArray& surfaceFeatures = ds.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath);
-  Int8Array& surfaceFeaturesExemplary = ds.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath);
+  BoolArray& surfaceFeatures = dataGraph.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath);
+  Int8Array& surfaceFeaturesExemplary = dataGraph.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath);
   REQUIRE(surfaceFeatures.getSize() == surfaceFeaturesExemplary.getSize());
   REQUIRE(surfaceFeatures.getSize() == 796);
   REQUIRE(surfaceFeaturesExemplary.getSize() == 796);
@@ -100,7 +100,7 @@ TEST_CASE("ComplexCore::FindSurfaceFeatures: Instantiation and Parameter Check",
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSurfaceFeatures filter;
-  DataStructure ds;
+  DataStructure dataGraph;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -109,11 +109,11 @@ TEST_CASE("ComplexCore::FindSurfaceFeatures: Instantiation and Parameter Check",
   args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 }
 

@@ -10,13 +10,13 @@
 
 using namespace complex;
 
-EdgeGeom::EdgeGeom(DataStructure& ds, std::string name)
-: INodeGeometry1D(ds, std::move(name))
+EdgeGeom::EdgeGeom(DataStructure& dataGraph, std::string name)
+: INodeGeometry1D(dataGraph, std::move(name))
 {
 }
 
-EdgeGeom::EdgeGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry1D(ds, std::move(name), importId)
+EdgeGeom::EdgeGeom(DataStructure& dataGraph, std::string name, IdType importId)
+: INodeGeometry1D(dataGraph, std::move(name), importId)
 {
 }
 
@@ -25,20 +25,20 @@ DataObject::Type EdgeGeom::getDataObjectType() const
   return DataObject::Type::EdgeGeom;
 }
 
-EdgeGeom* EdgeGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+EdgeGeom* EdgeGeom::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(dataGraph, std::move(name)));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-EdgeGeom* EdgeGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+EdgeGeom* EdgeGeom::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<EdgeGeom>(new EdgeGeom(dataGraph, std::move(name), importId));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }

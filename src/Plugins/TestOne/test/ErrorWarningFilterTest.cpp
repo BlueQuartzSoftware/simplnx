@@ -17,7 +17,7 @@ constexpr int32 k_ExecuteError = -666001;
 
 TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
 {
-  DataStructure ds;
+  DataStructure dataGraph;
 
   // All booleans disabled
   {
@@ -31,7 +31,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
     args.insertOrAssign(ErrorWarningFilter::k_ExecuteError_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataGraph, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   }
 
@@ -47,7 +47,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
     args.insertOrAssign(ErrorWarningFilter::k_ExecuteError_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataGraph, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     const std::vector<Warning>& warnings = preflightResult.outputActions.warnings();
@@ -67,7 +67,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
     args.insertOrAssign(ErrorWarningFilter::k_ExecuteError_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataGraph, args);
     COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
     const std::vector<Error>& errors = preflightResult.outputActions.errors();
@@ -87,7 +87,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
     args.insertOrAssign(ErrorWarningFilter::k_ExecuteError_Key, std::make_any<bool>(false));
 
     // Execute the filter and check result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataGraph, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const std::vector<Warning>& warnings = executeResult.result.warnings();
@@ -107,7 +107,7 @@ TEST_CASE("ErrorWarningFilter: Instantiate Filter", "[ErrorWarningFilter]")
     args.insertOrAssign(ErrorWarningFilter::k_ExecuteError_Key, std::make_any<bool>(true));
 
     // Execute the filter and check result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataGraph, args);
     COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
 
     const std::vector<Error>& errors = executeResult.result.errors();

@@ -5,13 +5,13 @@
 
 namespace complex
 {
-IGeometry::IGeometry(DataStructure& ds, std::string name)
-: BaseGroup(ds, std::move(name))
+IGeometry::IGeometry(DataStructure& dataGraph, std::string name)
+: BaseGroup(dataGraph, std::move(name))
 {
 }
 
-IGeometry::IGeometry(DataStructure& ds, std::string name, IdType importId)
-: BaseGroup(ds, std::move(name), importId)
+IGeometry::IGeometry(DataStructure& dataGraph, std::string name, IdType importId)
+: BaseGroup(dataGraph, std::move(name), importId)
 {
 }
 

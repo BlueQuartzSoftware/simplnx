@@ -7,13 +7,13 @@
 
 using namespace complex;
 
-BaseGroup::BaseGroup(DataStructure& ds, std::string name)
-: DataObject(ds, std::move(name))
+BaseGroup::BaseGroup(DataStructure& dataGraph, std::string name)
+: DataObject(dataGraph, std::move(name))
 {
 }
 
-BaseGroup::BaseGroup(DataStructure& ds, std::string name, IdType importId)
-: DataObject(ds, std::move(name), importId)
+BaseGroup::BaseGroup(DataStructure& dataGraph, std::string name, IdType importId)
+: DataObject(dataGraph, std::move(name), importId)
 {
 }
 
@@ -109,10 +109,10 @@ bool BaseGroup::canInsert(const DataObject* obj) const
   return true;
 }
 
-void BaseGroup::setDataStructure(DataStructure* ds)
+void BaseGroup::setDataStructure(DataStructure* dataGraph)
 {
-  DataObject::setDataStructure(ds);
-  m_DataMap.setDataStructure(ds);
+  DataObject::setDataStructure(dataGraph);
+  m_DataMap.setDataStructure(dataGraph);
 }
 
 BaseGroup::Iterator BaseGroup::find(const std::string& name)

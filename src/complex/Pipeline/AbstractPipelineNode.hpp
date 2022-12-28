@@ -279,17 +279,17 @@ protected:
   /**
    * @brief Updates the stored DataStructure. This should only be called from
    * within the execute(DataStructure&) method.
-   * @param ds
+   * @param dataGraph
    */
-  void setDataStructure(const DataStructure& ds);
+  void setDataStructure(const DataStructure& dataGraph);
 
   /**
    * @brief Updates the stored DataStructure from preflighting the node. This
    * should only be called from within the preflight(DataStructure&) method.
-   * @param ds
+   * @param dataGraph
    * @param success = true
    */
-  void setPreflightStructure(const DataStructure& ds, bool success = true);
+  void setPreflightStructure(const DataStructure& dataGraph, bool success = true);
 
   /**
    * @brief Called when ending pipeline node execution.

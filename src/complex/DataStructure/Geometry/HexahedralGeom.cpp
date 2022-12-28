@@ -10,13 +10,13 @@
 
 using namespace complex;
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name)
-: INodeGeometry3D(ds, std::move(name))
+HexahedralGeom::HexahedralGeom(DataStructure& dataGraph, std::string name)
+: INodeGeometry3D(dataGraph, std::move(name))
 {
 }
 
-HexahedralGeom::HexahedralGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry3D(ds, std::move(name), importId)
+HexahedralGeom::HexahedralGeom(DataStructure& dataGraph, std::string name, IdType importId)
+: INodeGeometry3D(dataGraph, std::move(name), importId)
 {
 }
 
@@ -25,20 +25,20 @@ DataObject::Type HexahedralGeom::getDataObjectType() const
   return DataObject::Type::HexahedralGeom;
 }
 
-HexahedralGeom* HexahedralGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+HexahedralGeom* HexahedralGeom::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(dataGraph, std::move(name)));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-HexahedralGeom* HexahedralGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+HexahedralGeom* HexahedralGeom::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<HexahedralGeom>(new HexahedralGeom(dataGraph, std::move(name), importId));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }

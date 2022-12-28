@@ -18,13 +18,13 @@ TEST_CASE("ComplexCore::CreateAttributeMatrixFilter(Instantiate)", "[ComplexCore
   static const DataPath k_DataPath({"foo"});
 
   CreateAttributeMatrixFilter filter;
-  DataStructure ds;
+  DataStructure dataGraph;
   Arguments args;
 
   args.insert(CreateAttributeMatrixFilter::k_DataObjectPath, std::make_any<DataPath>(k_DataPath));
   args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
 
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
@@ -35,7 +35,7 @@ TEST_CASE("ComplexCore::CreateAttributeMatrixFilter(Invalid Parameters)", "[Comp
   const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
 
   CreateAttributeMatrixFilter filter;
-  DataStructure ds;
+  DataStructure dataGraph;
   Arguments args;
 
   SECTION("Section 1")
@@ -46,11 +46,11 @@ TEST_CASE("ComplexCore::CreateAttributeMatrixFilter(Invalid Parameters)", "[Comp
 
   SECTION("Section 2")
   {
-    AttributeMatrix* attMat1 = AttributeMatrix::Create(ds, "AttributeMatrix1");
+    AttributeMatrix* attMat1 = AttributeMatrix::Create(dataGraph, "AttributeMatrix1");
     args.insert(CreateAttributeMatrixFilter::k_DataObjectPath, std::make_any<DataPath>(DataPath({"AttributeMatrix1", "AttributeMatrix2"})));
     args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
   }
 
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_INVALID(result.result);
 }

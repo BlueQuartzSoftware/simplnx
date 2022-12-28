@@ -4,8 +4,8 @@
 
 using namespace complex;
 
-AbstractDataStructureMessage::AbstractDataStructureMessage(const DataStructure* ds)
-: m_DataStructure(ds)
+AbstractDataStructureMessage::AbstractDataStructureMessage(const DataStructure* dataGraph)
+: m_DataStructure(dataGraph)
 {
 }
 

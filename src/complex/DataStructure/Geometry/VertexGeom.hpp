@@ -21,22 +21,22 @@ public:
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param parentId = {}
    * @return VertexGeom*
    */
-  static VertexGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static VertexGeom* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param parentId = {}
    * @return VertexGeom*
    */
-  static VertexGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static VertexGeom* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -113,17 +113,17 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    */
-  VertexGeom(DataStructure& ds, std::string name);
+  VertexGeom(DataStructure& dataGraph, std::string name);
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    */
-  VertexGeom(DataStructure& ds, std::string name, IdType importId);
+  VertexGeom(DataStructure& dataGraph, std::string name, IdType importId);
 };
 } // namespace complex

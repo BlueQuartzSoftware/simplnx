@@ -34,16 +34,16 @@ public:
    *
    * If the ScalarData cannot be created, this method returns nullptr.
    * Otherwise, a pointer to the created ScalarData will be returned.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param defaultValue
    * @param parentId = {}
    * @return ScalarData*
    */
-  static ScalarData* Create(DataStructure& ds, const std::string& name, value_type defaultValue, const std::optional<IdType>& parentId = {})
+  static ScalarData* Create(DataStructure& dataGraph, const std::string& name, value_type defaultValue, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<ScalarData>(new ScalarData(ds, name, defaultValue));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<ScalarData>(new ScalarData(dataGraph, name, defaultValue));
+    if(!AttemptToAddObject(dataGraph, data, parentId))
     {
       return nullptr;
     }
@@ -61,17 +61,17 @@ public:
    *
    * Unlike Create, Import allows setting the DataObject ID for use in
    * importing DataObjects from external sources.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param defaultValue
    * @param parentId = {}
    * @return ScalarData*
    */
-  static ScalarData* Import(DataStructure& ds, const std::string& name, IdType importId, value_type defaultValue, const std::optional<IdType>& parentId = {})
+  static ScalarData* Import(DataStructure& dataGraph, const std::string& name, IdType importId, value_type defaultValue, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<ScalarData>(new ScalarData(ds, name, importId, defaultValue));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<ScalarData>(new ScalarData(dataGraph, name, importId, defaultValue));
+    if(!AttemptToAddObject(dataGraph, data, parentId))
     {
       return nullptr;
     }
@@ -249,25 +249,25 @@ public:
 protected:
   /**
    * @brief Constructs a ScalarData object with the target name and value.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param defaultValue
    */
-  ScalarData(DataStructure& ds, const std::string& name, value_type defaultValue)
-  : DataObject(ds, name)
+  ScalarData(DataStructure& dataGraph, const std::string& name, value_type defaultValue)
+  : DataObject(dataGraph, name)
   , m_Data(defaultValue)
   {
   }
 
   /**
    * @brief Constructs a ScalarData object with the target name and value.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param defaultValue
    */
-  ScalarData(DataStructure& ds, const std::string& name, IdType importId, value_type defaultValue)
-  : DataObject(ds, name, importId)
+  ScalarData(DataStructure& dataGraph, const std::string& name, IdType importId, value_type defaultValue)
+  : DataObject(dataGraph, name, importId)
   , m_Data(defaultValue)
   {
   }

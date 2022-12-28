@@ -266,19 +266,19 @@ protected:
   /**
    * @brief DataObject constructor takes a reference to the DataStructure and
    * object name.
-   * @param ds
+   * @param dataGraph
    * @param name
    */
-  DataObject(DataStructure& ds, std::string name);
+  DataObject(DataStructure& dataGraph, std::string name);
 
   /**
    * @brief DataObject constructor takes a reference to the DataStructure,
    * object name, and object ID.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    */
-  DataObject(DataStructure& ds, std::string name, IdType importId);
+  DataObject(DataStructure& dataGraph, std::string name, IdType importId);
 
   /**
    * @brief Updates the data ID for lookup within the DataStructure.
@@ -307,12 +307,12 @@ protected:
    * target parent will take ownership of the added DataObject.
    *
    * Returns true if the operation succeeds. Returns false otherwise.
-   * @param ds
+   * @param dataGraph
    * @param data
    * @param parentId
    * @return bool
    */
-  static bool AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId);
+  static bool AttemptToAddObject(DataStructure& dataGraph, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId);
 
   /**
    * @brief Marks the specified BaseGroup as a parent.
@@ -336,9 +336,9 @@ protected:
 
   /**
    * @brief Sets a new DataStructure for the DataObject.
-   * @param ds
+   * @param dataGraph
    */
-  virtual void setDataStructure(DataStructure* ds);
+  virtual void setDataStructure(DataStructure* dataGraph);
 
   /**
    * @brief Writes the dataType as a string attribute for the target HDF5 object.

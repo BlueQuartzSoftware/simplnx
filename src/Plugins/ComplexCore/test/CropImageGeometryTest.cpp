@@ -58,7 +58,7 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
   const DataPath k_FeatureIdsPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds});
 
   CropImageGeometry filter;
-  DataStructure ds = CreateDataStructure();
+  DataStructure dataGraph = CreateDataStructure();
   Arguments args;
 
   args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
@@ -70,7 +70,7 @@ TEST_CASE("ComplexCore::CropImageGeometry(Instantiate)", "[ComplexCore][CropImag
   args.insert(CropImageGeometry::k_FeatureIds_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
 
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
@@ -91,7 +91,7 @@ TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropI
   CropImageGeometry filter;
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
-  DataStructure ds = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataGraph = UnitTest::LoadDataStructure(baseDataFilePath);
   Arguments args;
 
   args.insert(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(k_MinVector));
@@ -104,20 +104,20 @@ TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropI
   args.insert(CropImageGeometry::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
   args.insert(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
 
-  const auto oldDimensions = ds.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions();
+  const auto oldDimensions = dataGraph.getDataRefAs<ImageGeom>(k_ImageGeomPath).getDimensions();
 
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   {
     // Write out the DataStructure for later viewing/debugging
     Result<H5::FileWriter> ioResult = H5::FileWriter::CreateFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
     H5::FileWriter fileWriter = std::move(ioResult.value());
-    herr_t err = ds.writeHdf5(fileWriter);
+    herr_t err = dataGraph.writeHdf5(fileWriter);
     REQUIRE(err >= 0);
   }
 
-  auto& newImageGeom = ds.getDataRefAs<ImageGeom>(k_NewImageGeomPath);
+  auto& newImageGeom = dataGraph.getDataRefAs<ImageGeom>(k_NewImageGeomPath);
   auto newDimensions = newImageGeom.getDimensions();
 
   for(usize i = 0; i < 3; i++)
@@ -130,21 +130,21 @@ TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropI
   DataPath exemplarCellFeatureDataPath = exemplarGeoPath.createChildPath(Constants::k_CellFeatureData);
 
   // check the data arrays
-  const auto exemplarCellDataArrays = GetAllChildArrayDataPaths(ds, exemplarCellDataPath).value();
-  const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(ds, destCellDataPath).value();
+  const auto exemplarCellDataArrays = GetAllChildArrayDataPaths(dataGraph, exemplarCellDataPath).value();
+  const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataGraph, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = ds.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = ds.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const IDataArray& exemplarArray = dataGraph.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
+    const IDataArray& calculatedArray = dataGraph.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
-  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(ds, exemplarCellFeatureDataPath).value();
-  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(ds, k_DestCellFeatureDataPath).value();
+  const auto exemplarFeatureDataArrays = GetAllChildArrayDataPaths(dataGraph, exemplarCellFeatureDataPath).value();
+  const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataGraph, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = ds.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = ds.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const IDataArray& exemplarArray = dataGraph.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
+    const IDataArray& calculatedArray = dataGraph.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 }

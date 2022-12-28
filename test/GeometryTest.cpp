@@ -156,8 +156,8 @@ void testGeomGrid(IGridGeometry* geom)
 /////////////////////////////////////
 TEST_CASE("EdgeGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<EdgeGeom>(ds);
+  DataStructure dataGraph;
+  auto geom = createGeom<EdgeGeom>(dataGraph);
 
   testAbstractGeometry(geom);
 
@@ -169,8 +169,8 @@ TEST_CASE("EdgeGeomTest")
 
 TEST_CASE("HexahedralGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<HexahedralGeom>(ds);
+  DataStructure dataGraph;
+  auto geom = createGeom<HexahedralGeom>(dataGraph);
 
   testGeom3D(geom);
 
@@ -182,8 +182,8 @@ TEST_CASE("HexahedralGeomTest")
 
 TEST_CASE("ImageGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<ImageGeom>(ds);
+  DataStructure dataGraph;
+  auto geom = createGeom<ImageGeom>(dataGraph);
 
   testGeomGrid(geom);
 
@@ -195,8 +195,8 @@ TEST_CASE("ImageGeomTest")
 
 TEST_CASE("QuadGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<QuadGeom>(ds);
+  DataStructure dataGraph;
+  auto geom = createGeom<QuadGeom>(dataGraph);
 
   testGeom2D(geom);
 
@@ -208,8 +208,8 @@ TEST_CASE("QuadGeomTest")
 
 TEST_CASE("RectGridGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<RectGridGeom>(ds);
+  DataStructure dataGraph;
+  auto geom = createGeom<RectGridGeom>(dataGraph);
 
   testGeomGrid(geom);
 
@@ -221,8 +221,8 @@ TEST_CASE("RectGridGeomTest")
 
 TEST_CASE("TetrahedralGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<TetrahedralGeom>(ds);
+  DataStructure dataGraph;
+  auto geom = createGeom<TetrahedralGeom>(dataGraph);
 
   testGeom3D(geom);
 
@@ -234,8 +234,8 @@ TEST_CASE("TetrahedralGeomTest")
 
 TEST_CASE("TriangleGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<TriangleGeom>(ds);
+  DataStructure dataGraph;
+  auto geom = createGeom<TriangleGeom>(dataGraph);
 
   testGeom2D(geom);
 
@@ -247,8 +247,8 @@ TEST_CASE("TriangleGeomTest")
 
 TEST_CASE("VertexGeomTest")
 {
-  DataStructure ds;
-  auto geom = createGeom<VertexGeom>(ds);
+  DataStructure dataGraph;
+  auto geom = createGeom<VertexGeom>(dataGraph);
 
   testAbstractGeometry(geom);
 

@@ -37,15 +37,15 @@ public:
    *
    * Returns a pointer to the created DynamicListArray if the operation succeeded.
    * Returns nullptr otherwise.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param parentId = {}
    * @return DynamicListArray*
    */
-  static DynamicListArray* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+  static DynamicListArray* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
   {
-    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, std::move(name)));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(dataGraph, std::move(name)));
+    if(!AttemptToAddObject(dataGraph, data, parentId))
     {
       return nullptr;
     }
@@ -60,16 +60,16 @@ public:
    *
    * Returns a pointer to the created DynamicListArray if the operation succeeded.
    * Returns nullptr otherwise.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param parentId = {}
    * @return DynamicListArray*
    */
-  static DynamicListArray* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+  static DynamicListArray* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
   {
-    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(ds, std::move(name), importId));
-    if(!AttemptToAddObject(ds, data, parentId))
+    auto data = std::shared_ptr<DynamicListArray>(new DynamicListArray(dataGraph, std::move(name), importId));
+    if(!AttemptToAddObject(dataGraph, data, parentId))
     {
       return nullptr;
     }
@@ -329,22 +329,22 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    */
-  DynamicListArray(DataStructure& ds, std::string name)
-  : DataObject(ds, std::move(name))
+  DynamicListArray(DataStructure& dataGraph, std::string name)
+  : DataObject(dataGraph, std::move(name))
   {
   }
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    */
-  DynamicListArray(DataStructure& ds, std::string name, IdType importId)
-  : DataObject(ds, std::move(name), importId)
+  DynamicListArray(DataStructure& dataGraph, std::string name, IdType importId)
+  : DataObject(dataGraph, std::move(name), importId)
   {
   }
 

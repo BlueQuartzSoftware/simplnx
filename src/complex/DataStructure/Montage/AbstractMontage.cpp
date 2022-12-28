@@ -4,13 +4,13 @@
 
 using namespace complex;
 
-AbstractMontage::AbstractMontage(DataStructure& ds, std::string name)
-: BaseGroup(ds, std::move(name))
+AbstractMontage::AbstractMontage(DataStructure& dataGraph, std::string name)
+: BaseGroup(dataGraph, std::move(name))
 {
 }
 
-AbstractMontage::AbstractMontage(DataStructure& ds, std::string name, IdType importId)
-: BaseGroup(ds, std::move(name), importId)
+AbstractMontage::AbstractMontage(DataStructure& dataGraph, std::string name, IdType importId)
+: BaseGroup(dataGraph, std::move(name), importId)
 {
 }
 

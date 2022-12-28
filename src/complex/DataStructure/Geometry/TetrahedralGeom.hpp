@@ -28,22 +28,22 @@ public:
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param parentId = {}
    * @return TetrahedralGeom*
    */
-  static TetrahedralGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static TetrahedralGeom* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param parentId = {}
    * @return TetrahedralGeom*
    */
-  static TetrahedralGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static TetrahedralGeom* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -180,17 +180,17 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    */
-  TetrahedralGeom(DataStructure& ds, std::string name);
+  TetrahedralGeom(DataStructure& dataGraph, std::string name);
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    */
-  TetrahedralGeom(DataStructure& ds, std::string name, IdType importId);
+  TetrahedralGeom(DataStructure& dataGraph, std::string name, IdType importId);
 };
 } // namespace complex

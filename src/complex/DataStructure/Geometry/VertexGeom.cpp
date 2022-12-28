@@ -12,13 +12,13 @@
 
 using namespace complex;
 
-VertexGeom::VertexGeom(DataStructure& ds, std::string name)
-: INodeGeometry0D(ds, std::move(name))
+VertexGeom::VertexGeom(DataStructure& dataGraph, std::string name)
+: INodeGeometry0D(dataGraph, std::move(name))
 {
 }
 
-VertexGeom::VertexGeom(DataStructure& ds, std::string name, IdType importId)
-: INodeGeometry0D(ds, std::move(name), importId)
+VertexGeom::VertexGeom(DataStructure& dataGraph, std::string name, IdType importId)
+: INodeGeometry0D(dataGraph, std::move(name), importId)
 {
 }
 
@@ -38,20 +38,20 @@ BaseGroup::GroupType VertexGeom::getGroupType() const
   return GroupType::VertexGeom;
 }
 
-VertexGeom* VertexGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+VertexGeom* VertexGeom::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(dataGraph, std::move(name)));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-VertexGeom* VertexGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+VertexGeom* VertexGeom::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<VertexGeom>(new VertexGeom(dataGraph, std::move(name), importId));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }

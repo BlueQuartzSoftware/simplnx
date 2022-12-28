@@ -82,7 +82,7 @@ TEST_CASE("RunCoreFilter")
     static constexpr uint64 k_NSkipLines = 0;
 
     ImportTextFilter filter;
-    DataStructure ds;
+    DataStructure dataGraph;
     Arguments args;
     DataPath dataPath({"foo"});
 
@@ -95,8 +95,8 @@ TEST_CASE("RunCoreFilter")
     args.insert("output_data_array", std::make_any<DataPath>(dataPath));
 
     // auto callback = [](const IFilter::Message& message) { fmt::print("{}: {}\n", message.type, message.message); };
-    // Result<> result = filter.execute(ds, args, IFilter::MessageHandler{callback});
-    IFilter::ExecuteResult result = filter.execute(ds, args);
+    // Result<> result = filter.execute(dataGraph, args, IFilter::MessageHandler{callback});
+    IFilter::ExecuteResult result = filter.execute(dataGraph, args);
     for(const auto& warning : result.result.warnings())
     {
       // fmt::print("Warning {}: {}\n", warning.code, warning.message);
@@ -114,7 +114,7 @@ TEST_CASE("RunCoreFilter")
     CAPTURE(result.result.warnings());
     // CAPTURE(errors);
     REQUIRE(result.result.valid());
-    const auto* dataArrayPtr = dynamic_cast<DataArray<int32>*>(ds.getData(dataPath));
+    const auto* dataArrayPtr = dynamic_cast<DataArray<int32>*>(dataGraph.getData(dataPath));
     REQUIRE(dataArrayPtr != nullptr);
     const auto& dataArray = *dataArrayPtr;
     for(int32 i = k_NSkipLines; i < k_NLines; i++)

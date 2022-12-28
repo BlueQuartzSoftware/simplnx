@@ -28,22 +28,22 @@ public:
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param parentId = {}
    * @return HexahedralGeom*
    */
-  static HexahedralGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static HexahedralGeom* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param parentId = {}
    * @return HexahedralGeom*
    */
-  static HexahedralGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static HexahedralGeom* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -179,17 +179,17 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    */
-  HexahedralGeom(DataStructure& ds, std::string name);
+  HexahedralGeom(DataStructure& dataGraph, std::string name);
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    */
-  HexahedralGeom(DataStructure& ds, std::string name, IdType importId);
+  HexahedralGeom(DataStructure& dataGraph, std::string name, IdType importId);
 };
 } // namespace complex

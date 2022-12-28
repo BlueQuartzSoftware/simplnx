@@ -4,8 +4,8 @@
 
 using namespace complex;
 
-DataAddedMessage::DataAddedMessage(const DataStructure* ds, DataObject::IdType addedId)
-: AbstractDataStructureMessage(ds)
+DataAddedMessage::DataAddedMessage(const DataStructure* dataGraph, DataObject::IdType addedId)
+: AbstractDataStructureMessage(dataGraph)
 , m_Id(addedId)
 {
 }

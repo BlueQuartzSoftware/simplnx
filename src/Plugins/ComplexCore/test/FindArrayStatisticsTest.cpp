@@ -20,7 +20,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Instantiate Filter", "[Comple
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindArrayStatisticsFilter filter;
-  DataStructure ds;
+  DataStructure dataGraph;
   Arguments args;
 
   DataPath inputArrayPath;
@@ -59,11 +59,11 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Instantiate Filter", "[Comple
   args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(""));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   REQUIRE(executeResult.result.invalid());
 }
 

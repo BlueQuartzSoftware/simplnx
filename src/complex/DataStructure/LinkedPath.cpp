@@ -9,8 +9,8 @@ using namespace complex;
 
 LinkedPath::LinkedPath() = default;
 
-LinkedPath::LinkedPath(const DataStructure* ds, const std::vector<DataObject::IdType>& idPath)
-: m_DataStructure(ds)
+LinkedPath::LinkedPath(const DataStructure* dataGraph, const std::vector<DataObject::IdType>& idPath)
+: m_DataStructure(dataGraph)
 , m_IdPath(idPath)
 {
 }

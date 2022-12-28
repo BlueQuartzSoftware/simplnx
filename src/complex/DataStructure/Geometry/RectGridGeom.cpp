@@ -11,13 +11,13 @@
 
 using namespace complex;
 
-RectGridGeom::RectGridGeom(DataStructure& ds, std::string name)
-: IGridGeometry(ds, std::move(name))
+RectGridGeom::RectGridGeom(DataStructure& dataGraph, std::string name)
+: IGridGeometry(dataGraph, std::move(name))
 {
 }
 
-RectGridGeom::RectGridGeom(DataStructure& ds, std::string name, IdType importId)
-: IGridGeometry(ds, std::move(name), importId)
+RectGridGeom::RectGridGeom(DataStructure& dataGraph, std::string name, IdType importId)
+: IGridGeometry(dataGraph, std::move(name), importId)
 {
 }
 
@@ -36,20 +36,20 @@ BaseGroup::GroupType RectGridGeom::getGroupType() const
   return GroupType::RectGridGeom;
 }
 
-RectGridGeom* RectGridGeom::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+RectGridGeom* RectGridGeom::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataGraph, std::move(name)));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-RectGridGeom* RectGridGeom::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+RectGridGeom* RectGridGeom::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<RectGridGeom>(new RectGridGeom(dataGraph, std::move(name), importId));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }

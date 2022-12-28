@@ -30,18 +30,18 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Instantiation and Parameter Chec
   FindVolFractionsFilter filter;
   Arguments args;
 
-  DataStructure ds = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataGraph = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_CellPhasesPath));
   args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<DataPath>(k_VolumeFractionsPathNX));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   REQUIRE(executeResult.result.valid());
 }
 
@@ -51,22 +51,22 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[Compl
   FindVolFractionsFilter filter;
   Arguments args;
 
-  DataStructure ds = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataGraph = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_CellPhasesPath));
   args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<DataPath>(k_VolumeFractionsPathNX));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   REQUIRE(executeResult.result.valid());
 
-  auto& d3dVolumeFractionsArrayRef = ds.getDataRefAs<Float32Array>(k_VolumeFractionsPath);
-  auto& nxVolumeFractionsArrayRef = ds.getDataRefAs<Float32Array>(k_VolumeFractionsPathNX);
+  auto& d3dVolumeFractionsArrayRef = dataGraph.getDataRefAs<Float32Array>(k_VolumeFractionsPath);
+  auto& nxVolumeFractionsArrayRef = dataGraph.getDataRefAs<Float32Array>(k_VolumeFractionsPathNX);
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {
@@ -82,22 +82,22 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[Com
   Arguments args;
 
   auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_volFractions_and_numFeatures_test.dream3d", unit_test::k_DREAM3DDataDir));
-  DataStructure ds = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataGraph = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectCellPhasesPath));
   args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<DataPath>(k_VolumeFractionsPathNX));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataGraph, args);
   REQUIRE(executeResult.result.valid());
 
-  auto& d3dVolumeFractionsArrayRef = ds.getDataRefAs<Float32Array>(k_VolumeFractionsPath);
-  auto& nxVolumeFractionsArrayRef = ds.getDataRefAs<Float32Array>(k_VolumeFractionsPathNX);
+  auto& d3dVolumeFractionsArrayRef = dataGraph.getDataRefAs<Float32Array>(k_VolumeFractionsPath);
+  auto& nxVolumeFractionsArrayRef = dataGraph.getDataRefAs<Float32Array>(k_VolumeFractionsPathNX);
 
   for(usize index = 0; index < d3dVolumeFractionsArrayRef.getSize(); index++)
   {

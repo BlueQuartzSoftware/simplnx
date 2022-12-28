@@ -23,10 +23,10 @@ public:
    */
   static std::string GetTypeName();
 
-  static StringArray* Create(DataStructure& ds, const std::string_view& name, const std::optional<IdType>& parentId = {});
-  static StringArray* CreateWithValues(DataStructure& ds, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId = {});
+  static StringArray* Create(DataStructure& dataGraph, const std::string_view& name, const std::optional<IdType>& parentId = {});
+  static StringArray* CreateWithValues(DataStructure& dataGraph, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId = {});
 
-  static StringArray* Import(DataStructure& ds, const std::string_view& name, IdType importId, collection_type strings, const std::optional<IdType>& parentId = {});
+  static StringArray* Import(DataStructure& dataGraph, const std::string_view& name, IdType importId, collection_type strings, const std::optional<IdType>& parentId = {});
 
   StringArray(const StringArray& other);
   StringArray(StringArray&& other) noexcept;

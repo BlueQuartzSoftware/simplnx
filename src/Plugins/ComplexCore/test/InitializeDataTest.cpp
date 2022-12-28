@@ -42,24 +42,24 @@ Arguments CreateArgs(std::vector<DataPath> cellArrayPaths, DataPath imageGeomPat
 
 DataStructure CreateDataStructure()
 {
-  DataStructure ds;
+  DataStructure dataGraph;
 
-  ImageGeom* imageGeom = ImageGeom::Create(ds, k_ImageGeomPath.getTargetName());
+  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, k_ImageGeomPath.getTargetName());
   REQUIRE(imageGeom != nullptr);
 
   imageGeom->setDimensions(k_ImageDims);
 
-  Int32Array* int32Array = Int32Array::CreateWithStore<Int32DataStore>(ds, k_Int32ArrayPath.getTargetName(), k_ArrayDims, k_ComponentDims, imageGeom->getId());
+  Int32Array* int32Array = Int32Array::CreateWithStore<Int32DataStore>(dataGraph, k_Int32ArrayPath.getTargetName(), k_ArrayDims, k_ComponentDims, imageGeom->getId());
   REQUIRE(int32Array != nullptr);
 
   int32Array->fill(0);
 
-  Float32Array* float32Array = Float32Array::CreateWithStore<Float32DataStore>(ds, k_Float32ArrayPath.getTargetName(), k_ArrayDims, k_ComponentDims, imageGeom->getId());
+  Float32Array* float32Array = Float32Array::CreateWithStore<Float32DataStore>(dataGraph, k_Float32ArrayPath.getTargetName(), k_ArrayDims, k_ComponentDims, imageGeom->getId());
   REQUIRE(float32Array != nullptr);
 
   float32Array->fill(0.0f);
 
-  return ds;
+  return dataGraph;
 }
 
 template <class T, class PredicateT>
@@ -103,7 +103,7 @@ bool IsDataWithinInclusiveRange(const IDataStore& dataStore, const std::array<us
 TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
-  DataStructure ds = CreateDataStructure();
+  DataStructure dataGraph = CreateDataStructure();
 
   constexpr uint64 xMin = 5;
   constexpr uint64 yMin = 5;
@@ -115,17 +115,17 @@ TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]"
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::Manual, initValue, {0.0, 0.0});
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   std::array<usize, 3> imageDims = {k_ImageDims.at(0), k_ImageDims.at(1), k_ImageDims.at(2)};
 
   for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = ds.getDataRefAs<IDataArray>(path);
+    const auto& dataArray = dataGraph.getDataRefAs<IDataArray>(path);
     const auto& dataStore = dataArray.getIDataStoreRef();
 
     DataType type = dataStore.getDataType();
@@ -204,7 +204,7 @@ TEST_CASE("ComplexCore::InitializeData(Manual)", "[ComplexCore][InitializeData]"
 TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
-  DataStructure ds = CreateDataStructure();
+  DataStructure dataGraph = CreateDataStructure();
 
   constexpr uint64 xMin = 5;
   constexpr uint64 yMin = 5;
@@ -215,17 +215,17 @@ TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]"
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::Random, 0.0, {0.0, 0.0});
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   std::array<usize, 3> imageDims = {k_ImageDims.at(0), k_ImageDims.at(1), k_ImageDims.at(2)};
 
   for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = ds.getDataRefAs<IDataArray>(path);
+    const auto& dataArray = dataGraph.getDataRefAs<IDataArray>(path);
     const auto& dataStore = dataArray.getIDataStoreRef();
 
     DataType type = dataStore.getDataType();
@@ -295,7 +295,7 @@ TEST_CASE("ComplexCore::InitializeData(Random)", "[ComplexCore][InitializeData]"
 TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][InitializeData]")
 {
   InitializeData filter;
-  DataStructure ds = CreateDataStructure();
+  DataStructure dataGraph = CreateDataStructure();
 
   constexpr uint64 xMin = 5;
   constexpr uint64 yMin = 5;
@@ -307,17 +307,17 @@ TEST_CASE("ComplexCore::InitializeData(RandomWithRange)", "[ComplexCore][Initial
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeData::InitType::RandomWithRange, 0.0, initRange);
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto result = filter.execute(ds, args);
+  auto result = filter.execute(dataGraph, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   std::array<usize, 3> imageDims = {k_ImageDims.at(0), k_ImageDims.at(1), k_ImageDims.at(2)};
 
   for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = ds.getDataRefAs<IDataArray>(path);
+    const auto& dataArray = dataGraph.getDataRefAs<IDataArray>(path);
     const auto& dataStore = dataArray.getIDataStoreRef();
 
     DataType type = dataStore.getDataType();

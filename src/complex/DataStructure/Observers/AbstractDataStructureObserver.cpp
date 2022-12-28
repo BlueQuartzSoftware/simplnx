@@ -23,9 +23,9 @@ bool AbstractDataStructureObserver::isObservingStructure() const
   return m_ObservedStructure != nullptr;
 }
 
-void AbstractDataStructureObserver::startObservingStructure(DataStructure* ds)
+void AbstractDataStructureObserver::startObservingStructure(DataStructure* dataGraph)
 {
-  if(ds == nullptr)
+  if(dataGraph == nullptr)
   {
     return;
   }
@@ -34,8 +34,8 @@ void AbstractDataStructureObserver::startObservingStructure(DataStructure* ds)
     stopObservingStructure();
   }
 
-  m_ObservedStructure = ds;
-  m_Connection = ds->getSignal().connect([this](DataStructure* dataStructure, const std::shared_ptr<AbstractDataStructureMessage>& msg) { this->onNotify(dataStructure, msg); });
+  m_ObservedStructure = dataGraph;
+  m_Connection = dataGraph->getSignal().connect([this](DataStructure* dataStructure, const std::shared_ptr<AbstractDataStructureMessage>& msg) { this->onNotify(dataStructure, msg); });
 }
 
 void AbstractDataStructureObserver::stopObservingStructure()

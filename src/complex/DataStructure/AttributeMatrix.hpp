@@ -28,12 +28,12 @@ public:
    *
    * Returns a pointer to the AttributeMatrix if the process succeeds. Returns
    * nullptr otherwise.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param parentId = {}
    * @return AttributeMatrix*
    */
-  static AttributeMatrix* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static AttributeMatrix* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Attempts to construct and insert a AttributeMatrix into the DataStructure.
@@ -47,13 +47,13 @@ public:
    *
    * Returns a pointer to the AttributeMatrix if the process succeeds. Returns
    * nullptr otherwise.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param parentId = {}
    * @return AttributeMatrix*
    */
-  static AttributeMatrix* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static AttributeMatrix* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Constructs a shallow copy of the AttributeMatrix. This copy is not added
@@ -137,19 +137,19 @@ protected:
   /**
    * @brief Creates the AttributeMatrix for the target DataStructure and with the
    * specified name.
-   * @param ds
+   * @param dataGraph
    * @param name
    */
-  AttributeMatrix(DataStructure& ds, std::string name);
+  AttributeMatrix(DataStructure& dataGraph, std::string name);
 
   /**
    * @brief Creates the AttributeMatrix for the target DataStructure and with the
    * specified name.
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    */
-  AttributeMatrix(DataStructure& ds, std::string name, IdType importId);
+  AttributeMatrix(DataStructure& dataGraph, std::string name, IdType importId);
 
   /**
    * @brief Checks if the provided DataObject can be added to the container.

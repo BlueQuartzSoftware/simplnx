@@ -30,22 +30,22 @@ public:
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param parentId = {}
    * @return TriangleGeom*
    */
-  static TriangleGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static TriangleGeom* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param parentId = {}
    * @return TriangleGeom*
    */
-  static TriangleGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static TriangleGeom* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -164,17 +164,17 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    */
-  TriangleGeom(DataStructure& ds, std::string name);
+  TriangleGeom(DataStructure& dataGraph, std::string name);
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    */
-  TriangleGeom(DataStructure& ds, std::string name, IdType importId);
+  TriangleGeom(DataStructure& dataGraph, std::string name, IdType importId);
 };
 } // namespace complex

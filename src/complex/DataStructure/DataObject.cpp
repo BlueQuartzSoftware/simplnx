@@ -18,13 +18,13 @@ bool DataObject::IsValidName(std::string_view name)
   return !name.empty() && name.find('/') == std::string_view::npos;
 }
 
-DataObject::DataObject(DataStructure& ds, std::string name)
-: DataObject(ds, std::move(name), ds.generateId())
+DataObject::DataObject(DataStructure& dataGraph, std::string name)
+: DataObject(dataGraph, std::move(name), dataGraph.generateId())
 {
 }
 
-DataObject::DataObject(DataStructure& ds, std::string name, IdType importId)
-: m_DataStructure(&ds)
+DataObject::DataObject(DataStructure& dataGraph, std::string name, IdType importId)
+: m_DataStructure(&dataGraph)
 , m_Id(importId)
 , m_Name(std::move(name))
 {
@@ -110,9 +110,9 @@ void DataObject::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>
 {
 }
 
-bool DataObject::AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
+bool DataObject::AttemptToAddObject(DataStructure& dataGraph, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
 {
-  return ds.finishAddingObject(data, parentId);
+  return dataGraph.finishAddingObject(data, parentId);
 }
 
 DataObject::IdType DataObject::getId() const
@@ -150,9 +150,9 @@ const DataStructure& DataObject::getDataStructureRef() const
   return *m_DataStructure;
 }
 
-void DataObject::setDataStructure(DataStructure* ds)
+void DataObject::setDataStructure(DataStructure* dataGraph)
 {
-  m_DataStructure = ds;
+  m_DataStructure = dataGraph;
 }
 
 std::string DataObject::getName() const

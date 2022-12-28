@@ -13,7 +13,7 @@ TEST_CASE("ComplexCore::ChangeAngleRepresentation: Instantiation and Parameter C
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;
-  DataStructure ds;
+  DataStructure dataGraph;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -22,12 +22,12 @@ TEST_CASE("ComplexCore::ChangeAngleRepresentation: Instantiation and Parameter C
   args.insertOrAssign(ChangeAngleRepresentation::k_AnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.invalid());
 
   // This should fail because parameter is out of range
   args.insertOrAssign(ChangeAngleRepresentation::k_ConversionType_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  preflightResult = filter.preflight(ds, args);
+  preflightResult = filter.preflight(dataGraph, args);
   REQUIRE(preflightResult.outputActions.invalid());
 }
 

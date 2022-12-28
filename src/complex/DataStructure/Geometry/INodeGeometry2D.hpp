@@ -201,9 +201,9 @@ public:
   H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
-  INodeGeometry2D(DataStructure& ds, std::string name);
+  INodeGeometry2D(DataStructure& dataGraph, std::string name);
 
-  INodeGeometry2D(DataStructure& ds, std::string name, IdType importId);
+  INodeGeometry2D(DataStructure& dataGraph, std::string name, IdType importId);
 
   /**
    * @brief

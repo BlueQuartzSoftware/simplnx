@@ -27,22 +27,22 @@ public:
   static inline constexpr StringLiteral k_TypeName = "QuadGeom";
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param parentId = {}
    * @return QuadGeom*
    */
-  static QuadGeom* Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId = {});
+  static QuadGeom* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    * @param parentId = {}
    * @return QuadGeom*
    */
-  static QuadGeom* Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static QuadGeom* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -161,17 +161,17 @@ public:
 protected:
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    */
-  QuadGeom(DataStructure& ds, std::string name);
+  QuadGeom(DataStructure& dataGraph, std::string name);
 
   /**
    * @brief
-   * @param ds
+   * @param dataGraph
    * @param name
    * @param importId
    */
-  QuadGeom(DataStructure& ds, std::string name, IdType importId);
+  QuadGeom(DataStructure& dataGraph, std::string name, IdType importId);
 };
 } // namespace complex

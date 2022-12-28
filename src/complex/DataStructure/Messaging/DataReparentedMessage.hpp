@@ -24,12 +24,12 @@ public:
   /**
    * @brief Constructs a DataReparentedMessage, specifying the target DataObject,
    * parent ID, and whether or not the parent was added or removed.
-   * @param ds
+   * @param dataGraph
    * @param targetData
    * @param targetParent
    * @param parentAdded
    */
-  DataReparentedMessage(const DataStructure* ds, DataObject::IdType targetData, DataObject::IdType targetParent, bool parentAdded = true);
+  DataReparentedMessage(const DataStructure* dataGraph, DataObject::IdType targetData, DataObject::IdType targetParent, bool parentAdded = true);
 
   /**
    * @brief Copy constructor

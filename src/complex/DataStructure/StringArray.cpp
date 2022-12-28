@@ -12,26 +12,26 @@ std::string StringArray::GetTypeName()
   return k_TypeName;
 }
 
-StringArray* StringArray::Create(DataStructure& ds, const std::string_view& name, const std::optional<IdType>& parentId)
+StringArray* StringArray::Create(DataStructure& dataGraph, const std::string_view& name, const std::optional<IdType>& parentId)
 {
-  return CreateWithValues(ds, name, {}, parentId);
+  return CreateWithValues(dataGraph, name, {}, parentId);
 }
 
-StringArray* StringArray::CreateWithValues(DataStructure& ds, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId)
+StringArray* StringArray::CreateWithValues(DataStructure& dataGraph, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<StringArray>(new StringArray(ds, name.data()));
+  auto data = std::shared_ptr<StringArray>(new StringArray(dataGraph, name.data()));
   data->m_Strings = std::move(strings);
-  if(!AttemptToAddObject(ds, data, parentId))
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-StringArray* StringArray::Import(DataStructure& ds, const std::string_view& name, IdType importId, collection_type strings, const std::optional<IdType>& parentId)
+StringArray* StringArray::Import(DataStructure& dataGraph, const std::string_view& name, IdType importId, collection_type strings, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<StringArray>(new StringArray(ds, name.data(), importId, std::move(strings)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<StringArray>(new StringArray(dataGraph, name.data(), importId, std::move(strings)));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }

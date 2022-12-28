@@ -9,13 +9,13 @@
 
 using namespace complex;
 
-GridMontage::GridMontage(DataStructure& ds, std::string name)
-: AbstractMontage(ds, std::move(name))
+GridMontage::GridMontage(DataStructure& dataGraph, std::string name)
+: AbstractMontage(dataGraph, std::move(name))
 {
 }
 
-GridMontage::GridMontage(DataStructure& ds, std::string name, IdType importId)
-: AbstractMontage(ds, std::move(name), importId)
+GridMontage::GridMontage(DataStructure& dataGraph, std::string name, IdType importId)
+: AbstractMontage(dataGraph, std::move(name), importId)
 {
 }
 
@@ -31,20 +31,20 @@ GridMontage::GridMontage(GridMontage&& other)
 
 GridMontage::~GridMontage() = default;
 
-GridMontage* GridMontage::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+GridMontage* GridMontage::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<GridMontage>(new GridMontage(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<GridMontage>(new GridMontage(dataGraph, std::move(name)));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-GridMontage* GridMontage::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+GridMontage* GridMontage::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<GridMontage>(new GridMontage(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<GridMontage>(new GridMontage(dataGraph, std::move(name), importId));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }

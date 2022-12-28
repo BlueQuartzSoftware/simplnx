@@ -8,13 +8,13 @@
 
 using namespace complex;
 
-DataGroup::DataGroup(DataStructure& ds, std::string name)
-: BaseGroup(ds, std::move(name))
+DataGroup::DataGroup(DataStructure& dataGraph, std::string name)
+: BaseGroup(dataGraph, std::move(name))
 {
 }
 
-DataGroup::DataGroup(DataStructure& ds, std::string name, IdType importId)
-: BaseGroup(ds, std::move(name), importId)
+DataGroup::DataGroup(DataStructure& dataGraph, std::string name, IdType importId)
+: BaseGroup(dataGraph, std::move(name), importId)
 {
 }
 
@@ -40,20 +40,20 @@ BaseGroup::GroupType DataGroup::getGroupType() const
   return GroupType::DataGroup;
 }
 
-DataGroup* DataGroup::Create(DataStructure& ds, std::string name, const std::optional<IdType>& parentId)
+DataGroup* DataGroup::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, std::move(name)));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<DataGroup>(new DataGroup(dataGraph, std::move(name)));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-DataGroup* DataGroup::Import(DataStructure& ds, std::string name, IdType importId, const std::optional<IdType>& parentId)
+DataGroup* DataGroup::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<DataGroup>(new DataGroup(ds, std::move(name), importId));
-  if(!AttemptToAddObject(ds, data, parentId))
+  auto data = std::shared_ptr<DataGroup>(new DataGroup(dataGraph, std::move(name), importId));
+  if(!AttemptToAddObject(dataGraph, data, parentId))
   {
     return nullptr;
   }
