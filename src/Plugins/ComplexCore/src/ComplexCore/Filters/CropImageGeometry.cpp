@@ -32,6 +32,7 @@ namespace
 {
 
 const std::string k_TempGeometryName = ".cropped_image_geometry";
+
 /**
  * @brief
  * @param dims
@@ -412,17 +413,19 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
-    auto geomAction = std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, targetOrigin, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, cellDataName);
-    resultOutputActions.value().actions.push_back(std::move(geomAction));
 
-    DataPath newCellFeaturesPath = destImagePath.createChildPath(cellDataName);
+    resultOutputActions.value().actions.push_back(
+        std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, targetOrigin, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, cellDataName));
+
+    // Create the Cell AttributeMatrix in the Destination Geometry
+    DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
 
     for(const auto& [identifier, object] : *cellData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
       IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-      DataPath dataArrayPath = newCellFeaturesPath.createChildPath(srcArray.getName());
+      DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
       resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
     }
 
