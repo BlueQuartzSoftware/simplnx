@@ -61,9 +61,9 @@ const DataStructure& AbstractPipelineNode::getDataStructure() const
   return m_DataStructure;
 }
 
-void AbstractPipelineNode::setDataStructure(const DataStructure& dataGraph)
+void AbstractPipelineNode::setDataStructure(const DataStructure& dataStructure)
 {
-  m_DataStructure = dataGraph;
+  m_DataStructure = dataStructure;
 }
 
 const DataStructure& AbstractPipelineNode::getPreflightStructure() const
@@ -71,9 +71,9 @@ const DataStructure& AbstractPipelineNode::getPreflightStructure() const
   return m_PreflightStructure;
 }
 
-void AbstractPipelineNode::setPreflightStructure(const DataStructure& dataGraph, bool success)
+void AbstractPipelineNode::setPreflightStructure(const DataStructure& dataStructure, bool success)
 {
-  m_PreflightStructure = dataGraph;
+  m_PreflightStructure = dataStructure;
   m_IsPreflighted = success;
 }
 

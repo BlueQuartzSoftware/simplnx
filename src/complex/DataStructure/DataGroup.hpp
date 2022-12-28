@@ -26,12 +26,12 @@ public:
    *
    * Returns a pointer to the DataGroup if the process succeeds. Returns
    * nullptr otherwise.
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param parentId = {}
    * @return DataGroup*
    */
-  static DataGroup* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId = {});
+  static DataGroup* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Attempts to construct and insert a DataGroup into the DataStructure.
@@ -45,13 +45,13 @@ public:
    *
    * Returns a pointer to the DataGroup if the process succeeds. Returns
    * nullptr otherwise.
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param importId
    * @param parentId = {}
    * @return DataGroup*
    */
-  static DataGroup* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static DataGroup* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Constructs a shallow copy of the DataGroup. This copy is not added
@@ -114,19 +114,19 @@ protected:
   /**
    * @brief Creates the DataGroup for the target DataStructure and with the
    * specified name.
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    */
-  DataGroup(DataStructure& dataGraph, std::string name);
+  DataGroup(DataStructure& dataStructure, std::string name);
 
   /**
    * @brief Creates the DataGroup for the target DataStructure and with the
    * specified name.
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param importId
    */
-  DataGroup(DataStructure& dataGraph, std::string name, IdType importId);
+  DataGroup(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
    * @brief Checks if the provided DataObject can be added to the container.

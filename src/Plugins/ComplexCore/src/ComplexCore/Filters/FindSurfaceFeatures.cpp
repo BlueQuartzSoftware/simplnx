@@ -100,12 +100,12 @@ bool isPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yP
   return false;
 }
 
-void findSurfaceFeatures3D(DataStructure& dataGraph, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
+void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
-  const ImageGeom& featureGeometry = dataGraph.getDataRefAs<ImageGeom>(featureGeometryPathValue);
-  const Int32Array& featureIds = dataGraph.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  BoolArray& surfaceFeatures = dataGraph.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
+  const ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
+  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
+  BoolArray& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
 
   usize xPoints = featureGeometry.getNumXCells();
   usize yPoints = featureGeometry.getNumYCells();
@@ -137,12 +137,12 @@ void findSurfaceFeatures3D(DataStructure& dataGraph, const DataPath& featureGeom
   }
 }
 
-void findSurfaceFeatures2D(DataStructure& dataGraph, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
+void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
-  const ImageGeom& featureGeometry = dataGraph.getDataRefAs<ImageGeom>(featureGeometryPathValue);
-  const Int32Array& featureIds = dataGraph.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  BoolArray& surfaceFeatures = dataGraph.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
+  const ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
+  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
+  BoolArray& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
 
   usize xPoints = 0;
   usize yPoints = 0;

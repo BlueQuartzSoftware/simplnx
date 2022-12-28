@@ -15,7 +15,7 @@ using namespace complex::Constants;
 namespace
 {
 template <typename T>
-void ConditionalSetValueOverFlowTest(DataStructure& dataGraph, const DataPath& selectedDataPath, const DataPath& conditionalPath, const std::string& value)
+void ConditionalSetValueOverFlowTest(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& conditionalPath, const std::string& value)
 {
   ConditionalSetValue filter;
   Arguments args;
@@ -26,7 +26,7 @@ void ConditionalSetValueOverFlowTest(DataStructure& dataGraph, const DataPath& s
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(selectedDataPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 }
 
@@ -49,7 +49,7 @@ bool RequireDataArrayEqualZero(const DataArray<T>& data)
 TEST_CASE("ComplexCore::ConditionalSetValue: Instantiate Filter", "[ConditionalSetValue]")
 {
   ConditionalSetValue filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
@@ -60,17 +60,17 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Instantiate Filter", "[ConditionalS
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(!executeResult.result.valid());
 }
 
 TEST_CASE("ComplexCore::ConditionalSetValue: Missing/Empty DataPaths", "[ConditionalSetValue]")
 {
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
 
@@ -80,40 +80,40 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Missing/Empty DataPaths", "[Conditi
 
   // Preflight the filter and check result with empty values
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>(""));
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Invalid numeric value
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("asfasdf"));
-  preflightResult = filter.preflight(dataGraph, args);
+  preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Valid numeric value, but the boolean array and the input array are not set, should fail
   args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("5.0"));
-  preflightResult = filter.preflight(dataGraph, args);
+  preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Set the mask array but should still fail
   args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
-  preflightResult = filter.preflight(dataGraph, args);
+  preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 
   // Set the input array, now should pass preflight.
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
-  preflightResult = filter.preflight(dataGraph, args);
+  preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid() == true);
 }
 
 TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[ConditionalSetValue]")
 {
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
-  std::shared_ptr<ImageGeom> imageGeometry = dataGraph.getSharedDataAs<ImageGeom>(geomPath);
+  std::shared_ptr<ImageGeom> imageGeometry = dataStructure.getSharedDataAs<ImageGeom>(geomPath);
   complex::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  DataObject* ciDataObject = dataGraph.getData(ciDataPath);
+  DataObject* ciDataObject = dataStructure.getData(ciDataPath);
 
   DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
   // Fill every value with 10.0 into the ciArray
@@ -122,7 +122,7 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  BoolArray& conditionalArray = dataGraph.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
+  BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
   ConditionalSetValue filter;
@@ -134,11 +134,11 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
   REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
@@ -148,26 +148,26 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   // std::cout << "Writing file to: " << filePath << std::endl;
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
   H5::FileWriter fileWriter = std::move(result.value());
-  herr_t err = dataGraph.writeHdf5(fileWriter);
+  herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
 
 TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")
 {
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
-  const ImageGeom& imageGeometry = dataGraph.getDataRefAs<ImageGeom>(geomPath);
+  const ImageGeom& imageGeometry = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   complex::SizeVec3 imageGeomDims = imageGeometry.getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  auto& float32DataArray = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
+  auto& float32DataArray = dataStructure.getDataRefAs<Float32Array>(ciDataPath);
   // Fill every value with 10.0 into the ciArray
   float32DataArray.fill(10.0);
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  BoolArray& conditionalArray = dataGraph.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
+  BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
   ConditionalSetValue filter;
@@ -179,11 +179,11 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[Conditiona
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));
@@ -191,20 +191,20 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[Conditiona
 
 TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Int8", "[ConditionalSetValue]")
 {
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
-  const ImageGeom& imageGeometry = dataGraph.getDataRefAs<ImageGeom>(geomPath);
+  const ImageGeom& imageGeometry = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   complex::SizeVec3 imageGeomDims = imageGeometry.getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  auto& float32DataArray = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
+  auto& float32DataArray = dataStructure.getDataRefAs<Float32Array>(ciDataPath);
   // Fill every value with 10.0 into the ciArray
   float32DataArray.fill(10.0);
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
-  BoolArray& conditionalArray = dataGraph.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
+  BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
   conditionalArray.fill(true);
 
   ConditionalSetValue filter;
@@ -216,11 +216,11 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Int8", "[Conditional
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(RequireDataArrayEqualZero(float32DataArray));
@@ -235,70 +235,70 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Overflow/Underflow", "[ConditionalS
       22.0f,
       77.0f,
   };
-  DataStructure dataGraph = UnitTest::CreateAllPrimitiveTypes(imageDims);
+  DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
 
   // Get the DataGroups that we are going to add an Image Geometry into
-  DataGroup* levelOneGroup = dataGraph.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelOne}));
+  DataGroup* levelOneGroup = dataStructure.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelOne}));
   REQUIRE(levelOneGroup != nullptr);
-  DataGroup* levelTwoGroup = dataGraph.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelTwo}));
+  DataGroup* levelTwoGroup = dataStructure.getDataAs<DataGroup>(DataPath({k_LevelZero, k_LevelTwo}));
   REQUIRE(levelTwoGroup != nullptr);
 
   // Add an ImageGeometry into each DataGroup
-  UnitTest::AddImageGeometry(dataGraph, imageDims, imageSpacing, imageOrigin, *levelOneGroup);
-  UnitTest::AddImageGeometry(dataGraph, imageDims, imageSpacing, imageOrigin, *levelTwoGroup);
+  UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelOneGroup);
+  UnitTest::AddImageGeometry(dataStructure, imageDims, imageSpacing, imageOrigin, *levelTwoGroup);
 
   // Create a bool array where every value is TRUE
   std::vector<usize> tupleShape = {imageDims[2], imageDims[1], imageDims[0]};
-  BoolArray* conditionalArray1 = UnitTest::CreateTestDataArray<bool>(dataGraph, k_ConditionalArray, tupleShape, {1}, levelOneGroup->getId());
+  BoolArray* conditionalArray1 = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelOneGroup->getId());
   conditionalArray1->fill(true);
-  BoolArray* conditionalArray2 = UnitTest::CreateTestDataArray<bool>(dataGraph, k_ConditionalArray, tupleShape, {1}, levelTwoGroup->getId());
+  BoolArray* conditionalArray2 = UnitTest::CreateTestDataArray<bool>(dataStructure, k_ConditionalArray, tupleShape, {1}, levelTwoGroup->getId());
   conditionalArray2->fill(true);
 
   DataPath conditionalDataPath({k_LevelZero, k_LevelOne, k_ConditionalArray});
 
   DataPath selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int8DataSet});
-  ConditionalSetValueOverFlowTest<int8>(dataGraph, selectedDataPath, conditionalDataPath, "-130"); // underflow
-  ConditionalSetValueOverFlowTest<int8>(dataGraph, selectedDataPath, conditionalDataPath, "130");  // overflow
+  ConditionalSetValueOverFlowTest<int8>(dataStructure, selectedDataPath, conditionalDataPath, "-130"); // underflow
+  ConditionalSetValueOverFlowTest<int8>(dataStructure, selectedDataPath, conditionalDataPath, "130");  // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint8DataSet});
-  ConditionalSetValueOverFlowTest<uint8>(dataGraph, selectedDataPath, conditionalDataPath, "-1");  // underflow
-  ConditionalSetValueOverFlowTest<uint8>(dataGraph, selectedDataPath, conditionalDataPath, "260"); // overflow
+  ConditionalSetValueOverFlowTest<uint8>(dataStructure, selectedDataPath, conditionalDataPath, "-1");  // underflow
+  ConditionalSetValueOverFlowTest<uint8>(dataStructure, selectedDataPath, conditionalDataPath, "260"); // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int16DataSet});
-  ConditionalSetValueOverFlowTest<int16>(dataGraph, selectedDataPath, conditionalDataPath, "-32770"); // underflow
-  ConditionalSetValueOverFlowTest<int16>(dataGraph, selectedDataPath, conditionalDataPath, "32770");  // overflow
+  ConditionalSetValueOverFlowTest<int16>(dataStructure, selectedDataPath, conditionalDataPath, "-32770"); // underflow
+  ConditionalSetValueOverFlowTest<int16>(dataStructure, selectedDataPath, conditionalDataPath, "32770");  // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint16DataSet});
-  ConditionalSetValueOverFlowTest<uint16>(dataGraph, selectedDataPath, conditionalDataPath, "-1");    // underflow
-  ConditionalSetValueOverFlowTest<uint16>(dataGraph, selectedDataPath, conditionalDataPath, "65537"); // overflow
+  ConditionalSetValueOverFlowTest<uint16>(dataStructure, selectedDataPath, conditionalDataPath, "-1");    // underflow
+  ConditionalSetValueOverFlowTest<uint16>(dataStructure, selectedDataPath, conditionalDataPath, "65537"); // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int32DataSet});
-  ConditionalSetValueOverFlowTest<int32>(dataGraph, selectedDataPath, conditionalDataPath, "-2147483649"); // underflow
-  ConditionalSetValueOverFlowTest<int32>(dataGraph, selectedDataPath, conditionalDataPath, "2147483649");  // overflow
+  ConditionalSetValueOverFlowTest<int32>(dataStructure, selectedDataPath, conditionalDataPath, "-2147483649"); // underflow
+  ConditionalSetValueOverFlowTest<int32>(dataStructure, selectedDataPath, conditionalDataPath, "2147483649");  // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint32DataSet});
-  ConditionalSetValueOverFlowTest<uint32>(dataGraph, selectedDataPath, conditionalDataPath, "-1");         // underflow
-  ConditionalSetValueOverFlowTest<uint32>(dataGraph, selectedDataPath, conditionalDataPath, "4294967297"); // overflow
+  ConditionalSetValueOverFlowTest<uint32>(dataStructure, selectedDataPath, conditionalDataPath, "-1");         // underflow
+  ConditionalSetValueOverFlowTest<uint32>(dataStructure, selectedDataPath, conditionalDataPath, "4294967297"); // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Int64DataSet});
-  ConditionalSetValueOverFlowTest<int64>(dataGraph, selectedDataPath, conditionalDataPath, "-92233720368547758080"); // underflow
-  ConditionalSetValueOverFlowTest<int64>(dataGraph, selectedDataPath, conditionalDataPath, "92233720368547758080");  // overflow
+  ConditionalSetValueOverFlowTest<int64>(dataStructure, selectedDataPath, conditionalDataPath, "-92233720368547758080"); // underflow
+  ConditionalSetValueOverFlowTest<int64>(dataStructure, selectedDataPath, conditionalDataPath, "92233720368547758080");  // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Uint64DataSet});
-  ConditionalSetValueOverFlowTest<uint64>(dataGraph, selectedDataPath, conditionalDataPath, "-1");                    // underflow
-  ConditionalSetValueOverFlowTest<uint64>(dataGraph, selectedDataPath, conditionalDataPath, "184467440737095516150"); // overflow
+  ConditionalSetValueOverFlowTest<uint64>(dataStructure, selectedDataPath, conditionalDataPath, "-1");                    // underflow
+  ConditionalSetValueOverFlowTest<uint64>(dataStructure, selectedDataPath, conditionalDataPath, "184467440737095516150"); // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Float32DataSet});
-  ConditionalSetValueOverFlowTest<float32>(dataGraph, selectedDataPath, conditionalDataPath, "1.17549e-039");  // underflow
-  ConditionalSetValueOverFlowTest<float32>(dataGraph, selectedDataPath, conditionalDataPath, "3.40282e+039");  // overflow
-  ConditionalSetValueOverFlowTest<float32>(dataGraph, selectedDataPath, conditionalDataPath, "-1.17549e-039"); // underflow
-  ConditionalSetValueOverFlowTest<float32>(dataGraph, selectedDataPath, conditionalDataPath, "-3.40282e+039"); // overflow
+  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "1.17549e-039");  // underflow
+  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "3.40282e+039");  // overflow
+  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "-1.17549e-039"); // underflow
+  ConditionalSetValueOverFlowTest<float32>(dataStructure, selectedDataPath, conditionalDataPath, "-3.40282e+039"); // overflow
 
   selectedDataPath = DataPath({k_LevelZero, k_LevelOne, k_Float64DataSet});
-  ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "2.22507e-309");  // underflow
-  ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "1.79769e+309");  // overflow
-  ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // underflow
-  ConditionalSetValueOverFlowTest<float64>(dataGraph, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // overflow
+  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "2.22507e-309");  // underflow
+  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "1.79769e+309");  // overflow
+  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-2.22507e-309"); // underflow
+  ConditionalSetValueOverFlowTest<float64>(dataStructure, selectedDataPath, conditionalDataPath, "-1.79769e+309"); // overflow
 }
 
 TEST_CASE("ComplexCore::ConditionalSetValue: No Conditional", "[ConditionalSetValue]")
@@ -306,14 +306,14 @@ TEST_CASE("ComplexCore::ConditionalSetValue: No Conditional", "[ConditionalSetVa
   ConditionalSetValue filter;
   Arguments args;
 
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
   DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
-  std::shared_ptr<ImageGeom> imageGeometry = dataGraph.getSharedDataAs<ImageGeom>(geomPath);
+  std::shared_ptr<ImageGeom> imageGeometry = dataStructure.getSharedDataAs<ImageGeom>(geomPath);
   complex::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  DataObject* ciDataObject = dataGraph.getData(ciDataPath);
+  DataObject* ciDataObject = dataStructure.getData(ciDataPath);
 
   DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
   // Fill every value with 10.0 into the ciArray
@@ -328,14 +328,14 @@ TEST_CASE("ComplexCore::ConditionalSetValue: No Conditional", "[ConditionalSetVa
   args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  const auto& alteredArray = dataGraph.getDataRefAs<Float32Array>(ciDataPath);
+  const auto& alteredArray = dataStructure.getDataRefAs<Float32Array>(ciDataPath);
 
   for(const auto& value : alteredArray)
   {

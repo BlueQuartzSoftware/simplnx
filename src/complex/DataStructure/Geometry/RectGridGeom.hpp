@@ -20,22 +20,22 @@ public:
 
   /**
    * @brief
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param parentId = {}
    * @return RectGridGeom*
    */
-  static RectGridGeom* Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId = {});
+  static RectGridGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param importId
    * @param parentId = {}
    * @return RectGridGeom*
    */
-  static RectGridGeom* Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static RectGridGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief
@@ -335,18 +335,18 @@ public:
 protected:
   /**
    * @brief
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    */
-  RectGridGeom(DataStructure& dataGraph, std::string name);
+  RectGridGeom(DataStructure& dataStructure, std::string name);
 
   /**
    * @brief
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param importId
    */
-  RectGridGeom(DataStructure& dataGraph, std::string name, IdType importId);
+  RectGridGeom(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

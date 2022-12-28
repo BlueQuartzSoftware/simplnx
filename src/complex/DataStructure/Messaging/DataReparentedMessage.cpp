@@ -4,8 +4,8 @@
 
 using namespace complex;
 
-DataReparentedMessage::DataReparentedMessage(const DataStructure* dataGraph, DataObject::IdType targetData, DataObject::IdType targetParent, bool parentAdded)
-: AbstractDataStructureMessage(dataGraph)
+DataReparentedMessage::DataReparentedMessage(const DataStructure* dataStructure, DataObject::IdType targetData, DataObject::IdType targetParent, bool parentAdded)
+: AbstractDataStructureMessage(dataStructure)
 , m_TargetId(targetData)
 , m_ParentId(targetParent)
 , m_ParentAdded(parentAdded)

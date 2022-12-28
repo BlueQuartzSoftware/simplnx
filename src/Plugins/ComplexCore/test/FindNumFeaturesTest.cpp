@@ -31,18 +31,18 @@ TEST_CASE("ComplexCore::FindNumFeaturesFilter: Instantiation and Parameter Check
   FindNumFeaturesFilter filter;
   Arguments args;
 
-  DataStructure dataGraph = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(FindNumFeaturesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
   args.insertOrAssign(FindNumFeaturesFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(k_FeatureCountsPathNX));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
 
@@ -52,22 +52,22 @@ TEST_CASE("ComplexCore::FindNumFeaturesFilter: Valid filter execution", "[Comple
   FindNumFeaturesFilter filter;
   Arguments args;
 
-  DataStructure dataGraph = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(FindNumFeaturesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
   args.insertOrAssign(FindNumFeaturesFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(k_FeatureCountsPathNX));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  auto& d3dFeatureCountsArrayRef = dataGraph.getDataRefAs<Int32Array>(k_FeatureCountsPath);
-  auto& nxFeatureCountsArrayRef = dataGraph.getDataRefAs<Int32Array>(k_FeatureCountsPathNX);
+  auto& d3dFeatureCountsArrayRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureCountsPath);
+  auto& nxFeatureCountsArrayRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureCountsPathNX);
 
   for(usize index = 0; index < d3dFeatureCountsArrayRef.getSize(); index++)
   {
@@ -81,22 +81,22 @@ TEST_CASE("ComplexCore::FindNumFeaturesFilter: InValid filter execution", "[Comp
   FindNumFeaturesFilter filter;
   Arguments args;
 
-  DataStructure dataGraph = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(FindNumFeaturesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectFeaturePhasesPath));
   args.insertOrAssign(FindNumFeaturesFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(k_FeatureCountsPathNX));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  auto& d3dFeatureCountsArrayRef = dataGraph.getDataRefAs<Int32Array>(k_FeatureCountsPath);
-  auto& nxFeatureCountsArrayRef = dataGraph.getDataRefAs<Int32Array>(k_FeatureCountsPathNX);
+  auto& d3dFeatureCountsArrayRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureCountsPath);
+  auto& nxFeatureCountsArrayRef = dataStructure.getDataRefAs<Int32Array>(k_FeatureCountsPathNX);
 
   for(usize index = 1; index < d3dFeatureCountsArrayRef.getSize(); index++)
   {

@@ -8,8 +8,8 @@ using namespace complex;
 
 TEST_CASE("GridMontage")
 {
-  DataStructure dataGraph;
-  auto montage = GridMontage::Create(dataGraph, "Grid");
+  DataStructure dataStructure;
+  auto montage = GridMontage::Create(dataStructure, "Grid");
   REQUIRE(montage != nullptr);
 
   const usize rowCount = 3;
@@ -21,11 +21,11 @@ TEST_CASE("GridMontage")
   REQUIRE(montage->getColumnCount() == colCount);
   REQUIRE(montage->getDepth() == depthCount);
 
-  auto tile1 = ImageGeom::Create(dataGraph, "Tile 1", montage->getId());
-  auto tile2 = ImageGeom::Create(dataGraph, "Tile 2", montage->getId());
-  auto tile3 = ImageGeom::Create(dataGraph, "Tile 3", montage->getId());
-  auto tile4 = ImageGeom::Create(dataGraph, "Tile 4", montage->getId());
-  auto tile5 = ImageGeom::Create(dataGraph, "Tile 5");
+  auto tile1 = ImageGeom::Create(dataStructure, "Tile 1", montage->getId());
+  auto tile2 = ImageGeom::Create(dataStructure, "Tile 2", montage->getId());
+  auto tile3 = ImageGeom::Create(dataStructure, "Tile 3", montage->getId());
+  auto tile4 = ImageGeom::Create(dataStructure, "Tile 4", montage->getId());
+  auto tile5 = ImageGeom::Create(dataStructure, "Tile 5");
 
   auto index00 = montage->getTileIndex(0, 0, 0);
   auto index10 = montage->getTileIndex(1, 0, 0);

@@ -2,8 +2,8 @@
 
 using namespace complex;
 
-DataRemovedMessage::DataRemovedMessage(const DataStructure* dataGraph, DataObject::IdType identifier, const std::string& name)
-: AbstractDataStructureMessage(dataGraph)
+DataRemovedMessage::DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& name)
+: AbstractDataStructureMessage(dataStructure)
 , m_Id(identifier)
 , m_Name(name)
 {

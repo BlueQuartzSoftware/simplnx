@@ -12,13 +12,13 @@
 
 using namespace complex;
 
-ImageGeom::ImageGeom(DataStructure& dataGraph, std::string name)
-: IGridGeometry(dataGraph, std::move(name))
+ImageGeom::ImageGeom(DataStructure& dataStructure, std::string name)
+: IGridGeometry(dataStructure, std::move(name))
 {
 }
 
-ImageGeom::ImageGeom(DataStructure& dataGraph, std::string name, IdType importId)
-: IGridGeometry(dataGraph, std::move(name), importId)
+ImageGeom::ImageGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: IGridGeometry(dataStructure, std::move(name), importId)
 {
 }
 
@@ -37,20 +37,20 @@ BaseGroup::GroupType ImageGeom::getGroupType() const
   return GroupType::ImageGeom;
 }
 
-ImageGeom* ImageGeom::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
+ImageGeom* ImageGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(dataGraph, std::move(name)));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-ImageGeom* ImageGeom::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
+ImageGeom* ImageGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(dataGraph, std::move(name), importId));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<ImageGeom>(new ImageGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }

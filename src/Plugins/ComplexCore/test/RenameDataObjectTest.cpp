@@ -14,13 +14,13 @@ TEST_CASE("ComplexCore::RenameDataAction(Instantiate)", "[ComplexCore][RenameDat
   const DataPath k_DataPath({Constants::k_SmallIN100});
 
   RenameDataObject filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
   args.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_DataPath));
 
-  auto result = filter.preflight(dataGraph, args);
+  auto result = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.outputActions);
 }
 
@@ -30,16 +30,16 @@ TEST_CASE("ComplexCore::RenameDataAction(Invalid Parameters)", "[ComplexCore][Re
   static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
   RenameDataObject filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
   args.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_DataPath));
 
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto result = filter.execute(dataGraph, args);
+  auto result = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(result.result);
 }
 
@@ -49,20 +49,20 @@ TEST_CASE("ComplexCore::RenameDataAction(Valid Parameters)", "[ComplexCore][Rena
   static const DataPath k_DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_ImageGeometry});
 
   RenameDataObject filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   args.insert(RenameDataObject::k_NewName_Key, std::make_any<std::string>(k_NewName));
   args.insert(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(k_DataPath));
 
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto result = filter.execute(dataGraph, args);
+  auto result = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
   DataPath newPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_NewName});
-  auto* dataObject = dataGraph.getData(newPath);
+  auto* dataObject = dataStructure.getData(newPath);
   REQUIRE(dataObject != nullptr);
 
   REQUIRE(dataObject->getName() == k_NewName);

@@ -24,7 +24,7 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
   std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceDataName;
   std::string normalsDataArrayName = "FaceNormals";
 
-  DataStructure dataGraph;
+  DataStructure dataStructure;
 
   {
     Arguments args;
@@ -39,14 +39,14 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
     args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
@@ -63,18 +63,18 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
     args.insertOrAssign(CalculateTriangleAreasFilter::k_CalculatedAreasDataPath_Key, std::make_any<std::string>(triangleAreasName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    auto& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(geometryPath);
+    auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleGeom.getFaceAttributeMatrix()->getName()).createChildPath(triangleAreasName);
 
     // Let's sum up all the areas.
-    Float64Array& faceAreas = dataGraph.getDataRefAs<Float64Array>(triangleAreasDataPath);
+    Float64Array& faceAreas = dataStructure.getDataRefAs<Float64Array>(triangleAreasDataPath);
     double sumOfAreas = 0.0;
     for(const auto& area : faceAreas)
     {
@@ -87,7 +87,7 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/TriangleAreas.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataGraph.writeHdf5(fileWriter);
+  herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
 

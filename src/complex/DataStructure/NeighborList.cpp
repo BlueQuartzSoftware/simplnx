@@ -27,10 +27,10 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Create(DataStructure& dataGraph, const std::string& name, usize numTuples, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, usize numTuples, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataGraph, name, numTuples));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, numTuples));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
@@ -38,10 +38,10 @@ NeighborList<T>* NeighborList<T>::Create(DataStructure& dataGraph, const std::st
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Import(DataStructure& dataGraph, const std::string& name, IdType importId, const std::vector<SharedVectorType>& dataVector, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::vector<SharedVectorType>& dataVector, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataGraph, name, dataVector, importId));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, dataVector, importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }

@@ -325,18 +325,18 @@ public:
 protected:
   /**
    * @brief Creates a BaseGroup with the target DataStructure and name.
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    */
-  BaseGroup(DataStructure& dataGraph, std::string name);
+  BaseGroup(DataStructure& dataStructure, std::string name);
 
   /**
    * @brief Creates a BaseGroup with the target DataStructure and name.
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param importId
    */
-  BaseGroup(DataStructure& dataGraph, std::string name, IdType importId);
+  BaseGroup(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
    * @brief Updates the DataMap IDs. Should only be called by DataObject::checkUpdatedIds.
@@ -361,9 +361,9 @@ protected:
   /**
    * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap
    * and its contained DataObjects as well.
-   * @param dataGraph
+   * @param dataStructure
    */
-  void setDataStructure(DataStructure* dataGraph) override;
+  void setDataStructure(DataStructure* dataStructure) override;
 
   /**
    * @brief Returns the underlying DataMap by reference.

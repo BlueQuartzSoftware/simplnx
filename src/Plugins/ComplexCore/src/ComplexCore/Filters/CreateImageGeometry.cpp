@@ -76,7 +76,7 @@ IFilter::UniquePointer CreateImageGeometry::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure& dataGraph, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
   /**

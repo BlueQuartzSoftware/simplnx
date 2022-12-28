@@ -31,7 +31,7 @@ TEST_CASE("ComplexCore::Delete Singular Data Array", "[ComplexCore][DeleteData]"
 
   VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
-  DataStructure dataGraph = UnitTest::CreateAllPrimitiveTypes(imageDims);
+  DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
 
   DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne, k_Int8DataSet});
   Arguments args;
@@ -43,14 +43,14 @@ TEST_CASE("ComplexCore::Delete Singular Data Array", "[ComplexCore][DeleteData]"
   DeleteData filter;
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  DataObject* removedDataArray = dataGraph.getData(selectedDataGroupPath);
+  DataObject* removedDataArray = dataStructure.getData(selectedDataGroupPath);
   REQUIRE(removedDataArray == nullptr);
 }
 
@@ -64,7 +64,7 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 
   VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
-  DataStructure dataGraph = UnitTest::CreateAllPrimitiveTypes(imageDims);
+  DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
 
   DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne});
 
@@ -76,14 +76,14 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
   args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  DataObject* removedDataArray = dataGraph.getData(selectedDataGroupPath);
+  DataObject* removedDataArray = dataStructure.getData(selectedDataGroupPath);
   REQUIRE(removedDataArray == nullptr);
 }
 
@@ -101,8 +101,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   // in the data-lake (DataStructure) tables by ID grep.
 //
 //   // Create complex DataGraph and unpack it
-//   DataStructure dataGraph(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
-//   std::vector<DataPath> initialPaths = dataGraph.getAllDataPaths();
+//   DataStructure dataStructure(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
+//   std::vector<DataPath> initialPaths = dataStructure.getAllDataPaths();
 //
 //   // Select DataPath to remove
 //   DataPath selectedDataGroupPath({k_GroupBName, k_GroupCName});
@@ -118,8 +118,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //
 //   // Store Data prior to deletion to verify removal
 //   // The target node here is k_GroupCName (the DataGroup named C)
-//   std::weak_ptr<DataObject> objectCPtr = dataGraph.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
-//   auto groupCId = dataGraph.getId(selectedDataGroupPath).value();
+//   std::weak_ptr<DataObject> objectCPtr = dataStructure.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
+//   auto groupCId = dataStructure.getId(selectedDataGroupPath).value();
 //
 //   DeleteData filter;
 //   Arguments args;
@@ -129,15 +129,15 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //   // Preflight the filter and check result
-//   auto preflightResult = filter.preflight(dataGraph, args);
+//   auto preflightResult = filter.preflight(dataStructure, args);
 //   REQUIRE(preflightResult.outputActions.valid());
 //
 //   // Execute the filter and check the result
-//   auto executeResult = filter.execute(dataGraph, args);
+//   auto executeResult = filter.execute(dataStructure, args);
 //   REQUIRE(executeResult.result.valid());
 //
 //   // Verify edges are wiped
-//   std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths();
+//   std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
 //   for(const auto& path : alteredPaths)
 //   {
 //     for(const auto& nodeName : path.getPathVector())
@@ -147,7 +147,7 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   }
 //
 //   // Verify node is no longer in data lake
-//   REQUIRE(dataGraph.getData(groupCId) == nullptr);
+//   REQUIRE(dataStructure.getData(groupCId) == nullptr);
 //
 //   // Verify nodes data has been destructed
 //   REQUIRE(objectCPtr.expired());
@@ -161,8 +161,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   // parents list. The node's data and other edges to the nodes should be untouched.
 //
 //   // Create complex DataGraph and unpack it
-//   DataStructure dataGraph(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
-//   std::vector<DataPath> initialPaths = dataGraph.getAllDataPaths(); // This queries the parent lists implicitly
+//   DataStructure dataStructure(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
+//   std::vector<DataPath> initialPaths = dataStructure.getAllDataPaths(); // This queries the parent lists implicitly
 //
 //   // Select DataPath to remove
 //   DataPath selectedDataGroupPath({k_GroupBName, k_GroupCName});
@@ -184,14 +184,14 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //   // Preflight the filter and check result
-//   auto preflightResult = filter.preflight(dataGraph, args);
+//   auto preflightResult = filter.preflight(dataStructure, args);
 //   REQUIRE(preflightResult.outputActions.valid());
 //
 //   // Execute the filter and check the result
-//   auto executeResult = filter.execute(dataGraph, args);
+//   auto executeResult = filter.execute(dataStructure, args);
 //   REQUIRE(executeResult.result.valid());
 //
-//   std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths(); // This queries the parent lists implicitly
+//   std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths(); // This queries the parent lists implicitly
 //   for(const auto& path : alteredPaths)
 //   {
 //     REQUIRE(path.toString() != selectedDataGroupPath.toString());
@@ -207,8 +207,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   SECTION("Orphan Through Node Deletion")
 //   {
 //     // Create complex DataGraph and unpack it
-//     DataStructure dataGraph(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
-//     std::vector<DataPath> paths = dataGraph.getAllDataPaths();
+//     DataStructure dataStructure(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
+//     std::vector<DataPath> paths = dataStructure.getAllDataPaths();
 //
 //     // Select DataPath to remove
 //     DataPath selectedDataGroupPath({k_GroupAName, k_GroupCName, k_GroupDName}); // We are aiming to delete the D group
@@ -224,8 +224,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //
 //     // Store Data prior to deletion to verify removal
 //     // The target node here is k_GroupDName (the DataGroup named D)
-//     std::weak_ptr<DataObject> objectDPtr = dataGraph.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
-//     auto groupDId = dataGraph.getId(selectedDataGroupPath).value();
+//     std::weak_ptr<DataObject> objectDPtr = dataStructure.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
+//     auto groupDId = dataStructure.getId(selectedDataGroupPath).value();
 //
 //     DeleteData filter;
 //     Arguments args;
@@ -235,15 +235,15 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //     args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //     // Preflight the filter and check result
-//     auto preflightResult = filter.preflight(dataGraph, args);
+//     auto preflightResult = filter.preflight(dataStructure, args);
 //     REQUIRE(preflightResult.outputActions.valid());
 //
 //     // Execute the filter and check the result
-//     auto executeResult = filter.execute(dataGraph, args);
+//     auto executeResult = filter.execute(dataStructure, args);
 //     REQUIRE(executeResult.result.valid());
 //
 //     // Verify edges are wiped
-//     std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths();
+//     std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
 //     for(const auto& path : alteredPaths)
 //     {
 //       for(const auto& nodeName : path.getPathVector())
@@ -253,7 +253,7 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //     }
 //
 //     // Verify node is no longer in data lake
-//     REQUIRE(dataGraph.getData(groupDId) == nullptr);
+//     REQUIRE(dataStructure.getData(groupDId) == nullptr);
 //
 //     // Verify nodes data has been destructed
 //     REQUIRE(objectDPtr.expired());
@@ -279,8 +279,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   SECTION("Orphan Through Edge Deletion")
 //   {
 //     // Create complex DataGraph and unpack it
-//     DataStructure dataGraph(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
-//     std::vector<DataPath> initialPaths = dataGraph.getAllDataPaths();
+//     DataStructure dataStructure(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
+//     std::vector<DataPath> initialPaths = dataStructure.getAllDataPaths();
 //
 //     // Select DataPath to remove
 //     DataPath selectedDataGroupPath({k_GroupBName, k_GroupCName, k_GroupDName, k_ArrayIName}); // We are aiming to delete the D group
@@ -302,15 +302,15 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //     args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //     // Preflight the filter and check result
-//     auto preflightResult = filter.preflight(dataGraph, args);
+//     auto preflightResult = filter.preflight(dataStructure, args);
 //     REQUIRE(preflightResult.outputActions.valid());
 //
 //     // Execute the filter and check the result
-//     auto executeResult = filter.execute(dataGraph, args);
+//     auto executeResult = filter.execute(dataStructure, args);
 //     REQUIRE(executeResult.result.valid());
 //
 //     // Verify edges are wiped
-//     std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths();
+//     std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
 //
 //     // Now that Group D is verifiably gone verify array I still exists
 //     bool arrayIFound = false;
@@ -338,8 +338,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   // a warning will be thrown)
 //
 //   // Create complex DataGraph and unpack it
-//   DataStructure dataGraph(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
-//   std::vector<DataPath> initialPaths = dataGraph.getAllDataPaths();
+//   DataStructure dataStructure(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
+//   std::vector<DataPath> initialPaths = dataStructure.getAllDataPaths();
 //
 //   // Select DataPath to remove
 //   DataPath selectedDataGroupPath({k_GroupBName, k_GroupFName, k_GroupEName});
@@ -370,14 +370,14 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath)); // already verified to exist
 //
 //   // Preflight the filter and check result
-//   auto preflightResult = filter.preflight(dataGraph, args);
+//   auto preflightResult = filter.preflight(dataStructure, args);
 //   REQUIRE(preflightResult.outputActions.valid());
 //
 //   // Execute the filter and check the result
-//   auto executeResult = filter.execute(dataGraph, args);
+//   auto executeResult = filter.execute(dataStructure, args);
 //   REQUIRE(executeResult.result.valid());
 //
-//   std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths();
+//   std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
 //
 //   int32 secondGroupECount = 0;
 //   for(const auto& path : alteredPaths)
@@ -410,8 +410,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   SECTION("Delete Top Level with delete unshared children (Recursion Check)")
 //   {
 //     // Create complex DataGraph and unpack it
-//     DataStructure dataGraph(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
-//     std::vector<DataPath> paths = dataGraph.getAllDataPaths();
+//     DataStructure dataStructure(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
+//     std::vector<DataPath> paths = dataStructure.getAllDataPaths();
 //
 //     // Store Data prior to deletion to verify removal
 //     // The target node here is k_GroupBName (the DataGroup named B)
@@ -420,13 +420,13 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //
 //     for(const auto& path : pathsRemoved)
 //     {
-//       removedValues.emplace(dataGraph.getId(path).value(), dataGraph.getSharedData(path));
+//       removedValues.emplace(dataStructure.getId(path).value(), dataStructure.getSharedData(path));
 //     }
 //
-//     std::weak_ptr<DataObject> objectEPtr = dataGraph.getSharedData(groupEPath); // convert the shared ptr to a weak ptr
-//     auto groupEId = dataGraph.getId(groupEPath).value();
-//     std::weak_ptr<DataObject> objectKPtr = dataGraph.getSharedData(arrayKPath); // convert the shared ptr to a weak ptr
-//     auto arrayKId = dataGraph.getId(arrayKPath).value();
+//     std::weak_ptr<DataObject> objectEPtr = dataStructure.getSharedData(groupEPath); // convert the shared ptr to a weak ptr
+//     auto groupEId = dataStructure.getId(groupEPath).value();
+//     std::weak_ptr<DataObject> objectKPtr = dataStructure.getSharedData(arrayKPath); // convert the shared ptr to a weak ptr
+//     auto arrayKId = dataStructure.getId(arrayKPath).value();
 //
 //     DeleteData filter;
 //     Arguments args;
@@ -436,19 +436,19 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //     args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(groupBPath));
 //
 //     // Preflight the filter and check result
-//     auto preflightResult = filter.preflight(dataGraph, args);
+//     auto preflightResult = filter.preflight(dataStructure, args);
 //     REQUIRE(preflightResult.outputActions.valid());
 //
 //     // Execute the filter and check the result
-//     auto executeResult = filter.execute(dataGraph, args);
+//     auto executeResult = filter.execute(dataStructure, args);
 //     REQUIRE(executeResult.result.valid());
 //
 //     // Verify deleted down to level Three
-//     std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths();
+//     std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
 //     for(const auto& [identifier, weakPtr] : removedValues)
 //     {
 //       // Verify node is no longer in data lake
-//       REQUIRE(dataGraph.getData(identifier) == nullptr);
+//       REQUIRE(dataStructure.getData(identifier) == nullptr);
 //
 //       // Verify node's data has been destructed
 //       REQUIRE(weakPtr.expired());
@@ -456,8 +456,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //
 //     // Verify unshared children not deleted
 //     // Verify E node is in data lake
-//     REQUIRE(dataGraph.getData(groupEId) != nullptr);
-//     REQUIRE(dataGraph.getData(arrayKId) != nullptr);
+//     REQUIRE(dataStructure.getData(groupEId) != nullptr);
+//     REQUIRE(dataStructure.getData(arrayKId) != nullptr);
 //
 //     // Verify E node's data has not been destructed
 //     REQUIRE(!objectEPtr.expired());
@@ -467,8 +467,8 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //   SECTION("Delete Top Level without Regard to Childrens' Parent Count (Recursion Check)")
 //   {
 //     // Create complex DataGraph and unpack it
-//     DataStructure dataGraph(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
-//     std::vector<DataPath> paths = dataGraph.getAllDataPaths();
+//     DataStructure dataStructure(std::move(UnitTest::CreateComplexMultiLevelDataGraph()));
+//     std::vector<DataPath> paths = dataStructure.getAllDataPaths();
 //
 //     // Store Data prior to deletion to verify removal
 //     // The target node here is k_GroupBName (the DataGroup named B)
@@ -477,7 +477,7 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //
 //     for(const auto& path : pathsRemoved)
 //     {
-//       removedValues.emplace(dataGraph.getId(path).value(), dataGraph.getSharedData(path));
+//       removedValues.emplace(dataStructure.getId(path).value(), dataStructure.getSharedData(path));
 //     }
 //
 //     DeleteData filter;
@@ -488,19 +488,19 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 //     args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(groupBPath));
 //
 //     // Preflight the filter and check result
-//     auto preflightResult = filter.preflight(dataGraph, args);
+//     auto preflightResult = filter.preflight(dataStructure, args);
 //     REQUIRE(preflightResult.outputActions.valid());
 //
 //     // Execute the filter and check the result
-//     auto executeResult = filter.execute(dataGraph, args);
+//     auto executeResult = filter.execute(dataStructure, args);
 //     REQUIRE(executeResult.result.valid());
 //
 //     // Verify deleted down to level Three
-//     std::vector<DataPath> alteredPaths = dataGraph.getAllDataPaths();
+//     std::vector<DataPath> alteredPaths = dataStructure.getAllDataPaths();
 //     for(const auto& [identifier, weakPtr] : removedValues)
 //     {
 //       // Verify node is no longer in data lake
-//       REQUIRE(dataGraph.getData(identifier) == nullptr);
+//       REQUIRE(dataStructure.getData(identifier) == nullptr);
 //
 //       // Verify node's data has been destructed
 //       REQUIRE(weakPtr.expired());

@@ -33,7 +33,7 @@ TEST_CASE("ComplexCore::MoveData Successful", "[Complex::Core][MoveData]")
 {
   MoveData filter;
   Arguments args;
-  DataStructure dataGraph = createDataStructure();
+  DataStructure dataStructure = createDataStructure();
 
   const DataPath k_Group1Path({k_Group1Name});
   const DataPath k_Group3Path({k_Group2Name, k_Group3Name});
@@ -42,30 +42,30 @@ TEST_CASE("ComplexCore::MoveData Successful", "[Complex::Core][MoveData]")
   args.insertOrAssign(MoveData::k_NewParent_Key, std::make_any<DataPath>(k_Group1Path));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto* group1 = dataGraph.getDataAs<DataGroup>(k_Group1Path);
+  const auto* group1 = dataStructure.getDataAs<DataGroup>(k_Group1Path);
   REQUIRE(group1->getDataMap().getSize() == 1);
 
-  const auto* group2 = dataGraph.getDataAs<DataGroup>(DataPath({k_Group2Name}));
+  const auto* group2 = dataStructure.getDataAs<DataGroup>(DataPath({k_Group2Name}));
   REQUIRE(group2->getDataMap().getSize() == 1);
 
-  REQUIRE(dataGraph.getDataAs<DataGroup>(k_Group3Path) == nullptr);
+  REQUIRE(dataStructure.getDataAs<DataGroup>(k_Group3Path) == nullptr);
 
   const DataPath newGroup3Path = k_Group1Path.createChildPath(k_Group3Name);
-  REQUIRE(dataGraph.getDataAs<DataGroup>(newGroup3Path) != nullptr);
+  REQUIRE(dataStructure.getDataAs<DataGroup>(newGroup3Path) != nullptr);
 }
 
 TEST_CASE("ComplexCore::MoveData Unsuccessful", "[Complex::Core][MoveData]")
 {
   MoveData filter;
   Arguments args;
-  DataStructure dataGraph = createDataStructure();
+  DataStructure dataStructure = createDataStructure();
 
   const DataPath k_Group2Path({k_Group2Name});
   const DataPath k_Group3Path({k_Group3Name});
@@ -74,6 +74,6 @@ TEST_CASE("ComplexCore::MoveData Unsuccessful", "[Complex::Core][MoveData]")
   args.insertOrAssign(MoveData::k_NewParent_Key, std::make_any<DataPath>(k_Group2Path));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }

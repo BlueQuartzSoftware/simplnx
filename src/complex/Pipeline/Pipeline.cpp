@@ -126,35 +126,35 @@ void Pipeline::setName(const std::string& name)
 
 bool Pipeline::preflight(const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
-  DataStructure dataGraph;
-  return preflight(dataGraph, shouldCancel, allowRenaming);
+  DataStructure dataStructure;
+  return preflight(dataStructure, shouldCancel, allowRenaming);
 }
 
-bool Pipeline::preflight(DataStructure& dataGraph, const std::atomic_bool& shouldCancel)
+bool Pipeline::preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
-  return preflight(dataGraph, shouldCancel, false);
+  return preflight(dataStructure, shouldCancel, false);
 }
 
-bool Pipeline::preflight(DataStructure& dataGraph, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool Pipeline::preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   RenamedPaths renamedPaths;
-  return preflight(dataGraph, renamedPaths, shouldCancel, allowRenaming);
+  return preflight(dataStructure, renamedPaths, shouldCancel, allowRenaming);
 }
 
 bool Pipeline::execute(const std::atomic_bool& shouldCancel)
 {
-  DataStructure dataGraph;
-  return execute(dataGraph, shouldCancel);
+  DataStructure dataStructure;
+  return execute(dataStructure, shouldCancel);
 }
 
-bool Pipeline::preflight(DataStructure& dataGraph, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool Pipeline::preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
-  return preflightFrom(0, dataGraph, renamedPaths, shouldCancel, allowRenaming);
+  return preflightFrom(0, dataStructure, renamedPaths, shouldCancel, allowRenaming);
 }
 
-bool Pipeline::execute(DataStructure& dataGraph, const std::atomic_bool& shouldCancel)
+bool Pipeline::execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
-  return executeFrom(0, dataGraph, shouldCancel);
+  return executeFrom(0, dataStructure, shouldCancel);
 }
 
 bool Pipeline::canPreflightFrom(index_type index) const
@@ -170,13 +170,13 @@ bool Pipeline::canPreflightFrom(index_type index) const
   return at(index - 1)->isPreflighted() && !hasErrorsBeforeIndex(index);
 }
 
-bool Pipeline::preflightFrom(index_type index, DataStructure& dataGraph, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   RenamedPaths renamedPaths;
-  return preflightFrom(index, dataGraph, renamedPaths, shouldCancel, allowRenaming);
+  return preflightFrom(index, dataStructure, renamedPaths, shouldCancel, allowRenaming);
 }
 
-bool Pipeline::preflightFrom(index_type index, DataStructure& dataGraph, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   if(!canPreflightFrom(index))
   {
@@ -207,7 +207,7 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataGraph, Renamed
     }
     startObservingNode(iter->get());
     PipelineFilter::RenamedPaths renamedPathsRef;
-    bool succeeded = node->preflight(dataGraph, renamedPathsRef, shouldCancel, allowRenaming);
+    bool succeeded = node->preflight(dataStructure, renamedPathsRef, shouldCancel, allowRenaming);
     stopObservingNode();
 
     if(allowRenaming)
@@ -248,8 +248,8 @@ bool Pipeline::preflightFrom(index_type index, RenamedPaths& renamedPaths, const
   }
 
   auto node = at(index - 1);
-  DataStructure dataGraph = node->getPreflightStructure();
-  return preflightFrom(index, dataGraph, shouldCancel);
+  DataStructure dataStructure = node->getPreflightStructure();
+  return preflightFrom(index, dataStructure, shouldCancel);
 }
 
 bool Pipeline::canExecuteFrom(index_type index) const
@@ -265,7 +265,7 @@ bool Pipeline::canExecuteFrom(index_type index) const
   return !hasErrorsBeforeIndex(index);
 }
 
-bool Pipeline::executeFrom(index_type index, DataStructure& dataGraph, const std::atomic_bool& shouldCancel)
+bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
   if(!canExecuteFrom(index))
   {
@@ -295,7 +295,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataGraph, const std
       continue;
     }
 
-    bool success = filter->execute(dataGraph, shouldCancel);
+    bool success = filter->execute(dataStructure, shouldCancel);
     // Check if the filter was cancelled, and send out signal if it was.
     if(shouldCancel)
     {
@@ -312,7 +312,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataGraph, const std
     }
   }
 
-  setDataStructure(dataGraph);
+  setDataStructure(dataStructure);
 
   sendPipelineFaultMessage(m_FaultState);
   sendPipelineRunStateMessage(RunState::Idle);
@@ -332,8 +332,8 @@ bool Pipeline::executeFrom(index_type index, const std::atomic_bool& shouldCance
   }
 
   auto* node = at(index - 1);
-  DataStructure dataGraph = node->getDataStructure();
-  return executeFrom(index, dataGraph, shouldCancel);
+  DataStructure dataStructure = node->getDataStructure();
+  return executeFrom(index, dataStructure, shouldCancel);
 }
 
 bool Pipeline::hasWarningsBeforeIndex(index_type index) const

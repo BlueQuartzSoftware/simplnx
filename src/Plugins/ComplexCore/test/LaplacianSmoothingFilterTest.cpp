@@ -28,7 +28,7 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
   std::string triangleVertexDataGroupName = INodeGeometry0D::k_VertexDataName;
   std::string nodeTypeArrayName = "Node Type";
 
-  DataStructure dataGraph;
+  DataStructure dataStructure;
 
   {
     Arguments args;
@@ -45,14 +45,14 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(triangleGeomDataPath));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
     REQUIRE(triangleGeom.getNumberOfVertices() == 48);
   }
@@ -60,19 +60,19 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
   {
     DataPath triangleGeometryPath({triangleGeometryName});
 
-    DataObject::IdType triangleGeometryId = dataGraph.getId(triangleGeometryPath).value();
+    DataObject::IdType triangleGeometryId = dataStructure.getId(triangleGeometryPath).value();
     DataPath vertexDataGroupPath = triangleGeometryPath.createChildPath(triangleVertexDataGroupName);
-    DataObject::IdType vertexDataGroupId = dataGraph.getId(vertexDataGroupPath).value();
+    DataObject::IdType vertexDataGroupId = dataStructure.getId(vertexDataGroupPath).value();
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     LaplacianSmoothingFilter filter;
     Arguments args;
 
-    TriangleGeom& triangleGeom = dataGraph.getDataRefAs<TriangleGeom>(triangleGeometryPath);
+    TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
     std::vector<size_t> tupleShape = {triangleGeom.getNumberOfVertices()};
     std::vector<size_t> compShape = {1};
     // Insert a Node Type array into the DataStructure so the filter works.
-    Int8Array* nodeType = complex::UnitTest::CreateTestDataArray<int8_t>(dataGraph, nodeTypeArrayName, tupleShape, compShape, vertexDataGroupId);
+    Int8Array* nodeType = complex::UnitTest::CreateTestDataArray<int8_t>(dataStructure, nodeTypeArrayName, tupleShape, compShape, vertexDataGroupId);
 
     // Assign the `Default Node Type` to all the values
     for(size_t i = 0; i < triangleGeom.getNumberOfVertices(); i++)
@@ -96,7 +96,7 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     args.insertOrAssign(LaplacianSmoothingFilter::k_TriangleGeometryDataPath_Key, std::make_any<DataPath>(triangleGeometryPath));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     if(preflightResult.outputActions.invalid())
     {
       for(const auto& error : preflightResult.outputActions.errors())
@@ -107,14 +107,14 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(dataGraph, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
 
   Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/LaplacianSmoothing.dream3d", unit_test::k_BinaryTestOutputDir));
   H5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataGraph.writeHdf5(fileWriter);
+  herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
 

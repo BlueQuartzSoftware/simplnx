@@ -20,7 +20,7 @@ TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parame
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyFeatureArrayToElementArray filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -29,7 +29,7 @@ TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parame
   args.insertOrAssign(CopyFeatureArrayToElementArray::k_CreatedArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(""));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
   REQUIRE(preflightResult.outputActions.errors().size() == 3);
   for(const Error& err : preflightResult.outputActions.errors())
@@ -38,7 +38,7 @@ TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parame
   }
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 3);
   for(const Error& err : executeResult.result.errors())
@@ -50,10 +50,10 @@ TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parame
 using ListOfTypes = std::tuple<int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64>;
 TEMPLATE_LIST_TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Valid filter execution", "[Core][CopyFeatureArrayToElementArray]", ListOfTypes)
 {
-  DataStructure dataGraph;
+  DataStructure dataStructure;
 
   // Create Cell FeatureIds array
-  Int32Array* cellFeatureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataGraph, k_CellFeatureIdsArrayName, {{10, 3}}, {1});
+  Int32Array* cellFeatureIdsPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {{10, 3}}, {1});
   REQUIRE(cellFeatureIdsPtr != nullptr);
   Int32Array& cellFeatureIds = *cellFeatureIdsPtr;
 
@@ -67,7 +67,7 @@ TEMPLATE_LIST_TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Valid filt
   }
 
   // Create a feature data array with 3 values
-  DataArray<TestType>* avgTempValuePtr = DataArray<TestType>::template CreateWithStore<DataStore<TestType>>(dataGraph, k_FeatureDataArrayName, {3}, {1});
+  DataArray<TestType>* avgTempValuePtr = DataArray<TestType>::template CreateWithStore<DataStore<TestType>>(dataStructure, k_FeatureDataArrayName, {3}, {1});
   REQUIRE(avgTempValuePtr != nullptr);
   DataArray<TestType>& avgTempValue = *avgTempValuePtr;
 
@@ -85,15 +85,15 @@ TEMPLATE_LIST_TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Valid filt
   args.insertOrAssign(CopyFeatureArrayToElementArray::k_CreatedArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_CellTempArrayName));
 
   // Preflight the filter
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Check the filter results
-  DataArray<TestType>& createdElementArray = dataGraph.getDataRefAs<DataArray<TestType>>(DataPath({k_CellTempArrayName}));
+  DataArray<TestType>& createdElementArray = dataStructure.getDataRefAs<DataArray<TestType>>(DataPath({k_CellTempArrayName}));
   for(usize i = 0; i < createdElementArray.getNumberOfTuples(); i++)
   {
     int32 featureId = cellFeatureIds[i];

@@ -11,13 +11,13 @@
 
 using namespace complex;
 
-TriangleGeom::TriangleGeom(DataStructure& dataGraph, std::string name)
-: INodeGeometry2D(dataGraph, std::move(name))
+TriangleGeom::TriangleGeom(DataStructure& dataStructure, std::string name)
+: INodeGeometry2D(dataStructure, std::move(name))
 {
 }
 
-TriangleGeom::TriangleGeom(DataStructure& dataGraph, std::string name, IdType importId)
-: INodeGeometry2D(dataGraph, std::move(name), importId)
+TriangleGeom::TriangleGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: INodeGeometry2D(dataStructure, std::move(name), importId)
 {
 }
 
@@ -36,20 +36,20 @@ BaseGroup::GroupType TriangleGeom::getGroupType() const
   return GroupType::TriangleGeom;
 }
 
-TriangleGeom* TriangleGeom::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
+TriangleGeom* TriangleGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataGraph, std::move(name)));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-TriangleGeom* TriangleGeom::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
+TriangleGeom* TriangleGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataGraph, std::move(name), importId));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<TriangleGeom>(new TriangleGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }

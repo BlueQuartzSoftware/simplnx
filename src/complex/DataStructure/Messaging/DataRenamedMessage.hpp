@@ -22,12 +22,12 @@ public:
   /**
    * @brief Constructs a DataRenamedMessage specifying which DataObject was
    * renamed, its old name, and new name.
-   * @param dataGraph
+   * @param dataStructure
    * @param dataId
    * @param prevName
    * @param newName
    */
-  DataRenamedMessage(const DataStructure* dataGraph, DataObject::IdType dataId, const std::string& prevName, const std::string& newName);
+  DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType dataId, const std::string& prevName, const std::string& newName);
 
   /**
    * @brief Creates a copy of the target DataRenamedMessage.

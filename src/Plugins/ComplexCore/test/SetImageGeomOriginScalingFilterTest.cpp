@@ -17,7 +17,7 @@ TEST_CASE("ComplexCore::SetImageGeomOriginScalingFilter(Instantiate)", "[Complex
   std::vector<float64> k_Spacing{1, 1, 1};
 
   SetImageGeomOriginScalingFilter filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   args.insert(SetImageGeomOriginScalingFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
@@ -26,7 +26,7 @@ TEST_CASE("ComplexCore::SetImageGeomOriginScalingFilter(Instantiate)", "[Complex
   args.insert(SetImageGeomOriginScalingFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
   args.insert(SetImageGeomOriginScalingFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
 
-  auto result = filter.preflight(dataGraph, args);
+  auto result = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.outputActions);
 }
 
@@ -39,7 +39,7 @@ TEST_CASE("ComplexCore::SetImageGeomOriginScalingFilter(Valid Parameters)", "[Co
   std::vector<float64> k_Spacing{2, 2, 2};
 
   SetImageGeomOriginScalingFilter filter;
-  DataStructure dataGraph = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
   Arguments args;
 
   args.insert(SetImageGeomOriginScalingFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
@@ -48,13 +48,13 @@ TEST_CASE("ComplexCore::SetImageGeomOriginScalingFilter(Valid Parameters)", "[Co
   args.insert(SetImageGeomOriginScalingFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
   args.insert(SetImageGeomOriginScalingFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
 
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto result = filter.execute(dataGraph, args);
+  auto result = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
-  auto& imageGeom = dataGraph.getDataRefAs<ImageGeom>(k_ImageGeomPath);
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeom.getOrigin() == FloatVec3{7, 6, 5});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
 }

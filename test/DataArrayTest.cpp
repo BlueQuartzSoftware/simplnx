@@ -15,7 +15,7 @@ using namespace complex;
 
 TEST_CASE("DataArrayCreation")
 {
-  complex::DataStructure dataGraph;
+  complex::DataStructure dataStructure;
 
   using DataStoreType = complex::DataStore<int32_t>;
   DataStoreType data_array = DataStoreType(complex::IDataStore::ShapeType{0}, complex::IDataStore::ShapeType{2}, 0);

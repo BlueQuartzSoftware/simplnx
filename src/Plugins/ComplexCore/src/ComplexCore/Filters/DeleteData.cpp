@@ -67,11 +67,11 @@ IFilter::UniquePointer DeleteData::clone() const
   return std::make_unique<DeleteData>();
 }
 
-IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataGraph, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   // auto deletionType = static_cast<DeletionType>(args.value<ChoicesParameter::ValueType>(k_DeletionType_Key));
   auto dataObjectPath = args.value<DataPath>(k_DataPath_Key);
-  const auto* dataObject = dataGraph.getDataAs<DataObject>(dataObjectPath);
+  const auto* dataObject = dataStructure.getDataAs<DataObject>(dataObjectPath);
 
   OutputActions deleteActions;
   // switch(deletionType)
@@ -138,7 +138,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataGrap
   //      deleteActions.actions.push_back(std::move(action));
   //      return {ConvertResultTo<OutputActions>(
   //          MakeWarningVoidResult(-61504, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
-  //                                                    dataGraph.getData(dataObjectPath)->getTypeName())),
+  //                                                    dataStructure.getData(dataObjectPath)->getTypeName())),
   //          {})};
   //    }
   //    else
@@ -169,7 +169,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataGrap
   //    deleteActions.actions.push_back(std::move(action));
   //    return {ConvertResultTo<OutputActions>(
   //        MakeWarningVoidResult(-61505, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
-  //                                                  dataGraph.getData(dataObjectPath)->getTypeName())),
+  //                                                  dataStructure.getData(dataObjectPath)->getTypeName())),
   //        {})};
   //  }
   //  else

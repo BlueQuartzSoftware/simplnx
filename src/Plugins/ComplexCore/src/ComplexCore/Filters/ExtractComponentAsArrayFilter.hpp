@@ -78,17 +78,17 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param dataGraph The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& dataGraph, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param dataGraph The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function

@@ -100,7 +100,7 @@ DataStructure createDataStructure()
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void TestSplitByType(DataStructure& dataGraph, const std::string& dataType, const DynamicTableInfo::RowType& extractComps = {})
+void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, const DynamicTableInfo::RowType& extractComps = {})
 {
   SplitAttributeArrayFilter filter;
 
@@ -130,16 +130,16 @@ void TestSplitByType(DataStructure& dataGraph, const std::string& dataType, cons
     }
   }
 
-  auto executeResults = filter.execute(dataGraph, args);
+  auto executeResults = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResults.result);
 
   using DataArrayPtrType = DataArray<T>*;
 
-  DataArray<T>& mcArray_original = dataGraph.getDataRefAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType}));
+  DataArray<T>& mcArray_original = dataStructure.getDataRefAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType}));
   std::map<usize, DataArrayPtrType> mcArraysAfterSplit;
   for(const auto& comp : compsToCheck)
   {
-    DataArrayPtrType mcArray = dataGraph.getDataAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType + "Component" + StringUtilities::number(comp)}));
+    DataArrayPtrType mcArray = dataStructure.getDataAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType + "Component" + StringUtilities::number(comp)}));
     mcArraysAfterSplit[comp] = mcArray;
   }
 
@@ -159,20 +159,20 @@ void TestSplitByType(DataStructure& dataGraph, const std::string& dataType, cons
 // -----------------------------------------------------------------------------
 TEST_CASE("ComplexCore::SplitAttributeArray", "[ComplexCore][SplitAttributeArrayFilter]")
 {
-  DataStructure dataGraph = createDataStructure();
+  DataStructure dataStructure = createDataStructure();
 
-  TestSplitByType<uint32>(dataGraph, "uint32");
-  TestSplitByType<bool>(dataGraph, "bool");
-  TestSplitByType<int8>(dataGraph, "int8");
-  TestSplitByType<uint8>(dataGraph, "uint8", {1, 3});
-  TestSplitByType<int16>(dataGraph, "int16");
-  TestSplitByType<uint16>(dataGraph, "uint16");
-  TestSplitByType<int32>(dataGraph, "int32");
-  TestSplitByType<int64>(dataGraph, "int64");
-  TestSplitByType<uint64>(dataGraph, "uint64");
-  TestSplitByType<float>(dataGraph, "float");
-  TestSplitByType<double>(dataGraph, "double");
+  TestSplitByType<uint32>(dataStructure, "uint32");
+  TestSplitByType<bool>(dataStructure, "bool");
+  TestSplitByType<int8>(dataStructure, "int8");
+  TestSplitByType<uint8>(dataStructure, "uint8", {1, 3});
+  TestSplitByType<int16>(dataStructure, "int16");
+  TestSplitByType<uint16>(dataStructure, "uint16");
+  TestSplitByType<int32>(dataStructure, "int32");
+  TestSplitByType<int64>(dataStructure, "int64");
+  TestSplitByType<uint64>(dataStructure, "uint64");
+  TestSplitByType<float>(dataStructure, "float");
+  TestSplitByType<double>(dataStructure, "double");
 #ifndef __APPLE__
-  TestSplitByType<usize>(dataGraph, "size_t");
+  TestSplitByType<usize>(dataStructure, "size_t");
 #endif
 }

@@ -10,13 +10,13 @@
 
 using namespace complex;
 
-TetrahedralGeom::TetrahedralGeom(DataStructure& dataGraph, std::string name)
-: INodeGeometry3D(dataGraph, std::move(name))
+TetrahedralGeom::TetrahedralGeom(DataStructure& dataStructure, std::string name)
+: INodeGeometry3D(dataStructure, std::move(name))
 {
 }
 
-TetrahedralGeom::TetrahedralGeom(DataStructure& dataGraph, std::string name, IdType importId)
-: INodeGeometry3D(dataGraph, std::move(name), importId)
+TetrahedralGeom::TetrahedralGeom(DataStructure& dataStructure, std::string name, IdType importId)
+: INodeGeometry3D(dataStructure, std::move(name), importId)
 {
 }
 
@@ -35,20 +35,20 @@ BaseGroup::GroupType TetrahedralGeom::getGroupType() const
   return GroupType::TetrahedralGeom;
 }
 
-TetrahedralGeom* TetrahedralGeom::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
+TetrahedralGeom* TetrahedralGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(dataGraph, std::move(name)));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-TetrahedralGeom* TetrahedralGeom::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
+TetrahedralGeom* TetrahedralGeom::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(dataGraph, std::move(name), importId));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<TetrahedralGeom>(new TetrahedralGeom(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }

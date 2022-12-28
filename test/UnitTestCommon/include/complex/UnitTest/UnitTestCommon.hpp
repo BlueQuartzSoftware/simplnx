@@ -467,7 +467,7 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
 /**
  * @brief Creates a DataArray backed by a DataStore (in memory).
  * @tparam T The primitive type to use, i.e. int8, float, double
- * @param dataGraph The DataStructure to use
+ * @param dataStructure The DataStructure to use
  * @param name The name of the DataArray
  * @param tupleShape  The tuple dimensions of the data. If you want to mimic an image then your shape should be {height, width} slowest to fastest dimension
  * @param componentShape The component dimensions of the data. If you want to mimic an RGB image then your component would be {3},
@@ -476,22 +476,22 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
  * @return
  */
 template <typename T>
-DataArray<T>* CreateTestDataArray(DataStructure& dataGraph, const std::string& name, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
+DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
                                   DataObject::IdType parentId = {})
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
 
-  ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(dataGraph, name, tupleShape, componentShape, parentId);
+  ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, name, tupleShape, componentShape, parentId);
   dataArray->fill(static_cast<T>(0.0));
   return dataArray;
 }
 
 template <typename T>
-NeighborList<T>* CreateTestNeighborList(DataStructure& dataGraph, const std::string& name, usize numTuples, DataObject::IdType parentId)
+NeighborList<T>* CreateTestNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, DataObject::IdType parentId)
 {
   using NeighborListType = NeighborList<T>;
-  auto* neighborList = NeighborListType::Create(dataGraph, name, numTuples, parentId);
+  auto* neighborList = NeighborListType::Create(dataStructure, name, numTuples, parentId);
   neighborList->resizeTotalElements(numTuples);
   return neighborList;
 }
@@ -502,12 +502,12 @@ NeighborList<T>* CreateTestNeighborList(DataStructure& dataGraph, const std::str
  */
 inline DataStructure CreateDataStructure()
 {
-  DataStructure dataGraph;
-  DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataGraph, Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataStructure dataStructure;
+  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
   // Create an Image Geometry grid for the Scan Data
-  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, scanData->getId());
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, scanData->getId());
   imageGeom->setSpacing({0.25f, 0.55f, 1.86});
   imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
   SizeVec3 imageGeomDims = {40, 60, 80};
@@ -518,31 +518,31 @@ inline DataStructure CreateDataStructure()
   usize numComponents = 1;
   std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  Float32Array* ci_data = CreateTestDataArray<float>(dataGraph, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataGraph, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* phases_data = CreateTestDataArray<int32>(dataGraph, "Phases", tupleShape, {numComponents}, scanData->getId());
-  USizeArray* voxelIndices = CreateTestDataArray<usize>(dataGraph, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
+  Float32Array* ci_data = CreateTestDataArray<float>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
+  Int32Array* phases_data = CreateTestDataArray<int32>(dataStructure, "Phases", tupleShape, {numComponents}, scanData->getId());
+  USizeArray* voxelIndices = CreateTestDataArray<usize>(dataStructure, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
 
-  BoolArray* conditionalArray = CreateTestDataArray<bool>(dataGraph, Constants::k_ConditionalArray, tupleShape, {1}, scanData->getId());
+  BoolArray* conditionalArray = CreateTestDataArray<bool>(dataStructure, Constants::k_ConditionalArray, tupleShape, {1}, scanData->getId());
   conditionalArray->fill(true);
 
   numComponents = 3;
-  UInt8Array* ipf_color_data = CreateTestDataArray<uint8>(dataGraph, "IPF Colors", tupleShape, {numComponents}, scanData->getId());
-  Float32Array* euler_data = CreateTestDataArray<float>(dataGraph, "Euler", tupleShape, {numComponents}, scanData->getId());
+  UInt8Array* ipf_color_data = CreateTestDataArray<uint8>(dataStructure, "IPF Colors", tupleShape, {numComponents}, scanData->getId());
+  Float32Array* euler_data = CreateTestDataArray<float>(dataStructure, "Euler", tupleShape, {numComponents}, scanData->getId());
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
-  DataGroup* ensembleGroup = DataGroup::Create(dataGraph, "Phase Data", topLevelGroup->getId());
+  DataGroup* ensembleGroup = DataGroup::Create(dataStructure, "Phase Data", topLevelGroup->getId());
   numComponents = 1;
   usize numTuples = 2;
-  Int32Array* laue_data = CreateTestDataArray<int32>(dataGraph, "Laue Class", {numTuples}, {numComponents}, ensembleGroup->getId());
+  Int32Array* laue_data = CreateTestDataArray<int32>(dataStructure, "Laue Class", {numTuples}, {numComponents}, ensembleGroup->getId());
 
   // Create a Vertex Geometry grid for the Scan Data
-  VertexGeom* vertexGeom = VertexGeom::Create(dataGraph, Constants::k_VertexGeometry, scanData->getId());
+  VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry, scanData->getId());
   vertexGeom->setVertices(*euler_data);
 
-  // NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataGraph, "Neighbor List", numTuples, scanData->getId());
+  // NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataStructure, "Neighbor List", numTuples, scanData->getId());
 
-  return dataGraph;
+  return dataStructure;
 }
 
 /**
@@ -552,16 +552,16 @@ inline DataStructure CreateDataStructure()
  */
 inline DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShape)
 {
-  DataStructure dataGraph;
-  DataGroup* levelZeroGroup = DataGroup::Create(dataGraph, Constants::k_LevelZero);
+  DataStructure dataStructure;
+  DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
   // auto levelZeroId = levelZeroGroup->getId();
-  DataGroup* levelOneGroup = DataGroup::Create(dataGraph, Constants::k_LevelOne, levelZeroGroup->getId());
+  DataGroup* levelOneGroup = DataGroup::Create(dataStructure, Constants::k_LevelOne, levelZeroGroup->getId());
   auto levelOneId = levelOneGroup->getId();
-  DataGroup* levelTwoGroup = DataGroup::Create(dataGraph, Constants::k_LevelTwo, levelZeroGroup->getId());
+  DataGroup* levelTwoGroup = DataGroup::Create(dataStructure, Constants::k_LevelTwo, levelZeroGroup->getId());
   auto levelTwoId = levelTwoGroup->getId();
 
   //  // Create an Image Geometry grid for the Scan Data
-  //  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, levelOneGroup->getId());
+  //  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, levelOneGroup->getId());
   //  SizeVec3 imageGeomDims = {40, 60, 80};
   //  imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
   //  imageGeom->setSpacing({0.25f, 0.55f, 1.86});
@@ -571,48 +571,48 @@ inline DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShap
   // Create Scalar type data
   DataStore<usize>::ShapeType componentShape = {1ULL};
 
-  CreateTestDataArray<int8>(dataGraph, Constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint8>(dataGraph, Constants::k_Uint8DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint8>(dataStructure, Constants::k_Uint8DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int16>(dataGraph, Constants::k_Int16DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint16>(dataGraph, Constants::k_Uint16DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int16>(dataStructure, Constants::k_Int16DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint16>(dataStructure, Constants::k_Uint16DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int32>(dataGraph, Constants::k_Int32DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint32>(dataGraph, Constants::k_Uint32DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int32>(dataStructure, Constants::k_Int32DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint32>(dataStructure, Constants::k_Uint32DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int64>(dataGraph, Constants::k_Int64DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint64>(dataGraph, Constants::k_Uint64DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int64>(dataStructure, Constants::k_Int64DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint64>(dataStructure, Constants::k_Uint64DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<float32>(dataGraph, Constants::k_Float32DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<float64>(dataGraph, Constants::k_Float64DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<float32>(dataStructure, Constants::k_Float32DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<float64>(dataStructure, Constants::k_Float64DataSet, tupleShape, componentShape, levelOneId);
 
   // Create Vector/RGB type of data
   componentShape = {3ULL};
-  CreateTestDataArray<int8>(dataGraph, Constants::k_Int8DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint8>(dataGraph, Constants::k_Uint8DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint8>(dataStructure, Constants::k_Uint8DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int16>(dataGraph, Constants::k_Int16DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint16>(dataGraph, Constants::k_Uint16DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int16>(dataStructure, Constants::k_Int16DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint16>(dataStructure, Constants::k_Uint16DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int32>(dataGraph, Constants::k_Int32DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint32>(dataGraph, Constants::k_Uint32DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int32>(dataStructure, Constants::k_Int32DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint32>(dataStructure, Constants::k_Uint32DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int64>(dataGraph, Constants::k_Int64DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint64>(dataGraph, Constants::k_Uint64DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int64>(dataStructure, Constants::k_Int64DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint64>(dataStructure, Constants::k_Uint64DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<float32>(dataGraph, Constants::k_Float32DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<float64>(dataGraph, Constants::k_Float64DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<float32>(dataStructure, Constants::k_Float32DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<float64>(dataStructure, Constants::k_Float64DataSet, tupleShape, componentShape, levelTwoId);
 
-  return dataGraph;
+  return dataStructure;
 }
 
 /**
  * @brief Adds an ImageGeometry of the prescribed size to a group in the DataStructure.
  */
-inline void AddImageGeometry(DataStructure& dataGraph, const SizeVec3& imageGeomDims, const FloatVec3& spacing, const FloatVec3& origin, const DataGroup& dataGroup)
+inline void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& imageGeomDims, const FloatVec3& spacing, const FloatVec3& origin, const DataGroup& dataGroup)
 {
   // Create an Image Geometry grid for the Scan Data
-  ImageGeom* imageGeom = ImageGeom::Create(dataGraph, Constants::k_ImageGeometry, dataGroup.getId());
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, dataGroup.getId());
   if(imageGeom == nullptr)
   {
     throw std::runtime_error("UnitTestCommon: Unable to create ImageGeom");
@@ -724,20 +724,20 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
  */
 inline DataStructure CreateComplexMultiLevelDataGraph()
 {
-  DataStructure dataGraph;
+  DataStructure dataStructure;
 
   // Level Zero //
-  auto* groupA = DataGroup::Create(dataGraph, Constants::k_GroupAName);
-  auto* groupB = DataGroup::Create(dataGraph, Constants::k_GroupBName);
+  auto* groupA = DataGroup::Create(dataStructure, Constants::k_GroupAName);
+  auto* groupB = DataGroup::Create(dataStructure, Constants::k_GroupBName);
 
   auto groupAPath = DataPath({groupA->getName()});
   auto groupBPath = DataPath({groupB->getName()});
 
   // Level One //
-  auto* groupH = DataGroup::Create(dataGraph, Constants::k_GroupHName, groupA->getId());
-  auto* groupC = DataGroup::Create(dataGraph, Constants::k_GroupCName, groupA->getId());
-  groupB->insert(dataGraph.getSharedData(groupC->getId()));
-  auto* groupF = DataGroup::Create(dataGraph, Constants::k_GroupFName, groupB->getId());
+  auto* groupH = DataGroup::Create(dataStructure, Constants::k_GroupHName, groupA->getId());
+  auto* groupC = DataGroup::Create(dataStructure, Constants::k_GroupCName, groupA->getId());
+  groupB->insert(dataStructure.getSharedData(groupC->getId()));
+  auto* groupF = DataGroup::Create(dataStructure, Constants::k_GroupFName, groupB->getId());
 
   auto groupAHPath = groupAPath.createChildPath(groupH->getName());
 
@@ -747,12 +747,12 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   auto groupBFPath = groupBPath.createChildPath(groupF->getName());
 
   // Level Two //
-  auto* groupD = DataGroup::Create(dataGraph, Constants::k_GroupDName, groupC->getId());
-  auto* groupE = DataGroup::Create(dataGraph, Constants::k_GroupEName, groupC->getId());
-  groupB->insert(dataGraph.getSharedData(groupE->getId()));
-  groupF->insert(dataGraph.getSharedData(groupE->getId()));
-  auto* groupG = DataGroup::Create(dataGraph, Constants::k_GroupGName, groupF->getId());
-  auto* arrayN = CreateTestDataArray<int8>(dataGraph, Constants::k_ArrayNName, {1ULL}, {1ULL}, groupH->getId());
+  auto* groupD = DataGroup::Create(dataStructure, Constants::k_GroupDName, groupC->getId());
+  auto* groupE = DataGroup::Create(dataStructure, Constants::k_GroupEName, groupC->getId());
+  groupB->insert(dataStructure.getSharedData(groupE->getId()));
+  groupF->insert(dataStructure.getSharedData(groupE->getId()));
+  auto* groupG = DataGroup::Create(dataStructure, Constants::k_GroupGName, groupF->getId());
+  auto* arrayN = CreateTestDataArray<int8>(dataStructure, Constants::k_ArrayNName, {1ULL}, {1ULL}, groupH->getId());
 
   groupAHPath.createChildPath(arrayN->getName());
 
@@ -767,13 +767,13 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   auto groupBFGPath = groupBFPath.createChildPath(groupG->getName());
 
   // Level Three //
-  auto* arrayI = CreateTestDataArray<uint8>(dataGraph, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupD->getId());
-  auto* arrayJ = CreateTestDataArray<float32>(dataGraph, Constants::k_ArrayJName, {1ULL}, {1ULL}, groupD->getId());
-  groupE->insert(dataGraph.getSharedData(arrayJ->getId()));
-  auto* arrayK = CreateTestDataArray<float64>(dataGraph, Constants::k_ArrayKName, {1ULL}, {1ULL}, groupE->getId());
-  groupG->insert(dataGraph.getSharedData(arrayK->getId()));
-  auto* arrayL = CreateTestDataArray<uint32>(dataGraph, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupG->getId());
-  auto* arrayM = CreateTestDataArray<int64>(dataGraph, Constants::k_ArrayMName, {1ULL}, {1ULL}, groupG->getId());
+  auto* arrayI = CreateTestDataArray<uint8>(dataStructure, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupD->getId());
+  auto* arrayJ = CreateTestDataArray<float32>(dataStructure, Constants::k_ArrayJName, {1ULL}, {1ULL}, groupD->getId());
+  groupE->insert(dataStructure.getSharedData(arrayJ->getId()));
+  auto* arrayK = CreateTestDataArray<float64>(dataStructure, Constants::k_ArrayKName, {1ULL}, {1ULL}, groupE->getId());
+  groupG->insert(dataStructure.getSharedData(arrayK->getId()));
+  auto* arrayL = CreateTestDataArray<uint32>(dataStructure, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupG->getId());
+  auto* arrayM = CreateTestDataArray<int64>(dataStructure, Constants::k_ArrayMName, {1ULL}, {1ULL}, groupG->getId());
 
   groupACDPath.createChildPath(arrayI->getName());
   groupBCDPath.createChildPath(arrayI->getName());
@@ -793,7 +793,7 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
 
   groupBFGPath.createChildPath(arrayM->getName());
 
-  return dataGraph;
+  return dataStructure;
 }
 
 } // namespace UnitTest

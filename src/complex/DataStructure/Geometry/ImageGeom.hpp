@@ -38,7 +38,7 @@ public:
 
   /**
    * @brief
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param parentId = {}
    * @return ImageGeom*
@@ -47,7 +47,7 @@ public:
 
   /**
    * @brief
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param importId
    * @param parentId = {}
@@ -361,18 +361,18 @@ public:
 protected:
   /**
    * @brief
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    */
-  ImageGeom(DataStructure& dataGraph, std::string name);
+  ImageGeom(DataStructure& dataStructure, std::string name);
 
   /**
    * @brief
-   * @param dataGraph
+   * @param dataStructure
    * @param name
    * @param importId
    */
-  ImageGeom(DataStructure& dataGraph, std::string name, IdType importId);
+  ImageGeom(DataStructure& dataStructure, std::string name, IdType importId);
 
 private:
   FloatVec3 m_Spacing;

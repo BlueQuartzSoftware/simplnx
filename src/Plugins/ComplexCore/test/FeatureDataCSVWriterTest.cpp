@@ -51,12 +51,12 @@ std::vector<char> readIn(fs::path filePath)
 TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Instantiate Filter", "[FeatureDataCSVWriterFilter]")
 {
   FeatureDataCSVWriterFilter filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
-  AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataGraph, "TestData");
+  AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataStructure, "TestData");
 
   auto file = std::filesystem::path(fmt::format("{}/{}.csv", k_TestOutput, "CSV_Test"));
-  auto path = dataGraph.getAllDataPaths()[0];
+  auto path = dataStructure.getAllDataPaths()[0];
 
   args.insertOrAssign(FeatureDataCSVWriterFilter::k_FeatureDataFile_Key, std::make_any<FileSystemPathParameter::ValueType>(file));
   args.insertOrAssign(FeatureDataCSVWriterFilter::k_WriteNeighborListData_Key, std::make_any<bool>(true));
@@ -65,19 +65,19 @@ TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Instantiate Filter", "[Featu
   args.insertOrAssign(FeatureDataCSVWriterFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(path));
 
   // Preflight the filter
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Test Algorithm", "[FeatureDataCSVWriterFilter]")
 {
   FeatureDataCSVWriterFilter filter;
-  DataStructure dataGraph;
-  AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataGraph, "TestData");
+  DataStructure dataStructure;
+  AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataStructure, "TestData");
   topLevelGroup.setShape(k_VertexTupleDims);
-  auto path = dataGraph.getAllDataPaths()[0];
+  auto path = dataStructure.getAllDataPaths()[0];
 
-  auto* neighborList = NeighborList<float32>::Create(dataGraph, "Neighbor List", k_NumTuples, topLevelGroup.getId());
+  auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", k_NumTuples, topLevelGroup.getId());
   neighborList->resizeTotalElements(k_NumTuples);
   std::vector<float32> list1 = {117, 875, 1035, 3905, 4214};
   std::vector<float32> list2 = {750, 1905, 1912, 2015, 2586, 3180, 3592, 4041, 4772};
@@ -86,11 +86,11 @@ TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Test Algorithm", "[FeatureDa
   neighborList->setList(1, std::make_shared<std::vector<float32>>(list2));
   neighborList->setList(2, std::make_shared<std::vector<float32>>(list3));
 
-  auto dataArray1 = UnitTest::CreateTestDataArray<float32>(dataGraph, "floats", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto dataArray1 = UnitTest::CreateTestDataArray<float32>(dataStructure, "floats", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray1->fill(1.23);
-  auto dataArray2 = UnitTest::CreateTestDataArray<int32>(dataGraph, "negatives", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto dataArray2 = UnitTest::CreateTestDataArray<int32>(dataStructure, "negatives", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray2->fill(-678);
-  auto dataArray3 = UnitTest::CreateTestDataArray<uint64>(dataGraph, "basic", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  auto dataArray3 = UnitTest::CreateTestDataArray<uint64>(dataStructure, "basic", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
   dataArray3->fill(24343);
 
   auto file = std::filesystem::path(fmt::format("{}/{}.csv", k_TestOutput, "CSV_Test"));
@@ -103,11 +103,11 @@ TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Test Algorithm", "[FeatureDa
   args.insertOrAssign(FeatureDataCSVWriterFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(path));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   auto exemplarPath = fs::path(fmt::format("{}/write_csv_data_exemplars/{}", unit_test::k_TestDataSourceDir, k_CSVExemplarFileName));

@@ -113,22 +113,22 @@ public:
    * @brief Preflights the pipeline segment using the provided DataStructure.
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise.
-   * @param dataGraph
+   * @param dataStructure
    * @param shouldCancel
    * @return bool
    */
-  bool preflight(DataStructure& dataGraph, const std::atomic_bool& shouldCancel) override;
+  bool preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Preflights the pipeline segment using the provided DataStructure.
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise.
-   * @param dataGraph
+   * @param dataStructure
    * @param shouldCancel
    * @param allowRenaming
    * @return bool
    */
-  bool preflight(DataStructure& dataGraph, const std::atomic_bool& shouldCancel, bool allowRenaming);
+  bool preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, bool allowRenaming);
 
   /**
    * @brief Executes the pipeline segment using an empty DataStructure.
@@ -142,22 +142,22 @@ public:
    * @brief Preflights the pipeline segment using the provided DataStructure.
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise.
-   * @param dataGraph
+   * @param dataStructure
    * @param renamedPaths
    * @param shouldCancel
    * @param allowRenaming = false
    * @return bool
    */
-  bool preflight(DataStructure& dataGraph, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming = false) override;
+  bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming = false) override;
 
   /**
    * @brief Executes the pipeline segment using the provided DataStructure.
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise.
-   * @param dataGraph
+   * @param dataStructure
    * @return bool
    */
-  bool execute(DataStructure& dataGraph, const std::atomic_bool& shouldCancel) override;
+  bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override;
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -166,10 +166,10 @@ public:
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise. Returns false if the starting index is out of bounds.
    * @param index
-   * @param dataGraph
+   * @param dataStructure
    * @return bool
    */
-  bool preflightFrom(index_type index, DataStructure& dataGraph, const std::atomic_bool& shouldCancel = false, bool allowRenaming = false);
+  bool preflightFrom(index_type index, DataStructure& dataStructure, const std::atomic_bool& shouldCancel = false, bool allowRenaming = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -178,11 +178,11 @@ public:
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise. Returns false if the starting index is out of bounds.
    * @param index
-   * @param dataGraph
+   * @param dataStructure
    * @param renamedPaths
    * @return bool
    */
-  bool preflightFrom(index_type index, DataStructure& dataGraph, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel = false, bool allowRenaming = false);
+  bool preflightFrom(index_type index, DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel = false, bool allowRenaming = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -234,10 +234,10 @@ public:
    * Returns true if the pipeline segment completes without errors. Returns
    * false otherwise. Returns false if the starting index is out of bounds.
    * @param index
-   * @param dataGraph
+   * @param dataStructure
    * @return bool
    */
-  bool executeFrom(index_type index, DataStructure& dataGraph, const std::atomic_bool& shouldCancel = false);
+  bool executeFrom(index_type index, DataStructure& dataStructure, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Executes the pipeline segment from the target position using the

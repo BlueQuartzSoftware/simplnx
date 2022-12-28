@@ -176,10 +176,10 @@ public:
 protected:
   /**
    * @brief Constructs a LinkedPath for the target DataStructure and vector of DataObject IDs.
-   * @param dataGraph
+   * @param dataStructure
    * @param idPath
    */
-  LinkedPath(const DataStructure* dataGraph, const std::vector<DataObject::IdType>& idPath);
+  LinkedPath(const DataStructure* dataStructure, const std::vector<DataObject::IdType>& idPath);
 
 private:
   const DataStructure* m_DataStructure = nullptr;

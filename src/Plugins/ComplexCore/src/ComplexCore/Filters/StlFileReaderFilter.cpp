@@ -88,7 +88,7 @@ IFilter::UniquePointer StlFileReaderFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure& dataGraph, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
   /**

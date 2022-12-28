@@ -46,9 +46,9 @@ public:
 protected:
   /**
    * @brief Creates an AbstractDataStructureMessage for the target DataStructure.
-   * @param dataGraph
+   * @param dataStructure
    */
-  AbstractDataStructureMessage(const DataStructure* dataGraph);
+  AbstractDataStructureMessage(const DataStructure* dataStructure);
 
 private:
   const DataStructure* m_DataStructure = nullptr;

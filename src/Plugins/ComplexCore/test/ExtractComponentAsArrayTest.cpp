@@ -25,7 +25,7 @@ TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Instantiation and Paramet
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;
-  DataStructure dataGraph = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -36,11 +36,11 @@ TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Instantiation and Paramet
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<DataPath>(k_ExtractedComponentsPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
 
@@ -116,7 +116,7 @@ TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: InValid filter execution"
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;
-  DataStructure dataGraph = UnitTest::LoadDataStructure(k_BaseDataFilePath);
+  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -127,6 +127,6 @@ TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: InValid filter execution"
   args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<DataPath>(k_ExtractedComponentsPath));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(!preflightResult.outputActions.valid());
 }

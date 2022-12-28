@@ -13,13 +13,13 @@
 
 using namespace complex;
 
-AttributeMatrix::AttributeMatrix(DataStructure& dataGraph, std::string name)
-: BaseGroup(dataGraph, std::move(name))
+AttributeMatrix::AttributeMatrix(DataStructure& dataStructure, std::string name)
+: BaseGroup(dataStructure, std::move(name))
 {
 }
 
-AttributeMatrix::AttributeMatrix(DataStructure& dataGraph, std::string name, IdType importId)
-: BaseGroup(dataGraph, std::move(name), importId)
+AttributeMatrix::AttributeMatrix(DataStructure& dataStructure, std::string name, IdType importId)
+: BaseGroup(dataStructure, std::move(name), importId)
 {
 }
 
@@ -39,20 +39,20 @@ BaseGroup::GroupType AttributeMatrix::getGroupType() const
   return GroupType::AttributeMatrix;
 }
 
-AttributeMatrix* AttributeMatrix::Create(DataStructure& dataGraph, std::string name, const std::optional<IdType>& parentId)
+AttributeMatrix* AttributeMatrix::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataGraph, std::move(name)));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStructure, std::move(name)));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }
   return data.get();
 }
 
-AttributeMatrix* AttributeMatrix::Import(DataStructure& dataGraph, std::string name, IdType importId, const std::optional<IdType>& parentId)
+AttributeMatrix* AttributeMatrix::Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
 {
-  auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataGraph, std::move(name), importId));
-  if(!AttemptToAddObject(dataGraph, data, parentId))
+  auto data = std::shared_ptr<AttributeMatrix>(new AttributeMatrix(dataStructure, std::move(name), importId));
+  if(!AttemptToAddObject(dataStructure, data, parentId))
   {
     return nullptr;
   }

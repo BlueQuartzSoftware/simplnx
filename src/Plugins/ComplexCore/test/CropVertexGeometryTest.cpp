@@ -49,7 +49,7 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Instantiate)", "[ComplexCore][CropVer
   static const std::vector<float32> k_MaxPos{5, 6, 7};
 
   CropVertexGeometry filter;
-  DataStructure dataGraph = createTestData();
+  DataStructure dataStructure = createTestData();
   Arguments args;
 
   args.insert(CropVertexGeometry::k_VertexGeom_Key, std::make_any<DataPath>(k_VertexGeomPath));
@@ -59,7 +59,7 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Instantiate)", "[ComplexCore][CropVer
   args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
 
-  auto result = filter.execute(dataGraph, args);
+  auto result = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 }
 
@@ -69,7 +69,7 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Data)", "[ComplexCore][CropVertexGeom
   static const std::vector<float32> k_MaxPos{5, 6, 7};
 
   CropVertexGeometry filter;
-  DataStructure dataGraph = createTestData();
+  DataStructure dataStructure = createTestData();
   Arguments args;
 
   args.insert(CropVertexGeometry::k_VertexGeom_Key, std::make_any<DataPath>(k_VertexGeomPath));
@@ -79,16 +79,16 @@ TEST_CASE("ComplexCore::CropVertexGeometry(Data)", "[ComplexCore][CropVertexGeom
   args.insert(CropVertexGeometry::k_MaxPos_Key, std::make_any<std::vector<float32>>(k_MaxPos));
   args.insert(CropVertexGeometry::k_TargetArrayPaths_Key, std::make_any<std::vector<DataPath>>(targetDataArrays));
 
-  auto result = filter.execute(dataGraph, args);
+  auto result = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(result.result);
 
-  auto* croppedGeom = dataGraph.getDataAs<VertexGeom>(k_CroppedGeomPath);
+  auto* croppedGeom = dataStructure.getDataAs<VertexGeom>(k_CroppedGeomPath);
   REQUIRE(croppedGeom != nullptr);
 
   auto* croppedVertices = croppedGeom->getVertices();
   REQUIRE(croppedVertices != nullptr);
 
-  auto* croppedData = dataGraph.getDataAs<Int32Array>(k_CroppedGeomPath.createChildPath(k_VertexDataName).createChildPath("DataArray"));
+  auto* croppedData = dataStructure.getDataAs<Int32Array>(k_CroppedGeomPath.createChildPath(k_VertexDataName).createChildPath("DataArray"));
   REQUIRE(croppedData != nullptr);
 
   REQUIRE(croppedData->getNumberOfTuples() == 6);
