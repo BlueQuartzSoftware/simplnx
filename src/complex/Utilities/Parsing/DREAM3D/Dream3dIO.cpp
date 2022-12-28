@@ -904,7 +904,8 @@ IDataArray* readLegacyDataArray(DataStructure& dataStructure, const H5::DatasetR
 }
 
 template <typename T>
-void createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, const std::vector<usize>& tupleDims)
+void createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
+                              const std::vector<usize>& tupleDims)
 {
   auto numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
   auto data = NeighborList<T>::ReadHdf5Data(parentReader, datasetReader);
