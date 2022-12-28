@@ -13,10 +13,10 @@ class COMPLEX_EXPORT DeleteDataAction : public IDataAction
 public:
   enum class DeleteType : uint64
   {
-    IndependentChildren = 0,
-    AllChildren = 1,
-    JustObject = 2,
-    JustPath = 3,
+    JustObject = 0,
+    //IndependentChildren = 1,
+    //AllChildren = 2,
+    //JustPath = 3
   };
 
   DeleteDataAction() = delete;
@@ -49,6 +49,7 @@ public:
    * @return DeleteType
    */
   DeleteType type() const;
+
 
 private:
   DataPath m_Path;

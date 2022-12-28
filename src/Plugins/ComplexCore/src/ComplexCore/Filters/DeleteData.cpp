@@ -7,6 +7,14 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 
+/**The commented out code in this filter and the header is set up to offer deeper control
+ * of the dataStructre. The current state of the dataStructure abstracts the underlying data graph
+ * into a heirarchical structure, thus the advanced handling and data management is not necessary.
+ * Should the code be uncommented one should review the test cases and round out the development.
+ * The DeleteDataAction also implements code that has been commented out so it will need review as
+ * well.
+ */
+
 namespace complex
 {
 namespace
@@ -43,10 +51,10 @@ Parameters DeleteData::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Required Parameters"});
-  params.insert(std::make_unique<ChoicesParameter>(k_DeletionType_Key, "Deletion Type", "", to_underlying(DeletionType::DeleteDataPath),
-                                                   ChoicesParameter::Choices{"Delete DataObject", "Delete Path to DataObject", "Delete DataObject and Unshared Child Objects",
-                                                                             "Delete DataObject and All Child Objects"})); // sequence dependent DO NOT REORDER
+  // params.insertSeparator(Parameters::Separator{"Required Parameters"});
+  // params.insert(std::make_unique<ChoicesParameter>(k_DeletionType_Key, "Deletion Type", "", to_underlying(DeletionType::DeleteDataPath),
+  //                                                  ChoicesParameter::Choices{"Delete DataObject", "Delete Path to DataObject", "Delete DataObject and Unshared Child Objects",
+  //                                                                            "Delete DataObject and All Child Objects"})); // sequence dependent DO NOT REORDER
 
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_DataPath_Key, "DataPath to remove", "The complete path to the DataObject to be removed", DataPath({"DataStructure", "DataObject"})));
@@ -61,118 +69,119 @@ IFilter::UniquePointer DeleteData::clone() const
 
 IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataGraph, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  auto deletionType = static_cast<DeletionType>(args.value<ChoicesParameter::ValueType>(k_DeletionType_Key));
+  // auto deletionType = static_cast<DeletionType>(args.value<ChoicesParameter::ValueType>(k_DeletionType_Key));
   auto dataObjectPath = args.value<DataPath>(k_DataPath_Key);
   const auto* dataObject = dataGraph.getDataAs<DataObject>(dataObjectPath);
 
   OutputActions deleteActions;
-  switch(deletionType)
+  // switch(deletionType)
+  //{
+  // case DeletionType::DeleteDataObject: {
+  //   // original
+  //   // Remove Singular Node
+  //   // Rules:
+  //   // - If multiparented, throw warning of effects and recommend DataPath removal instead
+  //   // - Edges that point to node will all be deleted
+  //   // - Node will be deleted
+  //  - IN CURRENT STATE BEHAVES MORE LIKE REMOVE START NODE AND ALL CHILDREN
+
+  if(dataObject->getParentIds().size() > 1)
   {
-  case DeletionType::DeleteDataObject: {
-    // original
-    // Remove Singular Node
-    // Rules:
-    // - If multiparented, throw warning of effects and recommend DataPath removal instead
-    // - Edges that point to node will all be deleted
-    // - Node will be deleted
-
-    if(dataObject->getParentIds().size() > 1)
-    {
-      return {ConvertResultTo<OutputActions>(
-          MakeWarningVoidResult(-61501, fmt::format("The object is multiparented, deleting this data could affect other unintended nodes. Consider using the Delete DataPath instead.")), {})};
-    }
-
-    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
-    deleteActions.actions.push_back(std::move(action));
-
-    break;
+    return {ConvertResultTo<OutputActions>(
+        MakeWarningVoidResult(-61501, fmt::format("The object is multiparented, deleting this data could affect other unintended nodes. Consider using the Delete DataPath instead.")), {})};
   }
 
-  case DeletionType::DeleteDataPath: {
-    // Remove Edge (DataPath)
-    // Rules:
-    // - Neither of the nodes (parent or child) should be deleted
-    // - The edge between the nodes should be removed from both the respective parent and child list
+  auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
+  deleteActions.actions.push_back(std::move(action));
 
-    // check parent that its not a top level path [ie no parent] (can't be removed)
-    if(dataObjectPath.getLength() < 2)
-    {
-      return {MakeErrorResult<OutputActions>(
-          -61502, fmt::format("The DataPath [{}] cannot be processed because it is a top level datapath. Consider using an DataObject removal instead.", dataObjectPath.toString()))};
-    }
+  //  break;
+  //}
 
-    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustPath);
-    deleteActions.actions.push_back(std::move(action));
+  // case DeletionType::DeleteDataPath: {
+  //   // Remove Edge (DataPath)
+  //   // Rules:
+  //   // - Neither of the nodes (parent or child) should be deleted
+  //   // - The edge between the nodes should be removed from both the respective parent and child list
 
-    break;
-  }
+  //  // check parent that its not a top level path [ie no parent] (can't be removed)
+  //  if(dataObjectPath.getLength() < 2)
+  //  {
+  //    return {MakeErrorResult<OutputActions>(
+  //        -61502, fmt::format("The DataPath [{}] cannot be processed because it is a top level datapath. Consider using an DataObject removal instead.", dataObjectPath.toString()))};
+  //  }
 
-  case DeletionType::DeleteUnsharedChildren: {
-    // Remove Start Node and Children Recursively (Independent Removal Only)
-    // Rules:
-    // - If multiparented, any node and all children of that node will are kept
-    // - Edges that point to deleted nodes wil be removed
-    // - If start object is multiparented recommend edge removal instead
+  //  auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustPath);
+  //  deleteActions.actions.push_back(std::move(action));
 
-    // check parent count (Base Case)
-    if(dataObject->getParentIds().size() > 1)
-    {
-      return {
-          ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61503, fmt::format("The object cannot be processed because it is multiparented. Consider using the Delete DataPath instead.")), {})};
-    }
-    else
-    {
-      const auto* baseGroup = dynamic_cast<const BaseGroup*>(dataObject);
-      if(baseGroup == nullptr) // Object is the lowest level in its path
-      {
-        auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
-        deleteActions.actions.push_back(std::move(action));
-        return {ConvertResultTo<OutputActions>(
-            MakeWarningVoidResult(-61504, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
-                                                      dataGraph.getData(dataObjectPath)->getTypeName())),
-            {})};
-      }
-      else
-      {
-        // recurse action
-        auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::IndependentChildren);
-        deleteActions.actions.push_back(std::move(action));
-      }
-    }
+  //  break;
+  //}
 
-    break;
-  }
+  // case DeletionType::DeleteUnsharedChildren: {
+  //   // Remove Start Node and Children Recursively (Independent Removal Only)
+  //   // Rules:
+  //   // - If multiparented, any node and all children of that node will are kept
+  //   // - Edges that point to deleted nodes wil be removed
+  //   // - If start object is multiparented recommend edge removal instead
 
-  case DeletionType::DeleteChildren: {
-    // Remove Start Node and Children Recursively (Complete Removal)
-    // Rules:
-    // - All children will be removed regardless of parent count
-    // - Edges that point to deleted nodes wil be removed
-    // - Warn of absolute deletion of data and effects
+  //  // check parent count (Base Case)
+  //  if(dataObject->getParentIds().size() > 1)
+  //  {
+  //    return {
+  //        ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61503, fmt::format("The object cannot be processed because it is multiparented. Consider using the Delete DataPath instead.")), {})};
+  //  }
+  //  else
+  //  {
+  //    const auto* baseGroup = dynamic_cast<const BaseGroup*>(dataObject);
+  //    if(baseGroup == nullptr) // Object is the lowest level in its path
+  //    {
+  //      auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
+  //      deleteActions.actions.push_back(std::move(action));
+  //      return {ConvertResultTo<OutputActions>(
+  //          MakeWarningVoidResult(-61504, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
+  //                                                    dataGraph.getData(dataObjectPath)->getTypeName())),
+  //          {})};
+  //    }
+  //    else
+  //    {
+  //      // recurse action
+  //      auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::IndependentChildren);
+  //      deleteActions.actions.push_back(std::move(action));
+  //    }
+  //  }
 
-    // This needs to be implemented down the line
-    // ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61505, fmt::format("This action will remove the underlying data which could affect other structures if it is multiparented")), {});
+  //  break;
+  //}
 
-    const auto* baseGroup = dynamic_cast<const BaseGroup*>(dataObject);
-    if(baseGroup == nullptr) // Object is the lowest level in its path
-    {
-      auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
-      deleteActions.actions.push_back(std::move(action));
-      return {ConvertResultTo<OutputActions>(
-          MakeWarningVoidResult(-61505, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
-                                                    dataGraph.getData(dataObjectPath)->getTypeName())),
-          {})};
-    }
-    else
-    {
-      // recurse action
-      auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::AllChildren);
-      deleteActions.actions.push_back(std::move(action));
-    }
+  // case DeletionType::DeleteChildren: {
+  //   // Remove Start Node and Children Recursively (Complete Removal)
+  //   // Rules:
+  //   // - All children will be removed regardless of parent count
+  //   // - Edges that point to deleted nodes wil be removed
+  //   // - Warn of absolute deletion of data and effects
 
-    break;
-  }
-  }
+  //  // This needs to be implemented down the line
+  //  // ConvertResultTo<OutputActions>(MakeWarningVoidResult(-61505, fmt::format("This action will remove the underlying data which could affect other structures if it is multiparented")), {});
+
+  //  const auto* baseGroup = dynamic_cast<const BaseGroup*>(dataObject);
+  //  if(baseGroup == nullptr) // Object is the lowest level in its path
+  //  {
+  //    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
+  //    deleteActions.actions.push_back(std::move(action));
+  //    return {ConvertResultTo<OutputActions>(
+  //        MakeWarningVoidResult(-61505, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
+  //                                                  dataGraph.getData(dataObjectPath)->getTypeName())),
+  //        {})};
+  //  }
+  //  else
+  //  {
+  //    // recurse action
+  //    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::AllChildren);
+  //    deleteActions.actions.push_back(std::move(action));
+  //  }
+
+  //  break;
+  //}
+  //}
 
   return {std::move(deleteActions)};
 }
