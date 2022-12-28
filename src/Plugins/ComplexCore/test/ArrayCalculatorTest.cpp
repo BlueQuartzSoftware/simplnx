@@ -175,7 +175,8 @@ void MultiComponentArrayCalculatorTest()
 
   SECTION("Multi-Component Single Component")
   {
-    IFilter::ExecuteResult results = createAndExecuteArrayCalculatorFilter("MultiComponent Array1[1] + MultiComponent Array2[0]", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
+    IFilter::ExecuteResult results =
+        createAndExecuteArrayCalculatorFilter("MultiComponent Array1[1] + MultiComponent Array2[0]", k_AttributeArrayPath, CalculatorParameter::Radians, dataGraph, filter);
 
     UInt32Array* mcArray1 = dataGraph.getDataAs<UInt32Array>(k_MultiComponentArray1Path);
     UInt32Array* mcArray2 = dataGraph.getDataAs<UInt32Array>(k_MultiComponentArray2Path);

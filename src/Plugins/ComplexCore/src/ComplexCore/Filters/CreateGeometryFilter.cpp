@@ -207,7 +207,8 @@ IFilter::UniquePointer CreateGeometryFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure& dataGraph, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure& dataGraph, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel) const
 {
   auto pGeometryPath = filterArgs.value<DataPath>(k_GeometryName_Key);
   auto pGeometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);

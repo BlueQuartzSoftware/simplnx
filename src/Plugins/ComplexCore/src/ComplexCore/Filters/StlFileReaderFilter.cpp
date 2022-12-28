@@ -88,7 +88,8 @@ IFilter::UniquePointer StlFileReaderFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure& dataGraph, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure& dataGraph, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                            const std::atomic_bool& shouldCancel) const
 {
   /**
    * These are the values that were gathered from the UI or the pipeline file or
