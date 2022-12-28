@@ -83,11 +83,11 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertOrientations filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataGraph, Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
   std::vector<size_t> tupleShape = {10};
   std::vector<size_t> componentShape = {3};
@@ -98,20 +98,20 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
   args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
   // Create default Parameters for the filter.
   {
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     const std::vector<Error>& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
     REQUIRE(errors[0].code == complex::FilterParameter::Constants::k_Validate_Does_Not_Exist);
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataGraph, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
 
   // Create default Parameters for the filter.
   {
     args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(8));
     args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     const std::vector<Error>& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
     REQUIRE(errors[0].code == complex::FilterParameter::Constants::k_Validate_OutOfRange_Error);
@@ -121,7 +121,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
   {
     args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
     args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(8));
-    auto preflightResult = filter.preflight(dataGraph, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     auto& errors = preflightResult.outputActions.errors();
     REQUIRE(errors.size() == 1);
     REQUIRE(errors[0].code == complex::FilterParameter::Constants::k_Validate_OutOfRange_Error);
@@ -134,16 +134,16 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Instantiation and Parameter
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertOrientations filter;
-  DataStructure dataGraph;
+  DataStructure dataStructure;
   Arguments args;
 
-  DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataGraph, Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
   std::vector<size_t> tupleShape = {10};
   std::vector<size_t> componentShape = {3};
 
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataGraph, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
   for(size_t t = 0; t < tupleShape[0]; t++)
   {
     for(size_t c = 0; c < componentShape[0]; c++)
@@ -159,11 +159,11 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Instantiation and Parameter
   args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataGraph, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(dataGraph, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
 
@@ -206,13 +206,13 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
 
       // Instantiate the filter, a DataStructure object and an Arguments Object
       ConvertOrientations filter;
-      DataStructure dataGraph;
+      DataStructure dataStructure;
       Arguments args;
 
-      DataGroup* topLevelGroup = DataGroup::Create(dataGraph, Constants::k_SmallIN100);
-      DataGroup* scanData = DataGroup::Create(dataGraph, Constants::k_EbsdScanData, topLevelGroup->getId());
+      DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+      DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
 
-      Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataGraph, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+      Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
 
       for(size_t t = 0; t < tupleShape[0]; t++)
       {
@@ -229,14 +229,14 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
       args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
 
       // Preflight the filter and check result
-      auto preflightResult = filter.preflight(dataGraph, args);
+      auto preflightResult = filter.preflight(dataStructure, args);
       REQUIRE(preflightResult.outputActions.valid());
 
       // Execute the filter and check the result
-      auto executeResult = filter.execute(dataGraph, args);
+      auto executeResult = filter.execute(dataStructure, args);
       REQUIRE(executeResult.result.valid());
 
-      Float32Array& output = dataGraph.getDataRefAs<Float32Array>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_AxisAngles}));
+      Float32Array& output = dataStructure.getDataRefAs<Float32Array>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_AxisAngles}));
       for(size_t t = 0; t < tupleShape[0]; t++)
       {
         for(size_t c = 0; c < strides[o]; c++)

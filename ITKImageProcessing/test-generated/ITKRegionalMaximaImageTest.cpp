@@ -20,7 +20,7 @@ using namespace complex;
 
 TEST_CASE("ITKRegionalMaximaImageFilter(defaults)", "[ITKImageProcessing][ITKRegionalMaximaImage][defaults]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKRegionalMaximaImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -30,7 +30,7 @@ TEST_CASE("ITKRegionalMaximaImageFilter(defaults)", "[ITKImageProcessing][ITKReg
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -39,12 +39,12 @@ TEST_CASE("ITKRegionalMaximaImageFilter(defaults)", "[ITKImageProcessing][ITKReg
   args.insertOrAssign(ITKRegionalMaximaImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKRegionalMaximaImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "6839f3d9dc5b95e9513d723a3b7430f2");
 }

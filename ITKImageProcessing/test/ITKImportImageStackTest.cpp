@@ -30,17 +30,17 @@ const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath("ImageData");
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoInput", "[ITKImageProcessing][ITKImportImageStack]")
 {
   ITKImportImageStack filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoImageGeometry", "[ITKImageProcessing][ITKImportImageStack]")
 {
   ITKImportImageStack filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   GeneratedFileListParameter::ValueType fileListInfo;
@@ -49,14 +49,14 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoImageGeometry", "[ITKImage
 
   args.insertOrAssign(ITKImportImageStack::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoFiles", "[ITKImageProcessing][ITKImportImageStack]")
 {
   ITKImportImageStack filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   GeneratedFileListParameter::ValueType fileListInfo;
@@ -74,14 +74,14 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoFiles", "[ITKImageProcessi
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: FileDoesNotExist", "[ITKImageProcessing][ITKImportImageStack]")
 {
   ITKImportImageStack filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   GeneratedFileListParameter::ValueType fileListInfo;
@@ -99,14 +99,14 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: FileDoesNotExist", "[ITKImag
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 }
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImageProcessing][ITKImportImageStack]")
 {
   ITKImportImageStack filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   GeneratedFileListParameter::ValueType fileListInfo;
@@ -129,13 +129,13 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImagePro
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto* imageGeom = ds.getDataAs<ImageGeom>(k_ImageGeomPath);
+  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeom != nullptr);
 
   SizeVec3 imageDims = imageGeom->getDimensions();
@@ -156,9 +156,9 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImagePro
   REQUIRE(imageSpacing[1] == Approx(spacing[1]));
   REQUIRE(imageSpacing[2] == Approx(spacing[2]));
 
-  const auto* imageData = ds.getDataAs<UInt8Array>(k_ImageDataPath);
+  const auto* imageData = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
   REQUIRE(imageData != nullptr);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, k_ImageDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
   REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
 }

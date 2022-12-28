@@ -17,7 +17,7 @@ using namespace complex;
 
 TEST_CASE("ITKImageProcessing::ITKAsinImageFilter(defaults)", "[ITKImageProcessing][ITKAsinImage][defaults]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKAsinImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -27,7 +27,7 @@ TEST_CASE("ITKImageProcessing::ITKAsinImageFilter(defaults)", "[ITKImageProcessi
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/Ramp-Zero-One-Float.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -36,17 +36,17 @@ TEST_CASE("ITKImageProcessing::ITKAsinImageFilter(defaults)", "[ITKImageProcessi
   args.insertOrAssign(ITKAsinImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKAsinImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   fs::path baselineFilePath = fs::path(complex::unit_test::k_DataDir.view()) / "JSONFilters/Baseline/BasicFilters_AsinImageFilter_defaults.nrrd";
   DataPath baselineGeometryPath({ITKTestBase::k_BaselineGeometryPath});
   DataPath baseLineCellDataPath = baselineGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
   DataPath baselineDataPath = baseLineCellDataPath.createChildPath(ITKTestBase::k_BaselineDataPath);
-  Result<> readBaselineResult = ITKTestBase::ReadImage(ds, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
-  Result<> compareResult = ITKTestBase::CompareImages(ds, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.01);
+  Result<> readBaselineResult = ITKTestBase::ReadImage(dataStructure, baselineFilePath, baselineGeometryPath, baseLineCellDataPath, baselineDataPath);
+  Result<> compareResult = ITKTestBase::CompareImages(dataStructure, baselineGeometryPath, baselineDataPath, inputGeometryPath, outputDataPath, 0.01);
   COMPLEX_RESULT_REQUIRE_VALID(compareResult);
 }

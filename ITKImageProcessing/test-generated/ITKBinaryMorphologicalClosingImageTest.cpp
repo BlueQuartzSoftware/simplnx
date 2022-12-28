@@ -22,7 +22,7 @@ using namespace complex;
 
 TEST_CASE("ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosing)", "[ITKImageProcessing][ITKBinaryMorphologicalClosingImage][BinaryMorphologicalClosing]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKBinaryMorphologicalClosingImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -32,7 +32,7 @@ TEST_CASE("ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosing)"
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE1.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -43,19 +43,19 @@ TEST_CASE("ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosing)"
   args.insertOrAssign(ITKBinaryMorphologicalClosingImage::k_KernelRadius_Key, std::make_any<VectorParameter<uint32>::ValueType>(std::vector<uint32>{1, 1, 1}));
   args.insertOrAssign(ITKBinaryMorphologicalClosingImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "095f00a68a84df4396914fa758f34dcc");
 }
 
 TEST_CASE("ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosingWithBorder)", "[ITKImageProcessing][ITKBinaryMorphologicalClosingImage][BinaryMorphologicalClosingWithBorder]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKBinaryMorphologicalClosingImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -65,7 +65,7 @@ TEST_CASE("ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosingWi
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/WhiteDots.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -78,12 +78,12 @@ TEST_CASE("ITKBinaryMorphologicalClosingImageFilter(BinaryMorphologicalClosingWi
   args.insertOrAssign(ITKBinaryMorphologicalClosingImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(255));
   args.insertOrAssign(ITKBinaryMorphologicalClosingImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "506d365dd92db16c2ade264fca46890c");
 }

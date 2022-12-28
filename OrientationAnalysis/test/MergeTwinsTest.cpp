@@ -80,7 +80,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
   const DataPath k_NewFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_NewFeatureAttributeMatrixName);
   const DataPath k_NewFeatureActivePath = k_NewFeatureAttributeMatrix.createChildPath(k_NewFeatureActiveName);
 
-  DataStructure ds;
+  DataStructure dataStructure;
 
   // Read input data
   {
@@ -96,11 +96,11 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(k_ImportFileData, std::make_any<Dream3dImportParameter::ImportData>(parameter));
 
     // Preflight the filter and check result
-    auto preflightResult = filter->preflight(ds, args);
+    auto preflightResult = filter->preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
-    auto executeResult = filter->execute(ds, args);
+    auto executeResult = filter->execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
@@ -122,11 +122,11 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_ActiveName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
 
@@ -146,11 +146,11 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeaturePhasesPath));
 
     // Preflight the filter and check result
-    auto preflightResult = filter->preflight(ds, args);
+    auto preflightResult = filter->preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter->execute(ds, args);
+    auto executeResult = filter->execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
 
@@ -168,11 +168,11 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(FindAvgOrientationsFilter::k_AvgEulerAnglesArrayPath_Key, std::make_any<std::string>(EbsdLib::CellData::EulerAngles));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
 
@@ -206,10 +206,10 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insert(k_SharedSurfaceArea_Key, std::make_any<std::string>(k_SharedSurfaceAreaListName));
     args.insert(k_SurfaceFeatures_Key, std::make_any<std::string>("SurfaceFeatures"));
 
-    auto preflightResult = filter->preflight(ds, args);
+    auto preflightResult = filter->preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    auto result = filter->execute(ds, args);
+    auto result = filter->execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(result.result);
   }
 
@@ -236,17 +236,17 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     args.insertOrAssign(MergeTwinsFilter::k_ActiveArrayName_Key, std::make_any<std::string>(k_NewFeatureActiveName));
 
     // Preflight the filter and check result
-    auto preflightResult = filter.preflight(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
     REQUIRE(preflightResult.outputActions.valid());
 
     // Execute the filter and check the result
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
 
   // check results
   {
-    Int32Array* cellParentIdsArray = ds.getDataAs<Int32Array>(k_CellParentIdsPath);
+    Int32Array* cellParentIdsArray = dataStructure.getDataAs<Int32Array>(k_CellParentIdsPath);
     REQUIRE(cellParentIdsArray != nullptr);
     auto cellParentIdsTupleShape = cellParentIdsArray->getIDataStore()->getTupleShape();
     auto cellParentIdsNumComps = cellParentIdsArray->getNumberOfComponents();
@@ -256,7 +256,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     REQUIRE(cellParentIdsTupleShape[2] == 189);
     REQUIRE(cellParentIdsNumComps == 1);
 
-    Int32Array* featureParentIdsArray = ds.getDataAs<Int32Array>(k_FeatureParentIdsPath);
+    Int32Array* featureParentIdsArray = dataStructure.getDataAs<Int32Array>(k_FeatureParentIdsPath);
     REQUIRE(featureParentIdsArray != nullptr);
     auto featureParentIdsTupleShape = featureParentIdsArray->getIDataStore()->getTupleShape();
     auto featureParentIdsNumComps = featureParentIdsArray->getNumberOfComponents();
@@ -264,7 +264,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     REQUIRE(featureParentIdsTupleShape[0] == 5416);
     REQUIRE(featureParentIdsNumComps == 1);
 
-    BoolArray* activeArray = ds.getDataAs<BoolArray>(k_NewFeatureActivePath);
+    BoolArray* activeArray = dataStructure.getDataAs<BoolArray>(k_NewFeatureActivePath);
     REQUIRE(activeArray != nullptr);
     auto activeTupleShape = activeArray->getIDataStore()->getTupleShape();
     auto activeNumComps = activeArray->getNumberOfComponents();

@@ -19,7 +19,7 @@ using namespace complex;
 
 TEST_CASE("ITKIntensityWindowingImageFilter(2d)", "[ITKImageProcessing][ITKIntensityWindowingImage][2d]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKIntensityWindowingImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -29,7 +29,7 @@ TEST_CASE("ITKIntensityWindowingImageFilter(2d)", "[ITKImageProcessing][ITKInten
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE1.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -38,19 +38,19 @@ TEST_CASE("ITKIntensityWindowingImageFilter(2d)", "[ITKImageProcessing][ITKInten
   args.insertOrAssign(ITKIntensityWindowingImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKIntensityWindowingImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "095f00a68a84df4396914fa758f34dcc");
 }
 
 TEST_CASE("ITKIntensityWindowingImageFilter(3dFloat)", "[ITKImageProcessing][ITKIntensityWindowingImage][3dFloat]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKIntensityWindowingImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -60,7 +60,7 @@ TEST_CASE("ITKIntensityWindowingImageFilter(3dFloat)", "[ITKImageProcessing][ITK
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Float.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -69,19 +69,19 @@ TEST_CASE("ITKIntensityWindowingImageFilter(3dFloat)", "[ITKImageProcessing][ITK
   args.insertOrAssign(ITKIntensityWindowingImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKIntensityWindowingImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "199c966fabac791c758766e14df9974c");
 }
 
 TEST_CASE("ITKIntensityWindowingImageFilter(3dShort)", "[ITKImageProcessing][ITKIntensityWindowingImage][3dShort]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKIntensityWindowingImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -91,7 +91,7 @@ TEST_CASE("ITKIntensityWindowingImageFilter(3dShort)", "[ITKImageProcessing][ITK
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -100,12 +100,12 @@ TEST_CASE("ITKIntensityWindowingImageFilter(3dShort)", "[ITKImageProcessing][ITK
   args.insertOrAssign(ITKIntensityWindowingImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
   args.insertOrAssign(ITKIntensityWindowingImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "2790c2bdfeb8610821e9ec8751f95516");
 }

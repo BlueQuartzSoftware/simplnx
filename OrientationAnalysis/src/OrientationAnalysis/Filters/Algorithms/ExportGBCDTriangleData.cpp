@@ -45,8 +45,8 @@ Result<> ExportGBCDTriangleData::operator()()
   fprintf(f, "# Column 7-9:    triangle normal\n");
   fprintf(f, "# Column 8:      surface area\n");
 
-  int32 gid0 = 0; // Feature id 0
-  int32 gid1 = 0; // Feature id 1
+  int32 gid0 = 0; // Feature identifier 0
+  int32 gid1 = 0; // Feature identifier 1
   for(int64 t = 0; t < numTriangles; ++t)
   {
     // Get the Feature Ids for the triangle
@@ -62,7 +62,7 @@ Result<> ExportGBCDTriangleData::operator()()
       continue;
     }
 
-    // Now get the Euler Angles for that feature id
+    // Now get the Euler Angles for that feature identifier
     float32 euAngRightHand0 = eulerAngles[gid0 * 3];
     float32 euAngRightHand1 = eulerAngles[gid0 * 3 + 1];
     float32 euAngRightHand2 = eulerAngles[gid0 * 3 + 2];

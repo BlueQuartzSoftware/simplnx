@@ -213,7 +213,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     DataPath destCellFeatureAMPath = createdImageGeomPath.createChildPath(pCellFeatureAttributeMatrixPathValue.getTargetName());
     AttributeMatrix::ShapeType tDims = cellFeatureAM->getShape();
     resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
-    for(const auto& [id, object] : *cellFeatureAM)
+    for(const auto& [identifier, object] : *cellFeatureAM)
     {
       if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
       {

@@ -22,7 +22,7 @@ using namespace complex;
 
 TEST_CASE("ITKBinaryOpeningByReconstructionImageFilter(BinaryOpeningByReconstruction)", "[ITKImageProcessing][ITKBinaryOpeningByReconstructionImage][BinaryOpeningByReconstruction]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   ITKBinaryOpeningByReconstructionImage filter;
 
   DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
@@ -32,7 +32,7 @@ TEST_CASE("ITKBinaryOpeningByReconstructionImageFilter(BinaryOpeningByReconstruc
 
   { // Start Image Comparison Scope
     fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/2th_cthead1.png";
-    Result<> imageReadResult = ITKTestBase::ReadImage(ds, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
+    Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
     COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
   } // End Image Comparison Scope
 
@@ -44,12 +44,12 @@ TEST_CASE("ITKBinaryOpeningByReconstructionImageFilter(BinaryOpeningByReconstruc
   args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(itk::simple::sitkBall));
   args.insertOrAssign(ITKBinaryOpeningByReconstructionImage::k_ForegroundValue_Key, std::make_any<Float64Parameter::ValueType>(200));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(ds, outputDataPath);
+  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
   REQUIRE(md5Hash == "2dff38c9c5d2f516e7435f3e2291d6c1");
 }

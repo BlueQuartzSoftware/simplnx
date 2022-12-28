@@ -237,7 +237,7 @@ Result<> ResampleImageGeom::operator()()
     const AttributeMatrix* srcCellFeaturData = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->cellFeatureAttributeMatrix);
     DataPath destCellFeaturesPath = m_InputValues->newDataContainerPath.createChildPath(m_InputValues->cellFeatureAttributeMatrix.getTargetName());
     AttributeMatrix& cellFeatureData = m_DataStructure.getDataRefAs<AttributeMatrix>(destCellFeaturesPath);
-    for(const auto& [id, object] : cellFeatureData)
+    for(const auto& [identifier, object] : cellFeatureData)
     {
       if(m_ShouldCancel)
       {

@@ -26,7 +26,7 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write PNG", "[ITKImageProcessing]
   Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(dream3dFilePath);
   COMPLEX_RESULT_REQUIRE_VALID(dataStructureResult);
 
-  DataStructure ds = std::move(dataStructureResult.value());
+  DataStructure dataStructure = std::move(dataStructureResult.value());
 
   DataPath arrayPath{{"ImageGeom", "ImageArray"}};
   DataPath imagePath = arrayPath.getParent();
@@ -39,9 +39,9 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write PNG", "[ITKImageProcessing]
   args.insertOrAssign(ITKImageWriter::k_IndexOffset_Key, std::make_any<uint64>(0));
   args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XYPlane));
 
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
