@@ -508,7 +508,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  const auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);

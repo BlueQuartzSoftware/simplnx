@@ -62,7 +62,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RemoveFlaggedVerticesTest.cpp
   RemoveMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
+  ResampleImageGeomTest.cpp
   RobustAutomaticThresholdTest.cpp
+  RotateSampleRefFrameTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
