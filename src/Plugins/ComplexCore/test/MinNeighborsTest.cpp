@@ -53,7 +53,7 @@ const std::vector<int32> k_NumberElements = {
 TEST_CASE("ComplexCore::MinNeighbors", "[ComplexCore][MinNeighbors]")
 {
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_5_test_data_1/6_5_test_data_1.dream3d", complex::unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1/6_5_test_data_1.dream3d", complex::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
   DataPath cellDataAttributeMatrix = smallIn100Group.createChildPath(k_CellData);

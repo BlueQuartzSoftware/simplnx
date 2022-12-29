@@ -22,7 +22,7 @@ const DataPath k_IncorrectFeaturePhasesPath({Constants::k_DataContainer, Constan
 const DataPath k_FeatureCountsPath({Constants::k_DataContainer, Constants::k_CellEnsembleData, k_FeatureCounts});
 const DataPath k_FeatureCountsPathNX({Constants::k_DataContainer, Constants::k_CellEnsembleData, k_FeatureCountsNX});
 
-const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_volume_fraction_feature_count.dream3d", unit_test::k_DREAM3DDataDir));
+const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction_feature_count.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
 TEST_CASE("ComplexCore::FindNumFeaturesFilter: Instantiation and Parameter Check", "[ComplexCore][FindNumFeaturesFilter]")
