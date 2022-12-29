@@ -21,6 +21,7 @@
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/GeometryHelpers.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
@@ -32,26 +33,6 @@ namespace
 {
 
 const std::string k_TempGeometryName = ".cropped_image_geometry";
-
-/**
- * @brief
- * @param dims
- * @param spacing
- * @param origin
- * @return
- */
-std::string GenerateGeometryInfo(const complex::SizeVec3& dims, const complex::FloatVec3& spacing, const complex::FloatVec3& origin)
-{
-  std::stringstream description;
-
-  description << "X Range: " << origin[0] << " to " << (origin[0] + (static_cast<float>(dims[0]) * spacing[0])) << " (Delta: " << (dims[0] * spacing[0]) << ") " << 0 << "-" << dims[0] - 1
-              << " Voxels\n";
-  description << "Y Range: " << origin[1] << " to " << (origin[1] + (static_cast<float>(dims[1]) * spacing[1])) << " (Delta: " << (dims[1] * spacing[1]) << ") " << 0 << "-" << dims[1] - 1
-              << " Voxels\n";
-  description << "Z Range: " << origin[2] << " to " << (origin[2] + (static_cast<float>(dims[2]) * spacing[2])) << " (Delta: " << (dims[2] * spacing[2]) << ") " << 0 << "-" << dims[2] - 1
-              << " Voxels\n";
-  return description.str();
-}
 
 /**
  * @brief
@@ -244,7 +225,12 @@ std::string CropImageGeometry::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CropImageGeometry::defaultTags() const
 {
-  return {"#Core", "#Crop Image Geometry"};
+  return {
+      "#Core",
+      "#Crop Image Geometry",
+      "#Image Geometry",
+      "#Conversion",
+  };
 }
 
 //------------------------------------------------------------------------------
@@ -258,24 +244,24 @@ Parameters CropImageGeometry::parameters() const
   params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxVoxel_Key, "Max Voxel [Inclusive]", "Upper bound of the volume to crop out", std::vector<uint64>{0, 0, 0},
                                                         std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Specifies if the origin should be updated", false));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place Crop", "Removes the original Image Geometry after cropping is completed", true));
-
-  params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIds_Key, "Feature IDs", "DataPath to Feature IDs array", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the call feature Attribute Matrix",
-                                                                    DataPath({"CellFeatureData"})));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
   params.insertSeparator({"Input Geometry and Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "DataPath to the target ImageGeom", DataPath(), std::set{IGeometry::Type::Image}));
 
-  params.insertSeparator({"Output Geometry and Data"});
+  params.insertSeparator(Parameters::Separator{"Renumber Features Input Parameters"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features", "Specifies if the feature IDs should be renumbered", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature IDs", "DataPath to Cell Feature IDs array", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(
+      std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "DataPath to the feature Attribute Matrix", DataPath({"CellFeatureData"})));
+
+  params.insertSeparator({"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the cropped geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_RenumberFeatures_Key, k_FeatureIds_Key, true);
-  params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureAttributeMatrix_Key, true);
+  params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
+  params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrix_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
 
   return params;
@@ -291,12 +277,12 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  auto featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIds_Key);
+  auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
   auto shouldUpdateOrigin = filterArgs.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
-  auto cellFeatureAmPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
+  auto cellFeatureAmPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
 
   auto xMin = minVoxels[0];
@@ -306,6 +292,9 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   auto zMax = maxVoxels[2];
   auto zMin = minVoxels[2];
 
+  // If your filter is making structural changes to the DataStructure then the filter
+  // is going to create OutputActions subclasses that need to be returned. This will
+  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -318,12 +307,12 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   if(yMax < yMin)
   {
     const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
+    return {MakeErrorResult<OutputActions>(-5551, errMsg)};
   }
   if(zMax < zMin)
   {
     const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
+    return {MakeErrorResult<OutputActions>(-5552, errMsg)};
   }
 
   // Validate the incoming DataContainer, Geometry, and AttributeMatrix.
@@ -335,22 +324,21 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   if(xMax > srcImageGeom->getNumXCells() - 1)
   {
     const std::string errMsg = fmt::format("The X Max ({}) is greater than the Image Geometry X extent ({})", xMax, srcImageGeom->getNumXCells() - 1);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
+    return {MakeErrorResult<OutputActions>(-5553, errMsg)};
   }
 
   if(yMax > srcImageGeom->getNumYCells() - 1)
   {
     const std::string errMsg = fmt::format("The Y Max ({}) is greater than the Image Geometry Y extent ({})", yMax, srcImageGeom->getNumYCells() - 1);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
+    return {MakeErrorResult<OutputActions>(-5554, errMsg)};
   }
 
   if(zMax > srcImageGeom->getNumZCells() - 1)
   {
     const std::string errMsg = fmt::format("The Z Max ({}) is greater than the Image Geometry Z extent ({})", zMax, srcImageGeom->getNumZCells() - 1);
-    return {MakeErrorResult<OutputActions>(-5550, errMsg)};
+    return {MakeErrorResult<OutputActions>(-5555, errMsg)};
   }
 
-  std::vector<usize> geomDims(3, 0);
   if(static_cast<int>(xMax) - static_cast<int>(xMin) < 0)
   {
     xMax = xMin + 1;
@@ -365,10 +353,7 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
   }
 
   // The ImageGeometryDimensions go from Fastest to Slowest, XYZ.
-  geomDims[0] = (xMax - xMin) + 1;
-  geomDims[1] = (yMax - yMin) + 1;
-  geomDims[2] = (zMax - zMin) + 1;
-
+  std::vector<usize> geomDims = {(xMax - xMin) + 1, (yMax - yMin) + 1, (zMax - zMin) + 1};
   std::vector<usize> dataArrayShape = {geomDims[2], geomDims[1], geomDims[0]}; // The DataArray shape goes slowest to fastest (ZYX)
 
   std::vector<float32> targetOrigin(3);
@@ -405,7 +390,12 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     destImagePath = DataPath({tempPathVector});
   }
 
+  // This section gets the cell attribute matrix for the input Image Geometry and
+  // then creates new arrays from each array that is in that attribute matrix. We
+  // also push this attribute matrix into the `ignorePaths` variable since we do
+  // not need to manually copy these arrays to the destination image geometry
   {
+    // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
     const AttributeMatrix* selectedCellData = srcImageGeom->getCellData();
     if(selectedCellData == nullptr)
     {
@@ -417,9 +407,9 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     resultOutputActions.value().actions.push_back(
         std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, targetOrigin, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, cellDataName));
 
-    // Create the Cell AttributeMatrix in the Destination Geometry
+    // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
+    // in the destination image geometry's attribute matrix
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
-
     for(const auto& [identifier, object] : *selectedCellData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
@@ -429,44 +419,35 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
       resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
     }
 
-    // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-    // the appropriate methods.
-    // These values should have been updated during the preflightImpl(...) method
-    preflightUpdatedValues.push_back({"Input Geometry Info", ::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
-    preflightUpdatedValues.push_back({"Cropped Image Geometry Info", ::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin)});
+    // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
+    preflightUpdatedValues.push_back(
+        {"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
+    preflightUpdatedValues.push_back({"Cropped Image Geometry Info",
+                                      complex::GeometryHelpers::Description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin)});
   }
-
+  // This section covers the option of renumbering the Feature Data where we need to do a
+  // similar creation of the Data Arrays based on the arrays in the Source Image Geometry's
+  // Feature Attribute Matrix
   if(shouldRenumberFeatures)
   {
     ignorePaths.push_back(cellFeatureAmPath);
-    const auto* featureIdsPtr = dataStructure.getDataAs<DataArray<int32>>(featureIdsArrayPath);
-    if(nullptr == featureIdsPtr)
-    {
-      std::string errMsg = fmt::format("The DataArray '{}' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?", featureIdsArrayPath.toString());
-      return {MakeErrorResult<OutputActions>(-55500, errMsg)};
-    }
-    if(featureIdsPtr->getNumberOfComponents() != 1)
-    {
-      std::string errMsg = fmt::format("The Feature IDs array does not have the correct component dimensions. 1 component required. Array has {}", featureIdsPtr->getNumberOfComponents());
-      return {MakeErrorResult<OutputActions>(-55501, errMsg)};
-    }
+
     const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
     if(nullptr == srcCellFeatureData)
     {
-      std::string errMsg = fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString());
-      return {MakeErrorResult<OutputActions>(-55502, errMsg)};
+      return {MakeErrorResult<OutputActions>(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString()))};
     }
     std::string warningMsg;
-    DataPath destCellFeatureAMPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
+    DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
     auto tDims = srcCellFeatureData->getShape();
-    resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAMPath, tDims));
+    resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
     for(const auto& [identifier, object] : *srcCellFeatureData)
     {
       if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
       {
         DataType dataType = srcArray->getDataType();
         IDataStore::ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
-        DataPath dataArrayPath = destCellFeatureAMPath.createChildPath(srcArray->getName());
+        DataPath dataArrayPath = destCellFeatureAmPath.createChildPath(srcArray->getName());
         resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
       }
       else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
@@ -482,7 +463,9 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
   }
 
-  // copy over the rest of the data
+  // This section covers the option of renumbering the Feature Data where we need to do a
+  // similar creation of the Data Arrays based on the arrays in the Source Image Geometry's
+  // Feature Attribute Matrix
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
   {
@@ -525,12 +508,11 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
-  auto featureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIds_Key);
+  auto featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto minVoxels = filterArgs.value<std::vector<uint64>>(k_MinVoxel_Key);
   auto maxVoxels = filterArgs.value<std::vector<uint64>>(k_MaxVoxel_Key);
-  auto shouldUpdateOrigin = filterArgs.value<bool>(k_UpdateOrigin_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
-  auto cellFeatureAMPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
+  auto cellFeatureAMPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   auto removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
 
   uint64 xMin = minVoxels[0];
@@ -556,8 +538,6 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
   {
     return {};
   }
-
-  // Get current origin
 
   if(removeOriginalGeometry)
   {

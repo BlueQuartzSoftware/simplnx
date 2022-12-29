@@ -27,8 +27,8 @@ public:
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
   static inline constexpr StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
   static inline constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
-  static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrix_Key = "cell_feature_attribute_matrix";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrix_Key = "cell_feature_attribute_matrix";
   static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 
   /**
