@@ -357,6 +357,9 @@ function(create_complex_plugin_unit_test)
       complex::UnitTestCommon
   )
 
+  source_group("test" FILES  ${${ARGS_PLUGIN_NAME}UnitTest_SRCS} ${ARGS_PLUGIN_NAME}_test_main.cpp)
+  source_group("Generated" FILES ${COMPLEX_TEST_DIRS_HEADER} )                                                
+
   include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
   complex_enable_warnings(TARGET ${UNIT_TEST_TARGET})
 
