@@ -1,9 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <filesystem>
-#include <mutex>
-#include <string>
-#include <vector>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -20,7 +17,11 @@
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-#include "complex/unit_test/complex_test_dirs.hpp"
+
+#include <filesystem>
+#include <mutex>
+#include <string>
+#include <vector>
 
 using namespace complex;
 namespace fs = std::filesystem;
@@ -60,7 +61,7 @@ const FilterHandle k_ImportD3DHandle(Uuid::FromString("0dbd31c7-19e0-4077-83ef-f
 
 fs::path GetDataDir(const Application& app)
 {
-  return COMPLEX_BUILD_DIR / Constants::k_DataDir;
+  return {complex::unit_test::k_BinaryTestOutputDir};
 }
 
 fs::path GetIODataPath()
@@ -263,7 +264,7 @@ DREAM3D::FileData CreateFileData()
 
 } // End Namespace
 
-TEST_CASE("DREAM3D File IO Test")
+TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
 {
   Application app;
   fs::path pluginPath = complex::unit_test::k_BuildDir.str();
@@ -304,7 +305,7 @@ TEST_CASE("DREAM3D File IO Test")
   }
 }
 
-TEST_CASE("Import/Export DREAM3D Filter Test")
+TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
 {
   Application app;
   fs::path pluginPath = complex::unit_test::k_BuildDir.str();
@@ -339,7 +340,7 @@ TEST_CASE("Import/Export DREAM3D Filter Test")
   }
 }
 
-TEST_CASE("Import/Export Multi-DREAM3D Filter Test")
+TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test")
 {
   Application app;
   fs::path pluginPath = complex::unit_test::k_BuildDir.str();

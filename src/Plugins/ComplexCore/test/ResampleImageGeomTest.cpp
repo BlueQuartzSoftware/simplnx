@@ -25,7 +25,7 @@ struct CompareDataArrayFunctor
   }
 };
 
-TEST_CASE("Core::ResampleImageGeom: Invalid Parameters", "[Core][ResampleImageGeom]")
+TEST_CASE("ComplexCore::ResampleImageGeom: Invalid Parameters", "[ComplexCore][ResampleImageGeom]")
 {
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -57,7 +57,7 @@ TEST_CASE("Core::ResampleImageGeom: Invalid Parameters", "[Core][ResampleImageGe
   REQUIRE(preflightErrors[0].code == -11500);
 }
 
-TEST_CASE("Core::ResampleImageGeom: 3D In Place", "[Core][ResampleImageGeom]")
+TEST_CASE("ComplexCore::ResampleImageGeom: 3D In Place", "[ComplexCore][ResampleImageGeom]")
 {
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -179,7 +179,7 @@ TEST_CASE("Core::ResampleImageGeom: 3D In Place", "[Core][ResampleImageGeom]")
   }
 }
 
-TEST_CASE("Core::ResampleImageGeom: 3D Save Geometry", "[Core][ResampleImageGeom]")
+TEST_CASE("ComplexCore::ResampleImageGeom: 3D Save Geometry", "[ComplexCore][ResampleImageGeom]")
 {
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -300,7 +300,7 @@ TEST_CASE("Core::ResampleImageGeom: 3D Save Geometry", "[Core][ResampleImageGeom
   }
 }
 
-TEST_CASE("Core::ResampleImageGeom: 2D In Place", "[Core][ResampleImageGeom]")
+TEST_CASE("ComplexCore::ResampleImageGeom: 2D In Place", "[ComplexCore][ResampleImageGeom]")
 {
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -371,7 +371,7 @@ TEST_CASE("Core::ResampleImageGeom: 2D In Place", "[Core][ResampleImageGeom]")
   }
 }
 
-TEST_CASE("Core::ResampleImageGeom: 2D Save Geometry", "[Core][ResampleImageGeom]")
+TEST_CASE("ComplexCore::ResampleImageGeom: 2D Save Geometry", "[ComplexCore][ResampleImageGeom]")
 {
   ResampleImageGeomFilter filter;
   Arguments args;

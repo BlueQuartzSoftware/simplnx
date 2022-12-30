@@ -11,7 +11,7 @@
 #include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 
-#include "complex/unit_test/complex_test_dirs.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include <filesystem>
 #include <iostream>

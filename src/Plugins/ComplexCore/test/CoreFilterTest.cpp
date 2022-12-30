@@ -7,10 +7,9 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CreateDataGroup.hpp"
 #include "ComplexCore/Filters/ImportTextFilter.hpp"
-
-#include "complex/unit_test/complex_test_dirs.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -39,7 +38,7 @@ struct StringMaker<Warning>
 };
 } // namespace Catch
 
-TEST_CASE("Create Core Filter")
+TEST_CASE("CoreFilterTest:Create Core Filter")
 {
   Application app;
   app.loadPlugins(unit_test::k_BuildDir.view());
@@ -63,9 +62,9 @@ TEST_CASE("Create Core Filter")
   }
 }
 
-TEST_CASE("RunCoreFilter")
+TEST_CASE("CoreFilterTest:RunCoreFilter")
 {
-  static const fs::path k_FileName = fmt::format("{}/test/data/ascii_data.txt", complex::unit_test::k_BuildDir);
+  static const fs::path k_FileName = fmt::format("{}/ascii_data.txt", complex::unit_test::k_BinaryTestOutputDir);
   static constexpr uint64 k_NLines = 25;
 
   SECTION("Create ASCII File")
@@ -127,7 +126,7 @@ TEST_CASE("RunCoreFilter")
   }
 }
 
-TEST_CASE("CreateDataGroup")
+TEST_CASE("CoreFilterTest:CreateDataGroup")
 {
   DataStructure data;
   CreateDataGroup filter;
