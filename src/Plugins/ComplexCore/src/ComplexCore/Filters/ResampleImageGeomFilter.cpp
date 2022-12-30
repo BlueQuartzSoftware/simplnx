@@ -297,25 +297,25 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
 {
   ResampleImageGeomInputValues inputValues;
 
-  inputValues.spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
 
-  inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  const auto* cellDataGroup = dataStructure.getDataRefAs<ImageGeom>(inputValues.inputImageGeometry).getCellData();
-  inputValues.cellDataGroupPath = inputValues.inputImageGeometry.createChildPath(cellDataGroup->getName());
+  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  const auto* cellDataGroup = dataStructure.getDataRefAs<ImageGeom>(inputValues.SelectedImageGeometryPath).getCellData();
+  inputValues.CellDataGroupPath = inputValues.SelectedImageGeometryPath.createChildPath(cellDataGroup->getName());
 
-  inputValues.renumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
-  inputValues.featureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.cellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
+  inputValues.RenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.CellFeatureAttributeMatrix = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
 
-  inputValues.removeOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  inputValues.newDataContainerPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+  inputValues.RemoveOriginalImageGeom = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+  inputValues.CreatedImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
 
-  if(inputValues.removeOriginalImageGeom)
+  if(inputValues.RemoveOriginalImageGeom)
   {
-    auto tempPathVector = inputValues.inputImageGeometry.getPathVector();
+    auto tempPathVector = inputValues.SelectedImageGeometryPath.getPathVector();
     std::string tempName = k_TempGeometryName;
     tempPathVector.back() = tempName;
-    inputValues.newDataContainerPath = DataPath({tempPathVector});
+    inputValues.CreatedImageGeometryPath = DataPath({tempPathVector});
   }
 
   return ResampleImageGeom(dataStructure, messageHandler, shouldCancel, &inputValues)();

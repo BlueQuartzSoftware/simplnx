@@ -13,15 +13,14 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT ResampleImageGeomInputValues
 {
-  std::vector<float32> spacing;
-  DataPath inputImageGeometry;
-  DataPath cellDataGroupPath;
-  bool removeOriginalImageGeom;
-  DataPath newDataContainerPath;
-
-  bool renumberFeatures;
-  DataPath featureIdsArrayPath;
-  DataPath cellFeatureAttributeMatrix;
+  std::vector<float32> Spacing;
+  DataPath SelectedImageGeometryPath;
+  DataPath CellDataGroupPath;
+  bool RemoveOriginalImageGeom;
+  DataPath CreatedImageGeometryPath;
+  bool RenumberFeatures;
+  DataPath FeatureIdsArrayPath;
+  DataPath CellFeatureAttributeMatrix;
 };
 
 /**

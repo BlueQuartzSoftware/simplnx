@@ -16,19 +16,23 @@ using namespace complex;
 namespace
 {
 // -----------------------------------------------------------------------------
-class ChangeResolutionImpl
+class ResampleImageGeomImpl
 {
 public:
-  ChangeResolutionImpl(ResampleImageGeom* filter, std::vector<int64>& newindices, std::vector<float> spacing, FloatVec3 sourceSpacing, SizeVec3 sourceDims, SizeVec3 destDims)
-  : m_Filter(filter)
-  , m_NewIndices(newindices)
+  ResampleImageGeomImpl(std::vector<int64>& newIndices, std::vector<float> spacing, FloatVec3 sourceSpacing, SizeVec3 sourceDims, SizeVec3 destDims, const std::atomic_bool& shouldCancel)
+  : m_NewIndices(newIndices)
   , m_Spacing(std::move(spacing))
   , m_OrigSpacing(std::move(sourceSpacing))
   , m_OrigDims(std::move(sourceDims))
   , m_CopyDims(std::move(destDims))
+  , m_ShouldCancel(shouldCancel)
   {
   }
-  ~ChangeResolutionImpl() = default;
+  ~ResampleImageGeomImpl() = default;
+  ResampleImageGeomImpl(const ResampleImageGeomImpl&) = default;           // Copy Constructor default Implemented
+  ResampleImageGeomImpl(ResampleImageGeomImpl&&) = delete;                 // Move Constructor Not Implemented
+  ResampleImageGeomImpl& operator=(const ResampleImageGeomImpl&) = delete; // Copy Assignment Not Implemented
+  ResampleImageGeomImpl& operator=(ResampleImageGeomImpl&&) = delete;      // Move Assignment Not Implemented
 
   // -----------------------------------------------------------------------------
   void compute(size_t xStart, size_t xEnd, size_t yStart, size_t yEnd, size_t zStart, size_t zEnd) const
@@ -37,7 +41,7 @@ public:
     {
       for(size_t j = yStart; j < yEnd; j++)
       {
-        if(m_Filter->getCancel())
+        if(m_ShouldCancel)
         {
           return;
         }
@@ -64,12 +68,12 @@ public:
   }
 
 private:
-  ResampleImageGeom* m_Filter = nullptr;
   std::vector<int64>& m_NewIndices;
   std::vector<float> m_Spacing;
   FloatVec3 m_OrigSpacing;
   SizeVec3 m_OrigDims;
   SizeVec3 m_CopyDims;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 template <typename T>
@@ -113,27 +117,26 @@ Result<> ResampleImageGeom::operator()()
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Computing new indices...");
 
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
   SizeVec3 sourceDims = selectedImageGeom.getDimensions();
   FloatVec3 origSpacing = selectedImageGeom.getSpacing();
 
-  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->newDataContainerPath);
+  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->CreatedImageGeometryPath);
   SizeVec3 destDims = destImageGeom.getDimensions();
 
   std::vector<int64> newIndices(destDims[2] * destDims[1] * destDims[0]);
   ParallelData3DAlgorithm dataAlg;
   dataAlg.setRange(destDims[0], destDims[1], destDims[2]);
-  dataAlg.setParallelizationEnabled(true);
-  dataAlg.execute(ChangeResolutionImpl(this, newIndices, m_InputValues->spacing, origSpacing, sourceDims, destDims));
+  dataAlg.execute(ResampleImageGeomImpl(newIndices, m_InputValues->Spacing, origSpacing, sourceDims, destDims, m_ShouldCancel));
 
-  auto cellDataGroupPath = m_InputValues->cellDataGroupPath;
+  auto cellDataGroupPath = m_InputValues->CellDataGroupPath;
   auto& cellDataGroup = m_DataStructure.getDataRefAs<AttributeMatrix>(cellDataGroupPath);
   std::vector<DataPath> selectedCellArrays;
 
   // Create the vector of selected cell DataPaths
-  for(DataGroup::Iterator child = cellDataGroup.begin(); child != cellDataGroup.end(); ++child)
+  for(auto child = cellDataGroup.begin(); child != cellDataGroup.end(); ++child)
   {
-    selectedCellArrays.push_back(m_InputValues->cellDataGroupPath.createChildPath(child->second->getName()));
+    selectedCellArrays.push_back(m_InputValues->CellDataGroupPath.createChildPath(child->second->getName()));
   }
 
   // The actual cropping of the dataStructure arrays is done in parallel where parallel here
@@ -220,11 +223,11 @@ Result<> ResampleImageGeom::operator()()
   // into the destination feature attribute matrix so that we have somewhere to start.
   // During the renumbering phase is when those copied arrays will get potentially resized
   // to their proper number of tuples.
-  DataPath cellFeatureAMPath = m_InputValues->cellFeatureAttributeMatrix;
-  auto destImagePath = m_InputValues->newDataContainerPath;
-  DataPath featureIdsArrayPath = m_InputValues->featureIdsArrayPath;
+  DataPath cellFeatureAMPath = m_InputValues->CellFeatureAttributeMatrix;
+  auto destImagePath = m_InputValues->CreatedImageGeometryPath;
+  DataPath featureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
 
-  if(m_InputValues->renumberFeatures)
+  if(m_InputValues->RenumberFeatures)
   {
     std::vector<DataPath> sourceFeatureDataPaths;
     auto childPathsResult = GetAllChildArrayDataPaths(m_DataStructure, cellFeatureAMPath);
