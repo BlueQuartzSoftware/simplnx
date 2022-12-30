@@ -15,15 +15,12 @@ static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
 
 - [ ] Filters should have both the Filter class and Algorithm class for anything beyond trivial needs
 
-
-
 ## Converting Types ##
 
 + QString => std::string
 + QVector<> => std::vector<>
 + QMap<> => std::map<>
 + QByteArray => std::array<int8> or std::vector<int8>
-
 
 ## Converting `setErrorCondition` from SIMPL to COMPLEX##
 
@@ -36,12 +33,14 @@ COMPLEX
 ```c++
     Result<> result =  MakeErrorResult(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file")
 ```
-then you can optionally return the `result` variable if needed
 
+then you can optionally return the `result` variable if needed
 
 ## QString operations ##
 
- There are some substitutions for the QString operations. See [https://en.cppreference.com/w/cpp/string/basic_string](https://en.cppreference.com/w/cpp/string/basic_string) for more information about std::string
+There are some substitutions for the QString operations.
+See [https://en.cppreference.com/w/cpp/string/basic_string](https://en.cppreference.com/w/cpp/string/basic_string) for
+more information about std::string
 
 There is a file `complex/Utilities/StringUtilities.hpp` that has some QString functionality that is needed.
 
@@ -111,6 +110,7 @@ to the data stored in a DataArray:
 ```c++
 float* vertex = triangleGeom->getVertexPointer(0);
 ```
+
 and then used the `[]` notation to get and set values. With the possibility of out-of-core
 being added there is no guarantee that the data would exist at a given pointer offset in memory.
 Instead the developer should use:
@@ -118,7 +118,8 @@ Instead the developer should use:
 ```c++
 AbstractGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());
 ```
-Note the use of a _Reference Variable_ instead of the pointer. The developer can still use 
+
+Note the use of a _Reference Variable_ instead of the pointer. The developer can still use
 code such as `vertex[index]` to get/set a value but the code `vertex = i` to move a pointer
 **will not work**.
 
@@ -137,21 +138,21 @@ the user is allowed to "transfer" data from the source geometry onto the newly c
 geometry. QuickSurfaceMeshFilter and PointSampleTriangleGeometryFilter both are examples
 of how to perform this transfer of data.
 
-
 ## Parallel Algorithms ##
 
 There are several classes that can be used to help the developer write parallel algorithms.
 
 `complex/Utilities/ParallelAlgorithm` and `complex/Utilties/ParallelTaskAlgorithm` are the two main classes depending
-on the situation. `AlignSections.cpp` and `CropImageGeoemtry.cpp` both use a task based parallelism. `RotateSampleRefFrameFilter.cpp` shows an example
+on the situation. `AlignSections.cpp` and `CropImageGeoemtry.cpp` both use a task based
+parallelism. `RotateSampleRefFrameFilter.cpp` shows an example
 of using ParallelData3DAlgorithm.
-
 
 ## Constants for Pi and Others ##
 
 ```c++
   #include "complex/Common/Numbers.hpp"
 ``` 
+
 and use it this way:
 
 ```c++
@@ -160,14 +161,19 @@ and use it this way:
 
 ## MessageHandler ##
 
-All filters give you access to the MessageHandler class that sends status, progress, error and warning messages back to the user.
+All filters give you access to the MessageHandler class that sends status, progress, error and warning messages back to
+the user.
 
 This example uses the `fmt` library to format a message of type `Info` and send it back to the user interface.
+
 ```c++
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
 ```
-This example shows how to send back progress. The integer argument is a value between 0 and 100 where 0 is just starting and
+
+This example shows how to send back progress. The integer argument is a value between 0 and 100 where 0 is just starting
+and
 100 is fully complete.
+
 ```c++
     m_MessageHandler(IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt));
 ```
@@ -180,6 +186,36 @@ a feature attribute matrix then the following filters have examples.
 * TriangleNormalFilter
 * CalculateFeatureSizesFilter
 
+## Replace EXECUTE_FUNCTION_TEMPLATE
+
+You have code that does this:
+
+```
+EXECUTE_FUNCTION_TEMPLATE(this, Detail::ExecuteTemplate, m_InArrayPtr.lock(), this, m_InArrayPtr.lock());
+```
+
+and now you are porting that to `complex`. The old `Detail::ExecuteTemplate` needs to be converted into a "struct" based
+functor like the following:
+
+```
+struct ExecuteTemplate
+{
+
+  template <typename T>
+  void operator()([ARGUMENTS GO HERE], const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+  {
+  .... your code goes here
+  }
+```
+
+then you replace the macro with the following template function:
+
+```
+  ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray.getDataType(), [ARGUMENTS GO HERE], m_ShouldCancel, m_MessageHandler);
+```
+
+The first 2 arguments to the above function are used by the function, any additional arguments are passed directly to
+your functor implementation.
 
 ## Porting SIMPL Filter ##
 
@@ -194,12 +230,15 @@ a feature attribute matrix then the following filters have examples.
 Use proper grouping in the parameters to help the User Interface.
 
 There are potentially 3 sections of parameters:
+
 ```
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 ```
+
 ```
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
 ```
+
 ```
   params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
 ```
