@@ -55,7 +55,7 @@ const fs::path k_ComplexH5File = "new.h5";
 
 fs::path GetDataDir()
 {
-  return {unit_test::k_BinaryTestOutputDir};
+  return std::filesystem::path(unit_test::k_BinaryTestOutputDir);
 }
 
 fs::path GetLegacyFilepath()
