@@ -107,7 +107,7 @@ protected:
 };
 } // namespace
 
-TEST_CASE("Execute Pipeline")
+TEST_CASE("PipelineTest:Execute Pipeline")
 {
   Application app;
   app.loadPlugins(unit_test::k_BuildDir.view());
@@ -143,7 +143,7 @@ TEST_CASE("Execute Pipeline")
   REQUIRE(pipeline.push_back(tf2Handle));
 }
 
-TEST_CASE("Complex Pipeline")
+TEST_CASE("PipelineTest:Complex Pipeline")
 {
   Application app;
   app.loadPlugins(unit_test::k_BuildDir.view());
@@ -197,7 +197,7 @@ TEST_CASE("Complex Pipeline")
   }
 }
 
-TEST_CASE("PipelineJson")
+TEST_CASE("PipelineTest:PipelineJson")
 {
   Application app;
   app.loadPlugins(unit_test::k_BuildDir.view());
@@ -261,7 +261,7 @@ TEST_CASE("PipelineJson")
   REQUIRE(pipelineJson == pipeline2Json);
 }
 
-TEST_CASE("Rename Output")
+TEST_CASE("PipelineTest:Rename Output")
 {
   Application app;
   app.loadPlugins(unit_test::k_BuildDir.view());
@@ -304,7 +304,7 @@ TEST_CASE("Rename Output")
   }
 }
 
-TEST_CASE("Not Renaming")
+TEST_CASE("PipelineTest:Not Renaming")
 {
   Application app;
   app.loadPlugins(unit_test::k_BuildDir.view());
@@ -347,7 +347,7 @@ TEST_CASE("Not Renaming")
   }
 }
 
-TEST_CASE("PipelineDeferredActionTest")
+TEST_CASE("PipelineTest:PipelineDeferredActionTest")
 {
   Pipeline pipeline;
 
