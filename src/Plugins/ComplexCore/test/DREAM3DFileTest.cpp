@@ -61,7 +61,7 @@ const FilterHandle k_ImportD3DHandle(Uuid::FromString("0dbd31c7-19e0-4077-83ef-f
 
 fs::path GetDataDir(const Application& app)
 {
-  return {complex::unit_test::k_BinaryTestOutputDir};
+  return std::filesystem::path(unit_test::k_BinaryTestOutputDir.view());
 }
 
 fs::path GetIODataPath()
