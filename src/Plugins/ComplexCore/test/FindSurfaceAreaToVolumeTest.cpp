@@ -23,7 +23,7 @@ const std::string k_SphericityArrayName("Sphericity");
 TEST_CASE("ComplexCore::FindSurfaceAreaToVolume", "[ComplexCore][FindSurfaceAreaToVolume]")
 {
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_stats_test.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object

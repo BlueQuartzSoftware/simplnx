@@ -88,6 +88,8 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
+    static constexpr StringLiteral prefix = "CreateGeometry1DAction: ";
+
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedEdgeList = IGeometry::SharedEdgeList;
     DataPath edgeDataPath = getEdgeDataPath();
@@ -96,14 +98,14 @@ public:
     // Check for empty Geometry DataPath
     if(getCreatedPath().empty())
     {
-      return MakeErrorResult(-120, "CreateGeometry1DAction: Geometry Path cannot be empty");
+      return MakeErrorResult(-5401, fmt::format("{}CreateGeometry1DAction: Geometry Path cannot be empty", prefix));
     }
 
     // Check if the Geometry Path already exists
     const BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
     if(parentObject != nullptr)
     {
-      return MakeErrorResult(-121, fmt::format("CreateGeometry1DAction: DataObject already exists at path '{}'", getCreatedPath().toString()));
+      return MakeErrorResult(-5402, fmt::format("{}CreateGeometry1DAction: DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
     }
 
     DataPath parentPath = getCreatedPath().getParent();
@@ -112,27 +114,27 @@ public:
       Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
       if(geomPath.invalid())
       {
-        return MakeErrorResult(-122, fmt::format("CreateGeometry1DAction: Geometry could not be created at path:'{}'", getCreatedPath().toString()));
+        return MakeErrorResult(-5403, fmt::format("{}CreateGeometry1DAction: Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
       }
     }
     // Get the Parent ID
     if(!dataStructure.getId(parentPath).has_value())
     {
-      return MakeErrorResult(-123, fmt::format("CreateGeometry1DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
+      return MakeErrorResult(-5404, fmt::format("{}CreateGeometry1DAction: Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
     }
 
     // Get the vertices list if we are using an existing array
     const auto vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
     {
-      return MakeErrorResult(-124, fmt::format("CreateGeometry1DAction: Could not find vertices array at path '{}'", m_InputVertices.toString()));
+      return MakeErrorResult(-5405, fmt::format("{}CreateGeometry1DAction: Could not find vertices array at path '{}'", prefix, m_InputVertices.toString()));
     }
 
     // Get the faces list if we are using an existing array
     const auto edges = dataStructure.getDataAs<DataArray<MeshIndexType>>(m_InputEdges);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && edges == nullptr)
     {
-      return MakeErrorResult(-125, fmt::format("CreateGeometry1DAction: Could not find edges array at path '{}'", m_InputEdges.toString()));
+      return MakeErrorResult(-5406, fmt::format("{}CreateGeometry1DAction: Could not find edges array at path '{}'", prefix, m_InputEdges.toString()));
     }
 
     // Create the EdgeGeometry
@@ -165,8 +167,8 @@ public:
       const auto oldVertexParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldVertexParentId.has_value())
       {
-        return MakeErrorResult(-126, fmt::format("CreateGeometry1DAction: Failed to remove vertices array '{}' from parent at path '{}' while moving array", m_SharedVerticesName,
-                                                 m_InputVertices.getParent().toString()));
+        return MakeErrorResult(-5407, fmt::format("{}CreateGeometry1DAction: Failed to remove vertices array '{}' from parent at path '{}' while moving array", prefix, m_SharedVerticesName,
+                                                  m_InputVertices.getParent().toString()));
       }
       dataStructure.removeParent(verticesId, oldVertexParentId.value());
 
@@ -175,8 +177,8 @@ public:
       const auto oldEdgeParentId = dataStructure.getId(m_InputEdges.getParent());
       if(!oldEdgeParentId.has_value())
       {
-        return MakeErrorResult(
-            -126, fmt::format("CreateGeometry1DAction: Failed to remove edges array '{}' from parent at path '{}' while moving array", m_SharedEdgesName, m_InputEdges.getParent().toString()));
+        return MakeErrorResult(-5408, fmt::format("{}CreateGeometry1DAction: Failed to remove edges array '{}' from parent at path '{}' while moving array", prefix, m_SharedEdgesName,
+                                                  m_InputEdges.getParent().toString()));
       }
       dataStructure.removeParent(edgesId, oldEdgeParentId.value());
 
@@ -201,7 +203,7 @@ public:
       complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode);
       if(result.invalid())
       {
-        return MakeErrorResult(-127, fmt::format("CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", edgesPath.toString()));
+        return MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", prefix, edgesPath.toString()));
       }
       SharedEdgeList* createdEdges = complex::ArrayFromPath<MeshIndexType>(dataStructure, edgesPath);
       geometry1d->setEdgeList(*createdEdges);
@@ -212,7 +214,7 @@ public:
       result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
       if(result.invalid())
       {
-        return MakeErrorResult(-127, fmt::format("CreateGeometry1DAction: Could not allocate SharedVertList '{}'", vertexPath.toString()));
+        return MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
       Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
       geometry1d->setVertices(*vertexArray);
@@ -222,7 +224,7 @@ public:
     auto* edgeAttributeMatrix = AttributeMatrix::Create(dataStructure, m_EdgeDataName, geometry1d->getId());
     if(edgeAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-128, fmt::format("CreateGeometry1DAction: Failed to create attribute matrix: '{}'", edgeDataPath.toString()));
+      return MakeErrorResult(-5411, fmt::format("{}CreateGeometry1DAction: Failed to create attribute matrix: '{}'", prefix, edgeDataPath.toString()));
     }
     edgeAttributeMatrix->setShape(edgeTupleShape);
     geometry1d->setEdgeAttributeMatrix(*edgeAttributeMatrix);
@@ -230,7 +232,7 @@ public:
     auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry1d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-129, fmt::format("CreateGeometry1DAction: Failed to create attribute matrix: '{}'", vertexDataPath.toString()));
+      return MakeErrorResult(-5412, fmt::format("{}CreateGeometry1DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
     }
     vertexAttributeMatrix->setShape(vertexTupleShape);
     geometry1d->setVertexAttributeMatrix(*vertexAttributeMatrix);

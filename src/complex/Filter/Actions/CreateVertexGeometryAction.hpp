@@ -72,17 +72,18 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
+    static constexpr StringLiteral prefix = "CreateVertexGeometryAction: ";
     // Check for empty Geometry DataPath
     if(getCreatedPath().empty())
     {
-      return MakeErrorResult(-920, "CreateVertexGeometryAction: Geometry Path cannot be empty");
+      return MakeErrorResult(-6101, fmt::format("{}Geometry Path cannot be empty", prefix));
     }
 
     // Check if the Geometry Path already exists
     BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
     if(parentObject != nullptr)
     {
-      return MakeErrorResult(-921, fmt::format("CreateVertexGeometryAction: DataObject already exists at path '{}'", getCreatedPath().toString()));
+      return MakeErrorResult(-6102, fmt::format("{}DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
     }
 
     DataPath parentPath = getCreatedPath().getParent();
@@ -91,20 +92,20 @@ public:
       Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
       if(geomPath.invalid())
       {
-        return MakeErrorResult(-922, fmt::format("CreateVertexGeometryAction: Geometry could not be created at path:'{}'", getCreatedPath().toString()));
+        return MakeErrorResult(-6103, fmt::format("{}Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
       }
     }
     // Get the Parent ID
     if(!dataStructure.getId(parentPath).has_value())
     {
-      return MakeErrorResult(-923, fmt::format("CreateVertexGeometryAction: Parent Id was not available for path:'{}'", parentPath.toString()));
+      return MakeErrorResult(-6104, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
     }
 
     // Get the vertices list if we are using an existing array
     const auto vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
     {
-      return MakeErrorResult(-924, fmt::format("CreateVertexGeometryAction: Could not find vertices array at path '{}'", m_InputVertices.toString()));
+      return MakeErrorResult(-6105, fmt::format("{}Could not find vertices array at path '{}'", m_InputVertices.toString()));
     }
 
     // Create the VertexGeom
@@ -132,8 +133,8 @@ public:
       const auto oldParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldParentId.has_value())
       {
-        return MakeErrorResult(-925, fmt::format("CreateVertexGeometryAction: Failed to remove vertices array '{}' from parent at path '{}' while moving array", m_SharedVertexListName,
-                                                 m_InputVertices.getParent().toString()));
+        return MakeErrorResult(
+            -6106, fmt::format("{}Failed to remove vertices array '{}' from parent at path '{}' while moving array", prefix, m_SharedVertexListName, m_InputVertices.getParent().toString()));
       }
       dataStructure.removeParent(verticesId, oldParentId.value());
       vertexGeom->setVertices(*vertices);
@@ -162,7 +163,7 @@ public:
     auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, vertexGeom->getId());
     if(vertexAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-926, fmt::format("CreateVertexGeometryAction: Failed to create attribute matrix: '{}'", getVertexDataPath().toString()));
+      return MakeErrorResult(-6107, fmt::format("{}Failed to create attribute matrix: '{}'", prefix, getVertexDataPath().toString()));
     }
     vertexAttributeMatrix->setShape(tupleShape);
     vertexGeom->setVertexAttributeMatrix(*vertexAttributeMatrix);

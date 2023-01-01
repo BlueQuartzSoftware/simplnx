@@ -368,7 +368,7 @@ void PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, Data
     auto outputFilePath = fmt::format("{}/{}{}", directoryPath, dataPath.getTargetName(), fileExtension);
     mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
 
-    std::ofstream outStrm(outputFilePath, std::ios_base::out);
+    std::ofstream outStrm(outputFilePath, std::ios_base::out | std::ios_base::binary);
 
     std::pair<int32, std::string> result = {0, "PrintDataSetsToMultipleFiles default failure. If you are seeing this error something bad has happened."};
     auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);

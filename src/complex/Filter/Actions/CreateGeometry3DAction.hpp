@@ -89,6 +89,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
+    static constexpr StringLiteral prefix = "CreateGeometry3DAction: ";
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedCellList = IGeometry::SharedFaceList;
     const DataPath cellDataPath = getCellDataPath();
@@ -97,14 +98,14 @@ public:
     // Check for empty Geometry DataPath
     if(getCreatedPath().empty())
     {
-      return MakeErrorResult(-320, "CreateGeometry3DAction: Geometry Path cannot be empty");
+      return MakeErrorResult(-5601, fmt::format("{}CreateGeometry3DAction: Geometry Path cannot be empty", prefix));
     }
 
     // Check if the Geometry Path already exists
     const BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
     if(parentObject != nullptr)
     {
-      return MakeErrorResult(-321, fmt::format("CreateGeometry3DAction: DataObject already exists at path '{}'", getCreatedPath().toString()));
+      return MakeErrorResult(-5602, fmt::format("{}CreateGeometry3DAction: DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
     }
 
     const DataPath parentPath = getCreatedPath().getParent();
@@ -113,27 +114,27 @@ public:
       const Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
       if(geomPath.invalid())
       {
-        return MakeErrorResult(-322, fmt::format("CreateGeometry3DAction: Geometry could not be created at path:'{}'", getCreatedPath().toString()));
+        return MakeErrorResult(-5603, fmt::format("{}CreateGeometry3DAction: Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
       }
     }
     // Get the Parent ID
     if(!dataStructure.getId(parentPath).has_value())
     {
-      return MakeErrorResult(-323, fmt::format("CreateGeometry3DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
+      return MakeErrorResult(-5604, fmt::format("{}CreateGeometry3DAction: Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
     }
 
     // Get the vertices list if we are using an existing array
     const auto vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
     {
-      return MakeErrorResult(-324, fmt::format("CreateGeometry3DAction: Could not find vertices array at path '{}'", m_InputVertices.toString()));
+      return MakeErrorResult(-5605, fmt::format("{}CreateGeometry3DAction: Could not find vertices array at path '{}'", prefix, m_InputVertices.toString()));
     }
 
     // Get the faces list if we are using an existing array
     const auto cells = dataStructure.getDataAs<DataArray<MeshIndexType>>(m_InputCells);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && cells == nullptr)
     {
-      return MakeErrorResult(-325, fmt::format("CreateGeometry3DAction: Could not find cells array at path '{}'", m_InputCells.toString()));
+      return MakeErrorResult(-5606, fmt::format("{}CreateGeometry3DAction: Could not find cells array at path '{}'", prefix, m_InputCells.toString()));
     }
 
     // Create the Geometry
@@ -166,8 +167,8 @@ public:
       const auto oldVertexParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldVertexParentId.has_value())
       {
-        return MakeErrorResult(-326, fmt::format("CreateGeometry3DAction: Failed to remove vertices array '{}' from parent at path '{}' while moving array", m_SharedVerticesName,
-                                                 m_InputVertices.getParent().toString()));
+        return MakeErrorResult(-5607, fmt::format("{}CreateGeometry3DAction: Failed to remove vertices array '{}' from parent at path '{}' while moving array", prefix, m_SharedVerticesName,
+                                                  m_InputVertices.getParent().toString()));
       }
       dataStructure.removeParent(verticesId, oldVertexParentId.value());
 
@@ -176,8 +177,8 @@ public:
       const auto oldCellParentId = dataStructure.getId(m_InputCells.getParent());
       if(!oldCellParentId.has_value())
       {
-        return MakeErrorResult(
-            -326, fmt::format("CreateGeometry3DAction: Failed to remove cells array '{}' from parent at path '{}' while moving array", m_SharedCellsName, m_InputCells.getParent().toString()));
+        return MakeErrorResult(-5608, fmt::format("{}CreateGeometry3DAction: Failed to remove cells array '{}' from parent at path '{}' while moving array", prefix, m_SharedCellsName,
+                                                  m_InputCells.getParent().toString()));
       }
       dataStructure.removeParent(cellsId, oldCellParentId.value());
 
@@ -201,7 +202,7 @@ public:
       complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode);
       if(result.invalid())
       {
-        return MakeErrorResult(-327, fmt::format("CreateGeometry3DAction: Could not allocate SharedCellList '{}'", cellsPath.toString()));
+        return MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString()));
       }
       SharedCellList* polyhedronList = complex::ArrayFromPath<MeshIndexType>(dataStructure, cellsPath);
       geometry3d->setPolyhedraList(*polyhedronList);
@@ -212,7 +213,7 @@ public:
       result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
       if(result.invalid())
       {
-        return MakeErrorResult(-327, fmt::format("CreateGeometry3DAction: Could not allocate SharedVertList '{}'", vertexPath.toString()));
+        return MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
       Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
       geometry3d->setVertices(*vertexArray);
@@ -222,7 +223,7 @@ public:
     auto* cellAttributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, geometry3d->getId());
     if(cellAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-328, fmt::format("CreateGeometry3DAction: Failed to create attribute matrix: '{}'", cellDataPath.toString()));
+      return MakeErrorResult(-5611, fmt::format("{}CreateGeometry3DAction: Failed to create attribute matrix: '{}'", prefix, cellDataPath.toString()));
     }
     cellAttributeMatrix->setShape(cellTupleShape);
     geometry3d->setPolyhedraAttributeMatrix(*cellAttributeMatrix);
@@ -230,7 +231,7 @@ public:
     auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry3d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-329, fmt::format("CreateGeometry3DAction: Failed to create attribute matrix: '{}'", vertexDataPath.toString()));
+      return MakeErrorResult(-5612, fmt::format("{}CreateGeometry3DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
     }
     vertexAttributeMatrix->setShape(vertexTupleShape);
     geometry3d->setVertexAttributeMatrix(*vertexAttributeMatrix);

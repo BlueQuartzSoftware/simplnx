@@ -24,11 +24,11 @@ public:
   static inline constexpr StringLiteral k_MinVoxel_Key = "min_voxel";
   static inline constexpr StringLiteral k_MaxVoxel_Key = "max_voxel";
   static inline constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
-  static inline constexpr StringLiteral k_ImageGeom_Key = "image_geom";
-  static inline constexpr StringLiteral k_NewImageGeom_Key = "new_image_geom";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+  static inline constexpr StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
   static inline constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
-  static inline constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrix_Key = "cell_feature_attribute_matrix";
+  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids";
+  static inline constexpr StringLiteral k_FeatureAttributeMatrix_Key = "cell_feature_attribute_matrix";
   static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 
   /**
@@ -76,13 +76,13 @@ public:
 protected:
   /**
    * @brief
-   * @param data
-   * @param args
+   * @param dataStructure
+   * @param filterArgs
    * @param messageHandler
    * @param shouldCancel
    * @return PreflightResult
    */
-  PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief

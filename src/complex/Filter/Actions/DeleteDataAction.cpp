@@ -25,6 +25,7 @@ Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IData
   }
 
   dataStructure.removeData(targetObject->getId());
+
   return {};
 }
 

@@ -69,6 +69,8 @@
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
 #include "ComplexCore/Filters/TriangleCentroidFilter.hpp"
+#include "ComplexCore/Filters/ResampleImageGeomFilter.hpp"
+#include "ComplexCore/Filters/RotateSampleRefFrameFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -146,7 +148,9 @@ namespace complex
     {complex::Uuid::FromString("79d59b85-01e8-5c4a-a6e1-3fd3e2ceffb4").value(), complex::FilterTraits<ExtractComponentAsArrayFilter>::uuid}, // ExtractComponentAsArray
     {complex::Uuid::FromString("1b4b9941-62e4-52f2-9918-15d48147ab88").value(), complex::FilterTraits<ExtractComponentAsArrayFilter>::uuid}, // RemoveComponentFromArray
     {complex::Uuid::FromString("7aa33007-4186-5d7f-ba9d-d0a561b3351d").value(), complex::FilterTraits<TriangleCentroidFilter>::uuid}, // TriangleCentroid
-    // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
+    {complex::Uuid::FromString("1966e540-759c-5798-ae26-0c6a3abc65c0").value(), complex::FilterTraits<ResampleImageGeomFilter>::uuid}, // ResampleImageGeom
+    {complex::Uuid::FromString("e25d9b4c-2b37-578c-b1de-cf7032b5ef19").value(), complex::FilterTraits<RotateSampleRefFrameFilter>::uuid}, // RotateSampleRefFrame
+// @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
 } // namespace complex

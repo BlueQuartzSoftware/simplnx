@@ -89,6 +89,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
+    static constexpr StringLiteral prefix = "CreateGeometry2DAction: ";
     using MeshIndexType = IGeometry::MeshIndexType;
     using SharedTriList = IGeometry::SharedTriList;
     const DataPath faceDataPath = getFaceDataPath();
@@ -97,14 +98,14 @@ public:
     // Check for empty Geometry DataPath
     if(getCreatedPath().empty())
     {
-      return MakeErrorResult(-220, "CreateGeometry2DAction: Geometry Path cannot be empty");
+      return MakeErrorResult(-5501, fmt::format("{}CreateGeometry2DAction: Geometry Path cannot be empty", prefix));
     }
 
     // Check if the Geometry Path already exists
     const BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
     if(parentObject != nullptr)
     {
-      return MakeErrorResult(-221, fmt::format("CreateGeometry2DAction: DataObject already exists at path '{}'", getCreatedPath().toString()));
+      return MakeErrorResult(-5502, fmt::format("{}CreateGeometry2DAction: DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
     }
 
     const DataPath parentPath = getCreatedPath().getParent();
@@ -113,27 +114,27 @@ public:
       const Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
       if(geomPath.invalid())
       {
-        return MakeErrorResult(-222, fmt::format("CreateGeometry2DAction: Geometry could not be created at path:'{}'", getCreatedPath().toString()));
+        return MakeErrorResult(-5503, fmt::format("{}CreateGeometry2DAction: Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
       }
     }
     // Get the Parent ID
     if(!dataStructure.getId(parentPath).has_value())
     {
-      return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
+      return MakeErrorResult(-5504, fmt::format("{}CreateGeometry2DAction: Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
     }
 
     // Get the vertices list if we are using an existing array
     const auto vertices = dataStructure.getDataAs<Float32Array>(m_InputVertices);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && vertices == nullptr)
     {
-      return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Could not find vertices array at path '{}'", m_InputVertices.toString()));
+      return MakeErrorResult(-5505, fmt::format("{}CreateGeometry2DAction: Could not find vertices array at path '{}'", prefix, m_InputVertices.toString()));
     }
 
     // Get the faces list if we are using an existing array
     const auto faces = dataStructure.getDataAs<DataArray<MeshIndexType>>(m_InputFaces);
     if(m_ArrayHandlingType != ArrayHandlingType::Create && faces == nullptr)
     {
-      return MakeErrorResult(-225, fmt::format("CreateGeometry2DAction: Could not find faces array at path '{}'", m_InputFaces.toString()));
+      return MakeErrorResult(-5506, fmt::format("{}CreateGeometry2DAction: Could not find faces array at path '{}'", prefix, m_InputFaces.toString()));
     }
 
     // Create the TriangleGeometry
@@ -166,8 +167,8 @@ public:
       const auto oldVertexParentId = dataStructure.getId(m_InputVertices.getParent());
       if(!oldVertexParentId.has_value())
       {
-        return MakeErrorResult(-226, fmt::format("CreateGeometry2DAction: Failed to remove vertices array '{}' from parent at path '{}' while moving array", m_SharedVerticesName,
-                                                 m_InputVertices.getParent().toString()));
+        return MakeErrorResult(-5507, fmt::format("{}CreateGeometry2DAction: Failed to remove vertices array '{}' from parent at path '{}' while moving array", prefix, m_SharedVerticesName,
+                                                  m_InputVertices.getParent().toString()));
       }
       dataStructure.removeParent(verticesId, oldVertexParentId.value());
 
@@ -176,8 +177,8 @@ public:
       const auto oldFaceParentId = dataStructure.getId(m_InputFaces.getParent());
       if(!oldFaceParentId.has_value())
       {
-        return MakeErrorResult(
-            -226, fmt::format("CreateGeometry2DAction: Failed to remove faces array '{}' from parent at path '{}' while moving array", m_SharedFacesName, m_InputFaces.getParent().toString()));
+        return MakeErrorResult(-5508, fmt::format("{}CreateGeometry2DAction: Failed to remove faces array '{}' from parent at path '{}' while moving array", prefix, m_SharedFacesName,
+                                                  m_InputFaces.getParent().toString()));
       }
       dataStructure.removeParent(facesId, oldFaceParentId.value());
 
@@ -202,7 +203,7 @@ public:
       complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode);
       if(result.invalid())
       {
-        return MakeErrorResult(-227, fmt::format("CreateGeometry2DAction: Could not allocate SharedTriList '{}'", trianglesPath.toString()));
+        return MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString()));
       }
       SharedTriList* triangles = complex::ArrayFromPath<MeshIndexType>(dataStructure, trianglesPath);
       geometry2d->setFaceList(*triangles);
@@ -213,7 +214,7 @@ public:
       result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
       if(result.invalid())
       {
-        return MakeErrorResult(-227, fmt::format("CreateGeometry2DAction: Could not allocate SharedVertList '{}'", vertexPath.toString()));
+        return MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
       }
       Float32Array* vertexArray = complex::ArrayFromPath<float>(dataStructure, vertexPath);
       geometry2d->setVertices(*vertexArray);
@@ -223,7 +224,7 @@ public:
     auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, m_FaceDataName, geometry2d->getId());
     if(faceAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-228, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", faceDataPath.toString()));
+      return MakeErrorResult(-5511, fmt::format("{}CreateGeometry2DAction: Failed to create attribute matrix: '{}'", prefix, faceDataPath.toString()));
     }
     faceAttributeMatrix->setShape(faceTupleShape);
     geometry2d->setFaceAttributeMatrix(*faceAttributeMatrix);
@@ -231,7 +232,7 @@ public:
     auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry2d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-229, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", vertexDataPath.toString()));
+      return MakeErrorResult(-5512, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
     }
     vertexAttributeMatrix->setShape(vertexTupleShape);
     geometry2d->setVertexAttributeMatrix(*vertexAttributeMatrix);

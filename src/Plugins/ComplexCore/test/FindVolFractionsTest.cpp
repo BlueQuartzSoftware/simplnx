@@ -21,7 +21,7 @@ const DataPath k_IncorrectCellPhasesPath({Constants::k_DataContainer, Constants:
 const DataPath k_VolumeFractionsPath({Constants::k_DataContainer, Constants::k_CellEnsembleData, k_VolumeFractions});
 const DataPath k_VolumeFractionsPathNX({Constants::k_DataContainer, Constants::k_CellEnsembleData, k_VolumeFractionsNX});
 
-const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_volume_fraction_feature_count.dream3d", unit_test::k_DREAM3DDataDir));
+const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction_feature_count.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
 TEST_CASE("ComplexCore::FindVolFractionsFilter: Instantiation and Parameter Check", "[ComplexCore]")
@@ -81,7 +81,7 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[Com
   FindVolFractionsFilter filter;
   Arguments args;
 
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_volFractions_and_numFeatures_test.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_volFractions_and_numFeatures_test.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.

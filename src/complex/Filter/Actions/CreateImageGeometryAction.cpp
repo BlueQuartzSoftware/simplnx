@@ -21,16 +21,17 @@ CreateImageGeometryAction::~CreateImageGeometryAction() noexcept = default;
 
 Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mode) const
 {
+  static constexpr StringLiteral prefix = "CreateImageGeometryAction: ";
   // Check for empty Geometry DataPath
   if(getCreatedPath().empty())
   {
-    return MakeErrorResult(-220, "CreateImageGeometryAction: Geometry Path cannot be empty");
+    return MakeErrorResult(-5701, fmt::format("{}Geometry Path cannot be empty", prefix));
   }
   // Check if the Geometry Path already exists
   BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
   if(parentObject != nullptr)
   {
-    return MakeErrorResult(-222, fmt::format("CreateImageGeometryAction: DataObject already exists at path '{}'", getCreatedPath().toString()));
+    return MakeErrorResult(-5702, fmt::format("{}DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
   }
   DataPath parentPath = getCreatedPath().getParent();
   if(!parentPath.empty())
@@ -38,20 +39,20 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
     Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
     if(geomPath.invalid())
     {
-      return MakeErrorResult(-223, fmt::format("CreateGeometry2DAction: Geometry could not be created at path:'{}'", getCreatedPath().toString()));
+      return MakeErrorResult(-5703, fmt::format("{}Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
     }
   }
   // Get the Parent ID
   if(!dataStructure.getId(parentPath).has_value())
   {
-    return MakeErrorResult(-224, fmt::format("CreateGeometry2DAction: Parent Id was not available for path:'{}'", parentPath.toString()));
+    return MakeErrorResult(-5704, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
   }
 
   // Create the ImageGeometry
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
   if(imageGeom == nullptr)
   {
-    return MakeErrorResult(-225, fmt::format("CreateGeometry2DAction: Failed to create ImageGeometry:'{}'", getCreatedPath().toString()));
+    return MakeErrorResult(-5705, fmt::format("{}Failed to create ImageGeometry:'{}'", prefix, getCreatedPath().toString()));
   }
   imageGeom->setDimensions(m_Dims);
   imageGeom->setOrigin(m_Origin);
@@ -60,7 +61,7 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, imageGeom->getId());
   if(attributeMatrix == nullptr)
   {
-    return MakeErrorResult(-226, fmt::format("CreateGeometry2DAction: Failed to create ImageGeometry: '{}'", getCreatedPath().createChildPath(m_CellDataName).toString()));
+    return MakeErrorResult(-5706, fmt::format("{}Failed to create ImageGeometry: '{}'", prefix, getCreatedPath().createChildPath(m_CellDataName).toString()));
   }
   DimensionType reversedDims(m_Dims.rbegin(), m_Dims.rend());
   attributeMatrix->setShape(std::move(reversedDims));
