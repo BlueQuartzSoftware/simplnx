@@ -97,6 +97,7 @@ function(download_test_data)
 
   get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME_WE)
   file(TO_CMAKE_PATH "${complex_BINARY_DIR}/TestFiles" test_files_dir)
+  file(TO_CMAKE_PATH "${ARGS_DREAM3D_DATA_DIR}" ARGS_DREAM3D_DATA_DIR)
   #----------------------------------------------------------------------------
   # Create the custom CMake File for this archive file
   #----------------------------------------------------------------------------
