@@ -38,10 +38,10 @@ const DataPath k_FaceFeatureVolumesPath = k_FaceFeatureAttributeMatrixPath.creat
 
 using namespace FindTriangleGeomShapesFilterTest;
 
-TEST_CASE("Core::FindTriangleGeomShapes", "[Core][FindTriangleGeomShapes]")
+TEST_CASE("OrientationAnalysis::FindTriangleGeomShapes", "[OrientationAnalysis][FindTriangleGeomShapes]")
 {
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/12_IN625_GBCD/12_IN625_GBCD.dream3d", unit_test::k_DREAM3DDataDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/12_IN625_GBCD/12_IN625_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
   {

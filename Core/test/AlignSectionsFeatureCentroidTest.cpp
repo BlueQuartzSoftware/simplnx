@@ -50,11 +50,11 @@ TEST_CASE("Core::AlignSectionsFeatureCentroidFilter: Small IN100 Pipeline", "[Re
   const DataPath k_ExemplarShiftsPath = k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
 
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_align_sections_feature_centroid.dream3d", unit_test::k_DREAM3DDataDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_align_sections_feature_centroid.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
 
   // Read Exemplar Shifts File
@@ -74,7 +74,7 @@ TEST_CASE("Core::AlignSectionsFeatureCentroidFilter: Small IN100 Pipeline", "[Re
 
     Arguments args;
     // read in the exemplar shift data file
-    args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/TestFiles/align_sections_feature_centroid.txt", unit_test::k_DREAM3DDataDir))));
+    args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/align_sections_feature_centroid.txt", unit_test::k_TestFilesDir))));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::int32));
     args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(116));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));

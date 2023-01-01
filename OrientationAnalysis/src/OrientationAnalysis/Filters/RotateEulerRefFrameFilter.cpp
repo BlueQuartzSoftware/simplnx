@@ -38,7 +38,7 @@ std::string RotateEulerRefFrameFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RotateEulerRefFrameFilter::defaultTags() const
 {
-  return {"#Processing", "#Conversion"};
+  return {"#Processing", "#Conversion", "#Euler", "#Angles", "#ReferenceFrame"};
 }
 
 //------------------------------------------------------------------------------
@@ -48,10 +48,8 @@ Parameters RotateEulerRefFrameFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(
-      std::make_unique<Float32Parameter>(k_RotationAngle_Key, "Rotation Angle (Degrees)", "Angle (in degrees) that the Euler reference frame will be rotated around the rotation axis", 0.0f));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxis_Key, "Rotation Axis (ijk)", "Axis that the Euler reference frame will be rotated about", std::vector<float32>{0.0F, 0.0F, 1.0F},
-                                                         std::vector<std::string>{"i", "j", "k"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxisAngle_Key, "Rotation Axis-Angle [<ijk>w]", "Axis-Angle in sample reference frame to rotate about.",
+                                                         VectorFloat32Parameter::ValueType{0.0f, 0.0f, 0.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z)", DataPath{},
@@ -70,8 +68,7 @@ IFilter::UniquePointer RotateEulerRefFrameFilter::clone() const
 IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel) const
 {
-  auto pRotationAngleValue = filterArgs.value<float32>(k_RotationAngle_Key);
-  auto pRotationAxisValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxis_Key);
+  auto pRotationAxisAngleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
 
   complex::Result<OutputActions> resultOutputActions;
@@ -86,15 +83,12 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
 Result<> RotateEulerRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {
-  // Instantiate our Algorithm class.
-  complex::RotateEulerRefFrame algorithm(dataStructure, messageHandler, shouldCancel);
+  complex::RotateEulerRefFrameInputValues inputValues;
 
-  complex::RotateEulerRefFrameInputValues* inputValues = algorithm.inputValues();
+  inputValues.eulerAngleDataPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  inputValues.rotationAxis = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
 
-  inputValues->eulerAngleDataPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  inputValues->rotationAngle = filterArgs.value<float32>(k_RotationAngle_Key);
-  inputValues->rotationAxis = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxis_Key);
-
-  return algorithm();
+  // Let the Algorithm instance do the work
+  return RotateEulerRefFrame(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

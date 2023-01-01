@@ -43,14 +43,14 @@ inline constexpr float32 k_EPSILON = 0.001;
 
 } // namespace
 
-TEST_CASE("complex_plugins::ExportGBCDTriangleDataFilter: Valid filter execution")
+TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execution")
 {
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   DataPath smallIn100Group({Constants::k_SmallIN100});
@@ -91,7 +91,7 @@ TEST_CASE("complex_plugins::ExportGBCDTriangleDataFilter: Valid filter execution
   {
     Arguments args;
     CSVWizardData data;
-    data.inputFilePath = fmt::format("{}/TestFiles/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD_Triangles.ph", unit_test::k_DREAM3DDataDir);
+    data.inputFilePath = fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD_Triangles.ph", unit_test::k_TestFilesDir);
     data.dataHeaders = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.dataTypes = {DataType::float32, DataType::float32, DataType::float32, DataType::float32, DataType::float32,
                       DataType::float32, DataType::float64, DataType::float64, DataType::float64, DataType::float64};
@@ -192,14 +192,14 @@ TEST_CASE("complex_plugins::ExportGBCDTriangleDataFilter: Valid filter execution
   }
 }
 
-TEST_CASE("complex_plugins::ExportGBCDTriangleDataFilter: InValid filter execution")
+TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: InValid filter execution")
 {
   // Instantiate the filter and an Arguments Object
   ExportGBCDTriangleDataFilter filter;
   Arguments args;
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   DataPath smallIn100Group({Constants::k_SmallIN100});

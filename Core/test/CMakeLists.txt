@@ -8,8 +8,6 @@
 set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsFeatureCentroidTest.cpp
   FillBadDataTest.cpp # NEEDS TEST IMPLEMENTED
-  ResampleImageGeomFilterTest.cpp
-  RotateSampleRefFrameTest.cpp
   FindNeighborhoodsTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   ErodeDilateBadDataTest.cpp

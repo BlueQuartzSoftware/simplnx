@@ -18,8 +18,6 @@ set(FilterList
     FillBadDataFilter
     FindNeighborhoodsFilter
     RemoveFlaggedFeaturesFilter
-    ResampleImageGeomFilter
-    RotateSampleRefFrameFilter
 )
 # ------------------------------------------------------------------------------
 # Algorithms
@@ -31,7 +29,6 @@ set(AlgorithmList
   FillBadData
   FindNeighborhoods
   RemoveFlaggedFeatures
-  ResampleImageGeom
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
