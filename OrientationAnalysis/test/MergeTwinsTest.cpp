@@ -90,7 +90,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check",
     REQUIRE(nullptr != filter);
 
     Dream3dImportParameter::ImportData parameter;
-    parameter.FilePath = fs::path(fmt::format("{}/TestFiles/neighbor_orientation_correlation.dream3d", unit_test::k_DREAM3DDataDir));
+    parameter.FilePath = fs::path(fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_TestFilesDir));
 
     Arguments args;
     args.insertOrAssign(k_ImportFileData, std::make_any<Dream3dImportParameter::ImportData>(parameter));

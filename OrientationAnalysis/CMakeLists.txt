@@ -10,10 +10,10 @@ find_package(EbsdLib REQUIRED)
 # ------------------------------------------------------------------------------
 get_property(GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 
-if(NOT GENERATOR_IS_MULTI_CONFIG)
+#if(NOT GENERATOR_IS_MULTI_CONFIG)
   get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
   set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${EbsdLib_LIB_DIRS})
-endif()
+#endif()
 
 # ------------------------------------------------------------------------------
 # Include the standard complex plugin cmake support codes

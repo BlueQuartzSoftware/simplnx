@@ -31,7 +31,7 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write PNG", "[ITKImageProcessing]
   DataPath arrayPath{{"ImageGeom", "ImageArray"}};
   DataPath imagePath = arrayPath.getParent();
 
-  fs::path outputPath = fs::path(unit_test::k_BuildDir.view()) / "test/data/PngTestOutput.png";
+  fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "PngTestOutput.png";
 
   args.insertOrAssign(ITKImageWriter::k_ImageGeomPath_Key, std::make_any<DataPath>(imagePath));
   args.insertOrAssign(ITKImageWriter::k_ImageArrayPath_Key, std::make_any<DataPath>(arrayPath));

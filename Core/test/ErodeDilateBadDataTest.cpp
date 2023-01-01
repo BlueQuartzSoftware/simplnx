@@ -41,11 +41,11 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_erode_dilate_bad_data.dream3d", unit_test::k_DREAM3DDataDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_bad_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
 
   const std::string k_OrigDataContainer("Original DataContainer");
@@ -88,8 +88,8 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
     constexpr StringLiteral k_MinVoxel_Key = "min_voxel";
     constexpr StringLiteral k_MaxVoxel_Key = "max_voxel";
     constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
-    constexpr StringLiteral k_ImageGeom_Key = "image_geom";
-    constexpr StringLiteral k_NewImageGeom_Key = "new_image_geom";
+    constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
+    constexpr StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
     constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
     constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
     //    constexpr StringLiteral k_FeatureIds_Key = "feature_ids";
@@ -99,8 +99,8 @@ TEST_CASE("Core::ErodeDilateBadDataFilter: Small IN100 Pipeline", "[Core][ErodeD
     VectorUInt64Parameter::ValueType minValues = {0, 0, 116};
     VectorUInt64Parameter::ValueType maxValues = {188, 200, 116};
 
-    args.insertOrAssign(k_ImageGeom_Key, std::make_any<DataPath>(k_OrigDataContainerPath));
-    args.insertOrAssign(k_NewImageGeom_Key, std::make_any<DataPath>(k_DataContainerPath));
+    args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_OrigDataContainerPath));
+    args.insertOrAssign(k_CreatedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
     args.insertOrAssign(k_MinVoxel_Key, std::make_any<VectorUInt64Parameter::ValueType>(minValues));
     args.insertOrAssign(k_MaxVoxel_Key, std::make_any<VectorUInt64Parameter::ValueType>(maxValues));
     args.insertOrAssign(k_UpdateOrigin_Key, std::make_any<BoolParameter::ValueType>(false));

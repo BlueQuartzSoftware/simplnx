@@ -21,22 +21,19 @@ class RotateEulerRefFrameImpl
 {
 
 public:
-  RotateEulerRefFrameImpl(Float32Array& data, float rotAngle, std::vector<float>& rotAxis, const std::atomic_bool& shouldCancel)
+  RotateEulerRefFrameImpl(Float32Array& data, std::vector<float>& rotAxis, float angle, const std::atomic_bool& shouldCancel)
   : m_CellEulerAngles(data)
-  , angle(rotAngle)
-  , axis(rotAxis)
+  , m_AxisAngle(rotAxis)
+  , m_Angle(angle)
   , m_ShouldCancel(shouldCancel)
   {
-    axis[0] = rotAxis[0];
-    axis[1] = rotAxis[1];
-    axis[2] = rotAxis[2];
   }
   virtual ~RotateEulerRefFrameImpl() = default;
 
   void convert(size_t start, size_t end) const
   {
     float rotMat[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(axis[0], axis[1], axis[2], angle)).toGMatrix(rotMat);
+    OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * complex::numbers::pi / 180.0F)).toGMatrix(rotMat);
 
     float ea1 = 0, ea2 = 0, ea3 = 0;
     float g[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
@@ -65,24 +62,19 @@ public:
 
 private:
   Float32Array& m_CellEulerAngles;
-  float angle;
-  std::vector<float> axis;
+  std::vector<float> m_AxisAngle;
+  float m_Angle = 0.0F;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
 
 // -----------------------------------------------------------------------------
-RotateEulerRefFrame::RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel)
+RotateEulerRefFrame::RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RotateEulerRefFrameInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
+, m_InputValues(inputValues)
 {
-}
-
-// -----------------------------------------------------------------------------
-RotateEulerRefFrameInputValues* RotateEulerRefFrame::inputValues()
-{
-  return &m_InputValues;
 }
 
 // -----------------------------------------------------------------------------
@@ -91,16 +83,16 @@ RotateEulerRefFrame::~RotateEulerRefFrame() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> RotateEulerRefFrame::operator()()
 {
-  complex::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues.eulerAngleDataPath);
+  complex::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
 
   size_t m_TotalElements = eulerAngles.getNumberOfTuples();
 
-  float rotAngle = m_InputValues.rotationAngle * complex::numbers::pi_v<float> / 180.0F;
-  MatrixMath::Normalize3x1(m_InputValues.rotationAxis.data());
+  std::vector<float> axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
+  MatrixMath::Normalize3x1(axis.data());
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, m_TotalElements);
-  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, rotAngle, m_InputValues.rotationAxis, m_ShouldCancel));
+  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel));
   return {};
 }

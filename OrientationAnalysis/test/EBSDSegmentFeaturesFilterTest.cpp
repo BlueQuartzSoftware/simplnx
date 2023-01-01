@@ -32,11 +32,11 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Instantiation and Parameter
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_ebsd_segment_features.dream3d", unit_test::k_DREAM3DDataDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ebsd_segment_features.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/Small_IN100.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // MultiThreshold Objects Filter (From ComplexCore Plugins)

@@ -38,7 +38,7 @@ inline constexpr int32 k_Dimension = 300;
 TEST_CASE("OrientationAnalysis::GenerateGBCDPoleFigureFilter", "[OrientationAnalysis][GenerateGBCDPoleFigureFilter]")
 {
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_DREAM3DDataDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({complex::Constants::k_SmallIN100});
   DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_Grain_Data);

@@ -13,7 +13,6 @@ namespace complex
  */
 struct ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrameInputValues
 {
-  float rotationAngle;
   std::vector<float> rotationAxis;
   DataPath eulerAngleDataPath;
 };
@@ -24,7 +23,7 @@ struct ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrameInputValues
 class ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrame
 {
 public:
-  RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel);
+  RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RotateEulerRefFrameInputValues* inputValues);
   ~RotateEulerRefFrame() noexcept;
 
   RotateEulerRefFrame(const RotateEulerRefFrame&) = delete;            // Copy Constructor Not Implemented
@@ -34,13 +33,11 @@ public:
 
   Result<> operator()();
 
-  RotateEulerRefFrameInputValues* inputValues();
-
 private:
   DataStructure& m_DataStructure;
   const IFilter::MessageHandler& m_MessageHandler;
   const std::atomic_bool& m_ShouldCancel;
-  RotateEulerRefFrameInputValues m_InputValues;
+  const RotateEulerRefFrameInputValues* m_InputValues = nullptr;
 };
 
 } // namespace complex

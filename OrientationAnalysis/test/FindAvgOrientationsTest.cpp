@@ -65,7 +65,7 @@ void runImportTextFilter(const std::string k_InputFileName, complex::NumericType
 
   Arguments args;
   args.insertOrAssign(FindAvgOrientationsTest::k_InputFileKey,
-                      std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/TestFiles/ASCII_Data/{}.csv", unit_test::k_DREAM3DDataDir, k_InputFileName))));
+                      std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/ASCII_Data/{}.csv", unit_test::k_TestFilesDir, k_InputFileName))));
   args.insertOrAssign(FindAvgOrientationsTest::k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
   args.insertOrAssign(FindAvgOrientationsTest::k_NTuplesKey, std::make_any<uint64>(k_NumTuples));
   args.insertOrAssign(FindAvgOrientationsTest::k_NCompKey, std::make_any<uint64>(k_NumComponents));

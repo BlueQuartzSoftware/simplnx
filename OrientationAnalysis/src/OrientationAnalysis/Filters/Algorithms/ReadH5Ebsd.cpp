@@ -26,14 +26,14 @@ namespace RotateSampleRefFrame
 {
 // Parameter Keys
 static inline constexpr complex::StringLiteral k_RotationRepresentation_Key = "rotation_representation";
-static inline constexpr complex::StringLiteral k_RotationAngle_Key = "rotation_angle";
-static inline constexpr complex::StringLiteral k_RotationAxis_Key = "rotation_axis";
+static inline constexpr complex::StringLiteral k_RotationAxisAngle_Key = "rotation_axis";
+static inline constexpr complex::StringLiteral k_RotationMatrix_Key = "rotation_matrix";
 static inline constexpr complex::StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
-static inline constexpr complex::StringLiteral k_SelectedCellArrays_Key = "selected_cell_arrays";
 static inline constexpr complex::StringLiteral k_CreatedImageGeometry_Key = "created_image_geometry";
 static inline constexpr complex::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+static inline constexpr complex::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 
-static inline constexpr complex::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
+// static inline constexpr complex::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
 enum class RotationRepresentation : uint64_t
 {
@@ -295,14 +295,10 @@ Result<> ReadH5Ebsd::operator()()
 
   std::array<size_t, 3> dcDims = {static_cast<size_t>(dims[0]), static_cast<size_t>(dims[1]), static_cast<size_t>(dims[2])};
 
-  // The dimensions/spacing/origin of the ImageGeometry should have already been set during preflight.
-  complex::ImageGeom& imageGeom = m_DataStructure.getDataRefAs<complex::ImageGeom>(m_InputValues->dataContainerPath);
-
   // Now Calculate our "subvolume" of slices, ie, those start and end values that the user selected from the GUI
   dcDims[2] = m_InputValues->endSlice - m_InputValues->startSlice + 1;
 
   std::string manufacturer = volumeInfoReader->getManufacturer();
-  uint32_t mRefFrameZDir = volumeInfoReader->getStackingOrder();
 
   std::array<float, 3> sampleTransAxis = volumeInfoReader->getSampleTransformationAxis();
   float sampleTransAngle = volumeInfoReader->getSampleTransformationAngle();
@@ -358,9 +354,8 @@ Result<> ReadH5Ebsd::operator()()
     {
       RotateEulerRefFrameFilter rotEuler;
       Arguments args;
-      args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAngle_Key, std::make_any<Float32Parameter::ValueType>(eulerTransAngle));
-      args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxis_Key,
-                          std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{eulerTransAxis[0], eulerTransAxis[1], eulerTransAxis[2]}));
+      args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key,
+                          std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{eulerTransAxis[0], eulerTransAxis[1], eulerTransAxis[2], eulerTransAngle}));
 
       complex::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
       args.insertOrAssign(RotateEulerRefFrameFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerDataPath));
@@ -376,79 +371,42 @@ Result<> ReadH5Ebsd::operator()()
 
       // Execute the filter and check the result
       auto executeResult = rotEuler.execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
+      if(executeResult.result.invalid())
+      {
+        return {MakeErrorResult(-50011, fmt::format("Error executing {}", rotEuler.humanName()))};
+      }
     }
 
     if(sampleTransAngle > 0)
     {
-      const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313a69");
+      // const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313a69");
       const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
       auto* filterList = Application::Instance()->getFilterList();
-
-      /*************************************************************************
-       * First rename the entire Generated Image Geometry to a temp name
-       ************************************************************************/
-      const Uuid k_RenameDataObjectFilterId = *Uuid::FromString("911a3aa9-d3c2-4f66-9451-8861c4b726d5");
-      const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_ComplexCorePluginId);
-      auto filter = filterList->createFilter(k_RenameDataObjectFilterHandle);
-      if(nullptr == filter)
-      {
-        return {MakeErrorResult(-50010, fmt::format("Error creating RenameDataObject filter"))};
-      }
-      Arguments args;
-      args.insertOrAssign(RenameDataObject::k_DataObject_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
-      args.insertOrAssign(RenameDataObject::k_NewName_Key, std::make_any<std::string>(RotateSampleRefFrame::k_RotatedGeometryName));
-      // Preflight the filter and check result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
-      complex::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
-      if(preflightResult.outputActions.invalid())
-      {
-        for(const auto& error : preflightResult.outputActions.errors())
-        {
-          std::cout << error.code << ": " << error.message << std::endl;
-        }
-        return {MakeErrorResult(-50010, fmt::format("Error preflighting {}", filter->humanName()))};
-      }
-
-      // Execute the filter and check the result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}...", filter->humanName())});
-      auto executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
-      if(executeResult.result.invalid())
-      {
-        return {MakeErrorResult(-50011, fmt::format("Error executing {}", filter->humanName()))};
-      }
 
       /*************************************************************************
        * Rotate Sample Ref Frame
        ************************************************************************/
       const Uuid k_RotateSampleRefFrameFilterId = *Uuid::FromString("d2451dc1-a5a1-4ac2-a64d-7991669dcffc");
-      const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_CorePluginId);
+      const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilterId, k_ComplexCorePluginId);
 
-      filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
+      auto filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
       if(nullptr == filter)
       {
         return {MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter"))};
       }
-      args = Arguments();
+      Arguments args;
+
+      args.insertOrAssign(RotateSampleRefFrame::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
+      args.insertOrAssign(RotateSampleRefFrame::k_RemoveOriginalGeometry_Key, std::make_any<bool>(true));
 
       args.insertOrAssign(RotateSampleRefFrame::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
-      args.insertOrAssign(RotateSampleRefFrame::k_SelectedImageGeometry_Key, std::make_any<DataPath>(DataPath({RotateSampleRefFrame::k_RotatedGeometryName})));
-      args.insertOrAssign(RotateSampleRefFrame::k_CreatedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->dataContainerPath));
-
-      std::vector<DataPath> rotatedDataPaths;
-      for(const auto& path : m_InputValues->hdf5DataPaths)
-      {
-        std::string aPath = m_InputValues->cellAttributeMatrixPath.createChildPath(path).toString();
-        aPath = complex::StringUtilities::replace(aPath, m_InputValues->dataContainerPath.toString(), RotateSampleRefFrame::k_RotatedGeometryName);
-        rotatedDataPaths.push_back(*DataPath::FromString(aPath));
-      }
-      args.insertOrAssign(RotateSampleRefFrame::k_SelectedCellArrays_Key, std::make_any<std::vector<DataPath>>(rotatedDataPaths));
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationAngle_Key, std::make_any<Float32Parameter::ValueType>(sampleTransAngle));
-      args.insertOrAssign(RotateSampleRefFrame::k_RotationAxis_Key, std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2]}));
+      args.insertOrAssign(RotateSampleRefFrame::k_RotationAxisAngle_Key,
+                          std::make_any<VectorFloat32Parameter::ValueType>({sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle}));
       args.insertOrAssign(RotateSampleRefFrame::k_RotateSliceBySlice_Key, std::make_any<bool>(true));
 
       // Preflight the filter and check result
       m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
-      preflightResult = filter->preflight(m_DataStructure, args);
+      complex::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
         for(const auto& error : preflightResult.outputActions.errors())
@@ -460,50 +418,10 @@ Result<> ReadH5Ebsd::operator()()
 
       // Execute the filter and check the result
       m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
-      executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
+      auto executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {
         return {{nonstd::make_unexpected(executeResult.result.errors())}};
-      }
-
-      /*************************************************************************
-       * Delete the original Geometry
-       ************************************************************************/
-      DataPath nonRotatedDataGroup = DataPath({RotateSampleRefFrame::k_RotatedGeometryName});
-      // First set the final DataContainer Object as a parent of the Ensemble Data otherwise
-      // that will get deleted.
-      DataObject* dataContainerObject = m_DataStructure.getData(m_InputValues->dataContainerPath);
-      DataObject* ensembleObject = m_DataStructure.getData(nonRotatedDataGroup.createChildPath(m_InputValues->cellEnsembleMatrixPath.getTargetName()));
-      m_DataStructure.setAdditionalParent(ensembleObject->getId(), dataContainerObject->getId());
-
-      const Uuid k_DeleteDataFilterId = *Uuid::FromString("bf286740-e987-49fe-a7c8-6e566e3a0606");
-      const FilterHandle k_DeleteDataFilterHandle(k_DeleteDataFilterId, k_ComplexCorePluginId);
-      filter = filterList->createFilter(k_DeleteDataFilterHandle);
-      if(nullptr == filter)
-      {
-        return {MakeErrorResult(-50014, fmt::format("Error creating 'Delete Data Object' filter"))};
-      }
-      args = Arguments();
-      args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(nonRotatedDataGroup));
-
-      // Preflight the filter and check result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Preflighting {}...", filter->humanName())});
-      preflightResult = filter->preflight(m_DataStructure, args);
-      if(preflightResult.outputActions.invalid())
-      {
-        for(const auto& error : preflightResult.outputActions.errors())
-        {
-          std::cout << error.code << ": " << error.message << std::endl;
-        }
-        return {MakeErrorResult(-50015, fmt::format("Error preflighting {}", filter->humanName()))};
-      }
-
-      // Execute the filter and check the result
-      m_MessageHandler(complex::IFilter::Message{IFilter::Message::Type::Info, fmt::format("Executing {}", filter->humanName())});
-      executeResult = filter->execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
-      if(executeResult.result.invalid())
-      {
-        return {MakeErrorResult(-50016, fmt::format("Error executing {}", filter->humanName()))};
       }
     }
   }
