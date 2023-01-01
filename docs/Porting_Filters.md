@@ -185,3 +185,8 @@ There are potentially 3 sections of parameters:
 ```
 
 these should be used as needed by the filter.
+
+## Processing a Geometry In Place ##
+
+Sometimes a filter needs allow the user to process it's geometry "in place" in order to ease the number of filters that are needed to remove temporary DataObjecsts. If your filter needs this kind of capability, then take a look at the "CropImageGeometry" or "RotateSampleRefFrame" filters
+

@@ -217,6 +217,13 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parent)
 {
   std::vector<DataPath> childDataObjects;
+  const DataObject* dataObject1 = dataStructure.getData(parent);
+  if(dataObject1->getDataObjectType() == DataObject::Type::DataArray || dataObject1->getDataObjectType() == DataObject::Type::DynamicListArray ||
+     dataObject1->getDataObjectType() == DataObject::Type::NeighborList || dataObject1->getDataObjectType() == DataObject::Type::ScalarData ||
+     dataObject1->getDataObjectType() == DataObject::Type::StringArray)
+  {
+    return {};
+  }
   try
   {
     std::vector<std::string> childrenNames;

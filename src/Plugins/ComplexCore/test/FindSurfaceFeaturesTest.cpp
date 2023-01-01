@@ -21,7 +21,6 @@ const DataPath k_SurfaceFeaturesArrayPath({"Surface Features"});
 const std::string k_FeatureIdsFileName = "FeatureIds.raw";
 const std::string k_FeatureIds2DFileName = "FeatureIds_2D.raw";
 const std::string k_SurfaceFeatures2DExemplaryFileName = "SurfaceFeatures2D.raw";
-const std::string k_SurfaceFeatures3DExemplaryFileName = "SurfaceFeatures3D.raw";
 const std::string k_SurfaceFeatures("SurfaceFeatures");
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
@@ -120,7 +119,7 @@ TEST_CASE("ComplexCore::FindSurfaceFeatures: Instantiation and Parameter Check",
 TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[ComplexCore][FindSurfaceFeatures]")
 {
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1.dream3d", unit_test::k_TestDataSourceDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1/6_5_test_data_1.dream3d", complex::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   DataPath smallIn100Group({complex::Constants::k_DataContainer});

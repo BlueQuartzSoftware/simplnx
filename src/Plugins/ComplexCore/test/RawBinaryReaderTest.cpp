@@ -18,6 +18,7 @@
 
 #include <catch2/catch.hpp>
 
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
 
 #include "complex/Common/ScopeGuard.hpp"
@@ -29,20 +30,17 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 #include <fstream>
-
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include "complex/unit_test/complex_test_dirs.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;
 
 namespace
 {
-const fs::path k_TestOutput = fs::path(unit_test::k_BinaryDir.view()) / "RawBinaryReaderTest" / "Output.bin";
+const fs::path k_TestOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "Output.bin";
 const DataPath k_CreatedArrayPath = DataPath({"Test_Array"});
 
 constexpr int32 k_RbrNumComponentsError = -392;

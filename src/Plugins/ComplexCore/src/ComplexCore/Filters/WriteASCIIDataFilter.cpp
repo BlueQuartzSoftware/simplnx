@@ -185,7 +185,7 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
     auto outputFilePath = fmt::format("{}/{}{}", directoryPath.string(), fileName, fileExtension);
 
     // Create the output file
-    std::ofstream outStrm(outputFilePath, std::ios_base::out);
+    std::ofstream outStrm(outputFilePath, std::ios_base::out | std::ios_base::binary);
     if(!outStrm.is_open())
     {
       return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputFilePath));

@@ -33,12 +33,9 @@ add_executable(complex_test
   MontageTest.cpp
   BitTest.cpp
   UuidTest.cpp
-  CoreFilterTest.cpp
-  PipelineTest.cpp
   PluginTest.cpp
   FilePathGeneratorTest.cpp
   DataArrayTest.cpp
-  DREAM3DFileTest.cpp
   GeometryTestUtilities.hpp
   ParametersTest.cpp
   PipelineSaveTest.cpp
@@ -47,7 +44,6 @@ add_executable(complex_test
 target_link_libraries(complex_test
   PRIVATE
     complex
-    ComplexCore
     Catch2::Catch2
     complex::UnitTestCommon
 )

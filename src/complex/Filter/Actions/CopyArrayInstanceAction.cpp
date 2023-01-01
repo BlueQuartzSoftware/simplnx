@@ -10,7 +10,7 @@
 
 namespace
 {
-inline constexpr int32_t k_UnsupportedType_Error = -301;
+inline constexpr int32_t k_UnsupportedTypeError = -5001;
 
 }
 using namespace complex;
@@ -84,7 +84,8 @@ Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode)
     CAI_BODY(size_t)
   }
 
-  return MakeErrorResult(k_UnsupportedType_Error, fmt::format("The input array at DataPath '{}' was of an unsupported type", m_SelectedDataPath.toString()));
+  static constexpr StringLiteral prefix = "CopyArrayInstanceAction: ";
+  return MakeErrorResult(k_UnsupportedTypeError, fmt::format("{}The input array at DataPath '{}' was of an unsupported type", prefix, m_SelectedDataPath.toString()));
 }
 
 DataPath CopyArrayInstanceAction::selectedDataPath() const

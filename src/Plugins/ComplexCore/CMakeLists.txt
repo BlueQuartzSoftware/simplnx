@@ -67,7 +67,9 @@ set(FilterList
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
+  ResampleImageGeomFilter
   RobustAutomaticThreshold
+  RotateSampleRefFrameFilter
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
@@ -102,6 +104,7 @@ set(AlgorithmList
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   RawBinaryReader
+  ResampleImageGeom
   ScalarSegmentFeatures
   SharedFeatureFace
   SplitAttributeArray

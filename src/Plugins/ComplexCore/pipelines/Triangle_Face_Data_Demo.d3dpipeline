@@ -8,7 +8,7 @@
         "geometry_data_path": "[Triangle Geometry]",
         "scale_factor": 1.0,
         "scale_output": false,
-        "stl_file_path": "/Users/mjackson/Workspace1/DREAM3D-Build/CLion-NX-Debug/Bin/Data/Models/ASTMD638_specimen.stl"
+        "stl_file_path": "Data/Models/ASTMD638_specimen.stl"
       },
       "comments": "",
       "filter": {

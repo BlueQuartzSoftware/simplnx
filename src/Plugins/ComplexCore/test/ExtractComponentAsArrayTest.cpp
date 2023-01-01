@@ -18,7 +18,7 @@ const std::string k_ExtractedComponents("Extracted Components");
 const DataPath k_QuatsPath({Constants::k_DataContainer, Constants::k_EbsdScanData, Constants::k_Quats});
 const DataPath k_ExtractedComponentsPath({Constants::k_DataContainer, Constants::k_EbsdScanData, k_ExtractedComponents});
 
-const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/TestFiles/6_6_find_feature_centroids.dream3d", unit_test::k_DREAM3DDataDir));
+const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
 TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Instantiation and Parameter Check", "[ComplexCore]")

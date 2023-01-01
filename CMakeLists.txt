@@ -36,17 +36,37 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# -----------------------------------------------------------------------
+# These dependent libraries are header only libraries
+# -----------------------------------------------------------------------
 find_package(fmt CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(expected-lite CONFIG REQUIRED)
 find_package(span-lite CONFIG REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(HDF5 REQUIRED)
 find_package(boost_mp11 CONFIG REQUIRED)
 find_package(nod CONFIG REQUIRED)
 
+# -----------------------------------------------------------------------
+# Find HDF5 and get the path to the DLL libraries and put that into a
+# global property for later install, debugging and packaging
+# -----------------------------------------------------------------------
+find_package(HDF5 REQUIRED)
+get_target_property(hdf5_dll_path hdf5::hdf5-shared IMPORTED_LOCATION_RELEASE)
+get_filename_component(hdf5_dll_path "${hdf5_dll_path}" DIRECTORY)
+get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
+set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${hdf5_dll_path})
+
+# -----------------------------------------------------------------------
+# Find oneTBB and get the path to the DLL libraries and put that into a
+# global property for later install, debugging and packaging
+# -----------------------------------------------------------------------
 if(COMPLEX_ENABLE_MULTICORE)
   find_package(TBB CONFIG REQUIRED)
+  get_target_property(tbb_dll_path TBB::tbb IMPORTED_LOCATION_RELEASE)
+  get_filename_component(tbb_dll_path "${tbb_dll_path}" DIRECTORY)
+  get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
+  set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${tbb_dll_path})
 endif()
 
 add_library(complex SHARED)
@@ -492,6 +512,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/SegmentFeatures.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp

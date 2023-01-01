@@ -22,6 +22,7 @@ CreateStringArrayAction::~CreateStringArrayAction() noexcept = default;
 
 Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode) const
 {
+  static constexpr StringLiteral prefix = "CreateStringArrayAction: ";
   auto parentPath = path().getParent();
 
   std::optional<DataObject::IdType> dataObjectId;
@@ -32,7 +33,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
     parentObject = dataStructure.getData(parentPath);
     if(parentObject == nullptr)
     {
-      return MakeErrorResult(-380, fmt::format("CreateStringArrayAction:: Parent object '{}' does not exist", parentPath.toString()));
+      return MakeErrorResult(-6001, fmt::format("{}CreateStringArrayAction:: Parent object '{}' does not exist", prefix, parentPath.toString()));
     }
 
     dataObjectId = parentObject->getId();
@@ -40,7 +41,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
 
   if(m_Dims.empty())
   {
-    return MakeErrorResult(-381, fmt::format("CreateStringArrayAction: Tuple Shape was empty. Please set the number of tuples."));
+    return MakeErrorResult(-6002, fmt::format("{}CreateStringArrayAction: Tuple Shape was empty. Please set the number of tuples.", prefix));
   }
 
   std::string name = path().getTargetName();
@@ -56,14 +57,13 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
       auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
       std::string arrayShape = fmt::format("String Array Tuple Shape: {}", fmt::join(m_Dims, " x "));
-      return MakeErrorResult(
-          -382, fmt::format("CreateStringArrayAction: Unable to create String Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created String Array must have the same tuple "
-                            "dimensions or the same total number of tuples.\n{}\n{}",
-                            name, parentPath.toString(), amShape, arrayShape));
+      return MakeErrorResult(-6003, fmt::format("{}Unable to create String Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created String Array must have the same tuple "
+                                                "dimensions or the same total number of tuples.\n{}\n{}",
+                                                prefix, name, parentPath.toString(), amShape, arrayShape));
     }
     else
     {
-      return MakeErrorResult(-382, fmt::format("CreateStringArrayAction: Unable to create StringArray at '{}'", path().toString()));
+      return MakeErrorResult(-6004, fmt::format("{}CreateStringArrayAction: Unable to create StringArray at '{}'", prefix, path().toString()));
     }
   }
   return {};

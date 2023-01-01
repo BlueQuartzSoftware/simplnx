@@ -9,7 +9,7 @@ using namespace complex;
 
 namespace
 {
-constexpr complex::int32 k_InsertFailureError = -2;
+constexpr complex::int32 k_InsertFailureError = -6301;
 } // namespace
 
 namespace complex
@@ -24,6 +24,7 @@ ImportObjectAction::~ImportObjectAction() noexcept = default;
 
 Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) const
 {
+  static constexpr StringLiteral prefix = "ImportObjectAction: ";
   const auto importData = std::shared_ptr<DataObject>(getImportObject()->shallowCopy());
   // Clear all children before inserting into the DataStructure
   if(const auto importGroup = std::dynamic_pointer_cast<BaseGroup>(importData); importGroup != nullptr)
@@ -33,7 +34,7 @@ Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) cons
 
   if(!dataStructure.insert(importData, getCreatedPath().getParent()))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("Unable to import DataObject at '{}'", getCreatedPath().toString())}})};
+    return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, getCreatedPath().toString())}})};
   }
 
   return {};

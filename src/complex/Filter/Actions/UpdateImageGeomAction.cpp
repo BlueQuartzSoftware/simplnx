@@ -22,10 +22,11 @@ UpdateImageGeomAction::~UpdateImageGeomAction() noexcept = default;
 
 Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode mode) const
 {
+  static constexpr StringLiteral prefix = "UpdateImageGeomAction: ";
   auto* image = dataStructure.getDataAs<ImageGeom>(path());
   if(image == nullptr)
   {
-    return MakeErrorResult(-275, fmt::format("Unable to find ImageGeom at '{}'", path().toString()));
+    return MakeErrorResult(-6701, fmt::format("{}Unable to find ImageGeom at '{}'", prefix, path().toString()));
   }
 
   if(shouldUpdateOrigin())

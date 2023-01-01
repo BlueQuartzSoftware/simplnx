@@ -144,7 +144,7 @@ Result<> FeatureDataCSVWriterFilter::executeImpl(DataStructure& dataStructure, c
     }
   }
 
-  std::ofstream fout(pOutputFilePath.string(), std::ofstream::out); // test name resolution and create file
+  std::ofstream fout(pOutputFilePath.string(), std::ofstream::out | std::ios_base::binary); // test name resolution and create file
   if(!fout.is_open())
   {
     return MakeErrorResult(-64640, fmt::format("Error opening path {}", pOutputFilePath.string()));

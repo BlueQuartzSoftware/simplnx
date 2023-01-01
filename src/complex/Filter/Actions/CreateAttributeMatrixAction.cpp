@@ -18,17 +18,18 @@ CreateAttributeMatrixAction::~CreateAttributeMatrixAction() noexcept = default;
 
 Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode mode) const
 {
+  static constexpr StringLiteral prefix = "CreateAttributeMatrixAction: ";
   DataPath createdAttributeMatrixPath = getCreatedPath();
   // Check for empty Geometry DataPath
   if(createdAttributeMatrixPath.empty())
   {
-    return MakeErrorResult(-65450, "CreateAttributeMatrixAction: AttributeMatrix Path cannot be empty");
+    return MakeErrorResult(-5201, fmt::format("{}CreateAttributeMatrixAction: AttributeMatrix Path cannot be empty", prefix));
   }
   // Check if the Geometry Path already exists
   BaseGroup* amObject = dataStructure.getDataAs<BaseGroup>(createdAttributeMatrixPath);
   if(amObject != nullptr)
   {
-    return MakeErrorResult(-65451, fmt::format("CreateAttributeMatrixAction: DataObject already exists at path '{}'", createdAttributeMatrixPath.toString()));
+    return MakeErrorResult(-5203, fmt::format("{}CreateAttributeMatrixAction: DataObject already exists at path '{}'", prefix, createdAttributeMatrixPath.toString()));
   }
   DataPath parentPath = createdAttributeMatrixPath.getParent();
   if(!parentPath.empty())
@@ -36,19 +37,19 @@ Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode m
     Result<LinkedPath> amPath = dataStructure.makePath(parentPath);
     if(amPath.invalid())
     {
-      return MakeErrorResult(-65452, fmt::format("CreateAttributeMatrixAction: AttributeMatrix could not be created at path:'{}'", createdAttributeMatrixPath.toString()));
+      return MakeErrorResult(-5204, fmt::format("{}CreateAttributeMatrixAction: AttributeMatrix could not be created at path:'{}'", prefix, createdAttributeMatrixPath.toString()));
     }
   }
   // Get the Parent ID
   if(!dataStructure.getId(parentPath).has_value())
   {
-    return MakeErrorResult(-65453, fmt::format("CreateAttributeMatrixAction: Parent Id was not available for path:'{}'", parentPath.toString()));
+    return MakeErrorResult(-5205, fmt::format("{}CreateAttributeMatrixAction: Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
   }
 
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, createdAttributeMatrixPath.getTargetName(), dataStructure.getId(parentPath).value());
   if(attributeMatrix == nullptr)
   {
-    return MakeErrorResult(-65454, fmt::format("CreateAttributeMatrixAction: Failed to create AttributeMatrix: '{}'", createdAttributeMatrixPath.toString()));
+    return MakeErrorResult(-5206, fmt::format("{}CreateAttributeMatrixAction: Failed to create AttributeMatrix: '{}'", prefix, createdAttributeMatrixPath.toString()));
   }
   attributeMatrix->setShape(m_TupleShape);
 

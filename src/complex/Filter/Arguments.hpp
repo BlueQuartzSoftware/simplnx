@@ -30,7 +30,7 @@ public:
 
   /**
    * @brief Insert the given key value pair IF and ONLY IF there isn't a key already in the underlying map.
-   * If you want to overwrite the current value then use there insert_or_assign() function
+   * If you want to overwrite the current value then use  insertOrAssign() function
    * @param key
    * @param value
    * @return bool if the insert worked.
