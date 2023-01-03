@@ -24,7 +24,7 @@ FilterList::SearchContainerType FilterList::search(const std::string& text) cons
   std::vector<FilterHandle> handles;
   for(const auto& handle : getFilterHandles())
   {
-    if(handle.getFilterName().find(text) != std::string::npos || getPlugin(handle)->getName().find(text) != std::string::npos)
+    if(handle.getFilterName().find(text) != std::string::npos || getPlugin(handle)->getName().find(text) != std::string::npos || handle.getClassName().find(text) != std::string::npos)
     {
       handles.push_back(handle);
     }
