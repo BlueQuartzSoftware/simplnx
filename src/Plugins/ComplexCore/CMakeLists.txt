@@ -58,6 +58,7 @@ set(FilterList
   FindSurfaceFeatures
   FindTriangleGeomCentroidsFilter
   FindTriangleGeomSizesFilter
+  FindVertexToTriangleDistancesFilter
   FindVolFractionsFilter
   GenerateColorTableFilter
   IdentifySample
@@ -128,6 +129,7 @@ set(AlgorithmList
   FindSurfaceAreaToVolume
   FindTriangleGeomCentroids
   FindTriangleGeomSizes
+  FindVertexToTriangleDistances
   GenerateColorTable
   ImportVolumeGraphicsFile
   ImportBinaryCTNorthstar

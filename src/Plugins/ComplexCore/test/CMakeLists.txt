@@ -59,6 +59,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindSurfaceFeaturesTest.cpp
   FindTriangleGeomCentroidsTest.cpp
   FindTriangleGeomSizesTest.cpp
+  FindVertexToTriangleDistancesTest.cpp
   FindVolFractionsTest.cpp
   FindVolFractionsTest.cpp
   GenerateColorTableTest.cpp

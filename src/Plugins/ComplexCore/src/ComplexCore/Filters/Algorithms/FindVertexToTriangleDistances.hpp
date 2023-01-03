@@ -5,25 +5,9 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  FindVertexToTriangleDistancesInputValues inputValues;
-
-  inputValues.VertexDataContainer = filterArgs.value<DataPath>(k_VertexDataContainer_Key);
-  inputValues.TriangleDataContainer = filterArgs.value<DataPath>(k_TriangleDataContainer_Key);
-  inputValues.TriangleNormalsArrayPath = filterArgs.value<DataPath>(k_TriangleNormalsArrayPath_Key);
-  inputValues.DistancesArrayPath = filterArgs.value<DataPath>(k_DistancesArrayPath_Key);
-  inputValues.ClosestTriangleIdArrayPath = filterArgs.value<DataPath>(k_ClosestTriangleIdArrayPath_Key);
-
-  return FindVertexToTriangleDistances(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 
 namespace complex
 {
@@ -35,7 +19,6 @@ struct COMPLEXCORE_EXPORT FindVertexToTriangleDistancesInputValues
   DataPath TriangleNormalsArrayPath;
   DataPath DistancesArrayPath;
   DataPath ClosestTriangleIdArrayPath;
-
 };
 
 /**
