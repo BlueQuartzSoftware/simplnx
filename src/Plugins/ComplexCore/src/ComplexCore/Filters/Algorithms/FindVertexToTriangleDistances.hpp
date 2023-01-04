@@ -19,6 +19,7 @@ struct COMPLEXCORE_EXPORT FindVertexToTriangleDistancesInputValues
   DataPath TriangleNormalsArrayPath;
   DataPath DistancesArrayPath;
   DataPath ClosestTriangleIdArrayPath;
+  DataPath TriBoundsDataPath;
 };
 
 /**
@@ -42,11 +43,19 @@ public:
 
   const std::atomic_bool& getCancel();
 
+  void sendThreadSafeProgressMessage(usize counter);
+
 private:
   DataStructure& m_DataStructure;
   const FindVertexToTriangleDistancesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  // Threadsafe Progress Message
+  mutable std::mutex m_ProgressMessage_Mutex;
+  size_t m_TotalElements = 0;
+  size_t m_ProgressCounter = 0;
+  size_t m_LastProgressInt = 0;
 };
 
 } // namespace complex
