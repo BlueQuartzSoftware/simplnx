@@ -36,10 +36,10 @@ public:
 
   struct HeaderMetadata
   {
-    SizeVec3 dims;
-    FloatVec3 spacing;
-    IGeometry::LengthUnit units = IGeometry::LengthUnit::Unspecified;
-    std::string dataFilePath;
+    SizeVec3 Dimensions;
+    FloatVec3 Spacing;
+    IGeometry::LengthUnit Units = IGeometry::LengthUnit::Unspecified;
+    std::string DataFilePath;
   };
 
   /**
@@ -89,22 +89,26 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Should the current filter be canceled.
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
+   * @param pipelineNode The pipeline filter node
    * @param messageHandler The MessageHandler object
+   * @param shouldCancel Should the current filter be canceled.
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 
 private:
   int32 m_InstanceId;

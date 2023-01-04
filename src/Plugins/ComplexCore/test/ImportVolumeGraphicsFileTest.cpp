@@ -22,12 +22,12 @@ const SizeVec3 k_Dimensions = {50, 20, 80};
 void writeVolTestFile()
 {
   // Write out the data file
-  FILE* f = fopen(k_VolFile.string().c_str(), "wb");
-  size_t count = k_Dimensions[0] * k_Dimensions[1] * k_Dimensions[2];
+  FILE* outputFile = fopen(k_VolFile.string().c_str(), "wb");
+  const size_t count = k_Dimensions[0] * k_Dimensions[1] * k_Dimensions[2];
   std::vector<float> data(count, 2.0F);
-  usize bytesWritten = fwrite(data.data(), sizeof(float), count, f);
+  const usize bytesWritten = fwrite(data.data(), sizeof(float), count, outputFile);
   REQUIRE(bytesWritten == count);
-  fclose(f);
+  REQUIRE(fclose(outputFile) == 0);
 
   // Copy the vgi file
   const auto copyOptions = fs::copy_options::skip_existing;
@@ -37,7 +37,7 @@ void writeVolTestFile()
 TEST_CASE("Plugins::ImportVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ImportVolumeGraphicsFileFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ImportVolumeGraphicsFileFilter filter;
+  const ImportVolumeGraphicsFileFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
@@ -61,12 +61,11 @@ TEST_CASE("Plugins::ImportVolumeGraphicsFileFilter - Valid filter execution", "[
 
     dap = dap.createChildPath("CT Data");
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(dap));
-    const AttributeMatrix& am = dataStructure.getDataRefAs<AttributeMatrix>(dap);
 
     dap = dap.createChildPath("Density");
     const Float32Array& data = dataStructure.getDataRefAs<Float32Array>(dap);
 
-    size_t numTuples = data.getNumberOfTuples();
+    const size_t numTuples = data.getNumberOfTuples();
     for(size_t i = 0; i < numTuples; i++)
     {
       REQUIRE(data[i] == 2.0F);

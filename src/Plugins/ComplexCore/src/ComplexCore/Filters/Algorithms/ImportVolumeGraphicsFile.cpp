@@ -36,10 +36,10 @@ const std::atomic_bool& ImportVolumeGraphicsFile::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ImportVolumeGraphicsFile::operator()()
 {
-  const ImageGeom& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  // const ImageGeom& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
-  DataPath densityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->DensityArrayName);
-  Float32Array& density = m_DataStructure.getDataRefAs<Float32Array>(densityArrayPath);
+  const DataPath densityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->DensityArrayName);
+  auto& density = m_DataStructure.getDataRefAs<Float32Array>(densityArrayPath);
 
   usize filesize = static_cast<usize>(fs::file_size(m_InputValues->VGDataFile));
   usize allocatedBytes = density.getSize() * sizeof(float32);
@@ -49,21 +49,21 @@ Result<> ImportVolumeGraphicsFile::operator()()
     return {MakeErrorResult(k_VolBinaryAllocateMismatch, fmt::format("Binary file size ({}) is smaller than the number of allocated bytes ({}).", filesize, allocatedBytes))};
   }
 
-  FILE* f = fopen(m_InputValues->VGDataFile.string().c_str(), "rb");
-  if(nullptr == f)
+  FILE* inputDataFile = fopen(m_InputValues->VGDataFile.string().c_str(), "rb");
+  if(nullptr == inputDataFile)
   {
     return {MakeErrorResult(k_VolOpenError, fmt::format("Error opening binary input file: {}"))};
   }
 
   m_MessageHandler(IFilter::Message::Type::Info, "Reading Data from .vol File.....");
   std::byte* chunkptr = reinterpret_cast<std::byte*>(density.template getIDataStoreAs<DataStore<float32>>()->data());
-  usize bytesRead = fread(chunkptr, sizeof(std::byte), filesize, f);
+  usize bytesRead = fread(chunkptr, sizeof(std::byte), filesize, inputDataFile);
   if(bytesRead != filesize)
   {
-    std::fclose(f);
+    std::fclose(inputDataFile);
     return {MakeErrorResult(k_VolReadError, fmt::format("Error Reading .vol file. The file size is {}, but only {} bytes were read.", filesize, bytesRead))};
   }
 
-  std::fclose(f);
+  std::fclose(inputDataFile);
   return {};
 }
