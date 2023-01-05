@@ -64,8 +64,8 @@ Parameters ExampleFilter1::parameters() const
                                                           FileSystemPathParameter::PathType::InputFile, true));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Ouptut Directory", "Example output directory help text", "Output Data", FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir));
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "Example output file help text", "",
-                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "Example output file help text", "", FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputFile));
 
   params.insertSeparator({"Linked Parameter"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param2, "BoolParameter", "The 2nd parameter", true));
