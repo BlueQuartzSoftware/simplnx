@@ -2306,7 +2306,7 @@ void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const std::st
   (*verticesArray)[5] = 0;
 }
 
-TEST_CASE("ComplexCore::CreateGeometry: Instantiation and Parameter Check", "[ComplexCore][CreateGeometry]")
+TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateGeometry]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateGeometryFilter filter;

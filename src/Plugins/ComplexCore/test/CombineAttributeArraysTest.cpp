@@ -35,7 +35,7 @@ DataStructure CreateTestDataStructure()
   return dataStructure;
 }
 
-TEST_CASE("ComplexCore::CombineAttributeArrays: Instantiation and Parameter Check", "[ComplexCore][CombineAttributeArrays]")
+TEST_CASE("ComplexCore::CombineAttributeArrays: Parameter Check", "[ComplexCore][CombineAttributeArrays]")
 {
 
   // Instantiate the filter, a DataStructure object and an Arguments Object

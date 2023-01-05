@@ -48,27 +48,6 @@ std::vector<char> readIn(fs::path filePath)
   return {};
 }
 
-TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Instantiate Filter", "[FeatureDataCSVWriterFilter]")
-{
-  FeatureDataCSVWriterFilter filter;
-  DataStructure dataStructure;
-  Arguments args;
-  AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataStructure, "TestData");
-
-  auto file = std::filesystem::path(fmt::format("{}/{}.csv", k_TestOutput, "CSV_Test"));
-  auto path = dataStructure.getAllDataPaths()[0];
-
-  args.insertOrAssign(FeatureDataCSVWriterFilter::k_FeatureDataFile_Key, std::make_any<FileSystemPathParameter::ValueType>(file));
-  args.insertOrAssign(FeatureDataCSVWriterFilter::k_WriteNeighborListData_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FeatureDataCSVWriterFilter::k_WriteNumFeaturesLine_Key, std::make_any<bool>(true));
-  args.insertOrAssign(FeatureDataCSVWriterFilter::k_DelimiterChoiceInt_Key, std::make_any<ChoicesParameter::ValueType>(2ULL));
-  args.insertOrAssign(FeatureDataCSVWriterFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(path));
-
-  // Preflight the filter
-  auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-}
-
 TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Test Algorithm", "[FeatureDataCSVWriterFilter]")
 {
   FeatureDataCSVWriterFilter filter;

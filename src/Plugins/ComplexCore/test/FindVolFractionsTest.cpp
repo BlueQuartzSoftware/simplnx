@@ -24,27 +24,6 @@ const DataPath k_VolumeFractionsPathNX({Constants::k_DataContainer, Constants::k
 const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction_feature_count.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
-TEST_CASE("ComplexCore::FindVolFractionsFilter: Instantiation and Parameter Check", "[ComplexCore]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindVolFractionsFilter filter;
-  Arguments args;
-
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_CellPhasesPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<DataPath>(k_VolumeFractionsPathNX));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
-}
-
 TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[ComplexCore]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object

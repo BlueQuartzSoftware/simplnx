@@ -9,7 +9,7 @@
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::ChangeAngleRepresentation: Instantiation and Parameter Check", "[OrientationAnalysis][ChangeAngleRepresentation]")
+TEST_CASE("ComplexCore::ChangeAngleRepresentation: Invalid Execution", "[OrientationAnalysis][ChangeAngleRepresentation]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ChangeAngleRepresentation filter;

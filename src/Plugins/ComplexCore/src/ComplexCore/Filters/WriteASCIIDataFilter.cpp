@@ -64,7 +64,7 @@ Parameters WriteASCIIDataFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputStyle_Key, "Output Type", "Whether to output a folder of files or a single file with all the data in column form",
                                                                     to_underlying(OutputStyle::MultipleFiles),
                                                                     ChoicesParameter::Choices{"Multiple Files", "Single File"})); // sequence dependent DO NOT REORDER
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path("<default output directory>"), FileSystemPathParameter::ExtensionsType{},
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_FileName_Key, "Name of Output File", "The name of the output file(s)", "Data"));
   params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "The file extension for the output file(s)", ".csv"));
