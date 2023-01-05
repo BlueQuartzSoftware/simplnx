@@ -36,6 +36,7 @@ set(FilterList
   ExtractInternalSurfacesFromTriangleGeometry
   ExtractVertexGeometryFilter
   FeatureDataCSVWriterFilter
+  FillBadDataFilter
   FindArrayStatisticsFilter
   FindDifferencesMap
   FindEuclideanDistMapFilter
@@ -96,6 +97,7 @@ set(AlgorithmList
   ConvertData
   ExtractComponentAsArray
   ExtractVertexGeometry
+  FillBadData
   FindArrayStatistics
   FindEuclideanDistMap
   FindFeatureCentroids
