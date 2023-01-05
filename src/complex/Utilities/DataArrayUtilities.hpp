@@ -24,7 +24,7 @@ namespace
 #else
 #define FSEEK64 std::fseek
 #endif
-}
+} // namespace
 
 #define COMPLEX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                               \
   CONTAINER_TYPE value;                                                                                                                                                                                \
@@ -571,7 +571,7 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   }
 
   Result<> result = ImportFromBinaryFile(fs::path(filename), *dataArray);
-  if (result.invalid())
+  if(result.invalid())
   {
     return nullptr;
   }
