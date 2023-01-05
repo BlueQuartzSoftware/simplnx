@@ -17,6 +17,15 @@
 
 namespace fs = std::filesystem;
 
+namespace
+{
+#if defined(_MSC_VER)
+#define FSEEK64 _fseeki64
+#else
+#define FSEEK64 std::fseek
+#endif
+}
+
 #define COMPLEX_DEF_STRING_CONVERTOR_INT(CONTAINER_TYPE, TYPE, FUNCTION)                                                                                                                               \
   CONTAINER_TYPE value;                                                                                                                                                                                \
   try                                                                                                                                                                                                  \
@@ -475,6 +484,59 @@ DataArray<T>& ArrayRefFromPath(DataStructure& data, const DataPath& path)
 /**
  * @brief
  * @tparam T
+ * @param binaryFilePath
+ * @param outputDataArray
+ * @param startByte
+ * @param defaultBufferSize
+ * @return
+ */
+template <typename T>
+Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outputDataArray, usize startByte = 0, usize defaultBufferSize = 1000000)
+{
+  FILE* f = std::fopen(binaryFilePath.string().c_str(), "rb");
+  if(f == nullptr)
+  {
+    return MakeErrorResult(-1000, "Unable to open the specified file");
+  }
+
+  // Skip some bytes if needed
+  if(startByte > 0)
+  {
+    FSEEK64(f, startByte, SEEK_SET);
+  }
+
+  // Now start reading the data in chunks if needed.
+  usize chunkSize = std::min(outputDataArray.getSize(), defaultBufferSize);
+  std::vector<T> buffer(chunkSize);
+
+  usize element_counter = 0;
+  while(element_counter < outputDataArray.getSize())
+  {
+    usize elements_read = std::fread(buffer.data(), sizeof(T), chunkSize, f);
+
+    for(usize i = 0; i < elements_read; i++)
+    {
+      outputDataArray[i + element_counter] = buffer[i];
+    }
+
+    element_counter += elements_read;
+
+    usize elementsLeft = outputDataArray.getSize() - element_counter;
+
+    if(elementsLeft < chunkSize)
+    {
+      chunkSize = elementsLeft;
+    }
+  }
+
+  std::fclose(f);
+
+  return {};
+}
+
+/**
+ * @brief
+ * @tparam T
  * @param filename
  * @param name
  * @param dataStructure
@@ -490,7 +552,6 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   // std::cout << "  Reading file " << filename << std::endl;
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
-  constexpr size_t defaultBlocksize = 1048576;
 
   if(!fs::exists(filename))
   {
@@ -509,33 +570,11 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
     return nullptr;
   }
 
-  FILE* inputFile = std::fopen(filename.c_str(), "rb");
-  if(inputFile == nullptr)
+  Result<> result = ImportFromBinaryFile(fs::path(filename), *dataArray);
+  if (result.invalid())
   {
     return nullptr;
   }
-
-  auto* chunkptr = reinterpret_cast<std::byte*>(dataStore->data());
-
-  // Now start reading the data in chunks if needed.
-  size_t chunkSize = std::min(numBytesToRead, defaultBlocksize);
-
-  size_t masterCounter = 0;
-  while(masterCounter < numBytesToRead)
-  {
-    size_t bytesRead = std::fread(chunkptr, sizeof(std::byte), chunkSize, inputFile);
-    chunkptr += bytesRead;
-    masterCounter += bytesRead;
-
-    size_t bytesLeft = numBytesToRead - masterCounter;
-
-    if(bytesLeft < chunkSize)
-    {
-      chunkSize = bytesLeft;
-    }
-  }
-
-  fclose(inputFile);
 
   return dataArray;
 }
