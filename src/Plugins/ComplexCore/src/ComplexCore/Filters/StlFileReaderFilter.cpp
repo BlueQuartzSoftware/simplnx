@@ -70,7 +70,7 @@ Parameters StlFileReaderFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_ScaleFactor, "Scale Factor", "The factor by which to scale the geometry", 1.0F));
   params.linkParameters(k_ScaleOutput, k_ScaleFactor, true);
 
-  params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilePath_Key, "STL File", "Input STL File", fs::path("*.stl"), FileSystemPathParameter::ExtensionsType{".stl"},
+  params.insert(std::make_unique<FileSystemPathParameter>(k_StlFilePath_Key, "STL File", "Input STL File", fs::path(""), FileSystemPathParameter::ExtensionsType{".stl"},
                                                           FileSystemPathParameter::PathType::InputFile));
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
