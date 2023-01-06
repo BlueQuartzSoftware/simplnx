@@ -496,7 +496,7 @@ Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outp
   FILE* inputFile = std::fopen(binaryFilePath.string().c_str(), "rb");
   if(inputFile == nullptr)
   {
-    return MakeErrorResult(-1000, fmt::format("Unable to open the specified file. '{}'", binaryFilePath.native()));
+    return MakeErrorResult(-1000, fmt::format("Unable to open the specified file. '{}'", binaryFilePath.string()));
   }
 
   // Skip some bytes if needed
