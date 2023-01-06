@@ -44,18 +44,13 @@
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;
 
 namespace
 {
-#if defined(_MSC_VER)
-#define FSEEK64 _fseeki64
-#else
-#define FSEEK64 std::fseek
-#endif
-
 constexpr int32 k_RbrFileNotOpen = -1000;
 constexpr int32 k_RbrFileTooSmall = -1010;
 constexpr int32 k_RbrFileTooBig = -1020;
@@ -79,7 +74,7 @@ int32 SanityCheckFileSizeVersusAllocatedSize(usize allocatedBytes, usize fileSiz
 template <typename T>
 Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
 {
-  constexpr usize k_DefaultBlocksize = 1048576;
+  constexpr usize k_DefaultBlocksize = 1000000;
 
   DataArray<T>& dataArray = dynamic_cast<DataArray<T>&>(dataArrayPtr);
 
@@ -96,36 +91,10 @@ Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
     return MakeWarningVoidResult(k_RbrFileTooBig, "The file size is larger than the allocated size");
   }
 
-  FILE* f = std::fopen(filename.c_str(), "rb");
-  if(f == nullptr)
+  Result<> result = ImportFromBinaryFile(fs::path(filename), dataArray, skipHeaderBytes, k_DefaultBlocksize);
+  if(result.invalid())
   {
-    return MakeErrorResult(k_RbrFileNotOpen, "Unable to open the specified file");
-  }
-
-  // Skip some header bytes if the user asked for it.
-  if(skipHeaderBytes > 0)
-  {
-    FSEEK64(f, skipHeaderBytes, SEEK_SET);
-  }
-
-  std::byte* chunkptr = reinterpret_cast<std::byte*>(dataArray.template getIDataStoreAs<DataStore<T>>()->data());
-
-  // Now start reading the data in chunks if needed.
-  usize chunkSize = std::min(numBytesToRead, k_DefaultBlocksize);
-
-  usize master_counter = 0;
-  while(master_counter < numBytesToRead)
-  {
-    usize bytes_read = std::fread(chunkptr, sizeof(std::byte), chunkSize, f);
-    chunkptr += bytes_read;
-    master_counter += bytes_read;
-
-    usize bytesLeft = numBytesToRead - master_counter;
-
-    if(bytesLeft < chunkSize)
-    {
-      chunkSize = bytesLeft;
-    }
+    return result;
   }
 
   if(endian != static_cast<ChoicesParameter::ValueType>(complex::endian::native))
@@ -133,9 +102,7 @@ Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
     dataArray.byteSwapElements();
   }
 
-  std::fclose(f);
-
-  return {};
+  return result;
 }
 } // namespace
 
