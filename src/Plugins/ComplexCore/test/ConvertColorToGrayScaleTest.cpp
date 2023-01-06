@@ -331,7 +331,7 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
   CompareResults(algoMapIndex, dataStruct);
 }
 
-TEST_CASE("ComplexCore::ConvertColorToGrayScale: Instantiation and Parameter Check", "[ComplexCore][ConvertColorToGrayScaleFilter]")
+TEST_CASE("ComplexCore::ConvertColorToGrayScale: Valid Execution", "[ComplexCore][ConvertColorToGrayScaleFilter]")
 {
   // Luminosity Algorithm testing
   // Test defaults

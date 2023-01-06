@@ -21,29 +21,6 @@ const DataPath k_ExtractedComponentsPath({Constants::k_DataContainer, Constants:
 const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
-TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Instantiation and Parameter Check", "[ComplexCore]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ExtractComponentAsArrayFilter filter;
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_MoveComponentsToNewArray_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_RemoveComponentsFromArray_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_CompNumber_Key, std::make_any<int32>(1));
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
-  args.insertOrAssign(ExtractComponentAsArrayFilter::k_NewArrayPath_Key, std::make_any<DataPath>(k_ExtractedComponentsPath));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
-}
-
 TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Valid filter execution", "[ComplexCore]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object

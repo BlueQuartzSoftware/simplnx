@@ -25,20 +25,21 @@ add_executable(complex_test
   ${COMPLEX_TEST_DIRS_HEADER}
   complex_test_main.cpp
   ArgumentsTest.cpp
-  DataStructTest.cpp
-  GeometryTest.cpp
-  H5Test.cpp
+  BitTest.cpp
+  DataArrayTest.cpp
   DataStructObserver.hpp
   DataStructObserver.cpp
-  MontageTest.cpp
-  BitTest.cpp
-  UuidTest.cpp
-  PluginTest.cpp
+  DataStructTest.cpp
+  DynamicFilterInstantiationTest.cpp
   FilePathGeneratorTest.cpp
-  DataArrayTest.cpp
+  GeometryTest.cpp
   GeometryTestUtilities.hpp
+  H5Test.cpp
+  MontageTest.cpp
+  PluginTest.cpp
   ParametersTest.cpp
   PipelineSaveTest.cpp
+  UuidTest.cpp
 )
 
 target_link_libraries(complex_test

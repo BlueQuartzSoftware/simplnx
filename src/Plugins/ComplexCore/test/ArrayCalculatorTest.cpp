@@ -811,27 +811,6 @@ void SingleComponentArrayCalculatorTest2()
   }
 }
 
-TEST_CASE("ComplexCore::ArrayCalculatorFilter: Instantiation and Parameter Check", "[ComplexCore][ArrayCalculatorFilter]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ArrayCalculatorFilter filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ArrayCalculatorFilter::k_InfixEquation_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{}));
-  args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::int16));
-  args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(DataPath({k_CalculatedArray})));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
-}
-
 TEST_CASE("ComplexCore::ArrayCalculatorFilter: Filter Execution")
 {
   std::cout << "#### ArrayCalculatorTest Starting ####" << std::endl;

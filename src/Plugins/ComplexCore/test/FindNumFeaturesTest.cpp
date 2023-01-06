@@ -25,27 +25,6 @@ const DataPath k_FeatureCountsPathNX({Constants::k_DataContainer, Constants::k_C
 const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction_feature_count.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
-TEST_CASE("ComplexCore::FindNumFeaturesFilter: Instantiation and Parameter Check", "[ComplexCore][FindNumFeaturesFilter]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindNumFeaturesFilter filter;
-  Arguments args;
-
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(FindNumFeaturesFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
-  args.insertOrAssign(FindNumFeaturesFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(k_FeatureCountsPathNX));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
-}
-
 TEST_CASE("ComplexCore::FindNumFeaturesFilter: Valid filter execution", "[ComplexCore][FindNumFeaturesFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object

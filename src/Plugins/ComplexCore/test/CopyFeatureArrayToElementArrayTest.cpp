@@ -16,7 +16,7 @@ const std::string k_CellTempArrayName("Cell Temperature");
 const std::string k_FeatureDataArrayName("Feature Temperature");
 } // namespace
 
-TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Instantiation and Parameter Check", "[Core][CopyFeatureArrayToElementArray]")
+TEST_CASE("ComplexCore::CopyFeatureArrayToElementArray: Parameter Check", "[Core][CopyFeatureArrayToElementArray]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CopyFeatureArrayToElementArray filter;

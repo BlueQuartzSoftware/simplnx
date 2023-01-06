@@ -431,7 +431,7 @@ void TestOverwriteArray()
 }
 
 // -----------------------------------------------------------------------------
-TEST_CASE("ComplexCore::ConvertData: Instantiation and Parameter Check", "[ComplexCore][ConvertDataFilter]")
+TEST_CASE("ComplexCore::ConvertData: Valid Execution", "[ComplexCore][ConvertDataFilter]")
 {
   std::cout << "#### ConvertDataTest Starting ####" << std::endl;
 

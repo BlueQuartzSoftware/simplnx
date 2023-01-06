@@ -95,27 +95,6 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 }
 } // namespace
 
-TEST_CASE("ComplexCore::FindSurfaceFeatures: Instantiation and Parameter Check", "[ComplexCore][FindSurfaceFeatures]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindSurfaceFeatures filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
-}
-
 TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[ComplexCore][FindSurfaceFeatures]")
 {
   // Read the Small IN100 Data set
