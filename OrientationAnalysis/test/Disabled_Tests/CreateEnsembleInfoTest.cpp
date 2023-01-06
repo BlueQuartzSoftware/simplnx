@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::CreateEnsembleInfo: Instantiation and Parameter Check", "[OrientationAnalysis][CreateEnsembleInfo][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::CreateEnsembleInfo: Valid Execution", "[OrientationAnalysis][CreateEnsembleInfo][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateEnsembleInfo filter;
@@ -54,11 +54,6 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfo: Instantiation and Parameter 
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::CreateEnsembleInfo: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::CreateEnsembleInfo: InValid filter execution")
 //{

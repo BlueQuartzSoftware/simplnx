@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: Instantiation and Parameter Check", "[OrientationAnalysis][ConvertHexGridToSquareGrid][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: Valid Execution", "[OrientationAnalysis][ConvertHexGridToSquareGrid][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertHexGridToSquareGrid filter;
@@ -47,11 +47,6 @@ TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: Instantiation and Pa
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::ConvertHexGridToSquareGrid: InValid filter execution")
 //{

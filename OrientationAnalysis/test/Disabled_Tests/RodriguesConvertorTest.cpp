@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::RodriguesConvertor: Instantiation and Parameter Check", "[OrientationAnalysis][RodriguesConvertor][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::RodriguesConvertor: Valid Execution", "[OrientationAnalysis][RodriguesConvertor][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RodriguesConvertor filter;
@@ -51,11 +51,6 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertor: Instantiation and Parameter 
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::RodriguesConvertor: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::RodriguesConvertor: InValid filter execution")
 //{

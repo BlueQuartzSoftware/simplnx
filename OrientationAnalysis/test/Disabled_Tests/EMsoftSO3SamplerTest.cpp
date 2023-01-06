@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::EMsoftSO3Sampler: Instantiation and Parameter Check", "[OrientationAnalysis][EMsoftSO3Sampler][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::EMsoftSO3Sampler: Valid Execution", "[OrientationAnalysis][EMsoftSO3Sampler][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EMsoftSO3Sampler filter;
@@ -57,11 +57,6 @@ TEST_CASE("OrientationAnalysis::EMsoftSO3Sampler: Instantiation and Parameter Ch
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::EMsoftSO3Sampler: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::EMsoftSO3Sampler: InValid filter execution")
 //{

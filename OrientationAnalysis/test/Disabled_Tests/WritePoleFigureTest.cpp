@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::WritePoleFigure: Instantiation and Parameter Check", "[OrientationAnalysis][WritePoleFigure][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::WritePoleFigure: Valid Execution", "[OrientationAnalysis][WritePoleFigure][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WritePoleFigure filter;
@@ -68,11 +68,6 @@ TEST_CASE("OrientationAnalysis::WritePoleFigure: Instantiation and Parameter Che
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::WritePoleFigure: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::WritePoleFigure: InValid filter execution")
 //{

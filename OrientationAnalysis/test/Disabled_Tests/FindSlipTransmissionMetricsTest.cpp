@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetrics: Instantiation and Parameter Check", "[OrientationAnalysis][FindSlipTransmissionMetrics][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetrics: Valid Execution", "[OrientationAnalysis][FindSlipTransmissionMetrics][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSlipTransmissionMetrics filter;
@@ -55,11 +55,6 @@ TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetrics: Instantiation and P
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetrics: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetrics: InValid filter execution")
 //{

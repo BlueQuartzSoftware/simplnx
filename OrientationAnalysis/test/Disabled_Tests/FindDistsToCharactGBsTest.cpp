@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindDistsToCharactGBs: Instantiation and Parameter Check", "[OrientationAnalysis][FindDistsToCharactGBs][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindDistsToCharactGBs: Valid Execution", "[OrientationAnalysis][FindDistsToCharactGBs][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindDistsToCharactGBs filter;
@@ -56,11 +56,6 @@ TEST_CASE("OrientationAnalysis::FindDistsToCharactGBs: Instantiation and Paramet
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindDistsToCharactGBs: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindDistsToCharactGBs: InValid filter execution")
 //{

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Instantiation and Parameter Check", "[OrientationAnalysis][ImportEbsdMontage][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Valid Execution", "[OrientationAnalysis][ImportEbsdMontage][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportEbsdMontage filter;
@@ -57,11 +57,6 @@ TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Instantiation and Parameter C
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::ImportEbsdMontage: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::ImportEbsdMontage: InValid filter execution")
 //{

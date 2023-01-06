@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::Stereographic3D: Instantiation and Parameter Check", "[OrientationAnalysis][Stereographic3D][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::Stereographic3D: Valid Execution", "[OrientationAnalysis][Stereographic3D][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   Stereographic3D filter;
@@ -49,11 +49,6 @@ TEST_CASE("OrientationAnalysis::Stereographic3D: Instantiation and Parameter Che
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::Stereographic3D: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::Stereographic3D: InValid filter execution")
 //{

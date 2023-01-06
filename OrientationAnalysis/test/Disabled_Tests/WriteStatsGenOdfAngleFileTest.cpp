@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFile: Instantiation and Parameter Check", "[OrientationAnalysis][WriteStatsGenOdfAngleFile][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFile: Valid Execution", "[OrientationAnalysis][WriteStatsGenOdfAngleFile][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteStatsGenOdfAngleFile filter;
@@ -62,11 +62,6 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFile: Instantiation and Par
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFile: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFile: InValid filter execution")
 //{

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindGBCD: Instantiation and Parameter Check", "[OrientationAnalysis][FindGBCD][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindGBCD: Valid Execution", "[OrientationAnalysis][FindGBCD][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindGBCD filter;
@@ -57,11 +57,6 @@ TEST_CASE("OrientationAnalysis::FindGBCD: Instantiation and Parameter Check", "[
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindGBCD: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindGBCD: InValid filter execution")
 //{

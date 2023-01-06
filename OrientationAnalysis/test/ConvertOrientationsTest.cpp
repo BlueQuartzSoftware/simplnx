@@ -129,44 +129,6 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
   }
 }
 
-TEST_CASE("OrientationAnalysis::ConvertOrientations: Instantiation and Parameter Check", "[OrientationAnalysis][ConvertOrientations]")
-{
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ConvertOrientations filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
-
-  std::vector<size_t> tupleShape = {10};
-  std::vector<size_t> componentShape = {3};
-
-  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
-  for(size_t t = 0; t < tupleShape[0]; t++)
-  {
-    for(size_t c = 0; c < componentShape[0]; c++)
-    {
-      (*angles)[t * componentShape[0] + c] = static_cast<float>(t * c);
-    }
-  }
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ConvertOrientations::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(ConvertOrientations::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(ConvertOrientations::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
-  args.insertOrAssign(ConvertOrientations::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
-}
-
 /**
  * @brief TEST_CASE This test case will execute all the combinations of the ConvertOrientations filter. This test only
  * tests the execution of the filter and not the final output.

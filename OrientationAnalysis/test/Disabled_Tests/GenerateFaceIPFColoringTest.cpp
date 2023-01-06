@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateFaceIPFColoring: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateFaceIPFColoring][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateFaceIPFColoring: Valid Execution", "[OrientationAnalysis][GenerateFaceIPFColoring][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateFaceIPFColoring filter;
@@ -53,11 +53,6 @@ TEST_CASE("OrientationAnalysis::GenerateFaceIPFColoring: Instantiation and Param
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::GenerateFaceIPFColoring: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::GenerateFaceIPFColoring: InValid filter execution")
 //{

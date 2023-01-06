@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindBoundaryStrengths: Instantiation and Parameter Check", "[OrientationAnalysis][FindBoundaryStrengths][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindBoundaryStrengths: Valid Execution", "[OrientationAnalysis][FindBoundaryStrengths][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundaryStrengths filter;
@@ -57,11 +57,6 @@ TEST_CASE("OrientationAnalysis::FindBoundaryStrengths: Instantiation and Paramet
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindBoundaryStrengths: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindBoundaryStrengths: InValid filter execution")
 //{

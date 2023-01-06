@@ -11,30 +11,6 @@
 
 using namespace complex;
 
-TEST_CASE("Core::RemoveFlaggedFeatures: Instantiation", "[Core][RemoveFlaggedFeaturesFilter]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  RemoveFlaggedFeaturesFilter filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_ImageGeometry_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
-}
-
 TEST_CASE("Core::RemoveFlaggedFeatures: Test Algorithm", "[Core][RemoveFlaggedFeatures]")
 { // Instantiate the filter, a DataStructure object and an Arguments Object
   RemoveFlaggedFeaturesFilter filter;

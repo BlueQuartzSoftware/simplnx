@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::INLWriter: Instantiation and Parameter Check", "[OrientationAnalysis][INLWriter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::INLWriter: Valid Execution", "[OrientationAnalysis][INLWriter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   INLWriter filter;
@@ -57,11 +57,6 @@ TEST_CASE("OrientationAnalysis::INLWriter: Instantiation and Parameter Check", "
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::INLWriter: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::INLWriter: InValid filter execution")
 //{

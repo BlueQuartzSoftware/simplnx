@@ -38,7 +38,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ImportH5EspritData: Instantiation and Parameter Check", "[OrientationAnalysis][ImportH5EspritData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ImportH5EspritData: Valid Execution", "[OrientationAnalysis][ImportH5EspritData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportH5EspritData filter;
@@ -65,11 +65,6 @@ TEST_CASE("OrientationAnalysis::ImportH5EspritData: Instantiation and Parameter 
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::ImportH5EspritData: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::ImportH5EspritData: InValid filter execution")
 //{

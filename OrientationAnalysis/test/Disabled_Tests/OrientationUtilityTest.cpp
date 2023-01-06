@@ -29,7 +29,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::OrientationUtility: Instantiation and Parameter Check", "[OrientationAnalysis][OrientationUtility][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::OrientationUtility: Valid Execution", "[OrientationAnalysis][OrientationUtility][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   OrientationUtility filter;
@@ -47,11 +47,6 @@ TEST_CASE("OrientationAnalysis::OrientationUtility: Instantiation and Parameter 
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::OrientationUtility: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::OrientationUtility: InValid filter execution")
 //{
