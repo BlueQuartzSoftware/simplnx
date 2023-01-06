@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::EnsembleInfoReader: Instantiation and Parameter Check", "[OrientationAnalysis][EnsembleInfoReader][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::EnsembleInfoReader: Valid Execution", "[OrientationAnalysis][EnsembleInfoReader][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EnsembleInfoReader filter;
@@ -56,11 +56,6 @@ TEST_CASE("OrientationAnalysis::EnsembleInfoReader: Instantiation and Parameter 
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::EnsembleInfoReader: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::EnsembleInfoReader: InValid filter execution")
 //{

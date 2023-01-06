@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoring: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateFaceMisorientationColoring][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoring: Valid Execution", "[OrientationAnalysis][GenerateFaceMisorientationColoring][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateFaceMisorientationColoring filter;
@@ -52,11 +52,6 @@ TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoring: Instantiatio
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoring: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::GenerateFaceMisorientationColoring: InValid filter execution")
 //{

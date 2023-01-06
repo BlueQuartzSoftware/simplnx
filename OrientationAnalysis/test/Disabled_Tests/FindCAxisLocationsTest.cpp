@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindCAxisLocations: Instantiation and Parameter Check", "[OrientationAnalysis][FindCAxisLocations][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindCAxisLocations: Valid Execution", "[OrientationAnalysis][FindCAxisLocations][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindCAxisLocations filter;
@@ -49,11 +49,6 @@ TEST_CASE("OrientationAnalysis::FindCAxisLocations: Instantiation and Parameter 
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindCAxisLocations: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindCAxisLocations: InValid filter execution")
 //{

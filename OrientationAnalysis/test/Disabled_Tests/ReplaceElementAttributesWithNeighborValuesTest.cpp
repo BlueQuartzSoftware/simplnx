@@ -32,8 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValues: Instantiation and Parameter Check",
-          "[OrientationAnalysis][ReplaceElementAttributesWithNeighborValues][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValues: Valid Execution", "[OrientationAnalysis][ReplaceElementAttributesWithNeighborValues][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReplaceElementAttributesWithNeighborValues filter;
@@ -54,11 +53,6 @@ TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValues: Inst
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValues: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValues: InValid filter execution")
 //{

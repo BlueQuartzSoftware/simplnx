@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateOrientationMatrixTranspose: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateOrientationMatrixTranspose][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateOrientationMatrixTranspose: Valid Execution", "[OrientationAnalysis][GenerateOrientationMatrixTranspose][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateOrientationMatrixTranspose filter;
@@ -51,11 +51,6 @@ TEST_CASE("OrientationAnalysis::GenerateOrientationMatrixTranspose: Instantiatio
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::GenerateOrientationMatrixTranspose: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::GenerateOrientationMatrixTranspose: InValid filter execution")
 //{

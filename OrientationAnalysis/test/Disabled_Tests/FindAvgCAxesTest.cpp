@@ -30,7 +30,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindAvgCAxes: Instantiation and Parameter Check", "[OrientationAnalysis][FindAvgCAxes][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindAvgCAxes: Valid Execution", "[OrientationAnalysis][FindAvgCAxes][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindAvgCAxes filter;
@@ -50,11 +50,6 @@ TEST_CASE("OrientationAnalysis::FindAvgCAxes: Instantiation and Parameter Check"
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindAvgCAxes: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindAvgCAxes: InValid filter execution")
 //{

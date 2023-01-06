@@ -43,7 +43,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("Reconstruction::MergeTwinsFilter: Instantiation and Parameter Check", "[Reconstruction][MergeTwinsFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction][MergeTwinsFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);

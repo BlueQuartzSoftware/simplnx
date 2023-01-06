@@ -25,7 +25,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Instantiation and Parameter Check", "[OrientationAnalysis][EBSDSegmentFeatures]")
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Valid Execution", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);

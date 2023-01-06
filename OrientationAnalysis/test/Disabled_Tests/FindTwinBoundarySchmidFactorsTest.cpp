@@ -36,7 +36,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindTwinBoundarySchmidFactors: Instantiation and Parameter Check", "[OrientationAnalysis][FindTwinBoundarySchmidFactors][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindTwinBoundarySchmidFactors: Valid Execution", "[OrientationAnalysis][FindTwinBoundarySchmidFactors][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindTwinBoundarySchmidFactors filter;
@@ -63,11 +63,6 @@ TEST_CASE("OrientationAnalysis::FindTwinBoundarySchmidFactors: Instantiation and
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindTwinBoundarySchmidFactors: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindTwinBoundarySchmidFactors: InValid filter execution")
 //{

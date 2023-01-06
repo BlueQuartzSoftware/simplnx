@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::ReadAngData: Instantiation and Parameter Check", "[OrientationAnalysis][ReadAngData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ReadAngData: Valid Execution", "[OrientationAnalysis][ReadAngData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadAngDataFilter filter;
@@ -55,11 +55,6 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Instantiation and Parameter Check",
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::ReadAngData: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::ReadAngData: InValid filter execution")
 //{

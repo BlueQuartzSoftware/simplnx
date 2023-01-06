@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("Core::FillBadData: Instantiation and Parameter Check", "[Core][FillBadData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("Core::FillBadData: Valid filter execution", "[Core][FillBadData][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FillBadDataFilter filter;
@@ -54,11 +54,6 @@ TEST_CASE("Core::FillBadData: Instantiation and Parameter Check", "[Core][FillBa
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("Processing::FillBadData: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("Processing::FillBadData: InValid filter execution")
 //{

@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugate: Instantiation and Parameter Check", "[OrientationAnalysis][GenerateQuaternionConjugate][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugate: Valid Execution", "[OrientationAnalysis][GenerateQuaternionConjugate][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   GenerateQuaternionConjugate filter;
@@ -51,11 +51,6 @@ TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugate: Instantiation and P
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugate: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugate: InValid filter execution")
 //{

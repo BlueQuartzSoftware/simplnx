@@ -35,7 +35,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindGBPDMetricBased: Instantiation and Parameter Check", "[OrientationAnalysis][FindGBPDMetricBased][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindGBPDMetricBased: Valid Execution", "[OrientationAnalysis][FindGBPDMetricBased][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindGBPDMetricBased filter;
@@ -67,11 +67,6 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBased: Instantiation and Parameter
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindGBPDMetricBased: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindGBPDMetricBased: InValid filter execution")
 //{

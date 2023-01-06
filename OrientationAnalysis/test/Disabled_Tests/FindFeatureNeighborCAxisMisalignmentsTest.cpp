@@ -31,7 +31,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignments: Instantiation and Parameter Check", "[OrientationAnalysis][FindFeatureNeighborCAxisMisalignments][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignments: Valid Execution", "[OrientationAnalysis][FindFeatureNeighborCAxisMisalignments][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeatureNeighborCAxisMisalignments filter;
@@ -55,11 +55,6 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignments: Instantia
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignments: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignments: InValid filter execution")
 //{

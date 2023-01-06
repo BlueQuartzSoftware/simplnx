@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::CreateLambertSphere: Instantiation and Parameter Check", "[OrientationAnalysis][CreateLambertSphere][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::CreateLambertSphere: Valid Execution", "[OrientationAnalysis][CreateLambertSphere][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CreateLambertSphere filter;
@@ -59,11 +59,6 @@ TEST_CASE("OrientationAnalysis::CreateLambertSphere: Instantiation and Parameter
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::CreateLambertSphere: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::CreateLambertSphere: InValid filter execution")
 //{

@@ -32,7 +32,7 @@
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindTwinBoundaries: Instantiation and Parameter Check", "[OrientationAnalysis][FindTwinBoundaries][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindTwinBoundaries: Valid Execution", "[OrientationAnalysis][FindTwinBoundaries][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindTwinBoundaries filter;
@@ -59,11 +59,6 @@ TEST_CASE("OrientationAnalysis::FindTwinBoundaries: Instantiation and Parameter 
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("OrientationAnalysis::FindTwinBoundaries: Valid filter execution")
-//{
-//
-//}
 
 // TEST_CASE("OrientationAnalysis::FindTwinBoundaries: InValid filter execution")
 //{
