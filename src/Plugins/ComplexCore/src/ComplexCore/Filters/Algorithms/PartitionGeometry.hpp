@@ -54,7 +54,7 @@ struct COMPLEXCORE_EXPORT PartitionGeometryInputValues
 class COMPLEXCORE_EXPORT PartitionGeometry
 {
 public:
-  PartitionGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, PartitionGeometryInputValues* inputValues);
+  PartitionGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, PartitionGeometryInputValues* inputValues);
   ~PartitionGeometry() noexcept;
 
   PartitionGeometry(const PartitionGeometry&) = delete;
@@ -108,7 +108,6 @@ private:
    * is provided, the vertex will be labeled with the out of bounds value.  Otherwise,
    * the function will return an invalid Result with an error message.
    *
-   * @param geomName The name of the node-based input geometry
    * @param vertexList The list of vertices from the node-based geometry
    * @param partitionIds The partition ids array that stores the results.
    * @param psImageGeom The partitioning scheme image geometry that is used
@@ -119,7 +118,7 @@ private:
    * @return The result of the partitioning algorithm.  Valid if successful, invalid
    * if there was an error.
    */
-  Result<> partitionNodeBasedGeometry(const std::string& geomName, const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue,
+  Result<> partitionNodeBasedGeometry(const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue,
                                       const std::optional<const BoolArray>& maskArrayOpt);
 };
 

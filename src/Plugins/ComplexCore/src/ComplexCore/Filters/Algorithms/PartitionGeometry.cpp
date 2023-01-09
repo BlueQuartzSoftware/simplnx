@@ -27,8 +27,7 @@ const std::atomic_bool& PartitionGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> PartitionGeometry::operator()()
 {
-  PartitionGeometryFilter::PartitioningMode partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
-  std::optional<int> outOfBoundsValue = {};
+  auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
 
   DataPath psGeometryPath;
   if(partitioningMode == PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme)
@@ -38,12 +37,12 @@ Result<> PartitionGeometry::operator()()
   else
   {
     psGeometryPath = m_InputValues->PSGeometryPath;
-    DataPath psPartitionIdsPath = m_InputValues->PSGeometryPath.createChildPath(m_InputValues->PSGeometryAMName).createChildPath(m_InputValues->PSGeometryDataArrayName);
-    Int32Array& psPartitionIds = m_DataStructure.getDataRefAs<Int32Array>({psPartitionIdsPath});
+    const DataPath psPartitionIdsPath = m_InputValues->PSGeometryPath.createChildPath(m_InputValues->PSGeometryAMName).createChildPath(m_InputValues->PSGeometryDataArrayName);
+    auto& psPartitionIds = m_DataStructure.getDataRefAs<Int32Array>({psPartitionIdsPath});
 
     for(usize i = 0; i < psPartitionIds.getNumberOfTuples(); i++)
     {
-      psPartitionIds[i] = i + m_InputValues->StartingPartitionID;
+      psPartitionIds[i] = static_cast<int32>(i) + m_InputValues->StartingPartitionID;
     }
   }
 
@@ -55,8 +54,8 @@ Result<> PartitionGeometry::operator()()
     vertexMask = m_DataStructure.getDataRefAs<BoolArray>({m_InputValues->VertexMaskPath});
   }
 
-  DataPath partitionIdsPath = m_InputValues->AttributeMatrixPath.createChildPath(m_InputValues->PartitionIdsArrayName);
-  Int32Array& partitionIds = m_DataStructure.getDataRefAs<Int32Array>({partitionIdsPath});
+  const DataPath partitionIdsPath = m_InputValues->AttributeMatrixPath.createChildPath(m_InputValues->PartitionIdsArrayName);
+  auto& partitionIds = m_DataStructure.getDataRefAs<Int32Array>({partitionIdsPath});
 
   const IGeometry& iGeom = m_DataStructure.getDataRefAs<IGeometry>({m_InputValues->GeometryToPartition});
   Result<> result;
@@ -80,7 +79,7 @@ Result<> PartitionGeometry::operator()()
   case IGeometry::Type::Hexahedral: {
     const INodeGeometry0D& geometry = m_DataStructure.getDataRefAs<INodeGeometry0D>({m_InputValues->GeometryToPartition});
     const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
-    result = partitionNodeBasedGeometry(geometry.getName(), *vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
+    result = partitionNodeBasedGeometry(*vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
     break;
   }
   default: {
@@ -104,19 +103,19 @@ Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inpu
   SizeVec3 dims = inputGeometry.getDimensions();
   AbstractDataStore<int32>& partitionIdsStore = partitionIds.getDataStoreRef();
 
-  for(size_t z = 0; z < dims[2]; z++)
+  for(usize z = 0; z < dims[2]; z++)
   {
-    for(size_t y = 0; y < dims[1]; y++)
+    for(usize y = 0; y < dims[1]; y++)
     {
-      for(size_t x = 0; x < dims[0]; x++)
+      for(usize x = 0; x < dims[0]; x++)
       {
-        size_t index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
+        const usize index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
 
         Point3D<float64> coord = inputGeometry.getCoords(x, y, z);
         auto partitionIndexResult = psImageGeom.getIndex(coord[0], coord[1], coord[2]);
         if(partitionIndexResult.has_value())
         {
-          partitionIdsStore.setValue(index, *partitionIndexResult + m_InputValues->StartingPartitionID);
+          partitionIdsStore.setValue(index, static_cast<int32>(*partitionIndexResult) + m_InputValues->StartingPartitionID);
         }
         else
         {
@@ -132,31 +131,27 @@ Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inpu
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Result<> PartitionGeometry::partitionNodeBasedGeometry(const std::string& geomName, const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom,
-                                                       int outOfBoundsValue, const std::optional<const BoolArray>& maskArrayOpt)
+Result<> PartitionGeometry::partitionNodeBasedGeometry(const IGeometry::SharedVertexList& vertexList, Int32Array& partitionIds, const ImageGeom& psImageGeom, int outOfBoundsValue,
+                                                       const std::optional<const BoolArray>& maskArrayOpt)
 {
   AbstractDataStore<int32>& partitionIdsStore = partitionIds.getDataStoreRef();
   const AbstractDataStore<float32>& verticesStore = vertexList.getDataStoreRef();
 
-  size_t numOfVertices = vertexList.getNumberOfTuples();
-  for(size_t idx = 0; idx < numOfVertices; idx++)
+  const usize numOfVertices = vertexList.getNumberOfTuples();
+  for(usize idx = 0; idx < numOfVertices; idx++)
   {
-    float x = verticesStore[idx * 3];
-    float y = verticesStore[idx * 3 + 1];
-    float z = verticesStore[idx * 3 + 2];
+    const float32 x = verticesStore[idx * 3];
+    const float32 y = verticesStore[idx * 3 + 1];
+    const float32 z = verticesStore[idx * 3 + 2];
 
     auto partitionIndexResult = psImageGeom.getIndex(x, y, z);
-    if(maskArrayOpt.has_value() && !(*maskArrayOpt)[idx])
+    if((maskArrayOpt.has_value() && !(*maskArrayOpt)[idx]) || !partitionIndexResult.has_value())
     {
       partitionIdsStore.setValue(idx, outOfBoundsValue);
-    }
-    else if(partitionIndexResult.has_value())
-    {
-      partitionIdsStore.setValue(idx, *partitionIndexResult + m_InputValues->StartingPartitionID);
     }
     else
     {
-      partitionIdsStore.setValue(idx, outOfBoundsValue);
+      partitionIdsStore.setValue(idx, static_cast<int32>(*partitionIndexResult) + m_InputValues->StartingPartitionID);
     }
   }
 

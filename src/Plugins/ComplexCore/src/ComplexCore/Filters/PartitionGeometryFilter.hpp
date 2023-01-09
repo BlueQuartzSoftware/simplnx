@@ -118,22 +118,23 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param ds The input DataStructure instance
+   * @param dataStructure The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                       const std::atomic_bool& shouldCancel) const override;
 
   template <typename GeomType>
   Result<> dataCheckPartitioningMode(const DataStructure& dataStructure, const Arguments& filterArgs, const GeomType& geometryToPartition) const;
@@ -148,7 +149,7 @@ protected:
   Result<> dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition,
                                     const AttributeMatrix& attrMatrix) const;
 
-  Result<> dataCheckExistingGeometryMode() const;
+  static Result<> DataCheckExistingGeometryMode();
 
   template <typename GeomType>
   Result<> dataCheckPartitioningScheme(const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix) const;
@@ -156,9 +157,9 @@ protected:
   /**
    * @brief Helper method that data checks the Number Of Partitions Per Axis variable.
    */
-  Result<> dataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis) const;
+  static Result<> DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis);
 
-  Result<> dataCheckDimensionality(const INodeGeometry0D& geometry) const;
+  static Result<> DataCheckDimensionality(const INodeGeometry0D& geometry);
 
   Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
                                                                 const DataPath& attrMatrixPath) const;
