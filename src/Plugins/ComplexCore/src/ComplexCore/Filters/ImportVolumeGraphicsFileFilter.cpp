@@ -8,7 +8,6 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
@@ -19,12 +18,13 @@ using namespace complex;
 namespace
 {
 inline constexpr int32 k_FileDoesNotExist = -91501;
+inline constexpr int32 k_IncorrectTokenCount = -91502;
 inline constexpr int32 k_VgiParseError = -91503;
 inline const std::string k_Millimeter("mm");
 
 // File Block
-inline const std::string k_file1Block("[file1]");
-inline const std::string k_geometryBlock("[geometry]");
+inline const std::string k_File1Block("[file1]");
+inline const std::string k_GeometryBlock("[geometry]");
 
 inline const std::string k_RegionOfInterestStart("RegionOfInterestStart");
 inline const std::string k_RegionOfInterestEnd("RegionOfInterestEnd");
@@ -32,17 +32,17 @@ inline const std::string k_RegionOfInterestEnd("RegionOfInterestEnd");
 inline const std::string k_FileFormat("FileFormat");
 inline const std::string k_Size("Size");
 inline const std::string k_Name("Name");
-inline const std::string k_Datatype("Datatype");
-inline const std::string k_datarange("datarange");
+inline const std::string k_DataType("Datatype");
+inline const std::string k_DataRange("datarange");
 inline const std::string k_BitsPerElement("BitsPerElement");
-inline const std::string k_status("status");
-inline const std::string k_relativeposition("relativeposition");
-inline const std::string k_position("position");
-inline const std::string k_resolution("resolution");
-inline const std::string k_scale("scale");
-inline const std::string k_center("center");
-inline const std::string k_rotate("rotate");
-inline const std::string k_unit("unit");
+inline const std::string k_Status("status");
+inline const std::string k_RelativePosition("relativeposition");
+inline const std::string k_Position("position");
+inline const std::string k_Resolution("resolution");
+inline const std::string k_Scale("scale");
+inline const std::string k_Center("center");
+inline const std::string k_Rotate("rotate");
+inline const std::string k_Unit("unit");
 
 struct FileBlock
 {
@@ -68,11 +68,16 @@ struct GeometryBlock
   std::string Unit = "mm";
 };
 
-Result<SizeVec3> ParseSizeVec3(const std::vector<std::string>& tokens)
+Result<SizeVec3> ParseSizeVec3(const std::vector<std::string>& tokens, usize& lineCount)
 {
   SizeVec3 vec = {0, 0, 0};
   const std::string vgiParseErrorStr = "Error parsing usize value ({}) from vgi file.";
   const std::string vgiOutOfRangeErrorStr = "Value ({}) in vgi file is out of range for storage type usize.";
+
+  if(tokens.size() < 5)
+  {
+    return {MakeErrorResult<SizeVec3>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least 5 tokens.", lineCount))};
+  }
 
   try
   {
@@ -110,11 +115,16 @@ Result<SizeVec3> ParseSizeVec3(const std::vector<std::string>& tokens)
   return {vec};
 }
 
-Result<FloatVec2Type> ParseFloatVec2(const std::vector<std::string>& tokens)
+Result<FloatVec2Type> ParseFloatVec2(const std::vector<std::string>& tokens, usize& lineCount)
 {
   FloatVec2Type vec = {0.0F, 0.0F};
   const std::string vgiParseErrorStr = "Error parsing floating point value ({}) from vgi file.";
   const std::string vgiOutOfRangeErrorStr = "Floating point value ({}) in vgi file is out of range for storage type float32.";
+
+  if(tokens.size() < 4)
+  {
+    return {MakeErrorResult<FloatVec2Type>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least 4 tokens.", lineCount))};
+  }
 
   try
   {
@@ -141,11 +151,16 @@ Result<FloatVec2Type> ParseFloatVec2(const std::vector<std::string>& tokens)
   return {vec};
 }
 
-Result<FloatVec3> ParseFloatVec3(const std::vector<std::string>& tokens)
+Result<FloatVec3> ParseFloatVec3(const std::vector<std::string>& tokens, usize& lineCount)
 {
   FloatVec3 vec = {0.0F, 0.0F, 0.0F};
   const std::string vgiParseErrorStr = "Error parsing floating point value ({}) from vgi file.";
   const std::string vgiOutOfRangeErrorStr = "Floating point value ({}) in vgi file is out of range for storage type float32.";
+
+  if(tokens.size() < 5)
+  {
+    return {MakeErrorResult<FloatVec3>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least 5 tokens.", lineCount))};
+  }
 
   try
   {
@@ -184,9 +199,14 @@ Result<FloatVec3> ParseFloatVec3(const std::vector<std::string>& tokens)
 }
 
 template <typename T, usize Dimension = 9>
-Result<std::array<T, Dimension>> ParseIntArray(const std::vector<std::string>& tokens)
+Result<std::array<T, Dimension>> ParseIntArray(const std::vector<std::string>& tokens, usize& lineCount)
 {
   std::array<T, Dimension> vec;
+
+  if(tokens.size() < (Dimension + 1))
+  {
+    return {MakeErrorResult<std::array<T, Dimension>>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least {} tokens.", lineCount, Dimension + 1))};
+  }
 
   for(usize i = 0; i < Dimension; i++)
   {
@@ -195,23 +215,24 @@ Result<std::array<T, Dimension>> ParseIntArray(const std::vector<std::string>& t
       vec[i] = std::stof(tokens[i + 2]);
     } catch(const std::invalid_argument& e)
     {
-      return {MakeErrorResult<std::array<T, Dimension>>(k_VgiParseError, fmt::format("Error parsing floating point value ({}) from vgi file.", tokens[3]))};
+      return {MakeErrorResult<std::array<T, Dimension>>(k_VgiParseError, fmt::format("Error parsing floating point value ({}) from vgi file.", tokens[i + 2]))};
     } catch(const std::out_of_range& e)
     {
-      return {MakeErrorResult<std::array<T, Dimension>>(k_VgiParseError, fmt::format("Floating point value ({}) in vgi file is out of range for storage type float32.", tokens[3]))};
+      return {MakeErrorResult<std::array<T, Dimension>>(k_VgiParseError, fmt::format("Floating point value ({}) in vgi file is out of range for storage type float32.", tokens[i + 2]))};
     }
   }
 
   return {vec};
 }
 
-Result<FileBlock> ParseFileBlock(std::ifstream& inputFile)
+Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
 {
   FileBlock fileBlock;
   std::string buf;
 
   std::streampos currentPos = inputFile.tellg();
   getline(inputFile, buf);
+  lineCount++;
   buf = StringUtilities::trimmed(buf);
 
   while(buf[0] != '[' && !inputFile.eof())
@@ -219,7 +240,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile)
     std::vector<std::string> tokens = StringUtilities::split(buf, ' ');
     if(tokens[0] == k_RegionOfInterestStart)
     {
-      auto result = ParseSizeVec3(tokens);
+      auto result = ParseSizeVec3(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
@@ -228,7 +249,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile)
     }
     else if(tokens[0] == k_RegionOfInterestEnd)
     {
-      auto result = ParseSizeVec3(tokens);
+      auto result = ParseSizeVec3(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
@@ -241,7 +262,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile)
     }
     else if(tokens[0] == k_Size)
     {
-      auto result = ParseSizeVec3(tokens);
+      auto result = ParseSizeVec3(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
@@ -252,13 +273,13 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile)
     {
       fileBlock.Name = tokens[2];
     }
-    else if(tokens[0] == k_Datatype)
+    else if(tokens[0] == k_DataType)
     {
       fileBlock.Datatype = tokens[2];
     }
-    else if(tokens[0] == k_datarange)
+    else if(tokens[0] == k_DataRange)
     {
-      auto result = ParseFloatVec2(tokens);
+      auto result = ParseFloatVec2(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
@@ -281,90 +302,93 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile)
 
     currentPos = inputFile.tellg();
     getline(inputFile, buf); // Read the next line
+    lineCount++;
     buf = StringUtilities::trimmed(buf);
   }
   inputFile.seekg(currentPos); // Put the file position back before the last read.
   return {fileBlock};
 }
 
-Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile)
+Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCount)
 {
   GeometryBlock block;
   std::string buf;
 
   const std::streampos currentPos = inputFile.tellg();
   getline(inputFile, buf);
+  lineCount++;
   buf = StringUtilities::trimmed(buf);
   std::vector<std::string> tokens;
 
   while(buf[0] != '[' && !inputFile.eof())
   {
     tokens = StringUtilities::split(buf, ' ');
-    if(tokens[0] == k_status)
+    if(tokens[0] == k_Status)
     {
       block.Status = tokens[2];
     }
-    else if(tokens[0] == k_relativeposition)
+    else if(tokens[0] == k_RelativePosition)
     {
-      auto result = ParseFloatVec3(tokens);
+      auto result = ParseFloatVec3(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
       }
       block.RelativePosition = result.value();
     }
-    else if(tokens[0] == k_position)
+    else if(tokens[0] == k_Position)
     {
-      auto result = ParseFloatVec3(tokens);
+      auto result = ParseFloatVec3(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
       }
       block.Position = result.value();
     }
-    else if(tokens[0] == k_resolution)
+    else if(tokens[0] == k_Resolution)
     {
-      auto result = ParseFloatVec3(tokens);
+      auto result = ParseFloatVec3(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
       }
       block.Resolution = result.value();
     }
-    else if(tokens[0] == k_scale)
+    else if(tokens[0] == k_Scale)
     {
-      auto result = ParseFloatVec3(tokens);
+      auto result = ParseFloatVec3(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
       }
       block.Scale = result.value();
     }
-    else if(tokens[0] == k_center)
+    else if(tokens[0] == k_Center)
     {
-      auto result = ParseFloatVec3(tokens);
+      auto result = ParseFloatVec3(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
       }
       block.Center = result.value();
     }
-    else if(tokens[0] == k_rotate)
+    else if(tokens[0] == k_Rotate)
     {
-      auto result = ParseIntArray<int32, 9>(tokens);
+      auto result = ParseIntArray<int32, 9>(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
       }
       block.RotationMatrix = result.value();
     }
-    else if(tokens[0] == k_unit)
+    else if(tokens[0] == k_Unit)
     {
       block.Unit = tokens[2];
     }
 
     inputFile.tellg();
     getline(inputFile, buf); // Read the next line
+    lineCount++;
     buf = StringUtilities::trimmed(buf);
   }
 
@@ -376,6 +400,7 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile)
 Result<ImportVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const std::string& vgHeaderFilePath)
 {
   std::ifstream vgHeaderFile(vgHeaderFilePath);
+  usize lineCount = 0;
 
   std::string buf;
   FileBlock fileBlock;
@@ -383,11 +408,12 @@ Result<ImportVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const 
 
   while(getline(vgHeaderFile, buf))
   {
+    lineCount++;
     buf = StringUtilities::trimmed(buf);
 
-    if(buf == k_file1Block)
+    if(buf == k_File1Block)
     {
-      auto result = ParseFileBlock(vgHeaderFile);
+      auto result = ParseFileBlock(vgHeaderFile, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<ImportVolumeGraphicsFileFilter::HeaderMetadata>(std::move(ConvertResult(std::move(result))), {});
@@ -395,9 +421,9 @@ Result<ImportVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const 
       fileBlock = result.value();
     }
 
-    else if(buf == k_geometryBlock)
+    else if(buf == k_GeometryBlock)
     {
-      auto result = ParseGeometryBlock(vgHeaderFile);
+      auto result = ParseGeometryBlock(vgHeaderFile, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<ImportVolumeGraphicsFileFilter::HeaderMetadata>(std::move(ConvertResult(std::move(result))), {});
@@ -424,7 +450,7 @@ Result<ImportVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const 
 
 struct ImportVolumeGraphicsFileFilterCache
 {
-  fs::path vgiDataFilePath;
+  fs::path VgiDataFilePath;
 };
 
 std::atomic_int32_t s_InstanceId = 0;
@@ -474,7 +500,7 @@ std::string ImportVolumeGraphicsFileFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportVolumeGraphicsFileFilter::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import"};
+  return {"#IO", "#Input", "#Read", "#Import", "#CT", "#VolumeGraphics", "#vgi"};
 }
 
 //------------------------------------------------------------------------------
@@ -482,10 +508,11 @@ Parameters ImportVolumeGraphicsFileFilter::parameters() const
 {
   Parameters params;
 
-  params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "VolumeGraphics .vgi File", "", fs::path("DefaultInputFileName"), FileSystemPathParameter::ExtensionsType{".vgi"},
+  params.insertSeparator(Parameters::Separator{"Input Data"});
+  params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "VolumeGraphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"), FileSystemPathParameter::ExtensionsType{".vgi"},
                                                           FileSystemPathParameter::PathType::InputFile));
+  params.insertSeparator(Parameters::Separator{"Created Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"VolumeGraphics"})));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The attribute matrix created as a child of the image geometry", "CT Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_DensityArrayName_Key, "Density", "The data array created as a child of the attribute matrix", "Density"));
 
@@ -523,7 +550,7 @@ IFilter::PreflightResult ImportVolumeGraphicsFileFilter::preflightImpl(const Dat
   resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
 
   const fs::path fiData = fs::path(metadata.DataFilePath);
-  s_HeaderCache[m_InstanceId].vgiDataFilePath = fiData; // Store the data file path in the cache
+  s_HeaderCache[m_InstanceId].VgiDataFilePath = fiData; // Store the data file path in the cache
 
   if(!fs::exists(fiData))
   {
@@ -545,11 +572,10 @@ Result<> ImportVolumeGraphicsFileFilter::executeImpl(DataStructure& dataStructur
 
   ImportVolumeGraphicsFileInputValues inputValues;
 
-  inputValues.VGHeaderFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_VGHeaderFile_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_NewImageGeometry_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.DensityArrayName = filterArgs.value<std::string>(k_DensityArrayName_Key);
-  inputValues.VGDataFile = s_HeaderCache[m_InstanceId].vgiDataFilePath;
+  inputValues.VGDataFile = s_HeaderCache[m_InstanceId].VgiDataFilePath;
 
   return ImportVolumeGraphicsFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

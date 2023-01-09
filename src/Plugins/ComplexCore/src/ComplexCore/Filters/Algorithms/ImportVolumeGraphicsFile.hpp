@@ -3,28 +3,28 @@
 #include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace complex
 {
 
 struct COMPLEXCORE_EXPORT ImportVolumeGraphicsFileInputValues
 {
-  FileSystemPathParameter::ValueType VGHeaderFile;
   DataPath ImageGeometryPath;
   std::string CellAttributeMatrixName;
   std::string DensityArrayName;
-  std::filesystem::path VGDataFile;
+  fs::path VGDataFile;
 };
 
 class COMPLEXCORE_EXPORT ImportVolumeGraphicsFile
 {
 public:
-  ImportVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportVolumeGraphicsFileInputValues* inputValues);
+  ImportVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ImportVolumeGraphicsFileInputValues* inputValues);
   ~ImportVolumeGraphicsFile() noexcept;
 
   ImportVolumeGraphicsFile(const ImportVolumeGraphicsFile&) = delete;
