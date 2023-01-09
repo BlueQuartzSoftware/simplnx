@@ -509,8 +509,8 @@ Parameters ImportVolumeGraphicsFileFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "VolumeGraphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"), FileSystemPathParameter::ExtensionsType{".vgi"},
-                                                          FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_VGHeaderFile_Key, "VolumeGraphics .vgi File", "The input VolumeGraphics file", fs::path("DefaultInputFileName"),
+                                                          FileSystemPathParameter::ExtensionsType{".vgi"}, FileSystemPathParameter::PathType::InputFile));
   params.insertSeparator(Parameters::Separator{"Created Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewImageGeometry_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"VolumeGraphics"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The attribute matrix created as a child of the image geometry", "CT Data"));

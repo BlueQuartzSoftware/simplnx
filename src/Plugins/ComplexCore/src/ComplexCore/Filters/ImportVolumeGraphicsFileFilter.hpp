@@ -38,6 +38,7 @@ public:
   {
     SizeVec3 Dimensions;
     FloatVec3 Spacing;
+    IGeometry::LengthUnit Units = IGeometry::LengthUnit::Unspecified;
     std::string DataFilePath;
   };
 
