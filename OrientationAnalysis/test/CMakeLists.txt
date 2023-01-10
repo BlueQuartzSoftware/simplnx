@@ -29,6 +29,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadCtfDataTest.cpp
   ReadH5EbsdTest.cpp
   RotateEulerRefFrameTest.cpp
+  GenerateFaceMisorientationColoringTest.cpp
   GenerateGBCDPoleFigureTest.cpp
   ExportGBCDGMTFileTest.cpp
   ExportGBCDTriangleDataTest.cpp
