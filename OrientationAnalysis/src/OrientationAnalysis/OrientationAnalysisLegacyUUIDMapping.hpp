@@ -24,6 +24,7 @@
 #include "OrientationAnalysis/Filters/ReadH5EbsdFilter.hpp"
 #include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
 #include "OrientationAnalysis/Filters/FindShapesFilter.hpp"
+#include "OrientationAnalysis/Filters/GenerateFaceIPFColoringFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateGBCDPoleFigureFilter.hpp"
 #include "OrientationAnalysis/Filters/ExportGBCDGMTFileFilter.hpp"
 #include "OrientationAnalysis/Filters/ExportGBCDTriangleDataFilter.hpp"
@@ -44,7 +45,6 @@
 // #include "OrientationAnalysis/Filters/FindSlipTransmissionMetrics.hpp"
 // #include "OrientationAnalysis/Filters/FindTwinBoundaries.hpp"
 // #include "OrientationAnalysis/Filters/FindTwinBoundarySchmidFactors.hpp"
-// #include "OrientationAnalysis/Filters/GenerateFaceIPFColoring.hpp"
 // #include "OrientationAnalysis/Filters/GenerateFaceMisorientationColoring.hpp"
 // #include "OrientationAnalysis/Filters/GenerateOrientationMatrixTranspose.hpp"
 // #include "OrientationAnalysis/Filters/GenerateQuaternionConjugate.hpp"
@@ -88,6 +88,7 @@ namespace complex
     {complex::Uuid::FromString("85900eba-3da9-5985-ac71-1d9d290a5d31").value(), complex::FilterTraits<GenerateGBCDPoleFigureFilter>::uuid}, // VisualizeGBCDPoleFigureFilter
     {complex::Uuid::FromString("f62065b4-54e9-53b1-bed7-2178a57d3c7a").value(), complex::FilterTraits<ExportGBCDGMTFileFilter>::uuid}, // ExportGBCDGMTFileFilter
     {complex::Uuid::FromString("433976f0-710a-5dcc-938e-fcde49cd842f").value(), complex::FilterTraits<ExportGBCDTriangleDataFilter>::uuid}, // ExportGBCDTriangleDataFilter
+    {complex::Uuid::FromString("0a121e03-3922-5c29-962d-40d88653f4b6").value(), complex::FilterTraits<GenerateFaceIPFColoringFilter>::uuid}, // GenerateFaceIPFColoring
     // {complex::Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value(), complex::FilterTraits<ConvertHexGridToSquareGrid>::uuid}, // ConvertHexGridToSquareGrid
     // {complex::Uuid::FromString("439e31b7-3198-5d0d-aef6-65a9e9c1a016").value(), complex::FilterTraits<ConvertQuaternion>::uuid}, // ConvertQuaternion
     // {complex::Uuid::FromString("c4398303-db7d-506e-81ea-08f253895ccb").value(), complex::FilterTraits<CreateLambertSphere>::uuid}, // CreateLambertSphere
@@ -105,7 +106,6 @@ namespace complex
     // {complex::Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value(), complex::FilterTraits<FindSlipTransmissionMetrics>::uuid}, // FindSlipTransmissionMetrics
     // {complex::Uuid::FromString("a10124f3-05d0-5f49-93a0-e93926f5b48b").value(), complex::FilterTraits<FindTwinBoundaries>::uuid}, // FindTwinBoundaries
     // {complex::Uuid::FromString("b0e30e6d-912d-5a7e-aeed-750134aba86b").value(), complex::FilterTraits<FindTwinBoundarySchmidFactors>::uuid}, // FindTwinBoundarySchmidFactors
-    // {complex::Uuid::FromString("0a121e03-3922-5c29-962d-40d88653f4b6").value(), complex::FilterTraits<GenerateFaceIPFColoring>::uuid}, // GenerateFaceIPFColoring
     // {complex::Uuid::FromString("7cd30864-7bcf-5c10-aea7-d107373e2d40").value(), complex::FilterTraits<GenerateFaceMisorientationColoring>::uuid}, // GenerateFaceMisorientationColoring
     // {complex::Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value(), complex::FilterTraits<GenerateOrientationMatrixTranspose>::uuid}, // GenerateOrientationMatrixTranspose
     // {complex::Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value(), complex::FilterTraits<GenerateQuaternionConjugate>::uuid}, // GenerateQuaternionConjugate

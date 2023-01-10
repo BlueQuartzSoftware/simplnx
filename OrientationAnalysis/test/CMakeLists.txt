@@ -20,6 +20,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindSchmidsTest.cpp
   FindShapesFilterTest.cpp
   FindTriangleGeomShapesTest.cpp
+  GenerateFaceIPFColoringTest.cpp
   GenerateFZQuaternionsTest.cpp
   GenerateIPFColorsTest.cpp
   MergeTwinsTest.cpp
@@ -49,6 +50,7 @@ set(DISABLED_TESTS
   FindDistsToCharactGBsTest.cpp
   FindFeatureNeighborCAxisMisalignmentsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
+  FindGBCDTest.cpp
   FindGBCDMetricBasedTest.cpp
   FindGBPDMetricBasedTest.cpp
   FindSlipTransmissionMetricsTest.cpp
@@ -121,3 +123,4 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_Ang_Files.tar.gz SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b)
 
 endif()
+
