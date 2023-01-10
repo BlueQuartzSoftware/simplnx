@@ -91,6 +91,9 @@ if(MSVC)
   )
 endif()
 
+set(REPROC++ ON)
+add_subdirectory(3rdparty/reproc)
+
 # Force HDF5 1.10 API
 target_compile_definitions(complex PUBLIC "H5_USE_110_API")
 
@@ -109,6 +112,7 @@ target_link_libraries(complex
     HDF5::HDF5
     Boost::mp11
     nod::nod
+    reproc++
 )
 
 if(UNIX)
@@ -576,6 +580,8 @@ target_include_directories(complex
     $<BUILD_INTERFACE:${COMPLEX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${COMPLEX_GENERATED_DIR}>
     $<INSTALL_INTERFACE:include>
+	${complex_SOURCE_DIR}/3rdparty/reproc
+	${complex_SOURCE_DIR}/3rdparty/reproc/reproc++/include
 )
 
 #------------------------------------------------------------------------------
