@@ -33,6 +33,8 @@ set(FilterList
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
   EbsdToH5EbsdFilter
+  ExportGBCDGMTFileFilter
+  ExportGBCDTriangleDataFilter
   FindAvgOrientationsFilter
   FindFeatureReferenceMisorientationsFilter
   FindGBCDFilter
@@ -42,7 +44,9 @@ set(FilterList
   FindShapesFilter
   FindTriangleGeomShapesFilter
   GenerateFaceIPFColoringFilter
+  GenerateFaceMisorientationColoringFilter
   GenerateFZQuaternions
+  GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
@@ -50,9 +54,6 @@ set(FilterList
   ReadCtfDataFilter
   ReadH5EbsdFilter
   RotateEulerRefFrameFilter
-  ExportGBCDGMTFileFilter
-  GenerateGBCDPoleFigureFilter
-  ExportGBCDTriangleDataFilter
 )
   
 set(STUB_FILTERS
@@ -162,6 +163,8 @@ set(filter_algorithms
   CreateEnsembleInfo
   EBSDSegmentFeatures
   EbsdToH5Ebsd
+  ExportGBCDGMTFile
+  ExportGBCDTriangleData
   FindAvgOrientations
   FindFeatureReferenceMisorientations
   FindGBCD
@@ -171,6 +174,8 @@ set(filter_algorithms
   FindShapes
   FindTriangleGeomShapes
   GenerateFaceIPFColoring
+  GenerateFaceMisorientationColoring
+  GenerateGBCDPoleFigure
   GenerateIPFColors
   GroupFeatures
   MergeTwins
@@ -179,9 +184,6 @@ set(filter_algorithms
   ReadCtfData
   ReadH5Ebsd
   RotateEulerRefFrame
-  ExportGBCDGMTFile
-  GenerateGBCDPoleFigure
-  ExportGBCDTriangleData
 )
 
 
@@ -206,6 +208,7 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math" PREFIX 
              FILES "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X3.hpp"
                     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X1.hpp"
              )
+
 # ------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
 # can use the target_link_libraries() cmake call
