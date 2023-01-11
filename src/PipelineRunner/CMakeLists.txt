@@ -49,3 +49,11 @@ install(TARGETS PipelineRunner
     BUNDLE DESTINATION ${DEST_DIR}
 )
 
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+  set_target_properties( PipelineRunner
+        PROPERTIES
+        INSTALL_RPATH \$ORIGIN/../lib )
+  target_link_options(PipelineRunner PUBLIC "-Wl,--disable-new-dtags")
+  target_compile_options(PipelineRunner PUBLIC "-no-pie")
+endif()

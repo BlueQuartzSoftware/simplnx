@@ -240,7 +240,7 @@ if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
     COMMENT "Copying Pipeline Folder into Binary Directory")
   set_target_properties(${PLUGIN_NAME}PipelineFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
 
-  set(INSTALL_DESTINATION "Pipelines/${PLUGIN_NAME}")
+  set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
   install(DIRECTORY
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
     DESTINATION "${INSTALL_DESTINATION}"
