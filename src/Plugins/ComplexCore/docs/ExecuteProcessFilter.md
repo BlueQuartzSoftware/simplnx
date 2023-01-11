@@ -7,13 +7,16 @@ Core (Misc)
 
 ## Description ##
 
-This filter allows the user to execute any application, program, shell script or any other executable program on the computer system. Any output can be viewed with the Standard Output dock widget in SIMPLView.
+This filter allows the user to execute any application, program, shell script or any other executable program on the computer system. Any output can be found in the user specified log file.
 
 ## Parameters ##
 
 | Name             | Type | Description |
 |------------------|------|-------------|
 | Command Line | String| The complete command to execute. |
+| Should Block | Bool | Whether to block the pipeline process while the command executes or not. |
+| Timeout | Int32 | The amount of time (in ms) to wait for the command to start/finish when blocking is selected. |
+| Output Log File | File Path | The log file where the output from the process will be stored. |
 
 
 ## Required Geometry ##

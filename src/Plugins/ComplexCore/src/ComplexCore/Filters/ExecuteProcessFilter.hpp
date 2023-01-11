@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class ExecuteProcessFilter
- * @brief This filter will execute a given command as an external process
+ * @brief This filter allows the user to execute any application, program, shell script or any other executable program on the computer system as an external process
  */
 class COMPLEXCORE_EXPORT ExecuteProcessFilter : public IFilter
 {
