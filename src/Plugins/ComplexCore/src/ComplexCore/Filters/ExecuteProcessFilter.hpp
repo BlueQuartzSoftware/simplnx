@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class ExecuteProcessFilter
- * @brief This filter will ....
+ * @brief This filter will execute a given command as an external process
  */
 class COMPLEXCORE_EXPORT ExecuteProcessFilter : public IFilter
 {
