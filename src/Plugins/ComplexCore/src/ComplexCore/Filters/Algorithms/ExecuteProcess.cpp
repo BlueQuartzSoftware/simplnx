@@ -54,6 +54,7 @@ Result<> ExecuteProcess::operator()()
     return MakeErrorResult<>(-56410, fmt::format("An error occured while starting process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
   }
 
+  // redirect the process output to the output string so we can save it to a log file
   std::string output;
   std::mutex mutex;
   auto drain_async = std::async(std::launch::async, [&process, &output, &mutex]() {
@@ -61,38 +62,41 @@ Result<> ExecuteProcess::operator()()
     return reproc::drain(process, sink, sink);
   });
   int status = 0;
+  std::ofstream outFile;
+  outFile.open(m_InputValues->LogFile, std::ios_base::out);
+  if(!outFile.is_open())
+  {
+    return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_InputValues->LogFile.string()));
+  }
   // Show new output every 2 seconds.
   while(drain_async.wait_for(std::chrono::seconds(1)) != std::future_status::ready)
   {
     std::lock_guard<std::mutex> lock(mutex);
-    m_MessageHandler(IFilter::Message::Type::Info, output);
+    outFile << output;
     //  Clear output that's already been flushed
     output.clear();
 
     if(getCancel())
     {
-      std::tie(status, ec) = process.stop(options.stop);
-      if(ec)
-      {
-        return MakeErrorResult<>(-56411, fmt::format("An error occured while stopping process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
-      }
+      break;
     }
   }
   // Flush any remaining output of `process`.
-  m_MessageHandler(IFilter::Message::Type::Info, output);
+  outFile << output;
+  outFile.close();
 
   // Check if any errors occurred in the background thread.
   ec = drain_async.get();
   if(ec)
   {
-    return MakeErrorResult<>(-56412, fmt::format("An error occured while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+    return MakeErrorResult<>(-56413, fmt::format("An error occured while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
   }
 
   status = 0;
-  std::tie(status, ec) = process.stop(options.stop);
+  std::tie(status, ec) = process.wait(reproc::infinite);
   if(ec)
   {
-    return MakeErrorResult<>(-56413, fmt::format("An error occured while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+    return MakeErrorResult<>(-56414, fmt::format("An error occured while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
   }
   //}
 

@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
@@ -52,6 +53,8 @@ Parameters ExecuteProcessFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_Arguments_Key, "Command Line Arguments", "The complete command to execute.", "SomeString"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Blocking_Key, "Should Block", "Whether to block the process while the command executes or not", false));
   params.insert(std::make_unique<Int32Parameter>(k_Timeout_Key, "Timeout (ms)", "The amount of time to wait for the command to start/finish when blocking is selected", 30000));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputLogFile_Key, "Output Log File", "The log file where the output from the process will be stored", "Data/Output/ProcessOutput.txt",
+                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_Blocking_Key, k_Timeout_Key, true);
 
@@ -94,6 +97,7 @@ Result<> ExecuteProcessFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.Arguments = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
   inputValues.Blocking = filterArgs.value<bool>(k_Blocking_Key);
   inputValues.Timeout = filterArgs.value<int32>(k_Timeout_Key);
+  inputValues.LogFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputLogFile_Key);
 
   return ExecuteProcess(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

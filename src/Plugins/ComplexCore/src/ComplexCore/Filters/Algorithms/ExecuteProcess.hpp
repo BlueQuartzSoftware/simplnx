@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
@@ -16,6 +17,7 @@ struct COMPLEXCORE_EXPORT ExecuteProcessInputValues
   StringParameter::ValueType Arguments;
   bool Blocking;
   int32 Timeout;
+  FileSystemPathParameter::ValueType LogFile;
 };
 
 /**
