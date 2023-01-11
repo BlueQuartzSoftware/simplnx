@@ -241,32 +241,10 @@ if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
     COMMENT "Copying Pipeline Folder into Binary Directory")
   set_target_properties(${PLUGIN_NAME}PipelineFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
 
-  set(INSTALL_DESTINATION "Pipelines/${PLUGIN_NAME}")
+  set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
   install(DIRECTORY
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
     DESTINATION "${INSTALL_DESTINATION}"
-    COMPONENT Applications
-  )
-endif()
-
-# -----------------------------------------------------------------------
-# Copy Example Data Files to binary directory
-# -----------------------------------------------------------------------
-set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/")
-if(EXISTS "${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd")
-  add_custom_target(H5EbsdDataCopy ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
-    ${DATA_DEST_DIR}/H5Ebsd/SmallIN100.h5ebsd
-    COMMENT "Copying Data Folder into Binary Directory")
-    set_target_properties(H5EbsdDataCopy PROPERTIES FOLDER ZZ_COPY_FILES
-  )
-
-  # -----------------------------------------------------------------------
-  # Install Example Data Files
-  # -----------------------------------------------------------------------
-  install(FILES 
-    ${DREAM3D_DATA_DIR}/TestFiles/SmallIN100.h5ebsd
-    DESTINATION Data/H5Ebsd/
     COMPONENT Applications
   )
 endif()
