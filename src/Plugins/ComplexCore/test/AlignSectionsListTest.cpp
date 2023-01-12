@@ -52,3 +52,34 @@ TEST_CASE("ComplexCore::AlignSectionsListFilter: Valid filter execution", "[Comp
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, Constants::k_CellAttributeMatrix, Constants::k_ExemplarDataContainer);
 }
+
+TEST_CASE("ComplexCore::AlignSectionsListFilter: Invalid filter execution", "[ComplexCore][AlignSectionsListFilter]")
+{
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  // Instantiate the filter and an Arguments Object
+  AlignSectionsListFilter filter;
+  Arguments args;
+
+  args.insertOrAssign(AlignSectionsListFilter::k_InputFile_Key,
+                      std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/write_ascii_data_exemplars/float32/0_0_exemplar_0.txt", unit_test::k_TestFilesDir))));
+  args.insertOrAssign(AlignSectionsListFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(complex::Constants::k_DataContainerPath));
+
+  SECTION("Invalid DREAM3D Alignment file format")
+  {
+    args.insertOrAssign(AlignSectionsListFilter::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(true));
+  }
+  SECTION("Invalid user Alignment file format")
+  {
+    args.insertOrAssign(AlignSectionsListFilter::k_DREAM3DAlignmentFile_Key, std::make_any<bool>(false));
+  }
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.valid());
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  REQUIRE(executeResult.result.invalid());
+}
