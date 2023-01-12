@@ -130,11 +130,20 @@ void AlignSections::updateProgress(const std::string& progMessage)
 Result<> AlignSections::execute(const SizeVec3& udims)
 {
   std::array<int64, 3> dims = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
-  std::vector<int64_t> xshifts(dims[2], 0);
-  std::vector<int64_t> yshifts(dims[2], 0);
+  std::vector<int64_t> xShifts(dims[2], 0);
+  std::vector<int64_t> yShifts(dims[2], 0);
 
   // Find the voxel shifts that need to happen
-  find_shifts(xshifts, yshifts);
+  Result<> foundShiftsResults = findShifts(xShifts, yShifts);
+  if(foundShiftsResults.invalid())
+  {
+    return foundShiftsResults;
+  }
+
+  if(getCancel())
+  {
+    return {};
+  }
 
   // Now Adjust the actual DataArrays
   std::vector<DataPath> selectedCellArrays = getSelectedDataPaths();
@@ -155,47 +164,47 @@ Result<> AlignSections::execute(const SizeVec3& udims)
     switch(type)
     {
     case DataType::boolean: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<bool>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<bool>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<bool>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<bool>>(cellArrayPath)));
       break;
     }
     case DataType::int8: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<int8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int8>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<int8>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<int8>>(cellArrayPath)));
       break;
     }
     case DataType::int16: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<int16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int16>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<int16>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<int16>>(cellArrayPath)));
       break;
     }
     case DataType::int32: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<int32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int32>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<int32>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<int32>>(cellArrayPath)));
       break;
     }
     case DataType::int64: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<int64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<int64>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<int64>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<int64>>(cellArrayPath)));
       break;
     }
     case DataType::uint8: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<uint8>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint8>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<uint8>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<uint8>>(cellArrayPath)));
       break;
     }
     case DataType::uint16: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<uint16>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint16>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<uint16>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<uint16>>(cellArrayPath)));
       break;
     }
     case DataType::uint32: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<uint32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint32>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<uint32>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<uint32>>(cellArrayPath)));
       break;
     }
     case DataType::uint64: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<uint64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<uint64>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<uint64>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<uint64>>(cellArrayPath)));
       break;
     }
     case DataType::float32: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<float32>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float32>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<float32>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<float32>>(cellArrayPath)));
       break;
     }
     case DataType::float64: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<float64>(this, udims, xshifts, yshifts, m_DataStructure.getDataRefAs<DataArray<float64>>(cellArrayPath)));
+      taskRunner.execute(AlignSectionsTransferDataImpl<float64>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<float64>>(cellArrayPath)));
       break;
     }
     default: {
@@ -206,5 +215,83 @@ Result<> AlignSections::execute(const SizeVec3& udims)
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();
 
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<> AlignSections::readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const
+{
+  std::ifstream inFile;
+  inFile.open(file);
+
+  int64 slice = 0;
+  int64 newXShift = 0, newYShift = 0;
+  // These are ignored from the input file since DREAM.3D wrote the file
+  int64 slice2 = 0;
+  float32 xShift = 0.0f;
+  float32 yShift = 0.0f;
+
+  for(int64 iter = 1; iter < zDim; iter++)
+  {
+    std::string line;
+    std::getline(inFile, line);
+    std::istringstream iss(line);
+    std::vector<std::string> tokens;
+    std::string token;
+    while(iss >> token)
+    {
+      tokens.push_back(token);
+    }
+    if(tokens.size() < 6)
+    {
+      std::string message = fmt::format(
+          "Error reading line {} of Input Shifts File with file path '{}'. 6 columns in the format <Slice_A,Slice_B,New X Shift,New Y Shift,X Shift, Y Shift> are required but only {} were found",
+          iter, file.string(), tokens.size());
+      inFile.close();
+      return MakeErrorResult(-84750, message);
+    }
+    std::istringstream temp(line);
+    iss.swap(temp); // reset the stream to beginning so we can read in the formatted tokens
+    iss >> slice >> slice2 >> newXShift >> newYShift >> xShift >> yShift;
+    xShifts[iter] = xShifts[iter - 1] + newXShift;
+    yShifts[iter] = yShifts[iter - 1] + newYShift;
+  }
+  inFile.close();
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<> AlignSections::readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const
+{
+  int64 slice = 0;
+  int64 newXShift = 0, newYShift = 0;
+
+  std::ifstream inFile;
+  inFile.open(file);
+  for(int64 iter = 1; iter < zDim; iter++)
+  {
+    std::string line;
+    std::getline(inFile, line);
+    std::istringstream iss(line);
+    std::vector<std::string> tokens;
+    std::string token;
+    while(iss >> token)
+    {
+      tokens.push_back(token);
+    }
+    if(tokens.size() < 3)
+    {
+      std::string message = fmt::format("Error reading line {} of Input Shifts File with file path '{}'. 3 columns in the format <Slice_Number,X Shift,Y Shift> are required but only {} were found",
+                                        iter, file.string(), tokens.size());
+      inFile.close();
+      return MakeErrorResult(-84750, message);
+    }
+    std::istringstream temp(line);
+    iss.swap(temp); // reset the stream to beginning so we can read in the formatted tokens
+    inFile >> slice >> newXShift >> newYShift;
+    xShifts[iter] = xShifts[iter - 1] + newXShift;
+    yShifts[iter] = yShifts[iter - 1] + newYShift;
+  }
+  inFile.close();
   return {};
 }

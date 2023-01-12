@@ -40,7 +40,7 @@ public:
   Result<> operator()();
 
 protected:
-  void find_shifts(std::vector<int64>& xshifts, std::vector<int64>& yshifts) override;
+  Result<> findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts) override;
 
   std::vector<DataPath> getSelectedDataPaths() const override;
 
