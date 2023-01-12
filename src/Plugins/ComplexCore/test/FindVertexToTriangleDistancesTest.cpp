@@ -27,7 +27,7 @@ TEST_CASE("ComplexCore::FindVertexToTriangleDistancesFilter: Valid filter execut
   DataPath cellPhasesPath = cellDataPath.createChildPath(complex::Constants::k_Phases);
   DataPath featureIdsPath = cellDataPath.createChildPath(complex::Constants::k_FeatureIds);
   DataPath featureGroup = smallIn100Group.createChildPath(complex::Constants::k_CellFeatureData);
- 
+
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
     FindVertexToTriangleDistancesFilter filter;
