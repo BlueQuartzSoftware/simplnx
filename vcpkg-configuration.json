@@ -17,6 +17,7 @@
         "nlohmann-json",
         "nod",
         "pybind11",
+        "reproc",
         "span-lite",
         "tbb",
         "vcpkg-cmake",

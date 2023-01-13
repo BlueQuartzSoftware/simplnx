@@ -4,9 +4,9 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "reproc++/include/reproc++/drain.hpp"
-#include "reproc++/include/reproc++/reproc.hpp"
-#include "reproc++/include/reproc++/run.hpp"
+#include <reproc++/drain.hpp>
+#include <reproc++/reproc.hpp>
+#include <reproc++/run.hpp>
 
 #include <future>
 #include <mutex>
