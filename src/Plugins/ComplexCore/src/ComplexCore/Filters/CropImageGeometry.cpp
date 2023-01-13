@@ -19,6 +19,7 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/SamplingUtils.hpp"
@@ -28,28 +29,7 @@ using namespace complex;
 
 namespace
 {
-
 const std::string k_TempGeometryName = ".cropped_image_geometry";
-
-/**
- * @brief
- * @param dataStructure
- * @param imageGeomPath
- * @return
- */
-USizeVec3 GetCurrentVolumeDataContainerDimensions(const DataStructure& dataStructure, const DataPath& imageGeomPath)
-{
-  USizeVec3 data = {0, 0, 0};
-
-  const auto* image = dataStructure.getDataAs<ImageGeom>(imageGeomPath);
-  if(image != nullptr)
-  {
-    data[2] = image->getNumXCells();
-    data[1] = image->getNumYCells();
-    data[0] = image->getNumZCells();
-  }
-  return data;
-}
 
 /**
  * @brief
@@ -137,62 +117,14 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
-void ExecuteCropImageGeomDataArray(ParallelTaskAlgorithm& taskRunner, const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds,
-                                   const std::atomic_bool& shouldCancel)
+struct CropImageGeomDataArrayFunctor
 {
-  DataType type = oldCellArray.getDataType();
-  switch(type)
+  template <typename ScalarT, class ParallelRunner, class... ArgsT>
+  void operator()(ParallelRunner runner, ArgsT&&... args) const
   {
-  case DataType::boolean: {
-    taskRunner.execute(CropImageGeomDataArray<bool>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
+    runner.template execute(CropImageGeomDataArray<ScalarT>(std::forward<ArgsT>(args)...));
   }
-  case DataType::int8: {
-    taskRunner.execute(CropImageGeomDataArray<int8>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::int16: {
-    taskRunner.execute(CropImageGeomDataArray<int16>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::int32: {
-    taskRunner.execute(CropImageGeomDataArray<int32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::int64: {
-    taskRunner.execute(CropImageGeomDataArray<int64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::uint8: {
-    taskRunner.execute(CropImageGeomDataArray<uint8>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::uint16: {
-    taskRunner.execute(CropImageGeomDataArray<uint16>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::uint32: {
-    taskRunner.execute(CropImageGeomDataArray<uint32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::uint64: {
-    taskRunner.execute(CropImageGeomDataArray<uint64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::float32: {
-    taskRunner.execute(CropImageGeomDataArray<float32>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  case DataType::float64: {
-    taskRunner.execute(CropImageGeomDataArray<float64>(oldCellArray, newCellArray, srcImageGeom, bounds, shouldCancel));
-    break;
-  }
-  default: {
-    throw std::runtime_error("Invalid DataType");
-  }
-  }
-}
-
+};
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -587,7 +519,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
 
     messageHandler(fmt::format("Cropping Volume || Copying Data Array {}", srcName));
-    ExecuteCropImageGeomDataArray(taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
+    ExecuteParallelFunction(CropImageGeomDataArrayFunctor{}, oldDataArray.getDataType(), ParallelRunner(taskRunner), oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 

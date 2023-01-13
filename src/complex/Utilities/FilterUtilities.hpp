@@ -87,7 +87,6 @@ auto ExecuteNeighborFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
   }
   case DataType::boolean: {
     throw std::runtime_error("Cannot create a NeighborList of booleans.");
-    break;
   }
   default: {
     throw std::runtime_error("complex::ExecuteDataFunction<...>(FuncT&& func, DataType dataType, ArgsT&&... args). Error: Invalid DataType");

@@ -5,7 +5,6 @@
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
@@ -68,22 +67,18 @@ bool AreArraysEqual(const IDataArray& array1, const IDataArray& array2)
   const IDataStore& dataStore2 = array2.getIDataStoreRef();
 
   DataType dataType1 = dataStore1.getDataType();
-  DataType dataType2 = dataStore2.getDataType();
-  if(dataType1 != dataType2)
+
+  if(dataType1 != dataStore2.getDataType())
   {
     return false;
   }
 
-  IDataStore::ShapeType tupleShape1 = dataStore1.getTupleShape();
-  IDataStore::ShapeType tupleShape2 = dataStore2.getTupleShape();
-  if(tupleShape1 != tupleShape2)
+  if(dataStore1.getTupleShape() != dataStore2.getTupleShape())
   {
     return false;
   }
 
-  IDataStore::ShapeType componentShape1 = dataStore1.getComponentShape();
-  IDataStore::ShapeType componentShape2 = dataStore2.getComponentShape();
-  if(componentShape1 != componentShape2)
+  if(dataStore1.getComponentShape() != dataStore2.getComponentShape())
   {
     return false;
   }

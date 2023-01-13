@@ -23,6 +23,7 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -630,58 +631,7 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
     messageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcName));
 
-    DataType type = oldDataArray.getDataType();
-
-    switch(type)
-    {
-    case DataType::boolean: {
-      taskRunner.execute(CopyTupleUsingIndexList<bool>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::int8: {
-      taskRunner.execute(CopyTupleUsingIndexList<int8>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::int16: {
-      taskRunner.execute(CopyTupleUsingIndexList<int16>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::int32: {
-      taskRunner.execute(CopyTupleUsingIndexList<int32>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::int64: {
-      taskRunner.execute(CopyTupleUsingIndexList<int64>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::uint8: {
-      taskRunner.execute(CopyTupleUsingIndexList<uint8>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::uint16: {
-      taskRunner.execute(CopyTupleUsingIndexList<uint16>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::uint32: {
-      taskRunner.execute(CopyTupleUsingIndexList<uint32>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::uint64: {
-      taskRunner.execute(CopyTupleUsingIndexList<uint64>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::float32: {
-      taskRunner.execute(CopyTupleUsingIndexList<float32>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::float64: {
-      taskRunner.execute(CopyTupleUsingIndexList<float64>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Invalid DataType");
-    }
-    }
+    ExecuteParallelFunction(CopyTupleFunctor{}, oldDataArray.getDataType(), ParallelRunner(taskRunner), oldDataArray, newDataArray, newIndices);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
