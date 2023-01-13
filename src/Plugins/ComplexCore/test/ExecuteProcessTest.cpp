@@ -1,49 +1,37 @@
-/**
- * This file is auto generated from the original Plugins/ExecuteProcessFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ExecuteProcessFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
-#include "Plugins/Filters/ExecuteProcessFilter.hpp"
-#include "Plugins/Plugins_test_dirs.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ExecuteProcessFilter.hpp"
 
+#include <filesystem>
+#include <fstream>
+namespace fs = std::filesystem;
 using namespace complex;
 
-TEST_CASE("Plugins::ExecuteProcessFilter: Instantiation and Parameter Check","[Plugins][ExecuteProcessFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExecuteProcessFilter filter;
   DataStructure ds;
   Arguments args;
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insertOrAssign(ExecuteProcessFilter::k_Blocking_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ExecuteProcessFilter::k_Timeout_Key, std::make_any<int32>(1234356));
+  fs::path processOutput(fmt::format("{}/ExecuteProcessUnitTestOutput.txt", unit_test::k_BuildDir));
+  std::string testCommand = "PipelineRunner_d.exe";
+#if NDEBUG // release build
+  testCommand = "PipelineRunner.exe";
+#endif // DEBUG
 
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<StringParameter::ValueType>(testCommand));
+  args.insertOrAssign(ExecuteProcessFilter::k_Blocking_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ExecuteProcessFilter::k_Timeout_Key, std::make_any<int32>(5000));
+  args.insertOrAssign(ExecuteProcessFilter::k_OutputLogFile_Key, std::make_any<FileSystemPathParameter::ValueType>(processOutput));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -52,14 +40,51 @@ TEST_CASE("Plugins::ExecuteProcessFilter: Instantiation and Parameter Check","[P
   // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
   REQUIRE(executeResult.result.valid());
+
+  std::ifstream processOutputFile(processOutput);
+  REQUIRE(processOutputFile.is_open());
+  std::string firstLine;
+  std::getline(processOutputFile, firstLine);
+  firstLine = StringUtilities::rtrim(firstLine);
+  REQUIRE(firstLine == "PipelineRunner Version 7");
 }
 
-//TEST_CASE("Plugins::ExecuteProcessFilter: Valid filter execution")
-//{
-//
-//}
+TEST_CASE("ComplexCore::ExecuteProcessFilter: InValid filter execution")
+{
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ExecuteProcessFilter filter;
+  DataStructure ds;
+  Arguments args;
 
-//TEST_CASE("Plugins::ExecuteProcessFilter: InValid filter execution")
-//{
-//
-//}
+  fs::path processOutput(fmt::format("{}/ExecuteProcessUnitTestOutput.dream3d", unit_test::k_BinaryTestOutputDir));
+  args.insertOrAssign(ExecuteProcessFilter::k_Blocking_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ExecuteProcessFilter::k_Timeout_Key, std::make_any<int32>(5000));
+  args.insertOrAssign(ExecuteProcessFilter::k_OutputLogFile_Key, std::make_any<FileSystemPathParameter::ValueType>(processOutput));
+
+  SECTION("program not found")
+  {
+    args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<StringParameter::ValueType>("adfshjads"));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(ds, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(ds, args);
+    REQUIRE(executeResult.result.invalid());
+    REQUIRE(executeResult.result.errors()[0].code == -56410);
+  }
+
+  SECTION("no command line arguments")
+  {
+    args.insertOrAssign(ExecuteProcessFilter::k_Arguments_Key, std::make_any<StringParameter::ValueType>(""));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(ds, args);
+    REQUIRE(preflightResult.outputActions.invalid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(ds, args);
+    REQUIRE(executeResult.result.invalid());
+  }
+}
