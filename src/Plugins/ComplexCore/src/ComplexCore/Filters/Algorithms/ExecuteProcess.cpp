@@ -44,7 +44,7 @@ Result<> ExecuteProcess::operator()()
 
   // gather the command/arguments and process options
   std::vector<std::string> arguments = ExecuteProcess::splitArgumentsString(m_InputValues->Arguments);
-  auto args = reproc::arguments::arguments(arguments);
+  auto args = reproc::arguments(arguments);
 
   reproc::process process;
   reproc::stop_actions stop = {{reproc::stop::terminate, reproc::milliseconds(m_InputValues->Timeout)}, {reproc::stop::kill, reproc::milliseconds(m_InputValues->Timeout)}};
