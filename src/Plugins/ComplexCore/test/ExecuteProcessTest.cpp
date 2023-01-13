@@ -4,6 +4,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
@@ -35,11 +36,11 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
   std::ifstream processOutputFile(processOutput);
   REQUIRE(processOutputFile.is_open());
@@ -67,11 +68,11 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: InValid filter execution")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.invalid());
+    COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -56410);
   }
 
@@ -81,10 +82,10 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: InValid filter execution")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(ds, args);
-    REQUIRE(preflightResult.outputActions.invalid());
+    COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(ds, args);
-    REQUIRE(executeResult.result.invalid());
+    COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
 }
