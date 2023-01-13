@@ -50,7 +50,6 @@ Result<> ExecuteProcess::operator()()
   reproc::stop_actions stop = {{reproc::stop::terminate, reproc::milliseconds(m_InputValues->Timeout)}, {reproc::stop::kill, reproc::milliseconds(m_InputValues->Timeout)}};
   reproc::options options;
   options.stop = stop;
-  options.nonblocking = !m_InputValues->Blocking;
   std::error_code ec = process.start(args, options);
 
   if(ec == std::errc::no_such_file_or_directory)
