@@ -9,7 +9,8 @@ namespace complex
 {
 /**
  * @class FillBadDataFilter
- * @brief This filter will ....
+ * @brief This filter will replace data using data from surrounding voxels. See more
+ * at the help file.
  */
 class COMPLEXCORE_EXPORT FillBadDataFilter : public IFilter
 {

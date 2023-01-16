@@ -12,24 +12,6 @@ using namespace complex;
 namespace
 {
 
-// struct FillBadDataFunctor
-//{
-//   template <typename ScalarType>
-//   void operator()(const Int32Array& featureIds, IDataArray& output, const std::vector<int32>& neighbors)
-//   {
-//     DataArray<ScalarType>& outputArray = dynamic_cast<DataArray<ScalarType>>(output);
-//     for(size_t tupleIndex = 0; tupleIndex < featureIds.getNumberOfTuples(); tupleIndex++)
-//     {
-//       const int32 featureName = featureIds[tupleIndex];
-//       const int32 neighbor = neighbors[tupleIndex];
-//       if(featureName < 0 && neighbor != -1 && featureIds[static_cast<size_t>(neighbor)] > 0)
-//       {
-//         outputArray.copyTuple(neighbor, tupleIndex);
-//       }
-//     }
-//   }
-// };
-
 template <typename T>
 class FillBadDataUpdateTuples
 {
@@ -113,19 +95,24 @@ Result<> FillBadData::operator()()
   };
 
   size_t count = 1;
-  int32_t good = 1;
-  int64_t neighbor = 0;
-  int64_t index = 0;
-  float x = 0.0f, y = 0.0f, z = 0.0f;
-  int64_t column = 0, row = 0, plane = 0;
-  int64_t neighborPoint = 0;
-  int32_t featureName = 0, feature = 0;
+  // int32_t good = 1;
+  // int64_t neighbor = 0;
+  // int64_t index = 0;
+  // float32 x = 0.0F;
+  //  float32 y = 0.0F;
+  //  float32 z = 0.0F;
+  // int64 column = 0;
+  // int64 row = 0;
+  // int64 plane = 0;
+  //  int64 neighborPoint = 0;
+  //  int32 featureName = 0;
+  //  int32 feature = 0;
   size_t numFeatures = 0;
   size_t maxPhase = 0;
 
   for(size_t i = 0; i < totalPoints; i++)
   {
-    featureName = m_FeatureIds[i];
+    int32 featureName = m_FeatureIds[i];
     if(featureName > numFeatures)
     {
       numFeatures = featureName;
@@ -143,13 +130,7 @@ Result<> FillBadData::operator()()
     }
   }
 
-  int64_t neighborPoints[6] = {0, 0, 0, 0, 0, 0};
-  neighborPoints[0] = -dims[0] * dims[1];
-  neighborPoints[1] = -dims[0];
-  neighborPoints[2] = -1;
-  neighborPoints[3] = 1;
-  neighborPoints[4] = dims[0];
-  neighborPoints[5] = dims[0] * dims[1];
+  std::array<int64_t, 6> neighborPoints = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
   std::vector<int64_t> currentVisitedList;
 
   for(size_t iter = 0; iter < totalPoints; iter++)
@@ -169,39 +150,38 @@ Result<> FillBadData::operator()()
       count = 0;
       while(count < currentVisitedList.size())
       {
-        index = currentVisitedList[count];
-        column = index % dims[0];
-        row = (index / dims[0]) % dims[1];
-        plane = index / (dims[0] * dims[1]);
+        int64_t index = currentVisitedList[count];
+        int64 column = index % dims[0];
+        int64 row = (index / dims[0]) % dims[1];
+        int64 plane = index / (dims[0] * dims[1]);
         for(int32_t j = 0; j < 6; j++)
         {
-          good = 1;
-          neighbor = index + neighborPoints[j];
+          int64_t neighbor = index + neighborPoints[j];
           if(j == 0 && plane == 0)
           {
-            good = 0;
+            continue;
           }
           if(j == 5 && plane == (dims[2] - 1))
           {
-            good = 0;
+            continue;
           }
           if(j == 1 && row == 0)
           {
-            good = 0;
+            continue;
           }
           if(j == 4 && row == (dims[1] - 1))
           {
-            good = 0;
+            continue;
           }
           if(j == 2 && column == 0)
           {
-            good = 0;
+            continue;
           }
           if(j == 3 && column == (dims[0] - 1))
           {
-            good = 0;
+            continue;
           }
-          if(good == 1 && m_FeatureIds[neighbor] == 0 && !m_AlreadyChecked[neighbor])
+          if(m_FeatureIds[neighbor] == 0 && !m_AlreadyChecked[neighbor])
           {
             currentVisitedList.push_back(neighbor);
             m_AlreadyChecked[neighbor] = true;
@@ -216,7 +196,7 @@ Result<> FillBadData::operator()()
           m_FeatureIds[currentIndex] = 0;
           if(m_InputValues->storeAsNewPhase)
           {
-            (*m_CellPhases)[currentIndex] = maxPhase + 1;
+            (*m_CellPhases)[currentIndex] = static_cast<int32>(maxPhase) + 1;
           }
         }
       }
@@ -231,102 +211,94 @@ Result<> FillBadData::operator()()
     }
   }
 
-  int32_t current = 0;
-  int32_t most = 0;
-  std::vector<int32_t> n(numFeatures + 1, 0);
+  std::vector<int32_t> featureNumber(numFeatures + 1, 0);
 
   while(count != 0)
   {
     count = 0;
     for(size_t i = 0; i < totalPoints; i++)
     {
-      featureName = m_FeatureIds[i];
+      int32 featureName = m_FeatureIds[i];
       if(featureName < 0)
       {
         count++;
-        current = 0;
-        most = 0;
-        x = static_cast<float>(i % dims[0]);
-        y = static_cast<float>((i / dims[0]) % dims[1]);
-        z = static_cast<float>(i / (dims[0] * dims[1]));
+        // int32 current = 0;
+        int32 most = 0;
+        float32 xIndex = static_cast<float>(i % dims[0]);
+        float32 yIndex = static_cast<float>((i / dims[0]) % dims[1]);
+        float32 zIndex = static_cast<float>(i / (dims[0] * dims[1]));
         for(int32_t j = 0; j < 6; j++)
         {
-          good = 1;
-          neighborPoint = static_cast<int64_t>(i + neighborPoints[j]);
-          if(j == 0 && z == 0)
+          auto neighborPoint = static_cast<int64_t>(i + neighborPoints[j]);
+          if(j == 0 && zIndex == 0)
           {
-            good = 0;
+            continue;
           }
-          if(j == 5 && z == (dims[2] - 1))
+          if(j == 5 && zIndex == static_cast<float32>(dims[2] - 1))
           {
-            good = 0;
+            continue;
           }
-          if(j == 1 && y == 0)
+          if(j == 1 && yIndex == 0)
           {
-            good = 0;
+            continue;
           }
-          if(j == 4 && y == (dims[1] - 1))
+          if(j == 4 && yIndex == static_cast<float32>(dims[1] - 1))
           {
-            good = 0;
+            continue;
           }
-          if(j == 2 && x == 0)
+          if(j == 2 && xIndex == 0)
           {
-            good = 0;
+            continue;
           }
-          if(j == 3 && x == (dims[0] - 1))
+          if(j == 3 && xIndex == static_cast<float32>(dims[0] - 1))
           {
-            good = 0;
+            continue;
           }
-          if(good == 1)
+
+          int32 feature = m_FeatureIds[neighborPoint];
+          if(feature > 0)
           {
-            feature = m_FeatureIds[neighborPoint];
-            if(feature > 0)
+            featureNumber[feature]++;
+            int32 current = featureNumber[feature];
+            if(current > most)
             {
-              n[feature]++;
-              current = n[feature];
-              if(current > most)
-              {
-                most = current;
-                m_Neighbors[i] = neighborPoint;
-              }
+              most = current;
+              m_Neighbors[i] = static_cast<int32>(neighborPoint);
             }
           }
         }
-        for(int32_t l = 0; l < 6; l++)
+        for(int32_t j = 0; j < 6; j++)
         {
-          good = 1;
-          neighborPoint = i + neighborPoints[l];
-          if(l == 0 && z == 0)
+          int64 neighborPoint = static_cast<int64>(i) + neighborPoints[j];
+          if(j == 0 && zIndex == 0)
           {
-            good = 0;
+            continue;
           }
-          if(l == 5 && z == (dims[2] - 1))
+          if(j == 5 && zIndex == static_cast<float32>(dims[2] - 1))
           {
-            good = 0;
+            continue;
           }
-          if(l == 1 && y == 0)
+          if(j == 1 && yIndex == 0)
           {
-            good = 0;
+            continue;
           }
-          if(l == 4 && y == (dims[1] - 1))
+          if(j == 4 && yIndex == static_cast<float32>(dims[1] - 1))
           {
-            good = 0;
+            continue;
           }
-          if(l == 2 && x == 0)
+          if(j == 2 && xIndex == 0)
           {
-            good = 0;
+            continue;
           }
-          if(l == 3 && x == (dims[0] - 1))
+          if(j == 3 && xIndex == static_cast<float32>(dims[0] - 1))
           {
-            good = 0;
+            continue;
           }
-          if(good == 1)
+
+          int32 feature = m_FeatureIds[neighborPoint];
+          if(feature > 0)
           {
-            feature = m_FeatureIds[neighborPoint];
-            if(feature > 0)
-            {
-              n[feature] = 0;
-            }
+            featureNumber[feature] = 0;
           }
         }
       }
@@ -347,8 +319,6 @@ Result<> FillBadData::operator()()
       }
       auto& oldCellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
       const DataType type = oldCellArray.getDataType();
-
-      //      ExecuteDataFunction(FillBadDataFunctor{}, type, featureIds, oldCellArray, neighbors);
 
       switch(type)
       {

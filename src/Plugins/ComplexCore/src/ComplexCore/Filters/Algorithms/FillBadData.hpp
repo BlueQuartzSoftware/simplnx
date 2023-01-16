@@ -20,15 +20,13 @@ struct COMPLEXCORE_EXPORT FillBadDataInputValues
   DataPath cellPhasesArrayPath;
   std::vector<DataPath> ignoredDataArrayPaths;
   DataPath inputImageGeometry;
-  //  DataPath cellDataGroupPath;
 };
 
 /**
- * @class ConditionalSetValue
+ * @class FillBadData
  * @brief This filter replaces values in the target array with a user specified value
  * where a bool mask array specifies.
  */
-
 class COMPLEXCORE_EXPORT FillBadData
 {
 public:
