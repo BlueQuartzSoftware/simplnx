@@ -12,6 +12,28 @@ using namespace complex;
 namespace
 {
 
+struct FillBadDataUpdateTuplesFunctor
+{
+  template <typename T>
+  void operator()(const Int32Array& featureIds, IDataArray& outputIDataArray, const std::vector<int32>& neighbors)
+  {
+    using DataArrayType = DataArray<T>;
+
+    DataArrayType outputArray = dynamic_cast<DataArrayType&>(outputIDataArray);
+    size_t start = 0;
+    size_t stop = outputArray.getNumberOfTuples();
+    for(size_t tupleIndex = start; tupleIndex < stop; tupleIndex++)
+    {
+      const int32 featureName = featureIds[tupleIndex];
+      const int32 neighbor = neighbors[tupleIndex];
+      if(featureName < 0 && neighbor != -1 && featureIds[static_cast<size_t>(neighbor)] > 0)
+      {
+        outputArray.copyTuple(neighbor, tupleIndex);
+      }
+    }
+  }
+};
+
 template <typename T>
 class FillBadDataUpdateTuples
 {
@@ -318,58 +340,9 @@ Result<> FillBadData::operator()()
         continue;
       }
       auto& oldCellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-      const DataType type = oldCellArray.getDataType();
+      const DataType dataType = oldCellArray.getDataType();
 
-      switch(type)
-      {
-      case DataType::boolean: {
-        FillBadDataUpdateTuples<bool>(m_FeatureIds, dynamic_cast<BoolArray&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::int8: {
-        FillBadDataUpdateTuples<int8>(m_FeatureIds, dynamic_cast<Int8Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::int16: {
-        FillBadDataUpdateTuples<int16>(m_FeatureIds, dynamic_cast<Int16Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::int32: {
-        FillBadDataUpdateTuples<int32>(m_FeatureIds, dynamic_cast<Int32Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::int64: {
-        FillBadDataUpdateTuples<int64>(m_FeatureIds, dynamic_cast<Int64Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::uint8: {
-        FillBadDataUpdateTuples<uint8>(m_FeatureIds, dynamic_cast<UInt8Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::uint16: {
-        FillBadDataUpdateTuples<uint16>(m_FeatureIds, dynamic_cast<UInt16Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::uint32: {
-        FillBadDataUpdateTuples<uint32>(m_FeatureIds, dynamic_cast<UInt32Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::uint64: {
-        FillBadDataUpdateTuples<uint64>(m_FeatureIds, dynamic_cast<UInt64Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::float32: {
-        FillBadDataUpdateTuples<float32>(m_FeatureIds, dynamic_cast<Float32Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      case DataType::float64: {
-        FillBadDataUpdateTuples<float64>(m_FeatureIds, dynamic_cast<Float64Array&>(oldCellArray), m_Neighbors)();
-        break;
-      }
-      default: {
-        throw std::runtime_error("Invalid DataType");
-      }
-      }
+      ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, dataType, m_FeatureIds, oldCellArray, m_Neighbors);
     }
 
     // We need to update the FeatureIds array _LAST_ since the above operations depend on that values in that array
