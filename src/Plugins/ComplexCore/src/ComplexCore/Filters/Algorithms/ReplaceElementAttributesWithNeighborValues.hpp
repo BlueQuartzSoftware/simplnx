@@ -10,6 +10,13 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
+namespace
+{
+const std::string k_LessThan("< [Less Than]");
+const std::string k_GreaterThan("> [Greater Than]");
+const complex::ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_GreaterThan};
+} // namespace
+
 namespace complex
 {
 

@@ -72,6 +72,7 @@ set(FilterList
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
+  ResampleImageGeomFilter
   ReplaceElementAttributesWithNeighborValuesFilter
   RobustAutomaticThreshold
   RotateSampleRefFrameFilter
@@ -114,6 +115,7 @@ set(AlgorithmList
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   RawBinaryReader
+  ResampleImageGeom
   ReplaceElementAttributesWithNeighborValues
   ScalarSegmentFeatures
   SharedFeatureFace

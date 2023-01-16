@@ -9,7 +9,7 @@ using namespace complex;
 
 namespace
 {
-const int32 k_GreaterThan = 1;
+const int32 k_GreaterThanIndex = 1;
 
 template <typename T>
 class IComparisonFunctor
@@ -23,9 +23,9 @@ public:
   IComparisonFunctor& operator=(const IComparisonFunctor&) = delete; // Copy Assignment Not Implemented
   IComparisonFunctor& operator=(IComparisonFunctor&&) = delete;      // Move Assignment Not Implemented
 
-  virtual bool compare(T a, T b) const = 0;
-  virtual bool compare1(T a, T b) const = 0;
-  virtual bool compare2(T a, T b) const = 0;
+  virtual bool compare(T left, T right) const = 0;
+  virtual bool compare1(T left, T right) const = 0;
+  virtual bool compare2(T left, T right) const = 0;
 };
 
 template <typename T>
@@ -33,24 +33,24 @@ class LessThanComparison : public IComparisonFunctor<T>
 {
 public:
   LessThanComparison() = default;
-  virtual ~LessThanComparison() = default;
+  ~LessThanComparison() override = default;
 
   LessThanComparison(const LessThanComparison&) = delete;            // Copy Constructor Not Implemented
   LessThanComparison(LessThanComparison&&) = delete;                 // Move Constructor Not Implemented
   LessThanComparison& operator=(const LessThanComparison&) = delete; // Copy Assignment Not Implemented
   LessThanComparison& operator=(LessThanComparison&&) = delete;      // Move Assignment Not Implemented
 
-  bool compare(T a, T b) const override
+  bool compare(T left, T right) const override
   {
-    return a < b;
+    return left < right;
   }
-  bool compare1(T a, T b) const override
+  bool compare1(T left, T right) const override
   {
-    return a >= b;
+    return left >= right;
   }
-  bool compare2(T a, T b) const override
+  bool compare2(T left, T right) const override
   {
-    return a > b;
+    return left > right;
   }
 };
 
@@ -65,17 +65,17 @@ public:
   GreaterThanComparison& operator=(const GreaterThanComparison&) = delete; // Copy Assignment Not Implemented
   GreaterThanComparison& operator=(GreaterThanComparison&&) = delete;      // Move Assignment Not Implemented
 
-  bool compare(T a, T b) const override
+  bool compare(T left, T right) const override
   {
-    return a > b;
+    return left > right;
   }
-  bool compare1(T a, T b) const override
+  bool compare1(T left, T right) const override
   {
-    return a <= b;
+    return left <= right;
   }
-  bool compare2(T a, T b) const override
+  bool compare2(T left, T right) const override
   {
-    return a < b;
+    return left < right;
   }
 };
 
@@ -83,33 +83,30 @@ struct ExecuteTemplate
 {
 
   template <typename T>
-  void operator()(const DataStructure& dataStructure, const ImageGeom& imageGeom, IDataArray& inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone,
-                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+  void operator()(const ImageGeom& imageGeom, IDataArray& inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
+                  const IFilter::MessageHandler& messageHandler)
   {
     using DataArrayType = DataArray<T>;
 
-    const DataArrayType& inputArray = dynamic_cast<const DataArrayType&>(inputIDataArray);
+    const auto& inputArray = dynamic_cast<const DataArrayType&>(inputIDataArray);
 
-    size_t totalPoints = inputArray.getNumberOfTuples();
+    const size_t totalPoints = inputArray.getNumberOfTuples();
 
     Vec3 udims = imageGeom.getDimensions();
-    int64_t dims[3] = {
-        static_cast<int64_t>(udims[0]),
-        static_cast<int64_t>(udims[1]),
-        static_cast<int64_t>(udims[2]),
+    std::array<int64, 3> dims = {
+        static_cast<int64>(udims[0]),
+        static_cast<int64>(udims[1]),
+        static_cast<int64>(udims[2]),
     };
 
-    bool good = true;
-    int64_t neighbor = 0;
-    int64_t column = 0, row = 0, plane = 0;
+    // bool good = true;
+    int64 neighbor = 0;
+    int64 column = 0;
+    int64 row = 0;
+    int64 plane = 0;
 
-    int64_t neighborPoints[6] = {0, 0, 0, 0, 0, 0};
-    neighborPoints[0] = static_cast<int64_t>(-dims[0] * dims[1]);
-    neighborPoints[1] = static_cast<int64_t>(-dims[0]);
-    neighborPoints[2] = static_cast<int64_t>(-1);
-    neighborPoints[3] = static_cast<int64_t>(1);
-    neighborPoints[4] = static_cast<int64_t>(dims[0]);
-    neighborPoints[5] = static_cast<int64_t>(dims[0] * dims[1]);
+    std::array<int64, 6> neighborPoints = {static_cast<int64_t>(-dims[0] * dims[1]), static_cast<int64_t>(-dims[0]), static_cast<int64_t>(-1), static_cast<int64_t>(1), static_cast<int64_t>(dims[0]),
+                                           static_cast<int64_t>(dims[0] * dims[1])};
 
     std::vector<int64_t> bestNeighbor(totalPoints, -1);
 
@@ -118,16 +115,13 @@ struct ExecuteTemplate
     bool keepGoing = true;
 
     std::shared_ptr<IComparisonFunctor<T>> comparator = std::make_shared<LessThanComparison<T>>();
-    if(comparisonAlgorithm == k_GreaterThan)
+    if(comparisonAlgorithm == k_GreaterThanIndex)
     {
       comparator = std::make_shared<GreaterThanComparison<T>>();
     }
 
     const AttributeMatrix* attrMatrix = imageGeom.getCellData();
 
-    for(const auto& [dataId, dataObject] : *attrMatrix)
-    {
-    }
     while(keepGoing)
     {
       keepGoing = false;
@@ -137,9 +131,9 @@ struct ExecuteTemplate
         break;
       }
 
-      int64_t progIncrement = static_cast<int64_t>(totalPoints / 50);
-      int64_t prog = 1;
-      int64_t progressInt = 0;
+      int64 progIncrement = static_cast<int64_t>(totalPoints / 50);
+      int64 prog = 1;
+      int64 progressInt = 0;
       for(size_t i = 0; i < totalPoints; i++)
       {
         if(comparator->compare(inputArray[i], thresholdValue))
@@ -149,50 +143,47 @@ struct ExecuteTemplate
           plane = i / (dims[0] * dims[1]);
           count++;
           best = inputArray[i];
-          for(int64_t j = 0; j < 6; j++)
+          for(int64 j = 0; j < 6; j++)
           {
-            good = true;
-            neighbor = int64_t(i) + neighborPoints[j];
+            neighbor = static_cast<int64>(i) + neighborPoints[j];
             if(j == 0 && plane == 0)
             {
-              good = false;
+              continue;
             }
             if(j == 5 && plane == (dims[2] - 1))
             {
-              good = false;
+              continue;
             }
             if(j == 1 && row == 0)
             {
-              good = false;
+              continue;
             }
             if(j == 4 && row == (dims[1] - 1))
             {
-              good = false;
+              continue;
             }
             if(j == 2 && column == 0)
             {
-              good = false;
+              continue;
             }
             if(j == 3 && column == (dims[0] - 1))
             {
-              good = false;
+              continue;
             }
-            if(good)
+
+            if(comparator->compare1(inputArray[neighbor], thresholdValue) && comparator->compare2(inputArray[neighbor], best))
             {
-              if(comparator->compare1(inputArray[neighbor], thresholdValue) && comparator->compare2(inputArray[neighbor], best))
-              {
-                best = inputArray[neighbor];
-                bestNeighbor[i] = neighbor;
-              }
+              best = inputArray[neighbor];
+              bestNeighbor[i] = neighbor;
             }
           }
         }
         if(int64_t(i) > prog)
         {
           progressInt = static_cast<int64_t>(((float)i / totalPoints) * 100.0f);
-          std::string progressMessage = fmt::format("Processing Loop({}) Progress: {}% Complete", count, progressInt);
+          const std::string progressMessage = fmt::format("Processing Loop({}) Progress: {}% Complete", count, progressInt);
           messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
-          prog = prog + progIncrement;
+          prog += progIncrement;
         }
       }
 
@@ -209,7 +200,7 @@ struct ExecuteTemplate
         if(int64_t(i) > prog)
         {
           progressInt = static_cast<int64_t>(((float)i / totalPoints) * 100.0f);
-          std::string progressMessage = fmt::format("Transferring Loop({}) Progress: {}% Complete", count, progressInt);
+          const std::string progressMessage = fmt::format("Transferring Loop({}) Progress: {}% Complete", count, progressInt);
           messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
           prog = prog + progIncrement;
         }
@@ -219,8 +210,8 @@ struct ExecuteTemplate
         {
           for(const auto& [dataId, dataObject] : *attrMatrix)
           {
-            auto& p = dynamic_cast<IDataArray&>(*dataObject);
-            p.copyTuple(neighbor, i);
+            auto& dataArray = dynamic_cast<IDataArray&>(*dataObject);
+            dataArray.copyTuple(neighbor, i);
           }
         }
       }
@@ -260,8 +251,8 @@ Result<> ReplaceElementAttributesWithNeighborValues::operator()()
   auto& srcIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
-  ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray.getDataType(), m_DataStructure, imageGeom, srcIDataArray, m_InputValues->SelectedComparison, m_InputValues->MinConfidence, m_InputValues->Loop,
-                      m_ShouldCancel, m_MessageHandler);
+  ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray.getDataType(), imageGeom, srcIDataArray, m_InputValues->SelectedComparison, m_InputValues->MinConfidence, m_InputValues->Loop, m_ShouldCancel,
+                      m_MessageHandler);
 
   return {};
 }

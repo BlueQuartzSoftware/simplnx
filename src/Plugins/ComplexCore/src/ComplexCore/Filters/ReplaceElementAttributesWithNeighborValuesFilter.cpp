@@ -52,7 +52,7 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
   params.insert(std::make_unique<Float32Parameter>(k_MinConfidence_Key, "Threshold Value", "", 0.1F));
-  params.insert(std::make_unique<ChoicesParameter>(k_SelectedComparison_Key, "Comparison Operator", "", 0, ChoicesParameter::Choices{"< [Less Than]", "> [Greater Than]"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_SelectedComparison_Key, "Comparison Operator", "", 0, ::k_OperationChoices));
   params.insert(std::make_unique<BoolParameter>(k_Loop_Key, "Loop Until Gone", "", false));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
@@ -74,12 +74,7 @@ IFilter::UniquePointer ReplaceElementAttributesWithNeighborValuesFilter::clone()
 IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                          const std::atomic_bool& shouldCancel) const
 {
-  auto pMinConfidenceValue = filterArgs.value<float32>(k_MinConfidence_Key);
-  auto pSelectedComparisonValue = filterArgs.value<ChoicesParameter::ValueType>(k_SelectedComparison_Key);
-  auto pLoopValue = filterArgs.value<bool>(k_Loop_Key);
   auto pConfidenceIndexArrayPathValue = filterArgs.value<DataPath>(k_ConfidenceIndexArrayPath_Key);
-
-  PreflightResult preflightResult;
 
   complex::Result<OutputActions> resultOutputActions;
 

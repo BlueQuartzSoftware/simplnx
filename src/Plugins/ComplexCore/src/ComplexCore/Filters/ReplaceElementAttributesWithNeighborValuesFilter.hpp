@@ -9,7 +9,8 @@ namespace complex
 {
 /**
  * @class ReplaceElementAttributesWithNeighborValuesFilter
- * @brief This filter will ....
+ * @brief This filter will replace values based on neighbor values. More information can
+ * be found in the help file located in docs/ReplaceElementAttributesWithNeighborValuesFilter.md
  */
 class COMPLEXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesFilter : public IFilter
 {
