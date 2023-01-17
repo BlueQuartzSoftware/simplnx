@@ -47,6 +47,7 @@
 #include "ComplexCore/Filters/ImportHDF5Dataset.hpp"
 #include "ComplexCore/Filters/ImportTextFilter.hpp"
 #include "ComplexCore/Filters/InitializeData.hpp"
+#include "ComplexCore/Filters/GenerateColorTableFilter.hpp"
 #include "ComplexCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 #include "ComplexCore/Filters/IterativeClosestPointFilter.hpp"
 #include "ComplexCore/Filters/LaplacianSmoothingFilter.hpp"
@@ -117,6 +118,7 @@ namespace complex
     {complex::Uuid::FromString("5d586366-6b59-566e-8de1-57aa9ae8a91c").value(), complex::FilterTraits<FindSurfaceAreaToVolumeFilter>::uuid}, // FindSurfaceAreaToVolume
     {complex::Uuid::FromString("d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb").value(), complex::FilterTraits<FindSurfaceFeatures>::uuid}, // FindSurfaceFeatures
     {complex::Uuid::FromString("68246a67-7f32-5c80-815a-bec82008d7bc").value(), complex::FilterTraits<FindVolFractionsFilter>::uuid}, // FindVolFractions
+    {complex::Uuid::FromString("0d0a6535-6565-51c5-a3fc-fbc00008606d").value(), complex::FilterTraits<GenerateColorTableFilter>::uuid}, // GenerateColorTable
     {complex::Uuid::FromString("0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a").value(), complex::FilterTraits<IdentifySample>::uuid}, // IdentifySample
     {complex::Uuid::FromString("bdb978bc-96bf-5498-972c-b509c38b8d50").value(), complex::FilterTraits<ImportCSVDataFilter>::uuid}, // ReadASCIIData
     {complex::Uuid::FromString("043cbde5-3878-5718-958f-ae75714df0df").value(), complex::FilterTraits<ImportDREAM3DFilter>::uuid}, // DataContainerReader

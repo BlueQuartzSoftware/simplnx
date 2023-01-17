@@ -157,6 +157,7 @@ set(CoreParameters
   DynamicTableParameter
   EnsembleInfoParameter
   FileSystemPathParameter
+  GenerateColorTableParameter
   GeneratedFileListParameter
   GeometrySelectionParameter
   Dream3dImportParameter
