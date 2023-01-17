@@ -1,7 +1,6 @@
 #include <memory>
 
 #include <cassert>
-#include <cstdint>
 #include <vector>
 
 #include "complex/Common/TypesUtility.hpp"

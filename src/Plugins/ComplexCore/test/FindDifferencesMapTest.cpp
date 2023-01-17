@@ -1,11 +1,9 @@
-#include <iostream>
 #include <string>
 
 #include <catch2/catch.hpp>
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/FindDifferencesMap.hpp"
 
 using namespace complex;

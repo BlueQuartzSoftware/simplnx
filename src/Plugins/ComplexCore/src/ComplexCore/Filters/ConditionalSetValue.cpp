@@ -1,6 +1,5 @@
 #include "ConditionalSetValue.hpp"
 
-#include "complex/Common/ComplexConstants.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"

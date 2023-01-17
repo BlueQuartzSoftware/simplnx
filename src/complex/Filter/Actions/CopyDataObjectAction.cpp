@@ -3,7 +3,6 @@
 #include <fmt/core.h>
 
 #include "complex/DataStructure/BaseGroup.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 
 using namespace complex;

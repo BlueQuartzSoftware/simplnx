@@ -1,7 +1,6 @@
 #include <catch2/catch.hpp>
 
 #include "ComplexCore/Filters/FindNeighbors.hpp"
-#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"

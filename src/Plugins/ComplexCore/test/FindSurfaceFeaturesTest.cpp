@@ -7,7 +7,6 @@
 #include "ComplexCore/Filters/FindSurfaceFeatures.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 using namespace complex;
 namespace fs = std::filesystem;

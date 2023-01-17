@@ -14,7 +14,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Utilities/DataGroupUtilities.hpp"
 
 namespace complex
 {

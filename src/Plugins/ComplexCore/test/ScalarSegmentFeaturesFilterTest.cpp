@@ -5,7 +5,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"

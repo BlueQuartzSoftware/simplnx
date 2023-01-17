@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 
-#include "fmt/format.h"
 #include <fmt/core.h>
 
 #include <nlohmann/json.hpp>

@@ -5,7 +5,6 @@
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/TypesUtility.hpp"
-#include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"

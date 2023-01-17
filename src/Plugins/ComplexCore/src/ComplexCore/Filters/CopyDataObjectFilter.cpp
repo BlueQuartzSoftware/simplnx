@@ -3,7 +3,6 @@
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Filter/Actions/CopyDataObjectAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"

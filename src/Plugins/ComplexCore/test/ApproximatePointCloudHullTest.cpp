@@ -1,5 +1,4 @@
 #include <filesystem>
-#include <iostream>
 #include <string>
 namespace fs = std::filesystem;
 
@@ -12,7 +11,6 @@ namespace fs = std::filesystem;
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 using namespace complex;

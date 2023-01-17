@@ -6,7 +6,6 @@
 
 #include "complex/Common/Any.hpp"
 #include "complex/DataStructure/IArray.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex

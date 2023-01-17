@@ -9,7 +9,6 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include <string>
 
@@ -17,8 +16,6 @@ using namespace complex;
 
 namespace
 {
-constexpr int32 k_EMPTY_PARAMETER = -123;
-
 FloatVec3 extractOrigin(const IGeometry& geometry)
 {
   auto geomType = geometry.getGeomType();

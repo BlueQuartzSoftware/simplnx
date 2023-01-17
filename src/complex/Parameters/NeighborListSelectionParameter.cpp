@@ -2,9 +2,7 @@
 
 #include "complex/Common/Any.hpp"
 #include "complex/Common/TypesUtility.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>

@@ -38,7 +38,6 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
-#include <cassert>
 #include <cstring>
 
 using namespace complex;

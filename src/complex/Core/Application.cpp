@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -17,7 +16,6 @@
 
 #include <fmt/core.h>
 
-#include "complex/Core/Application.hpp"
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Plugin/PluginLoader.hpp"

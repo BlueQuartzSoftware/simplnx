@@ -1,7 +1,5 @@
 #include "ComplexCore/utils/SubtractionOperator.hpp"
 
-#include <cmath>
-
 #include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;

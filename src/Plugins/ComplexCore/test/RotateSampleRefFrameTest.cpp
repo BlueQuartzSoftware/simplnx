@@ -17,7 +17,6 @@
 #include <Eigen/Dense>
 
 #include <filesystem>
-#include <stdexcept>
 #include <string>
 
 namespace fs = std::filesystem;

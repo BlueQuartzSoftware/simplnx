@@ -5,8 +5,6 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/SharedFeatureFaceFilter.hpp"
 

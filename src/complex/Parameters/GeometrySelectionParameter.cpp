@@ -9,8 +9,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include <algorithm>
-
 namespace complex
 {
 GeometrySelectionParameter::GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,

@@ -2,7 +2,6 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 
 #include <chrono>
-#include <fstream>
 #include <iomanip>
 #include <ostream>
 #include <string>

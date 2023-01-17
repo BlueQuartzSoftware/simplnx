@@ -1,7 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include <fstream>
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"

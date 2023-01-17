@@ -14,7 +14,6 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include <filesystem>
-#include <iostream>
 #include <typeinfo>
 
 #include <nlohmann/json.hpp>

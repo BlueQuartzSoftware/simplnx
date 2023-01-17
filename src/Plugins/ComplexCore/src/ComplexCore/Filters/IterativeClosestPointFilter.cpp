@@ -1,10 +1,8 @@
 #include "IterativeClosestPointFilter.hpp"
 
-#include <Eigen/Dense>
 #include <Eigen/Geometry>
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"

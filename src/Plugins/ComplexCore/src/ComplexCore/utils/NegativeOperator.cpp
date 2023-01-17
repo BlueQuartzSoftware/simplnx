@@ -1,7 +1,5 @@
 #include "ComplexCore/utils/NegativeOperator.hpp"
 
-#include <cmath>
-
 #include "ComplexCore/utils/BinaryOperator.hpp"
 #include "ComplexCore/utils/CalculatorArray.hpp"
 #include "ComplexCore/utils/LeftParenthesisItem.hpp"

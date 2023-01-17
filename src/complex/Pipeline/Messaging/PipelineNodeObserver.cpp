@@ -1,7 +1,5 @@
 #include "PipelineNodeObserver.hpp"
 
-#include <algorithm>
-
 #include "complex/Pipeline/AbstractPipelineNode.hpp"
 
 using namespace complex;

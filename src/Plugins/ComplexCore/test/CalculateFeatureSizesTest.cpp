@@ -3,7 +3,6 @@
 #include "ComplexCore/Filters/CalculateFeatureSizesFilter.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 

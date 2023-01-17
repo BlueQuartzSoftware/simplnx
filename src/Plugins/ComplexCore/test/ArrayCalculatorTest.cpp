@@ -4,7 +4,6 @@
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/CalculatorParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"

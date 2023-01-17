@@ -1,12 +1,5 @@
 #include "ComplexCore/utils/DivisionOperator.hpp"
 
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include <Eigen/Eigen>
-
-#include "ComplexCore/utils/LeftParenthesisItem.hpp"
-#include "ComplexCore/utils/RightParenthesisItem.hpp"
-
 using namespace complex;
 
 // -----------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 #include "DeleteData.hpp"
 
-#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"

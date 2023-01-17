@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
