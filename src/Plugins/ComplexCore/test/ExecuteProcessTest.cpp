@@ -23,9 +23,9 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
   Arguments args;
 
   fs::path processOutput(fmt::format("{}/ExecuteProcessUnitTestOutput.txt", unit_test::k_BuildDir));
-  std::string testCommand = fmt::format("{}/PipelineRunner_d.exe", unit_test::k_BuildDir);
+  std::string testCommand = fmt::format("{}/PipelineRunner_d", unit_test::k_BuildDir);
 #if NDEBUG // release build
-  testCommand = fmt::format("{}/PipelineRunner.exe", unit_test::k_BuildDir);
+  testCommand = fmt::format("{}/PipelineRunner", unit_test::k_BuildDir);
 #endif
 
   // Create default Parameters for the filter.
