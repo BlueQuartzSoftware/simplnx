@@ -22,47 +22,6 @@ namespace SmallIn100
 inline constexpr StringLiteral k_SmallIN100ScanData("EBSD Scan Data");
 
 //------------------------------------------------------------------------------
-inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList)
-{
-  constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
-  constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
-  INFO(fmt::format("Error creating Filter '{}'  ", k_MultiThresholdObjectsFilterHandle.getFilterName()));
-
-  auto filter = filterList.createFilter(k_MultiThresholdObjectsFilterHandle);
-  REQUIRE(nullptr != filter);
-
-  Arguments args;
-
-  ArrayThresholdSet arrayThresholdset;
-  ArrayThresholdSet::CollectionType thresholds;
-
-  std::shared_ptr<ArrayThreshold> ciThreshold = std::make_shared<ArrayThreshold>();
-  ciThreshold->setArrayPath(Constants::k_ConfidenceIndexArrayPath);
-  ciThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-  ciThreshold->setComparisonValue(0.1);
-  thresholds.push_back(ciThreshold);
-
-  std::shared_ptr<ArrayThreshold> iqThreshold = std::make_shared<ArrayThreshold>();
-  iqThreshold->setArrayPath(Constants::k_ImageQualityArrayPath);
-  iqThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-  iqThreshold->setComparisonValue(120.0);
-  thresholds.push_back(iqThreshold);
-
-  arrayThresholdset.setArrayThresholds(thresholds);
-
-  args.insertOrAssign(k_ArrayThresholds_Key, std::make_any<ArrayThresholdsParameter::ValueType>(arrayThresholdset));
-  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter->preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-  // Execute the filter and check the result
-  auto executeResult = filter->execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
-}
-
-//------------------------------------------------------------------------------
 inline void ExecuteConvertOrientations(DataStructure& dataStructure, const FilterList& filterList)
 {
   INFO(fmt::format("Error creating Filter '{}'  ", k_ConvertOrientationsFilterHandle.getFilterName()));
@@ -80,32 +39,6 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
   args.insertOrAssign(k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(2));
   args.insertOrAssign(k_InputOrientationArrayPath_Key, std::make_any<DataPath>(Constants::k_EulersArrayPath));
   args.insertOrAssign(k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_Quats));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter->preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-  // Execute the filter and check the result
-  auto executeResult = filter->execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
-}
-
-//------------------------------------------------------------------------------
-inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filterList)
-{
-  INFO(fmt::format("Error creating Filter '{}'  ", k_IdentifySampleFilterHandle.getFilterName()));
-  auto filter = filterList.createFilter(k_IdentifySampleFilterHandle);
-  REQUIRE(nullptr != filter);
-
-  // Parameter Keys
-  constexpr StringLiteral k_FillHoles_Key = "fill_holes";
-  constexpr StringLiteral k_ImageGeom_Key = "image_geometry";
-  constexpr StringLiteral k_GoodVoxels_Key = "good_voxels";
-
-  Arguments args;
-  args.insertOrAssign(k_FillHoles_Key, std::make_any<BoolParameter::ValueType>(false));
-  args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(Constants::k_DataContainerPath));
-  args.insertOrAssign(k_GoodVoxels_Key, std::make_any<ArraySelectionParameter::ValueType>(Constants::k_MaskArrayPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);

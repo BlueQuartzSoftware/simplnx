@@ -4,11 +4,6 @@
 
 namespace complex
 {
-// Make sure we can load the needed filters from the plugins
-const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-// Make sure we can instantiate the MultiThreshold Objects Filter
-const Uuid k_MultiThresholdObjectsId = *Uuid::FromString("4246245e-1011-4add-8436-0af6bed19228");
-const FilterHandle k_MultiThresholdObjectsFilterHandle(k_MultiThresholdObjectsId, k_ComplexCorePluginId);
 // Make sure we can instantiate the Import Text Filter
 const Uuid k_ImportTextFilterId = *Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4");
 const FilterHandle k_ImportTextFilterHandle(k_ImportTextFilterId, k_ComplexCorePluginId);
@@ -21,9 +16,6 @@ const FilterHandle k_RenameDataObjectFilterHandle(k_RenameDataObjectFilterId, k_
 // Make sure we can instantiate the Crop Image Geometry
 const Uuid k_CropImageGeometryFilterId = *Uuid::FromString("e6476737-4aa7-48ba-a702-3dfab82c96e2");
 const FilterHandle k_CropImageGeometryFilterHandle(k_CropImageGeometryFilterId, k_ComplexCorePluginId);
-// Make sure we can instantiate the IdentifySample
-const Uuid k_IdentifySampleFilterId = *Uuid::FromString("94d47495-5a89-4c7f-a0ee-5ff20e6bd273");
-const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_ComplexCorePluginId);
 // Make sure we can instantiate the CopyDataGroup
 const Uuid k_CopyDataGroupFilterId = *Uuid::FromString("ac8d51d8-9167-5628-a060-95a8863a76b1");
 const FilterHandle k_CopyDataGroupFilterHandle(k_CopyDataGroupFilterId, k_ComplexCorePluginId);

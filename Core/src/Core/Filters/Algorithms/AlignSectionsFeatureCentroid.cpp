@@ -56,7 +56,7 @@ std::vector<DataPath> AlignSectionsFeatureCentroid::getSelectedDataPaths() const
 }
 
 // -----------------------------------------------------------------------------
-void AlignSectionsFeatureCentroid::find_shifts(std::vector<int64_t>& xshifts, std::vector<int64_t>& yshifts)
+Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
   std::unique_ptr<MaskCompare> maskCompare = nullptr;
   try
@@ -67,8 +67,7 @@ void AlignSectionsFeatureCentroid::find_shifts(std::vector<int64_t>& xshifts, st
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
     std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->GoodVoxelsArrayPath.toString());
-    m_Result.errors().push_back({-53900, message});
-    return;
+    return MakeErrorResult(-53900, message);
   }
 
   std::ofstream outFile;
@@ -78,8 +77,7 @@ void AlignSectionsFeatureCentroid::find_shifts(std::vector<int64_t>& xshifts, st
     if(!outFile.is_open())
     {
       std::string message = fmt::format("Error creating Input Shifts File with file path {}", m_InputValues->AlignmentShiftFileName.string());
-      m_Result.errors().push_back({-53901, message});
-      return;
+      return MakeErrorResult(-53901, message);
     }
     outFile << "#"
             << "Slice_A,Slice_B,New X Shift,New Y Shift,X Shift, Y Shift, X Centroid, Y Centroid" << std::endl;
@@ -121,7 +119,7 @@ void AlignSectionsFeatureCentroid::find_shifts(std::vector<int64_t>& xshifts, st
     }
     if(getCancel())
     {
-      return;
+      return {};
     }
 
     size_t count = 0;
@@ -155,28 +153,28 @@ void AlignSectionsFeatureCentroid::find_shifts(std::vector<int64_t>& xshifts, st
     slice = (dims[2] - 1) - iter;
     if(m_InputValues->UseReferenceSlice)
     {
-      xshifts[iter] = static_cast<int64_t>((xCentroid[iter] - xCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]) / spacing[0]);
-      yshifts[iter] = static_cast<int64_t>((yCentroid[iter] - yCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]) / spacing[1]);
+      xShifts[iter] = static_cast<int64_t>((xCentroid[iter] - xCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]) / spacing[0]);
+      yShifts[iter] = static_cast<int64_t>((yCentroid[iter] - yCentroid[static_cast<size_t>(m_InputValues->ReferenceSlice)]) / spacing[1]);
     }
     else
     {
-      xshifts[iter] = xshifts[iter - 1] + static_cast<int64_t>((xCentroid[iter] - xCentroid[iter - 1]) / spacing[0]);
-      yshifts[iter] = yshifts[iter - 1] + static_cast<int64_t>((yCentroid[iter] - yCentroid[iter - 1]) / spacing[1]);
+      xShifts[iter] = xShifts[iter - 1] + static_cast<int64_t>((xCentroid[iter] - xCentroid[iter - 1]) / spacing[0]);
+      yShifts[iter] = yShifts[iter - 1] + static_cast<int64_t>((yCentroid[iter] - yCentroid[iter - 1]) / spacing[1]);
     }
 
-    if((xshifts[iter] < -sdims[0] || xshifts[iter] > sdims[0]) && !xWarning)
+    if((xShifts[iter] < -sdims[0] || xShifts[iter] > sdims[0]) && !xWarning)
     {
       std::string message = fmt::format("A shift was greater than the X dimension of the Image Geometry. "
                                         "All subsequent slices are probably wrong. Slice={}  X Dim={}  X Shift={}  sDims[0]={}",
-                                        iter, dims[0], xshifts[iter], sdims[0]);
+                                        iter, dims[0], xShifts[iter], sdims[0]);
       m_MessageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});
       xWarning = true;
     }
-    if((yshifts[iter] < -sdims[1] || yshifts[iter] > sdims[1]) && !yWarning)
+    if((yShifts[iter] < -sdims[1] || yShifts[iter] > sdims[1]) && !yWarning)
     {
       std::string message = fmt::format("A shift was greater than the Y dimension of the Image Geometry. "
                                         "All subsequent slices are probably wrong. Slice={}  Y Dim={}  Y Shift={}  sDims[1]={}",
-                                        iter, dims[1], yshifts[iter], sdims[1]);
+                                        iter, dims[1], yShifts[iter], sdims[1]);
       m_MessageHandler(complex::IFilter::Message{complex::IFilter::Message::Type::Info, message});
       yWarning = true;
     }
@@ -194,11 +192,13 @@ void AlignSectionsFeatureCentroid::find_shifts(std::vector<int64_t>& xshifts, st
     }
     if(m_InputValues->WriteAlignmentShifts)
     {
-      outFile << slice << "," << slice + 1 << "," << newxshift << "," << newyshift << "," << xshifts[iter] << "," << yshifts[iter] << "," << xCentroid[iter] << "," << yCentroid[iter] << std::endl;
+      outFile << slice << "," << slice + 1 << "," << newxshift << "," << newyshift << "," << xShifts[iter] << "," << yShifts[iter] << "," << xCentroid[iter] << "," << yCentroid[iter] << std::endl;
     }
   }
   if(m_InputValues->WriteAlignmentShifts)
   {
     outFile.close();
   }
+
+  return {};
 }

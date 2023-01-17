@@ -59,7 +59,7 @@ std::vector<DataPath> AlignSectionsMisorientation::getSelectedDataPaths() const
 }
 
 // -----------------------------------------------------------------------------
-void AlignSectionsMisorientation::find_shifts(std::vector<int64_t>& xshifts, std::vector<int64_t>& yshifts)
+Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
   std::unique_ptr<MaskCompare> maskCompare = nullptr;
   if(m_InputValues->useGoodVoxels)
@@ -72,8 +72,7 @@ void AlignSectionsMisorientation::find_shifts(std::vector<int64_t>& xshifts, std
       // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
       // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
       std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->goodVoxelsArrayPath.toString());
-      m_Result = MergeResults(MakeErrorResult(-53900, message), m_Result);
-      return;
+      return MakeErrorResult(-53900, message);
     }
   }
 
@@ -84,8 +83,7 @@ void AlignSectionsMisorientation::find_shifts(std::vector<int64_t>& xshifts, std
     if(!outFile.is_open())
     {
       std::string message = fmt::format("Error creating Input Shifts File with file path {}", m_InputValues->alignmentShiftFileName.string());
-      m_Result = MergeResults(MakeErrorResult(-53901, message), m_Result);
-      return;
+      return MakeErrorResult(-53901, message);
     }
   }
 
@@ -129,7 +127,7 @@ void AlignSectionsMisorientation::find_shifts(std::vector<int64_t>& xshifts, std
     }
     if(getCancel())
     {
-      return;
+      return {};
     }
     float minDisorientation = std::numeric_limits<float>::max();
     // Work from the largest Slice Value to the lowest Slice Value.
@@ -217,15 +215,17 @@ void AlignSectionsMisorientation::find_shifts(std::vector<int64_t>& xshifts, std
         }
       }
     }
-    xshifts[iter] = xshifts[iter - 1] + newxshift;
-    yshifts[iter] = yshifts[iter - 1] + newyshift;
+    xShifts[iter] = xShifts[iter - 1] + newxshift;
+    yShifts[iter] = yShifts[iter - 1] + newyshift;
     if(m_InputValues->writeAlignmentShifts)
     {
-      outFile << slice << "	" << slice + 1 << "	" << newxshift << "	" << newyshift << "	" << xshifts[iter] << "	" << yshifts[iter] << "\n";
+      outFile << slice << "	" << slice + 1 << "	" << newxshift << "	" << newyshift << "	" << xShifts[iter] << "	" << yShifts[iter] << "\n";
     }
   }
   if(m_InputValues->writeAlignmentShifts)
   {
     outFile.close();
   }
+
+  return {};
 }
