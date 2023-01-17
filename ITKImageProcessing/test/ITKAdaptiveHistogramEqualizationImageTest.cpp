@@ -44,8 +44,6 @@ void InitApplicationAndPlugins()
 
 DataPath ConvertColorToGrayScale(DataStructure& dataStructure, DataPath inputGeometryPath, DataPath inputDataPath)
 {
-  const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-
   const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
   const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
 
