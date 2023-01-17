@@ -73,6 +73,10 @@ Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueTy
   while(!fs::exists(checkedPath))
   {
     checkedPath = checkedPath.parent_path();
+    if(checkedPath.empty())
+    {
+      return MakeErrorResult(-9, fmt::format("Cannot find file system path '{}'", path.string()));
+    }
   }
   // We should be at the top of the tree with an existing directory.
   if(HasWriteAccess(checkedPath.string()))
@@ -242,16 +246,22 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     }
   }
 
+  auto absolutePath = path;
+  if(path.is_relative())
+  {
+    absolutePath = fs::absolute(path);
+  }
+
   switch(m_PathType)
   {
   case complex::FileSystemPathParameter::PathType::InputFile:
-    return ValidateInputFile(path);
+    return ValidateInputFile(absolutePath);
   case complex::FileSystemPathParameter::PathType::InputDir:
-    return ValidateInputDir(path);
+    return ValidateInputDir(absolutePath);
   case complex::FileSystemPathParameter::PathType::OutputFile:
-    return ValidateOutputFile(path);
+    return ValidateOutputFile(absolutePath);
   case complex::FileSystemPathParameter::PathType::OutputDir:
-    return ValidateOutputDir(path);
+    return ValidateOutputDir(absolutePath);
   }
 
   return {};
