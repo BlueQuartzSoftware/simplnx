@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 
 // fmt >= 8.0.0
 #if FMT_VERSION >= 80000
