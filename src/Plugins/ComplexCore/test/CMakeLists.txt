@@ -11,6 +11,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   PipelineTest.cpp
   
   AlignGeometriesTest.cpp
+  AlignSectionsListTest.cpp
   ApplyTransformationToGeometryFilterTest.cpp
   ApproximatePointCloudHullTest.cpp
   ArrayCalculatorTest.cpp

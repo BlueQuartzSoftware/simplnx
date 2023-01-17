@@ -8,6 +8,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
   AlignGeometries
+  AlignSectionsListFilter
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHull
   ArrayCalculatorFilter
@@ -86,6 +87,7 @@ set(ActionList
 )
 
 set(AlgorithmList
+  AlignSectionsList
   ApplyTransformationToGeometry
   ArrayCalculator
   CalculateArrayHistogram
