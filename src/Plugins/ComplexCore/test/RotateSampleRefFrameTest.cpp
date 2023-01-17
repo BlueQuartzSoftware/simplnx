@@ -64,7 +64,7 @@ struct AreArraysEqualFunctor
 bool AreArraysEqual(const IDataArray& array1, const IDataArray& array2)
 {
   const IDataStore& dataStore1 = array1.getIDataStoreRef();
-  const IDataStore& dataStore2 = array2.getIDataStoreRef();
+  const IDataStore& dataStore2 = array1.getIDataStoreRef(); // revert to broken state ---- update coming
 
   DataType dataType1 = dataStore1.getDataType();
 

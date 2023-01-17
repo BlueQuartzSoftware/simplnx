@@ -104,7 +104,7 @@ private:
 struct GenerateHistogramFunctor
 {
   template <typename ScalarT, class ParallelRunner, class... ArgsT>
-  void operator()(ParallelRunner runner, ArgsT&&... args) const
+  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
   {
     runner.template execute(GenerateHistogramFromData<ScalarT>(std::forward<ArgsT>(args)...));
   }

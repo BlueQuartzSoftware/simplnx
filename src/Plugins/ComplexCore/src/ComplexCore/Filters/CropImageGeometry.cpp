@@ -120,7 +120,7 @@ private:
 struct CropImageGeomDataArrayFunctor
 {
   template <typename ScalarT, class ParallelRunner, class... ArgsT>
-  void operator()(ParallelRunner runner, ArgsT&&... args) const
+  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
   {
     runner.template execute(CropImageGeomDataArray<ScalarT>(std::forward<ArgsT>(args)...));
   }
