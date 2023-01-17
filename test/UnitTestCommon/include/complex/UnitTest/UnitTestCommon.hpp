@@ -12,6 +12,10 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/StringArray.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/ArrayThresholdsParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
@@ -22,6 +26,7 @@
 #include <algorithm>
 
 namespace fs = std::filesystem;
+using namespace complex;
 
 #define COMPLEX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
   for(const auto& warning : result.warnings())                                                                                                                                                         \
@@ -798,4 +803,84 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
 
 } // namespace UnitTest
 
+// Make sure we can load the needed filters from the plugins
+const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+// Make sure we can instantiate the MultiThreshold Objects Filter
+const Uuid k_MultiThresholdObjectsId = *Uuid::FromString("4246245e-1011-4add-8436-0af6bed19228");
+const FilterHandle k_MultiThresholdObjectsFilterHandle(k_MultiThresholdObjectsId, k_ComplexCorePluginId);
+// Make sure we can instantiate the IdentifySample
+const Uuid k_IdentifySampleFilterId = *Uuid::FromString("94d47495-5a89-4c7f-a0ee-5ff20e6bd273");
+const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_ComplexCorePluginId);
+
 } // namespace complex
+
+namespace SmallIn100
+{
+//------------------------------------------------------------------------------
+inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList)
+{
+  constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
+  constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
+  INFO(fmt::format("Error creating Filter '{}'  ", k_MultiThresholdObjectsFilterHandle.getFilterName()));
+
+  auto filter = filterList.createFilter(k_MultiThresholdObjectsFilterHandle);
+  REQUIRE(nullptr != filter);
+
+  Arguments args;
+
+  ArrayThresholdSet arrayThresholdset;
+  ArrayThresholdSet::CollectionType thresholds;
+
+  std::shared_ptr<ArrayThreshold> ciThreshold = std::make_shared<ArrayThreshold>();
+  ciThreshold->setArrayPath(Constants::k_ConfidenceIndexArrayPath);
+  ciThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+  ciThreshold->setComparisonValue(0.1);
+  thresholds.push_back(ciThreshold);
+
+  std::shared_ptr<ArrayThreshold> iqThreshold = std::make_shared<ArrayThreshold>();
+  iqThreshold->setArrayPath(Constants::k_ImageQualityArrayPath);
+  iqThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+  iqThreshold->setComparisonValue(120.0);
+  thresholds.push_back(iqThreshold);
+
+  arrayThresholdset.setArrayThresholds(thresholds);
+
+  args.insertOrAssign(k_ArrayThresholds_Key, std::make_any<ArrayThresholdsParameter::ValueType>(arrayThresholdset));
+  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter->preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter->execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+}
+
+//------------------------------------------------------------------------------
+inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filterList)
+{
+  INFO(fmt::format("Error creating Filter '{}'  ", k_IdentifySampleFilterHandle.getFilterName()));
+  auto filter = filterList.createFilter(k_IdentifySampleFilterHandle);
+  REQUIRE(nullptr != filter);
+
+  // Parameter Keys
+  constexpr StringLiteral k_FillHoles_Key = "fill_holes";
+  constexpr StringLiteral k_ImageGeom_Key = "image_geometry";
+  constexpr StringLiteral k_GoodVoxels_Key = "good_voxels";
+
+  Arguments args;
+  args.insertOrAssign(k_FillHoles_Key, std::make_any<BoolParameter::ValueType>(false));
+  args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(Constants::k_DataContainerPath));
+  args.insertOrAssign(k_GoodVoxels_Key, std::make_any<ArraySelectionParameter::ValueType>(Constants::k_MaskArrayPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter->preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter->execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+}
+
+} // namespace SmallIn100
