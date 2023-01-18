@@ -7,7 +7,7 @@
 namespace complex
 {
 template <class ParallelRunnerT>
-struct ParallelRunner
+class ParallelRunner
 {
 public:
   explicit ParallelRunner(ParallelRunnerT& parallelRunner)
