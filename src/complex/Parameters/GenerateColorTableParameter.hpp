@@ -10,6 +10,10 @@
 
 namespace complex
 {
+/**
+ * @brief This FilterParameter represents a color preset, and works specifically
+ * with the GenerateColorTable filter. The data is held in an nlohmann::json object.
+ */
 class COMPLEX_EXPORT GenerateColorTableParameter : public ValueParameter
 {
 public:

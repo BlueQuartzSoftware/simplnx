@@ -11,7 +11,7 @@ using namespace complex;
 namespace
 {
 // -----------------------------------------------------------------------------
-usize findRightBinIndex(float32 nValue, std::vector<float32> binPoints)
+usize FindRightBinIndex(float32 nValue, std::vector<float32> binPoints)
 {
   usize min = 0;
   usize max = binPoints.size() - 1;
@@ -38,11 +38,11 @@ template <typename T>
 class GenerateColorTableImpl
 {
 public:
-  GenerateColorTableImpl(const DataArray<T>& arrayPtr, std::vector<float32> binPoints, std::vector<std::vector<float64>> controlPoints, int numControlColors, UInt8Array& colorArray)
+  GenerateColorTableImpl(const DataArray<T>& arrayPtr, const std::vector<float32>& binPoints, const std::vector<std::vector<float64>>& controlPoints, int numControlColors, UInt8Array& colorArray)
   : m_ArrayPtr(arrayPtr)
-  , m_BinPoints(std::move(binPoints))
+  , m_BinPoints(binPoints)
   , m_NumControlColors(numControlColors)
-  , m_ControlPoints(std::move(controlPoints))
+  , m_ControlPoints(controlPoints)
   , m_ColorArray(colorArray)
   , m_ArrayMin(arrayPtr[0])
   , m_ArrayMax(arrayPtr[0])
@@ -73,7 +73,7 @@ public:
       // Normalize value
       const float32 nValue = (static_cast<float32>(m_ArrayPtr[i] - m_ArrayMin)) / static_cast<float32>((m_ArrayMax - m_ArrayMin));
 
-      int rightBinIndex = findRightBinIndex(nValue, m_BinPoints);
+      int rightBinIndex = FindRightBinIndex(nValue, m_BinPoints);
 
       int leftBinIndex = rightBinIndex - 1;
       if(leftBinIndex < 0)
@@ -119,17 +119,17 @@ public:
 
 private:
   const DataArray<T>& m_ArrayPtr;
-  std::vector<float32> m_BinPoints;
+  const std::vector<float32>& m_BinPoints;
   T m_ArrayMin;
   T m_ArrayMax;
   int m_NumControlColors;
-  std::vector<std::vector<float64>> m_ControlPoints;
+  const std::vector<std::vector<float64>>& m_ControlPoints;
   UInt8Array& m_ColorArray;
 };
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void generateColorArray(const DataArray<T>& arrayPtr, const nlohmann::json& presetControlPoints, const DataPath& rgbArrayPath, DataStructure& dataStructure)
+void GenerateColorArray(const DataArray<T>& arrayPtr, const nlohmann::json& presetControlPoints, const DataPath& rgbArrayPath, DataStructure& dataStructure)
 {
   if(arrayPtr.getNumberOfTuples() <= 0)
   {
@@ -201,57 +201,57 @@ Result<> GenerateColorTable::operator()()
   {
   case DataType::int8: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<int8>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<int8>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::int16: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<Int16Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<int16>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<int16>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::int32: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<int32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<int32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::int64: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<Int64Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<int64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<int64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::uint8: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<uint8>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<uint8>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::uint16: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<UInt16Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<uint16>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<uint16>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::uint32: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<uint32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<uint32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::uint64: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<uint64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<uint64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::float32: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<float32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<float32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::float64: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<float64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<float64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   case DataType::boolean: {
     const auto& selectedDataArray = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->SelectedDataArrayPath);
-    generateColorArray<bool>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
+    GenerateColorArray<bool>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
     break;
   }
   default:

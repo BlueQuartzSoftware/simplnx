@@ -50,7 +50,7 @@ const std::string k_RainbowDesaturatedPresetName = "Rainbow Desaturated";
 const std::string k_RainbowPresetName = "rainbow";
 const std::string k_XRayPresetName = "X Ray";
 
-std::map<std::string, nlohmann::json> readPresets()
+std::map<std::string, nlohmann::json> ReadPresets()
 {
   Result<nlohmann::json> result = readRGBPresets(k_PresetsFilePath);
   COMPLEX_RESULT_REQUIRE_VALID(result);
@@ -68,11 +68,28 @@ std::map<std::string, nlohmann::json> readPresets()
 }
 } // namespace
 
+TEST_CASE("Plugins::GenerateColorTableFilter: Filter Instantiation")
+{
+  const GenerateColorTableFilter filter;
+  Arguments args;
+  DataStructure dataStructure;
+
+  args.insertOrAssign(GenerateColorTableFilter::k_SelectedPreset_Key, std::make_any<nlohmann::json>(nlohmann::json{}));
+  args.insertOrAssign(GenerateColorTableFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(GenerateColorTableFilter::k_RgbArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
+}
+
 TEST_CASE("Plugins::GenerateColorTableFilter: Valid filter execution")
 {
   DataStructure dataStructure;
 
-  std::map<std::string, nlohmann::json> presetsMap = readPresets();
+  std::map<std::string, nlohmann::json> presetsMap = ReadPresets();
 
   // Read Image File
   {
