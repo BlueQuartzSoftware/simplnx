@@ -22,7 +22,7 @@ struct COMPLEXCORE_EXPORT GenerateColorTableInputValues
 class COMPLEXCORE_EXPORT GenerateColorTable
 {
 public:
-  GenerateColorTable(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GenerateColorTableInputValues* inputValues);
+  GenerateColorTable(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, GenerateColorTableInputValues* inputValues);
   ~GenerateColorTable() noexcept;
 
   GenerateColorTable(const GenerateColorTable&) = delete;

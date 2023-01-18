@@ -50,8 +50,7 @@ Parameters GenerateColorTableFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "", ""));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array", "", DataPath{},
-                                                          complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array", "", DataPath{}, complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_RgbArrayPath_Key, "Output RGB Array", "", DataPath{}));
 
   return params;
@@ -74,7 +73,7 @@ IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStruc
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const IDataArray& dataArray = dataStructure.getDataRefAs<IDataArray>(pSelectedDataArrayPathValue);
+  const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(pSelectedDataArrayPathValue);
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, dataArray.getTupleShape(), std::vector<usize>{3}, pRgbArrayPathValue);
   resultOutputActions.value().actions.push_back(std::move(createArrayAction));
 

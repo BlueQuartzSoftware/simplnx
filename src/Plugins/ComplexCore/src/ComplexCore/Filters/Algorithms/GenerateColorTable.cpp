@@ -101,14 +101,14 @@ public:
       }
 
       // Calculate the RGB values
-      const unsigned char r = (m_ControlPoints[leftBinIndex][1] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][1] * currFraction) * 255;
-      const unsigned char g = (m_ControlPoints[leftBinIndex][2] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][2] * currFraction) * 255;
-      const unsigned char b = (m_ControlPoints[leftBinIndex][3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][3] * currFraction) * 255;
+      const unsigned char redVal = (m_ControlPoints[leftBinIndex][1] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][1] * currFraction) * 255;
+      const unsigned char greenVal = (m_ControlPoints[leftBinIndex][2] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][2] * currFraction) * 255;
+      const unsigned char blueVal = (m_ControlPoints[leftBinIndex][3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex][3] * currFraction) * 255;
 
       auto& colorArrayDS = m_ColorArray.getDataStoreRef();
-      colorArrayDS.setComponent(i, 0, r);
-      colorArrayDS.setComponent(i, 1, g);
-      colorArrayDS.setComponent(i, 2, b);
+      colorArrayDS.setComponent(i, 0, redVal);
+      colorArrayDS.setComponent(i, 1, greenVal);
+      colorArrayDS.setComponent(i, 2, blueVal);
     }
   }
 
@@ -176,11 +176,11 @@ void generateColorArray(const DataArray<T>& arrayPtr, const nlohmann::json& pres
 } // namespace
 
 // -----------------------------------------------------------------------------
-GenerateColorTable::GenerateColorTable(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, GenerateColorTableInputValues* inputValues)
+GenerateColorTable::GenerateColorTable(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, GenerateColorTableInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
+, m_MessageHandler(msgHandler)
 {
 }
 
