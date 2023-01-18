@@ -11,22 +11,7 @@ using namespace complex;
 namespace
 {
 // -----------------------------------------------------------------------------
-template <typename T>
-int findRightBinIndex(T nValue, std::vector<float32> binPoints)
-{
-  /* This is a brute-force way of finding the proper bins.
-     We will need to change this method to a binary search. */
-  int rightBinIndex = 0;
-  while(binPoints[rightBinIndex] < nValue)
-  {
-    rightBinIndex++;
-  }
-
-  return rightBinIndex;
-}
-
-// -----------------------------------------------------------------------------
-usize findRightBinIndex_Binary(float32 nValue, std::vector<float32> binPoints)
+usize findRightBinIndex(float32 nValue, std::vector<float32> binPoints)
 {
   usize min = 0;
   usize max = binPoints.size() - 1;
@@ -88,7 +73,7 @@ public:
       // Normalize value
       const float32 nValue = (static_cast<float32>(m_ArrayPtr[i] - m_ArrayMin)) / static_cast<float32>((m_ArrayMax - m_ArrayMin));
 
-      int rightBinIndex = findRightBinIndex_Binary(nValue, m_BinPoints);
+      int rightBinIndex = findRightBinIndex(nValue, m_BinPoints);
 
       int leftBinIndex = rightBinIndex - 1;
       if(leftBinIndex < 0)
@@ -144,7 +129,7 @@ private:
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void generateColorArray(const DataArray<T>& arrayPtr, const nlohmann::json& presetControlPoints, const DataPath &rgbArrayPath, DataStructure& dataStructure)
+void generateColorArray(const DataArray<T>& arrayPtr, const nlohmann::json& presetControlPoints, const DataPath& rgbArrayPath, DataStructure& dataStructure)
 {
   if(arrayPtr.getNumberOfTuples() <= 0)
   {

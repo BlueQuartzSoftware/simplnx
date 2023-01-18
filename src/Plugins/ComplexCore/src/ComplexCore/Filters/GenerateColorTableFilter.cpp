@@ -50,7 +50,8 @@ Parameters GenerateColorTableFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "", ""));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array", "", DataPath{},
+                                                          complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
   params.insert(std::make_unique<ArrayCreationParameter>(k_RgbArrayPath_Key, "Output RGB Array", "", DataPath{}));
 
   return params;
@@ -63,7 +64,8 @@ IFilter::UniquePointer GenerateColorTableFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pSelectedPresetValue = filterArgs.value<nlohmann::json>(k_SelectedPreset_Key);
   auto pSelectedDataArrayPathValue = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
@@ -80,7 +82,8 @@ IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
   GenerateColorTableInputValues inputValues;
 

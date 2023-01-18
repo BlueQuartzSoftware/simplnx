@@ -2,10 +2,10 @@
 
 #include "complex/Common/Result.hpp"
 
+#include "nlohmann/json.hpp"
 #include <fmt/format.h>
 #include <fstream>
 #include <sstream>
-#include "nlohmann/json.hpp"
 
 namespace fs = std::filesystem;
 
@@ -41,7 +41,7 @@ Result<nlohmann::json> readRGBPresets(const std::string& presetsJson)
 // Description:
 // Reads the RGB presets using the path to the presets JSON file.
 // -----------------------------------------------------------------------------
-Result<nlohmann::json> readRGBPresets(const fs::path &presetsFilePath)
+Result<nlohmann::json> readRGBPresets(const fs::path& presetsFilePath)
 {
   const std::ifstream iStream(presetsFilePath.string());
   std::stringstream buffer;

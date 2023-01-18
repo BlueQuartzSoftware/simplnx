@@ -53,7 +53,7 @@ const std::string k_XRayPresetName = "X Ray";
 std::map<std::string, nlohmann::json> readPresets()
 {
   Result<nlohmann::json> result = readRGBPresets(k_PresetsFilePath);
-  COMPLEX_RESULT_REQUIRE_VALID(result)
+  COMPLEX_RESULT_REQUIRE_VALID(result);
 
   std::map<std::string, nlohmann::json> presetsMap;
   for(const nlohmann::json& preset : result.value())

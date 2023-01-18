@@ -9,17 +9,6 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/GenerateColorTableParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  GenerateColorTableInputValues inputValues;
-
-  inputValues.SelectedPresetName = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_SelectedPresetName_Key);
-  inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-  inputValues.RgbArrayName = filterArgs.value<DataPath>(k_RgbArrayName_Key);
-
-  return GenerateColorTable(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 
@@ -29,12 +18,6 @@ struct COMPLEXCORE_EXPORT GenerateColorTableInputValues
   DataPath SelectedDataArrayPath;
   DataPath RgbArrayPath;
 };
-
-/**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
- */
 
 class COMPLEXCORE_EXPORT GenerateColorTable
 {
