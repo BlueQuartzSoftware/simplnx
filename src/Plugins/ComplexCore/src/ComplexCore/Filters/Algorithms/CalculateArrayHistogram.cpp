@@ -38,8 +38,8 @@ public:
     auto end = inputArray.getSize();
 
     // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }
-    float64 min;
-    float64 max;
+    float64 min = 0.0;
+    float64 max = 0.0;
     if(std::get<0>(m_Range))
     {
       min = std::get<1>(m_Range);
