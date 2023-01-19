@@ -50,11 +50,13 @@ Parameters GenerateColorTableFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator({"Input Parameters"});
-  params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "", ""));
+  params.insert(
+      std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select the color preset that will be used to create the color table array.", nlohmann::json{}));
   params.insertSeparator({"Required Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array", "", DataPath{}, complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array", "The data array that will be used to create the color table array.", DataPath{},
+                                                          complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator({"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_RgbArrayPath_Key, "Output RGB Array", "", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_RgbArrayPath_Key, "Output RGB Array", "The output color table array.", DataPath{}));
 
   return params;
 }
