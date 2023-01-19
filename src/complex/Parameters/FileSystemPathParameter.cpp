@@ -16,6 +16,8 @@
 #define FSPP_ACCESS_FUNC_NAME access
 #endif
 
+#include <iostream>
+
 namespace fs = std::filesystem;
 
 using namespace complex;
@@ -65,14 +67,24 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
   }
   return {};
 }
-
 //-----------------------------------------------------------------------------
 Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueType& path)
 {
+  const FileSystemPathParameter::ValueType emptyPath("");
   auto checkedPath = path;
+
+  if(!path.is_absolute() && !fs::exists(checkedPath))
+  {
+    return MakeErrorResult(-9, fmt::format("Relative Path given does not exist.\n    Relative Path:'{}'\n    Current Working Path: '{}'\n    Computed Path: '{}/{}", path.string(),
+                                           std::filesystem::current_path().string(), std::filesystem::current_path().string(), path.string()));
+  }
   while(!fs::exists(checkedPath))
   {
     checkedPath = checkedPath.parent_path();
+    if(checkedPath == emptyPath)
+    {
+      return MakeErrorResult(-10, fmt::format("Empty path encountered while trying to compute full path '{}'", path.string()));
+    }
   }
   // We should be at the top of the tree with an existing directory.
   if(HasWriteAccess(checkedPath.string()))
