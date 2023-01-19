@@ -6,8 +6,6 @@
 
 #include "complex/Common/Any.hpp"
 
-#include <type_traits>
-
 namespace complex
 {
 GenerateColorTableParameter::GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
@@ -39,7 +37,8 @@ Result<std::any> GenerateColorTableParameter::fromJson(const nlohmann::json& jso
   {
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
   }
-  return {{json}};
+
+  return {{nonstd::make_unexpected(std::make_any<nlohmann::json>(json))}};
 }
 
 IParameter::UniquePointer GenerateColorTableParameter::clone() const
