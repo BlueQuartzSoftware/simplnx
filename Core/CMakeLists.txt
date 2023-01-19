@@ -15,7 +15,6 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(FilterList
     AlignSectionsFeatureCentroidFilter
     ErodeDilateBadDataFilter
-    FillBadDataFilter
     FindNeighborhoodsFilter
     RemoveFlaggedFeaturesFilter
 )
@@ -26,7 +25,6 @@ set(FilterList
 set(AlgorithmList
   AlignSectionsFeatureCentroid
   ErodeDilateBadData
-  FillBadData
   FindNeighborhoods
   RemoveFlaggedFeatures
 )
