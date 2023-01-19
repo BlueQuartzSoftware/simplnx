@@ -48,25 +48,27 @@ struct AreArraysEqualFunctor
     const auto& dataStore2 = dynamic_cast<const AbstractDataStore<T>&>(array2);
 
     usize size = dataStore1.getSize();
-
+    bool failed = false;
     for(usize i = 0; i < size; i++)
     {
       T value1 = dataStore1[i];
       T value2 = dataStore2[i];
       if(value1 != value2)
       {
-        return false;
+        UNSCOPED_INFO(fmt::format("index: {}    value1 != value2. {} != {}", i, value1, value2));
+        failed = true;
+        break;
       }
     }
-
-    return true;
+    REQUIRE(!failed);
+    return !failed;
   }
 };
 
 bool AreArraysEqual(const IDataArray& array1, const IDataArray& array2)
 {
   const IDataStore& dataStore1 = array1.getIDataStoreRef();
-  const IDataStore& dataStore2 = array1.getIDataStoreRef();
+  const IDataStore& dataStore2 = array2.getIDataStoreRef();
 
   DataType dataType1 = dataStore1.getDataType();
   DataType dataType2 = dataStore2.getDataType();
@@ -88,6 +90,7 @@ bool AreArraysEqual(const IDataArray& array1, const IDataArray& array2)
   {
     return false;
   }
+  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", array1.getName(), array2.getName()));
 
   return ExecuteDataFunction(AreArraysEqualFunctor{}, dataType1, dataStore1, dataStore2);
 }
@@ -115,7 +118,7 @@ TEST_CASE("ComplexCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
   const DataPath k_OriginalGeomPath({"Original"});
   const DataPath k_OriginalCellArrayPath = k_OriginalGeomPath.createChildPath("CellData").createChildPath("Data");
 
-  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/RotateSampleRefFrameTest.dream3d", complex::unit_test::k_TestFilesDir)));
+  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/Rotate_Sample_Ref_Frame_Test.dream3d", complex::unit_test::k_TestFilesDir)));
   COMPLEX_RESULT_REQUIRE_VALID(dataStructureResult);
 
   DataStructure dataStructure = std::move(dataStructureResult.value());
@@ -124,6 +127,13 @@ TEST_CASE("ComplexCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
   REQUIRE(originalImageGeom != nullptr);
 
   std::vector<DataObject*> dataContainers = dataStructure.getTopLevelData();
+
+  std::map<std::string, std::vector<float>> axisAngleMapping = {
+      {"Test_1", {1.0F, 0.0F, 0.0F, 90.0F}},
+      {"Test_2", {0.0F, 1.0F, 0.0F, 90.0F}},
+      {"Test_3", {0.0F, 0.0F, 1.0F, 90.0F}},
+      {"Test_4", {0.357407F, 0.862856F, 0.357407F, 64.7368F}},
+  };
 
   for(auto* dc : dataContainers)
   {
@@ -136,7 +146,7 @@ TEST_CASE("ComplexCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
 
     REQUIRE(dc != nullptr);
 
-    std::string name = dc->getName();
+    const std::string name = dc->getName();
     if(name.find("Rotate_") != 0) // Skip the "Original" Image Geometry
     {
       continue;
@@ -149,18 +159,13 @@ TEST_CASE("ComplexCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
     const auto* expectedRotatedArray = dataStructure.getDataAs<IDataArray>(expectedRotatedCellArrayPath);
     REQUIRE(expectedRotatedArray != nullptr);
 
-    DataPath testAxisAngleGeomPath({fmt::format("{}_Test_AxisAngle", name)});
+    const DataPath testAxisAngleGeomPath({fmt::format("{}_Test_AxisAngle", name)});
     args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometry_Key, std::make_any<DataPath>(testAxisAngleGeomPath));
 
-    std::vector<std::string> parts = StringUtilities::split(name, '_');
+    const std::vector<std::string> parts = StringUtilities::split(name, '_');
     REQUIRE(parts.size() == 5);
 
-    float32 x = std::stof(parts[1]);
-    float32 y = std::stof(parts[2]);
-    float32 z = std::stof(parts[3]);
-    float32 angle = std::stof(parts[4]);
-
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>({x, y, z, angle}));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>(axisAngleMapping[name]));
 
     auto preflightAxisAngleResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightAxisAngleResult.outputActions);
@@ -179,8 +184,13 @@ TEST_CASE("ComplexCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
 
     REQUIRE(AreArraysEqual(*testAxisAngleArray, *expectedRotatedArray));
 
-    Eigen::Vector3f axis(x, y, z);
-    float32 angleRadians = angle * (numbers::pi / 180.0);
+    /* This section will convert the Axis Angle into a Rotation Matrix and send that into the
+     * filter as the RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix type
+     */
+    auto axisAngleEntry = axisAngleMapping[name];
+
+    Eigen::Vector3f axis(axisAngleEntry[0], axisAngleEntry[1], axisAngleEntry[2]);
+    float32 angleRadians = axisAngleEntry[3] * (numbers::pi / 180.0F);
     Eigen::AngleAxisf axisAngle(angleRadians, axis);
 
     Eigen::Matrix3f rotationMatrix = axisAngle.toRotationMatrix();
@@ -205,7 +215,7 @@ TEST_CASE("ComplexCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
 
     REQUIRE(AreImageGeomsEqual(*testRotationMatrixGeom, *expectedImageGeom));
 
-    DataPath testRotationMatrixArrayPath = testRotationMatrixGeomPath.createChildPath("CellData").createChildPath(k_OriginalCellArrayPath.getTargetName());
+    const DataPath testRotationMatrixArrayPath = testRotationMatrixGeomPath.createChildPath("CellData").createChildPath(k_OriginalCellArrayPath.getTargetName());
     auto* testRotationMatrixArray = dataStructure.getDataAs<IDataArray>(testRotationMatrixArrayPath);
     REQUIRE(testRotationMatrixArray != nullptr);
 
