@@ -1,11 +1,11 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/ConditionalSetValue.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ConditionalSetValue.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+
+#include <catch2/catch.hpp>
 
 #include <string>
 

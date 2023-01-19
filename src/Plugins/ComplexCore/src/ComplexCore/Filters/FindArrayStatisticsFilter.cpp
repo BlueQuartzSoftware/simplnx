@@ -1,20 +1,18 @@
 #include "FindArrayStatisticsFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/FindArrayStatistics.hpp"
+
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
-
-#include "ComplexCore/Filters/Algorithms/FindArrayStatistics.hpp"
 
 using namespace complex;
 

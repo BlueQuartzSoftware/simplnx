@@ -1,8 +1,3 @@
-#include <memory>
-#include <vector>
-
-#include <catch2/catch.hpp>
-
 #include "DataStructObserver.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
@@ -23,6 +18,13 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 
+#include <catch2/catch.hpp>
+
+#include <memory>
+#include <vector>
+
+namespace
+{
 constexpr StringLiteral k_RectGridGeo = "Rect Grid Geom";
 constexpr StringLiteral k_XBounds = "X Bounds";
 constexpr StringLiteral k_YBounds = "Y Bounds";
@@ -34,8 +36,9 @@ constexpr StringLiteral k_SharedEdges = "SharedEdges";
 constexpr StringLiteral k_SharedFaces = "SharedFaces";
 constexpr StringLiteral k_QuadGeo = "Quad Geometry";
 constexpr StringLiteral k_TetGeo = "Tet Geometry";
-constexpr StringLiteral k_SharedPloyhedrons = "SharedPolyhedronList";
+constexpr StringLiteral k_SharedPolyhedrons = "SharedPolyhedronList";
 constexpr StringLiteral k_HexGeo = "Hex Geometry";
+} // namespace
 
 DataStructure createTestDataStructure()
 {
@@ -350,7 +353,7 @@ DataStructure createTestDataStructure()
     (*vertListArray)[13] = 0.5;
     (*vertListArray)[14] = 0;
     tetGeom->setVertices(*vertListArray);
-    IGeometry::SharedEdgeList* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPloyhedrons, cellTupleShape, {4}, tetGeom->getId());
+    IGeometry::SharedEdgeList* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPolyhedrons, cellTupleShape, {4}, tetGeom->getId());
     (*polyListArray)[0] = 0;
     (*polyListArray)[1] = 1;
     (*polyListArray)[2] = 2;
@@ -421,7 +424,7 @@ DataStructure createTestDataStructure()
     (*vertListArray)[34] = -1;
     (*vertListArray)[35] = 1;
     hexGeom->setVertices(*vertListArray);
-    IGeometry::SharedEdgeList* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPloyhedrons, cellTupleShape, {8}, hexGeom->getId());
+    IGeometry::SharedEdgeList* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStruct, k_SharedPolyhedrons, cellTupleShape, {8}, hexGeom->getId());
     (*polyListArray)[0] = 6;
     (*polyListArray)[1] = 7;
     (*polyListArray)[2] = 4;
@@ -1197,8 +1200,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
     UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
 
-    const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedPloyhedrons);
-    const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedPloyhedrons);
+    const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedPolyhedrons);
+    const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedPolyhedrons);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcCellArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destCellArrayPath));
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
 
@@ -1272,8 +1275,8 @@ TEST_CASE("DataObjectsDeepCopyTest")
     REQUIRE(dataStruct.getDataAs<Float32Array>(srcVertArrayPath) != dataStruct.getDataAs<Float32Array>(destVertArrayPath));
     UnitTest::CompareArrays<float32>(dataStruct, srcVertArrayPath, destVertArrayPath);
 
-    const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedPloyhedrons);
-    const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedPloyhedrons);
+    const DataPath srcCellArrayPath = srcGeoPath.createChildPath(k_SharedPolyhedrons);
+    const DataPath destCellArrayPath = destGeoPath.createChildPath(k_SharedPolyhedrons);
     REQUIRE(dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(srcCellArrayPath) != dataStruct.getDataAs<DataArray<IGeometry::MeshIndexType>>(destCellArrayPath));
     UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStruct, srcCellArrayPath, destCellArrayPath);
 

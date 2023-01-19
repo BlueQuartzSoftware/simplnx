@@ -1,14 +1,12 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/SharedFeatureFaceFilter.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/SharedFeatureFaceFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::UnitTest;

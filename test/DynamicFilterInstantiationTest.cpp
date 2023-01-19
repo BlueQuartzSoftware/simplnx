@@ -1,10 +1,9 @@
-#include <catch2/catch.hpp>
-
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/IFilter.hpp"
-
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
+
+#include <catch2/catch.hpp>
 
 /**
  * @brief Test every currently compiled filters instantiation.

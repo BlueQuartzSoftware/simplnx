@@ -1,12 +1,12 @@
-#include <exception>
-#include <iostream>
-#include <stdexcept>
-#include <string>
+#include "PluginDir.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Filtering/AbstractFilter.hpp"
 
-#include "PluginDir.hpp"
+#include <exception>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 using namespace complex;
 

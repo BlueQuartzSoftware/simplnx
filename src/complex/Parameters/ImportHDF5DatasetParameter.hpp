@@ -30,16 +30,16 @@
 
 #pragma once
 
-#include <list>
-#include <memory>
-
-#include "nlohmann/json.hpp"
-
 #include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
+
+#include <nlohmann/json.hpp>
+
+#include <list>
+#include <memory>
 
 namespace complex
 {

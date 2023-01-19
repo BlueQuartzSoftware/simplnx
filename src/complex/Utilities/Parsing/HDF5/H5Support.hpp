@@ -1,17 +1,18 @@
 #pragma once
 
-#include <iostream>
-#include <numeric>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
 #include "complex/Common/Types.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/complex_export.hpp"
 
 #include <H5Ipublic.h>
 #include <H5Ppublic.h>
 #include <hdf5.h>
+
+#include <iostream>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #ifdef H5Support_USE_MUTEX
 #include <mutex>
@@ -21,8 +22,6 @@
 #else
 #define H5SUPPORT_MUTEX_LOCK()
 #endif
-
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
 // Defined in CMake
 // #define H5_USE_110_API

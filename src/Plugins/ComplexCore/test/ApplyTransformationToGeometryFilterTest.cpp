@@ -1,4 +1,6 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -9,9 +11,7 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include <catch2/catch.hpp>
 
 #include <cmath>
 #include <filesystem>

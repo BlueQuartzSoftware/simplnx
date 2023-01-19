@@ -1,11 +1,10 @@
 #include "DataObjectNameParameter.hpp"
 
-#include <fmt/core.h>
-
-#include <nlohmann/json.hpp>
-
 #include "complex/Common/Any.hpp"
 #include "complex/DataStructure/DataObject.hpp"
+
+#include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 namespace complex
 {

@@ -124,15 +124,8 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataPath_Key);
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
   // The parameter will have validated that the Triangle Geometry exists and is the correct type

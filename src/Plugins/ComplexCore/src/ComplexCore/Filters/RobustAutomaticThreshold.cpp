@@ -6,7 +6,6 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
 namespace fs = std::filesystem;
@@ -14,11 +13,7 @@ using namespace complex;
 
 namespace
 {
-constexpr int32 k_IncorrectOrMissingInputArray = -60;
-constexpr int32 k_IncorrectOrMissingMagnitudeArray = -61;
-constexpr int32 k_BadArrayCreationPath = -62;
 constexpr int32 k_IncorrectInputArrayType = -63;
-constexpr int32 k_MismatchedDims = -64;
 
 template <class T>
 void FindThreshold(const DataArray<T>& inputArray, const Float32Array& gradMagnitudeArray, BoolArray& maskArray)

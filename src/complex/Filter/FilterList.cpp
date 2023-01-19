@@ -1,12 +1,12 @@
 #include "FilterList.hpp"
 
-#include <memory>
-#include <stdexcept>
+#include "complex/Core/Application.hpp"
+#include "complex/Plugin/PluginLoader.hpp"
 
 #include <fmt/core.h>
 
-#include "complex/Core/Application.hpp"
-#include "complex/Plugin/PluginLoader.hpp"
+#include <memory>
+#include <stdexcept>
 
 using namespace complex;
 

@@ -1,13 +1,13 @@
 #include "DeleteDataAction.hpp"
 
-#include <fmt/core.h>
-
 #include "complex/Common/Result.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
+
+#include <fmt/core.h>
 
 using namespace complex;
 

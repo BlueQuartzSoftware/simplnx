@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 
 namespace complex
 {

@@ -1,13 +1,13 @@
 #pragma once
 
+#include "complex/Pipeline/Pipeline.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/complex_export.hpp"
+
 #include <filesystem>
 #include <memory>
 #include <string>
 #include <utility>
-
-#include "complex/Pipeline/Pipeline.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

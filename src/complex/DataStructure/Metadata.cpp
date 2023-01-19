@@ -1,7 +1,5 @@
 #include "Metadata.hpp"
 
-#include <exception>
-
 using namespace complex;
 
 namespace complex

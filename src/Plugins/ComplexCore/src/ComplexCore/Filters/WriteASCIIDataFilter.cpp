@@ -13,7 +13,6 @@
 #include <fstream>
 
 namespace fs = std::filesystem;
-
 using namespace complex;
 
 namespace
@@ -129,8 +128,8 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
                                            const std::atomic_bool& shouldCancel) const
 {
   const auto includes = static_cast<WriteASCIIDataFilter::Includes>(filterArgs.value<ChoicesParameter::ValueType>(k_Includes_Key));
-  bool includeHeaders = false;
-  bool includeIndex = false;
+  bool includeHeaders;
+  bool includeIndex;
   switch(includes)
   {
   case WriteASCIIDataFilter::Includes::Neither: // 0

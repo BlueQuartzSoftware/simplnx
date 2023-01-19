@@ -7,8 +7,9 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
-#include <cmath>
 #include <fmt/format.h>
+
+#include <cmath>
 
 using namespace complex;
 

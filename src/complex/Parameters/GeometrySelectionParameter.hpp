@@ -1,12 +1,12 @@
 #pragma once
 
-#include <set>
-#include <string>
-
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/complex_export.hpp"
+
+#include <set>
+#include <string>
 
 namespace complex
 {

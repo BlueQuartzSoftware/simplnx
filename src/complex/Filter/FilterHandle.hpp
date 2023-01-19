@@ -1,11 +1,11 @@
 #pragma once
 
-#include <functional>
-#include <string>
-
 #include "complex/Common/Uuid.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/complex_export.hpp"
+
+#include <functional>
+#include <string>
 
 namespace complex
 {

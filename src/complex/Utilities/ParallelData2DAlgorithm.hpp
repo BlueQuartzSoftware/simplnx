@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-
 #include "complex/Common/Range2D.hpp"
 #include "complex/complex_export.hpp"
 

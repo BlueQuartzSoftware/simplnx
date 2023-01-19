@@ -1,9 +1,7 @@
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
-
 #include "complex/unit_test/complex_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
-
 #include <fmt/core.h>
 
 using namespace complex;

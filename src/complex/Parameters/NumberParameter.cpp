@@ -1,7 +1,6 @@
 #include "NumberParameter.hpp"
 
 #include <fmt/core.h>
-
 #include <nlohmann/json.hpp>
 
 namespace complex

@@ -1,10 +1,8 @@
 #include "IterativeClosestPointFilter.hpp"
 
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
+#include "ComplexCore/utils/nanoflann.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -12,7 +10,7 @@
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
-#include "ComplexCore/utils/nanoflann.hpp"
+#include <Eigen/Geometry>
 
 namespace complex
 {

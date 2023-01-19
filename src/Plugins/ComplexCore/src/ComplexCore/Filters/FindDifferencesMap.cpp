@@ -1,20 +1,19 @@
 #include "FindDifferencesMap.hpp"
 
-#include <optional>
-#include <vector>
-
 #include "complex/DataStructure/AbstractDataStore.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 
+#include <optional>
+#include <vector>
+
 namespace complex
 {
 namespace
 {
 constexpr int32 k_MissingInputArray = -567;
-constexpr int32 k_InputArrayTypeError = -90000;
 constexpr int32 k_ComponentCountMismatchError = -90003;
 constexpr int32 k_TupleCountMismatchError = -90004;
 

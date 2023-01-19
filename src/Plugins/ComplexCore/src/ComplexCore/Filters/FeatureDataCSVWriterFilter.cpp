@@ -3,7 +3,6 @@
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
@@ -118,7 +117,7 @@ Result<> FeatureDataCSVWriterFilter::executeImpl(DataStructure& dataStructure, c
     }
   }
 
-  // load list of datapaths
+  // load list of DataPaths
   std::vector<DataObject::Type> dataTypesToExtract;
   if(filterArgs.value<bool>(k_WriteNeighborListData_Key))
   {

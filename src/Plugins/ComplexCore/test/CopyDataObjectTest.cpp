@@ -1,11 +1,10 @@
-#include <catch2/catch.hpp>
-
-#include "ComplexCore/Filters/CopyDataObjectFilter.hpp"
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/CopyDataObjectFilter.hpp"
 
 #include "complex/Parameters/MultiPathSelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

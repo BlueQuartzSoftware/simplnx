@@ -1,13 +1,13 @@
 #pragma once
 
-#include <any>
-#include <string>
-#include <vector>
-
 #include "complex/Common/Array.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/complex_export.hpp"
+
+#include <any>
+#include <string>
+#include <vector>
 
 namespace complex
 {

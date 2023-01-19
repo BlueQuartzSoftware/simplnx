@@ -1,11 +1,11 @@
 #include "H5GroupReader.hpp"
 
-#include <iostream>
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <H5Gpublic.h>
 #include <H5Opublic.h>
 
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+#include <iostream>
 
 using namespace complex;
 

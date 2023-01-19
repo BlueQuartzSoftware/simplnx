@@ -2,12 +2,11 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/complex_export.hpp"
 
 #include <cstdint>
 #include <string>
 #include <string_view>
-
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

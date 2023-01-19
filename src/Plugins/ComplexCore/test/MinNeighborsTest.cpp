@@ -1,19 +1,18 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/MinNeighbors.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/FindNeighbors.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/FindNeighbors.hpp"
-#include "ComplexCore/Filters/MinNeighbors.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <random>
 #include <string>
 
 namespace fs = std::filesystem;
-
 using namespace complex;
 using namespace complex::Constants;
 

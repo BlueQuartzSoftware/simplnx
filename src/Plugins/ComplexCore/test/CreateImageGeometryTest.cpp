@@ -1,33 +1,10 @@
-/**
- * This file is auto generated from the original Core/CreateImageGeometry
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[CreateImageGeometry][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/CreateImageGeometry.hpp"
 
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include "ComplexCore/Filters/CreateImageGeometry.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::Constants;
@@ -92,13 +69,3 @@ TEST_CASE("ComplexCore::CreateImageGeometry", "[ComplexCore]")
   REQUIRE(err >= 0);
 #endif
 }
-
-// TEST_CASE("Core::CreateImageGeometry: Valid filter execution")
-//{
-//
-//}
-
-// TEST_CASE("Core::CreateImageGeometry: InValid filter execution")
-//{
-//
-//}

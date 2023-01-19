@@ -1,13 +1,12 @@
-#include <catch2/catch.hpp>
-
-#include <string>
-
 #include "ComplexCore/Filters/ExtractInternalSurfacesFromTriangleGeometry.hpp"
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
+
+#include <string>
 
 using namespace complex;
 

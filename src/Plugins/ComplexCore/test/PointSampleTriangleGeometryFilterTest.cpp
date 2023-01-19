@@ -1,27 +1,23 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/PointSampleTriangleGeometryFilter.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"
+#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"
-#include "ComplexCore/Filters/PointSampleTriangleGeometryFilter.hpp"
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <limits>
 
 namespace fs = std::filesystem;
-
 using namespace complex;
 using namespace complex::Constants;
 

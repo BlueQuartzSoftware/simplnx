@@ -9,7 +9,6 @@
 #include "complex/DataStructure/Messaging/DataRemovedMessage.hpp"
 #include "complex/DataStructure/Messaging/DataReparentedMessage.hpp"
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
-#include "complex/Filter/DataParameter.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
@@ -17,10 +16,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
+#include <fmt/core.h>
+
 #include <numeric>
 #include <stdexcept>
-
-#include <fmt/core.h>
 
 namespace
 {

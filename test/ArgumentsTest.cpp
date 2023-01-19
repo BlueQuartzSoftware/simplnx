@@ -1,9 +1,9 @@
-#include <string>
+#include <complex/Common/StringLiteral.hpp>
+#include <complex/Filter/Arguments.hpp>
 
 #include <catch2/catch.hpp>
 
-#include <complex/Common/StringLiteral.hpp>
-#include <complex/Filter/Arguments.hpp>
+#include <string>
 
 using namespace complex;
 

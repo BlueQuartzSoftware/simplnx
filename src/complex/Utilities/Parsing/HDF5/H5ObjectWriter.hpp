@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeWriter.hpp"
 #include "complex/complex_export.hpp"
+
+#include <string>
 
 namespace complex
 {

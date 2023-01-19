@@ -1,12 +1,11 @@
-#include <iostream>
-#include <string>
-
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/FindNeighborListStatistics.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/FindNeighborListStatistics.hpp"
+#include <catch2/catch.hpp>
+
+#include <string>
 
 using namespace complex;
 using namespace complex::Constants;

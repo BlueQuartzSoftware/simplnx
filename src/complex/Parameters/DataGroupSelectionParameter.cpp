@@ -1,13 +1,11 @@
 #include "DataGroupSelectionParameter.hpp"
 
+#include "complex/Common/Any.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
-
 #include <nlohmann/json.hpp>
-
-#include "complex/Common/Any.hpp"
 
 namespace complex
 {

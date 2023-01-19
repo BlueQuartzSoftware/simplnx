@@ -1,4 +1,3 @@
-
 #include "LinkedGeometryData.hpp"
 
 using namespace complex;

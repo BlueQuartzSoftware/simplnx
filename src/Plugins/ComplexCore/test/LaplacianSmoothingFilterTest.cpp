@@ -1,22 +1,20 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/LaplacianSmoothingFilter.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/LaplacianSmoothingFilter.hpp"
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <string>
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
@@ -117,13 +115,3 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
   herr_t err = dataStructure.writeHdf5(fileWriter);
   REQUIRE(err >= 0);
 }
-
-// TEST_CASE("SurfaceMeshing::LaplacianSmoothingFilter: Valid filter execution")
-//{
-//
-//}
-
-// TEST_CASE("SurfaceMeshing::LaplacianSmoothingFilter: InValid filter execution")
-//{
-//
-//}

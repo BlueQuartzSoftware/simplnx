@@ -1,7 +1,7 @@
-#include <catch2/catch.hpp>
-
-#include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Uuid.hpp"
+#include "complex/Common/StringLiteral.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

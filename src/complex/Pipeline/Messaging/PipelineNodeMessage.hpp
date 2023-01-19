@@ -1,9 +1,9 @@
 #pragma once
 
+#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
+
 #include <memory>
 #include <string>
-
-#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
 namespace complex
 {

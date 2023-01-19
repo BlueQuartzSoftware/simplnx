@@ -1,10 +1,9 @@
 #include "RenameDataAction.hpp"
 
-#include <fmt/core.h>
-
-#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+
+#include <fmt/core.h>
 
 using namespace complex;
 

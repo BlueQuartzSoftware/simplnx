@@ -1,12 +1,12 @@
 #pragma once
 
-#include <vector>
-
 #include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Pipeline/AbstractPipelineNode.hpp"
 #include "complex/Pipeline/Messaging/PipelineNodeObserver.hpp"
+
+#include <vector>
 
 namespace complex
 {

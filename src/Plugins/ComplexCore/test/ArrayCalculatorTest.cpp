@@ -1,18 +1,17 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
+#include "ComplexCore/utils/CalculatorItem.hpp"
 
 #include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/CalculatorParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
-#include "ComplexCore/utils/CalculatorItem.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

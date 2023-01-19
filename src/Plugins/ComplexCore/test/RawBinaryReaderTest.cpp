@@ -15,9 +15,6 @@
  * possibilty that we can not write the data or read the data from the file in one
  * step in the filter
  */
-
-#include <catch2/catch.hpp>
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
 
@@ -29,8 +26,9 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <fstream>

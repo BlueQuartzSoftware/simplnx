@@ -1,11 +1,9 @@
 #pragma once
 
-#include <vector>
+#include "TestTwo/TestTwo_export.hpp"
 
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
-
-#include "TestTwo/TestTwo_export.hpp"
 
 class TESTTWO_EXPORT TestTwoPlugin : public complex::AbstractPlugin
 {

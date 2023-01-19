@@ -1,5 +1,3 @@
-#include <catch2/catch.hpp>
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Core/Application.hpp"
@@ -17,6 +15,8 @@
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <mutex>

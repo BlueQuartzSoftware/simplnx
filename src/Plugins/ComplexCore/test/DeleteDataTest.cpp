@@ -1,19 +1,16 @@
-#include <catch2/catch.hpp>
-
-#include "complex/Common/TypeTraits.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/unit_test/complex_test_dirs.hpp"
-
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
 #include "ComplexCore/Filters/DeleteData.hpp"
 
-using namespace complex;
-using namespace complex::Constants;
+#include "complex/Common/TypeTraits.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/VectorParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/unit_test/complex_test_dirs.hpp"
+
+#include <catch2/catch.hpp>
 
 namespace fs = std::filesystem;
+using namespace complex;
+using namespace complex::Constants;
 
 namespace CreateImageGeometryUnitTest
 {

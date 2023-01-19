@@ -1,13 +1,13 @@
-#include <catch2/catch.hpp>
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CropImageGeometry.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

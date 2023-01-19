@@ -2,7 +2,6 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
-
 #include <nlohmann/json.hpp>
 
 namespace fmt

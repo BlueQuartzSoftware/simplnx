@@ -1,14 +1,11 @@
 #include "DynamicTableParameter.hpp"
 
-#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Common/Any.hpp"
 
 #include <fmt/core.h>
-
 #include <nlohmann/json.hpp>
 
 #include <stdexcept>
-
-#include "complex/Common/Any.hpp"
 
 namespace complex
 {

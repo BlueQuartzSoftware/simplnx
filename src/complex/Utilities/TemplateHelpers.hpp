@@ -1,10 +1,10 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include "complex/Common/ComplexConstants.hpp"
 #include "complex/DataStructure/DataObject.hpp"
+
+#include <memory>
+#include <vector>
 
 #define VALIDATE_NUMERIC_TYPE(input_data, replace_value, result)                                                                                                                                       \
   if(TemplateHelpers::CanDynamicCast<Float32Array>()(input_data))                                                                                                                                      \

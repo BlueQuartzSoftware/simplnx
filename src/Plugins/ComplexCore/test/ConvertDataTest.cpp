@@ -1,19 +1,18 @@
-#include <memory>
-
-#include <cassert>
-#include <cstdint>
-#include <vector>
+#include "ComplexCore/Filters/Algorithms/ConvertData.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ConvertDataFilter.hpp"
 
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/Algorithms/ConvertData.hpp"
-#include "ComplexCore/Filters/ConvertDataFilter.hpp"
+#include <catch2/catch.hpp>
+
+#include <cassert>
+#include <memory>
+#include <vector>
 
 using namespace complex;
 

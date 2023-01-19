@@ -1,10 +1,10 @@
 #pragma once
 
+#include "complex/DataStructure/DataStructure.hpp"
+
 #include <filesystem>
 #include <map>
 #include <memory>
-
-#include "complex/DataStructure/DataStructure.hpp"
 
 namespace complex
 {

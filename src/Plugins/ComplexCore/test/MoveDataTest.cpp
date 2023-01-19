@@ -1,9 +1,9 @@
-#include <catch2/catch.hpp>
-
 #include "ComplexCore/Filters/MoveData.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 #include <set>
 

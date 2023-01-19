@@ -1,13 +1,13 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include <nonstd/span.hpp>
-
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+
+#include <nonstd/span.hpp>
+
+#include <memory>
+#include <vector>
 
 namespace complex
 {

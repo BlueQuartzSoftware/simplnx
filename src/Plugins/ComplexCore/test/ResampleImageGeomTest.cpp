@@ -1,14 +1,12 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ResampleImageGeomFilter.hpp"
 
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ResampleImageGeomFilter.hpp"
-
-// #include "complex_plugins/Utilities/TestUtilities.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 

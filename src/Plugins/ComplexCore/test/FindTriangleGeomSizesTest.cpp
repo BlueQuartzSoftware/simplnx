@@ -1,15 +1,12 @@
-#include <catch2/catch.hpp>
-
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/FindTriangleGeomSizesFilter.hpp"
+
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::UnitTest;

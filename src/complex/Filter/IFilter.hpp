@@ -1,13 +1,5 @@
 #pragma once
 
-#include <atomic>
-#include <functional>
-#include <optional>
-#include <string>
-#include <vector>
-
-#include <nonstd/expected.hpp>
-
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Uuid.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -15,6 +7,14 @@
 #include "complex/Filter/Output.hpp"
 #include "complex/Filter/Parameters.hpp"
 #include "complex/complex_export.hpp"
+
+#include <nonstd/expected.hpp>
+
+#include <atomic>
+#include <functional>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace complex
 {

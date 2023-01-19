@@ -1,8 +1,5 @@
 #include "RemoveMinimumSizeFeaturesFilter.hpp"
 
-#include <algorithm>
-#include <vector>
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
@@ -11,6 +8,9 @@
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+
+#include <algorithm>
+#include <vector>
 
 namespace complex
 {

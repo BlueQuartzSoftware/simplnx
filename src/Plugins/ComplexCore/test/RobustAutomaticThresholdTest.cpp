@@ -1,11 +1,11 @@
 
-#include <string>
-
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/RobustAutomaticThreshold.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/Filters/RobustAutomaticThreshold.hpp"
+#include <catch2/catch.hpp>
+
+#include <string>
 
 using namespace complex;
 using namespace complex::Constants;

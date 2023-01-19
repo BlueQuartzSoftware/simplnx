@@ -1,10 +1,10 @@
 #include "DataGroup.hpp"
 
-#include <exception>
-#include <stdexcept>
-
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+
+#include <exception>
+#include <stdexcept>
 
 using namespace complex;
 

@@ -3,7 +3,6 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
@@ -12,8 +11,6 @@
 namespace
 {
 constexpr complex::int32 k_NoExportPathError = -1;
-constexpr complex::int32 k_NoParentPathError = -2;
-constexpr complex::int32 k_FailedFileWriterError = -14;
 constexpr complex::int32 k_FailedFindPipelineError = -15;
 } // namespace
 

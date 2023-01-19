@@ -1,7 +1,5 @@
 #include "ImportDREAM3DFilter.hpp"
 
-#include "nlohmann/json.hpp"
-
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/Actions/ImportH5ObjectPathsAction.hpp"
@@ -11,12 +9,13 @@
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 
+#include <nlohmann/json.hpp>
+
 namespace
 {
 constexpr complex::StringLiteral k_ImportedPipeline = "Imported Pipeline";
 constexpr complex::int32 k_NoImportPathError = -1;
 constexpr complex::int32 k_FailedOpenFileReaderError = -25;
-constexpr complex::int32 k_NoSelectedPaths = -26;
 } // namespace
 
 namespace complex

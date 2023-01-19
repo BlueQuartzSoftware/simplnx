@@ -6,14 +6,11 @@
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Filter/Actions/RenameDataAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include <fstream>
 
 using namespace complex;
 

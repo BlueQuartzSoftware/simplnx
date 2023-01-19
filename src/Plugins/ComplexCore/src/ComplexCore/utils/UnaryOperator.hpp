@@ -1,11 +1,10 @@
 #pragma once
 
+#include "ComplexCore/utils/CalculatorOperator.hpp"
+#include "complex/DataStructure/DataPath.hpp"
+
 #include <memory>
 #include <stack>
-
-#include "ComplexCore/utils/CalculatorOperator.hpp"
-
-#include "complex/DataStructure/DataPath.hpp"
 
 namespace complex
 {

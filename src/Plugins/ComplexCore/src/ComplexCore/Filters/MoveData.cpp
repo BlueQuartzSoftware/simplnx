@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Filter/Actions/MoveDataAction.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 
 namespace complex

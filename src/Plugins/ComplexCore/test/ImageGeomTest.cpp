@@ -1,7 +1,7 @@
-#include <catch2/catch.hpp>
-
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Arguments.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 
