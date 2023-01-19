@@ -63,6 +63,7 @@ set(FilterList
   MinNeighbors
   MoveData
   MultiThresholdObjects
+  PartitionGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RawBinaryReaderFilter
@@ -95,6 +96,7 @@ set(AlgorithmList
   CombineAttributeArrays
   ConvertColorToGrayScale
   ConvertData
+  PartitionGeometry
   ExtractComponentAsArray
   ExtractVertexGeometry
   FillBadData

@@ -315,6 +315,49 @@ SizeVec3 RectGridGeom::getDimensions() const
   return m_Dimensions;
 }
 
+std::optional<FloatVec3> RectGridGeom::getOrigin() const
+{
+  const Float32Array* xBounds = getXBounds();
+  const Float32Array* yBounds = getYBounds();
+  const Float32Array* zBounds = getZBounds();
+
+  if(xBounds == nullptr)
+  {
+    return {};
+  }
+
+  if(yBounds == nullptr)
+  {
+    return {};
+  }
+
+  if(zBounds == nullptr)
+  {
+    return {};
+  }
+
+  if(xBounds->getSize() == 0)
+  {
+    return {};
+  }
+
+  if(yBounds->getSize() == 0)
+  {
+    return {};
+  }
+
+  if(zBounds->getSize() == 0)
+  {
+    return {};
+  }
+
+  FloatVec3 origin = {0.0f, 0.0f, 0.0f};
+  origin.setX(xBounds->at(0));
+  origin.setY(yBounds->at(0));
+  origin.setZ(zBounds->at(0));
+  return origin;
+}
+
 usize RectGridGeom::getNumXCells() const
 {
   return m_Dimensions.getX();
