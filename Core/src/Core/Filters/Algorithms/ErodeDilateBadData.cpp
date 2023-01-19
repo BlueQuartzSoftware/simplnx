@@ -237,11 +237,12 @@ Result<> ErodeDilateBadData::operator()()
     // Build up a list of the DataArrays that we are going to operate on.
     std::vector<std::shared_ptr<IDataArray>> voxelArrays = complex::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
-    ParallelTaskAlgorithm parallelTask;
+    ParallelTaskAlgorithm taskRunner;
     for(const auto& voxelArray : voxelArrays)
     {
-      parallelTask.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, m_FeatureIds, m_Neighbors, voxelArray));
+      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, m_FeatureIds, m_Neighbors, voxelArray));
     }
+    taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   }
 
   return {};

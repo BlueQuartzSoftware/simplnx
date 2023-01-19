@@ -57,7 +57,7 @@ std::vector<DataPath> AlignSectionsFeatureCentroid::getSelectedDataPaths() const
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
-  std::unique_ptr<MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompare> maskCompare;
   try
   {
     maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->GoodVoxelsArrayPath);

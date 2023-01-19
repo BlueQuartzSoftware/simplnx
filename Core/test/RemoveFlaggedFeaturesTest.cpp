@@ -81,7 +81,7 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Test Algorithm", "[Core][RemoveFlaggedFe
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  Int32Array& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
   REQUIRE(featureIdsResult[0] == 0);
   REQUIRE(featureIdsResult[1] == 1);
   REQUIRE(featureIdsResult[2] == 1);
@@ -99,10 +99,10 @@ TEST_CASE("Core::RemoveFlaggedFeatures: Test Algorithm", "[Core][RemoveFlaggedFe
   REQUIRE(featureIdsResult[14] == 0);
   REQUIRE(featureIdsResult[15] == 0);
 
-  AttributeMatrix& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData}));
+  auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData}));
   REQUIRE(cellFeatureAMResult.getNumTuples() == 3);
 
-  Int32Array& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData, Constants::k_Int32DataSet}));
+  auto& testArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({Constants::k_DataContainer, Constants::k_CellFeatureData, Constants::k_Int32DataSet}));
   REQUIRE(testArrayResult[0] == 0);
   REQUIRE(testArrayResult[1] == 4041);
   REQUIRE(testArrayResult[2] == 10128);

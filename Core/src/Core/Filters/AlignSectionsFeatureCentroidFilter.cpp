@@ -99,7 +99,6 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 {
   auto pWriteAlignmentShifts = filterArgs.value<bool>(k_WriteAlignmentShifts_Key);
   auto pAlignmentShiftFileName = filterArgs.value<FileSystemPathParameter::ValueType>(k_AlignmentShiftFileName_Key);
-  auto pUseReferenceSliceValue = filterArgs.value<bool>(k_UseReferenceSlice_Key);
   auto pReferenceSliceValue = filterArgs.value<int32>(k_ReferenceSlice_Key);
   auto pGoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
   auto inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
