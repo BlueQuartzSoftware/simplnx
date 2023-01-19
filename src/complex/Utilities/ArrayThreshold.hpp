@@ -1,15 +1,16 @@
 #pragma once
 
-#include <memory>
-#include <set>
-#include <vector>
-
-#include "nlohmann/json.hpp"
-
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/complex_export.hpp"
+
+#include <nlohmann/json.hpp>
+
+#include <memory>
+#include <set>
+#include <vector>
+
 
 namespace complex
 {

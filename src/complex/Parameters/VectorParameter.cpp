@@ -1,11 +1,10 @@
 #include "VectorParameter.hpp"
 
-#include <fmt/core.h>
-
-#include <nlohmann/json.hpp>
-
 #include "complex/Common/Any.hpp"
 #include "complex/Common/TypeTraits.hpp"
+
+#include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 namespace complex
 {

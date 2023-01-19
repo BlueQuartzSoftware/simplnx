@@ -1,10 +1,10 @@
-#include <catch2/catch.hpp>
-
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CalculateFeatureSizesFilter.hpp"
 #include "ComplexCore/Filters/RawBinaryReaderFilter.hpp"
+
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 namespace fs = std::filesystem;

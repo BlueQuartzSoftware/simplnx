@@ -1,5 +1,7 @@
 #include "ApplyTransformationToGeometryFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/ApplyTransformationToGeometry.hpp"
+
 #include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -8,8 +10,6 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
-
-#include "ComplexCore/Filters/Algorithms/ApplyTransformationToGeometry.hpp"
 
 using namespace complex;
 

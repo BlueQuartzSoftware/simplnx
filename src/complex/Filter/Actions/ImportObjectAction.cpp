@@ -1,9 +1,9 @@
 #include "ImportObjectAction.hpp"
 
-#include <fmt/core.h>
-
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+
+#include <fmt/core.h>
 
 using namespace complex;
 

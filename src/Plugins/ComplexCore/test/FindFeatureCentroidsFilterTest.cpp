@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/FindFeatureCentroidsFilter.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -6,12 +7,11 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/FindFeatureCentroidsFilter.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::UnitTest;
 using namespace complex::Constants;

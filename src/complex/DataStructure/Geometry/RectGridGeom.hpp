@@ -2,7 +2,6 @@
 
 #include "complex/Common/Point3D.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
-
 #include "complex/complex_export.hpp"
 
 namespace complex

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "ComplexCore/ComplexCore_export.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "ComplexCore/ComplexCore_export.hpp"
 
 namespace complex
 {

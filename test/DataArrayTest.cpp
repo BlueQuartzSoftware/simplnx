@@ -1,13 +1,13 @@
-#include <memory>
-#include <vector>
-
-#include <catch2/catch.hpp>
-
-#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+
+#include <catch2/catch.hpp>
+
+#include <memory>
+#include <vector>
 
 using namespace complex;
 

@@ -1,8 +1,5 @@
 #include "AttributeMatrix.hpp"
 
-#include <exception>
-#include <stdexcept>
-
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/IArray.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
@@ -10,6 +7,9 @@
 #include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+
+#include <exception>
+#include <stdexcept>
 
 using namespace complex;
 

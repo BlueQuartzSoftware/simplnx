@@ -1,16 +1,14 @@
 #include "GeneratedFileListParameter.hpp"
 
+#include "complex/Common/Any.hpp"
 #include "complex/Common/StringLiteral.hpp"
+#include "complex/Common/TypeTraits.hpp"
+
+#include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 #include <filesystem>
 #include <type_traits>
-
-#include <fmt/core.h>
-
-#include <nlohmann/json.hpp>
-
-#include "complex/Common/Any.hpp"
-#include "complex/Common/TypeTraits.hpp"
 
 namespace fs = std::filesystem;
 

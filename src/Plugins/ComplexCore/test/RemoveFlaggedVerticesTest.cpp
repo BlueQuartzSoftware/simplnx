@@ -1,11 +1,11 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/RemoveFlaggedVertices.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/RemoveFlaggedVertices.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

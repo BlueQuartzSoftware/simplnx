@@ -30,14 +30,14 @@
 
 #pragma once
 
-#include <optional>
-
-#include "nlohmann/json.hpp"
-
 #include "complex/Common/Result.hpp"
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
+
+#include <nlohmann/json.hpp>
+
+#include <optional>
 
 namespace complex
 {

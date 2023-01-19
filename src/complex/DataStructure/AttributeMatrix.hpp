@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
-
 #include "complex/complex_export.hpp"
 
 namespace complex

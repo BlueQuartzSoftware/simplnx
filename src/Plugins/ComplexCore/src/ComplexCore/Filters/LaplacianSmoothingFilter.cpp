@@ -1,13 +1,13 @@
 #include "LaplacianSmoothingFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/LaplacianSmoothing.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/LaplacianSmoothing.hpp"
 
 using namespace complex;
 

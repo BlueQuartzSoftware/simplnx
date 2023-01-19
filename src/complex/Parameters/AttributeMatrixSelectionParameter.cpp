@@ -1,12 +1,10 @@
 #include "AttributeMatrixSelectionParameter.hpp"
 
+#include "complex/Common/Any.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 
 #include <fmt/core.h>
-
 #include <nlohmann/json.hpp>
-
-#include "complex/Common/Any.hpp"
 
 namespace complex
 {

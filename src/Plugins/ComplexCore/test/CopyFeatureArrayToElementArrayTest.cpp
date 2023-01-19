@@ -1,11 +1,11 @@
-#include <catch2/catch.hpp>
-
 #include "ComplexCore/Filters/CopyFeatureArrayToElementArray.hpp"
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-
 #include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

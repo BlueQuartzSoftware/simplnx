@@ -1,5 +1,4 @@
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
-
 #include "complex/DataStructure/DataStructure.hpp"
 
 using namespace complex;

@@ -1,5 +1,7 @@
 #include "PointSampleTriangleGeometryFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/PointSampleTriangleGeometry.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
@@ -10,8 +12,6 @@
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/PointSampleTriangleGeometry.hpp"
 
 using namespace complex;
 

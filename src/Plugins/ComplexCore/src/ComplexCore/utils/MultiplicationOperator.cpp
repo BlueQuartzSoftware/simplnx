@@ -1,5 +1,4 @@
 #include "ComplexCore/utils/MultiplicationOperator.hpp"
-
 #include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;

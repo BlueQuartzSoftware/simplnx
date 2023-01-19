@@ -1,8 +1,8 @@
 #include "UpdateImageGeomAction.hpp"
 
-#include <fmt/core.h>
-
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+
+#include <fmt/core.h>
 
 using namespace complex;
 

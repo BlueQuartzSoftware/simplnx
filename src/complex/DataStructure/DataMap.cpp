@@ -1,7 +1,5 @@
 #include "complex/DataStructure/DataMap.hpp"
 
-#include <algorithm>
-
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -10,6 +8,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
+
+#include <algorithm>
 
 using namespace complex;
 

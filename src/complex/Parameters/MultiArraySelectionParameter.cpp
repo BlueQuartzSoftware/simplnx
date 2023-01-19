@@ -1,12 +1,11 @@
 #include "MultiArraySelectionParameter.hpp"
 
-#include <fmt/core.h>
-
-#include <nlohmann/json.hpp>
-
 #include "complex/Common/Any.hpp"
 #include "complex/DataStructure/IArray.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+
+#include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 namespace complex
 {

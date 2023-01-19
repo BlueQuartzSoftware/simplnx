@@ -1,7 +1,5 @@
 #include "ImportTextFilter.hpp"
 
-#include <filesystem>
-
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/TypesUtility.hpp"
@@ -13,6 +11,8 @@
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
+
+#include <filesystem>
 
 namespace fs = std::filesystem;
 using namespace complex;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-
 #include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
+
+#include <vector>
 
 namespace complex
 {

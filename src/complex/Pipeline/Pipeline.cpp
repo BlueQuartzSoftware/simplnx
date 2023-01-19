@@ -9,11 +9,11 @@
 #include "complex/Pipeline/Messaging/PipelineNodeMessage.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
-
-#include <nlohmann/json.hpp>
 
 using namespace complex;
 

@@ -1,12 +1,11 @@
 #include "QuickSurfaceMesh.hpp"
+#include "TupleTransfer.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-
-#include "TupleTransfer.hpp"
 
 #include <array>
 #include <random>

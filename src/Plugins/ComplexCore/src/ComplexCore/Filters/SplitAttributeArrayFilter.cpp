@@ -1,5 +1,7 @@
 #include "SplitAttributeArrayFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/SplitAttributeArray.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -9,8 +11,6 @@
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-
-#include "ComplexCore/Filters/Algorithms/SplitAttributeArray.hpp"
 
 using namespace complex;
 

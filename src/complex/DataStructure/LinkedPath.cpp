@@ -1,5 +1,4 @@
 #include "complex/DataStructure/LinkedPath.hpp"
-
 #include "complex/DataStructure/DataStructure.hpp"
 
 #include <utility>

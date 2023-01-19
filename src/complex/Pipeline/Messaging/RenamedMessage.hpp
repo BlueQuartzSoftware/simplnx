@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
+
+#include <string>
 
 namespace complex
 {

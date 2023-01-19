@@ -11,8 +11,6 @@
 namespace
 {
 constexpr complex::int32 k_NoExportPathError = -1;
-constexpr complex::int32 k_NoParentPathError = -2;
-constexpr complex::int32 k_FailedFileWriterError = -14;
 constexpr complex::int32 k_FailedFindPipelineError = -15;
 } // namespace
 

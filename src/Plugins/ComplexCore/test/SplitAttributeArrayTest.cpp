@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/SplitAttributeArrayFilter.hpp"
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -8,8 +9,7 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/SplitAttributeArrayFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

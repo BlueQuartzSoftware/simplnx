@@ -2,6 +2,7 @@
 
 #include "DataPath.hpp"
 #include "DataStructure.hpp"
+
 #include "complex/Common/Bit.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStore.hpp"

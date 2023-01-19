@@ -1,10 +1,9 @@
 #include "StringParameter.hpp"
 
-#include <fmt/core.h>
-
-#include <nlohmann/json.hpp>
-
 #include "complex/Common/Any.hpp"
+
+#include <fmt/core.h>
+#include <nlohmann/json.hpp>
 
 namespace complex
 {

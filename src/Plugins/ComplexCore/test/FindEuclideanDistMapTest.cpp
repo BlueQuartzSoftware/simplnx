@@ -1,12 +1,11 @@
-
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/FindEuclideanDistMapFilter.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/FindEuclideanDistMapFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::Constants;

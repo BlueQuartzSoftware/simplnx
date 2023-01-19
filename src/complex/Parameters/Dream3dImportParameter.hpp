@@ -5,10 +5,10 @@
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/complex_export.hpp"
 
+#include <nonstd/span.hpp>
+
 #include <filesystem>
 #include <optional>
-
-#include "nonstd/span.hpp"
 
 namespace complex
 {

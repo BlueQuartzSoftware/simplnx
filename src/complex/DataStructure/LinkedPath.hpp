@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-
 #include "complex/complex_export.hpp"
 
 namespace complex

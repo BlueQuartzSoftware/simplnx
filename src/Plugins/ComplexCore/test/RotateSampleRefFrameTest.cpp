@@ -1,5 +1,3 @@
-#include <catch2/catch.hpp>
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/RotateSampleRefFrameFilter.hpp"
 
@@ -15,12 +13,12 @@
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <Eigen/Dense>
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <string>
 
 namespace fs = std::filesystem;
-
 using namespace complex;
 
 namespace

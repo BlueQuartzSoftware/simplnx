@@ -1,14 +1,13 @@
 #pragma once
 
+#include "complex/Filter/FilterHandle.hpp"
+#include "complex/Filter/IFilter.hpp"
+#include "complex/complex_export.hpp"
+
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include "complex/Filter/FilterHandle.hpp"
-#include "complex/Filter/IFilter.hpp"
-
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

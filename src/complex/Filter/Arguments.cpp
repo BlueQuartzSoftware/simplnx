@@ -1,8 +1,8 @@
 #include "Arguments.hpp"
 
-#include <stdexcept>
-
 #include <fmt/core.h>
+
+#include <stdexcept>
 
 namespace complex
 {

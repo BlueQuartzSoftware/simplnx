@@ -1,8 +1,8 @@
 #include "H5FileReader.hpp"
 
-#include <H5Apublic.h>
-
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
+#include <H5Apublic.h>
 
 using namespace complex;
 

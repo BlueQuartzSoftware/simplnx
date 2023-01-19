@@ -1,7 +1,5 @@
 #include "MapPointCloudToRegularGridFilter.hpp"
 
-#include <cmath>
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
@@ -15,6 +13,8 @@
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+
+#include <cmath>
 
 namespace complex
 {

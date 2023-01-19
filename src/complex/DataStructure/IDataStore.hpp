@@ -5,10 +5,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include <fmt/format.h>
+
 #include <algorithm>
 #include <iterator>
-
-#include "fmt/format.h"
 
 namespace complex
 {

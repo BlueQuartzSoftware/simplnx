@@ -1,16 +1,16 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/ImportHDF5Dataset.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
+#include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ImportHDF5Dataset.hpp"
-#include "complex/Common/TypesUtility.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+
+#include <catch2/catch.hpp>
 
 namespace fs = std::filesystem;
 using namespace complex;

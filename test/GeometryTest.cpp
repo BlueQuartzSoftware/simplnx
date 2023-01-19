@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "GeometryTestUtilities.hpp"
 
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -11,7 +11,7 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 
-#include "GeometryTestUtilities.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

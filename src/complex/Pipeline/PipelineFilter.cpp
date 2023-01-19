@@ -1,14 +1,13 @@
 #include "PipelineFilter.hpp"
 
-#include <algorithm>
-
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Pipeline/Messaging/FilterPreflightMessage.hpp"
 #include "complex/Pipeline/Messaging/OutputRenamedMessage.hpp"
-#include "complex/Pipeline/Messaging/PipelineFilterMessage.hpp"
 
 #include <nlohmann/json.hpp>
+
+#include <algorithm>
 
 using namespace complex;
 

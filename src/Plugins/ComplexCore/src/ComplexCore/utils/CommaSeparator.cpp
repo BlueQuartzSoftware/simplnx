@@ -1,5 +1,4 @@
 #include "ComplexCore/utils/CommaSeparator.hpp"
-
 #include "ComplexCore/utils/UnaryOperator.hpp"
 
 using namespace complex;

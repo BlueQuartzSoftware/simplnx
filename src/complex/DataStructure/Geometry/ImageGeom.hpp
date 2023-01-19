@@ -5,7 +5,6 @@
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
-
 #include "complex/complex_export.hpp"
 
 #include <map>

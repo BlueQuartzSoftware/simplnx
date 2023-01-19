@@ -20,7 +20,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <catch2/catch.hpp>
-
 #include <fmt/format.h>
 
 #include <algorithm>

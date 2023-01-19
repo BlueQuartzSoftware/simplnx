@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/CreateGeometryFilter.hpp"
 
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
 #include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
@@ -13,7 +13,7 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
 
-#include "ComplexCore/Filters/CreateGeometryFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

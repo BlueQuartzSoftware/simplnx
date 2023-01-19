@@ -1,10 +1,10 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/FindNumFeaturesFilter.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/FindNumFeaturesFilter.hpp"
+#include <catch2/catch.hpp>
 
 namespace fs = std::filesystem;
 using namespace complex;

@@ -28,9 +28,7 @@
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <Eigen/Dense>
-
 #include <fmt/core.h>
-
 #include <nonstd/span.hpp>
 
 #include <algorithm>

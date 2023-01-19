@@ -1,9 +1,9 @@
-#include <catch2/catch.hpp>
+#include "TestOne/Filters/ErrorWarningFilter.hpp"
+#include "TestOne/TestOne_test_dirs.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "TestOne/Filters/ErrorWarningFilter.hpp"
-#include "TestOne/TestOne_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

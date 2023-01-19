@@ -1,8 +1,8 @@
-#include <catch2/catch.hpp>
-
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

@@ -1,14 +1,13 @@
 #pragma once
 
+#include "complex/DataStructure/DataMap.hpp"
+#include "complex/DataStructure/DataObject.hpp"
+#include "complex/complex_export.hpp"
+
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
-
-#include "complex/DataStructure/DataMap.hpp"
-#include "complex/DataStructure/DataObject.hpp"
-
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

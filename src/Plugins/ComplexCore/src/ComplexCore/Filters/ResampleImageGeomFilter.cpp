@@ -1,9 +1,10 @@
 #include "ResampleImageGeomFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/ResampleImageGeom.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
-#include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "complex/Filter/Actions/CopyDataObjectAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -19,8 +20,6 @@
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-
-#include "ComplexCore/Filters/Algorithms/ResampleImageGeom.hpp"
 
 using namespace complex;
 

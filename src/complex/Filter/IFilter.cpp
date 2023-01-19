@@ -4,7 +4,6 @@
 #include "complex/Filter/ValueParameter.hpp"
 
 #include <fmt/format.h>
-
 #include <nlohmann/json.hpp>
 
 #include <vector>

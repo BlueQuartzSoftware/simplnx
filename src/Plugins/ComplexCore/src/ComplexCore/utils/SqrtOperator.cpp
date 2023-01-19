@@ -1,7 +1,4 @@
 #include "ComplexCore/utils/SqrtOperator.hpp"
-
-#include <cmath>
-
 #include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;

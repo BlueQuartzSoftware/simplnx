@@ -1,11 +1,10 @@
 #pragma once
 
+#include "complex/Plugin/AbstractPlugin.hpp"
+#include "complex/complex_export.hpp"
+
 #include <filesystem>
 #include <memory>
-
-#include "complex/Plugin/AbstractPlugin.hpp"
-
-#include "complex/complex_export.hpp"
 
 namespace complex
 {
@@ -19,7 +18,7 @@ class COMPLEX_EXPORT PluginLoader
 {
 public:
   /**
-   * @brief Constructs a PluginLoader targetting the specified path.
+   * @brief Constructs a PluginLoader targeting the specified path.
    * The plugin is loaded upon construction and unloaded when the object is
    * destroyed.
    * @param path

@@ -5,8 +5,6 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 
-#include <sstream>
-
 using namespace complex;
 
 // -----------------------------------------------------------------------------

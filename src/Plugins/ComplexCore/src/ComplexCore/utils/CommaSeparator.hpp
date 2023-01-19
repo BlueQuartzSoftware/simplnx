@@ -1,9 +1,6 @@
 #pragma once
 
-#include <memory>
-
 #include "ComplexCore/ComplexCore_export.hpp"
-
 #include "ComplexCore/utils/CalculatorSeparator.hpp"
 
 namespace complex

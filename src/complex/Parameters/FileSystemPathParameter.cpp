@@ -5,7 +5,6 @@
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
-
 #include <nlohmann/json.hpp>
 
 #include <stdexcept>

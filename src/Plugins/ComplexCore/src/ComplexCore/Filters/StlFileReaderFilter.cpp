@@ -13,8 +13,8 @@
 
 #include <filesystem>
 #include <tuple>
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 using namespace complex;
 
 namespace

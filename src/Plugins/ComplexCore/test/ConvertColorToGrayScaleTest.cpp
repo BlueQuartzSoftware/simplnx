@@ -1,4 +1,6 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ConvertColorToGrayScaleFilter.hpp"
 
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -11,9 +13,7 @@
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
-#include "ComplexCore/Filters/ConvertColorToGrayScaleFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::types;

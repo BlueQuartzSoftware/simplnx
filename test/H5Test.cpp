@@ -7,7 +7,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/EdgeGeom.hpp"
-#include "complex/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/QuadGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -21,24 +20,20 @@
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
-
-#include "GeometryTestUtilities.hpp"
-
-// This file is generated into the binary directory
 #include "complex/unit_test/complex_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
 
-#include <iostream>
+#include <random>
 #include <string>
 #include <type_traits>
 
-#include <random>
+// This file is generated into the binary directory
 
 #define TEST_LEGACY 1
 
-using namespace complex;
 namespace fs = std::filesystem;
+using namespace complex;
 
 static_assert(std::is_same_v<hid_t, H5::IdType>, "H5::IdType must be the same type as hid_t");
 static_assert(std::is_same_v<herr_t, H5::ErrorType>, "H5::ErrorType must be the same type as herr_t");

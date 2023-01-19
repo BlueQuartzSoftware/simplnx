@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ExtractVertexGeometryFilter.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
@@ -9,8 +10,7 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ExtractVertexGeometryFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 
@@ -24,10 +24,6 @@ const std::string k_WrongAttrMatName = "WrongAttrMatrix";
 const std::string k_FloatArrayName = "FloatArray";
 const std::string k_MaskArrayName = "MaskArray";
 const DataPath k_VertexDataContainerPath = {{"VertexDataContainer"}};
-const DataPath k_BadDataContainerName({"BadDataContainer"});
-const DataPath k_WrongGeomDataContainerName({"WrongGeomDataContainer"});
-const std::string k_FeatureAttrMatName = "Feature Attr Mat";
-const std::string k_FeatureArrayName = "featureData";
 const int32 k_MoveArrays = 0;
 const int32 k_CopyArrays = 1;
 

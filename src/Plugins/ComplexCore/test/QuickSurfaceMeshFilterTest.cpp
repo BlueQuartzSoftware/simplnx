@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/QuickSurfaceMeshFilter.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -8,8 +9,7 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/QuickSurfaceMeshFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::UnitTest;

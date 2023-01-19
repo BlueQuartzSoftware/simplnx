@@ -13,7 +13,6 @@
 #include <fstream>
 
 namespace fs = std::filesystem;
-
 using namespace complex;
 
 namespace

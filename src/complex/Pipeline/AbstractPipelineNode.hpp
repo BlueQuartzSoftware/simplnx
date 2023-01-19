@@ -5,8 +5,7 @@
 #include "complex/complex_export.hpp"
 
 #include <nlohmann/json_fwd.hpp>
-
-#include "nod/nod.hpp"
+#include <nod/nod.hpp>
 
 #include <atomic>
 #include <memory>

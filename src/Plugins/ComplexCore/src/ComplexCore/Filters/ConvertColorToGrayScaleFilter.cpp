@@ -1,5 +1,7 @@
 #include "ConvertColorToGrayScaleFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -10,8 +12,6 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
 
 using namespace complex;
 

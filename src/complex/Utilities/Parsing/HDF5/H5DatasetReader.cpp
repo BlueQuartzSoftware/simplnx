@@ -1,12 +1,12 @@
 #include "H5DatasetReader.hpp"
 
-#include <iostream>
-#include <numeric>
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <H5Apublic.h>
 
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+#include <iostream>
+#include <numeric>
 
 using namespace complex;
 

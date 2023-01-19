@@ -1,9 +1,9 @@
 #pragma once
 
-#include <type_traits>
-
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Filter/IFilter.hpp"
+
+#include <type_traits>
 
 namespace complex
 {

@@ -1,4 +1,7 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/PointSampleTriangleGeometryFilter.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"
+#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -9,16 +12,12 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"
-#include "ComplexCore/Filters/PointSampleTriangleGeometryFilter.hpp"
-#include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <limits>
 
 namespace fs = std::filesystem;
-
 using namespace complex;
 using namespace complex::Constants;
 

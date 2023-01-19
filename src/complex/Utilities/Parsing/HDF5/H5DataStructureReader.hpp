@@ -1,10 +1,10 @@
 #pragma once
 
-#include <optional>
-
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp"
+
+#include <optional>
 
 namespace complex
 {

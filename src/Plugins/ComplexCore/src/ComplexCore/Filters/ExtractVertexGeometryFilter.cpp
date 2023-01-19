@@ -1,5 +1,7 @@
 #include "ExtractVertexGeometryFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/ExtractVertexGeometry.hpp"
+
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
@@ -11,8 +13,6 @@
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/ExtractVertexGeometry.hpp"
 
 using namespace complex;
 

@@ -1,10 +1,10 @@
 #include "H5AttributeReader.hpp"
 
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
 #include <iostream>
 #include <numeric>
 #include <vector>
-
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 using namespace complex;
 

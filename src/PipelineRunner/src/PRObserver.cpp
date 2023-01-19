@@ -1,9 +1,9 @@
 #include "PRObserver.hpp"
 
+#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
+
 #include <iostream>
 #include <string>
-
-#include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
 using namespace complex;
 using namespace complex::PipelineRunner;

@@ -1,4 +1,6 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
+#include "ComplexCore/utils/CalculatorItem.hpp"
 
 #include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
@@ -9,9 +11,7 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
-#include "ComplexCore/utils/CalculatorItem.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

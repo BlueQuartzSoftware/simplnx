@@ -1,9 +1,9 @@
 #pragma once
 
-#include <memory>
-
 #include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
+
+#include <memory>
 
 namespace complex
 {

@@ -7,7 +7,6 @@
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <fmt/core.h>
-
 #include <nonstd/span.hpp>
 
 #include <algorithm>

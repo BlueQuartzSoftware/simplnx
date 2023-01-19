@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Eigen/Dense"
-
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Utilities/Math/GeometryMath.hpp"
+
+#include <Eigen/Dense>
 
 namespace complex
 {

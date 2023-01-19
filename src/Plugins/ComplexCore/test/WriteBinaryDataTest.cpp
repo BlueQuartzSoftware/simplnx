@@ -1,15 +1,14 @@
-#include <catch2/catch.hpp>
-
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/WriteBinaryDataFilter.hpp"
 
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
+#include <catch2/catch.hpp>
+
 #include <filesystem>
 #include <fstream>
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;
@@ -26,7 +25,6 @@ constexpr int32 k_NumComponents = 16;     // used for generation
 constexpr uint64 k_EndianessElements = 2; // pull enum # of elements
 constexpr uint64 k_MultipleFiles = 0;     // enum representation
 constexpr uint64 k_SingleFile = 1;        // enum representation
-constexpr uint64 k_TabDelimiter = 4;      // enum representation
 } // namespace
 
 // -----------------------------------------------------------------------------

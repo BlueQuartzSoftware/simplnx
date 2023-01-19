@@ -1,5 +1,7 @@
 #include "CombineAttributeArraysFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/CombineAttributeArrays.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
@@ -7,8 +9,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-
-#include "ComplexCore/Filters/Algorithms/CombineAttributeArrays.hpp"
 
 using namespace complex;
 

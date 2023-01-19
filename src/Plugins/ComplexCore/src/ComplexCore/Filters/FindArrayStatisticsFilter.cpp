@@ -1,5 +1,7 @@
 #include "FindArrayStatisticsFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/FindArrayStatistics.hpp"
+
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -11,8 +13,6 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
-
-#include "ComplexCore/Filters/Algorithms/FindArrayStatistics.hpp"
 
 using namespace complex;
 

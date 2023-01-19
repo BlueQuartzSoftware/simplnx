@@ -1,5 +1,13 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
+#include "complex/Common/Types.hpp"
+#include "complex/Common/Uuid.hpp"
+#include "complex/Filter/Arguments.hpp"
+#include "complex/complex_export.hpp"
+
+#include <nlohmann/json_fwd.hpp>
+
 #include <any>
 #include <memory>
 #include <optional>
@@ -7,14 +15,6 @@
 #include <typeindex>
 #include <typeinfo>
 #include <vector>
-
-#include <nlohmann/json_fwd.hpp>
-
-#include "complex/Common/Result.hpp"
-#include "complex/Common/Types.hpp"
-#include "complex/Common/Uuid.hpp"
-#include "complex/Filter/Arguments.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

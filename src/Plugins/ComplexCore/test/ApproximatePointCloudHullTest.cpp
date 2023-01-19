@@ -1,18 +1,19 @@
-#include <filesystem>
-#include <string>
-namespace fs = std::filesystem;
-
-#include <catch2/catch.hpp>
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ApproximatePointCloudHull.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
+
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
+#include <catch2/catch.hpp>
+
+#include <filesystem>
+#include <string>
+
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 namespace

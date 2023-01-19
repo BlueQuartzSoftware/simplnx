@@ -1,11 +1,11 @@
 #pragma once
 
-#include <string>
-
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/MutableDataParameter.hpp"
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/complex_export.hpp"
+
+#include <string>
 
 namespace complex
 {

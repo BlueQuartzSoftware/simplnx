@@ -1,12 +1,12 @@
 #pragma once
 
+#include "complex/DataStructure/DataStructure.hpp"
+#include "complex/complex_export.hpp"
+
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

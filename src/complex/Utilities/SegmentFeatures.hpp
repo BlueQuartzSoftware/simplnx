@@ -1,12 +1,11 @@
 #pragma once
 
-#include "complex/complex_export.hpp"
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/complex_export.hpp"
 
 #include <random>
 #include <vector>

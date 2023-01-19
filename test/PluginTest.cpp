@@ -1,17 +1,16 @@
-#include <string>
-
-#include <catch2/catch.hpp>
-
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
-
 #include "complex/unit_test/complex_test_dirs.hpp"
 
-using namespace complex;
+#include <catch2/catch.hpp>
+
+#include <string>
+
 namespace fs = std::filesystem;
+using namespace complex;
 
 namespace
 {

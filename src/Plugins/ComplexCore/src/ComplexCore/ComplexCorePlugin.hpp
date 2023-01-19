@@ -1,11 +1,9 @@
 #pragma once
 
-#include <vector>
+#include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
-
-#include "ComplexCore/ComplexCore_export.hpp"
 
 class COMPLEXCORE_EXPORT ComplexCorePlugin : public complex::AbstractPlugin
 {

@@ -1,5 +1,7 @@
 #include "FindTriangleGeomSizesFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/FindTriangleGeomSizes.hpp"
+
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -8,8 +10,6 @@
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/FindTriangleGeomSizes.hpp"
 
 using namespace complex;
 

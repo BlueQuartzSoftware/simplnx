@@ -1,7 +1,5 @@
 #include "FindNeighbors.hpp"
 
-#include <sstream>
-
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -14,6 +12,8 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+
+#include <sstream>
 
 namespace complex
 {

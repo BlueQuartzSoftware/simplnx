@@ -1,14 +1,13 @@
+#include "PRObserver.hpp"
+
+#include "complex/Core/Application.hpp"
+#include "complex/Pipeline/Pipeline.hpp"
+
+#include <fmt/format.h>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
-
-#include "fmt/format.h"
-
-#include "nlohmann/json.hpp"
-
-#include "PRObserver.hpp"
-#include "complex/Core/Application.hpp"
-#include "complex/Pipeline/Pipeline.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;

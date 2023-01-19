@@ -1,10 +1,9 @@
 #include "NumericTypeParameter.hpp"
 
-#include <optional>
-
 #include <fmt/core.h>
-
 #include <nlohmann/json.hpp>
+
+#include <optional>
 
 namespace
 {

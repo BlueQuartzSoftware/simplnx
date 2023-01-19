@@ -1,7 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/Geometry/INodeGeometry3D.hpp"
-
 #include "complex/complex_export.hpp"
 
 namespace complex

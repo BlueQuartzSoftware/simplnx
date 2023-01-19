@@ -10,16 +10,16 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
+#include <fmt/format.h>
+
 #include <limits>
 #include <unordered_map>
-
-#include "fmt/format.h"
 
 using namespace complex;
 
 namespace
 {
-constexpr int32 k_MissingTrianglVerticesArray = -351;
+constexpr int32 k_MissingTriangleVerticesArray = -351;
 constexpr int32 k_MissingTriangleFacesArray = -352;
 constexpr int32 k_NoNodeTypesArray = -353;
 constexpr int32 k_MissingVertexArray = -354;
@@ -159,7 +159,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   if(triangleGeom.getVertices() == nullptr)
   {
     std::string ss = fmt::format("Triangle Geometry does not have an assigned vertices array");
-    return {MakeErrorResult<OutputActions>(k_MissingTrianglVerticesArray, ss)};
+    return {MakeErrorResult<OutputActions>(k_MissingTriangleVerticesArray, ss)};
   }
   arrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
 

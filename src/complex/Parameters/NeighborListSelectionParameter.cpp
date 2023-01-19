@@ -6,7 +6,6 @@
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
-
 #include <nlohmann/json.hpp>
 
 using namespace complex;

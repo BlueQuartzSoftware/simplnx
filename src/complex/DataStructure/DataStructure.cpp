@@ -16,10 +16,10 @@
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
+#include <fmt/core.h>
+
 #include <numeric>
 #include <stdexcept>
-
-#include <fmt/core.h>
 
 namespace
 {
