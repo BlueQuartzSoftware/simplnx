@@ -101,6 +101,13 @@ None
 
 ## Example Pipelines
 
+The example pipeline (pipelines/Examples/ReplaceElementAttributesWithNeighbor.d3dpipeline) will give output similar to the following images.
+
+|  Before Filter | After Filter |
+|--|--|
+| ![Original Data](Images/NeighborReplace_Small_IN100_Before.png) | ![Original Data](Images/NeighborReplace_Small_IN100_After.png) |
+
+
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**
