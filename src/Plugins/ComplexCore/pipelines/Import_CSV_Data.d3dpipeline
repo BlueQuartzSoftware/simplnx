@@ -28,15 +28,6 @@
     },
     {
       "args": {
-        "Data_Object_Path": "[Image Geometry]/Cell Data"
-      },
-      "filter": {
-        "name": "complex::CreateDataGroup",
-        "uuid": "e7d2f9b8-4131-4b28-a843-ea3c6950f101"
-      }
-    },
-    {
-      "args": {
         "delimiter_choice": 0,
         "input_file": "TestFiles/ASCII_Data/Confidence Index.csv",
         "n_comp": 1,
@@ -93,24 +84,6 @@
       "filter": {
         "name": "complex::ImportTextFilter",
         "uuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4"
-      }
-    },
-    {
-      "args": {
-        "geometry_data_path": "[Image Geometry]",
-        "selected_edge_data_array_paths": [],
-        "selected_face_data_array_paths": [],
-        "selected_vertex_data_array_paths": [],
-        "selected_volume_element_data_array_paths": [
-          "[Image Geometry]/Cell Data/FeatureIds",
-          "[Image Geometry]/Cell Data/Confidence Index",
-          "[Image Geometry]/Cell Data/Image Quality",
-          "[Image Geometry]/Cell Data/IPFColors"
-        ]
-      },
-      "filter": {
-        "name": "complex::LinkGeometryDataFilter",
-        "uuid": "a33ace9e-5e8a-4299-8531-4b4da6f91f70"
       }
     }
   ],
