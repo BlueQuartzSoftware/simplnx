@@ -69,13 +69,15 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 //-----------------------------------------------------------------------------
 Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueType& path)
 {
+  const FileSystemPathParameter::ValueType emptyPath("");
+
   auto checkedPath = path;
   while(!fs::exists(checkedPath))
   {
     checkedPath = checkedPath.parent_path();
-    if(checkedPath.empty())
+    if(checkedPath == emptyPath)
     {
-      return MakeErrorResult(-9, fmt::format("Cannot find file system path '{}'", path.string()));
+      return MakeErrorResult(-9, fmt::format("Empty path encountered while trying to compute full path '{}'", path.string()));
     }
   }
   // We should be at the top of the tree with an existing directory.
@@ -246,22 +248,22 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     }
   }
 
-  auto absolutePath = path;
-  if(path.is_relative())
+  if(!path.is_absolute() && !fs::exists(path))
   {
-    absolutePath = fs::absolute(path);
+    return MakeErrorResult(-3004, fmt::format("Relative Path given does not exist.\n    Relative Path:'{}'\n    Current Working Path: '{}'\n    Computed Path: '{}/{}", path.string(),
+                                              std::filesystem::current_path().string(), std::filesystem::current_path().string(), path.string()));
   }
 
   switch(m_PathType)
   {
   case complex::FileSystemPathParameter::PathType::InputFile:
-    return ValidateInputFile(absolutePath);
+    return ValidateInputFile(path);
   case complex::FileSystemPathParameter::PathType::InputDir:
-    return ValidateInputDir(absolutePath);
+    return ValidateInputDir(path);
   case complex::FileSystemPathParameter::PathType::OutputFile:
-    return ValidateOutputFile(absolutePath);
+    return ValidateOutputFile(path);
   case complex::FileSystemPathParameter::PathType::OutputDir:
-    return ValidateOutputDir(absolutePath);
+    return ValidateOutputDir(path);
   }
 
   return {};
