@@ -19,7 +19,7 @@ const DataPath k_ConfidenceIndexPath = k_CellAttributeMatrix.createChildPath(Con
 const std::string k_ExemplarDataContainer("DataContainer");
 } // namespace
 
-TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValuesFilter:", "[OrientationAnalysis][ReplaceElementAttributesWithNeighborValuesFilter]")
+TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValuesFilter", "[OrientationAnalysis][ReplaceElementAttributesWithNeighborValuesFilter]")
 {
 
   // Read Exemplar DREAM3D File Filter

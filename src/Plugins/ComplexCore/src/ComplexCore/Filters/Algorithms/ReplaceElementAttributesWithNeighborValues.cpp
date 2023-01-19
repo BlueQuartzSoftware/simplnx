@@ -81,6 +81,16 @@ public:
 
 struct ExecuteTemplate
 {
+  template <typename T>
+  void CompareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, const DataArray<T>& inputArray, int64 neighbor, float thresholdValue, float32& best, std::vector<int64_t>& bestNeighbor,
+                     size_t i) const
+  {
+    if(comparator->compare1(inputArray[neighbor], thresholdValue) && comparator->compare2(inputArray[neighbor], best))
+    {
+      best = inputArray[neighbor];
+      bestNeighbor[i] = neighbor;
+    }
+  }
 
   template <typename T>
   void operator()(const ImageGeom& imageGeom, IDataArray& inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
@@ -111,7 +121,6 @@ struct ExecuteTemplate
     std::vector<int64_t> bestNeighbor(totalPoints, -1);
 
     size_t count = 0;
-    float best = 0.0f;
     bool keepGoing = true;
 
     std::shared_ptr<IComparisonFunctor<T>> comparator = std::make_shared<LessThanComparison<T>>();
@@ -142,40 +151,37 @@ struct ExecuteTemplate
           row = (i / dims[0]) % dims[1];
           plane = i / (dims[0] * dims[1]);
           count++;
-          best = inputArray[i];
-          for(int64 j = 0; j < 6; j++)
-          {
-            neighbor = static_cast<int64>(i) + neighborPoints[j];
-            if(j == 0 && plane == 0)
-            {
-              continue;
-            }
-            if(j == 5 && plane == (dims[2] - 1))
-            {
-              continue;
-            }
-            if(j == 1 && row == 0)
-            {
-              continue;
-            }
-            if(j == 4 && row == (dims[1] - 1))
-            {
-              continue;
-            }
-            if(j == 2 && column == 0)
-            {
-              continue;
-            }
-            if(j == 3 && column == (dims[0] - 1))
-            {
-              continue;
-            }
+          float32 best = inputArray[i];
 
-            if(comparator->compare1(inputArray[neighbor], thresholdValue) && comparator->compare2(inputArray[neighbor], best))
-            {
-              best = inputArray[neighbor];
-              bestNeighbor[i] = neighbor;
-            }
+          neighbor = static_cast<int64>(i) + neighborPoints[0];
+          if(plane != 0)
+          {
+            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+          }
+          neighbor = static_cast<int64>(i) + neighborPoints[1];
+          if(row != 0)
+          {
+            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+          }
+          neighbor = static_cast<int64>(i) + neighborPoints[2];
+          if(column != 0)
+          {
+            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+          }
+          neighbor = static_cast<int64>(i) + neighborPoints[3];
+          if(column != (dims[0] - 1))
+          {
+            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+          }
+          neighbor = static_cast<int64>(i) + neighborPoints[4];
+          if(row != (dims[1] - 1))
+          {
+            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
+          }
+          neighbor = static_cast<int64>(i) + neighborPoints[5];
+          if(plane != (dims[2] - 1))
+          {
+            CompareValues<T>(comparator, inputArray, neighbor, thresholdValue, best, bestNeighbor, i);
           }
         }
         if(int64_t(i) > prog)
