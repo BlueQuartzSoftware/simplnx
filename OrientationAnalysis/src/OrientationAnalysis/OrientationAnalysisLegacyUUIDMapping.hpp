@@ -1,7 +1,5 @@
 #pragma once
 
-#include <map>
-#include <string>
 // clang-format off
 #include "OrientationAnalysis/Filters/AlignSectionsMisorientationFilter.hpp"
 #include "OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.hpp"
@@ -59,6 +57,9 @@
 // #include "OrientationAnalysis/Filters/WritePoleFigure.hpp"
 // #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFile.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
+
+#include <map>
+#include <string>
 
 namespace complex
 {

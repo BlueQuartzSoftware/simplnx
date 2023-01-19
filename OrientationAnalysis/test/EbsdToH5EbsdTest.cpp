@@ -1,5 +1,3 @@
-#include <catch2/catch.hpp>
-
 #include "OrientationAnalysis/Filters/Algorithms/EbsdToH5Ebsd.hpp"
 #include "OrientationAnalysis/Filters/EbsdToH5EbsdFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
@@ -14,11 +12,12 @@
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
 
+#include <catch2/catch.hpp>
 #include <hdf5.h>
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace H5Support;
 

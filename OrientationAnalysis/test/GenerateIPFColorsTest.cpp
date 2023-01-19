@@ -18,24 +18,23 @@ be the input 'k_CrystalStructuresArrayPath_Key' path and data.
 Compare the data sets. The values should be exactly the same.
 
 */
-
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
+#include <cstdio>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::UnitTest;
 using namespace complex::Constants;
-
-#include <filesystem>
-namespace fs = std::filesystem;
-#include <cstdio>
 
 namespace complex::Constants
 {

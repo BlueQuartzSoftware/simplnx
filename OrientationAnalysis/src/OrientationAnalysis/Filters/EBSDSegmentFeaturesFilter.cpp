@@ -1,4 +1,5 @@
 #include "EBSDSegmentFeaturesFilter.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/EBSDSegmentFeatures.hpp"
 
 #include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -10,8 +11,6 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include "OrientationAnalysis/Filters/Algorithms/EBSDSegmentFeatures.hpp"
 
 using namespace complex;
 

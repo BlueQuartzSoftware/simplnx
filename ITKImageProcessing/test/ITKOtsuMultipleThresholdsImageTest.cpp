@@ -2,8 +2,6 @@
 
 #include "ITKImageProcessing/Filters/ITKOtsuMultipleThresholdsImage.hpp"
 
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
-
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 

@@ -1,11 +1,9 @@
 #pragma once
 
-#include <vector>
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
-
-#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 class ORIENTATIONANALYSIS_EXPORT OrientationAnalysisPlugin : public complex::AbstractPlugin
 {

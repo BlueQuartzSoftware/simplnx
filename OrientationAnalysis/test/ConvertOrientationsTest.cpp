@@ -19,17 +19,15 @@
  * from the TEST_CASE macro. This will enable this unit test to be run by default
  * and report errors.
  */
-
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Common/Numbers.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

@@ -1,7 +1,6 @@
 #include "ITKSinImage.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"

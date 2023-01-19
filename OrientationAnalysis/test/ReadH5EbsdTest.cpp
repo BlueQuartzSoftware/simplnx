@@ -1,16 +1,13 @@
-#include <catch2/catch.hpp>
-
-#include "complex/Core/Application.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/Dream3dImportParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
-
 #include "OrientationAnalysis/Filters/ReadH5EbsdFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Parameters/H5EbsdReaderParameter.h"
+
+#include "complex/Core/Application.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/Dream3dImportParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::UnitTest;

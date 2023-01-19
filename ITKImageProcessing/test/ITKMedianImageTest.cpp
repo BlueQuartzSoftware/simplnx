@@ -2,8 +2,6 @@
 
 #include "ITKImageProcessing/Filters/ITKMedianImage.hpp"
 
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
-
 #include "complex/Parameters/VectorParameter.hpp"
 
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"

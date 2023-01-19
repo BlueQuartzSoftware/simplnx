@@ -2,8 +2,6 @@
 
 #include "ITKImageProcessing/Filters/ITKGrayscaleFillholeImage.hpp"
 
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
-
 #include "complex/Parameters/BoolParameter.hpp"
 
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"

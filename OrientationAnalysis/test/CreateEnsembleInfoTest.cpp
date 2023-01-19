@@ -1,10 +1,10 @@
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/CreateEnsembleInfoFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Parameters/EnsembleInfoParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "OrientationAnalysis/Filters/CreateEnsembleInfoFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::UnitTest;

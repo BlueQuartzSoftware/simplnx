@@ -7,12 +7,9 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 
-#include "EbsdLib/Core/EbsdMacros.h"
-#include "EbsdLib/IO/H5EbsdVolumeInfo.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/H5CtfVolumeReader.h"
 #include "EbsdLib/IO/TSL/AngFields.h"

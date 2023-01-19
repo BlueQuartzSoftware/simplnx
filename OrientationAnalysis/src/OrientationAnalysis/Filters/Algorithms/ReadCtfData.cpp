@@ -3,7 +3,6 @@
 #include "complex/Common/ComplexConstants.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/Math/EbsdLibMath.h"

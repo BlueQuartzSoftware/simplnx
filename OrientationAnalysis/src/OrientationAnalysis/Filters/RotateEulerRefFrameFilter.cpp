@@ -1,11 +1,10 @@
 #include "RotateEulerRefFrameFilter.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/RotateEulerRefFrame.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-
-#include "OrientationAnalysis/Filters/Algorithms/RotateEulerRefFrame.hpp"
 
 using namespace complex;
 

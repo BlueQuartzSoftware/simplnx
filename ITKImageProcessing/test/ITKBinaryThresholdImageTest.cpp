@@ -2,8 +2,6 @@
 
 #include "ITKImageProcessing/Filters/ITKBinaryThresholdImage.hpp"
 
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
-
 #include "complex/Parameters/NumberParameter.hpp"
 
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"

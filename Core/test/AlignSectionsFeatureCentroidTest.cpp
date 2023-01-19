@@ -1,10 +1,7 @@
-
-
-#include <catch2/catch.hpp>
+#include "Core/Core_test_dirs.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
@@ -12,14 +9,13 @@
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-
-#include <filesystem>
-namespace fs = std::filesystem;
-
 #include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
 
-#include "Core/Core_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 using namespace complex::UnitTest;

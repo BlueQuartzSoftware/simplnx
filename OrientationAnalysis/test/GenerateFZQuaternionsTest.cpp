@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/GenerateFZQuaternions.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -8,8 +9,7 @@
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 
-#include "OrientationAnalysis/Filters/GenerateFZQuaternions.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::Constants;

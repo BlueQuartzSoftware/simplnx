@@ -232,9 +232,6 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
     }
   }
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;

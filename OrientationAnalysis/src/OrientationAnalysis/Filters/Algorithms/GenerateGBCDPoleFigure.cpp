@@ -10,8 +10,6 @@
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-#include <filesystem>
-
 namespace fs = std::filesystem;
 
 using namespace complex;

@@ -1,4 +1,5 @@
 #include "FindGBCDFilter.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/FindGBCD.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -8,8 +9,6 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include "OrientationAnalysis/Filters/Algorithms/FindGBCD.hpp"
 
 using namespace complex;
 

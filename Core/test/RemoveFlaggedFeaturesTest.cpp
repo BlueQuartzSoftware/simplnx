@@ -1,13 +1,13 @@
-#include <catch2/catch.hpp>
+#include "Core/Core_test_dirs.hpp"
+#include "Core/Filters/RemoveFlaggedFeaturesFilter.hpp"
 
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-
-#include "Core/Core_test_dirs.hpp"
-#include "Core/Filters/RemoveFlaggedFeaturesFilter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

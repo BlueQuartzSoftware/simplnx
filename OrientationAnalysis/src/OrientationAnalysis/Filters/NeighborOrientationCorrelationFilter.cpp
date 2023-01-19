@@ -1,4 +1,5 @@
 #include "NeighborOrientationCorrelationFilter.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/NeighborOrientationCorrelation.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -6,8 +7,6 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include "OrientationAnalysis/Filters/Algorithms/NeighborOrientationCorrelation.hpp"
 
 using namespace complex;
 

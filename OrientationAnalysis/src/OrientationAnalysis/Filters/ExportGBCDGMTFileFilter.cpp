@@ -10,6 +10,7 @@
 #include "OrientationAnalysis/Filters/Algorithms/ExportGBCDGMTFile.hpp"
 
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 using namespace complex;

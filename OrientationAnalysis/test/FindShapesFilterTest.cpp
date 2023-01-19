@@ -1,18 +1,18 @@
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/FindShapesFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "OrientationAnalysis/Filters/FindShapesFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("ComplexCore::FindShapesFilter", "[ComplexCore][FindShapesFilter]")
+TEST_CASE("OrientationAnalysis::FindShapesFilter", "[ComplexCore][FindShapesFilter]")
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test.dream3d", unit_test::k_TestFilesDir));
