@@ -7,7 +7,6 @@
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsFeatureCentroidTest.cpp
-  FillBadDataTest.cpp # NEEDS TEST IMPLEMENTED
   FindNeighborhoodsTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   ErodeDilateBadDataTest.cpp
@@ -35,3 +34,11 @@ target_include_directories(${PLUGIN_NAME}UnitTest
   PUBLIC
   ${CMAKE_CURRENT_LIST_DIR}/../../src
 )
+
+if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
+  if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
+    file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
+  endif()
+
+endif()
+
