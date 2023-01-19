@@ -1,15 +1,9 @@
 #include "GroupFeatures.hpp"
 
-#include "complex/Common/Numbers.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
-
-#include "EbsdLib/Core/EbsdLibConstants.h"
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/Quaternion.hpp"
-#include "EbsdLib/LaueOps/LaueOps.h"
 
 #include <chrono>
 #include <random>

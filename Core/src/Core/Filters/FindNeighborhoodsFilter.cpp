@@ -1,5 +1,7 @@
 #include "FindNeighborhoodsFilter.hpp"
 
+#include "Core/Filters/Algorithms/FindNeighborhoods.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateNeighborListAction.hpp"
@@ -7,8 +9,6 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include "Core/Filters/Algorithms/FindNeighborhoods.hpp"
 
 using namespace complex;
 
@@ -95,15 +95,8 @@ IFilter::PreflightResult FindNeighborhoodsFilter::preflightImpl(const DataStruct
   auto pNeighborhoodsArrayNameValue = filterArgs.value<DataPath>(k_NeighborhoodsArrayName_Key);
   auto pNeighborhoodListArrayNameValue = filterArgs.value<DataPath>(k_NeighborhoodListArrayName_Key);
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
   PreflightResult preflightResult;
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
   // Get the Feature Phases Array and get its TupleShape
@@ -125,10 +118,6 @@ IFilter::PreflightResult FindNeighborhoodsFilter::preflightImpl(const DataStruct
     resultOutputActions.value().actions.push_back(std::move(action));
   }
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

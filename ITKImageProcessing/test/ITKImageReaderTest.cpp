@@ -1,7 +1,6 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Filters/ITKImageReader.hpp"
-#include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"

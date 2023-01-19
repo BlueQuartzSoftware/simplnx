@@ -19,19 +19,18 @@
  * from the TEST_CASE macro. This will enable this unit test to be run by default
  * and report errors.
  */
-
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/ReadCtfDataFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 
-#include <filesystem>
-namespace fs = std::filesystem;
+#include <catch2/catch.hpp>
 
-#include "OrientationAnalysis/Filters/ReadCtfDataFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 using namespace complex;
 

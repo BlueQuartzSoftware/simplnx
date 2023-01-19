@@ -1,20 +1,18 @@
-
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/GenerateGBCDPoleFigureFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "OrientationAnalysis/Filters/GenerateGBCDPoleFigureFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::UnitTest;
 

@@ -5,13 +5,10 @@
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/EbsdMacros.h"
-#include "EbsdLib/IO/H5EbsdVolumeInfo.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/HKL/H5CtfImporter.h"
-#include "EbsdLib/IO/HKL/H5CtfVolumeReader.h"
 #include "EbsdLib/IO/TSL/AngFields.h"
 #include "EbsdLib/IO/TSL/H5AngImporter.h"
-#include "EbsdLib/IO/TSL/H5AngVolumeReader.h"
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"

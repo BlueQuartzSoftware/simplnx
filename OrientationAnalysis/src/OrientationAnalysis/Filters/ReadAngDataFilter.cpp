@@ -16,6 +16,7 @@
 #include "EbsdLib/IO/TSL/AngReader.h"
 
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 namespace complex

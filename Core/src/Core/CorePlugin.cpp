@@ -1,7 +1,7 @@
 #include "CorePlugin.hpp"
+#include "CoreLegacyUUIDMapping.hpp"
 
 #include "Core/Core_filter_registration.hpp"
-#include "CoreLegacyUUIDMapping.hpp"
 
 using namespace complex;
 

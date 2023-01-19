@@ -5,7 +5,6 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
-#include <fstream>
 #include <iostream>
 
 using namespace complex;

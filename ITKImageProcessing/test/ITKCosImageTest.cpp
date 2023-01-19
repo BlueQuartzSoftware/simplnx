@@ -2,8 +2,6 @@
 
 #include "ITKImageProcessing/Filters/ITKCosImage.hpp"
 
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
-
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 

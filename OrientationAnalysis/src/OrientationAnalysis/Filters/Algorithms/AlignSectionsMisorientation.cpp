@@ -7,7 +7,6 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
-#include <fstream>
 #include <iostream>
 
 using namespace complex;

@@ -1,4 +1,5 @@
 #include "GenerateGBCDPoleFigureFilter.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/GenerateGBCDPoleFigure.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -8,11 +9,8 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-
-#include "OrientationAnalysis/Filters/Algorithms/GenerateGBCDPoleFigure.hpp"
 
 #include <filesystem>
 

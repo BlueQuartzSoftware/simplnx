@@ -1,7 +1,7 @@
 #include "OrientationAnalysisPlugin.hpp"
+#include "OrientationAnalysisLegacyUUIDMapping.hpp"
 
 #include "OrientationAnalysis/OrientationAnalysis_filter_registration.hpp"
-#include "OrientationAnalysisLegacyUUIDMapping.hpp"
 
 using namespace complex;
 

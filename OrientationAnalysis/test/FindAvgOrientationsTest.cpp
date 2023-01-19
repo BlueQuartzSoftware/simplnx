@@ -24,7 +24,8 @@ of doing that.
 
 */
 
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/FindAvgOrientationsFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -33,15 +34,13 @@ of doing that.
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include "OrientationAnalysis/Filters/FindAvgOrientationsFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-
 #include "complex_plugins/Utilities/TestUtilities.hpp"
 
-#include <filesystem>
-namespace fs = std::filesystem;
+#include <catch2/catch.hpp>
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 

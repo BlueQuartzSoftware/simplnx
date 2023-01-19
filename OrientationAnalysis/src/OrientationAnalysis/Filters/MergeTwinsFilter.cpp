@@ -9,7 +9,6 @@
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"

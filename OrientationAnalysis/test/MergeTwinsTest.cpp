@@ -19,8 +19,10 @@
  * from the TEST_CASE macro. This will enable this unit test to be run by default
  * and report errors.
  */
-
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
+#include "OrientationAnalysis/Filters/FindAvgOrientationsFilter.hpp"
+#include "OrientationAnalysis/Filters/MergeTwinsFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -28,18 +30,14 @@
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
-#include "OrientationAnalysis/Filters/FindAvgOrientationsFilter.hpp"
-#include "OrientationAnalysis/Filters/MergeTwinsFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-
-#include <filesystem>
-namespace fs = std::filesystem;
-
 #include "complex_plugins/EbsdLibConstants.hpp"
 #include "complex_plugins/Utilities/TestUtilities.hpp"
 
+#include <catch2/catch.hpp>
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 

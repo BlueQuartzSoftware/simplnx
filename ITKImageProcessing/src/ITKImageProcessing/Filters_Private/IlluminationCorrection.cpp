@@ -129,20 +129,9 @@ IFilter::PreflightResult IlluminationCorrection::preflightImpl(const DataStructu
   auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   auto pFileExtensionValue = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
   PreflightResult preflightResult;
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
   resultOutputActions = ITK::DataCheck(dataStructure, pSelectedCellArrayPath, pImageGeomPath, pOutputArrayPath);

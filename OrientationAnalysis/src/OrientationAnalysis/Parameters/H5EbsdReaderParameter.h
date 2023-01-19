@@ -2,11 +2,11 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
-
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/Utilities/FilePathGenerator.hpp"
+
+#include "EbsdLib/Core/EbsdLibConstants.h"
 
 #include <string>
 

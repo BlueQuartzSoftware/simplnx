@@ -6,14 +6,7 @@
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
-#include "EbsdLib/LaueOps/CubicLowOps.h"
-#include "EbsdLib/LaueOps/CubicOps.h"
-#include "EbsdLib/LaueOps/HexagonalOps.h"
 #include "EbsdLib/LaueOps/LaueOps.h"
-#include "EbsdLib/LaueOps/MonoclinicOps.h"
-#include "EbsdLib/LaueOps/OrthoRhombicOps.h"
-#include "EbsdLib/LaueOps/TetragonalOps.h"
-#include "EbsdLib/LaueOps/TrigonalOps.h"
 
 using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
 using LaueOpsContainer = std::vector<LaueOpsShPtrType>;

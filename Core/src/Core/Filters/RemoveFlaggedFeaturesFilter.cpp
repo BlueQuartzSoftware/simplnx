@@ -1,6 +1,7 @@
 #include "RemoveFlaggedFeaturesFilter.hpp"
 
 #include "Core/Filters/Algorithms/RemoveFlaggedFeatures.hpp"
+
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"

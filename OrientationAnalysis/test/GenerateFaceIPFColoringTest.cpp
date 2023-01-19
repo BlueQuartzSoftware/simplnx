@@ -1,13 +1,10 @@
-#include <catch2/catch.hpp>
-
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-
 #include "OrientationAnalysis/Filters/GenerateFaceIPFColoringFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex_plugins/Utilities/TestUtilities.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::UnitTest;

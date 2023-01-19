@@ -1,5 +1,3 @@
-#include <catch2/catch.hpp>
-
 #include "OrientationAnalysis/Filters/AlignSectionsMisorientationFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
@@ -13,13 +11,13 @@
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+#include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
+
+#include <catch2/catch.hpp>
 
 #include <filesystem>
+
 namespace fs = std::filesystem;
-
-#include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
-#include "complex_plugins/Utilities/TestUtilities.hpp"
-
 using namespace complex;
 using namespace complex::Constants;
 using namespace complex::UnitTest;

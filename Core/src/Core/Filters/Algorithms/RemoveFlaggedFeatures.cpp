@@ -1,6 +1,5 @@
 #include "RemoveFlaggedFeatures.hpp"
 
-#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"

@@ -1,4 +1,5 @@
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -7,13 +8,12 @@
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-
-#include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-
 #include "complex_plugins/Utilities/TestUtilities.hpp"
 
+#include <catch2/catch.hpp>
+
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 using namespace complex;

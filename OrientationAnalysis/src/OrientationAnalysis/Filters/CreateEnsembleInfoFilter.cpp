@@ -1,4 +1,5 @@
 #include "CreateEnsembleInfoFilter.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/CreateEnsembleInfo.hpp"
 
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -8,9 +9,6 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/EnsembleInfoParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
-
-#include "OrientationAnalysis/Filters/Algorithms/CreateEnsembleInfo.hpp"
 
 using namespace complex;
 

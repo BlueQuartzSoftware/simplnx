@@ -1,16 +1,16 @@
-#include <catch2/catch.hpp>
+#include "OrientationAnalysis/Filters/FindKernelAvgMisorientationsFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "OrientationAnalysis/Filters/FindKernelAvgMisorientationsFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 

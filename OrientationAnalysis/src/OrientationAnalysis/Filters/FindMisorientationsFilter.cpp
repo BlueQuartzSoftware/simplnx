@@ -1,4 +1,5 @@
 #include "FindMisorientationsFilter.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/FindMisorientations.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -9,8 +10,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
-
-#include "OrientationAnalysis/Filters/Algorithms/FindMisorientations.hpp"
 
 using namespace complex;
 
@@ -111,10 +110,6 @@ IFilter::PreflightResult FindMisorientationsFilter::preflightImpl(const DataStru
   auto pMisorientationListArrayPath = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_MisorientationListArrayName_Key));
   auto pAvgMisorientationsArrayPath = cellFeatDataPath.createChildPath(filterArgs.value<std::string>(k_AvgMisorientationsArrayName_Key));
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
   PreflightResult preflightResult;
 
   std::vector<DataPath> dataArrayPaths;
@@ -137,9 +132,6 @@ IFilter::PreflightResult FindMisorientationsFilter::preflightImpl(const DataStru
     return {MakeErrorResult<OutputActions>(-34501, "Input DataArrays do not have matching tuple count")};
   }
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
   if(pFindAvgMisorsValue)
@@ -152,10 +144,6 @@ IFilter::PreflightResult FindMisorientationsFilter::preflightImpl(const DataStru
   auto createArrayAction = std::make_unique<CreateNeighborListAction>(complex::DataType::float32, avgQuats->getNumberOfTuples(), pMisorientationListArrayPath);
   resultOutputActions.value().actions.push_back(std::move(createArrayAction));
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

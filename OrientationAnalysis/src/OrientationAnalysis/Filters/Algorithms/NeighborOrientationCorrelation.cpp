@@ -4,7 +4,6 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 

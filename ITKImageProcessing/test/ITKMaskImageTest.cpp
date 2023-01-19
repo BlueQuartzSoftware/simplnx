@@ -2,8 +2,6 @@
 
 #include "ITKImageProcessing/Filters/ITKMaskImage.hpp"
 
-#include "ITKImageProcessing/Common/sitkCommon.hpp"
-
 #include "complex/Parameters/NumberParameter.hpp"
 
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"

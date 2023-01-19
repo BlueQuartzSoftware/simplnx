@@ -4,7 +4,6 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/DataStore.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"

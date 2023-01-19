@@ -1,5 +1,4 @@
 #include "FindAvgOrientationsFilter.hpp"
-
 #include "OrientationAnalysis/Filters/Algorithms/FindAvgOrientations.hpp"
 
 #include "complex/DataStructure/AttributeMatrix.hpp"

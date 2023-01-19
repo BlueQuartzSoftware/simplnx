@@ -24,7 +24,6 @@
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
-#include <numeric>
 #include <sstream>
 
 namespace fs = std::filesystem;
