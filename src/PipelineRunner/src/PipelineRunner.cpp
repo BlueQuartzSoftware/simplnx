@@ -22,7 +22,7 @@ using namespace complex;
 
 void LoadApp(complex::Application& app)
 {
-#if(__APPLE__)
+#if defined(__APPLE__)
   {
     fs::path appPath = app.getCurrentDir();
     app.loadPlugins(appPath, true);
@@ -40,9 +40,19 @@ void LoadApp(complex::Application& app)
       app.loadPlugins(appPath, true);
     }
   }
+#elif defined(_MSC_VER)
 #else
-  app.loadPlugins(app.getCurrentDir(), true);
+  fs::path appPath = app.getCurrentDir();
+  appPath = appPath.parent_path();
+
+  // Check if there is a Plugins Folder inside the app package
+  if(fs::exists(appPath / "Plugins"))
+  {
+    appPath = appPath / "Plugins";
+    app.loadPlugins(appPath, true);
+  }
 #endif
+  app.loadPlugins(app.getCurrentDir(), true);
 }
 
 #ifdef TEST_PIPELINE
