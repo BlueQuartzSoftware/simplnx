@@ -6,6 +6,8 @@
 
 #include "complex/Common/Any.hpp"
 
+#include <type_traits>
+
 namespace complex
 {
 GenerateColorTableParameter::GenerateColorTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
