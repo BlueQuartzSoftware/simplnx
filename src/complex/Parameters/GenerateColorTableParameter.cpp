@@ -65,7 +65,7 @@ Result<> GenerateColorTableParameter::validate(const std::any& value) const
   {
     return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
   }
-  
+
   return {};
 }
 } // namespace complex
