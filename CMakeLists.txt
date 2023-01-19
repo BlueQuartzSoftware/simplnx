@@ -507,6 +507,7 @@ set(COMPLEX_SRCS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/ArrayThreshold.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.cpp
