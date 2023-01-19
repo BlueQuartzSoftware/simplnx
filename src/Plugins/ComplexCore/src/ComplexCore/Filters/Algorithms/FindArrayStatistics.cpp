@@ -5,7 +5,7 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
-#include <complex/Utilities/ParallelDataAlgorithm.hpp>
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <unordered_map>
 

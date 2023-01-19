@@ -26,9 +26,9 @@ class FindNeighborListStatisticsImpl
 public:
   using NeighborListType = NeighborList<T>;
 
-  FindNeighborListStatisticsImpl(const IFilter* thisFilter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
+  FindNeighborListStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
                                  std::vector<IDataArray*>& arrays)
-  : m_Filter(thisFilter)
+  : m_Filter(filter)
   , m_Source(source)
   , m_Length(length)
   , m_Min(min)

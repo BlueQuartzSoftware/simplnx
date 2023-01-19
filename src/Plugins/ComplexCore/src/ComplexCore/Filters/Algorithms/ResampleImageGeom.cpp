@@ -141,7 +141,7 @@ Result<> ResampleImageGeom::operator()()
     const std::string srcName = oldDataArray.getName();
 
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Resample Volume || Copying Dat Array {}", srcName));
+    m_MessageHandler(fmt::format("Resample Volume || Copying Data Array {}", srcName));
 
     ExecuteParallelFunction(CopyTupleFunctor{}, oldDataArray.getDataType(), ParallelRunner(taskRunner), oldDataArray, newDataArray, newIndices);
   }
