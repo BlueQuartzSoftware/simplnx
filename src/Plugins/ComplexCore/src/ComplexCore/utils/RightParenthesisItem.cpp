@@ -1,5 +1,4 @@
 #include "ComplexCore/utils/RightParenthesisItem.hpp"
-
 #include "ComplexCore/utils/LeftParenthesisItem.hpp"
 
 using namespace complex;

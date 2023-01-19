@@ -1,6 +1,6 @@
-#include <catch2/catch.hpp>
-
 #include "complex/Common/Bit.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

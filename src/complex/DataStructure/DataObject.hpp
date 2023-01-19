@@ -1,17 +1,16 @@
 #pragma once
 
+#include "complex/DataStructure/Metadata.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/Utilities/TooltipGenerator.hpp"
+#include "complex/complex_export.hpp"
+
 #include <iostream>
 #include <list>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "complex/DataStructure/Metadata.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/Utilities/TooltipGenerator.hpp"
-
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

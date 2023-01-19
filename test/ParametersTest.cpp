@@ -1,10 +1,10 @@
-#include <catch2/catch.hpp>
-
 #include "complex/Filter/Parameters.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

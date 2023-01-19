@@ -1,10 +1,9 @@
 #pragma once
 
-#include <vector>
-
 #include "complex/Utilities/TooltipRowItem.hpp"
-
 #include "complex/complex_export.hpp"
+
+#include <vector>
 
 namespace complex
 {

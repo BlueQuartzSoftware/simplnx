@@ -1,5 +1,7 @@
 #include "FindEuclideanDistMapFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/FindEuclideanDistMap.hpp"
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -8,8 +10,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/FindEuclideanDistMap.hpp"
 
 using namespace complex;
 

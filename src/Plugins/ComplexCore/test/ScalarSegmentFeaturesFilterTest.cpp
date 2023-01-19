@@ -1,15 +1,13 @@
-
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/ScalarSegmentFeaturesFilter.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ScalarSegmentFeaturesFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::UnitTest;

@@ -1,11 +1,11 @@
 #include "H5AttributeWriter.hpp"
 
-#include <iostream>
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <H5Apublic.h>
 
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+#include <iostream>
 
 using namespace complex;
 

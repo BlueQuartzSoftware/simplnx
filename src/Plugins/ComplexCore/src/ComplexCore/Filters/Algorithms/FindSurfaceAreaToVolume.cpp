@@ -5,10 +5,6 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 
-#ifdef COMPLEX_ENABLE_MULTICORE
-#include <tbb/parallel_for.h>
-#endif
-
 using namespace complex;
 
 // -----------------------------------------------------------------------------

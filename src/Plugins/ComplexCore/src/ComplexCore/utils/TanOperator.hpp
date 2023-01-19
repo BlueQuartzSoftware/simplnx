@@ -1,11 +1,6 @@
 #pragma once
 
-#include <memory>
-
-#include <stack>
-
 #include "ComplexCore/ComplexCore_export.hpp"
-
 #include "ComplexCore/utils/UnaryOperator.hpp"
 
 namespace complex

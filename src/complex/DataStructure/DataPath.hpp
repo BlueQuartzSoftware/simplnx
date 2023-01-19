@@ -1,12 +1,12 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
+#include "complex/complex_export.hpp"
+
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include "complex/Common/Types.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

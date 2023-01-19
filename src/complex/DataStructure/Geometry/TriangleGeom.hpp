@@ -1,7 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/Geometry/INodeGeometry2D.hpp"
-
 #include "complex/complex_export.hpp"
 
 #include <nonstd/span.hpp>

@@ -1,5 +1,4 @@
-#include <catch2/catch.hpp>
-
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/FeatureDataCSVWriterFilter.hpp"
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
@@ -9,12 +8,13 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
+#include <catch2/catch.hpp>
+
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-
+namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 

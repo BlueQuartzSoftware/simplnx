@@ -1,10 +1,8 @@
 #include "complex/Plugin/PluginLoader.hpp"
 
-#include <memory>
-#include <string>
-
 #include <fmt/core.h>
-#include <fmt/format.h>
+
+#include <memory>
 
 // fmt >= 8.0.0
 #if FMT_VERSION >= 80000
@@ -13,6 +11,7 @@
 
 #if defined(_WIN32)
 #include <Windows.h>
+#include <fmt/format.h>
 #define COMPLEX_TEXT_IMPL(text) L##text
 #elif defined(__linux__) || defined(__APPLE__)
 #include <dlfcn.h>

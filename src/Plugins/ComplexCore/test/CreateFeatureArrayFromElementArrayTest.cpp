@@ -1,13 +1,13 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/CreateFeatureArrayFromElementArray.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/CreateFeatureArrayFromElementArray.hpp"
+#include <catch2/catch.hpp>
 
-using namespace complex;
 namespace fs = std::filesystem;
+using namespace complex;
 
 namespace
 {

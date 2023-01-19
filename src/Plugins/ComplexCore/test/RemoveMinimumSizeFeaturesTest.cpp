@@ -1,6 +1,6 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp"
 
-#include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
@@ -8,12 +8,11 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 
+#include <catch2/catch.hpp>
+
 #include <filesystem>
+
 namespace fs = std::filesystem;
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp"
-
 using namespace complex;
 
 TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[ComplexCore][RemoveMinimumSizeFeatures]")

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string>
-
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
+
+#include <string>
 
 namespace complex
 {

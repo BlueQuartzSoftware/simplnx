@@ -1,9 +1,9 @@
 #include "CreateRectGridGeometryAction.hpp"
 
-#include <fmt/core.h>
-
 #include "complex/DataStructure/Geometry/RectGridGeom.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+
+#include <fmt/core.h>
 
 #include <memory>
 

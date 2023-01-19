@@ -1,9 +1,9 @@
 #pragma once
 
-#include "nod/nod.hpp"
-
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Pipeline/AbstractPipelineNode.hpp"
+
+#include <nod/nod.hpp>
 
 namespace complex
 {

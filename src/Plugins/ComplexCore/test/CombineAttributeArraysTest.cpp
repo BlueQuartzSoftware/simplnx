@@ -1,11 +1,11 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/CombineAttributeArraysFilter.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/Filters/CombineAttributeArraysFilter.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

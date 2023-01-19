@@ -1,9 +1,9 @@
 #include "MoveDataAction.hpp"
 
-#include <fmt/core.h>
-
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+
+#include <fmt/core.h>
 
 using namespace complex;
 

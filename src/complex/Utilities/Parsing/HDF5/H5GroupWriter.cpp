@@ -1,8 +1,8 @@
 #include "H5GroupWriter.hpp"
 
-#include <H5Gpublic.h>
-
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+
+#include <H5Gpublic.h>
 
 using namespace complex;
 

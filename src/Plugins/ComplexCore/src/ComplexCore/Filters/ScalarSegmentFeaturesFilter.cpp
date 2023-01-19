@@ -1,19 +1,15 @@
 #include "ScalarSegmentFeaturesFilter.hpp"
 
-#include <chrono>
+#include "ComplexCore/Filters/Algorithms/ScalarSegmentFeatures.hpp"
 
-#include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/ScalarSegmentFeatures.hpp"
 
 using namespace complex;
 
@@ -27,8 +23,6 @@ namespace
 {
 using FeatureIdsArrayType = Int32Array;
 using GoodVoxelsArrayType = BoolArray;
-
-constexpr StringLiteral k_CompareFunctKey = "Compare Function";
 
 constexpr int64 k_IncorrectInputArray = -600;
 constexpr int64 k_MissingInputArray = -601;

@@ -1,10 +1,9 @@
 #include "ImportCSVDataFilter.hpp"
 
-#include <fstream>
+#include "ComplexCore/utils/CSVDataParser.hpp"
 
 #include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
-#include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -18,7 +17,7 @@
 #include "complex/Parameters/ImportCSVDataParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include "ComplexCore/utils/CSVDataParser.hpp"
+#include <fstream>
 
 using namespace complex;
 

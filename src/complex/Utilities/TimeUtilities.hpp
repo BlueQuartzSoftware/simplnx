@@ -1,8 +1,9 @@
 #pragma once
 
-#include <chrono>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+
+#include <chrono>
 #include <string>
 
 namespace complex

@@ -1,7 +1,5 @@
 #include "Dream3dIO.hpp"
 
-#include "nlohmann/json.hpp"
-
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
@@ -23,6 +21,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 #include <sstream>
@@ -770,7 +770,6 @@ IDataArray* createLegacyDataArray(DataStructure& dataStructure, DataObject::IdTy
 {
   using DataArrayType = DataArray<T>;
   using EmptyDataStoreType = EmptyDataStore<T>;
-  using DataStoreType = DataStore<T>;
 
   const std::string daName = dataArrayReader.getName();
 

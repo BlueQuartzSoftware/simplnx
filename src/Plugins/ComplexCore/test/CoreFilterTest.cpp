@@ -1,4 +1,6 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/CreateDataGroup.hpp"
+#include "ComplexCore/Filters/ImportTextFilter.hpp"
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/Core/Application.hpp"
@@ -7,15 +9,13 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/CreateDataGroup.hpp"
-#include "ComplexCore/Filters/ImportTextFilter.hpp"
+#include <catch2/catch.hpp>
 
 #include <filesystem>
 #include <fstream>
 
-using namespace complex;
 namespace fs = std::filesystem;
+using namespace complex;
 
 namespace Catch
 {

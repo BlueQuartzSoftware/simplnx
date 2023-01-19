@@ -1,21 +1,15 @@
 #include "SetImageGeomOriginScalingFilter.hpp"
 
-#include <optional>
-#include <string>
-
-#include "fmt/format.h"
-
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/UpdateImageGeomAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 
-namespace
-{
-constexpr complex::int32 k_EMPTY_PARAMETER = -123;
-} // namespace
+#include <fmt/format.h>
+
+#include <optional>
+#include <string>
 
 namespace complex
 {

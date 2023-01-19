@@ -1,12 +1,11 @@
-#include <catch2/catch.hpp>
-
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/CreateAttributeMatrixFilter.hpp"
+
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-
 #include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
 
 using namespace complex;
 

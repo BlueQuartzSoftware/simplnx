@@ -1,5 +1,7 @@
 #include "FindSurfaceAreaToVolumeFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/FindSurfaceAreaToVolume.hpp"
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -7,8 +9,6 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/FindSurfaceAreaToVolume.hpp"
 
 using namespace complex;
 

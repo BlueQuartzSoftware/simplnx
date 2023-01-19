@@ -29,7 +29,6 @@
 
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"

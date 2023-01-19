@@ -1,15 +1,12 @@
-
 #include "ApplyTransformationToGeometry.hpp"
 
 #include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <Eigen/Dense>
-
 #include <fmt/format.h>
 
 #include <cstdint>
-#include <map>
 
 using namespace complex;
 

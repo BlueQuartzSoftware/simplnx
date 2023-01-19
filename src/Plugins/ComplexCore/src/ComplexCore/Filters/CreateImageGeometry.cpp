@@ -4,9 +4,7 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
 #include <sstream>
@@ -116,10 +114,6 @@ IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure&
   complex::Result<OutputActions> resultOutputActions;
   resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
   IFilter::PreflightResult preflightResult;
   // Assign/Move the resultOutputActions to the preflightResult object
 

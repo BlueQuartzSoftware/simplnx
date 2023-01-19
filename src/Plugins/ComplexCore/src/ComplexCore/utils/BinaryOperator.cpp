@@ -1,5 +1,4 @@
 #include "ComplexCore/utils/BinaryOperator.hpp"
-
 #include "ComplexCore/utils/LeftParenthesisItem.hpp"
 #include "ComplexCore/utils/RightParenthesisItem.hpp"
 

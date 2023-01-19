@@ -1,11 +1,11 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
 #include "complex/complex_export.hpp"
+
+#include <string>
+#include <vector>
 
 namespace complex
 {

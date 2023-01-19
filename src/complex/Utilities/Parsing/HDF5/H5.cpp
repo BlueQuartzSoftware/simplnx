@@ -2,10 +2,9 @@
 
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include <stdexcept>
-#include <vector>
-
 #include <H5Apublic.h>
+
+#include <stdexcept>
 
 using namespace complex;
 

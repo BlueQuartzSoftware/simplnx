@@ -1,7 +1,4 @@
 #include "ComplexCore/utils/ACosOperator.hpp"
-
-#include <cmath>
-
 #include "ComplexCore/utils/CalculatorArray.hpp"
 
 using namespace complex;

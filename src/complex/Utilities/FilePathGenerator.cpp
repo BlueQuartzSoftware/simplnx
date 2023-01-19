@@ -1,9 +1,8 @@
 #include "FilePathGenerator.hpp"
 
-#include <filesystem>
-#include <string>
-
 #include <fmt/core.h>
+
+#include <filesystem>
 
 namespace fs = std::filesystem;
 

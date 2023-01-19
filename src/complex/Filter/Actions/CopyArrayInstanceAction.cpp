@@ -1,7 +1,6 @@
 #include "CopyArrayInstanceAction.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"

@@ -5,14 +5,13 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
+namespace fs = std::filesystem;
 using namespace complex;
 
 namespace complex

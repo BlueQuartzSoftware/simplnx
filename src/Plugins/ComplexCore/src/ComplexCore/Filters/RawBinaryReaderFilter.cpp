@@ -1,5 +1,7 @@
 #include "RawBinaryReaderFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/RawBinaryReader.hpp"
+
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -10,12 +12,9 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/RawBinaryReader.hpp"
-
 #include <filesystem>
 
 namespace fs = std::filesystem;
-
 using namespace complex;
 
 namespace complex
@@ -25,7 +24,6 @@ constexpr int32 k_RbrNumComponentsError = -392;
 constexpr int32 k_RbrWrongType = -393;
 constexpr int32 k_RbrEmptyFile = -394;
 constexpr int32 k_RbrSkippedTooMuch = -395;
-constexpr int32 k_RbrTupleDimsError = -396;
 constexpr int32 k_RbrTupleDimsInconsistent = -397;
 
 //------------------------------------------------------------------------------

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <memory>
-
 #include "ComplexCore/ComplexCore_export.hpp"
+#include "ComplexCore/utils/CalculatorItem.hpp"
+
 #include "complex/DataStructure/DataArray.hpp"
 
-#include "ComplexCore/utils/CalculatorItem.hpp"
+#include <memory>
 
 namespace complex
 {

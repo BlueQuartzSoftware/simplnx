@@ -1,11 +1,11 @@
 #pragma once
 
+#include "complex/DataStructure/DataObject.hpp"
+
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
 #include <string>
-
-#include "complex/DataStructure/DataObject.hpp"
 
 namespace complex
 {

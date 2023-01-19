@@ -1,4 +1,4 @@
-#include "catch2/catch.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -11,16 +11,13 @@
 #include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-
-#include <filesystem>
-#include <iostream>
-#include <typeinfo>
-
+#include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
 
-namespace fs = std::filesystem;
+#include <filesystem>
+#include <typeinfo>
 
+namespace fs = std::filesystem;
 using namespace complex;
 
 namespace

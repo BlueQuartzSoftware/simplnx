@@ -1,8 +1,6 @@
 #include "complex/DataStructure/LinkedPath.hpp"
-
 #include "complex/DataStructure/DataStructure.hpp"
 
-#include <exception>
 #include <utility>
 
 using namespace complex;

@@ -1,15 +1,15 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
+#include "complex/Filter/AnyParameter.hpp"
+#include "complex/Filter/IParameter.hpp"
+#include "complex/complex_export.hpp"
+
 #include <map>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <variant>
-
-#include "complex/Common/Types.hpp"
-#include "complex/Filter/AnyParameter.hpp"
-#include "complex/Filter/IParameter.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

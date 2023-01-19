@@ -1,30 +1,25 @@
 #include "ResampleImageGeomFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/ResampleImageGeom.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
-#include "complex/Filter/Actions/CopyArrayInstanceAction.hpp"
 #include "complex/Filter/Actions/CopyDataObjectAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Filter/Actions/MoveDataAction.hpp"
 #include "complex/Filter/Actions/RenameDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
-
-#include "ComplexCore/Filters/Algorithms/ResampleImageGeom.hpp"
-
-#include <sstream>
 
 using namespace complex;
 
@@ -119,9 +114,6 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   auto cellFeatureAmPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrix_Key);
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;

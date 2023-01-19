@@ -1,9 +1,9 @@
-#include <catch2/catch.hpp>
+#include "ComplexCore/Filters/AlignGeometries.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/AlignGeometries.hpp"
+#include <catch2/catch.hpp>
 
 using namespace complex;
 using namespace complex::Constants;

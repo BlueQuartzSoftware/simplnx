@@ -1,10 +1,10 @@
 #pragma once
 
-#include <memory>
-
-#include "nod/nod.hpp"
-
 #include "complex/complex_export.hpp"
+
+#include <nod/nod.hpp>
+
+#include <memory>
 
 namespace complex
 {

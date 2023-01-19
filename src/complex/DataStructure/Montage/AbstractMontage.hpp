@@ -4,7 +4,6 @@
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/LinkedPath.hpp"
 #include "complex/Utilities/TooltipGenerator.hpp"
-
 #include "complex/complex_export.hpp"
 
 namespace complex
@@ -113,7 +112,7 @@ public:
   virtual void setGeometry(const AbstractTileIndex* index, IGeometry* geom) = 0;
 
   /**
-   * @brief Returns an iterator to the begining of the montage.
+   * @brief Returns an iterator to the beginning of the montage.
    * @return iterator
    */
   virtual Iterator begin();
@@ -125,7 +124,7 @@ public:
   virtual Iterator end();
 
   /**
-   * @brief Returns an iterator to the begining of the montage.
+   * @brief Returns an iterator to the beginning of the montage.
    * @return iterator
    */
   virtual ConstIterator begin() const;

@@ -1,5 +1,7 @@
 #include "FindTriangleGeomCentroidsFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/FindTriangleGeomCentroids.hpp"
+
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
@@ -7,8 +9,6 @@
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/FindTriangleGeomCentroids.hpp"
 
 using namespace complex;
 

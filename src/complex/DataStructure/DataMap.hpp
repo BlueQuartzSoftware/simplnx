@@ -1,13 +1,13 @@
 #pragma once
 
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
+#include "complex/complex_export.hpp"
+
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
-
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/complex_export.hpp"
 
 namespace complex
 {

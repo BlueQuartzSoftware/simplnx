@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
-
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
+
+#include <vector>
 
 namespace complex
 {

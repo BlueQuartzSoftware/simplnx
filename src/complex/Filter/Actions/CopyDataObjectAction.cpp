@@ -1,10 +1,9 @@
 #include "CopyDataObjectAction.hpp"
 
-#include <fmt/core.h>
-
 #include "complex/DataStructure/BaseGroup.hpp"
-#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
+
+#include <fmt/core.h>
 
 using namespace complex;
 

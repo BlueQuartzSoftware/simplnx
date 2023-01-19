@@ -3,7 +3,6 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 

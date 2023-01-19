@@ -1,8 +1,5 @@
 #include "DataStructObserver.hpp"
 
-#include <iostream>
-#include <string>
-
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Messaging/DataAddedMessage.hpp"

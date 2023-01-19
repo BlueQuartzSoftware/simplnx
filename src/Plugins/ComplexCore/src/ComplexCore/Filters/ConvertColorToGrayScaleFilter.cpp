@@ -1,19 +1,17 @@
 #include "ConvertColorToGrayScaleFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
+
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
 
 using namespace complex;
 

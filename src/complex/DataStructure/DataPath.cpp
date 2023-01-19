@@ -1,13 +1,13 @@
 #include "DataPath.hpp"
 
-#include <algorithm>
-#include <stdexcept>
-
-#include <fmt/format.h>
-
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+
+#include <fmt/format.h>
+
+#include <algorithm>
+#include <stdexcept>
 
 using namespace complex;
 

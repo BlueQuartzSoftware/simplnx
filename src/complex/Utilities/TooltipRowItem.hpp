@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "complex/complex_export.hpp"
+
+#include <string>
 
 namespace complex
 {

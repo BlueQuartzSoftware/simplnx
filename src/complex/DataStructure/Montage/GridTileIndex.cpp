@@ -1,8 +1,8 @@
 #include "GridTileIndex.hpp"
 
-#include <stdexcept>
-
 #include "complex/DataStructure/Montage/GridMontage.hpp"
+
+#include <stdexcept>
 
 using namespace complex;
 

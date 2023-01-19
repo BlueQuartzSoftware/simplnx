@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
-
 #include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <nonstd/span.hpp>
+
+#include <vector>
 
 namespace complex
 {

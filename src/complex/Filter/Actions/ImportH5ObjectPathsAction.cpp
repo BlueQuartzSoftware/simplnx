@@ -1,13 +1,13 @@
 #include "ImportH5ObjectPathsAction.hpp"
 
-#include <algorithm>
-
-#include <fmt/core.h>
-
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+
+#include <fmt/core.h>
+
+#include <algorithm>
 
 using namespace complex;
 

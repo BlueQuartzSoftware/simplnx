@@ -1,5 +1,7 @@
 #include "ConvertDataFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/ConvertData.hpp"
+
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
@@ -7,8 +9,6 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-
-#include "ComplexCore/Filters/Algorithms/ConvertData.hpp"
 
 using namespace complex;
 
