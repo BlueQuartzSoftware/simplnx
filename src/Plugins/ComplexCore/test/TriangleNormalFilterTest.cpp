@@ -1,6 +1,6 @@
+#include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
-#include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
