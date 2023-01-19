@@ -21,6 +21,19 @@ using namespace complex;
 
 namespace
 {
+
+const std::string k_BasicMode("Basic (0)");
+const std::string k_AdvancedMode("Advanced (1)");
+const std::string k_BoundingBoxMode("Bounding Box (2)");
+const std::string k_ExistingSchemeMode("Existing Partitioning Scheme (3)");
+
+const ChoicesParameter::Choices k_Choices = {k_BasicMode, k_AdvancedMode, k_BoundingBoxMode, k_ExistingSchemeMode};
+
+const ChoicesParameter::ValueType k_BasicModeIndex = 0;
+const ChoicesParameter::ValueType k_AdvancedModeIndex = 1;
+const ChoicesParameter::ValueType k_BoundingBoxModeIndex = 2;
+const ChoicesParameter::ValueType k_ExistingSchemeModeIndex = 3;
+
 /**
  * @brief Generates the display text that describes the input geometry,
  * shown as a preflight updated value in the user interface.
@@ -218,7 +231,7 @@ std::string PartitionGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> PartitionGeometryFilter::defaultTags() const
 {
-  return {"#Reconstruction", "#Reconstruction"};
+  return {"#Processing", "#Segmentation"};
 }
 
 //------------------------------------------------------------------------------
@@ -228,26 +241,35 @@ Parameters PartitionGeometryFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Geometry Details"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryToPartition_Key, "Geometry to Partition", "", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryToPartition_Key, "Geometry to Partition", "The input geometry that will be partitioned", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
                                                                                                       IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral, IGeometry::Type::Image,
                                                                                                       IGeometry::Type::RectGrid}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_AttributeMatrixPath_Key, "Attribute Matrix (Vertex=>Node Geometry, Cell=>Image/Rectilinear)", "", DataPath{}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_AttributeMatrixPath_Key, "Cell Attribute Matrix (Vertex=>Node Geometry, Cell=>Image/Rectilinear)",
+                                                                    "The attribute matrix that represents the cell data for the geometry.", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Partitioning Scheme Details"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_PartitioningMode_Key, "Select the partitioning mode", "", 0,
-                                                                    ChoicesParameter::Choices{"Basic", "Advanced", "Bounding Box", "Existing Partitioning Scheme"}));
-  params.insert(std::make_unique<Int32Parameter>(k_StartingPartitionID_Key, "Starting Partition ID", "", 1));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_PartitioningMode_Key, "Select the partitioning mode",
+                                                                    "Mode can be 'Basic (0)', 'Advanced (1)', 'Bounding Box (2)', 'Existing Partitioning Scheme (3)'", 0, ::k_Choices));
+  params.insert(std::make_unique<Int32Parameter>(k_StartingPartitionID_Key, "Starting Partition ID", "The value to start the partition ids at.", 1));
   params.insert(std::make_unique<Int32Parameter>(k_OutOfBoundsValue_Key, "Out-Of-Bounds Value",
                                                  "The value used as the partition id for cells/vertices that are outside the bounds of the partitioning scheme.", 0));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_NumberOfPartitionsPerAxis_Key, "Number Of Partitions Per Axis (X, Y, Z)", "", std::vector<int32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_PartitioningSchemeOrigin_Key, "Partitioning Scheme Origin (X, Y, Z)", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_LengthPerPartition_Key, "Length Per Partition (X, Y, Z)", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_LowerLeftCoord_Key, "Lower Left Coordinate (X, Y, Z)", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_UpperRightCoord_Key, "Upper Right Coordinate (X, Y, Z)", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingPartitioningSchemePath_Key, "Existing Partitioning Scheme", "", DataPath{},
+  params.insert(std::make_unique<VectorInt32Parameter>(k_NumberOfPartitionsPerAxis_Key, "Number Of Partitions Per Axis", "The number of partitions along each axis", std::vector<int32>({5, 5, 5}),
+                                                       std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(
+      std::make_unique<VectorFloat32Parameter>(k_PartitioningSchemeOrigin_Key, "Partitioning Scheme Origin", "", std::vector<float32>({0.0F, 0.0F, 0.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_LengthPerPartition_Key, "Length Per Partition",
+                                                         "The length in units for each partition. These should be consistent with the units being used in other filters",
+                                                         std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_LowerLeftCoord_Key, "Lower Left Coordinate", "Minimum value coordinate", std::vector<float32>({0.0F, 0.0F, 0.0F}),
+                                                         std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_UpperRightCoord_Key, "Upper Right Coordinate", "The Maximum value coordinate", std::vector<float32>({10.0F, 10.0F, 10.0F}),
+                                                         std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingPartitioningSchemePath_Key, "Existing Partitioning Scheme",
+                                                             "This is an existing Image Geometry that defines the partitioning scheme that is to be used.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseVertexMask_Key, "Use Vertex Mask", "", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_UseVertexMask_Key, "Use Vertex Mask", "Partition ID values will only be placed on vertices that have a 'true' mask value. All others will have the invalid value used instead", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexMaskPath_Key, "Vertex Mask", "The complete path to the vertex mask array.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -267,30 +289,30 @@ Parameters PartitionGeometryFilter::parameters() const
                                                           "PartitioningSchemeIds"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_PartitioningMode_Key, k_StartingPartitionID_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  params.linkParameters(k_PartitioningMode_Key, k_StartingPartitionID_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_PartitioningMode_Key, k_StartingPartitionID_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsValue_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsValue_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsValue_Key, std::make_any<ChoicesParameter::ValueType>(3));
-  params.linkParameters(k_PartitioningMode_Key, k_NumberOfPartitionsPerAxis_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  params.linkParameters(k_PartitioningMode_Key, k_NumberOfPartitionsPerAxis_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_PartitioningMode_Key, k_NumberOfPartitionsPerAxis_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  params.linkParameters(k_PartitioningMode_Key, k_PartitioningSchemeOrigin_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_PartitioningMode_Key, k_LengthPerPartition_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_PartitioningMode_Key, k_LowerLeftCoord_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  params.linkParameters(k_PartitioningMode_Key, k_UpperRightCoord_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  params.linkParameters(k_PartitioningMode_Key, k_ExistingPartitioningSchemePath_Key, std::make_any<ChoicesParameter::ValueType>(3));
+  params.linkParameters(k_PartitioningMode_Key, k_StartingPartitionID_Key, std::make_any<ChoicesParameter::ValueType>(k_BasicModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_StartingPartitionID_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_StartingPartitionID_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsValue_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsValue_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_OutOfBoundsValue_Key, std::make_any<ChoicesParameter::ValueType>(k_ExistingSchemeModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_NumberOfPartitionsPerAxis_Key, std::make_any<ChoicesParameter::ValueType>(k_BasicModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_NumberOfPartitionsPerAxis_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_NumberOfPartitionsPerAxis_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PartitioningSchemeOrigin_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_LengthPerPartition_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_LowerLeftCoord_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_UpperRightCoord_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_ExistingPartitioningSchemePath_Key, std::make_any<ChoicesParameter::ValueType>(k_ExistingSchemeModeIndex));
   params.linkParameters(k_UseVertexMask_Key, k_VertexMaskPath_Key, std::make_any<BoolParameter::ValueType>(true));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometry_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometry_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometry_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryAMName_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryAMName_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryAMName_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryDataName_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryDataName_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryDataName_Key, std::make_any<ChoicesParameter::ValueType>(2));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometry_Key, std::make_any<ChoicesParameter::ValueType>(k_BasicModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometry_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometry_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryAMName_Key, std::make_any<ChoicesParameter::ValueType>(k_BasicModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryAMName_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryAMName_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryDataName_Key, std::make_any<ChoicesParameter::ValueType>(k_BasicModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryDataName_Key, std::make_any<ChoicesParameter::ValueType>(k_AdvancedModeIndex));
+  params.linkParameters(k_PartitioningMode_Key, k_PSGeometryDataName_Key, std::make_any<ChoicesParameter::ValueType>(k_BoundingBoxModeIndex));
 
   return params;
 }
