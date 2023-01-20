@@ -41,11 +41,16 @@ struct ArrayTypeOptions
   static inline constexpr bool UsingFloat64 = UseFloat64V;
 };
 
-template <template <class> class ClassT, class ArrayTypeOptions, class ParallelRunner, class... ArgsT>
-auto ExecuteParallelFunction(const IDataStore& dataStore, ParallelRunner&& runner, ArgsT&&... args)
-{
-  DataType dataType = dataStore.getDataType();
+using ArrayUseAllTypes = ArrayTypeOptions<true, true, true, true, true, true, true, true, true, true, true>;
+using NoBooleanType = ArrayTypeOptions<false, true, true, true, true, true, true, true, true, true, true>;
+using ArrayUseIntegerTypes = ArrayTypeOptions<false, true, true, true, true, true, true, true, true, false, false>;
+using ArrayUseFloatingTypes = ArrayTypeOptions<false, false, false, false, false, false, false, false, false, true, true>;
+using ArrayUseSignedTypes = ArrayTypeOptions<false, true, false, true, false, true, false, true, false, true, true>;
+using ArrayUseUnsignedTypes = ArrayTypeOptions<false, false, true, false, true, false, true, false, true, false, false>;
 
+template <template <class> class ClassT, class ArrayTypeOptions = ArrayUseAllTypes, class ParallelRunnerT, class... ArgsT>
+auto ExecuteParallelFunction(DataType dataType, ParallelRunnerT&& runner, ArgsT&&... args)
+{
   if constexpr(ArrayTypeOptions::UsingBoolean)
   {
     if(dataType == DataType::boolean)
@@ -57,70 +62,70 @@ auto ExecuteParallelFunction(const IDataStore& dataStore, ParallelRunner&& runne
   {
     if(dataType == DataType::int8)
     {
-      return func.template operator()<int8>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<int8>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingInt16)
   {
     if(dataType == DataType::int16)
     {
-      return func.template operator()<int16>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<int16>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingInt32)
   {
     if(dataType == DataType::int32)
     {
-      return func.template operator()<int32>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<int32>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingInt64)
   {
     if(dataType == DataType::int64)
     {
-      return func.template operator()<int64>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<int64>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingUInt8)
   {
     if(dataType == DataType::uint8)
     {
-      return func.template operator()<uint8>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<uint8>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingUInt16)
   {
     if(dataType == DataType::uint16)
     {
-      return func.template operator()<uint16>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<uint16>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingUInt32)
   {
     if(dataType == DataType::uint32)
     {
-      return func.template operator()<uint32>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<uint32>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingUInt64)
   {
     if(dataType == DataType::uint64)
     {
-      return func.template operator()<uint64>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<uint64>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingFloat32)
   {
     if(dataType == DataType::float32)
     {
-      return func.template operator()<float32>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<float32>(std::forward<ArgsT>(args)...));
     }
   }
   if constexpr(ArrayTypeOptions::UsingFloat64)
   {
     if(dataType == DataType::float64)
     {
-      return func.template operator()<float64>(std::forward<ParallelRunner>(runner), std::forward<ArgsT>(args)...);
+      return runner.template execute<>(ClassT<float64>(std::forward<ArgsT>(args)...));
     }
   }
 

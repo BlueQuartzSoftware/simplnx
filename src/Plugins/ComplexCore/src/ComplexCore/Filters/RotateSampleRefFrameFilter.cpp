@@ -631,7 +631,7 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
     messageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcName));
 
-    ExecuteParallelFunction(CopyTupleFunctor{}, oldDataArray.getDataType(), ParallelRunner(taskRunner), oldDataArray, newDataArray, newIndices);
+    ExecuteParallelFunction<CopyTupleUsingIndexList>(oldDataArray.getDataType(), ParallelRunner(taskRunner), oldDataArray, newDataArray, newIndices);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
