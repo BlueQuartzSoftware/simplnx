@@ -50,6 +50,7 @@ set(FilterList
   FindTriangleGeomCentroidsFilter
   FindTriangleGeomSizesFilter
   FindVolFractionsFilter
+  GenerateColorTableFilter
   IdentifySample
   ImportCSVDataFilter
   ImportDREAM3DFilter
@@ -106,6 +107,7 @@ set(AlgorithmList
   FindSurfaceAreaToVolume
   FindTriangleGeomCentroids
   FindTriangleGeomSizes
+  GenerateColorTable
   LaplacianSmoothing
   PointSampleTriangleGeometry
   QuickSurfaceMesh
