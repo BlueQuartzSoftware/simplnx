@@ -11,6 +11,8 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
 option(COMPLEX_ENABLE_MULTICORE "Enable multicore support" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_MULTICORE FEATURE "parallel")
 
+option(COMPLEX_DOWNLOAD_TEST_FILES "Download the test files" ON)
+
 project(complex
   VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"
