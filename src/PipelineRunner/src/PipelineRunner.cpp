@@ -32,13 +32,10 @@ void LoadApp(complex::Application& app)
       appPath = appPath / "Plugins";
       app.loadPlugins(appPath, true);
     }
-    else // Climb out of the app package and look in the build directory
-    {
-      appPath = appPath.parent_path().parent_path();
-      app.loadPlugins(appPath, true);
-    }
   }
 #elif defined(_MSC_VER)
+  fs::path appPath = app.getCurrentDir();
+  app.loadPlugins(appPath, true);
 #else
   fs::path appPath = app.getCurrentDir();
   appPath = appPath.parent_path();
@@ -50,7 +47,6 @@ void LoadApp(complex::Application& app)
     app.loadPlugins(appPath, true);
   }
 #endif
-  app.loadPlugins(app.getCurrentDir(), true);
 }
 
 #ifdef TEST_PIPELINE
