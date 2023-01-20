@@ -3,6 +3,7 @@
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -153,18 +154,6 @@ private:
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void findStatisticsByIndexImpl(std::unordered_map<int32, std::list<T>>& featureDataMap, std::vector<IDataArray*>& arrays, const FindArrayStatisticsInputValues* inputValues, usize numFeatures)
-{
-  // Allow data-based parallelization
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, numFeatures);
-  dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(featureDataMap, inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMedian,
-                                                    inputValues->FindStdDeviation, inputValues->FindSummation, arrays, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
-                                                    inputValues->UseFullRange, inputValues->NumBins));
-}
-
-// -----------------------------------------------------------------------------
-template <typename T>
 void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, const FindArrayStatisticsInputValues* inputValues)
 {
   if(inputValues->FindLength)
@@ -278,8 +267,12 @@ void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
       }
     }
 
-    // compute the statistics by feature/ensemble identifier
-    findStatisticsByIndexImpl<T>(featureValueMap, arrays, inputValues, numFeatures);
+    // Allow data-based parallelization
+    ParallelDataAlgorithm dataAlg;
+    dataAlg.setRange(0, numFeatures);
+    dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(featureValueMap, inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMedian,
+                                                      inputValues->FindStdDeviation, inputValues->FindSummation, arrays, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
+                                                      inputValues->UseFullRange, inputValues->NumBins));
   }
   else
   {
@@ -351,6 +344,54 @@ void standardizeData(const DataArray<T>& data, bool useMask, const std::unique_p
   }
 }
 
+struct FindArrayStatisticsFunctor
+{
+  template <typename T>
+  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IDataArray*>& arrays, usize numFeatures, const FindArrayStatisticsInputValues* inputValues)
+  {
+    const auto& inputArray = static_cast<const DataArray<T>&>(inputIDataArray);
+    Int32Array* featureIds = nullptr;
+    if(inputValues->ComputeByIndex)
+    {
+      featureIds = dataStructure.getDataAs<Int32Array>(inputValues->FeatureIdsArrayPath);
+    }
+    std::unique_ptr<MaskCompare> maskCompare = nullptr;
+    if(inputValues->UseMask)
+    {
+      try
+      {
+        maskCompare = InstantiateMaskCompare(dataStructure, inputValues->MaskArrayPath);
+      } catch(const std::out_of_range& exception)
+      {
+        // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+        // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
+        std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", inputValues->MaskArrayPath.toString());
+        return MakeErrorResult(-563502, message);
+      }
+    }
+
+    // this level checks whether computing by index or not and preps the calculations accordingly
+    findStatistics<T>(inputArray, featureIds, maskCompare, inputValues, arrays, numFeatures);
+
+    // compute the standardized data based on whether computing by index or not
+    if(inputValues->StandardizeData)
+    {
+      const auto& mean = dataStructure.getDataRefAs<Float32Array>(inputValues->MeanArrayName);
+      const auto& std = dataStructure.getDataRefAs<Float32Array>(inputValues->StdDeviationArrayName);
+      auto& standardized = dataStructure.getDataRefAs<Float32Array>(inputValues->StandardizedArrayName);
+
+      if(inputValues->ComputeByIndex)
+      {
+        standardizeDataByIndex<T>(inputArray, inputValues->UseMask, maskCompare, featureIds, mean, std, standardized);
+      }
+      else
+      {
+        standardizeData<T>(inputArray, inputValues->UseMask, maskCompare, mean, std, standardized);
+      }
+    }
+    return {};
+  }
+};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -369,52 +410,6 @@ FindArrayStatistics::~FindArrayStatistics() noexcept = default;
 const std::atomic_bool& FindArrayStatistics::getCancel()
 {
   return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-template <typename T>
-Result<> FindArrayStatistics::findStats(const DataArray<T>& inputArray, std::vector<IDataArray*>& arrays, usize numFeatures)
-{
-  Int32Array* featureIds = nullptr;
-  if(m_InputValues->ComputeByIndex)
-  {
-    featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  }
-  std::unique_ptr<MaskCompare> maskCompare = nullptr;
-  if(m_InputValues->UseMask)
-  {
-    try
-    {
-      maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
-    } catch(const std::out_of_range& exception)
-    {
-      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-      // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
-      return MakeErrorResult(-563502, message);
-    }
-  }
-
-  // this level checks whether computing by index or not and preps the calculations accordingly
-  findStatistics<T>(inputArray, featureIds, maskCompare, m_InputValues, arrays, numFeatures);
-
-  // compute the standardized data based on whether computing by index or not
-  if(m_InputValues->StandardizeData)
-  {
-    const Float32Array& mean = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->MeanArrayName);
-    const Float32Array& std = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->StdDeviationArrayName);
-    Float32Array& standardized = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->StandardizedArrayName);
-
-    if(m_InputValues->ComputeByIndex)
-    {
-      standardizeDataByIndex<T>(inputArray, m_InputValues->UseMask, maskCompare, featureIds, mean, std, standardized);
-    }
-    else
-    {
-      standardizeData<T>(inputArray, m_InputValues->UseMask, maskCompare, mean, std, standardized);
-    }
-  }
-  return {};
 }
 
 // -----------------------------------------------------------------------------
@@ -480,43 +475,8 @@ Result<> FindArrayStatistics::operator()()
   }
 
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
-  auto dataType = inputArray.getDataType();
-  switch(dataType)
-  {
-  case DataType::int8: {
-    return findStats<int8>(m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::int16: {
-    return findStats<int16>(m_DataStructure.getDataRefAs<Int16Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::int32: {
-    return findStats<int32>(m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::int64: {
-    return findStats<int64>(m_DataStructure.getDataRefAs<Int64Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::uint8: {
-    return findStats<uint8>(m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::uint16: {
-    return findStats<uint16>(m_DataStructure.getDataRefAs<UInt16Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::uint32: {
-    return findStats<uint32>(m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::uint64: {
-    return findStats<uint64>(m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::float32: {
-    return findStats<float32>(m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::float64: {
-    return findStats<float64>(m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SelectedArrayPath), arrays, numFeatures);
-  }
-  case DataType::boolean: {
-    return {};
-  }
-  }
+
+  ExecuteDataFunction(FindArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues);
 
   return {};
 }

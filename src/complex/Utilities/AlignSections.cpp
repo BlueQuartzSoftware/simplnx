@@ -1,5 +1,6 @@
 #include "AlignSections.hpp"
 
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -19,12 +20,12 @@ public:
   AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default;     // Copy Constructor Default Implemented
   AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&) noexcept = default; // Move Constructor Default Implemented
 
-  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, complex::DataArray<T>& dataArray)
+  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
   : m_Filter(filter)
   , m_Dims(std::move(dims))
   , m_Xshifts(std::move(xShifts))
   , m_Yshifts(std::move(yShifts))
-  , m_DataArray(dataArray)
+  , m_DataArray(static_cast<DataArray<T>&>(dataArray))
   {
   }
 
@@ -100,6 +101,15 @@ private:
   complex::DataArray<T>& m_DataArray;
 };
 
+struct AlignSectionsFunctor
+{
+  template <typename ScalarT, class ParallelRunner, class... ArgsT>
+  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
+  {
+    runner.template execute<>(AlignSectionsTransferDataImpl<ScalarT>(std::forward<ArgsT>(args)...));
+  }
+};
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -155,61 +165,11 @@ Result<> AlignSections::execute(const SizeVec3& udims)
     {
       return {};
     }
+
     m_MessageHandler(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
-    const auto& oldCellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
+    auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
 
-    DataType type = oldCellArray.getDataType();
-
-    switch(type)
-    {
-    case DataType::boolean: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<bool>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<bool>>(cellArrayPath)));
-      break;
-    }
-    case DataType::int8: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<int8>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<int8>>(cellArrayPath)));
-      break;
-    }
-    case DataType::int16: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<int16>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<int16>>(cellArrayPath)));
-      break;
-    }
-    case DataType::int32: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<int32>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<int32>>(cellArrayPath)));
-      break;
-    }
-    case DataType::int64: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<int64>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<int64>>(cellArrayPath)));
-      break;
-    }
-    case DataType::uint8: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<uint8>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<uint8>>(cellArrayPath)));
-      break;
-    }
-    case DataType::uint16: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<uint16>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<uint16>>(cellArrayPath)));
-      break;
-    }
-    case DataType::uint32: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<uint32>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<uint32>>(cellArrayPath)));
-      break;
-    }
-    case DataType::uint64: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<uint64>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<uint64>>(cellArrayPath)));
-      break;
-    }
-    case DataType::float32: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<float32>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<float32>>(cellArrayPath)));
-      break;
-    }
-    case DataType::float64: {
-      taskRunner.execute(AlignSectionsTransferDataImpl<float64>(this, udims, xShifts, yShifts, m_DataStructure.getDataRefAs<DataArray<float64>>(cellArrayPath)));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Invalid DataType");
-    }
-    }
+    ExecuteParallelFunction(AlignSectionsFunctor{}, cellArray.getDataType(), ParallelRunner(taskRunner), this, udims, xShifts, yShifts, cellArray);
   }
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();

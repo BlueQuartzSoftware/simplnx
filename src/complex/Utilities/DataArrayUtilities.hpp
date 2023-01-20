@@ -833,4 +833,12 @@ private:
   nonstd::span<const int64> m_NewIndices;
 };
 
+struct CopyTupleFunctor
+{
+  template <typename ScalarT, class ParallelRunner, class... ArgsT>
+  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
+  {
+    runner.template execute<>(CopyTupleUsingIndexList<ScalarT>(std::forward<ArgsT>(args)...));
+  }
+};
 } // namespace complex

@@ -8,6 +8,7 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 namespace complex
@@ -16,8 +17,8 @@ namespace
 {
 constexpr int64 k_NoAction = -6800;
 constexpr int64 k_MissingInputArray = -6801;
-constexpr int64 k_WrongInputArrayType = -6802;
-constexpr int64 k_NonScalarInputArray = -6803;
+constexpr int64 k_BoolTypeNeighborList = -6802;
+constexpr int64 k_EmptyNeighborList = -6803;
 
 template <typename T>
 class FindNeighborListStatisticsImpl
@@ -44,6 +45,10 @@ public:
 
   void compute(usize start, usize end) const
   {
+    if constexpr(std::is_same_v<bool, T>)
+    {
+      return;
+    }
 
     using DataArrayType = DataArray<T>;
 
@@ -146,61 +151,14 @@ private:
   std::vector<IDataArray*>& m_Arrays;
 };
 
-template <typename DataType>
-void findStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
+struct FindNeighborListStatisticsFunctor
 {
-  usize numTuples = source.getNumberOfTuples();
-  // Allow data-based parallelization
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, numTuples);
-  dataAlg.execute(FindNeighborListStatisticsImpl<DataType>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays));
-}
-
-void findStatistics(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays)
-{
-  usize numTuples = source.getNumberOfTuples();
-  if(numTuples == 0)
+  template <typename ScalarT, class ParallelRunner, class... ArgsT>
+  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
   {
-    return;
+    runner.template execute<>(FindNeighborListStatisticsImpl<ScalarT>(std::forward<ArgsT>(args)...));
   }
-
-  auto dataType = source.getDataType();
-  switch(dataType)
-  {
-  case DataType::int8:
-    findStatisticsImpl<int8>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::int16:
-    findStatisticsImpl<int16>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::int32:
-    findStatisticsImpl<int32>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::int64:
-    findStatisticsImpl<int64>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::uint8:
-    findStatisticsImpl<uint8>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::uint16:
-    findStatisticsImpl<uint16>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::uint32:
-    findStatisticsImpl<uint32>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::uint64:
-    findStatisticsImpl<uint64>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::float32:
-    findStatisticsImpl<float32>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::float64:
-    findStatisticsImpl<float64>(filter, source, length, min, max, mean, median, stdDeviation, summation, arrays);
-    return;
-  case DataType::boolean:
-    return;
-  }
-}
+};
 } // namespace
 
 OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStructure& data, const Arguments& args) const
@@ -370,7 +328,7 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
   }
 
   auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
-  auto* inputArray = data.getDataAs<INeighborList>(inputArrayPath);
+  auto& inputArray = data.getDataRefAs<INeighborList>(inputArrayPath);
 
   std::vector<IDataArray*> arrays(7, nullptr);
 
@@ -410,7 +368,25 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
     arrays[6] = data.getDataAs<IDataArray>(summationPath);
   }
 
-  findStatistics(this, *inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation, arrays);
+  DataType type = inputArray.getDataType();
+  if(type == DataType::boolean)
+  {
+    std::string ss = fmt::format("FindNeighborListStatistics::NeighborList {} was of type boolean, and thus cannot be processed", inputArray.getName());
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_BoolTypeNeighborList, ss}})};
+  }
+
+  usize numTuples = inputArray.getNumberOfTuples();
+  if(numTuples == 0)
+  {
+    std::string ss = fmt::format("FindNeighborListStatistics::NeighborList {} was empty", inputArray.getName());
+    return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyNeighborList, ss}})};
+  }
+
+  // Allow data-based parallelization
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0, numTuples);
+  ExecuteParallelFunction(FindNeighborListStatisticsFunctor{}, type, ParallelRunner(dataAlg), this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation,
+                          arrays);
 
   return {};
 }
