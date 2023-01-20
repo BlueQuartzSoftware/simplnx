@@ -150,15 +150,6 @@ private:
 
   std::vector<IDataArray*>& m_Arrays;
 };
-
-struct FindNeighborListStatisticsFunctor
-{
-  template <typename ScalarT, class ParallelRunner, class... ArgsT>
-  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
-  {
-    runner.template execute<>(FindNeighborListStatisticsImpl<ScalarT>(std::forward<ArgsT>(args)...));
-  }
-};
 } // namespace
 
 OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStructure& data, const Arguments& args) const
@@ -385,8 +376,7 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
-  ExecuteParallelFunction(FindNeighborListStatisticsFunctor{}, type, ParallelRunner(dataAlg), this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation,
-                          arrays);
+  ExecuteParallelFunction<FindNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation, arrays);
 
   return {};
 }

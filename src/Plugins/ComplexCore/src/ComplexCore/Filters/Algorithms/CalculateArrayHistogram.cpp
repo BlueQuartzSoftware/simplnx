@@ -100,15 +100,6 @@ private:
   std::atomic<usize>& m_Overflow;
   size_t m_ProgressIncrement = 100;
 };
-
-struct GenerateHistogramFunctor
-{
-  template <typename ScalarT, class ParallelRunner, class... ArgsT>
-  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
-  {
-    runner.template execute<>(GenerateHistogramFromData<ScalarT>(std::forward<ArgsT>(args)...));
-  }
-};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -177,7 +168,7 @@ Result<> CalculateArrayHistogram::operator()()
     const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(selectedArrayPaths[i]);
     auto& histogram = m_DataStructure.getDataRefAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i));
 
-    ExecuteParallelFunction(GenerateHistogramFunctor{}, inputData.getDataType(), ParallelRunner(taskRunner), *this, numBins, inputData, histogram, overflow, range, progressIncrement);
+    ExecuteParallelFunction<GenerateHistogramFromData>(inputData.getDataType(), taskRunner, *this, numBins, inputData, histogram, overflow, range, progressIncrement);
 
     if(overflow > 0)
     {

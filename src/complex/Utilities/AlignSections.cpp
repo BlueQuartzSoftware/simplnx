@@ -100,16 +100,6 @@ private:
   std::vector<int64_t> m_Yshifts;
   complex::DataArray<T>& m_DataArray;
 };
-
-struct AlignSectionsFunctor
-{
-  template <typename ScalarT, class ParallelRunner, class... ArgsT>
-  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
-  {
-    runner.template execute<>(AlignSectionsTransferDataImpl<ScalarT>(std::forward<ArgsT>(args)...));
-  }
-};
-
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -169,7 +159,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
     m_MessageHandler(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
 
-    ExecuteParallelFunction(AlignSectionsFunctor{}, cellArray.getDataType(), ParallelRunner(taskRunner), this, udims, xShifts, yShifts, cellArray);
+    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
   }
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();
