@@ -58,7 +58,14 @@ typename StringParameter::ValueType StringParameter::defaultString() const
 
 Result<> StringParameter::validate(const std::any& value) const
 {
-  [[maybe_unused]] const auto& stringValue = GetAnyRef<ValueType>(value);
+  try
+  {
+    [[maybe_unused]] const auto& stringValue = GetAnyRef<ValueType>(value);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
+
   return {};
 }
 } // namespace complex

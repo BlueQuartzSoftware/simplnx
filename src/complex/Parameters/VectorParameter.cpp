@@ -119,8 +119,14 @@ const typename VectorParameter<T>::ValueType& VectorParameter<T>::defaultVector(
 template <class T>
 Result<> VectorParameter<T>::validate(const std::any& value) const
 {
-  const auto& vec = GetAnyRef<ValueType>(value);
-  return validateVector(vec);
+  try
+  {
+    const auto& vec = GetAnyRef<ValueType>(value);
+    return validateVector(vec);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 
 template <class T>

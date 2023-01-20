@@ -59,8 +59,14 @@ typename DataObjectNameParameter::ValueType DataObjectNameParameter::defaultName
 
 Result<> DataObjectNameParameter::validate(const std::any& value) const
 {
-  const auto& stringValue = GetAnyRef<ValueType>(value);
-  return validateName(stringValue);
+  try
+  {
+    const auto& stringValue = GetAnyRef<ValueType>(value);
+    return validateName(stringValue);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 
 Result<> DataObjectNameParameter::validateName(const std::string& value) const

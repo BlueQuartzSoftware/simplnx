@@ -123,7 +123,15 @@ Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
   const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
   std::vector<Error> errors;
 
-  const auto& table = GetAnyRef<ValueType>(valueRef);
+  ValueType table;
+  try
+  {
+    table = GetAnyRef<ValueType>(valueRef);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
+
   usize numRows = table.size();
   if(numRows == 0)
   {

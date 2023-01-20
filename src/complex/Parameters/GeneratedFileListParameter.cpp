@@ -143,7 +143,15 @@ std::any GeneratedFileListParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
-  const auto& value = GetAnyRef<ValueType>(valueRef);
+  ValueType value;
+  try
+  {
+    value = GetAnyRef<ValueType>(valueRef);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
+
   if(value.startIndex > value.endIndex)
   {
     return MakeErrorResult(-1, "startIndex must be less than or equal to endIndex");

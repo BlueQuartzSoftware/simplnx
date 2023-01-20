@@ -67,9 +67,14 @@ ArrayThresholdsParameter::AllowedComponentShapes ArrayThresholdsParameter::requi
 
 Result<> ArrayThresholdsParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  const auto& threshold = GetAnyRef<ValueType>(value);
-
-  return validatePaths(dataStructure, threshold);
+  try
+  {
+    const auto& threshold = GetAnyRef<ValueType>(value);
+    return validatePaths(dataStructure, threshold);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 
 Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructure, const DataPath& dataPath) const

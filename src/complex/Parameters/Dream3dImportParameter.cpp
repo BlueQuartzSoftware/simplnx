@@ -142,8 +142,14 @@ std::any Dream3dImportParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> Dream3dImportParameter::validate(const std::any& value) const
 {
-  const auto& importData = GetAnyRef<ValueType>(value);
-  return validatePath(importData);
+  try
+  {
+    const auto& importData = GetAnyRef<ValueType>(value);
+    return validatePath(importData);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 
 //-----------------------------------------------------------------------------

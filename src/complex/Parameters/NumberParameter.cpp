@@ -65,8 +65,14 @@ typename NumberParameter<T>::ValueType NumberParameter<T>::defaultNumber() const
 template <class T>
 Result<> NumberParameter<T>::validate(const std::any& value) const
 {
-  auto castValue = std::any_cast<ValueType>(value);
-  return validateNumber(castValue);
+  try
+  {
+    auto castValue = std::any_cast<ValueType>(value);
+    return validateNumber(castValue);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 
 template <class T>

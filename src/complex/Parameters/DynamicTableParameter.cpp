@@ -68,7 +68,13 @@ const DynamicTableInfo& DynamicTableParameter::tableInfo() const
 
 Result<> DynamicTableParameter::validate(const std::any& value) const
 {
-  const auto& table = GetAnyRef<ValueType>(value);
-  return m_TableInfo.validate(table);
+  try
+  {
+    const auto& table = GetAnyRef<ValueType>(value);
+    return m_TableInfo.validate(table);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 } // namespace complex

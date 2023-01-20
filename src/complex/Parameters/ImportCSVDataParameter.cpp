@@ -80,7 +80,14 @@ std::any ImportCSVDataParameter::defaultValue() const
 // -----------------------------------------------------------------------------
 Result<> ImportCSVDataParameter::validate(const std::any& value) const
 {
-  [[maybe_unused]] auto data = std::any_cast<CSVWizardData>(value);
+  try
+  {
+    [[maybe_unused]] auto data = std::any_cast<CSVWizardData>(value);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
+
   return {};
 }
 } // namespace complex

@@ -108,9 +108,14 @@ ArraySelectionParameter::AllowedComponentShapes ArraySelectionParameter::require
 
 Result<> ArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  const auto& path = GetAnyRef<ValueType>(value);
-
-  return validatePath(dataStructure, path);
+  try
+  {
+    const auto& path = GetAnyRef<ValueType>(value);
+    return validatePath(dataStructure, path);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 
 Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructure, const DataPath& value) const

@@ -102,7 +102,16 @@ typename CalculatorParameter::ValueType CalculatorParameter::defaultString() con
 Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
-  [[maybe_unused]] const auto& structValue = GetAnyRef<ValueType>(value);
+
+  ValueType structValue;
+  try
+  {
+    structValue = GetAnyRef<ValueType>(value);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
+
   if(StringUtilities::trimmed(structValue.m_Equation).empty())
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", prefix));

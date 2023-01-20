@@ -107,7 +107,14 @@ typename NumericTypeParameter::ValueType NumericTypeParameter::defaultNumericTyp
 
 Result<> NumericTypeParameter::validate(const std::any& value) const
 {
-  [[maybe_unused]] auto castValue = std::any_cast<ValueType>(value);
+  try
+  {
+    [[maybe_unused]] auto castValue = std::any_cast<ValueType>(value);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
+
   return {};
 }
 } // namespace complex

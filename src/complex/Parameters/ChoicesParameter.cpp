@@ -77,8 +77,14 @@ typename ChoicesParameter::ValueType ChoicesParameter::defaultIndex() const
 
 Result<> ChoicesParameter::validate(const std::any& value) const
 {
-  auto index = std::any_cast<ValueType>(value);
-  return validateIndex(index);
+  try
+  {
+    auto index = std::any_cast<ValueType>(value);
+    return validateIndex(index);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 
 Result<> ChoicesParameter::validateIndex(ValueType index) const

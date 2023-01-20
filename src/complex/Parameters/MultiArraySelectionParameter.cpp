@@ -108,9 +108,14 @@ MultiArraySelectionParameter::AllowedComponentShapes MultiArraySelectionParamete
 
 Result<> MultiArraySelectionParameter::validate(const DataStructure& dataStructure, const std::any& value) const
 {
-  const auto& paths = GetAnyRef<ValueType>(value);
-
-  return validatePaths(dataStructure, paths);
+  try
+  {
+    const auto& paths = GetAnyRef<ValueType>(value);
+    return validatePaths(dataStructure, paths);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
 }
 
 Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataStructure, const ValueType& value) const

@@ -140,7 +140,14 @@ std::any ImportHDF5DatasetParameter::defaultValue() const
 // -----------------------------------------------------------------------------
 Result<> ImportHDF5DatasetParameter::validate(const std::any& value) const
 {
-  [[maybe_unused]] auto data = std::any_cast<ValueType>(value);
+  try
+  {
+    [[maybe_unused]] auto data = std::any_cast<ValueType>(value);
+  } catch(const std::bad_any_cast& exception)
+  {
+    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
+  }
+
   return {};
 }
 } // namespace complex
