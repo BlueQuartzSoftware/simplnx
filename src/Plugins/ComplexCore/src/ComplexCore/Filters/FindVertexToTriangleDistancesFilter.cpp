@@ -8,8 +8,8 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
 
@@ -56,11 +56,10 @@ Parameters FindVertexToTriangleDistancesFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  std::set<BaseGroup::GroupType> allowedTypes = {BaseGroup::GroupType::DataGroup, BaseGroup::GroupType::AttributeMatrix};
-
   params.insertSeparator(Parameters::Separator{"Required Input Arrays"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexDataContainer_Key, "Source Vertex Geometry", "", DataPath{}, allowedTypes));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_TriangleDataContainer_Key, "Target Triangle Geometry", "", DataPath{}, allowedTypes));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_VertexDataContainer_Key, "Source Vertex Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+  params.insert(
+      std::make_unique<GeometrySelectionParameter>(k_TriangleDataContainer_Key, "Target Triangle Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "", DataPath{}, std::set<DataType>{DataType::float64}));
 
   params.insertSeparator(Parameters::Separator{"Created Output Arrays"});
