@@ -376,8 +376,7 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
-  ExecuteParallelFunction<FindNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation,
-                                                                         findSummation, arrays);
+  ExecuteParallelFunction<FindNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation, arrays);
 
   return {};
 }
