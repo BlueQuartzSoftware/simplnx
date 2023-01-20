@@ -18,10 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - windows-2019
+          - windows-2022
         toolset:
-          - v141
           - v142
+          - v143
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
@@ -35,9 +35,11 @@ jobs:
           path: DREAM3D_Data
           submodules: true
       - name: Add C++ Problem Matcher
-        uses: ammaraskar/msvc-problem-matcher@0.1
+        uses: ammaraskar/msvc-problem-matcher@0.2.0
       - name: Setup Build Environment
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: ilammy/msvc-dev-cmd@v1.12.0
+        with:
+          vsversion: 2022
       - name: Setup NuGet Credentials
         shell: bash
         run: >
@@ -50,7 +52,7 @@ jobs:
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         run: |
-          cmake --preset ci ${{github.workspace}} -G "Visual Studio 16 2019" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data 
+          cmake --preset ci ${{github.workspace}} -G "Visual Studio 17 2022" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data
       - name: Build
         run: |
           cmake --build --preset ci
