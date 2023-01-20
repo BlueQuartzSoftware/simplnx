@@ -116,15 +116,6 @@ private:
   std::array<uint64, 6> m_Bounds;
   const std::atomic_bool& m_ShouldCancel;
 };
-
-struct CropImageGeomDataArrayFunctor
-{
-  template <typename ScalarT, class ParallelRunner, class... ArgsT>
-  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
-  {
-    runner.template execute<>(CropImageGeomDataArray<ScalarT>(std::forward<ArgsT>(args)...));
-  }
-};
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -519,7 +510,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
 
     messageHandler(fmt::format("Cropping Volume || Copying Data Array {}", srcName));
-    ExecuteParallelFunction(CropImageGeomDataArrayFunctor{}, oldDataArray.getDataType(), ParallelRunner(taskRunner), oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
+    ExecuteParallelFunction<CropImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
