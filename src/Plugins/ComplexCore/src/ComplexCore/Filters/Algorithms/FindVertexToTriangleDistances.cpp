@@ -19,7 +19,6 @@ float distanceFromVec(const std::vector<float>& vec1, const std::vector<float>& 
     dist += (vec1[i] - vec2[i]) * (vec1[i] - vec2[i]);
   }
 
-  //  return std::sqrt(dist); // why is this here
   return dist;
 }
 
@@ -29,9 +28,9 @@ float32 PointSegmentDistance(const std::vector<float32>& x0, const std::vector<f
   std::transform(x2.begin(), x2.end(), x1.begin(), dx.begin(), std::minus<float32>());
 
   float64 m2 = 0.0;
-  for(usize i = 0; i < dx.size(); i++)
+  for(auto value : dx)
   {
-    m2 += static_cast<float64>(dx[i] * dx[i]);
+    m2 += static_cast<float64>(value * value);
   }
 
   std::vector<float32> x2minx0 = {0.0f, 0.0f, 0.0f};
@@ -43,7 +42,7 @@ float32 PointSegmentDistance(const std::vector<float32>& x0, const std::vector<f
     dotProduct += static_cast<float64>(x2minx0[i] * dx[i]);
   }
 
-  float32 s12 = static_cast<float32>(dotProduct / m2);
+  auto s12 = static_cast<float32>(dotProduct / m2);
   if(s12 < 0.0f)
   {
     s12 = 0.0f;
@@ -67,8 +66,8 @@ float32 PointSegmentDistance(const std::vector<float32>& x0, const std::vector<f
 
 float32 CosThetaBetweenVectors(const std::array<float32, 3>& a, const float32 b[3])
 {
-  float32 norm1 = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-  float32 norm2 = sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
+  float32 norm1 = sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+  float32 norm2 = sqrtf(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
   if(norm1 == 0 || norm2 == 0)
   {
     return 1.0;
@@ -90,13 +89,13 @@ float32 PointTriangleDistance(const std::vector<float32>& x0, const std::vector<
 
   float32 m13 = 0.0f;
   float32 m23 = 0.0f;
-  for(usize i = 0; i < x13.size(); i++)
+  for(auto value : x13)
   {
-    m13 += (x13[i] * x13[i]);
+    m13 += (value * value);
   }
-  for(usize i = 0; i < x23.size(); i++)
+  for(auto value : x23)
   {
-    m23 += (x23[i] * x23[i]);
+    m23 += (value * value);
   }
   float32 d = 0.0;
   for(usize i = 0; i < x13.size(); i++)
@@ -144,7 +143,7 @@ float32 PointTriangleDistance(const std::vector<float32>& x0, const std::vector<
 
   std::array<float32, 3> normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
 
-  float32 cosTheta = CosThetaBetweenVectors(normal, x03.data());
+  float32 cosTheta = ::CosThetaBetweenVectors(normal, x03.data());
 
   if(cosTheta < 0.0f)
   {
@@ -181,8 +180,8 @@ public:
   void compute(usize start, usize end) const
   {
     int64 counter = 0;
-    int64 totalElements = end - start;
-    int64 progIncrement = static_cast<int64>(totalElements / 100);
+    auto totalElements = static_cast<int64>(end - start);
+    auto progIncrement = static_cast<int64>(totalElements / 100);
 
     for(usize v = start; v < end; v++)
     {
@@ -196,15 +195,15 @@ public:
            (m_SourceVerts[3 * v + 1] >= m_TriBounds[6 * t + 2] && m_SourceVerts[3 * v + 1] <= m_TriBounds[6 * t + 3]) ||
            (m_SourceVerts[3 * v + 2] >= m_TriBounds[6 * t + 4] && m_SourceVerts[3 * v + 2] <= m_TriBounds[6 * t + 5]))
         {
-          int64 p = m_Tris[t][0];
-          int64 q = m_Tris[t][1];
-          int64 r = m_Tris[t][2];
+          auto p = static_cast<int64>(m_Tris[t][0]);
+          auto q = static_cast<int64>(m_Tris[t][1]);
+          auto r = static_cast<int64>(m_Tris[t][2]);
           std::vector<float32> gx = {m_SourceVerts[3 * v + 0], m_SourceVerts[3 * v + 1], m_SourceVerts[3 * v + 2]};
-          float32 d = PointTriangleDistance(gx, m_Verts[p], m_Verts[q], m_Verts[r], t, m_Normals);
+          float32 d = PointTriangleDistance(gx, m_Verts[p], m_Verts[q], m_Verts[r], static_cast<int64>(t), m_Normals);
           if(std::abs(d) < std::abs(m_Distances[v]))
           {
             m_Distances[v] = d;
-            m_ClosestTri[v] = t;
+            m_ClosestTri[v] = static_cast<int64>(t);
           }
         }
       }
@@ -235,7 +234,7 @@ private:
   const IGeometry::SharedVertexList& m_SourceVerts;
   Float32Array& m_Distances;
   Int64Array& m_ClosestTri;
-  int64_t m_NumTris;
+  size_t m_NumTris;
   Float32Array& m_TriBounds;
   const Float64Array& m_Normals;
 };
@@ -266,7 +265,7 @@ void FindVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
   m_ProgressCounter += counter;
-  size_t progressInt = static_cast<size_t>((static_cast<float32>(m_ProgressCounter) / m_TotalElements) * 100.0f);
+  auto progressInt = static_cast<size_t>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
 
   size_t progIncrement = m_TotalElements / 100;
 
@@ -286,8 +285,8 @@ Result<> FindVertexToTriangleDistances::operator()()
   IGeometry::SharedVertexList& sourceVerts = vertexGeom.getVerticesRef();
   usize numVerts = vertexGeom.getNumberOfVertices();
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->VertexDataContainer);
-  usize numTris = triangleGeom.getNumberOfFaces();
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainer);
+  auto numTris = static_cast<usize>(triangleGeom.getNumberOfFaces());
   IGeometry::SharedTriList& triangles = triangleGeom.getFacesRef();
   IGeometry::SharedVertexList& vertices = triangleGeom.getVerticesRef();
 
@@ -320,6 +319,7 @@ Result<> FindVertexToTriangleDistances::operator()()
 
   auto& normalsArray = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->TriangleNormalsArrayPath);
   auto& distancesArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->DistancesArrayPath);
+  distancesArray.fill(std::numeric_limits<float32>::max());
   auto& closestTriangleIdsArray = m_DataStructure.getDataRefAs<Int64Array>(m_InputValues->ClosestTriangleIdArrayPath);
 
   // Allow data-based parallelization
