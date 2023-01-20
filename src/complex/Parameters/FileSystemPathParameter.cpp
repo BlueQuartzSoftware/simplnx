@@ -69,10 +69,16 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 //-----------------------------------------------------------------------------
 Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueType& path)
 {
+  const FileSystemPathParameter::ValueType emptyPath("");
+
   auto checkedPath = path;
   while(!fs::exists(checkedPath))
   {
     checkedPath = checkedPath.parent_path();
+    if(checkedPath == emptyPath)
+    {
+      return MakeErrorResult(-9, fmt::format("Empty path encountered while trying to compute full path '{}'", path.string()));
+    }
   }
   // We should be at the top of the tree with an existing directory.
   if(HasWriteAccess(checkedPath.string()))
@@ -240,6 +246,12 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     {
       return {nonstd::make_unexpected(std::vector<Error>{{-3003, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
     }
+  }
+
+  if(!path.is_absolute() && !fs::exists(path))
+  {
+    return MakeErrorResult(-3004, fmt::format("Relative Path given does not exist.\n    Relative Path:'{}'\n    Current Working Path: '{}'\n    Computed Path: '{}/{}", path.string(),
+                                              std::filesystem::current_path().string(), std::filesystem::current_path().string(), path.string()));
   }
 
   switch(m_PathType)

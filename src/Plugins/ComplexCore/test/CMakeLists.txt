@@ -33,6 +33,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
   DeleteDataTest.cpp
+  ExecuteProcessTest.cpp
   ExtractComponentAsArrayTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
