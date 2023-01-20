@@ -38,7 +38,7 @@ Result<std::any> GenerateColorTableParameter::fromJson(const nlohmann::json& jso
     return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
   }
 
-  return {std::make_any<nlohmann::json>(json)};
+  return {{std::make_any<nlohmann::json>(json)}};
 }
 
 IParameter::UniquePointer GenerateColorTableParameter::clone() const
@@ -58,14 +58,7 @@ typename GenerateColorTableParameter::ValueType GenerateColorTableParameter::def
 
 Result<> GenerateColorTableParameter::validate(const std::any& value) const
 {
-  try
-  {
-    [[maybe_unused]] const auto& json = GetAnyRef<ValueType>(value);
-  } catch(const std::bad_any_cast& exception)
-  {
-    return MakeErrorResult(-1000, fmt::format("FilterParameter '{}' Validation Error: {}", humanName(), exception.what()));
-  }
-
+  [[maybe_unused]] const auto& json = GetAnyRef<ValueType>(value);
   return {};
 }
 } // namespace complex
