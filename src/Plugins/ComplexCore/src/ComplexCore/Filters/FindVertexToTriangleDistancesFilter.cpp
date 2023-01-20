@@ -7,8 +7,6 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
@@ -63,7 +61,7 @@ Parameters FindVertexToTriangleDistancesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Arrays"});
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_VertexDataContainer_Key, "Source Vertex Geometry", "", DataPath{}, allowedTypes));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_TriangleDataContainer_Key, "Target Triangle Geometry", "", DataPath{}, allowedTypes));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "", DataPath{}, std::set<DataType>{DataType::int64}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "", DataPath{}, std::set<DataType>{DataType::float64}));
 
   params.insertSeparator(Parameters::Separator{"Created Output Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_DistancesArrayPath_Key, "Distances Array Name", "", "Distances"));
