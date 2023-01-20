@@ -50,13 +50,14 @@ Parameters GenerateColorTableFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator({"Input Parameters"});
-  params.insert(
-      std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select the color preset that will be used to create the color table array.", nlohmann::json{}));
+  params.insert(std::make_unique<GenerateColorTableParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the created array", nlohmann::json{}));
   params.insertSeparator({"Required Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array", "The data array that will be used to create the color table array.", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedDataArrayPath_Key, "Data Array",
+                                                          "The complete path to the data array from which to create the rgb array by applying the selected preset color scheme", DataPath{},
                                                           complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator({"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_RgbArrayPath_Key, "Output RGB Array", "The output color table array.", DataPath{}));
+  params.insert(std::make_unique<ArrayCreationParameter>(
+      k_RgbArrayPath_Key, "Output RGB Array", "The rgb array created by normalizing each element of the input array and converting to a color based on the selected preset color scheme", DataPath{}));
 
   return params;
 }

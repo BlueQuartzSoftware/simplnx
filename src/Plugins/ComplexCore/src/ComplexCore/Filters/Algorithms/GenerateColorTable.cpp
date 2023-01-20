@@ -4,6 +4,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
@@ -11,7 +12,7 @@ using namespace complex;
 namespace
 {
 // -----------------------------------------------------------------------------
-usize FindRightBinIndex(float32 nValue, std::vector<float32> binPoints)
+usize FindRightBinIndex(float32 nValue, const std::vector<float32>& binPoints)
 {
   usize min = 0;
   usize max = binPoints.size() - 1;
@@ -127,52 +128,55 @@ private:
   UInt8Array& m_ColorArray;
 };
 
-// -----------------------------------------------------------------------------
-template <typename T>
-void GenerateColorArray(const DataArray<T>& arrayPtr, const nlohmann::json& presetControlPoints, const DataPath& rgbArrayPath, DataStructure& dataStructure)
+struct GenerateColorArrayFunctor
 {
-  if(arrayPtr.getNumberOfTuples() <= 0)
+  template <typename ScalarType>
+  void operator()(const DataPath& selectedArrayPath, const nlohmann::json& presetControlPoints, const DataPath& rgbArrayPath, DataStructure& dataStructure)
   {
-    return;
-  }
-
-  if(presetControlPoints.empty())
-  {
-    return;
-  }
-
-  const usize numControlColors = presetControlPoints.size() / 4;
-  const usize numComponents = 4;
-  std::vector<std::vector<float64>> controlPoints(numControlColors, std::vector<float64>(numComponents));
-
-  // Migrate colorControlPoints values from QJsonArray to 2D array.  Store A-values in binPoints vector.
-  std::vector<float32> binPoints;
-  for(usize i = 0; i < numControlColors; i++)
-  {
-    for(usize j = 0; j < numComponents; j++)
+    const DataArray<ScalarType>& arrayPtr = dataStructure.getDataRefAs<DataArray<ScalarType>>(selectedArrayPath);
+    if(arrayPtr.getNumberOfTuples() <= 0)
     {
-      controlPoints[i][j] = static_cast<float32>(presetControlPoints[numComponents * i + j].get<float64>());
-      if(j == 0)
+      return;
+    }
+
+    if(presetControlPoints.empty())
+    {
+      return;
+    }
+
+    const usize numControlColors = presetControlPoints.size() / 4;
+    const usize numComponents = 4;
+    std::vector<std::vector<float64>> controlPoints(numControlColors, std::vector<float64>(numComponents));
+
+    // Migrate colorControlPoints values from QJsonArray to 2D array.  Store A-values in binPoints vector.
+    std::vector<float32> binPoints;
+    for(usize i = 0; i < numControlColors; i++)
+    {
+      for(usize j = 0; j < numComponents; j++)
       {
-        binPoints.push_back(static_cast<float32>(controlPoints[i][j]));
+        controlPoints[i][j] = static_cast<float32>(presetControlPoints[numComponents * i + j].get<float64>());
+        if(j == 0)
+        {
+          binPoints.push_back(static_cast<float32>(controlPoints[i][j]));
+        }
       }
     }
+
+    // Normalize binPoints values
+    const float32 binMin = binPoints[0];
+    const float32 binMax = binPoints[binPoints.size() - 1];
+    for(auto& binPoint : binPoints)
+    {
+      binPoint = (binPoint - binMin) / (binMax - binMin);
+    }
+
+    auto& colorArray = dataStructure.getDataRefAs<UInt8Array>(rgbArrayPath);
+
+    ParallelDataAlgorithm dataAlg;
+    dataAlg.setRange(0, arrayPtr.getNumberOfTuples());
+    dataAlg.execute(GenerateColorTableImpl(arrayPtr, binPoints, controlPoints, numControlColors, colorArray));
   }
-
-  // Normalize binPoints values
-  const float32 binMin = binPoints[0];
-  const float32 binMax = binPoints[binPoints.size() - 1];
-  for(auto& binPoint : binPoints)
-  {
-    binPoint = (binPoint - binMin) / (binMax - binMin);
-  }
-
-  auto& colorArray = dataStructure.getDataRefAs<UInt8Array>(rgbArrayPath);
-
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, arrayPtr.getNumberOfTuples());
-  dataAlg.execute(GenerateColorTableImpl(arrayPtr, binPoints, controlPoints, numControlColors, colorArray));
-}
+};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -197,66 +201,7 @@ const std::atomic_bool& GenerateColorTable::getCancel()
 Result<> GenerateColorTable::operator()()
 {
   const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
-  switch(selectedIDataArray.getDataType())
-  {
-  case DataType::int8: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<int8>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::int16: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<Int16Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<int16>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::int32: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<int32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::int64: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<Int64Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<int64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::uint8: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<uint8>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::uint16: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<UInt16Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<uint16>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::uint32: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<uint32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::uint64: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<uint64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::float32: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<float32>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::float64: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<float64>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  case DataType::boolean: {
-    const auto& selectedDataArray = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->SelectedDataArrayPath);
-    GenerateColorArray<bool>(selectedDataArray, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath, m_DataStructure);
-    break;
-  }
-  default:
-    return MakeErrorResult(-10000, fmt::format("The selected array '{}' does not have a compatible data type.", m_InputValues->SelectedDataArrayPath.toString()));
-  }
-
+  ExecuteDataFunction(GenerateColorArrayFunctor{}, selectedIDataArray.getDataType(), m_InputValues->SelectedDataArrayPath, m_InputValues->SelectedPreset["RGBPoints"], m_InputValues->RgbArrayPath,
+                      m_DataStructure);
   return {};
 }
