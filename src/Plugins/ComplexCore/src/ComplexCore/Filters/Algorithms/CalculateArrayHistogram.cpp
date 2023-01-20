@@ -4,6 +4,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 
 #include <algorithm>
@@ -19,27 +20,26 @@ class GenerateHistogramFromData
 {
 public:
   GenerateHistogramFromData(CalculateArrayHistogram& filter, const int32 numBins, const IDataArray& inputArray, Float64Array& histogram, std::atomic<usize>& overflow,
-                            std::tuple<bool, float64, float64>& range, size_t progIncrement)
+                            std::tuple<bool, float64, float64>& range, size_t progressIncrement)
   : m_Filter(filter)
   , m_NumBins(numBins)
   , m_InputArray(inputArray)
   , m_Histogram(histogram)
   , m_Overflow(overflow)
   , m_Range(range)
-  , m_ProgIncrement(progIncrement)
+  , m_ProgressIncrement(progressIncrement)
   {
   }
   ~GenerateHistogramFromData() = default;
 
   void operator()() const
   {
-    static_assert(std::is_base_of_v<DataObject, DataArrayType>);
-    const DataArrayType& inputArray = dynamic_cast<const DataArrayType&>(m_InputArray);
+    const auto& inputArray = dynamic_cast<const DataArray<DataArrayType>&>(m_InputArray);
     auto end = inputArray.getSize();
 
     // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }
-    float64 min = std::numeric_limits<float>::max();
-    float64 max = -1.0 * std::numeric_limits<float>::max();
+    float64 min = 0.0;
+    float64 max = 0.0;
     if(std::get<0>(m_Range))
     {
       min = std::get<1>(m_Range);
@@ -60,13 +60,13 @@ public:
     }
     else
     {
-      size_t progCounter = 0;
+      size_t progressCounter = 0;
       for(usize i = 0; i < end; i++)
       {
-        if(progCounter > m_ProgIncrement)
+        if(progressCounter > m_ProgressIncrement)
         {
-          m_Filter.updateThreadSafeProgress(progCounter);
-          progCounter = 0;
+          m_Filter.updateThreadSafeProgress(progressCounter);
+          progressCounter = 0;
         }
         if(m_Filter.getCancel())
         {
@@ -81,13 +81,13 @@ public:
         {
           m_Overflow++;
         }
-        progCounter++;
+        progressCounter++;
       }
     }
 
     for(int64 i = 0; i < m_NumBins; i++)
     {
-      m_Histogram[(i * 2)] = min + (increment * (i + 1.0)); // load bin maximum into respective postion {(x, ), (x , ), ...}
+      m_Histogram[(i * 2)] = static_cast<float64>(min + (increment * (static_cast<float64>(i) + 1.0))); // load bin maximum into respective position {(x, ), (x , ), ...}
     }
   }
 
@@ -98,7 +98,16 @@ private:
   const IDataArray& m_InputArray;
   Float64Array& m_Histogram;
   std::atomic<usize>& m_Overflow;
-  size_t m_ProgIncrement = 100;
+  size_t m_ProgressIncrement = 100;
+};
+
+struct GenerateHistogramFunctor
+{
+  template <typename ScalarT, class ParallelRunner, class... ArgsT>
+  void operator()(ParallelRunner&& runner, ArgsT&&... args) const
+  {
+    runner.template execute<>(GenerateHistogramFromData<ScalarT>(std::forward<ArgsT>(args)...));
+  }
 };
 } // namespace
 
@@ -116,9 +125,9 @@ CalculateArrayHistogram::CalculateArrayHistogram(DataStructure& dataStructure, c
 CalculateArrayHistogram::~CalculateArrayHistogram() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void CalculateArrayHistogram::updateProgress(const std::string& progMessage)
+void CalculateArrayHistogram::updateProgress(const std::string& progressMessage)
 {
-  m_MessageHandler({IFilter::Message::Type::Info, progMessage});
+  m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
 }
 // -----------------------------------------------------------------------------
 void CalculateArrayHistogram::updateThreadSafeProgress(size_t counter)
@@ -130,7 +139,7 @@ void CalculateArrayHistogram::updateThreadSafeProgress(size_t counter)
   auto now = std::chrono::steady_clock::now();
   if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
   {
-    size_t progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / m_TotalElements) * 100.0);
+    auto progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / static_cast<double>(m_TotalElements)) * 100.0);
     std::string progressMessage = "Calculating... ";
     m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
     m_InitialTime = std::chrono::steady_clock::now();
@@ -153,7 +162,7 @@ Result<> CalculateArrayHistogram::operator()()
   {
     m_TotalElements += m_DataStructure.getDataAs<IDataArray>(arrayPath)->getSize();
   }
-  auto progIncrement = m_TotalElements / 100;
+  auto progressIncrement = m_TotalElements / 100;
 
   std::tuple<bool, float64, float64> range = std::make_tuple(m_InputValues->UserDefinedRange, m_InputValues->MinRange, m_InputValues->MaxRange); // Custom bool, min, max
   ParallelTaskAlgorithm taskRunner;
@@ -168,53 +177,7 @@ Result<> CalculateArrayHistogram::operator()()
     const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(selectedArrayPaths[i]);
     auto& histogram = m_DataStructure.getDataRefAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i));
 
-    auto type = inputData.getDataType();
-    switch(type)
-    {
-    case DataType::int8: {
-      taskRunner.execute(GenerateHistogramFromData<Int8Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::int16: {
-      taskRunner.execute(GenerateHistogramFromData<Int16Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::int32: {
-      taskRunner.execute(GenerateHistogramFromData<Int32Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::int64: {
-      taskRunner.execute(GenerateHistogramFromData<Int64Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::uint8: {
-      taskRunner.execute(GenerateHistogramFromData<UInt8Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::uint16: {
-      taskRunner.execute(GenerateHistogramFromData<UInt16Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::uint32: {
-      taskRunner.execute(GenerateHistogramFromData<UInt32Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::uint64: {
-      taskRunner.execute(GenerateHistogramFromData<UInt64Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::float32: {
-      taskRunner.execute(GenerateHistogramFromData<Float32Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    case DataType::float64: {
-      taskRunner.execute(GenerateHistogramFromData<Float64Array>(*this, numBins, inputData, histogram, overflow, range, progIncrement));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Invalid DataType");
-    }
-    }
+    ExecuteParallelFunction(GenerateHistogramFunctor{}, inputData.getDataType(), ParallelRunner(taskRunner), *this, numBins, inputData, histogram, overflow, range, progressIncrement);
 
     if(overflow > 0)
     {

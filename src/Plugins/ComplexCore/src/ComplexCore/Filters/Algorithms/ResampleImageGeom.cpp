@@ -5,6 +5,7 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
@@ -48,14 +49,14 @@ public:
 
         for(size_t k = xStart; k < xEnd; k++)
         {
-          float x = (k * m_Spacing[0]);
-          float y = (j * m_Spacing[1]);
-          float z = (i * m_Spacing[2]);
-          int64 col = static_cast<int64>(x / m_OrigSpacing[0]);
-          int64 row = static_cast<int64>(y / m_OrigSpacing[1]);
-          int64 plane = static_cast<int64>(z / m_OrigSpacing[2]);
-          int64 indexOld = (plane * m_OrigDims[1] * m_OrigDims[0]) + (row * m_OrigDims[0]) + col;
-          size_t index = static_cast<size_t>((i * m_CopyDims[0] * m_CopyDims[1]) + (j * m_CopyDims[0]) + k);
+          float32 x = (static_cast<float32>(k) * m_Spacing[0]);
+          float32 y = (static_cast<float32>(j) * m_Spacing[1]);
+          float32 z = (static_cast<float32>(i) * m_Spacing[2]);
+          auto col = static_cast<int64>(x / m_OrigSpacing[0]);
+          auto row = static_cast<int64>(y / m_OrigSpacing[1]);
+          auto plane = static_cast<int64>(z / m_OrigSpacing[2]);
+          int64 indexOld = static_cast<int64>(plane * m_OrigDims[1] * m_OrigDims[0]) + static_cast<int64>(row * m_OrigDims[0]) + col;
+          auto index = static_cast<size_t>((i * m_CopyDims[0] * m_CopyDims[1]) + (j * m_CopyDims[0]) + k);
           m_NewIndices[index] = indexOld;
         }
       }
@@ -75,23 +76,6 @@ private:
   SizeVec3 m_CopyDims;
   const std::atomic_bool& m_ShouldCancel;
 };
-
-template <typename T>
-void CopyDataTuple(const IDataArray& oldArray, IDataArray& newArray, usize oldIndex, usize newIndex)
-{
-  const auto& oldArrayCast = static_cast<const DataArray<T>&>(oldArray);
-  auto& newArrayCast = static_cast<DataArray<T>&>(newArray);
-
-  auto numComponents = oldArrayCast.getNumberOfComponents();
-
-  for(usize i = 0; i < numComponents; i++)
-  {
-    usize newOffset = newIndex * numComponents;
-    usize oldOffset = oldIndex * numComponents;
-    newArrayCast[newOffset + i] = oldArrayCast[oldOffset + i];
-  }
-}
-
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -152,65 +136,14 @@ Result<> ResampleImageGeom::operator()()
     {
       return {};
     }
+
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
 
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+    m_MessageHandler(fmt::format("Resample Volume || Copying Data Array {}", srcName));
 
-    m_MessageHandler(fmt::format("Resample Volume || Copying Dat Array {}", srcName));
-
-    DataType type = oldDataArray.getDataType();
-
-    switch(type)
-    {
-    case DataType::boolean: {
-      taskRunner.execute(CopyTupleUsingIndexList<bool>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::int8: {
-      taskRunner.execute(CopyTupleUsingIndexList<int8>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::int16: {
-      taskRunner.execute(CopyTupleUsingIndexList<int16>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::int32: {
-      taskRunner.execute(CopyTupleUsingIndexList<int32>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::int64: {
-      taskRunner.execute(CopyTupleUsingIndexList<int64>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::uint8: {
-      taskRunner.execute(CopyTupleUsingIndexList<uint8>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::uint16: {
-      taskRunner.execute(CopyTupleUsingIndexList<uint16>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::uint32: {
-      taskRunner.execute(CopyTupleUsingIndexList<uint32>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::uint64: {
-      taskRunner.execute(CopyTupleUsingIndexList<uint64>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::float32: {
-      taskRunner.execute(CopyTupleUsingIndexList<float32>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    case DataType::float64: {
-      taskRunner.execute(CopyTupleUsingIndexList<float64>(oldDataArray, newDataArray, newIndices));
-      break;
-    }
-    default: {
-      throw std::runtime_error("Invalid DataType");
-    }
-    }
+    ExecuteParallelFunction(CopyTupleFunctor{}, oldDataArray.getDataType(), ParallelRunner(taskRunner), oldDataArray, newDataArray, newIndices);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

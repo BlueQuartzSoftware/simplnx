@@ -240,10 +240,6 @@ public:
     {
       return "NeighborList<float64>";
     }
-    else if constexpr(std::is_same_v<T, bool>)
-    {
-      return "NeighborList<bool>";
-    }
     return "NeighborList: UNKNOWN TYPE";
   }
 
