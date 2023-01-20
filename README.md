@@ -50,7 +50,7 @@ This clearance is in effect until 14 SEPT 2025 at which point any new additions 
 In order to compile `complex` you will need a C++17 compiler suite installed on your computer.
 
 + Compiler
-  + Windows Visual Studio 2017 v141 toolset
+  + Windows Visual Studio 2019 v142 toolset
   + macOS 10.15 and Xcode 12.4 or higher
   + Linux with GCC Version 9.0 or higher or clang.
 
