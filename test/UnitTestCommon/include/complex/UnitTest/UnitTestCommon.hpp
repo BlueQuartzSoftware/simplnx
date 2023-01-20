@@ -63,7 +63,9 @@ inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
 inline constexpr StringLiteral k_Phase_Data("Phase Data");
 
 inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");
+inline constexpr StringLiteral k_VertexDataContainerName("VertexDataContainer");
 inline constexpr StringLiteral k_FaceData("FaceData");
+inline constexpr StringLiteral k_VertexData("VertexData");
 inline constexpr StringLiteral k_GBCD_Name("GBCD");
 
 inline constexpr StringLiteral k_Centroids("Centroids");
