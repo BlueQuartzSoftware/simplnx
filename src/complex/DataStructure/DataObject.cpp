@@ -140,7 +140,7 @@ DataStructure& DataObject::getDataStructureRef()
 
 const DataStructure& DataObject::getDataStructureRef() const
 {
-   if(m_DataStructure == nullptr)
+  if(m_DataStructure == nullptr)
   {
     throw std::runtime_error("DataObject's DataStructure is null");
   }
