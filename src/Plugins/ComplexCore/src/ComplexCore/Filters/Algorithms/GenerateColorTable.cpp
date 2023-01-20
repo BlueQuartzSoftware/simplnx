@@ -1,11 +1,11 @@
 #include "GenerateColorTable.hpp"
 
-#include "nlohmann/json.hpp"
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
+
+#include <nlohmann/json.hpp>
 
 using namespace complex;
 
