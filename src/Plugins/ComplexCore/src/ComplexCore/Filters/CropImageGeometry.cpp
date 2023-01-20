@@ -510,7 +510,7 @@ Result<> CropImageGeometry::executeImpl(DataStructure& dataStructure, const Argu
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
 
     messageHandler(fmt::format("Cropping Volume || Copying Data Array {}", srcName));
-    ExecuteParallelFunction<CropImageGeomDataArray>(oldDataArray.getDataType(), ParallelRunner(taskRunner), oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
+    ExecuteParallelFunction<CropImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 

@@ -159,7 +159,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
     m_MessageHandler(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
 
-    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), ParallelRunner(taskRunner), this, udims, xShifts, yShifts, cellArray);
+    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
   }
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();

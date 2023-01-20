@@ -6,25 +6,6 @@
 
 namespace complex
 {
-template <class ParallelRunnerT>
-class ParallelRunner
-{
-public:
-  explicit ParallelRunner(ParallelRunnerT& parallelRunner)
-  : m_ParallelRunner(parallelRunner)
-  {
-  }
-
-  template <typename Body>
-  void execute(Body&& body)
-  {
-    m_ParallelRunner.execute(std::forward<Body>(body));
-  }
-
-private:
-  ParallelRunnerT& m_ParallelRunner;
-};
-
 template <bool UseBoolean, bool UseInt8V, bool UseUInt8V, bool UseInt16V, bool UseUInt16V, bool UseInt32V, bool UseUInt32V, bool UseInt64V, bool UseUInt64V, bool UseFloat32V, bool UseFloat64V>
 struct ArrayTypeOptions
 {

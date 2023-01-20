@@ -168,7 +168,7 @@ Result<> CalculateArrayHistogram::operator()()
     const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(selectedArrayPaths[i]);
     auto& histogram = m_DataStructure.getDataRefAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i));
 
-    ExecuteParallelFunction<GenerateHistogramFromData>(inputData.getDataType(), ParallelRunner(taskRunner), *this, numBins, inputData, histogram, overflow, range, progressIncrement);
+    ExecuteParallelFunction<GenerateHistogramFromData>(inputData.getDataType(), taskRunner, *this, numBins, inputData, histogram, overflow, range, progressIncrement);
 
     if(overflow > 0)
     {
