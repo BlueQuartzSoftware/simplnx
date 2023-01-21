@@ -62,6 +62,8 @@ function(complex_enable_warnings)
         /we4457 # C4457: declaration of 'identifier' hides function parameter
         /we4458 # C4458: declaration of 'identifier' hides class member
         /we4459 # C4459: declaration of 'identifier' hides global declaration
+
+        /permissive- # Standards compliance
     )
   else()
 
