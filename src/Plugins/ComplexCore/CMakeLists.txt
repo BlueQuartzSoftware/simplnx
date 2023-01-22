@@ -58,6 +58,7 @@ set(FilterList
   FindVolFractionsFilter
   GenerateColorTableFilter
   IdentifySample
+  ImportBinaryCTNorthstarFilter
   ImportCSVDataFilter
   ImportDREAM3DFilter
   ImportHDF5Dataset
@@ -122,6 +123,7 @@ set(AlgorithmList
   FindTriangleGeomSizes
   GenerateColorTable
   ImportVolumeGraphicsFile
+  ImportBinaryCTNorthstar
   LaplacianSmoothing
   PartitionGeometry
   PointSampleTriangleGeometry
