@@ -5,9 +5,14 @@
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
+
 #include <nlohmann/json.hpp>
 
+#include <cctype>
+#include <filesystem>
+#include <iostream>
 #include <stdexcept>
+
 #ifdef _WIN32
 #include <io.h>
 #define FSPP_ACCESS_FUNC_NAME _access
@@ -65,21 +70,57 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
   }
   return {};
 }
-
 //-----------------------------------------------------------------------------
-Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueType& path)
+Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueType& path, bool isFile)
 {
-  const FileSystemPathParameter::ValueType emptyPath("");
-
   auto checkedPath = path;
-  while(!fs::exists(checkedPath))
+  if(isFile)
   {
     checkedPath = checkedPath.parent_path();
-    if(checkedPath == emptyPath)
-    {
-      return MakeErrorResult(-9, fmt::format("Empty path encountered while trying to compute full path '{}'", path.string()));
-    }
   }
+  std::error_code errorCode;
+  // We now have the parent directory. Let us see if *any* part of the path exists
+
+  // If the path is relative, then make it absolute
+  if(!checkedPath.is_absolute())
+  {
+    checkedPath = fs::absolute(checkedPath, errorCode);
+  }
+
+  // The idea here is to start walking up from the deepest directory and hopefully
+  // find an existing directory. If we get to the top if the path and we are still
+  // empty then:
+  //  On unix based systems not sure this would happen. Even if the user set a path
+  // to another drive that didn't exist, at some point you hit the '/' and then you
+  // can try to create the directories.
+  //  On Windows the user put in a bogus drive letter which is just a hard failure
+  // because we can't make up a new drive letter.
+  while(!fs::exists(checkedPath) && !checkedPath.empty())
+  {
+    checkedPath = checkedPath.parent_path();
+  }
+
+#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
+  std::string pathAsString = path.string();
+  if(isalpha(pathAsString.at(0)) != 0 && pathAsString.at(1) == ':')
+  {
+    // We have a valid Drive letter + ":" so we can check that
+    fs::path driveLetterOnly = pathAsString.substr(0, 2);
+    if(!fs::exists({driveLetterOnly}))
+    {
+      return MakeErrorResult(-11, fmt::format("The drive does not exist on this system: '{}'", driveLetterOnly.string()));
+    }
+    // If the drive exists then go to the next step of checking write permissions
+    checkedPath = {driveLetterOnly};
+  }
+#else
+  // if we hit here then we walked all the way up the path and hit the root, so
+  // see if the user can write to the root level
+  if(checkedPath.empty())
+  {
+    checkedPath = "/";
+  }
+#endif
   // We should be at the top of the tree with an existing directory.
   if(HasWriteAccess(checkedPath.string()))
   {
@@ -91,7 +132,7 @@ Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueTy
 //-----------------------------------------------------------------------------
 Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 {
-  auto result = ValidateDirectoryWritePermission(path);
+  auto result = ValidateDirectoryWritePermission(path, true);
   if(result.invalid())
   {
     return result;
@@ -106,7 +147,7 @@ Result<> ValidateOutputFile(const FileSystemPathParameter::ValueType& path)
 //-----------------------------------------------------------------------------
 Result<> ValidateOutputDir(const FileSystemPathParameter::ValueType& path)
 {
-  auto result = ValidateDirectoryWritePermission(path);
+  auto result = ValidateDirectoryWritePermission(path, false);
   if(result.invalid())
   {
     return result;
@@ -246,12 +287,6 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     {
       return {nonstd::make_unexpected(std::vector<Error>{{-3003, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
     }
-  }
-
-  if(!path.is_absolute() && !fs::exists(path))
-  {
-    return MakeErrorResult(-3004, fmt::format("Relative Path given does not exist.\n    Relative Path:'{}'\n    Current Working Path: '{}'\n    Computed Path: '{}/{}", path.string(),
-                                              std::filesystem::current_path().string(), std::filesystem::current_path().string(), path.string()));
   }
 
   switch(m_PathType)
