@@ -7,6 +7,9 @@
 
 #include <catch2/catch.hpp>
 
+#include <fmt/core.h>
+
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 
@@ -206,3 +209,53 @@ TEST_CASE("ComplexCore::WriteBinaryData: Valid filter execution")
   RunBinaryTest<float32>(dsRef).execute();
   RunBinaryTest<float64>(dsRef).execute();
 } // end of test case
+
+// For this test we are going to use the Windows path of "A:/" which historically
+// was for the floppy disk drives. I've not seen anyone use A or B for drive letters
+// is a LONG time, so I'm going to just assume that the test machines are setup
+// like a normal "modern" Windows system and start their drive lettering at "C".
+//
+// Not sure how to replicate this on unix as there is a decent probability that
+// a test bot might actually have write access to the root "/" of the Unix OS. This
+// definitely would NOT happen macOS. Linux is iffy.
+TEST_CASE("ComplexCore::WriteBinaryData:Invalid Filter Execution")
+{
+  // We are just going to generate a big number so that we can use that in the output
+  // file path. This tests the creation of intermediate directories that the filter
+  // would be responsible to create.
+  const uint64_t millisFromEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+  // create data set
+  DataStructure dataStructure;
+  // create DataArrays and store in vector to pass as an args
+  for(int32 index = 0; index < k_NumOfDataArrays; index++)
+  {
+    using DataStoreType = DataStore<int32>;
+    using ArrayType = DataArray<int32>;
+
+    ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, std::to_string(0) + "_" + "array_" + std::to_string(index), {static_cast<usize>(k_NumOfTuples)},
+                                                                              {static_cast<usize>(k_NumComponents)});
+    dataArray->fill(123123);
+  }
+  std::vector<DataPath> daps1 = dataStructure.getAllDataPaths();
+
+  // Instantiate the filter and an Arguments Object
+  WriteBinaryDataFilter filter;
+  Arguments args;
+
+#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
+  std::string invalidPath = fmt::format("A:/{}", millisFromEpoch);
+#else
+  std::string invalidPath = fmt::format("/{}", millisFromEpoch);
+#endif
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(WriteBinaryDataFilter::k_Endianess_Key, std::make_any<ChoicesParameter::ValueType>(0)); // uint64 0 and 1
+  args.insertOrAssign(WriteBinaryDataFilter::k_OutputPath_Key, std::make_any<fs::path>(invalidPath));
+  args.insertOrAssign(WriteBinaryDataFilter::k_FileExtension_Key, std::make_any<std::string>(".bin"));
+  args.insertOrAssign(WriteBinaryDataFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(daps1));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+}
