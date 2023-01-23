@@ -243,6 +243,8 @@ TEST_CASE("ComplexCore::WriteBinaryData:Invalid Filter Execution")
   WriteBinaryDataFilter filter;
   Arguments args;
 
+  // These paths are meant to fail. A: doesn't probably exist on most main stream Windows computers
+  // Most Unix users don't have write privs on "/". If they do then this test fails and we fix this test
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
   std::string invalidPath = fmt::format("A:/{}", millisFromEpoch);
 #else

@@ -98,6 +98,14 @@ Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueTy
   while(!fs::exists(checkedPath) && !checkedPath.empty())
   {
     checkedPath = checkedPath.parent_path();
+
+    // Check if we worked our way up to the root of the path
+#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
+    if(checkedPath.string().size() == 3 && checkedPath.string().at(1) == ':')
+    {
+      break;
+    }
+#endif
   }
 
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
@@ -105,7 +113,7 @@ Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueTy
   if(isalpha(pathAsString.at(0)) != 0 && pathAsString.at(1) == ':')
   {
     // We have a valid Drive letter + ":" so we can check that
-    fs::path driveLetterOnly = pathAsString.substr(0, 2);
+    fs::path driveLetterOnly = path.root_name();
     if(!fs::exists({driveLetterOnly}))
     {
       return MakeErrorResult(-11, fmt::format("The drive does not exist on this system: '{}'", driveLetterOnly.string()));
