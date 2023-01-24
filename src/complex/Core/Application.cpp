@@ -1,6 +1,5 @@
 #include "Application.hpp"
 
-
 #include "complex/Filter/FilterList.hpp"
 #include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/Plugin/PluginLoader.hpp"
