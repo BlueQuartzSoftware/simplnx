@@ -130,6 +130,14 @@ Result<> WriteBinaryDataFilter::executeImpl(DataStructure& dataStructure, const 
   }
 
   fs::path dirPath(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key));
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  Result<> createDirectoriesResult = complex::CreateOutputDirectories(dirPath);
+  if(createDirectoriesResult.invalid())
+  {
+    return createDirectoriesResult;
+  }
+
   if(!fs::is_directory(dirPath))
   {
     return MakeErrorResult(-23430, fmt::format("{}({}): Function {}: Error. OutputPath must be a directory. '{}'", "WriteBinaryDataFilter::executeImpl", __FILE__, __LINE__, dirPath.string()));

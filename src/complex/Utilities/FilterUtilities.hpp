@@ -1,8 +1,13 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/complex_export.hpp"
 
+#include <filesystem>
 #include <stdexcept>
+
+namespace fs = std::filesystem;
 
 namespace complex
 {
@@ -93,4 +98,12 @@ auto ExecuteNeighborFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
   }
   }
 }
+
+/**
+ * @brief Creates all intermediate directories for a given path.
+ * @param outputPath The path that gets created
+ * @return
+ */
+COMPLEX_EXPORT Result<> CreateOutputDirectories(const fs::path& outputPath);
+
 } // namespace complex
