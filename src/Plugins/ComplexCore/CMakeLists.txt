@@ -144,7 +144,6 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 # ------------------------------------------------------------------------------
 # The ExecuteProcess Filter requires the `reproc` library
 # ------------------------------------------------------------------------------
-find_package("reproc" CONFIG REQUIRED)
 find_package("reproc++" CONFIG REQUIRED)
 
 #------------------------------------------------------------------------------
