@@ -1,5 +1,22 @@
 # Porting Filter Notes #
 
+## Porting Checklist ##
+
+- [ ] Parameters should be generally broken down into "Input Parameters", "Required Data Objects", "Created Data Objects". There can be exceptions to this.
+- [ ] ChoicesParameter selections should be an enumeration defined in the filer header
+- [ ] Documentation copied from SIMPL Repo and updated (if necessary)
+- [ ] Parameter argument variables are `k_CamelCase_Key`
+- [ ] Parameter argument strings are `lower_snake_case`
+```
+static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type";
+```
+
+## Misc. Code Style requirements
+
+- [ ] Filters should have both the Filter class and Algorithm class for anything beyond trivial needs
+
+
+
 ## Converting Types ##
 
 + QString => std::string
@@ -8,11 +25,14 @@
 + QByteArray => std::array<int8> or std::vector<int8>
 
 
-## Converting `setErrorCondition` ##
+## Converting `setErrorCondition` from SIMPL to COMPLEX##
 
+SIMPL
 ```c++
     setErrorCondition(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file");
 ```
+
+COMPLEX
 ```c++
     Result<> result =  MakeErrorResult(complex::StlConstants::k_ErrorOpeningFile, "Error opening STL file")
 ```
