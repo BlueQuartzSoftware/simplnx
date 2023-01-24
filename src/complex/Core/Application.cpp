@@ -1,5 +1,13 @@
 #include "Application.hpp"
 
+
+#include "complex/Filter/FilterList.hpp"
+#include "complex/Plugin/AbstractPlugin.hpp"
+#include "complex/Plugin/PluginLoader.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
+
+#include <fmt/core.h>
+
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>
@@ -13,12 +21,6 @@
 #elif defined(__APPLE__)
 #include <mach-o/dyld.h>
 #endif
-
-#include <fmt/core.h>
-
-#include "complex/Filter/FilterList.hpp"
-#include "complex/Plugin/AbstractPlugin.hpp"
-#include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
 
@@ -141,13 +143,6 @@ std::vector<Uuid> Application::getSimplUuid(const Uuid& complexUuid)
   return uuidList;
 }
 
-inline bool ends_with(std::string const& value, std::string const& ending)
-{
-  if(ending.size() > value.size())
-    return false;
-  return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-}
-
 void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbose)
 {
   if(verbose)
@@ -157,12 +152,10 @@ void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbo
   for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
   {
     std::filesystem::path path = entry.path();
-    std::string extension = path.extension().string();
-    std::string fileName = path.filename().string();
 #ifdef NDEBUG // Release mode
-    if(!ends_with(path.string(), "_d.complex") && ends_with(path.string(), ".complex"))
+    if(!StringUtilities::ends_with(path.string(), "_d.complex") && StringUtilities::ends_with(path.string(), ".complex"))
 #else
-    if(ends_with(path.string(), "_d.complex"))
+    if(StringUtilities::ends_with(path.string(), "_d.complex"))
 #endif
     {
       loadPlugin(path, verbose);

@@ -130,6 +130,23 @@ inline std::string trimmed(std::string_view str)
   return std::string(str.substr(front, back - front + 1));
 }
 
+/**
+ * @brief 
+ * 
+ * @param value input string to check
+ * @param ending The ending to check the input string for.
+ * @return True or False if the given string ends with the given ending
+ */
+inline bool ends_with(std::string_view value, std::string_view ending)
+{
+  if(ending.size() > value.size())
+  {
+    return false;
+  }
+  return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+
 inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool consecutiveDelimiters)
 {
   std::vector<std::string> tokens;
