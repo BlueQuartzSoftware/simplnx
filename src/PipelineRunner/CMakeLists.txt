@@ -18,7 +18,7 @@ add_executable(PipelineRunner)
 
 set_target_properties(PipelineRunner
   PROPERTIES
-    DEBUG_POSTFIX "_d"
+  DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
 )
 
 

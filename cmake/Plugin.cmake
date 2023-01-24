@@ -19,7 +19,7 @@ function(complex_COMPILE_PLUGIN)
     add_subdirectory(${ARGS_PLUGIN_SOURCE_DIR} ${PROJECT_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME})
     get_property(PluginNumFilters GLOBAL PROPERTY ${ARGS_PLUGIN_NAME}_filter_count)
     file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/test_output)
-    message(STATUS "${ARGS_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
+    # message(STATUS "${ARGS_PLUGIN_NAME} [ENABLED] ${PluginNumFilters} Filters")
 
     #- Now set up the dependency between the main application and each of the plugins so that
     #- things like Visual Studio are forced to rebuild the plugins when launching
@@ -203,13 +203,15 @@ function(create_complex_plugin)
   endif()
   #------------------------------------------------------------------------------
   # Add a global property that stores the filters that are in this plugin
-  #------------------------------------------------------------------------------   
+  #------------------------------------------------------------------------------
+  get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)   
   set_property(GLOBAL PROPERTY ${ARGS_NAME}_FILTER_LIST ${ARGS_FILTER_LIST})
-
+  get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)
   set_target_properties(${ARGS_NAME}
     PROPERTIES
       FOLDER "Plugins/${ARGS_NAME}"
       SUFFIX ".complex"
+      DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
   )
 
   #------------------------------------------------------------------------------

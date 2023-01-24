@@ -1,5 +1,12 @@
 #include "Application.hpp"
 
+#include "complex/Filter/FilterList.hpp"
+#include "complex/Plugin/AbstractPlugin.hpp"
+#include "complex/Plugin/PluginLoader.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
+
+#include <fmt/core.h>
+
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>
@@ -13,12 +20,6 @@
 #elif defined(__APPLE__)
 #include <mach-o/dyld.h>
 #endif
-
-#include <fmt/core.h>
-
-#include "complex/Filter/FilterList.hpp"
-#include "complex/Plugin/AbstractPlugin.hpp"
-#include "complex/Plugin/PluginLoader.hpp"
 
 using namespace complex;
 
@@ -150,8 +151,11 @@ void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbo
   for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
   {
     std::filesystem::path path = entry.path();
-    std::string extension = path.extension().string();
-    if(extension == ".complex")
+#ifdef NDEBUG // Release mode
+    if(!StringUtilities::ends_with(path.string(), "_d.complex") && StringUtilities::ends_with(path.string(), ".complex"))
+#else
+    if(StringUtilities::ends_with(path.string(), "_d.complex"))
+#endif
     {
       loadPlugin(path, verbose);
     }
