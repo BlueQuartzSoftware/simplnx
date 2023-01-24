@@ -73,6 +73,7 @@ set(FilterList
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
   ResampleImageGeomFilter
+  ReplaceElementAttributesWithNeighborValuesFilter
   RobustAutomaticThreshold
   RotateSampleRefFrameFilter
   ScalarSegmentFeaturesFilter
@@ -115,6 +116,7 @@ set(AlgorithmList
   QuickSurfaceMesh
   RawBinaryReader
   ResampleImageGeom
+  ReplaceElementAttributesWithNeighborValues
   ScalarSegmentFeatures
   SharedFeatureFace
   SplitAttributeArray

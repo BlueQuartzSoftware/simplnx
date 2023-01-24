@@ -75,6 +75,7 @@
 #include "ComplexCore/Filters/ResampleImageGeomFilter.hpp"
 #include "ComplexCore/Filters/RotateSampleRefFrameFilter.hpp"
 #include "ComplexCore/Filters/FillBadDataFilter.hpp"
+#include "ComplexCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -158,7 +159,9 @@ namespace complex
     {complex::Uuid::FromString("1966e540-759c-5798-ae26-0c6a3abc65c0").value(), complex::FilterTraits<ResampleImageGeomFilter>::uuid}, // ResampleImageGeom
     {complex::Uuid::FromString("e25d9b4c-2b37-578c-b1de-cf7032b5ef19").value(), complex::FilterTraits<RotateSampleRefFrameFilter>::uuid}, // RotateSampleRefFrame
     {complex::Uuid::FromString("30ae0a1e-3d94-5dab-b279-c5727ab5d7ff").value(), complex::FilterTraits<FillBadDataFilter>::uuid}, // FillBadData
-// @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
+    {complex::Uuid::FromString("7aa33007-4186-5d7f-ba9d-d0a561b3351d").value(), complex::FilterTraits<TriangleCentroidFilter>::uuid}, // TriangleCentroid  
+    {complex::Uuid::FromString("17410178-4e5f-58b9-900e-8194c69200ab").value(), complex::FilterTraits<ReplaceElementAttributesWithNeighborValuesFilter>::uuid}, // ReplaceElementAttributesWithNeighborValues
+    // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
 } // namespace complex
