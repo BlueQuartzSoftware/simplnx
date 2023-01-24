@@ -73,62 +73,55 @@ Result<> ValidateInputDir(const FileSystemPathParameter::ValueType& path)
 //-----------------------------------------------------------------------------
 Result<> ValidateDirectoryWritePermission(const FileSystemPathParameter::ValueType& path, bool isFile)
 {
+  if(path.empty())
+  {
+    return MakeErrorResult(-16, "ValidateDirectoryWritePermission() error: given path was empty.");
+  }
+
   auto checkedPath = path;
   if(isFile)
   {
     checkedPath = checkedPath.parent_path();
   }
-  std::error_code errorCode;
   // We now have the parent directory. Let us see if *any* part of the path exists
 
   // If the path is relative, then make it absolute
   if(!checkedPath.is_absolute())
   {
-    checkedPath = fs::absolute(checkedPath, errorCode);
+    try
+    {
+      checkedPath = fs::absolute(checkedPath);
+    } catch(const std::filesystem::filesystem_error& error)
+    {
+      return MakeErrorResult(-15, fmt::format("ValidateDirectoryWritePermission() threw an error: '{}'", error.what()));
+    }
   }
+
+  auto rootPath = checkedPath.root_path();
 
   // The idea here is to start walking up from the deepest directory and hopefully
   // find an existing directory. If we get to the top if the path and we are still
   // empty then:
-  //  On unix based systems not sure this would happen. Even if the user set a path
+  //  On unix based systems not sure if it would happen. Even if the user set a path
   // to another drive that didn't exist, at some point you hit the '/' and then you
   // can try to create the directories.
   //  On Windows the user put in a bogus drive letter which is just a hard failure
   // because we can't make up a new drive letter.
-  while(!fs::exists(checkedPath) && !checkedPath.empty())
+  while(!fs::exists(checkedPath) && checkedPath != rootPath)
   {
     checkedPath = checkedPath.parent_path();
-
-    // Check if we worked our way up to the root of the path
-#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
-    if(checkedPath.string().size() == 3 && checkedPath.string().at(1) == ':')
-    {
-      break;
-    }
-#endif
   }
 
-#if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
-  std::string pathAsString = path.string();
-  if(isalpha(pathAsString.at(0)) != 0 && pathAsString.at(1) == ':')
-  {
-    // We have a valid Drive letter + ":" so we can check that
-    fs::path driveLetterOnly = path.root_name();
-    if(!fs::exists({driveLetterOnly}))
-    {
-      return MakeErrorResult(-11, fmt::format("The drive does not exist on this system: '{}'", driveLetterOnly.string()));
-    }
-    // If the drive exists then go to the next step of checking write permissions
-    checkedPath = {driveLetterOnly};
-  }
-#else
-  // if we hit here then we walked all the way up the path and hit the root, so
-  // see if the user can write to the root level
   if(checkedPath.empty())
   {
-    checkedPath = "/";
+    return MakeErrorResult(-19, "ValidateDirectoryWritePermission() resolved path was empty");
   }
-#endif
+
+  if(!fs::exists(checkedPath))
+  {
+    return MakeErrorResult(-11, fmt::format("ValidateDirectoryWritePermission() error: The drive does not exist on this system: '{}'", checkedPath.string()));
+  }
+
   // We should be at the top of the tree with an existing directory.
   if(HasWriteAccess(checkedPath.string()))
   {
