@@ -5,6 +5,9 @@
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "complex/Utilities/RTree.hpp"
+
+using RTreeType = RTree<size_t, float, 3, float>;
 
 using namespace complex;
 
@@ -323,7 +326,8 @@ class FindVertexToTriangleDistancesImpl
 {
 public:
   FindVertexToTriangleDistancesImpl(FindVertexToTriangleDistances* filter, const IGeometry::SharedTriList& triangles, const IGeometry::SharedVertexList& verts,
-                                    const IGeometry::SharedVertexList& sourcePoints, Float32Array& distances, Int64Array& closestTri, const std::vector<float>& triBounds, const Float64Array& normals)
+                                    IGeometry::SharedVertexList& sourcePoints, Float32Array& distances, Int64Array& closestTri, const std::vector<float>& triBounds, const Float64Array& normals,
+                                    const RTreeType& rtree)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
   , m_TriangleVertices(verts)
@@ -332,6 +336,7 @@ public:
   , m_ClosestTri(closestTri)
   , m_TriBounds(triBounds)
   , m_Normals(normals)
+  , m_RTree(rtree)
   {
   }
   virtual ~FindVertexToTriangleDistancesImpl() = default;
@@ -351,9 +356,20 @@ public:
     for(usize v = start; v < end; v++)
     {
       std::cout << "Vert: " << v << std::endl;
-      //      m_SourcePoints[3 * v] = -1.0F;
-      //      m_SourcePoints[3 * v + 1] = -1.0F;
-      //      m_SourcePoints[3 * v + 2] = -1.0F;
+//      m_SourcePoints[3 * v] = -1.0F;
+//      m_SourcePoints[3 * v + 1] = -1.0F;
+//      m_SourcePoints[3 * v + 2] = -1.0F;
+
+      Vec3fa sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
+
+      std::vector<size_t> hitTriangleIds;
+      std::function<bool(size_t)> func = [&](size_t triangleIndex) {
+        hitTriangleIds.push_back(triangleIndex);
+        return true; // keep going
+      };
+
+      int nhits = m_RTree.Search(sourcePoint.data(), sourcePoint.data(), func);
+
       for(usize t = 0; t < numTriangles; t++)
       {
         std::cout << "  Triangle: " << t << std::endl;
@@ -361,6 +377,7 @@ public:
         {
           return;
         }
+
         if((m_SourcePoints[3 * v] >= m_TriBounds[6 * t] && m_SourcePoints[3 * v] <= m_TriBounds[6 * t + 1]) ||
            (m_SourcePoints[3 * v + 1] >= m_TriBounds[6 * t + 2] && m_SourcePoints[3 * v + 1] <= m_TriBounds[6 * t + 3]) ||
            (m_SourcePoints[3 * v + 2] >= m_TriBounds[6 * t + 4] && m_SourcePoints[3 * v + 2] <= m_TriBounds[6 * t + 5]))
@@ -421,11 +438,12 @@ private:
   FindVertexToTriangleDistances* m_Filter;
   const IGeometry::SharedTriList& m_SharedTriangleList;
   const IGeometry::SharedVertexList& m_TriangleVertices;
-  const IGeometry::SharedVertexList& m_SourcePoints;
+  IGeometry::SharedVertexList& m_SourcePoints;
   Float32Array& m_Distances;
   Int64Array& m_ClosestTri;
   const std::vector<float>& m_TriBounds;
   const Float64Array& m_Normals;
+  const RTreeType& m_RTree;
 };
 } // namespace
 
@@ -467,6 +485,23 @@ void FindVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
   m_LastProgressInt = progressInt;
 }
 
+void GetBoundingBoxAtTri(const IGeometry::SharedTriList& triList, const IGeometry::SharedVertexList& vertList, size_t triId, nonstd::span<float> bounds)
+{
+  size_t v0Index = triList[triId * 3 + 0] * 3;
+  size_t v1Index = triList[triId * 3 + 1] * 3;
+  size_t v2Index = triList[triId * 3 + 2] * 3;
+
+  auto xMinMax = std::minmax({vertList[v0Index + 0], vertList[v1Index + 0], vertList[v2Index + 0]});
+  auto yMinMax = std::minmax({vertList[v0Index + 1], vertList[v1Index + 1], vertList[v2Index + 1]});
+  auto zMinMax = std::minmax({vertList[v0Index + 2], vertList[v1Index + 2], vertList[v2Index + 2]});
+  bounds[0] = xMinMax.first;
+  bounds[1] = yMinMax.first;
+  bounds[2] = zMinMax.first;
+  bounds[3] = xMinMax.second;
+  bounds[4] = yMinMax.second;
+  bounds[5] = zMinMax.second;
+}
+
 // -----------------------------------------------------------------------------
 Result<> FindVertexToTriangleDistances::operator()()
 {
@@ -479,17 +514,20 @@ Result<> FindVertexToTriangleDistances::operator()()
   IGeometry::SharedTriList& triangles = triangleGeom.getFacesRef();
   IGeometry::SharedVertexList& vertices = triangleGeom.getVerticesRef();
 
-  // std::vector<std::vector<usize>> tmpTris;
-  // auto& triBoundsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->TriBoundsDataPath);
+  RTreeType m_RTree;
+  // Populate the RTree
   std::vector<float> triBoundsArray(numTris * 6, 0.0F);
-  for(size_t i = 0; i < numTris; i++)
+  for(size_t triIndex = 0; triIndex < numTris; triIndex++)
   {
-    triBoundsArray[6 * i] = std::min({vertices[3 * triangles[3 * i]], vertices[3 * triangles[3 * i + 1]], vertices[3 * triangles[3 * i + 2]]});
-    triBoundsArray[6 * i + 1] = std::max({vertices[3 * triangles[3 * i]], vertices[3 * triangles[3 * i + 1]], vertices[3 * triangles[3 * i + 2]]});
-    triBoundsArray[6 * i + 2] = std::min({vertices[3 * triangles[3 * i] + 1], vertices[3 * triangles[3 * i + 1] + 1], vertices[3 * triangles[3 * i + 2] + 1]});
-    triBoundsArray[6 * i + 3] = std::max({vertices[3 * triangles[3 * i] + 1], vertices[3 * triangles[3 * i + 1] + 1], vertices[3 * triangles[3 * i + 2] + 1]});
-    triBoundsArray[6 * i + 4] = std::min({vertices[3 * triangles[3 * i] + 2], vertices[3 * triangles[3 * i + 1] + 2], vertices[3 * triangles[3 * i + 2] + 2]});
-    triBoundsArray[6 * i + 5] = std::max({vertices[3 * triangles[3 * i] + 2], vertices[3 * triangles[3 * i + 1] + 2], vertices[3 * triangles[3 * i + 2] + 2]});
+    triBoundsArray[6 * triIndex] = std::min({vertices[3 * triangles[3 * triIndex]], vertices[3 * triangles[3 * triIndex + 1]], vertices[3 * triangles[3 * triIndex + 2]]});
+    triBoundsArray[6 * triIndex + 1] = std::max({vertices[3 * triangles[3 * triIndex]], vertices[3 * triangles[3 * triIndex + 1]], vertices[3 * triangles[3 * triIndex + 2]]});
+    triBoundsArray[6 * triIndex + 2] = std::min({vertices[3 * triangles[3 * triIndex] + 1], vertices[3 * triangles[3 * triIndex + 1] + 1], vertices[3 * triangles[3 * triIndex + 2] + 1]});
+    triBoundsArray[6 * triIndex + 3] = std::max({vertices[3 * triangles[3 * triIndex] + 1], vertices[3 * triangles[3 * triIndex + 1] + 1], vertices[3 * triangles[3 * triIndex + 2] + 1]});
+    triBoundsArray[6 * triIndex + 4] = std::min({vertices[3 * triangles[3 * triIndex] + 2], vertices[3 * triangles[3 * triIndex + 1] + 2], vertices[3 * triangles[3 * triIndex + 2] + 2]});
+    triBoundsArray[6 * triIndex + 5] = std::max({vertices[3 * triangles[3 * triIndex] + 2], vertices[3 * triangles[3 * triIndex + 1] + 2], vertices[3 * triangles[3 * triIndex + 2] + 2]});
+
+    GetBoundingBoxAtTri(triangles, vertices, triIndex, {triBoundsArray.data() + (6 * triIndex), 6});
+    m_RTree.Insert(triBoundsArray.data() + (6 * triIndex), triBoundsArray.data() + (6 * triIndex) + 3, triIndex); // Note, all values including zero are fine in this version
   }
 
   const auto& normalsArray = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->TriangleNormalsArrayPath);
@@ -504,7 +542,7 @@ Result<> FindVertexToTriangleDistances::operator()()
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(false);
   dataAlg.setRange(0, numVerts);
-  dataAlg.execute(FindVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVerts, distancesArray, closestTriangleIdsArray, triBoundsArray, normalsArray));
+  dataAlg.execute(FindVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVerts, distancesArray, closestTriangleIdsArray, triBoundsArray, normalsArray, m_RTree));
 
   return {};
 }
