@@ -640,6 +640,56 @@ public:
   {
     return Vec3<OutType>(static_cast<OutType>((*this)[0]), static_cast<OutType>((*this)[1]), static_cast<OutType>((*this)[2]));
   }
+
+  /**
+  * @brief Returns the crossproduct of this and an input Vec3
+  * @return Vec3<T>
+  */
+  inline Vec3 crossProduct(const Vec3<T>& v) const
+  {
+    return Vec3<T>((*this)[1] * v[2] - (*this)[2] * v[1], (*this)[2] * v[0] - (*this)[0] * v[2], (*this)[0] * v[1] - (*this)[1] * v[0]);
+  }
+
+    /**
+   * @brief Returns the dotproduct of this and an input Vec3
+   * @return Vec3<T>
+   */
+  inline T dotProduct(const Vec3<T>& v) const
+  {
+    return (*this)[0] * v[0] + (*this)[1] * v[1] + (*this)[2] * v[2];
+  }
+
+  inline Vec3 operator+(const Vec3& v) const
+  {
+    return Vec3((*this)[0] + v[0], (*this)[1] + v[1], (*this)[2] + v[2]);
+  }
+  inline Vec3 operator-(const Vec3& v) const
+  {
+    return Vec3((*this)[0] - v[0], (*this)[1] - v[1], (*this)[2] - v[2]);
+  }
+  inline Vec3 operator-() const
+  {
+    return Vec3(-(*this)[0], -(*this)[1], -(*this)[2]);
+  }
+  inline Vec3 operator*(const T& r) const
+  {
+    return Vec3((*this)[0] * r, (*this)[1] * r, (*this)[2] * r);
+  }
+  inline Vec3 operator*(const Vec3& v) const
+  {
+    return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
+  }
+  inline Vec3& operator/=(const T& r)
+  {
+    (*this)[0] /= r, (*this)[1] /= r, (*this)[2] /= r;
+    return *this;
+  }
+  inline Vec3& operator*=(const T& r)
+  {
+    (*this)[0] *= r, (*this)[1] *= r, (*this)[2] *= r;
+    return *this;
+  }
+};
 };
 
 // -----------------------------------------------------------------------------
