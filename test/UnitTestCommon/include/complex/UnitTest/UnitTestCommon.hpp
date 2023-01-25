@@ -223,11 +223,11 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
  */
 inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
 {
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filepath);
-  H5::FileWriter fileWriter = std::move(result.value());
+  Pipeline pipeline;
+  bool writeXdmf = true;
 
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto result = DREAM3D::WriteFile(filepath, dataStructure, pipeline, writeXdmf);
+  COMPLEX_RESULT_REQUIRE_VALID(result);
 }
 
 /**
