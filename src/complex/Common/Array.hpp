@@ -650,10 +650,10 @@ public:
     return Vec3<T>((*this)[1] * v[2] - (*this)[2] * v[1], (*this)[2] * v[0] - (*this)[0] * v[2], (*this)[0] * v[1] - (*this)[1] * v[0]);
   }
 
-    /**
-   * @brief Returns the dotproduct of this and an input Vec3
-   * @return Vec3<T>
-   */
+  /**
+  * @brief Returns the dotproduct of this and an input Vec3
+  * @return Vec3<T>
+  */
   inline T dotProduct(const Vec3<T>& v) const
   {
     return (*this)[0] * v[0] + (*this)[1] * v[1] + (*this)[2] * v[2];
