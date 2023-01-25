@@ -66,7 +66,7 @@ public:
    */
   T& operator[](size_t index)
   {
-    return m_Data[index]; // No bounds checking.. living life on the edge.
+    return m_Data[index]; // No bounds checking.
   }
 
   /**
@@ -118,16 +118,6 @@ public:
   }
 
   /**
-   * @brief Initializes the 3x3 matrix to the "Identity" matrix
-   * @return Matrix3X1 (1,0,0);
-   */
-
-  Matrix3X1 identity()
-  {
-    return {1.0f, 0.0f, 0.0f};
-  }
-
-  /**
    * @brief Performs an "in place" normalization of the 3x1 vector.
    * @param g
    */
@@ -172,86 +162,6 @@ public:
     i = i / denom;
     j = j / denom;
     k = k / denom;
-  }
-
-  /**
-   * @brief Performs an "in place" sort of the 3x1 vector in ascending order.
-   * @return new Matrix3x1 sorted ascending
-   */
-  SelfType sortAscending()
-  {
-    SelfType outMat = this; // copy constructor
-    T temp;
-
-    if(outMat[0] <= outMat[1] && outMat[0] <= outMat[2])
-    {
-      if(outMat[1] <= outMat[2])
-      {
-        outMat[0] = outMat[0];
-        outMat[1] = outMat[1];
-        outMat[2] = outMat[2];
-      }
-      else
-      {
-        outMat[0] = outMat[0];
-        temp = outMat[1];
-        outMat[1] = outMat[2];
-        outMat[2] = temp;
-      }
-    }
-    else if(outMat[1] <= outMat[0] && outMat[1] <= outMat[2])
-    {
-      if(outMat[0] <= outMat[2])
-      {
-        temp = outMat[0];
-        outMat[0] = outMat[1];
-        outMat[1] = temp;
-        outMat[2] = outMat[2];
-      }
-      else
-      {
-        temp = outMat[0];
-        outMat[0] = outMat[1];
-        outMat[1] = outMat[2];
-        outMat[2] = temp;
-      }
-    }
-    else if(outMat[2] <= outMat[0] && outMat[2] <= outMat[1])
-    {
-      if(outMat[0] <= outMat[1])
-      {
-        temp = outMat[0];
-        outMat[0] = outMat[2];
-        outMat[2] = outMat[1];
-        outMat[1] = temp;
-      }
-      else
-      {
-        temp = outMat[0];
-        outMat[0] = outMat[2];
-        outMat[1] = outMat[1];
-        outMat[2] = temp;
-      }
-    }
-  }
-
-  /**
-   * @brief Returns index of maximum value.
-   */
-  size_t maxValueIndex()
-  {
-    float a = fabs(m_Data[0]);
-    float b = fabs(m_Data[1]);
-    float c = fabs(m_Data[2]);
-    if(a >= b && a >= c)
-    {
-      return 0;
-    }
-    if(b >= a && b >= c)
-    {
-      return 1;
-    }
-    return 2;
   }
 
   /**
@@ -305,60 +215,6 @@ Vec3fa operator*(const Vec3fa& rhs, const float scalar)
   return {rhs[0] * scalar, rhs[1] * scalar, rhs[2] * scalar};
 }
 
-float distanceFromVec(const std::vector<float>& vec1, const std::vector<float>& vec2)
-{
-  // assumption: vectors are of the same length
-  float dist = 0.0f;
-  for(size_t i = 0; i < vec1.size(); i++)
-  {
-    dist += (vec1[i] - vec2[i]) * (vec1[i] - vec2[i]);
-  }
-
-  return dist;
-}
-
-float32 PointSegmentDistance(const std::vector<float32>& x0, const std::vector<float32>& x1, const std::vector<float32>& x2)
-{
-  std::vector<float32> dx = {0.0f, 0.0f, 0.0f};
-  std::transform(x2.begin(), x2.end(), x1.begin(), dx.begin(), std::minus<float32>());
-
-  float64 m2 = 0.0;
-  for(auto value : dx)
-  {
-    m2 += static_cast<float64>(value * value);
-  }
-
-  std::vector<float32> x2minx0 = {0.0f, 0.0f, 0.0f};
-  std::transform(x2.begin(), x2.end(), x0.begin(), x2minx0.begin(), std::minus<float32>());
-
-  float64 dotProduct = 0.0;
-  for(usize i = 0; i < x2minx0.size(); i++)
-  {
-    dotProduct += static_cast<float64>(x2minx0[i] * dx[i]);
-  }
-
-  auto s12 = static_cast<float32>(dotProduct / m2);
-  if(s12 < 0.0f)
-  {
-    s12 = 0.0f;
-  }
-  else if(s12 > 1.0f)
-  {
-    s12 = 1.0f;
-  }
-
-  std::vector<float32> multVal1 = {x1[0] * s12, x1[1] * s12, x1[2] * s12};
-  std::vector<float32> mutlVal2 = {x2[0] * (1 - s12), x2[1] * (1 - s12), x2[2] * (1 - s12)};
-
-  std::vector<float32> vecSum = {0.0f, 0.0f, 0.0f};
-  for(usize i = 0; i < x1.size(); i++)
-  {
-    vecSum[i] = multVal1[i] + mutlVal2[i];
-  }
-
-  return distanceFromVec(x0, vecSum);
-}
-
 float32 CosThetaBetweenVectors(const std::array<float32, 3>& a, const float32 b[3])
 {
   float32 norm1 = sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
@@ -370,10 +226,11 @@ float32 CosThetaBetweenVectors(const std::array<float32, 3>& a, const float32 b[
   return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (norm1 * norm2);
 }
 
-float dot(const Vec3fa& a, const Vec3fa& b)
-{
-  return a.dot(b);
-}
+// float dot(const Vec3fa& a, const Vec3fa& b)
+//{
+//   return a.dot(b);
+// }
+
 /**
  * @brief Take from https://github.com/embree/embree/blob/master/tutorials/common/math/closest_point.h
  * Which has an apache license.
@@ -389,24 +246,24 @@ Vec3fa closestPointTriangle(const Vec3fa& p, const Vec3fa& a, const Vec3fa& b, c
   const Vec3fa ac = c - a;
   const Vec3fa ap = p - a;
 
-  const float d1 = dot(ab, ap);
-  const float d2 = dot(ac, ap);
+  const float d1 = ab.dot(ap); // dot(ab, ap);
+  const float d2 = ac.dot(ap); // dot(ac, ap);
   if(d1 <= 0.f && d2 <= 0.f)
   {
     return a;
   }
 
   const Vec3fa bp = p - b;
-  const float d3 = dot(ab, bp);
-  const float d4 = dot(ac, bp);
+  const float d3 = ab.dot(bp); // dot(ab, bp);
+  const float d4 = ac.dot(bp); // dot(ac, bp);
   if(d3 >= 0.f && d4 <= d3)
   {
     return b;
   }
 
   const Vec3fa cp = p - c;
-  const float d5 = dot(ab, cp);
-  const float d6 = dot(ac, cp);
+  const float d5 = ab.dot(cp); // dot(ab, cp);
+  const float d6 = ac.dot(cp); // dot(ac, cp);
   if(d6 >= 0.f && d5 <= d6)
   {
     return c;
@@ -446,8 +303,8 @@ float32 PointTriangleDistance(const Vec3fa& point, const Vec3fa& vert0, const Ve
 
   Vec3fa closestPointInTriangle = closestPointTriangle(point, vert0, vert1, vert2);
 
-  auto diffPoint = point - closestPointInTriangle; // Gives a vector pointing from closest point in triangle to point
-  // Only do the dot-product of the vector with itself so we don't incure the penalty of a square root that we might not need
+  auto diffPoint = point - closestPointInTriangle; // Gives a vector pointing from the closest point in triangle to point
+  // Only do the dot-product of the vector with itself, so we don't incur the penalty of a square root that we might not need
   float dist = diffPoint.dot(diffPoint);
 
   std::array<float32, 3> normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
@@ -489,7 +346,7 @@ public:
     int64 counter = 0;
     auto totalElements = static_cast<int64>(end - start);
     auto progIncrement = static_cast<int64>(totalElements / 100);
-    size_t numTriangles = m_SharedTriangleList.getSize();
+    size_t numTriangles = m_SharedTriangleList.getNumberOfTuples();
 
     for(usize v = start; v < end; v++)
     {
