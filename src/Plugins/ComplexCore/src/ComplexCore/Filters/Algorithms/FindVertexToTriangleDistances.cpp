@@ -199,6 +199,22 @@ public:
     return c;
   }
 
+  /**
+   * @brief Finds the cosine of the angle Theta between this vector and another vector
+   * @param vectorB
+   * @return
+   */
+  float cosThetaBetweenVectors(const SelfType& vectorB) const
+  {
+    float32 norm1 = sqrtf(m_Data[0] * m_Data[0] + m_Data[1] * m_Data[1] + m_Data[2] * m_Data[2]);
+    float32 norm2 = sqrtf(vectorB[0] * vectorB[0] + vectorB[1] * vectorB[1] + vectorB[2] * vectorB[2]);
+    if(norm1 == 0 || norm2 == 0)
+    {
+      return 1.0;
+    }
+    return (m_Data[0] * vectorB[0] + m_Data[1] * vectorB[1] + m_Data[2] * vectorB[2]) / (norm1 * norm2);
+  }
+
 private:
   std::array<T, 3> m_Data = {0.0, 0.0, 0.0};
 };
@@ -214,22 +230,6 @@ Vec3fa operator*(const Vec3fa& rhs, const float scalar)
 {
   return {rhs[0] * scalar, rhs[1] * scalar, rhs[2] * scalar};
 }
-
-float32 CosThetaBetweenVectors(const std::array<float32, 3>& a, const float32 b[3])
-{
-  float32 norm1 = sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-  float32 norm2 = sqrtf(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
-  if(norm1 == 0 || norm2 == 0)
-  {
-    return 1.0;
-  }
-  return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (norm1 * norm2);
-}
-
-// float dot(const Vec3fa& a, const Vec3fa& b)
-//{
-//   return a.dot(b);
-// }
 
 /**
  * @brief Take from https://github.com/embree/embree/blob/master/tutorials/common/math/closest_point.h
@@ -307,9 +307,9 @@ float32 PointTriangleDistance(const Vec3fa& point, const Vec3fa& vert0, const Ve
   // Only do the dot-product of the vector with itself, so we don't incur the penalty of a square root that we might not need
   float dist = diffPoint.dot(diffPoint);
 
-  std::array<float32, 3> normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
+  Vec3fa normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
 
-  float32 cosTheta = ::CosThetaBetweenVectors(normal, diffPoint.data());
+  float32 cosTheta = normal.cosThetaBetweenVectors(diffPoint);
 
   if(cosTheta < 0.0f)
   {
