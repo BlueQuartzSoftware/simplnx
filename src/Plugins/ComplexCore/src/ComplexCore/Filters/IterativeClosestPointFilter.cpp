@@ -87,15 +87,15 @@ Parameters IterativeClosestPointFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<UInt64Parameter>(k_NumIterations_Key, "Number of Iterations", "Number of components", 1));
-  params.insert(std::make_unique<BoolParameter>(k_ApplyTransformation_Key, "Apply Transformation to Moving Geometry", "Number of components", false));
+  params.insert(std::make_unique<UInt64Parameter>(k_NumIterations_Key, "Number of Iterations", "The number of times to run the algorithm [more increases accuracy]", 1));
+  params.insert(std::make_unique<BoolParameter>(k_ApplyTransformation_Key, "Apply Transformation to Moving Geometry", "If checked, geometry will be updated implicitly", false));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_MovingVertexPath_Key, "Moving Vertex Geometry", "Numeric Type of data to create", DataPath()));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_TargetVertexPath_Key, "Target Vertex Geometry", "Number of components", DataPath()));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_MovingVertexPath_Key, "Moving Vertex Geometry", "The geometry to align [mutable]", DataPath()));
+  params.insert(std::make_unique<DataPathSelectionParameter>(k_TargetVertexPath_Key, "Target Vertex Geometry", "The geometry to be matched against [immutable]", DataPath()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_TransformArrayPath_Key, "Output Transform Array", "Number of tuples", DataPath()));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_TransformArrayPath_Key, "Output Transform Array", "This is the array to store the transform matrix in", DataPath()));
   return params;
 }
 
@@ -109,7 +109,6 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   auto movingVertexPath = args.value<DataPath>(k_MovingVertexPath_Key);
   auto targetVertexPath = args.value<DataPath>(k_TargetVertexPath_Key);
   auto numIterations = args.value<uint64>(k_NumIterations_Key);
-  //  auto applytransformation = args.value<bool>(k_ApplyTransformation_Key);
   auto transformArrayPath = args.value<DataPath>(k_TransformArrayPath_Key);
 
   if(data.getDataAs<VertexGeom>(movingVertexPath) == nullptr)
