@@ -9,7 +9,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CoreFilterTest.cpp
   DREAM3DFileTest.cpp
   PipelineTest.cpp
-  
+
   AlignGeometriesTest.cpp
   AlignSectionsListTest.cpp
   ApplyTransformationToGeometryFilterTest.cpp
@@ -33,7 +33,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
   DeleteDataTest.cpp
-  ExecuteProcessTest.cpp
   ExtractComponentAsArrayTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
@@ -85,6 +84,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteASCIIDataTest.cpp
   WriteBinaryDataTest.cpp
 )
+
+if(COMPLEXCORE_ENABLE_REPROC)
+  set(${PLUGIN_NAME}UnitTest_SRCS ${${PLUGIN_NAME}UnitTest_SRCS} ExecuteProcessTest.cpp)
+endif()
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ${${PLUGIN_NAME}UnitTest_SRCS})

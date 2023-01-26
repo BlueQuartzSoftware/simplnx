@@ -31,7 +31,6 @@ set(FilterList
   CropImageGeometry
   CropVertexGeometry
   DeleteData
-  ExecuteProcessFilter
   ExportDREAM3DFilter
   ExtractComponentAsArrayFilter
   ExtractInternalSurfacesFromTriangleGeometry
@@ -99,7 +98,6 @@ set(AlgorithmList
   CombineAttributeArrays
   ConvertColorToGrayScale
   ConvertData
-  ExecuteProcess
   ExtractComponentAsArray
   ExtractVertexGeometry
   FillBadData
@@ -125,6 +123,14 @@ set(AlgorithmList
   TupleTransfer
 )
 
+
+option(COMPLEXCORE_ENABLE_REPROC "Compile the ExecuteProcess filter" OFF)
+
+if(COMPLEXCORE_ENABLE_REPROC)
+  set(FilterList ${FilterList} ExecuteProcessFilter)
+  set(AlgorithmList ${AlgorithmList} ExecuteProcess)
+endif()
+
 create_complex_plugin(NAME ${PLUGIN_NAME}
                       FILTER_LIST ${FilterList}
                       ACTION_LIST ${ActionList}
@@ -146,12 +152,14 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 # ------------------------------------------------------------------------------
 # The ExecuteProcess Filter requires the `reproc` library
 # ------------------------------------------------------------------------------
-find_package("reproc++" CONFIG REQUIRED)
+if(COMPLEXCORE_ENABLE_REPROC)
+  find_package("reproc++" CONFIG REQUIRED)
+  target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++)
+endif()
 
 #------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
 # can use the target_link_libraries() cmake call
-target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++)
 
 #------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin
