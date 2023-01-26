@@ -38,9 +38,12 @@ void LoadApp(complex::Application& app)
   app.loadPlugins(appPath, true);
 #else
   fs::path appPath = app.getCurrentDir();
-  appPath = appPath.parent_path();
+  // Try loading plugins from the current directory, which should be the default for build directories
+  app.loadPlugins(appPath, true);
 
-  // Check if there is a Plugins Folder inside the app package
+  // This should be the case for an actual deployed package.
+  // Move up a directory and look for the 'Plugins' directory
+  appPath = appPath.parent_path();
   if(fs::exists(appPath / "Plugins"))
   {
     appPath = appPath / "Plugins";
