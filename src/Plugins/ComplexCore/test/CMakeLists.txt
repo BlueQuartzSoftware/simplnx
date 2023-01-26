@@ -9,7 +9,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CoreFilterTest.cpp
   DREAM3DFileTest.cpp
   PipelineTest.cpp
-  
+  AlignSectionsFeatureCentroidTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsListTest.cpp
   ApplyTransformationToGeometryFilterTest.cpp
@@ -122,9 +122,6 @@ target_include_directories(${PLUGIN_NAME}UnitTest
 # the table and then upload your compressed file.
 # Save the release so that the repo is updated
 # -----------------------------------------------------------------------------
-
-option(COMPLEX_DOWNLOAD_TEST_FILES "Download the test files" ON)
-
 if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES) 
   if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
@@ -156,6 +153,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME PartitionGeometryTest.tar.gz SHA512 8074dbcff86ed206d9185065a56258b766eb24367b3481e8600e9b48542de23dbd715ef8f9eca1c9718ca5e05a9c48997f613bde6f4357b8bba206241caecbbd)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME GenerateColorTableTest.tar.gz SHA512 2b660e327f730f868dd5ccf0bc39509d731b53011c755eda64f21cc2f28ff5a5c0c1b933666e2bca49b46cfb05d03ad3b9380d338bc2794cd562aef4e7480274)  
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_replace_element_attributes_with_neighbor.tar.gz SHA512 319ebdf08b83ce5ec915afda8ee2af1e0952a3ce26b3e65a4171eb3125c7bc6613c3994610bf526f70413c00da9061c3e6c2d867643220d62faa8c3cd79a96cd)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_align_sections_feature_centroids.tar.gz SHA512 96ca08eca2ac3839a1d7ded6287c138cac49140d1b80713d747f6143a90b75335b351cd291e2e438621cdfb32bcb5f0ec5bf2f59ec0e0d61250e423f289bdad8)
 
 endif()
 
