@@ -20,34 +20,22 @@ using namespace complex;
 
 void LoadApp(complex::Application& app)
 {
-#if defined(__APPLE__)
-  {
-    fs::path appPath = app.getCurrentDir();
-    app.loadPlugins(appPath, true);
-    appPath = appPath.parent_path();
+  // Try loading plugins from the directory that the executable is in.
+  // This is the default for developer build trees and CI build trees
+  fs::path appPath = app.getCurrentDir();
+  app.loadPlugins(appPath, true);
 
+  // For non-windows platforms we need to look in the actual 'Plugins'
+  // directory which is up one directory from the executable.
+#ifndef _MSC_VER
+  {
+    appPath = appPath.parent_path();
     // Check if there is a Plugins Folder inside the app package
     if(fs::exists(appPath / "Plugins"))
     {
       appPath = appPath / "Plugins";
       app.loadPlugins(appPath, true);
     }
-  }
-#elif defined(_MSC_VER)
-  fs::path appPath = app.getCurrentDir();
-  app.loadPlugins(appPath, true);
-#else
-  fs::path appPath = app.getCurrentDir();
-  // Try loading plugins from the current directory, which should be the default for build directories
-  app.loadPlugins(appPath, true);
-
-  // This should be the case for an actual deployed package.
-  // Move up a directory and look for the 'Plugins' directory
-  appPath = appPath.parent_path();
-  if(fs::exists(appPath / "Plugins"))
-  {
-    appPath = appPath / "Plugins";
-    app.loadPlugins(appPath, true);
   }
 #endif
 }
