@@ -124,7 +124,7 @@ set(AlgorithmList
 )
 
 
-option(COMPLEXCORE_ENABLE_REPROC "Compile the ExecuteProcess filter" OFF)
+option(s "Compile the ExecuteProcess filter" OFF)
 
 if(COMPLEXCORE_ENABLE_REPROC)
   set(FilterList ${FilterList} ExecuteProcessFilter)
@@ -155,6 +155,7 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 if(COMPLEXCORE_ENABLE_REPROC)
   find_package("reproc++" CONFIG REQUIRED)
   target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++)
+  target_compile_definitions(${PLUGIN_NAME} PUBLIC "COMPLEXCORE_ENABLE_REPROC")
 endif()
 
 #------------------------------------------------------------------------------
