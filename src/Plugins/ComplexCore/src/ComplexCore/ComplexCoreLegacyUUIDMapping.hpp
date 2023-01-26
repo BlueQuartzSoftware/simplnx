@@ -76,6 +76,8 @@
 #include "ComplexCore/Filters/RotateSampleRefFrameFilter.hpp"
 #include "ComplexCore/Filters/FillBadDataFilter.hpp"
 #include "ComplexCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
+#include "ComplexCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
+
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -83,6 +85,7 @@ namespace complex
   static const std::map<complex::Uuid, complex::Uuid> k_SIMPL_to_ComplexCore
   {
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID}, // dream3d-class-name
+    {complex::Uuid::FromString("886f8b46-51b6-5682-a289-6febd10b7ef0").value(), complex::FilterTraits<AlignSectionsFeatureCentroidFilter>::uuid}, // AlignSectionsFeatureCentroid
     {complex::Uuid::FromString("ce1ee404-0336-536c-8aad-f9641c9458be").value(), complex::FilterTraits<AlignGeometries>::uuid}, // AlignGeometries
     {complex::Uuid::FromString("accf8f6c-0551-5da3-9a3d-e4be41c3985c").value(), complex::FilterTraits<AlignSectionsListFilter>::uuid}, // AlignSectionsListFilter
     {complex::Uuid::FromString("7ff0ebb3-7b0d-5ff7-b9d8-5147031aca10").value(), complex::FilterTraits<ArrayCalculatorFilter>::uuid}, // ArrayCalculatorFilter
