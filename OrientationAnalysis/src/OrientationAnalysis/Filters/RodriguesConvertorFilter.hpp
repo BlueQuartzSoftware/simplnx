@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class RodriguesConvertor
+ * @class RodriguesConvertorFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT RodriguesConvertor : public IFilter
+class ORIENTATIONANALYSIS_EXPORT RodriguesConvertorFilter : public IFilter
 {
 public:
-  RodriguesConvertor() = default;
-  ~RodriguesConvertor() noexcept override = default;
+  RodriguesConvertorFilter() = default;
+  ~RodriguesConvertorFilter() noexcept override = default;
 
-  RodriguesConvertor(const RodriguesConvertor&) = delete;
-  RodriguesConvertor(RodriguesConvertor&&) noexcept = delete;
+  RodriguesConvertorFilter(const RodriguesConvertorFilter&) = delete;
+  RodriguesConvertorFilter(RodriguesConvertorFilter&&) noexcept = delete;
 
-  RodriguesConvertor& operator=(const RodriguesConvertor&) = delete;
-  RodriguesConvertor& operator=(RodriguesConvertor&&) noexcept = delete;
+  RodriguesConvertorFilter& operator=(const RodriguesConvertorFilter&) = delete;
+  RodriguesConvertorFilter& operator=(RodriguesConvertorFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_RodriguesDataArrayPath_Key = "rodrigues_data_array_path";
@@ -75,17 +75,17 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param dataStructure The input DataStructure instance
+   * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param dataStructure The input DataStructure instance
+   * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
@@ -94,4 +94,5 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, RodriguesConvertor, "3704a3c6-dd09-4b91-9eda-2fbb4cb9bf99");
+COMPLEX_DEF_FILTER_TRAITS(complex, RodriguesConvertorFilter, "3704a3c6-dd09-4b91-9eda-2fbb4cb9bf99");
+/* LEGACY UUID FOR THIS FILTER a2b62395-1a7d-5058-a840-752d8f8e2430 */

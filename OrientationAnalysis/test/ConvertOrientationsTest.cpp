@@ -31,17 +31,19 @@
 
 using namespace complex;
 
+// This section of code exists solely to generate a source code in case another
+// orientation representation is created. Leave this code here.
 void _make_code()
 {
-  std::vector<std::string> inRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu"};
-  std::vector<std::string> outRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu"};
-  std::vector<std::string> names = {"Euler", "OrientationMatrix", "Quaternion", "AxisAngle", "Rodrigues", "Homochoric", "Cubochoric"};
+  std::vector<std::string> inRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu", "st"};
+  std::vector<std::string> outRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu", "st"};
+  std::vector<std::string> names = {"Euler", "OrientationMatrix", "Quaternion", "AxisAngle", "Rodrigues", "Homochoric", "Cubochoric", "Stereographic"};
 
-  std::vector<int> strides = {3, 9, 4, 4, 4, 3, 3};
+  std::vector<int> strides = {3, 9, 4, 4, 4, 3, 3, 3};
 
-  for(size_t i = 0; i < 7; i++)
+  for(size_t i = 0; i < 8; i++)
   {
-    for(size_t o = 0; o < 7; o++)
+    for(size_t o = 0; o < 8; o++)
     {
       if(inRep[i] == outRep[o])
       {
@@ -55,20 +57,23 @@ void _make_code()
       if(inRep[i] == "qu")
       {
         std::cout << "  FromQuaternionFunctionType " << inRep[i] << "2" << outRep[o] << " = OrientationTransformation::" << inRep[i] << "2" << outRep[o] << "<QuaternionType, OutputType>;\n";
-        std::cout << "  parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2"
-                  << outRep[o] << ", QuaternionType::Order::VectorScalar));\n";
+        //   std::cout << "  ValidateInputDataFunctionType " << inRep[i] << "Check = " << names[i] << "Check<float>();" << std::endl;
+        std::cout << "  parallelAlgorithm.execute(::FromQuaternion<float, FromQuaternionFunctionType, ValidateInputDataFunctionType, " << strides[i] << ", " << strides[o]
+                  << ">(inputDataArray, outputDataArray, " << inRep[i] << "2" << outRep[o] << "," << inRep[i] << "Check, QuaternionType::Order::VectorScalar));\n";
       }
       else if(outRep[o] == "qu")
       {
         std::cout << "  ToQuaternionFunctionType " << inRep[i] << "2" << outRep[o] << " = OrientationTransformation::" << inRep[i] << "2" << outRep[o] << "<InputType, QuaternionType>;\n";
-        std::cout << "  parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2"
-                  << outRep[o] << ", QuaternionType::Order::VectorScalar));\n";
+        //    std::cout << "  ValidateInputDataFunctionType " << inRep[i] << "Check = " << names[i] << "Check<float>();" << std::endl;
+        std::cout << "  parallelAlgorithm.execute(::ToQuaternion<float, ToQuaternionFunctionType, ValidateInputDataFunctionType, " << strides[i] << ", " << strides[o]
+                  << ">(inputDataArray, outputDataArray, " << inRep[i] << "2" << outRep[o] << ", " << inRep[i] << "Check, QuaternionType::Order::VectorScalar));\n";
       }
       else
       {
         std::cout << "  ConversionFunctionType " << inRep[i] << "2" << outRep[o] << " = OrientationTransformation::" << inRep[i] << "2" << outRep[o] << "<InputType, OutputType>;\n";
-        std::cout << "  parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, " << strides[i] << ", " << strides[o] << ">(inputDataArray, outputDataArray, " << inRep[i] << "2"
-                  << outRep[o] << "));\n";
+        //   std::cout << "  ValidateInputDataFunctionType " << inRep[i] << "Check = " << names[i] << "Check<float>();" << std::endl;
+        std::cout << "  parallelAlgorithm.execute(::ConvertOrientation<float, ConversionFunctionType, ValidateInputDataFunctionType, " << strides[i] << ", " << strides[o]
+                  << ">(inputDataArray, outputDataArray, " << inRep[i] << "2" << outRep[o] << ", " << inRep[i] << "Check));\n";
         //        std::cout << "  dataAlg.execute(::ConvertOrientationImpl<float, OrientationType, " << strides[i] << ", OrientationType, " << strides[o]
         //                  << ", std::function<OutputType(InputType)>>(inputDataArray, outputDataArray, " << inRep[i] << "2" << outRep[o] << "));\n";
       }
@@ -79,6 +84,13 @@ void _make_code()
 
 TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[OrientationAnalysis][ConvertOrientations]")
 {
+  //------------------------------
+  // This code is commented out because it generates a bunch of code. See the comment
+  // at the top of the _make_code function. This should stay in here in case it is
+  // needed later on. I don't want to rewrite the code.
+  //_make_code();
+  //----------------------------
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ConvertOrientations filter;
   DataStructure dataStructure;

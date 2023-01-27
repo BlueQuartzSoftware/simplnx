@@ -18,10 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - windows-2019
+          - windows-2022
         toolset:
-          - v141
           - v142
+          - v143
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
@@ -41,9 +41,12 @@ jobs:
           path: DREAM3D_Data
           submodules: true
       - name: Add C++ Problem Matcher
-        uses: ammaraskar/msvc-problem-matcher@0.1
+        uses: ammaraskar/msvc-problem-matcher@0.2.0
       - name: Setup Build Environment
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: ilammy/msvc-dev-cmd@v1.12.0
+        with:
+          vsversion: 2022
+
       - name: Setup NuGet Credentials
         shell: bash
         run: >
@@ -56,7 +59,7 @@ jobs:
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         run: |
-          cd ${{github.workspace}}/complex && cmake --preset ci  -G "Visual Studio 16 2019" -T ${{matrix.toolset}} -DDREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DCOMPLEX_EXTRA_PLUGINS="Core;OrientationAnalysis" -DCOMPLEX_PLUGIN_SEARCH_DIRS=${{github.workspace}} -S ${{github.workspace}}/complex 
+          cd ${{github.workspace}}/complex && cmake --preset ci  -G "Visual Studio 17 2022" -T ${{matrix.toolset}} -DDREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DCOMPLEX_EXTRA_PLUGINS="Core;OrientationAnalysis" -DCOMPLEX_PLUGIN_SEARCH_DIRS=${{github.workspace}} -S ${{github.workspace}}/complex 
       - name: Build
         run: |
           cd ${{github.workspace}}/complex && cmake --build --preset ci

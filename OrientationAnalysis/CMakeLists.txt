@@ -30,6 +30,7 @@ set(FilterList
   AlignSectionsMisorientationFilter
   BadDataNeighborOrientationCheckFilter
   ConvertOrientations
+  ConvertQuaternionFilter
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
   EbsdToH5EbsdFilter
@@ -48,16 +49,17 @@ set(FilterList
   GenerateFZQuaternions
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
+  GenerateQuaternionConjugateFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
   ReadCtfDataFilter
   ReadH5EbsdFilter
+  RodriguesConvertorFilter
   RotateEulerRefFrameFilter
 )
   
 set(STUB_FILTERS
-  ConvertQuaternion
 
   # ConvertHexGridToSquareGrid # MISSING 1 or more Parameter Implementations
   # CreateEnsembleInfo # MISSING 1 or more Parameter Implementations
@@ -84,8 +86,6 @@ set(STUB_FILTERS
   GenerateFaceIPFColoring
   GenerateFaceMisorientationColoring
   GenerateOrientationMatrixTranspose
-  GenerateQuaternionConjugate
-  INLWriter
 
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
   # ImportH5EspritData # MISSING 1 or more Parameter Implementations
@@ -97,9 +97,7 @@ set(STUB_FILTERS
   #ImportH5OimData # MISSING 1 or more Parameter Implementations
   
   #OrientationUtility # MISSING 1 or more Parameter Implementations
-  ReplaceElementAttributesWithNeighborValues
-  RodriguesConvertor
-  Stereographic3D
+
   WritePoleFigure
   WriteStatsGenOdfAngleFile
 )
@@ -160,6 +158,7 @@ endif()
 set(filter_algorithms
   AlignSectionsMisorientation
   BadDataNeighborOrientationCheck
+  ConvertQuaternion
   CreateEnsembleInfo
   EBSDSegmentFeatures
   EbsdToH5Ebsd
@@ -177,12 +176,14 @@ set(filter_algorithms
   GenerateFaceMisorientationColoring
   GenerateGBCDPoleFigure
   GenerateIPFColors
+  GenerateQuaternionConjugate
   GroupFeatures
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
   ReadCtfData
   ReadH5Ebsd
+  RodriguesConvertor
   RotateEulerRefFrame
 )
 
