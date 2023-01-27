@@ -58,7 +58,7 @@ Parameters EbsdToH5EbsdFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output H5Ebsd File", "", fs::path(""), FileSystemPathParameter::ExtensionsType{".h5ebsd"},
-                                                          FileSystemPathParameter::PathType::OutputDir, true));
+                                                          FileSystemPathParameter::PathType::OutputFile, true));
 
   params.insertSeparator(Parameters::Separator{"Orientation Source Data"});
   params.insert(std::make_unique<GeneratedFileListParameter>(k_InputFileListInfo_Key, "Input File List", "", GeneratedFileListParameter::ValueType{}));
