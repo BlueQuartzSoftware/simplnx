@@ -56,6 +56,9 @@
 // #include "OrientationAnalysis/Filters/Stereographic3D.hpp"
 // #include "OrientationAnalysis/Filters/WritePoleFigure.hpp"
 // #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFile.hpp"
+#include "OrientationAnalysis/Filters/ConvertQuaternionFilter.hpp"
+#include "OrientationAnalysis/Filters/GenerateQuaternionConjugateFilter.hpp"
+#include "OrientationAnalysis/Filters/RodriguesConvertorFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -120,6 +123,9 @@ namespace complex
     // {complex::Uuid::FromString("3630623e-724b-5154-a060-a5fca4ecfff5").value(), complex::FilterTraits<Stereographic3D>::uuid}, // Stereographic3D
     // {complex::Uuid::FromString("a10bb78e-fcff-553d-97d6-830a43c85385").value(), complex::FilterTraits<WritePoleFigure>::uuid}, // WritePoleFigure
     // {complex::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), complex::FilterTraits<WriteStatsGenOdfAngleFile>::uuid}, // WriteStatsGenOdfAngleFile
+    {complex::Uuid::FromString("439e31b7-3198-5d0d-aef6-65a9e9c1a016").value(), complex::FilterTraits<ConvertQuaternionFilter>::uuid}, // ConvertQuaternion
+    {complex::Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value(), complex::FilterTraits<GenerateQuaternionConjugateFilter>::uuid}, // GenerateQuaternionConjugate
+    {complex::Uuid::FromString("a2b62395-1a7d-5058-a840-752d8f8e2430").value(), complex::FilterTraits<RodriguesConvertorFilter>::uuid}, // RodriguesConvertor
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
