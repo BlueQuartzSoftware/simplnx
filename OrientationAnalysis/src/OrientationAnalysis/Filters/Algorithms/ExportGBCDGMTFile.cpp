@@ -3,14 +3,15 @@
 #include "OrientationAnalysis/Math/Matrix3X1.hpp"
 #include "OrientationAnalysis/Math/Matrix3X3.hpp"
 
-#include "complex/Common/Constants.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
-
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/LaueOps/LaueOps.h"
+
+#include "complex/Common/Constants.hpp"
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/Math/MatrixMath.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -72,14 +73,12 @@ Result<> ExportGBCDGMTFile::operator()()
 
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
-  const fs::path parentPath = m_InputValues->OutputFile.parent_path();
-  if(!fs::exists(parentPath))
+  Result<> createDirectoriesResult = complex::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  if(createDirectoriesResult.invalid())
   {
-    if(!fs::create_directories(parentPath))
-    {
-      return MakeErrorResult(-58320, fmt::format("Unable to create output directory {}", parentPath.string()));
-    }
+    return createDirectoriesResult;
   }
+
   const std::ofstream outStrm(m_InputValues->OutputFile, std::ios_base::out);
   if(!outStrm.is_open())
   {

@@ -4,6 +4,7 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
@@ -78,11 +79,18 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
   std::ofstream outFile;
   if(m_InputValues->writeAlignmentShifts)
   {
+    // Make sure any directory path is also available as the user may have just typed
+    // in a path without actually creating the full path
+    Result<> createDirectoriesResult = complex::CreateOutputDirectories(m_InputValues->alignmentShiftFileName.parent_path());
+    if(createDirectoriesResult.invalid())
+    {
+      return createDirectoriesResult;
+    }
     outFile.open(m_InputValues->alignmentShiftFileName, std::ios_base::out);
     if(!outFile.is_open())
     {
-      std::string message = fmt::format("Error creating Input Shifts File with file path {}", m_InputValues->alignmentShiftFileName.string());
-      return MakeErrorResult(-53901, message);
+      std::string message = fmt::format("Error creating output shifts file with file path {}", m_InputValues->alignmentShiftFileName.string());
+      return MakeErrorResult(-53801, message);
     }
   }
 
