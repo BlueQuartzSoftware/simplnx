@@ -75,6 +75,98 @@ struct RotateArgs
   float32 zMinNew = 0.0f;
 };
 
+template <typename T>
+class RotateDataArray
+{
+public:
+  RotateDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const RotateArgs& args, const Matrix3FRType& rotationMatrix, bool sliceBySlice)
+  : m_OldCellArray(oldCellArray)
+  , m_NewCellArray(newCellArray)
+  , m_SliceBySlice(sliceBySlice)
+  , m_Params(args)
+  {
+    // We have to inline the 3x3 Matrix transpose here because of the "const" nature of the 'convert' function
+    Matrix3FRType transpose = rotationMatrix.transpose();
+    // Need to use row based Eigen matrix so that the values get mapped to the right place in the raw array.
+    // Raw array is faster than Eigen
+    Eigen::Map<Matrix3FRType>(&m_RotMatrixInv[0][0], transpose.rows(), transpose.cols()) = transpose;
+  }
+  ~RotateDataArray() = default;
+
+  RotateDataArray(const RotateDataArray&) = default;
+  RotateDataArray(RotateDataArray&&) noexcept = default;
+  RotateDataArray& operator=(const RotateDataArray&) = delete;
+  RotateDataArray& operator=(RotateDataArray&&) noexcept = delete;
+
+  void convert() const
+  {
+    const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    std::array<float32, 3> coordsOld = {0.0f, 0.0f, 0.0f};
+
+    for(int64 k = 0; k < m_Params.zpNew; k++)
+    {
+      int64 ktot = (m_Params.xpNew * m_Params.ypNew) * k;
+      for(int64 j = 0; j < m_Params.ypNew; j++)
+      {
+        int64 jtot = (m_Params.xpNew) * j;
+        for(int64 i = 0; i < m_Params.xpNew; i++)
+        {
+
+          int64 newIndex = ktot + jtot + i;
+          int64 oldIndex = -1;
+
+          std::array<float32, 3> coordsNew = {(static_cast<float32>(i) * m_Params.xResNew) + m_Params.xMinNew, (static_cast<float32>(j) * m_Params.yResNew) + m_Params.yMinNew,
+                                              (static_cast<float32>(k) * m_Params.zResNew) + m_Params.zMinNew};
+
+          MatrixMath::Multiply3x3with3x1(m_RotMatrixInv, coordsNew.data(), coordsOld.data());
+
+          auto colOld = static_cast<int64>(std::nearbyint(coordsOld[0] / m_Params.xRes));
+          auto rowOld = static_cast<int64>(std::nearbyint(coordsOld[1] / m_Params.yRes));
+          auto planeOld = static_cast<int64>(std::nearbyint(coordsOld[2] / m_Params.zRes));
+
+          if(m_SliceBySlice)
+          {
+            planeOld = k;
+          }
+
+          if(colOld >= 0 && colOld < m_Params.xp && rowOld >= 0 && rowOld < m_Params.yp && planeOld >= 0 && planeOld < m_Params.zp)
+          {
+            oldIndex = (m_Params.xp * m_Params.yp * planeOld) + (m_Params.xp * rowOld) + colOld;
+          }
+
+          if(oldIndex >= 0)
+          {
+            if(!newDataStore.copyFrom(oldIndex, oldDataStore, newIndex, 1))
+            {
+              std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), oldIndex,
+                                       m_OldCellArray.getName(), newIndex)
+                        << std::endl;
+              break;
+            }
+          }
+          else
+          {
+            newDataStore.fillTuple(i, 0);
+          }
+        }
+      }
+    }
+  }
+
+  void operator()() const
+  {
+    convert();
+  }
+
+private:
+  const IDataArray& m_OldCellArray;
+  IDataArray& m_NewCellArray;
+  float32 m_RotMatrixInv[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+  bool m_SliceBySlice = false;
+  RotateArgs m_Params;
+};
+
 /**
  * @brief Class that implements the actual rotation
  */
@@ -602,12 +694,12 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
   int64 newNumCellTuples = rotateArgs.xpNew * rotateArgs.ypNew * rotateArgs.zpNew;
 
   // Compute the mapping of old indices from the original geometry to the new indices in the new geometry.
-  std::vector<int64> newIndices(newNumCellTuples, -1);
+  // std::vector<int64> newIndices(newNumCellTuples, -1);
 
-  ParallelData3DAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(Range3D(0, rotateArgs.xpNew, 0, rotateArgs.ypNew, 0, rotateArgs.zpNew));
-  parallelAlgorithm.setParallelizationEnabled(true);
-  parallelAlgorithm.execute(SampleRefFrameRotator(newIndices, rotateArgs, rotationMatrix, sliceBySlice));
+  //  ParallelData3DAlgorithm parallelAlgorithm;
+  //  parallelAlgorithm.setRange(Range3D(0, rotateArgs.xpNew, 0, rotateArgs.ypNew, 0, rotateArgs.zpNew));
+  //  parallelAlgorithm.setParallelizationEnabled(true);
+  //  parallelAlgorithm.execute(SampleRefFrameRotator(newIndices, rotateArgs, rotationMatrix, sliceBySlice));
 
   auto selectedCellDataChildren = GetAllChildArrayDataPaths(dataStructure, srcImageGeom.getCellDataPath());
   auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
@@ -631,7 +723,7 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
     messageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcName));
 
-    ExecuteParallelFunction<CopyTupleUsingIndexList>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, newIndices);
+    ExecuteParallelFunction<::RotateDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, rotateArgs, rotationMatrix, sliceBySlice);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
