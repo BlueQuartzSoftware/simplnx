@@ -129,7 +129,7 @@ public:
   }
 
   /**
-   * @brief Performs an "in place" normalization of the 3x1 vector.
+   * @brief returs the normalization of the 3x1 vector.
    * @param g
    */
   SelfType normalize()
@@ -157,7 +157,7 @@ public:
   }
 
   /**
-   * @brief Performs an "in place" normalization of the 3x1 vector
+   * @brief Performs an "in place" normalization of the passed in vector comprising the i, j, k values
    * @param i
    * @param j
    * @param k

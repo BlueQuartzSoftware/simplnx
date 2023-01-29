@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <tuple>
 #include <vector>
 
@@ -207,7 +208,7 @@ public:
   }
 
   /**
-   * @brief operator == Tests for an element by element equivelance of the underlying data
+   * @brief operator == Tests for an element by element equivalence of the underlying data
    * @param rhs
    * @return bool
    */
@@ -305,7 +306,7 @@ public:
   }
 
   /**
-   * @brief Move assignmenmt operator
+   * @brief Move assignment operator
    * @param rhs
    * @return Vec2&
    */
@@ -642,21 +643,29 @@ public:
   }
 
   /**
-   * @brief Returns the crossproduct of this and an input Vec3
+   * @brief Returns the cross product of this and an input Vec3
    * @return Vec3<T>
    */
-  inline Vec3 crossProduct(const Vec3<T>& v) const
+  inline Vec3 cross(const Vec3<T>& v) const
   {
     return Vec3<T>((*this)[1] * v[2] - (*this)[2] * v[1], (*this)[2] * v[0] - (*this)[0] * v[2], (*this)[0] * v[1] - (*this)[1] * v[0]);
   }
 
   /**
-   * @brief Returns the dotproduct of this and an input Vec3
+   * @brief Returns the dot product of this and an input Vec3
    * @return Vec3<T>
    */
-  inline T dotProduct(const Vec3<T>& v) const
+  inline T dot(const Vec3<T>& v) const
   {
     return (*this)[0] * v[0] + (*this)[1] * v[1] + (*this)[2] * v[2];
+  }
+
+  /**
+   * @brief Returns the magnitude of the 3x1 vector
+   */
+  inline T magnitude()
+  {
+    return std::sqrt(dot(this));
   }
 
   inline Vec3 operator+(const Vec3& v) const
