@@ -327,7 +327,7 @@ class FindVertexToTriangleDistancesImpl
 public:
   FindVertexToTriangleDistancesImpl(FindVertexToTriangleDistances* filter, const IGeometry::SharedTriList& triangles, const IGeometry::SharedVertexList& verts,
                                     IGeometry::SharedVertexList& sourcePoints, Float32Array& distances, Int64Array& closestTri, const std::vector<float>& triBounds, const Float64Array& normals,
-                                    const RTreeType& rtree)
+                                    const RTreeType rtree)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
   , m_TriangleVertices(verts)
@@ -443,7 +443,7 @@ private:
   Int64Array& m_ClosestTri;
   const std::vector<float>& m_TriBounds;
   const Float64Array& m_Normals;
-  const RTreeType& m_RTree;
+  const RTreeType m_RTree;
 };
 } // namespace
 
