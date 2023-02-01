@@ -68,157 +68,60 @@ struct GeometryBlock
   std::string Unit = "mm";
 };
 
-Result<SizeVec3> ParseSizeVec3(const std::vector<std::string>& tokens, usize& lineCount)
+template <usize Dimension, bool USizeType = false>
+struct ParserArgs
 {
-  SizeVec3 vec = {0, 0, 0};
-  const std::string vgiParseErrorStr = "Error parsing usize value ({}) from vgi file.";
-  const std::string vgiOutOfRangeErrorStr = "Value ({}) in vgi file is out of range for storage type usize.";
+  static inline constexpr usize UseDimension = Dimension;
+  static inline constexpr bool UseUSize = USizeType;
+};
 
-  if(tokens.size() < 5)
-  {
-    return {MakeErrorResult<SizeVec3>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least 5 tokens.", lineCount))};
-  }
+using ParseIntArray = ParserArgs<9>;
+using ParseFloatVec2 = ParserArgs<2>;
+using ParseFloatVec3 = ParserArgs<3>;
+using ParseSizeVec3 = ParserArgs<3, true>;
 
-  try
-  {
-    vec[0] = std::stoull(tokens[2]);
-  } catch(const std::invalid_argument& e)
-  {
-    return {MakeErrorResult<SizeVec3>(k_VgiParseError, fmt::format(vgiParseErrorStr, tokens[2]))};
-  } catch(const std::out_of_range& e)
-  {
-    return {MakeErrorResult<SizeVec3>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[2]))};
-  }
-
-  try
-  {
-    vec[1] = std::stoull(tokens[3]);
-  } catch(const std::invalid_argument& e)
-  {
-    return {MakeErrorResult<SizeVec3>(k_VgiParseError, fmt::format(vgiParseErrorStr, tokens[3]))};
-  } catch(const std::out_of_range& e)
-  {
-    return {MakeErrorResult<SizeVec3>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[3]))};
-  }
-
-  try
-  {
-    vec[2] = std::stoull(tokens[4]);
-  } catch(const std::invalid_argument& e)
-  {
-    return {MakeErrorResult<SizeVec3>(k_VgiParseError, fmt::format(vgiParseErrorStr, tokens[4]))};
-  } catch(const std::out_of_range& e)
-  {
-    return {MakeErrorResult<SizeVec3>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[4]))};
-  }
-
-  return {vec};
-}
-
-Result<FloatVec2Type> ParseFloatVec2(const std::vector<std::string>& tokens, usize& lineCount)
+template <typename T, typename ParserArgs = ParseIntArray>
+Result<std::array<T, ParserArgs::UseDimension>> ParseArray(const std::vector<std::string>& tokens, usize& lineCount)
 {
-  FloatVec2Type vec = {0.0F, 0.0F};
-  const std::string vgiParseErrorStr = "Error parsing floating point value ({}) from vgi file.";
-  const std::string vgiOutOfRangeErrorStr = "Floating point value ({}) in vgi file is out of range for storage type float32.";
+  const auto Dimension = ParserArgs::UseDimension;
+  const auto UseSize = ParserArgs::UseUSize;
+  using VecT = std::array<T, Dimension>;
 
-  if(tokens.size() < 4)
+  VecT vec = {0}; // auto initializes all values to 0
+
+  const std::string vgiParseErrorStr = "Error parsing {} value ({}) from vgi file.";
+  const std::string vgiOutOfRangeErrorStr = "Value ({}) in vgi file is out of range for storage type {}.";
+
+  std::string parseUnit = "float32"; // default to save calls
+
+  if constexpr(UseSize)
   {
-    return {MakeErrorResult<FloatVec2Type>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least 4 tokens.", lineCount))};
+    parseUnit = "usize";
   }
 
-  try
+  if(tokens.size() < Dimension + 2)
   {
-    vec[0] = std::stof(tokens[2]);
-  } catch(const std::invalid_argument& e)
-  {
-    return {MakeErrorResult<FloatVec2Type>(k_VgiParseError, fmt::format(vgiParseErrorStr, tokens[2]))};
-  } catch(const std::out_of_range& e)
-  {
-    return {MakeErrorResult<FloatVec2Type>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[2]))};
+    return {MakeErrorResult<VecT>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least {} tokens.", lineCount, Dimension + 2))};
   }
 
-  try
-  {
-    vec[1] = std::stof(tokens[3]);
-  } catch(const std::invalid_argument& e)
-  {
-    return {MakeErrorResult<FloatVec2Type>(k_VgiParseError, fmt::format(vgiParseErrorStr, tokens[3]))};
-  } catch(const std::out_of_range& e)
-  {
-    return {MakeErrorResult<FloatVec2Type>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[3]))};
-  }
-
-  return {vec};
-}
-
-Result<FloatVec3> ParseFloatVec3(const std::vector<std::string>& tokens, usize& lineCount)
-{
-  FloatVec3 vec = {0.0F, 0.0F, 0.0F};
-  const std::string vgiParseErrorStr = "Error parsing floating point value ({}) from vgi file.";
-  const std::string vgiOutOfRangeErrorStr = "Floating point value ({}) in vgi file is out of range for storage type float32.";
-
-  if(tokens.size() < 5)
-  {
-    return {MakeErrorResult<FloatVec3>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least 5 tokens.", lineCount))};
-  }
-
-  try
-  {
-    vec[0] = std::stof(tokens[2]);
-  } catch(const std::invalid_argument& e)
-  {
-    return {MakeErrorResult<FloatVec3>(k_VgiParseError, fmt::format(vgiParseErrorStr, tokens[2]))};
-  } catch(const std::out_of_range& e)
-  {
-    return {MakeErrorResult<FloatVec3>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[2]))};
-  }
-
-  try
-  {
-    vec[1] = std::stof(tokens[3]);
-  } catch(const std::invalid_argument& e)
-  {
-    return {MakeErrorResult<FloatVec3>(k_VgiParseError, fmt::format(vgiParseErrorStr, tokens[3]))};
-  } catch(const std::out_of_range& e)
-  {
-    return {MakeErrorResult<FloatVec3>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[3]))};
-  }
-
-  try
-  {
-    vec[2] = std::stof(tokens[4]);
-  } catch(const std::invalid_argument& e)
-  {
-    return {MakeErrorResult<FloatVec3>(k_VgiParseError, fmt::format(vgiParseErrorStr, tokens[4]))};
-  } catch(const std::out_of_range& e)
-  {
-    return {MakeErrorResult<FloatVec3>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[4]))};
-  }
-
-  return {vec};
-}
-
-template <typename T, usize Dimension = 9>
-Result<std::array<T, Dimension>> ParseIntArray(const std::vector<std::string>& tokens, usize& lineCount)
-{
-  std::array<T, Dimension> vec;
-
-  if(tokens.size() < (Dimension + 1))
-  {
-    return {MakeErrorResult<std::array<T, Dimension>>(k_IncorrectTokenCount, fmt::format("Line '{}' in the vgi file does not have at least {} tokens.", lineCount, Dimension + 1))};
-  }
-
-  for(usize i = 0; i < Dimension; i++)
+  for(usize index = 0; index < Dimension; index++)
   {
     try
     {
-      vec[i] = std::stof(tokens[i + 2]);
+      if constexpr(UseSize)
+      {
+        vec[index] = std::stoull(tokens[index + 2]);
+      }
+      else
+      {
+        vec[index] = std::stof(tokens[index + 2]);
+      }
     } catch(const std::invalid_argument& e)
     {
-      return {MakeErrorResult<std::array<T, Dimension>>(k_VgiParseError, fmt::format("Error parsing floating point value ({}) from vgi file.", tokens[i + 2]))};
+      return {MakeErrorResult<VecT>(k_VgiParseError, fmt::format(vgiParseErrorStr, parseUnit, tokens[index + 2]))};
     } catch(const std::out_of_range& e)
     {
-      return {MakeErrorResult<std::array<T, Dimension>>(k_VgiParseError, fmt::format("Floating point value ({}) in vgi file is out of range for storage type float32.", tokens[i + 2]))};
+      return {MakeErrorResult<VecT>(k_VgiParseError, fmt::format(vgiOutOfRangeErrorStr, tokens[index + 2], parseUnit))};
     }
   }
 
@@ -238,36 +141,9 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
   while(buf[0] != '[' && !inputFile.eof())
   {
     std::vector<std::string> tokens = StringUtilities::split(buf, ' ');
-    if(tokens[0] == k_RegionOfInterestStart)
-    {
-      auto result = ParseSizeVec3(tokens, lineCount);
-      if(result.invalid())
-      {
-        return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
-      }
-      fileBlock.RegionOfInterestStart = result.value();
-    }
-    else if(tokens[0] == k_RegionOfInterestEnd)
-    {
-      auto result = ParseSizeVec3(tokens, lineCount);
-      if(result.invalid())
-      {
-        return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
-      }
-      fileBlock.RegionOfInterestEnd = result.value();
-    }
-    else if(tokens[0] == k_FileFormat)
+    if(tokens[0] == k_FileFormat)
     {
       fileBlock.FileFormat = tokens[2];
-    }
-    else if(tokens[0] == k_Size)
-    {
-      auto result = ParseSizeVec3(tokens, lineCount);
-      if(result.invalid())
-      {
-        return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
-      }
-      fileBlock.Size = result.value();
     }
     else if(tokens[0] == k_Name)
     {
@@ -279,7 +155,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
     }
     else if(tokens[0] == k_DataRange)
     {
-      auto result = ParseFloatVec2(tokens, lineCount);
+      auto result = ParseArray<float32, ParseFloatVec2>(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
@@ -297,6 +173,26 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
       } catch(const std::out_of_range& e)
       {
         return {MakeErrorResult<FileBlock>(k_VgiParseError, fmt::format("'Bits Per Element' integer value ({}) in vgi file is out of range for storage type int8.", tokens[2]))};
+      }
+    }
+    else if(std::find(tokens.begin(), tokens.end(), "=") != tokens.end())
+    {
+      auto result = ParseArray<usize, ParseSizeVec3>(tokens, lineCount);
+      if(result.invalid())
+      {
+        return ConvertResultTo<FileBlock>(std::move(ConvertResult(std::move(result))), {});
+      }
+      else if(tokens[0] == k_RegionOfInterestStart)
+      {
+        fileBlock.RegionOfInterestStart = result.value();
+      }
+      else if(tokens[0] == k_RegionOfInterestEnd)
+      {
+        fileBlock.RegionOfInterestEnd = result.value();
+      }
+      else if(tokens[0] == k_Size)
+      {
+        fileBlock.Size = result.value();
       }
     }
 
@@ -327,63 +223,46 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, usize& lineCo
     {
       block.Status = tokens[2];
     }
-    else if(tokens[0] == k_RelativePosition)
+    else if(tokens[0] == k_Unit)
     {
-      auto result = ParseFloatVec3(tokens, lineCount);
-      if(result.invalid())
-      {
-        return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
-      }
-      block.RelativePosition = result.value();
-    }
-    else if(tokens[0] == k_Position)
-    {
-      auto result = ParseFloatVec3(tokens, lineCount);
-      if(result.invalid())
-      {
-        return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
-      }
-      block.Position = result.value();
-    }
-    else if(tokens[0] == k_Resolution)
-    {
-      auto result = ParseFloatVec3(tokens, lineCount);
-      if(result.invalid())
-      {
-        return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
-      }
-      block.Resolution = result.value();
-    }
-    else if(tokens[0] == k_Scale)
-    {
-      auto result = ParseFloatVec3(tokens, lineCount);
-      if(result.invalid())
-      {
-        return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
-      }
-      block.Scale = result.value();
-    }
-    else if(tokens[0] == k_Center)
-    {
-      auto result = ParseFloatVec3(tokens, lineCount);
-      if(result.invalid())
-      {
-        return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
-      }
-      block.Center = result.value();
+      block.Unit = tokens[2];
     }
     else if(tokens[0] == k_Rotate)
     {
-      auto result = ParseIntArray<int32, 9>(tokens, lineCount);
+      auto result = ParseArray<int32, ParseIntArray>(tokens, lineCount);
       if(result.invalid())
       {
         return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
       }
       block.RotationMatrix = result.value();
     }
-    else if(tokens[0] == k_Unit)
+    else
     {
-      block.Unit = tokens[2];
+      auto result = ParseArray<float32, ParseFloatVec3>(tokens, lineCount);
+      if(result.invalid())
+      {
+        return ConvertResultTo<GeometryBlock>(std::move(ConvertResult(std::move(result))), {});
+      }
+      else if(tokens[0] == k_RelativePosition)
+      {
+        block.RelativePosition = result.value();
+      }
+      else if(tokens[0] == k_Position)
+      {
+        block.Position = result.value();
+      }
+      else if(tokens[0] == k_Resolution)
+      {
+        block.Resolution = result.value();
+      }
+      else if(tokens[0] == k_Scale)
+      {
+        block.Scale = result.value();
+      }
+      else if(tokens[0] == k_Center)
+      {
+        block.Center = result.value();
+      }
     }
 
     inputFile.tellg();
