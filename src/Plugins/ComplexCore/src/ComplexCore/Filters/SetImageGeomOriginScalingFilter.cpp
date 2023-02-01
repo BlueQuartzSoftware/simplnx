@@ -14,26 +14,37 @@
 namespace complex
 {
 
+//------------------------------------------------------------------------------
 std::string SetImageGeomOriginScalingFilter::name() const
 {
   return FilterTraits<SetImageGeomOriginScalingFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string SetImageGeomOriginScalingFilter::className() const
 {
   return FilterTraits<SetImageGeomOriginScalingFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid SetImageGeomOriginScalingFilter::uuid() const
 {
   return FilterTraits<SetImageGeomOriginScalingFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string SetImageGeomOriginScalingFilter::humanName() const
 {
   return "Set Origin & Spacing (Image Geom)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> SetImageGeomOriginScalingFilter::defaultTags() const
+{
+  return {"#Image Geometry", "#Shift", "#Spacing", "#Mutate"};
+}
+
+//------------------------------------------------------------------------------
 Parameters SetImageGeomOriginScalingFilter::parameters() const
 {
   Parameters params;
@@ -51,11 +62,13 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer SetImageGeomOriginScalingFilter::clone() const
 {
   return std::make_unique<SetImageGeomOriginScalingFilter>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel) const
 {
@@ -84,6 +97,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> SetImageGeomOriginScalingFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                       const std::atomic_bool& shouldCancel) const
 {

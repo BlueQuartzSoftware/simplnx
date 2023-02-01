@@ -142,26 +142,37 @@ void mapKernelDistances(NeighborList<float32>* kernelDistances, std::vector<floa
 }
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGridFilter::name() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGridFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGridFilter::className() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGridFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InterpolatePointCloudToRegularGridFilter::uuid() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGridFilter::humanName() const
 {
   return "Interpolate Point Cloud to Regular Grid";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InterpolatePointCloudToRegularGridFilter::defaultTags() const
+{
+  return {"#Geometry", "#Gaussian", "#Kernel", "Interpolation", "Point Cloud", "Vertex Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;

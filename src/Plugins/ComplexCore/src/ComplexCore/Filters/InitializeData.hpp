@@ -61,6 +61,12 @@ public:
   std::string humanName() const override;
 
   /**
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
+
+  /**
    * @brief
    * @return Parameters
    */

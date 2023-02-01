@@ -12,26 +12,37 @@
 namespace complex
 {
 
+//------------------------------------------------------------------------------
 std::string CopyDataObjectFilter::name() const
 {
   return FilterTraits<CopyDataObjectFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string CopyDataObjectFilter::className() const
 {
   return FilterTraits<CopyDataObjectFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CopyDataObjectFilter::uuid() const
 {
   return FilterTraits<CopyDataObjectFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CopyDataObjectFilter::humanName() const
 {
   return "Copy Data Object";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CopyDataObjectFilter::defaultTags() const
+{
+  return {"#Copy", "#Data Management", "#Memory Management", "#Data Structure", "#Duplicate"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CopyDataObjectFilter::parameters() const
 {
   Parameters params;
@@ -48,11 +59,13 @@ Parameters CopyDataObjectFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CopyDataObjectFilter::clone() const
 {
   return std::make_unique<CopyDataObjectFilter>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto dataArrayPaths = args.value<MultiPathSelectionParameter::ValueType>(k_DataPath_Key);
@@ -96,6 +109,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CopyDataObjectFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {

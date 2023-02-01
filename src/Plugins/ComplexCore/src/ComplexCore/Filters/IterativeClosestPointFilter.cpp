@@ -62,26 +62,37 @@ struct VertexGeomAdaptor
 };
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string IterativeClosestPointFilter::name() const
 {
   return FilterTraits<IterativeClosestPointFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string IterativeClosestPointFilter::className() const
 {
   return FilterTraits<IterativeClosestPointFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid IterativeClosestPointFilter::uuid() const
 {
   return FilterTraits<IterativeClosestPointFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string IterativeClosestPointFilter::humanName() const
 {
   return "Iterative Closest Point";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> IterativeClosestPointFilter::defaultTags() const
+{
+  return {"#Transformation", "#Align", "#Geometry", "#ICP"};
+}
+
+//------------------------------------------------------------------------------
 Parameters IterativeClosestPointFilter::parameters() const
 {
   Parameters params;
@@ -99,11 +110,13 @@ Parameters IterativeClosestPointFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer IterativeClosestPointFilter::clone() const
 {
   return std::make_unique<IterativeClosestPointFilter>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto movingVertexPath = args.value<DataPath>(k_MovingVertexPath_Key);
@@ -137,6 +150,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> IterativeClosestPointFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {

@@ -369,26 +369,37 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
 namespace complex
 {
 
+//------------------------------------------------------------------------------
 std::string AlignGeometries::name() const
 {
   return FilterTraits<AlignGeometries>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string AlignGeometries::className() const
 {
   return FilterTraits<AlignGeometries>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid AlignGeometries::uuid() const
 {
   return FilterTraits<AlignGeometries>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string AlignGeometries::humanName() const
 {
   return "Align Geometries";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> AlignGeometries::defaultTags() const
+{
+  return {"#Match", "#Align", "#Geometry", "#Move"};
+}
+
+//------------------------------------------------------------------------------
 Parameters AlignGeometries::parameters() const
 {
   GeometrySelectionParameter::AllowedTypes geomTypes = IGeometry::GetAllGeomTypes();
@@ -402,11 +413,13 @@ Parameters AlignGeometries::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer AlignGeometries::clone() const
 {
   return std::make_unique<AlignGeometries>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult AlignGeometries::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel) const
 {
@@ -427,6 +440,7 @@ IFilter::PreflightResult AlignGeometries::preflightImpl(const DataStructure& dat
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> AlignGeometries::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto movingGeometryPath = args.value<DataPath>(k_MovingGeometry_Key);

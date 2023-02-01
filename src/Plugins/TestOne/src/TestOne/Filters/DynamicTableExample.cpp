@@ -15,26 +15,38 @@ constexpr StringLiteral k_Param4 = "param4";
 
 namespace complex
 {
+
+//------------------------------------------------------------------------------
 std::string DynamicTableExample::name() const
 {
   return FilterTraits<DynamicTableExample>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string DynamicTableExample::className() const
 {
   return FilterTraits<DynamicTableExample>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid DynamicTableExample::uuid() const
 {
   return FilterTraits<DynamicTableExample>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string DynamicTableExample::humanName() const
 {
   return "Dynamic Table Examples";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> DynamicTableExample::defaultTags() const
+{
+  return {"#Example", "#Test"};
+}
+
+//------------------------------------------------------------------------------
 Parameters DynamicTableExample::parameters() const
 {
   Parameters params;
@@ -75,16 +87,19 @@ Parameters DynamicTableExample::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer DynamicTableExample::clone() const
 {
   return std::make_unique<DynamicTableExample>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult DynamicTableExample::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
+//------------------------------------------------------------------------------
 Result<> DynamicTableExample::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel) const
 {

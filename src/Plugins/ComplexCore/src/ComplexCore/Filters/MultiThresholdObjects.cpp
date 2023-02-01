@@ -277,25 +277,31 @@ std::string MultiThresholdObjects::name() const
   return FilterTraits<MultiThresholdObjects>::name;
 }
 
-// -----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects::className() const
 {
   return FilterTraits<MultiThresholdObjects>::className;
 }
 
-// -----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 Uuid MultiThresholdObjects::uuid() const
 {
   return FilterTraits<MultiThresholdObjects>::uuid;
 }
 
-// -----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects::humanName() const
 {
   return "Multi-Threshold Objects";
 }
 
-// -----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+std::vector<std::string> MultiThresholdObjects::defaultTags() const
+{
+  return {"#Find Outliers", "#Threshold", "#Isolate", "Data Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MultiThresholdObjects::parameters() const
 {
   Parameters params;
@@ -307,7 +313,7 @@ Parameters MultiThresholdObjects::parameters() const
   return params;
 }
 
-// -----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MultiThresholdObjects::clone() const
 {
   return std::make_unique<MultiThresholdObjects>();

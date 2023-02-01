@@ -276,26 +276,37 @@ nonstd::expected<std::vector<bool>, Error> mergeContainedFeatures(DataStructure&
 }
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string MinNeighbors::name() const
 {
   return FilterTraits<MinNeighbors>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string MinNeighbors::className() const
 {
   return FilterTraits<MinNeighbors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MinNeighbors::uuid() const
 {
   return FilterTraits<MinNeighbors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MinNeighbors::humanName() const
 {
   return "Minimum Number of Neighbors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MinNeighbors::defaultTags() const
+{
+  return {"#Minimum", "#Neighbors", "#Memory Management", "#Cleanup"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MinNeighbors::parameters() const
 {
   Parameters params;
@@ -330,11 +341,13 @@ Parameters MinNeighbors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MinNeighbors::clone() const
 {
   return std::make_unique<MinNeighbors>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
@@ -375,6 +388,7 @@ IFilter::PreflightResult MinNeighbors::preflightImpl(const DataStructure& data, 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MinNeighbors::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto featurePhasesPath = args.value<DataPath>(k_FeaturePhases_Key);

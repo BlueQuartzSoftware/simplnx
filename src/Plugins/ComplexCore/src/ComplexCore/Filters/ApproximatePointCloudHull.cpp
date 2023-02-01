@@ -24,26 +24,37 @@ bool validNeighbor(const SizeVec3& dims, int64 neighborhood[78], usize index, in
 }
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string ApproximatePointCloudHull::name() const
 {
   return FilterTraits<ApproximatePointCloudHull>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string ApproximatePointCloudHull::className() const
 {
   return FilterTraits<ApproximatePointCloudHull>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ApproximatePointCloudHull::uuid() const
 {
   return FilterTraits<ApproximatePointCloudHull>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ApproximatePointCloudHull::humanName() const
 {
   return "Approximate Point Cloud Hull";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ApproximatePointCloudHull::defaultTags() const
+{
+  return {"#Point Cloud", "#Grid", "#Vertex Geometry", "#Geometry", "#Hull"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ApproximatePointCloudHull::parameters() const
 {
   Parameters params;
@@ -51,16 +62,22 @@ Parameters ApproximatePointCloudHull::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_GridResolution_Key, "Grid Resolution", "Geometry resolution", std::vector<float32>{0, 0, 0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<UInt64Parameter>(k_MinEmptyNeighbors_Key, "Minimum Number of Empty Neighbors", "Minimum number of empty neighbors", 0));
+
+  params.insertSeparator(Parameters::Separator{"Required Geometry"});
   params.insert(std::make_unique<DataPathSelectionParameter>(k_VertexGeomPath_Key, "Vertex Geometry", "Path to the target Vertex geometry", DataPath()));
+
+  params.insertSeparator(Parameters::Separator{"Created Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_HullVertexGeomPath_Key, "Hull Vertex Geometry", "Path to create the hull Vertex geometry", DataPath{}));
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ApproximatePointCloudHull::clone() const
 {
   return std::make_unique<ApproximatePointCloudHull>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult ApproximatePointCloudHull::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto gridResolution = args.value<std::vector<float32>>(k_GridResolution_Key);
@@ -91,6 +108,7 @@ IFilter::PreflightResult ApproximatePointCloudHull::preflightImpl(const DataStru
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ApproximatePointCloudHull::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel) const
 {

@@ -25,24 +25,23 @@ TEST_CASE("Filter List Instantiation")
     auto filter = filterList->createFilter(handle);
     REQUIRE(filter != nullptr);
 
-    SECTION(("Filter List Instantiation::" + filter->className() + ": Instantiation"), ("[complex][" + filter->name() + "]"))
+    UNSCOPED_INFO(fmt::format("Filter List Instantiation::{} Instantiation. [complex][{}]", filter->className(), filter->name()));
+
+    complex::Arguments args;
+    dataStructure.clear();
+
+    auto params = filter->parameters();
+    for(const auto& [name, param] : params)
     {
-      complex::Arguments args;
-      dataStructure.clear();
-
-      auto params = filter->parameters();
-      for(const auto& [name, param] : params)
-      {
-        args.insert(name, param->defaultValue());
-      }
-
-      if(filter->defaultTags().empty())
-      {
-        REQUIRE(!filter->defaultTags().empty());
-      }
-
-      auto preflightResult = filter->preflight(dataStructure, args);
-      REQUIRE((preflightResult.outputActions.valid() || preflightResult.outputActions.invalid())); // Preflight exists
+      args.insert(name, param->defaultValue());
     }
+
+    if(filter->defaultTags().empty())
+    {
+      REQUIRE(!filter->defaultTags().empty());
+    }
+
+    auto preflightResult = filter->preflight(dataStructure, args);
+    REQUIRE((preflightResult.outputActions.valid() || preflightResult.outputActions.invalid())); // Preflight exists
   }
 }

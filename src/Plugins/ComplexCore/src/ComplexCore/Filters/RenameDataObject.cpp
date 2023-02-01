@@ -17,26 +17,38 @@ constexpr int32 k_EmptyParameterError = -520;
 
 namespace complex
 {
+
+//------------------------------------------------------------------------------
 std::string RenameDataObject::name() const
 {
   return FilterTraits<RenameDataObject>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string RenameDataObject::className() const
 {
   return FilterTraits<RenameDataObject>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid RenameDataObject::uuid() const
 {
   return FilterTraits<RenameDataObject>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string RenameDataObject::humanName() const
 {
   return "Rename DataObject";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> RenameDataObject::defaultTags() const
+{
+  return {"#Data Management", "#Rename", "#Data Structure", "#Data Object"};
+}
+
+//------------------------------------------------------------------------------
 Parameters RenameDataObject::parameters() const
 {
   Parameters params;
@@ -47,11 +59,13 @@ Parameters RenameDataObject::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer RenameDataObject::clone() const
 {
   return std::make_unique<RenameDataObject>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult RenameDataObject::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                          const std::atomic_bool& shouldCancel) const
 {
@@ -65,6 +79,7 @@ IFilter::PreflightResult RenameDataObject::preflightImpl(const DataStructure& da
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> RenameDataObject::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};

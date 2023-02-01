@@ -91,26 +91,37 @@ struct RemoveFlaggedVerticesFunctor
 namespace complex
 {
 
+//------------------------------------------------------------------------------
 std::string ExtractInternalSurfacesFromTriangleGeometry::name() const
 {
   return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractInternalSurfacesFromTriangleGeometry::className() const
 {
   return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExtractInternalSurfacesFromTriangleGeometry::uuid() const
 {
   return FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExtractInternalSurfacesFromTriangleGeometry::humanName() const
 {
   return "Extract Internal Surfaces From Triangle Geometry";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExtractInternalSurfacesFromTriangleGeometry::defaultTags() const
+{
+  return {"#Geometry", "#Triangle Geometry", "#Memory Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
 {
   Parameters params;
@@ -135,11 +146,13 @@ Parameters ExtractInternalSurfacesFromTriangleGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExtractInternalSurfacesFromTriangleGeometry::clone() const
 {
   return std::make_unique<ExtractInternalSurfacesFromTriangleGeometry>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                     const std::atomic_bool& shouldCancel) const
 {
@@ -233,6 +246,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel) const
 {

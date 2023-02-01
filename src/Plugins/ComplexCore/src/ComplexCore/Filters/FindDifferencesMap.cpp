@@ -129,26 +129,37 @@ struct ExecuteFindDifferenceMapFunctor
 };
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string FindDifferencesMap::name() const
 {
   return FilterTraits<FindDifferencesMap>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string FindDifferencesMap::className() const
 {
   return FilterTraits<FindDifferencesMap>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindDifferencesMap::uuid() const
 {
   return FilterTraits<FindDifferencesMap>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindDifferencesMap::humanName() const
 {
   return "Find Differences Map";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindDifferencesMap::defaultTags() const
+{
+  return {"#Statistics", "#ComplexCore"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindDifferencesMap::parameters() const
 {
   Parameters params;
@@ -160,11 +171,13 @@ Parameters FindDifferencesMap::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindDifferencesMap::clone() const
 {
   return std::make_unique<FindDifferencesMap>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
@@ -231,6 +244,7 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindDifferencesMap::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {

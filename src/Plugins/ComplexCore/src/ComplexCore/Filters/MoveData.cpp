@@ -13,26 +13,37 @@ constexpr int64 k_MissingFeaturePhasesError = -251;
 
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string MoveData::name() const
 {
   return FilterTraits<MoveData>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string MoveData::className() const
 {
   return FilterTraits<MoveData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MoveData::uuid() const
 {
   return FilterTraits<MoveData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MoveData::humanName() const
 {
   return "Move Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MoveData::defaultTags() const
+{
+  return {"#Move", "#Memory Management", "#Data Management", "#Data Structure"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MoveData::parameters() const
 {
   Parameters params;
@@ -43,11 +54,13 @@ Parameters MoveData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MoveData::clone() const
 {
   return std::make_unique<MoveData>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto dataPath = args.value<DataPath>(k_Data_Key);
@@ -67,6 +80,7 @@ IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, cons
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MoveData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};

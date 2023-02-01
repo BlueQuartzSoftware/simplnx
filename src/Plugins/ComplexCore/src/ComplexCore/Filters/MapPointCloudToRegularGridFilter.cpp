@@ -191,26 +191,37 @@ void createRegularGrid(DataStructure& data, const Arguments& args)
 }
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string MapPointCloudToRegularGridFilter::name() const
 {
   return FilterTraits<MapPointCloudToRegularGridFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string MapPointCloudToRegularGridFilter::className() const
 {
   return FilterTraits<MapPointCloudToRegularGridFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MapPointCloudToRegularGridFilter::uuid() const
 {
   return FilterTraits<MapPointCloudToRegularGridFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MapPointCloudToRegularGridFilter::humanName() const
 {
   return "Map Point Cloud to Regular Grid";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MapPointCloudToRegularGridFilter::defaultTags() const
+{
+  return {"#Alignment", "#Point Cloud", "#Grid", "#Sampling", "#Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MapPointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
@@ -240,11 +251,13 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MapPointCloudToRegularGridFilter::clone() const
 {
   return std::make_unique<MapPointCloudToRegularGridFilter>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler,
                                                                          const std::atomic_bool& shouldCancel) const
 {
@@ -332,6 +345,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel) const
 {

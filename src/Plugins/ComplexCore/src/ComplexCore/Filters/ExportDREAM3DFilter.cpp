@@ -16,26 +16,37 @@ constexpr complex::int32 k_FailedFindPipelineError = -15;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExportDREAM3DFilter::name() const
 {
   return FilterTraits<ExportDREAM3DFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string ExportDREAM3DFilter::className() const
 {
   return FilterTraits<ExportDREAM3DFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExportDREAM3DFilter::uuid() const
 {
   return FilterTraits<ExportDREAM3DFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExportDREAM3DFilter::humanName() const
 {
   return "Write DREAM3D NX File (V8)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExportDREAM3DFilter::defaultTags() const
+{
+  return {"#IO", "#Output", "#Write", "#Export", "Binary"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExportDREAM3DFilter::parameters() const
 {
   Parameters params;
@@ -47,11 +58,13 @@ Parameters ExportDREAM3DFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExportDREAM3DFilter::clone() const
 {
   return std::make_unique<ExportDREAM3DFilter>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto exportFilePath = args.value<std::filesystem::path>(k_ExportFilePath);
@@ -62,6 +75,7 @@ IFilter::PreflightResult ExportDREAM3DFilter::preflightImpl(const DataStructure&
   return {};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExportDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel) const
 {
