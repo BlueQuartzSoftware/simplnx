@@ -265,7 +265,7 @@ Result<> ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr,
     return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
   }
 
-  complex::DataType arrayType = conditionalDataArray.getDataType();
+  const complex::DataType arrayType = conditionalDataArray.getDataType();
 
   if(complex::DataType::uint8 == arrayType)
   {
@@ -360,13 +360,13 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
   {
     return MakeErrorResult(-262, fmt::format("CreateArray: Component Shape was empty. Please set the number of components."));
   }
-  size_t numComponents = std::accumulate(compShape.cbegin(), compShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+  const usize numComponents = std::accumulate(compShape.cbegin(), compShape.cend(), static_cast<usize>(1), std::multiplies<>());
   if(numComponents == 0 && mode == IDataAction::Mode::Execute)
   {
     return MakeErrorResult(-263, fmt::format("CreateArray: Number of components is ZERO. Please set the number of components."));
   }
 
-  usize last = path.getLength() - 1;
+  const usize last = path.getLength() - 1;
 
   std::string name = path[last];
 
@@ -378,7 +378,8 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
     {
       return MakeErrorResult(-264, fmt::format("CreateArray: Cannot create Data Array at path '{}' because it already exists. Choose a different name.", path.toString()));
     }
-    else if(parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
+
+    if(parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
       auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
@@ -425,7 +426,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, usize numTuples, const Da
     dataObjectId = parentObject->getId();
   }
 
-  usize last = path.getLength() - 1;
+  const usize last = path.getLength() - 1;
 
   std::string name = path[last];
 
@@ -502,7 +503,7 @@ Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outp
   // Skip some bytes if needed
   if(startByte > 0)
   {
-    FSEEK64(inputFile, startByte, SEEK_SET);
+    FSEEK64(inputFile, static_cast<int32>(startByte), SEEK_SET);
   }
 
   const usize numElements = outputDataArray.getSize();
@@ -547,7 +548,7 @@ Result<> ImportFromBinaryFile(const fs::path& binaryFilePath, DataArray<T>& outp
  * @return
  */
 template <typename T>
-DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure& dataStructure, const std::vector<size_t>& tupleShape, const std::vector<size_t>& componentShape,
+DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape,
                                    DataObject::IdType parentId = {})
 {
   // std::cout << "  Reading file " << filename << std::endl;
@@ -563,8 +564,8 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
   std::shared_ptr<DataStoreType> dataStore = std::shared_ptr<DataStoreType>(new DataStoreType({tupleShape}, componentShape, static_cast<T>(0)));
   ArrayType* dataArray = ArrayType::Create(dataStructure, name, dataStore, parentId);
 
-  const size_t fileSize = fs::file_size(filename);
-  const size_t numBytesToRead = dataArray->getSize() * sizeof(T);
+  const usize fileSize = fs::file_size(filename);
+  const usize numBytesToRead = dataArray->getSize() * sizeof(T);
   if(numBytesToRead != fileSize)
   {
     std::cout << "FileSize '" << fileSize << "' and Allocated Size '" << numBytesToRead << "' do not match" << std::endl;
@@ -607,7 +608,7 @@ Result<> DeepCopy(DataStructure& dataStructure, const DataPath& sourceDataPath, 
 }
 
 /**
- * @brief This function will Resize and DataArray and then replace and exisint DataArray in the DataStructure
+ * @brief This function will Resize a DataArray and then replace an existing DataArray in the DataStructure
  * @param dataStructure
  * @param dataPath The path of the target DataArray
  * @param tupleShape The tuple shape of the resized array
@@ -676,6 +677,7 @@ COMPLEX_EXPORT Result<> ValidateNumFeaturesInArray(const DataStructure& dataStru
 struct MaskCompare
 {
   virtual ~MaskCompare() noexcept = default;
+
   /**
    * @brief Both of the values pointed to by the index *must* be `true` or non-zero. If either of the values or
    * *both* of the values are false, this will return false.
@@ -683,7 +685,7 @@ struct MaskCompare
    * @param indexB Second index
    * @return
    */
-  virtual bool bothTrue(size_t indexA, size_t indexB) const = 0;
+  virtual bool bothTrue(usize indexA, usize indexB) const = 0;
 
   /**
    * @brief Both of the values pointed to by the index *must* be `false` or non-zero. If either of the values or
@@ -692,16 +694,16 @@ struct MaskCompare
    * @param indexB
    * @return
    */
-  virtual bool bothFalse(size_t indexA, size_t indexB) const = 0;
+  virtual bool bothFalse(usize indexA, usize indexB) const = 0;
 
   /**
    * @brief Returns `true` or `false` based on the value at the index
    * @param index index to check
    * @return
    */
-  virtual bool isTrue(size_t index) const = 0;
+  virtual bool isTrue(usize index) const = 0;
 
-  virtual void setValue(size_t index, bool val) = 0;
+  virtual void setValue(usize index, bool val) = 0;
 };
 
 struct BoolMaskCompare : public MaskCompare
@@ -711,20 +713,21 @@ struct BoolMaskCompare : public MaskCompare
   {
   }
   ~BoolMaskCompare() noexcept override = default;
+
   BoolArray& m_Array;
-  bool bothTrue(size_t indexA, size_t indexB) const override
+  bool bothTrue(usize indexA, usize indexB) const override
   {
     return m_Array.at(indexA) && m_Array.at(indexB);
   }
-  bool bothFalse(size_t indexA, size_t indexB) const override
+  bool bothFalse(usize indexA, usize indexB) const override
   {
     return !m_Array.at(indexA) && !m_Array.at(indexB);
   }
-  bool isTrue(size_t index) const override
+  bool isTrue(usize index) const override
   {
     return m_Array.at(index);
   }
-  void setValue(size_t index, bool val) override
+  void setValue(usize index, bool val) override
   {
     m_Array[index] = val;
   }
@@ -738,19 +741,19 @@ struct UInt8MaskCompare : public MaskCompare
   }
   ~UInt8MaskCompare() noexcept override = default;
   UInt8Array& m_Array;
-  bool bothTrue(size_t indexA, size_t indexB) const override
+  bool bothTrue(usize indexA, usize indexB) const override
   {
     return m_Array.at(indexA) != 0 && m_Array.at(indexB) != 0;
   }
-  bool bothFalse(size_t indexA, size_t indexB) const override
+  bool bothFalse(usize indexA, usize indexB) const override
   {
     return m_Array.at(indexA) == 0 && m_Array.at(indexB) == 0;
   }
-  bool isTrue(size_t index) const override
+  bool isTrue(usize index) const override
   {
     return m_Array.at(index) != 0;
   }
-  void setValue(size_t index, bool val) override
+  void setValue(usize index, bool val) override
   {
     m_Array[index] = static_cast<uint8>(val);
   }
@@ -798,19 +801,19 @@ public:
   CopyTupleUsingIndexList& operator=(const CopyTupleUsingIndexList&) = delete;
   CopyTupleUsingIndexList& operator=(CopyTupleUsingIndexList&&) noexcept = delete;
 
-  void convert(size_t start, size_t end) const
+  void convert(usize start, usize end) const
   {
     const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
 
     for(usize i = start; i < end; i++)
     {
-      int64 newIndicies_I = m_NewIndices[i];
-      if(newIndicies_I >= 0)
+      int64 newIndices_I = m_NewIndices[i];
+      if(newIndices_I >= 0)
       {
-        if(!newDataStore.copyFrom(i, oldDataStore, newIndicies_I, 1))
+        if(!newDataStore.copyFrom(i, oldDataStore, newIndices_I, 1))
         {
-          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), newIndicies_I, i)
+          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), newIndices_I, i)
                     << std::endl;
           break;
         }
