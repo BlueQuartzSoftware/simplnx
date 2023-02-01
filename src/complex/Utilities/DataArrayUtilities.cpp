@@ -12,8 +12,8 @@ namespace
 template <class T>
 Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, const std::vector<usize>& tupleShape, IDataAction::Mode mode, const IDataArray& inputDataArray)
 {
-  const DataArray<T>& castInputArray = dynamic_cast<const DataArray<T>&>(inputDataArray);
-  IDataStore::ShapeType componentShape = castInputArray.getDataStoreRef().getComponentShape();
+  auto& castInputArray = dynamic_cast<const DataArray<T>&>(inputDataArray);
+  const IDataStore::ShapeType componentShape = castInputArray.getDataStoreRef().getComponentShape();
   dataStructure.removeData(dataPath);
   return CreateArray<T>(dataStructure, tupleShape, componentShape, dataPath, mode);
 }
@@ -138,9 +138,9 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
 //-----------------------------------------------------------------------------
 Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
 {
-  IDataArray& iDataArray = dynamic_cast<IDataArray&>(inputDataObject);
-  complex::DataType arrayType = iDataArray.getDataType();
-  Result<> resultFromConversion;
+  const IDataArray& iDataArray = dynamic_cast<IDataArray&>(inputDataObject);
+  const complex::DataType arrayType = iDataArray.getDataType();
+  const Result<> resultFromConversion;
   switch(arrayType)
   {
   case complex::DataType::int8:
@@ -242,7 +242,7 @@ void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<u
 {
   attributeMatrix.setShape(newShape);
   auto childArrays = attributeMatrix.findAllChildrenOfType<IArray>();
-  for(auto array : childArrays)
+  for(const auto& array : childArrays)
   {
     array->reshapeTuples(newShape);
   }
@@ -257,7 +257,7 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
     return MakeErrorResult(-5550, fmt::format("Could not find the input array path '{}' for validating number of features", arrayPath.toString()));
   }
 
-  usize numFeatures = featureArray->getNumberOfTuples();
+  const usize numFeatures = featureArray->getNumberOfTuples();
   bool mismatchedFeatures = false;
   usize largestFeature = 0;
   for(const int32& featureId : featureIds)

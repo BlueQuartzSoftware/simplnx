@@ -72,11 +72,11 @@ Result<> ReadBinaryFile(IDataArray& dataArrayPtr, const std::string& filename, u
 {
   constexpr usize k_DefaultBlocksize = 1000000;
 
-  DataArray<T>& dataArray = dynamic_cast<DataArray<T>&>(dataArrayPtr);
+  auto& dataArray = dynamic_cast<DataArray<T>&>(dataArrayPtr);
 
   const usize fileSize = fs::file_size(filename);
   const usize numBytesToRead = dataArray.getSize() * sizeof(T);
-  int32 err = SanityCheckFileSizeVersusAllocatedSize(numBytesToRead, fileSize, skipHeaderBytes);
+  const int32 err = SanityCheckFileSizeVersusAllocatedSize(numBytesToRead, fileSize, skipHeaderBytes);
 
   if(err < 0)
   {
