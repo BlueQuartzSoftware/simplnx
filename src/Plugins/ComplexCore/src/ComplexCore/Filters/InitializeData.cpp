@@ -272,7 +272,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
       continue;
     }
 
-    std::optional<Error> maybeError = ExecuteNeighborFunction(CheckInitializationFunctor{}, dataArray.getDataType(), dataArray, initType, initValue, initRange); //NO BOOL
+    std::optional<Error> maybeError = ExecuteNeighborFunction(CheckInitializationFunctor{}, dataArray.getDataType(), dataArray, initType, initValue, initRange); // NO BOOL
     if(maybeError.has_value())
     {
       errors.push_back(std::move(*maybeError));

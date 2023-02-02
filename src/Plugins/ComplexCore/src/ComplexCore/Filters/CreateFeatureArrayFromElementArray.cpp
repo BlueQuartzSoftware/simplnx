@@ -17,7 +17,7 @@ struct CopyCellDataFunctor
 {
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const DataPath& selectedCellArrayPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& createdArrayNameValue,
-                        const std::atomic_bool& shouldCancel)
+                      const std::atomic_bool& shouldCancel)
   {
     const DataArray<T>& selectedCellArray = dataStructure.getDataRefAs<DataArray<T>>(selectedCellArrayPathValue);
     const DataStore<T> selectedCellArrayStore = selectedCellArray.template getIDataStoreRefAs<DataStore<T>>();

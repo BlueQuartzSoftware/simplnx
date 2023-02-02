@@ -1,8 +1,8 @@
 #include "SplitAttributeArray.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 

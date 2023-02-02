@@ -495,7 +495,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
           continue;
         }
 
-        //NO BOOL
+        // NO BOOL
         ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, interpolatedArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
@@ -514,7 +514,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
           continue;
         }
 
-        //NO BOOL
+        // NO BOOL
         ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, copyArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
