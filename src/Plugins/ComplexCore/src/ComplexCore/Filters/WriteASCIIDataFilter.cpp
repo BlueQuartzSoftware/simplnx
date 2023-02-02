@@ -50,7 +50,7 @@ std::string WriteASCIIDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> WriteASCIIDataFilter::defaultTags() const
 {
-  return {"#IO", "#Output", "#Write", "#Export", "#Text", "#CSV", "#ASCII"};
+  return {"IO","Output","Write", "Export", "Text", "CSV", "ASCII"};
 }
 
 //------------------------------------------------------------------------------

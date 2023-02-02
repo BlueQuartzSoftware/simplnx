@@ -43,9 +43,9 @@ std::string CreateImageGeometry::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateImageGeometry::defaultTags() const
 {
-  return {"#Core", "#Generation",
-          "#ImageGeometry"
-          "#Create Geometry"};
+  return {"Core","Generation",
+          "ImageGeometry"
+          "Create Geometry"};
 }
 
 //------------------------------------------------------------------------------

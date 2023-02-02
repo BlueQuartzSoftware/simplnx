@@ -218,7 +218,7 @@ std::string MapPointCloudToRegularGridFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MapPointCloudToRegularGridFilter::defaultTags() const
 {
-  return {"#Alignment", "#Point Cloud", "#Grid", "#Sampling", "#Geometry"};
+  return {"Alignment","Point Cloud","Grid","Sampling","Geometry"};
 }
 
 //------------------------------------------------------------------------------

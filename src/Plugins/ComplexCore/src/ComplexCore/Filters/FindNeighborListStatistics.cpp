@@ -242,7 +242,7 @@ std::string FindNeighborListStatistics::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindNeighborListStatistics::defaultTags() const
 {
-  return {"#NeighborList", "#Statistics", "#Analytics"};
+  return {"NeighborList", "Statistics", "Analytics"};
 }
 
 //------------------------------------------------------------------------------

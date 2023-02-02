@@ -40,7 +40,7 @@ std::string MoveData::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MoveData::defaultTags() const
 {
-  return {"#Move", "#Memory Management", "#Data Management", "#Data Structure"};
+  return {"Move","Memory Management","Data Management","Data Structure"};
 }
 
 //------------------------------------------------------------------------------

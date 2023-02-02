@@ -30,7 +30,7 @@ std::string CreateDataGroup::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateDataGroup::defaultTags() const
 {
-  return {"#Core", "#Generation", "#DataGroup", "#Create"};
+  return {"Core","Generation","DataGroup","Create"};
 }
 
 Parameters CreateDataGroup::parameters() const
