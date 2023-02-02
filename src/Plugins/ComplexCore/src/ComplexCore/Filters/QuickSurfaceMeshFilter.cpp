@@ -46,7 +46,7 @@ std::string QuickSurfaceMeshFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> QuickSurfaceMeshFilter::defaultTags() const
 {
-  return {"Surface Meshing","Generation","Create","Triangle", "Geoemtry"};
+  return {"Surface Meshing", "Generation", "Create", "Triangle", "Geoemtry"};
 }
 
 //------------------------------------------------------------------------------

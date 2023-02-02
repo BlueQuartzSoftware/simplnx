@@ -215,7 +215,7 @@ std::string FindSurfaceFeatures::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindSurfaceFeatures::defaultTags() const
 {
-  return {"Generic","Spatial"};
+  return {"Generic", "Spatial"};
 }
 
 //------------------------------------------------------------------------------

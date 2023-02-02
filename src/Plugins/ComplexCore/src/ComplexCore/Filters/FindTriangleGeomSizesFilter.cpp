@@ -42,7 +42,7 @@ std::string FindTriangleGeomSizesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindTriangleGeomSizesFilter::defaultTags() const
 {
-  return {"Generic","Morphological", "SurfaceMesh", "Statistics", "Triangle"};
+  return {"Generic", "Morphological", "SurfaceMesh", "Statistics", "Triangle"};
 }
 
 //------------------------------------------------------------------------------
