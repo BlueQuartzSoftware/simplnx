@@ -6,37 +6,41 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
 namespace
 {
 // -----------------------------------------------------------------------------
-template <typename T>
-void copyData(DataStructure& dataStructure, const DataPath& selectedFeatureArrayPath, const DataPath& featureIdsArrayPath, const DataPath& createdArrayPath, const std::atomic_bool& shouldCancel)
+struct CopyDataFunctor
 {
-  const DataArray<T>& selectedFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(selectedFeatureArrayPath);
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
-  DataArray<T>& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdArrayPath);
-
-  usize totalFeatureIdTuples = featureIds.getNumberOfTuples();
-  usize totalFeatureArrayComponents = selectedFeatureArray.getNumberOfComponents();
-  for(usize i = 0; i < totalFeatureIdTuples; ++i)
+  template <typename T>
+  void operator()(DataStructure& dataStructure, const DataPath& selectedFeatureArrayPath, const DataPath& featureIdsArrayPath, const DataPath& createdArrayPath, const std::atomic_bool& shouldCancel)
   {
-    if(shouldCancel)
-    {
-      return;
-    }
+    const DataArray<T>& selectedFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(selectedFeatureArrayPath);
+    const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+    auto& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdArrayPath);
 
-    // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
-    int32 featureIdx = featureIds[i];
-
-    for(usize faComp = 0; faComp < totalFeatureArrayComponents; faComp++)
+    usize totalFeatureIdTuples = featureIds.getNumberOfTuples();
+    usize totalFeatureArrayComponents = selectedFeatureArray.getNumberOfComponents();
+    for(usize i = 0; i < totalFeatureIdTuples; ++i)
     {
-      createdArray[totalFeatureArrayComponents * i + faComp] = selectedFeatureArray[totalFeatureArrayComponents * featureIdx + faComp];
+      if(shouldCancel)
+      {
+        return;
+      }
+
+      // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
+      int32 featureIdx = featureIds[i];
+
+      for(usize faComp = 0; faComp < totalFeatureArrayComponents; faComp++)
+      {
+        createdArray[totalFeatureArrayComponents * i + faComp] = selectedFeatureArray[totalFeatureArrayComponents * featureIdx + faComp];
+      }
     }
   }
-}
+};
 } // namespace
 
 namespace complex
@@ -105,9 +109,9 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
   auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedArrayName_Key);
   DataPath createdArrayPath = pFeatureIdsArrayPathValue.getParent().createChildPath(createdArrayName);
 
-  const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);
+  const auto& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);
   const IDataStore& selectedFeatureArrayStore = selectedFeatureArray.getIDataStoreRef();
-  const IDataArray& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
+  const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
   const IDataStore& featureIdsArrayStore = featureIdsArray.getIDataStoreRef();
 
   complex::Result<OutputActions> resultOutputActions;
@@ -141,43 +145,8 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
     return results;
   }
 
-  switch(selectedFeatureArray.getDataType())
-  {
-  case DataType::int8:
-    copyData<int8>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::uint8:
-    copyData<uint8>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::int16:
-    copyData<int16>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::uint16:
-    copyData<uint16>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::int32:
-    copyData<int32>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::uint32:
-    copyData<uint32>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::int64:
-    copyData<int64>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::uint64:
-    copyData<uint64>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::float32:
-    copyData<float>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::float64:
-    copyData<double>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  case DataType::boolean:
-    copyData<bool>(dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
-    return {};
-  default:
-    return MakeErrorResult(-14000, fmt::format("The selected array was of unsupported type. The path is {}", pSelectedFeatureArrayPathValue.toString()));
-  }
+  ExecuteDataFunction(CopyDataFunctor{}, selectedFeatureArray.getDataType(), dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
+
+  return {};
 }
 } // namespace complex

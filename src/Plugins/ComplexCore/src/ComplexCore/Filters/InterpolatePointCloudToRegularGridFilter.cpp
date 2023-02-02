@@ -28,7 +28,7 @@ constexpr int64 k_MissingImageGeom = -24501;
 struct MapPointCloudDataByKernelFunctor
 {
   template <typename T>
-  void operator()(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
+  void operator()(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, const int64 kernel[3], const usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
   {
     auto* inputDataArray = dynamic_cast<DataArray<T>*>(source);
     auto& inputData = inputDataArray->getDataStoreRef();
@@ -66,7 +66,7 @@ struct MapPointCloudDataByKernelFunctor
   }
 };
 
-void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std::vector<float32>& kernel, int64 kernelNumVoxels[3])
+void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std::vector<float32>& kernel, const int64 kernelNumVoxels[3])
 {
   usize counter = 0;
 
@@ -488,8 +488,15 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
         auto dynamicArrayPath = parentPath.createChildPath(interpolatedDataPathItem.getTargetName() + "Neighbors");
         auto* dynamicArrayToInterpolate = data.getDataAs<INeighborList>(dynamicArrayPath);
         auto* interpolatedArray = data.getDataAs<IDataArray>(interpolatedDataPathItem);
+
+        const auto& type = interpolatedArray->getDataType();
+        if(type == DataType::boolean) // Cant be executed will throw error
+        {
+          continue;
+        }
+
         //NO BOOL
-        ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, interpolatedArray->getDataType(), interpolatedArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
+        ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, interpolatedArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
 
@@ -500,8 +507,15 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
         auto dynamicArrayPath = interpolatedDataPath.createChildPath(copyDataPath.getTargetName() + " Neighbors");
         auto* dynamicArrayToCopy = data.getDataAs<INeighborList>(dynamicArrayPath);
         auto* copyArray = data.getDataAs<IDataArray>(copyDataPath);
+
+        const auto& type = copyArray->getDataType();
+        if(type == DataType::boolean) // Cant be executed will throw error
+        {
+          continue;
+        }
+
         //NO BOOL
-        ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, copyArray->getDataType(), copyArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
+        ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, copyArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
 
