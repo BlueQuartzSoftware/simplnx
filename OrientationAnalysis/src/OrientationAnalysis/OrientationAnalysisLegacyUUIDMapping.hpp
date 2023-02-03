@@ -2,6 +2,7 @@
 
 // clang-format off
 #include "OrientationAnalysis/Filters/AlignSectionsMisorientationFilter.hpp"
+#include "OrientationAnalysis/Filters/AlignSectionsMutualInformationFilter.hpp"
 #include "OrientationAnalysis/Filters/BadDataNeighborOrientationCheckFilter.hpp"
 #include "OrientationAnalysis/Filters/ConvertOrientations.hpp"
 #include "OrientationAnalysis/Filters/CreateEnsembleInfoFilter.hpp"
@@ -70,6 +71,7 @@ namespace complex
   {
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID}, // dream3d-class-name
     {complex::Uuid::FromString("4fb2b9de-3124-534b-b914-dbbbdbc14604").value(), complex::FilterTraits<AlignSectionsMisorientationFilter>::uuid}, // AlignSectionsMisorientation
+    {complex::Uuid::FromString("61c5519b-5561-58b8-a522-2ce1324e244d").value(), complex::FilterTraits<AlignSectionsMutualInformationFilter>::uuid}, // AlignSectionsMutualInformationFilter
     {complex::Uuid::FromString("f4a7c2df-e9b0-5da9-b745-a862666d6c99").value(), complex::FilterTraits<BadDataNeighborOrientationCheckFilter>::uuid}, // BadDataNeighborOrientationCheck
     {complex::Uuid::FromString("e5629880-98c4-5656-82b8-c9fe2b9744de").value(), complex::FilterTraits<ConvertOrientations>::uuid}, // ConvertOrientations
     {complex::Uuid::FromString("2a0bfcd3-2517-5117-b164-964dfac8fe22").value(), complex::FilterTraits<CreateEnsembleInfoFilter>::uuid}, // CreateEnsembleInfoFilter

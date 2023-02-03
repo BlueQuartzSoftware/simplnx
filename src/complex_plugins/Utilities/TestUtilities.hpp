@@ -2,6 +2,10 @@
 
 #include <catch2/catch.hpp>
 
+#include "complex/Common/Uuid.hpp"
+#include "complex/Filter/FilterHandle.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
 namespace complex
 {
 // Make sure we can instantiate the Import Text Filter
