@@ -5,6 +5,7 @@ Checks: '
   -boost-*,
   -cert-*,
   clang-diagnostic-*,
+  -clang-diagnostic-documentation,
   clang-analyzer-*,
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-magic-numbers,
@@ -15,10 +16,11 @@ Checks: '
   -linuxkernel-*,
   -llvm-*,
   misc-*,
-  moderize-*,
+  -misc-const-correctness,
+  modernize-*,
   -modernize-use-trailing-return-type,
   -modernize-use-nodiscard,
-  -moderize-use-auto,
+  -modernize-use-auto,
   -mpi-*,
   -objc-*,
   -openmp-*,
@@ -29,7 +31,8 @@ Checks: '
   -readability-function-size,
   -readability-identifier-naming,
   -readability-uppercase-literal-suffix,
-  -readability-magic-numbers
+  -readability-magic-numbers,
+  -cppcoreguidelines-pro-bounds-constant-array-index
 '
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'complex/.*\.hpp'

@@ -28,6 +28,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # OrientationAnalysis/src/OrientationAnalysis/Filters/ directory.
 set(FilterList
   AlignSectionsMisorientationFilter
+  AlignSectionsMutualInformationFilter
   BadDataNeighborOrientationCheckFilter
   ConvertOrientations
   ConvertQuaternionFilter
@@ -157,6 +158,7 @@ endif()
 # ------------------------------------------------------------------------------
 set(filter_algorithms
   AlignSectionsMisorientation
+  AlignSectionsMutualInformation
   BadDataNeighborOrientationCheck
   ConvertQuaternion
   CreateEnsembleInfo
