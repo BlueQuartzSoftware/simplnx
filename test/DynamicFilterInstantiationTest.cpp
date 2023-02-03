@@ -36,10 +36,7 @@ TEST_CASE("Filter List Instantiation")
       args.insert(name, param->defaultValue());
     }
 
-    if(filter->defaultTags().empty())
-    {
       REQUIRE(!filter->defaultTags().empty());
-    }
 
     auto preflightResult = filter->preflight(dataStructure, args);
     REQUIRE((preflightResult.outputActions.valid() || preflightResult.outputActions.invalid())); // Preflight exists
