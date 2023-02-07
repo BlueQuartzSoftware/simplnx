@@ -356,10 +356,6 @@ public:
     for(usize v = start; v < end; v++)
     {
       std::cout << "Vert: " << v << std::endl;
-//      m_SourcePoints[3 * v] = -1.0F;
-//      m_SourcePoints[3 * v + 1] = -1.0F;
-//      m_SourcePoints[3 * v + 2] = -1.0F;
-
       Vec3fa sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
 
       std::vector<size_t> hitTriangleIds;
@@ -369,20 +365,10 @@ public:
       };
 
       int nhits = m_RTree.Search(sourcePoint.data(), sourcePoint.data(), func);
-
-      for(usize t = 0; t < numTriangles; t++)
+      if(nhits > 0) // Point is within the RTree bounding box so just loop over those triangles that are in the RTree
       {
-        std::cout << "  Triangle: " << t << std::endl;
-        if(m_Filter->getCancel())
+        for(const auto& t : hitTriangleIds)
         {
-          return;
-        }
-
-        if((m_SourcePoints[3 * v] >= m_TriBounds[6 * t] && m_SourcePoints[3 * v] <= m_TriBounds[6 * t + 1]) ||
-           (m_SourcePoints[3 * v + 1] >= m_TriBounds[6 * t + 2] && m_SourcePoints[3 * v + 1] <= m_TriBounds[6 * t + 3]) ||
-           (m_SourcePoints[3 * v + 2] >= m_TriBounds[6 * t + 4] && m_SourcePoints[3 * v + 2] <= m_TriBounds[6 * t + 5]))
-        {
-          std::cout << "      Vert Within Triangle Bound Box" << std::endl;
           auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
           auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
           auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
@@ -400,12 +386,41 @@ public:
 
           float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
           std::cout << "      d=" << d << std::endl;
-          //          Vec3fa closestPointInTriangle = closestPointTriangle(Vec3fa(m_SourceVerts[3 * v + 0], m_SourceVerts[3 * v + 1], m_SourceVerts[3 * v + 2]), Vec3fa(m_Verts[p].data()),
-          //                                                               Vec3fa(m_Verts[q].data()), Vec3fa(m_Verts[r].data()));
-          //          std::cout << "closestPointInTriangle: " << closestPointInTriangle[0] << ", " << closestPointInTriangle[1] << ", " << closestPointInTriangle[2] << std::endl;
-          //
-          //          Vec3fa point(gx.data());
-          //          float distance = (point - closestPointInTriangle).magnitude();
+
+          if(std::abs(d) < std::abs(m_Distances[v]))
+          {
+            m_Distances[v] = d;
+            m_ClosestTri[v] = static_cast<int64>(t);
+          }
+        }
+      }
+      else // Point was not in the RTree so we need to search against every triangle
+      {
+        for(usize t = 0; t < numTriangles; t++)
+        {
+          std::cout << "  Triangle: " << t << std::endl;
+          if(m_Filter->getCancel())
+          {
+            return;
+          }
+
+          auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
+          auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
+          auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
+          const Vec3fa point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
+          const Vec3fa v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
+          const Vec3fa v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
+          const Vec3fa v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
+
+          std::cout << "      Point: " << point[0] << ", " << point[1] << ", " << point[2] << "\n      Triangle:\n"
+                    << "         V0: " << m_TriangleVertices[p * 3 + 0] << ", " << m_TriangleVertices[p * 3 + 1] << ", " << m_TriangleVertices[p * 3 + 2] << "\n"
+                    << "         V1: " << m_TriangleVertices[q * 3 + 0] << ", " << m_TriangleVertices[q * 3 + 1] << ", " << m_TriangleVertices[q * 3 + 2] << "\n"
+                    << "         V2: " << m_TriangleVertices[r * 3 + 0] << ", " << m_TriangleVertices[r * 3 + 1] << ", " << m_TriangleVertices[r * 3 + 2] << "\n"
+                    << "         Box: " << m_TriBounds[6 * t + 0] << ", " << m_TriBounds[6 * t + 1] << ", " << m_TriBounds[6 * t + 2] << ", " << m_TriBounds[6 * t + 3] << ", "
+                    << m_TriBounds[6 * t + 4] << ", " << m_TriBounds[6 * t + 5] << std::endl;
+
+          float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
+          std::cout << "      d=" << d << std::endl;
 
           if(std::abs(d) < std::abs(m_Distances[v]))
           {
