@@ -37,7 +37,7 @@ std::string AxioVisionV4ToTileConfiguration::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AxioVisionV4ToTileConfiguration::defaultTags() const
 {
-  return {"#Processing", "#Conversion"};
+  return {"Processing", "Conversion"};
 }
 
 //------------------------------------------------------------------------------

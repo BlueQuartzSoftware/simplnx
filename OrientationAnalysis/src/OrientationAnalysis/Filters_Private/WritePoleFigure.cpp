@@ -42,7 +42,7 @@ std::string WritePoleFigure::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> WritePoleFigure::defaultTags() const
 {
-  return {"#IO", "#Output", "#Write", "#Export"};
+  return {"IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

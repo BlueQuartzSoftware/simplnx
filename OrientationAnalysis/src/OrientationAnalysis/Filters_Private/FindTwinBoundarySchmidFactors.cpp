@@ -41,7 +41,7 @@ std::string FindTwinBoundarySchmidFactors::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindTwinBoundarySchmidFactors::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ std::string EMsoftSO3Sampler::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> EMsoftSO3Sampler::defaultTags() const
 {
-  return {"#Sampling", "#Crystallography"};
+  return {"Sampling", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

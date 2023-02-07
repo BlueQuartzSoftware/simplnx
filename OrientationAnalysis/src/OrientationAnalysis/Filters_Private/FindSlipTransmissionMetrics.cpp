@@ -35,7 +35,7 @@ std::string FindSlipTransmissionMetrics::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindSlipTransmissionMetrics::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

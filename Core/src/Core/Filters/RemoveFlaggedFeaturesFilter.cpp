@@ -42,7 +42,7 @@ std::string RemoveFlaggedFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RemoveFlaggedFeaturesFilter::defaultTags() const
 {
-  return {"#Processing", "#Cleanup"};
+  return {"Processing", "Cleanup"};
 }
 
 //------------------------------------------------------------------------------

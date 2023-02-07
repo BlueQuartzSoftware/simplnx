@@ -40,7 +40,7 @@ std::string FindGBPDMetricBased::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindGBPDMetricBased::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

@@ -35,7 +35,7 @@ std::string Stereographic3D::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> Stereographic3D::defaultTags() const
 {
-  return {"#Utilities", "#Conversion"};
+  return {"Utilities", "Conversion"};
 }
 
 //------------------------------------------------------------------------------

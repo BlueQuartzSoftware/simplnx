@@ -36,7 +36,7 @@ std::string FindFeatureNeighborCAxisMisalignments::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindFeatureNeighborCAxisMisalignments::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

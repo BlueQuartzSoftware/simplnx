@@ -41,7 +41,7 @@ std::string WriteStatsGenOdfAngleFile::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> WriteStatsGenOdfAngleFile::defaultTags() const
 {
-  return {"#IO", "#Output", "#Write", "#Export"};
+  return {"IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

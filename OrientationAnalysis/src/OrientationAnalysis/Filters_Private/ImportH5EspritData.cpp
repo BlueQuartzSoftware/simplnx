@@ -44,7 +44,7 @@ std::string ImportH5EspritData::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportH5EspritData::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import"};
+  return {"IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

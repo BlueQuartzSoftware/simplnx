@@ -37,7 +37,7 @@ std::string FindTwinBoundaries::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindTwinBoundaries::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

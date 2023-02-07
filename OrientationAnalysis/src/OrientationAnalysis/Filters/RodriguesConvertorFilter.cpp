@@ -47,7 +47,7 @@ std::string RodriguesConvertorFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RodriguesConvertorFilter::defaultTags() const
 {
-  return {"#Processing", "#Crystallography", "#Convert"};
+  return {"Processing", "Crystallography", "Convert"};
 }
 
 //------------------------------------------------------------------------------

@@ -48,7 +48,7 @@ std::string GenerateQuaternionConjugateFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateQuaternionConjugateFilter::defaultTags() const
 {
-  return {"#Processing", "#Crystallography"};
+  return {"Processing", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

@@ -35,7 +35,7 @@ std::string FindFeatureReferenceCAxisMisorientations::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindFeatureReferenceCAxisMisorientations::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

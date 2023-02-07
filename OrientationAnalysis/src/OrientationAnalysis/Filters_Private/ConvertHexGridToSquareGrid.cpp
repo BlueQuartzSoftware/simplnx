@@ -34,7 +34,7 @@ std::string ConvertHexGridToSquareGrid::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ConvertHexGridToSquareGrid::defaultTags() const
 {
-  return {"#Sampling", "#Spacing"};
+  return {"Sampling", "Spacing"};
 }
 
 //------------------------------------------------------------------------------

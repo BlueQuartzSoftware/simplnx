@@ -38,7 +38,7 @@ std::string CreateLambertSphere::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateLambertSphere::defaultTags() const
 {
-  return {"#Surface Meshing", "#Generation"};
+  return {"Surface Meshing", "Generation"};
 }
 
 //------------------------------------------------------------------------------
