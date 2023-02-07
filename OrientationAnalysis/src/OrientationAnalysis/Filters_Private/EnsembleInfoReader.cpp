@@ -39,7 +39,7 @@ std::string EnsembleInfoReader::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> EnsembleInfoReader::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import"};
+  return {"IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

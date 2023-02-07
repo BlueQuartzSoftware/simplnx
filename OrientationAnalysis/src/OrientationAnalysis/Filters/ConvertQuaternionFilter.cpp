@@ -51,7 +51,7 @@ std::string ConvertQuaternionFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ConvertQuaternionFilter::defaultTags() const
 {
-  return {"#Processing", "#Conversion"};
+  return {"Processing", "Conversion"};
 }
 
 //------------------------------------------------------------------------------

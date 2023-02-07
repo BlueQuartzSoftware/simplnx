@@ -44,7 +44,7 @@ std::string MergeTwinsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MergeTwinsFilter::defaultTags() const
 {
-  return {"#Reconstruction", "#Grouping"};
+  return {"Reconstruction", "Grouping"};
 }
 
 //------------------------------------------------------------------------------

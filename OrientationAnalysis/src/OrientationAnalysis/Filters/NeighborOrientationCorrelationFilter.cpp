@@ -47,7 +47,7 @@ std::string NeighborOrientationCorrelationFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> NeighborOrientationCorrelationFilter::defaultTags() const
 {
-  return {"#Processing", "#Cleanup"};
+  return {"Processing", "Cleanup"};
 }
 
 //------------------------------------------------------------------------------

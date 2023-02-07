@@ -36,7 +36,7 @@ std::string FindDistsToCharactGBs::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindDistsToCharactGBs::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

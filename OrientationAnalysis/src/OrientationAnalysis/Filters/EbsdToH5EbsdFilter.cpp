@@ -43,7 +43,7 @@ std::string EbsdToH5EbsdFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> EbsdToH5EbsdFilter::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import", "#Ebsd", "#EDAX", "#Oxford", "#Convert"};
+  return {"IO", "Input", "Read", "Import", "Ebsd", "EDAX", "Oxford", "Convert"};
 }
 
 //------------------------------------------------------------------------------

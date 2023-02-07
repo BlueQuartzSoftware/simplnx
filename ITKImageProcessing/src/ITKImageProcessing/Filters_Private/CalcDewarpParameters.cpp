@@ -38,7 +38,7 @@ std::string CalcDewarpParameters::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CalcDewarpParameters::defaultTags() const
 {
-  return {"#Processing", "#Processing"};
+  return {"Processing", "Processing"};
 }
 
 //------------------------------------------------------------------------------

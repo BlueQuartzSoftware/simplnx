@@ -38,7 +38,7 @@ std::string INLWriter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> INLWriter::defaultTags() const
 {
-  return {"#IO", "#Output", "#Write", "#Export"};
+  return {"IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

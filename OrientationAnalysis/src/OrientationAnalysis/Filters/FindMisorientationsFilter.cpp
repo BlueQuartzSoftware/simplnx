@@ -42,7 +42,7 @@ std::string FindMisorientationsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindMisorientationsFilter::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography", "#Misorientation"};
+  return {"Statistics", "Crystallography", "Misorientation"};
 }
 
 //------------------------------------------------------------------------------

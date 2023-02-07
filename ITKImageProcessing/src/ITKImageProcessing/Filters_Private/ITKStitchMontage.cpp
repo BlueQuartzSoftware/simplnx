@@ -52,7 +52,7 @@ std::string ITKStitchMontage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKStitchMontage::defaultTags() const
 {
-  return {"#IO", "#Generation"};
+  return {"IO", "Generation"};
 }
 
 //------------------------------------------------------------------------------

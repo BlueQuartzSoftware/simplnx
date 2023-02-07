@@ -34,7 +34,7 @@ std::string OrientationUtility::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> OrientationUtility::defaultTags() const
 {
-  return {"#Utilities", "#OrientationAnalysis"};
+  return {"Utilities", "OrientationAnalysis"};
 }
 
 //------------------------------------------------------------------------------

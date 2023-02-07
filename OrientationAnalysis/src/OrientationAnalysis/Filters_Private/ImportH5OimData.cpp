@@ -44,7 +44,7 @@ std::string ImportH5OimData::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportH5OimData::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import"};
+  return {"IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

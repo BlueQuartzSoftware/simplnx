@@ -35,7 +35,7 @@ std::string FindCAxisLocations::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindCAxisLocations::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

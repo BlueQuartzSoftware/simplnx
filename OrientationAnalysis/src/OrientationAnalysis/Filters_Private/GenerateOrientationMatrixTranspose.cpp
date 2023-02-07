@@ -37,7 +37,7 @@ std::string GenerateOrientationMatrixTranspose::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateOrientationMatrixTranspose::defaultTags() const
 {
-  return {"#Processing", "#Crystallography"};
+  return {"Processing", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

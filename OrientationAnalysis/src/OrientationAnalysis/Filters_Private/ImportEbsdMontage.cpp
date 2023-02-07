@@ -38,7 +38,7 @@ std::string ImportEbsdMontage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportEbsdMontage::defaultTags() const
 {
-  return {"#Unsupported", "#Input", "#Read", "#Import"};
+  return {"Unsupported", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

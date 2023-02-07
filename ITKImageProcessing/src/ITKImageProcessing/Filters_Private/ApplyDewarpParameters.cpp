@@ -36,7 +36,7 @@ std::string ApplyDewarpParameters::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ApplyDewarpParameters::defaultTags() const
 {
-  return {"#Processing", "#Processing"};
+  return {"Processing", "Processing"};
 }
 
 //------------------------------------------------------------------------------

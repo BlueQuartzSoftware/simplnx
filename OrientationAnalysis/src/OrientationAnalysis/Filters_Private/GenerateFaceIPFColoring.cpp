@@ -35,7 +35,7 @@ std::string GenerateFaceIPFColoring::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateFaceIPFColoring::defaultTags() const
 {
-  return {"#Processing", "#Crystallography"};
+  return {"Processing", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

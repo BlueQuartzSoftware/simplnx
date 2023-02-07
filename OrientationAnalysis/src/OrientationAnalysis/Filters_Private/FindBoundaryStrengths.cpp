@@ -36,7 +36,7 @@ std::string FindBoundaryStrengths::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindBoundaryStrengths::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography"};
+  return {"Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

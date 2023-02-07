@@ -40,7 +40,7 @@ std::string FindKernelAvgMisorientationsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindKernelAvgMisorientationsFilter::defaultTags() const
 {
-  return {"#Statistics", "#Crystallography", "#Misorientation"};
+  return {"Statistics", "Crystallography", "Misorientation"};
 }
 
 //------------------------------------------------------------------------------

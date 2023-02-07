@@ -39,7 +39,7 @@ std::string ITKRefineTileCoordinates::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKRefineTileCoordinates::defaultTags() const
 {
-  return {"#Unsupported", "#Misc"};
+  return {"Unsupported", "Misc"};
 }
 
 //------------------------------------------------------------------------------
