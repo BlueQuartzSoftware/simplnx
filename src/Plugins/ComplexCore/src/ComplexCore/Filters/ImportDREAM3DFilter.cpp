@@ -20,26 +20,37 @@ constexpr complex::int32 k_FailedOpenFileReaderError = -25;
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ImportDREAM3DFilter::name() const
 {
   return FilterTraits<ImportDREAM3DFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportDREAM3DFilter::className() const
 {
   return FilterTraits<ImportDREAM3DFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ImportDREAM3DFilter::uuid() const
 {
   return FilterTraits<ImportDREAM3DFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ImportDREAM3DFilter::humanName() const
 {
   return "Read DREAM.3D File (v8)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ImportDREAM3DFilter::defaultTags() const
+{
+  return {"IO", "Input", "Read", "Import"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ImportDREAM3DFilter::parameters() const
 {
   Parameters params;
@@ -48,6 +59,7 @@ Parameters ImportDREAM3DFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ImportDREAM3DFilter::clone() const
 {
   return std::make_unique<ImportDREAM3DFilter>();

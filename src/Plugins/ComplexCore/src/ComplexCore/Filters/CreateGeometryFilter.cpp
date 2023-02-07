@@ -102,9 +102,9 @@ std::string CreateGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateGeometryFilter::defaultTags() const
 {
-  return {"#Core", "#Generation",
-          "#Geometry"
-          "#Create Geometry"};
+  return {"Core", "Generation",
+          "Geometry"
+          "Create Geometry"};
 }
 
 //------------------------------------------------------------------------------

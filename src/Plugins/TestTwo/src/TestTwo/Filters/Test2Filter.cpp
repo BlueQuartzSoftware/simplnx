@@ -18,26 +18,37 @@ Test2Filter::Test2Filter() = default;
 
 Test2Filter::~Test2Filter() = default;
 
+//------------------------------------------------------------------------------
 std::string Test2Filter::name() const
 {
   return FilterTraits<Test2Filter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string Test2Filter::className() const
 {
   return FilterTraits<Test2Filter>::className;
 }
 
+//------------------------------------------------------------------------------
 complex::Uuid Test2Filter::uuid() const
 {
   return FilterTraits<Test2Filter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string Test2Filter::humanName() const
 {
   return "Test Filter 2";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> Test2Filter::defaultTags() const
+{
+  return {"Example", "Test"};
+}
+
+//------------------------------------------------------------------------------
 complex::Parameters Test2Filter::parameters() const
 {
   Parameters params;
@@ -47,16 +58,19 @@ complex::Parameters Test2Filter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 complex::IFilter::UniquePointer Test2Filter::clone() const
 {
   return std::make_unique<Test2Filter>();
 }
 
+//------------------------------------------------------------------------------
 complex::IFilter::PreflightResult Test2Filter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
+//------------------------------------------------------------------------------
 complex::Result<> Test2Filter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {

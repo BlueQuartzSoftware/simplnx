@@ -63,6 +63,12 @@ public:
   Parameters parameters() const override;
 
   /**
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
+
+  /**
    * @brief
    * @return IFilter::UniquePointer
    */
