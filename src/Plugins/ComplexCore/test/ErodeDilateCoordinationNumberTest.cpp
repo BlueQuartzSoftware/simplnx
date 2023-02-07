@@ -1,66 +1,57 @@
-/**
- * This file is auto generated from the original ComplexCore/ErodeDilateCoordinationNumberFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ErodeDilateCoordinationNumberFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
 #include <catch2/catch.hpp>
-
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
 
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/MultiArraySelectionParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
 using namespace complex;
+using namespace complex::Constants;
+using namespace complex::UnitTest;
 
-TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: Instantiation and Parameter Check", "[ComplexCore][ErodeDilateCoordinationNumberFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ErodeDilateCoordinationNumberFilter filter;
-  DataStructure ds;
-  Arguments args;
+const DataPath k_FeatureIdsDataPath = DataPath({"Input Data", "EBSD Scan Data", "FeatureIds"});
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CoordinationNumber_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_Loop_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_IgnoredDataArrayPaths_Key,
-                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
+const DataPath k_SelectedGeometry = DataPath({"Input Data"});
+const std::string k_ExemplarCoordinationNumberDataPath("Exemplar Coordination Number");
+const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarCoordinationNumberDataPath, "EBSD Scan Data"});
+} // namespace
 
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter", "[ComplexCore][ErodeDilateCoordinationNumberFilter]")
+{
+  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+  app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_coordination_number.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+
+  {
+    // Instantiate the filter, a DataStructure object and an Arguments Object
+    const ErodeDilateCoordinationNumberFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CoordinationNumber_Key, std::make_any<int32>(6));
+    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_Loop_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsDataPath));
+    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometry));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarCoordinationNumberDataPath);
 }
-
-// TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: Valid filter execution")
-//{
-//
-// }
-
-// TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: InValid filter execution")
-//{
-//
-// }

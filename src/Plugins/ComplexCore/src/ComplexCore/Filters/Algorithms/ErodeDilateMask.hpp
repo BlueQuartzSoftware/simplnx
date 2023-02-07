@@ -18,15 +18,6 @@ const complex::ChoicesParameter::Choices k_OperationChoices = {k_ErodeString, k_
 
 const complex::ChoicesParameter::ValueType k_ErodeIndex = 0ULL;
 const complex::ChoicesParameter::ValueType k_DilateIndex = 1ULL;
-
-// const std::string k_BadData("Bad Data");
-// const std::string k_BooleanMask("Boolean Mask");
-// const std::string k_CoordinationNumber("Coordination Number");
-// const complex::ChoicesParameter::Choices k_AlgorithmChoices = {k_BadData, k_BooleanMask, k_CoordinationNumber};
-//
-// const complex::ChoicesParameter::ValueType k_BadDataIndex = 0ULL;
-// const complex::ChoicesParameter::ValueType k_BooleanMaskIndex = 1ULL;
-// const complex::ChoicesParameter::ValueType k_CoordinationNumberIndex = 2ULL;
 } // namespace
 
 namespace complex

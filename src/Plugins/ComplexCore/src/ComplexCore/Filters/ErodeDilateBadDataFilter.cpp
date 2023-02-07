@@ -70,9 +70,6 @@ Parameters ErodeDilateBadDataFilter::parameters() const
                                                                MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()},
                                                                MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypes{}));
 
-  params.insertSeparator(Parameters::Separator{"Required Feature Data"});
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_SelectedFeatureDataGroup_Key, "Feature Data Attribute Matrix", "Feature data Attribute Matrix", DataPath{}));
-
   return params;
 }
 
@@ -123,7 +120,6 @@ Result<> ErodeDilateBadDataFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
-  inputValues.FeatureDataPath = filterArgs.value<DataPath>(k_SelectedFeatureDataGroup_Key);
 
   return ErodeDilateBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

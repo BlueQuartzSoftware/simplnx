@@ -32,7 +32,6 @@ public:
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
-  static inline constexpr StringLiteral k_SelectedFeatureDataGroup_Key = "selected_feature_group";
   /**
    * @brief Returns the name of the filter.
    * @return

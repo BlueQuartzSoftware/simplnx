@@ -1,67 +1,98 @@
-/**
- * This file is auto generated from the original ComplexCore/ErodeDilateMaskFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ErodeDilateMaskFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
 #include <catch2/catch.hpp>
-
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ErodeDilateMaskFilter.hpp"
 
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
 using namespace complex;
+using namespace complex::Constants;
+using namespace complex::UnitTest;
 
-TEST_CASE("ComplexCore::ErodeDilateMaskFilter: Instantiation and Parameter Check", "[ComplexCore][ErodeDilateMaskFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
 {
+constexpr ChoicesParameter::ValueType k_Erode = 0ULL;
+constexpr ChoicesParameter::ValueType k_Dilate = 1ULL;
+
+const DataPath k_MaskArrayDataPath = DataPath({"Input Data", "EBSD Scan Data", "Mask"});
+const DataPath k_SelectedGeometry = DataPath({"Input Data"});
+const std::string k_ExemplarCoordinationNumberDataPath("Exemplar Mask Erode");
+const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarCoordinationNumberDataPath, "EBSD Scan Data"});
+
+const std::string k_ExemplarDilateDataContainer("Exemplar Mask Dilate");
+const DataPath k_DilateCellAttributeMatrixDataPath = DataPath({k_ExemplarDilateDataContainer, "EBSD Scan Data"});
+} // namespace
+
+TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Erode)", "[ComplexCore][ErodeDilateMaskFilter]")
+{
+  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+  app->loadPlugins(unit_test::k_BuildDir.view(), true);
+
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_mask.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  ErodeDilateMaskFilter filter;
-  DataStructure ds;
-  Arguments args;
+  {
+    const ErodeDilateMaskFilter filter;
+    Arguments args;
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ErodeDilateMaskFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(ErodeDilateMaskFilter::k_NumIterations_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(ErodeDilateMaskFilter::k_XDirOn_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    // Create default Parameters for the filter.
+    args.insertOrAssign(ErodeDilateMaskFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Erode));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_NumIterations_Key, std::make_any<int32>(2));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_XDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayDataPath));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometry));
 
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarCoordinationNumberDataPath);
 }
 
-// TEST_CASE("ComplexCore::ErodeDilateMaskFilter: Valid filter execution")
-//{
-//
-// }
+TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Dilate)", "[ComplexCore][ErodeDilateMaskFilter]")
+{
+  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
+  app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-// TEST_CASE("ComplexCore::ErodeDilateMaskFilter: InValid filter execution")
-//{
-//
-// }
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_mask.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  {
+    const ErodeDilateMaskFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(ErodeDilateMaskFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Dilate));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_NumIterations_Key, std::make_any<int32>(2));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_XDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayDataPath));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometry));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_DilateCellAttributeMatrixDataPath, k_ExemplarCoordinationNumberDataPath);
+}

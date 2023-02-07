@@ -61,7 +61,7 @@ Parameters ErodeDilateMaskFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "Boolean array where true voxels are used. False voxels are ignored.", DataPath{},
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array Path", "Boolean array where true voxels are used. False voxels are ignored.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   return params;
