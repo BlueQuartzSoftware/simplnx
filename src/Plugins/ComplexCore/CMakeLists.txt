@@ -87,7 +87,12 @@ set(FilterList
   TriangleNormalFilter
   WriteASCIIDataFilter
   WriteBinaryDataFilter
-AlignSectionsListFilter
+  AlignSectionsListFilter
+
+
+  ErodeDilateBadDataFilter
+  ErodeDilateMaskFilter
+  ErodeDilateCoordinationNumberFilter
 )
 
 set(ActionList
@@ -127,6 +132,10 @@ set(AlgorithmList
   TriangleCentroid
   TupleTransfer
   ImportVolumeGraphicsFile
+
+  ErodeDilateBadData
+  ErodeDilateMask
+  ErodeDilateCoordinationNumber
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}

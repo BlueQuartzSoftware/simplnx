@@ -88,6 +88,10 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindVolFractionsTest.cpp
   ExtractComponentAsArrayTest.cpp
   ImportVolumeGraphicsFileTest.cpp
+
+  ErodeDilateBadDataTest.cpp
+  ErodeDilateMaskTest.cpp
+  ErodeDilateCoordinationNumberTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

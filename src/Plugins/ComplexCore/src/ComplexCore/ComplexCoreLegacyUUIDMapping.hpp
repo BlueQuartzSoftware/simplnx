@@ -5,10 +5,11 @@
 
 // clang-format off
 #include "ComplexCore/Filters/AlignGeometries.hpp"
+#include "ComplexCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
 #include "ComplexCore/Filters/AlignSectionsListFilter.hpp"
-#include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
 #include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "ComplexCore/Filters/ApproximatePointCloudHull.hpp"
+#include "ComplexCore/Filters/ArrayCalculatorFilter.hpp"
 #include "ComplexCore/Filters/CalculateArrayHistogramFilter.hpp"
 #include "ComplexCore/Filters/CalculateFeatureSizesFilter.hpp"
 #include "ComplexCore/Filters/CalculateTriangleAreasFilter.hpp"
@@ -27,9 +28,15 @@
 #include "ComplexCore/Filters/CropImageGeometry.hpp"
 #include "ComplexCore/Filters/CropVertexGeometry.hpp"
 #include "ComplexCore/Filters/DeleteData.hpp"
+#include "ComplexCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
+#include "ComplexCore/Filters/ErodeDilateMaskFilter.hpp"
+#include "ComplexCore/Filters/ErodeDilateBadDataFilter.hpp"
+#include "ComplexCore/Filters/ExecuteProcessFilter.hpp"
 #include "ComplexCore/Filters/ExportDREAM3DFilter.hpp"
+#include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
 #include "ComplexCore/Filters/ExtractInternalSurfacesFromTriangleGeometry.hpp"
 #include "ComplexCore/Filters/FeatureDataCSVWriterFilter.hpp"
+#include "ComplexCore/Filters/FillBadDataFilter.hpp"
 #include "ComplexCore/Filters/FindArrayStatisticsFilter.hpp"
 #include "ComplexCore/Filters/FindDifferencesMap.hpp"
 #include "ComplexCore/Filters/FindEuclideanDistMapFilter.hpp"
@@ -41,14 +48,14 @@
 #include "ComplexCore/Filters/FindSurfaceAreaToVolumeFilter.hpp"
 #include "ComplexCore/Filters/FindSurfaceFeatures.hpp"
 #include "ComplexCore/Filters/FindVolFractionsFilter.hpp"
+#include "ComplexCore/Filters/GenerateColorTableFilter.hpp"
 #include "ComplexCore/Filters/IdentifySample.hpp"
 #include "ComplexCore/Filters/ImportCSVDataFilter.hpp"
-#include "ComplexCore/Filters/ImportVolumeGraphicsFileFilter.hpp"
 #include "ComplexCore/Filters/ImportDREAM3DFilter.hpp"
 #include "ComplexCore/Filters/ImportHDF5Dataset.hpp"
 #include "ComplexCore/Filters/ImportTextFilter.hpp"
+#include "ComplexCore/Filters/ImportVolumeGraphicsFileFilter.hpp"
 #include "ComplexCore/Filters/InitializeData.hpp"
-#include "ComplexCore/Filters/GenerateColorTableFilter.hpp"
 #include "ComplexCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 #include "ComplexCore/Filters/IterativeClosestPointFilter.hpp"
 #include "ComplexCore/Filters/LaplacianSmoothingFilter.hpp"
@@ -62,25 +69,18 @@
 #include "ComplexCore/Filters/RemoveFlaggedVertices.hpp"
 #include "ComplexCore/Filters/RemoveMinimumSizeFeaturesFilter.hpp"
 #include "ComplexCore/Filters/RenameDataObject.hpp"
+#include "ComplexCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
+#include "ComplexCore/Filters/ResampleImageGeomFilter.hpp"
 #include "ComplexCore/Filters/RobustAutomaticThreshold.hpp"
+#include "ComplexCore/Filters/RotateSampleRefFrameFilter.hpp"
 #include "ComplexCore/Filters/ScalarSegmentFeaturesFilter.hpp"
 #include "ComplexCore/Filters/SetImageGeomOriginScalingFilter.hpp"
 #include "ComplexCore/Filters/SplitAttributeArrayFilter.hpp"
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
-#include "ComplexCore/Filters/WriteASCIIDataFilter.hpp"
+#include "ComplexCore/Filters/TriangleCentroidFilter.hpp"
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
-#include "ComplexCore/Filters/ExtractComponentAsArrayFilter.hpp"
-#include "ComplexCore/Filters/ExecuteProcessFilter.hpp"
-#include "ComplexCore/Filters/TriangleCentroidFilter.hpp"
-#include "ComplexCore/Filters/ResampleImageGeomFilter.hpp"
-#include "ComplexCore/Filters/RotateSampleRefFrameFilter.hpp"
-#include "ComplexCore/Filters/FillBadDataFilter.hpp"
-#include "ComplexCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
-#include "ComplexCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
-
-#include "ComplexCore/Filters/ErodeDilateMaskFilter.hpp"
-#include "ComplexCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
+#include "ComplexCore/Filters/WriteASCIIDataFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -170,6 +170,7 @@ namespace complex
     {complex::Uuid::FromString("17410178-4e5f-58b9-900e-8194c69200ab").value(), complex::FilterTraits<ReplaceElementAttributesWithNeighborValuesFilter>::uuid}, // ReplaceElementAttributesWithNeighborValues
     {complex::Uuid::FromString("4fff1aa6-4f62-56c4-8ee9-8e28ec2fcbba").value(), complex::FilterTraits<ErodeDilateMaskFilter>::uuid}, // ErodeDilateMask
     {complex::Uuid::FromString("d26e85ff-7e52-53ae-b095-b1d969c9e73c").value(), complex::FilterTraits<ErodeDilateCoordinationNumberFilter>::uuid}, // ErodeDilateCoordinationNumber
+    {complex::Uuid::FromString("3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254").value(), complex::FilterTraits<ErodeDilateBadDataFilter>::uuid}, // ErodeDilateBadData
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

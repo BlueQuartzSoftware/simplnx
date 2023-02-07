@@ -4,10 +4,10 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
 
@@ -65,8 +65,10 @@ Parameters ErodeDilateCoordinationNumberFilter::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_CoordinationNumber_Key, "Coordination Number to Consider", "", 1234356));
   params.insert(std::make_unique<BoolParameter>(k_Loop_Key, "Loop Until Gone", "", false));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "", MultiArraySelectionParameter::ValueType {DataPath(), DataPath(), DataPath()}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{},
+                                                          complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "", std::vector<DataPath>(),
+                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, complex::GetAllDataTypes()));
 
   return params;
 }
@@ -78,7 +80,8 @@ IFilter::UniquePointer ErodeDilateCoordinationNumberFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                            const std::atomic_bool& shouldCancel) const
 {
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
@@ -93,8 +96,6 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
   auto pLoopValue = filterArgs.value<bool>(k_Loop_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-
-
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -139,16 +140,16 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
 }
 
 //------------------------------------------------------------------------------
-Result<> ErodeDilateCoordinationNumberFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ErodeDilateCoordinationNumberFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                                          const std::atomic_bool& shouldCancel) const
 {
 
   ErodeDilateCoordinationNumberInputValues inputValues;
 
-    inputValues.CoordinationNumber = filterArgs.value<int32>(k_CoordinationNumber_Key);
+  inputValues.CoordinationNumber = filterArgs.value<int32>(k_CoordinationNumber_Key);
   inputValues.Loop = filterArgs.value<bool>(k_Loop_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-
 
   return ErodeDilateCoordinationNumber(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
