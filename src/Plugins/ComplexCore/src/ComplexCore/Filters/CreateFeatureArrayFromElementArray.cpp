@@ -7,63 +7,68 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 using namespace complex;
 
 namespace
 {
-template <typename T>
-Result<> copyCellData(DataStructure& dataStructure, const DataPath& selectedCellArrayPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& createdArrayNameValue,
-                      const std::atomic_bool& shouldCancel)
+struct CopyCellDataFunctor
 {
-  const DataArray<T>& selectedCellArray = dataStructure.getDataRefAs<DataArray<T>>(selectedCellArrayPathValue);
-  const DataStore<T> selectedCellArrayStore = selectedCellArray.template getIDataStoreRefAs<DataStore<T>>();
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  DataArray<T>& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdArrayNameValue);
-
-  // Initialize the output array with a default value
-  createdArray.fill(0);
-
-  usize totalCellArrayComponents = selectedCellArray.getNumberOfComponents();
-
-  std::map<int32, usize> featureMap;
-  Result<> result;
-
-  usize totalCellArrayTuples = selectedCellArray.getNumberOfTuples();
-  for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
+  template <typename T>
+  Result<> operator()(DataStructure& dataStructure, const DataPath& selectedCellArrayPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& createdArrayNameValue,
+                      const std::atomic_bool& shouldCancel)
   {
-    if(shouldCancel)
-    {
-      return {};
-    }
+    const DataArray<T>& selectedCellArray = dataStructure.getDataRefAs<DataArray<T>>(selectedCellArrayPathValue);
+    const DataStore<T> selectedCellArrayStore = selectedCellArray.template getIDataStoreRefAs<DataStore<T>>();
+    const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
+    auto& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdArrayNameValue);
 
-    // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
-    int32 featureIdx = featureIds[cellTupleIdx];
+    // Initialize the output array with a default value
+    createdArray.fill(0);
 
-    // Store the index of the first tuple with this feature identifier in the map
-    if(featureMap.find(featureIdx) == featureMap.end())
-    {
-      featureMap[featureIdx] = totalCellArrayComponents * cellTupleIdx;
-    }
+    usize totalCellArrayComponents = selectedCellArray.getNumberOfComponents();
 
-    // Check that the values at the current index match the value at the first index
-    usize firstInstanceCellTupleIdx = featureMap[featureIdx];
-    for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
+    std::map<int32, usize> featureMap;
+    Result<> result;
+
+    usize totalCellArrayTuples = selectedCellArray.getNumberOfTuples();
+    for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
     {
-      T firstInstanceCellVal = selectedCellArray[firstInstanceCellTupleIdx + cellCompIdx];
-      T currentCellVal = selectedCellArray[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
-      if(currentCellVal != firstInstanceCellVal && result.warnings().empty())
+      if(shouldCancel)
       {
-        // The values are inconsistent with the first values for this feature identifier, so throw a warning
-        result.warnings().push_back(Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
+        return {};
       }
 
-      createdArray[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellArray[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
-    }
-  }
+      // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
+      int32 featureIdx = featureIds[cellTupleIdx];
 
-  return result;
-}
+      // Store the index of the first tuple with this feature identifier in the map
+      if(featureMap.find(featureIdx) == featureMap.end())
+      {
+        featureMap[featureIdx] = totalCellArrayComponents * cellTupleIdx;
+      }
+
+      // Check that the values at the current index match the value at the first index
+      usize firstInstanceCellTupleIdx = featureMap[featureIdx];
+      for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
+      {
+        T firstInstanceCellVal = selectedCellArray[firstInstanceCellTupleIdx + cellCompIdx];
+        T currentCellVal = selectedCellArray[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
+        if(currentCellVal != firstInstanceCellVal && result.warnings().empty())
+        {
+          // The values are inconsistent with the first values for this feature identifier, so throw a warning
+          result.warnings().push_back(
+              Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
+        }
+
+        createdArray[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellArray[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
+      }
+    }
+
+    return result;
+  }
+};
 } // namespace
 
 namespace complex
@@ -95,7 +100,7 @@ std::string CreateFeatureArrayFromElementArray::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateFeatureArrayFromElementArray::defaultTags() const
 {
-  return {"#Core", "#Memory Management"};
+  return {"Core", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------
@@ -129,7 +134,7 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
 
-  const IDataArray& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
+  const auto& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
   const IDataStore& selectedCellArrayStore = selectedCellArray.getIDataStoreRef();
 
   complex::Result<OutputActions> resultOutputActions;
@@ -155,41 +160,15 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
 
   const IDataArray& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  IDataArray& createdArray = dataStructure.getDataRefAs<IDataArray>(pCreatedArrayNameValue);
+  auto& createdArray = dataStructure.getDataRefAs<IDataArray>(pCreatedArrayNameValue);
 
   // Resize the created array to the proper size
   usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
   usize maxValue = featureIds[featureIdsMaxIdx];
 
-  IDataStore& createdArrayStore = createdArray.getIDataStoreRefAs<IDataStore>();
+  auto& createdArrayStore = createdArray.getIDataStoreRefAs<IDataStore>();
   createdArrayStore.reshapeTuples(std::vector<usize>{maxValue + 1});
 
-  switch(selectedCellArray.getDataType())
-  {
-  case DataType::int8:
-    return copyCellData<int8>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::uint8:
-    return copyCellData<uint8>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::int16:
-    return copyCellData<int16>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::uint16:
-    return copyCellData<uint16>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::int32:
-    return copyCellData<int32>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::uint32:
-    return copyCellData<uint32>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::int64:
-    return copyCellData<int64>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::uint64:
-    return copyCellData<uint64>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::float32:
-    return copyCellData<float>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::float64:
-    return copyCellData<double>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  case DataType::boolean:
-    return copyCellData<bool>(dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
-  default:
-    return MakeErrorResult(-14000, fmt::format("The selected array was of unsupported type. The path is {}", pSelectedCellArrayPathValue.toString()));
-  }
+  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
 }
 } // namespace complex

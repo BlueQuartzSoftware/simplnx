@@ -14,6 +14,7 @@
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <cmath>
 
@@ -24,87 +25,48 @@ namespace
 constexpr int64 k_MissingVertexGeom = -24500;
 constexpr int64 k_MissingImageGeom = -24501;
 
-template <typename T>
-void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
+struct MapPointCloudDataByKernelFunctor
 {
-  auto* inputDataArray = dynamic_cast<DataArray<T>*>(source);
-  auto& inputData = inputDataArray->getDataStoreRef();
-  auto* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
-
-  usize index = 0;
-  int64 startKernel[3] = {0, 0, 0};
-  int64 endKernel[3] = {0, 0, 0};
-  usize counter = 0;
-
-  kernel[0] > int64(curX) ? startKernel[0] = 0 : startKernel[0] = curX - kernel[0];
-  kernel[1] > int64(curY) ? startKernel[1] = 0 : startKernel[1] = curY - kernel[1];
-  kernel[2] > int64(curZ) ? startKernel[2] = 0 : startKernel[2] = curZ - kernel[2];
-
-  int64(curX) + kernel[0] >= int64(dims[0]) ? endKernel[0] = dims[0] - 1 : endKernel[0] = curX + kernel[0];
-  int64(curY) + kernel[1] >= int64(dims[1]) ? endKernel[1] = dims[1] - 1 : endKernel[1] = curY + kernel[1];
-  endKernel[2] = int64(curZ);
-
-  for(int64 z = startKernel[2]; z <= endKernel[2]; z++)
+  template <typename T>
+  void operator()(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, const int64 kernel[3], const usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
   {
-    for(int64 y = startKernel[1]; y <= endKernel[1]; y++)
+    auto* inputDataArray = dynamic_cast<DataArray<T>*>(source);
+    auto& inputData = inputDataArray->getDataStoreRef();
+    auto* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
+
+    usize index = 0;
+    int64 startKernel[3] = {0, 0, 0};
+    int64 endKernel[3] = {0, 0, 0};
+    usize counter = 0;
+
+    kernel[0] > int64(curX) ? startKernel[0] = 0 : startKernel[0] = curX - kernel[0];
+    kernel[1] > int64(curY) ? startKernel[1] = 0 : startKernel[1] = curY - kernel[1];
+    kernel[2] > int64(curZ) ? startKernel[2] = 0 : startKernel[2] = curZ - kernel[2];
+
+    int64(curX) + kernel[0] >= int64(dims[0]) ? endKernel[0] = dims[0] - 1 : endKernel[0] = curX + kernel[0];
+    int64(curY) + kernel[1] >= int64(dims[1]) ? endKernel[1] = dims[1] - 1 : endKernel[1] = curY + kernel[1];
+    endKernel[2] = int64(curZ);
+
+    for(int64 z = startKernel[2]; z <= endKernel[2]; z++)
     {
-      for(int64 x = startKernel[0]; x <= endKernel[0]; x++)
+      for(int64 y = startKernel[1]; y <= endKernel[1]; y++)
       {
-        if(kernelVals[counter] == 0.0f)
+        for(int64 x = startKernel[0]; x <= endKernel[0]; x++)
         {
-          continue;
+          if(kernelVals[counter] == 0.0f)
+          {
+            continue;
+          }
+          index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
+          interpolatedDataPtr->addEntry(index, kernelVals[counter] * inputData[vertIdx]);
+          counter++;
         }
-        index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
-        interpolatedDataPtr->addEntry(index, kernelVals[counter] * inputData[vertIdx]);
-        counter++;
       }
     }
   }
-}
+};
 
-void mapPointCloudDataByKernel(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, int64 kernel[3], usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
-{
-  // Because we are using INeighborList we CANNOT accept Boolean template parameters.
-  // We silently skip over the boolean types. Not really sure if this is a problem.
-
-  switch(source->getDataType())
-  {
-  case DataType::int8:
-    mapPointCloudDataByKernel<int8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::int16:
-    mapPointCloudDataByKernel<int16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::int32:
-    mapPointCloudDataByKernel<int32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::int64:
-    mapPointCloudDataByKernel<int64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::uint8:
-    mapPointCloudDataByKernel<uint8>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::uint16:
-    mapPointCloudDataByKernel<uint16>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::uint32:
-    mapPointCloudDataByKernel<uint32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::uint64:
-    mapPointCloudDataByKernel<uint64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::float32:
-    mapPointCloudDataByKernel<float32>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::float64:
-    mapPointCloudDataByKernel<float64>(source, dynamic, kernelVals, kernel, dims, curX, curY, curZ, vertIdx);
-    break;
-  case DataType::boolean:
-    break;
-  }
-}
-
-void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std::vector<float32>& kernel, int64 kernelNumVoxels[3])
+void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std::vector<float32>& kernel, const int64 kernelNumVoxels[3])
 {
   usize counter = 0;
 
@@ -180,26 +142,37 @@ void mapKernelDistances(NeighborList<float32>* kernelDistances, std::vector<floa
 }
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGridFilter::name() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGridFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGridFilter::className() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGridFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InterpolatePointCloudToRegularGridFilter::uuid() const
 {
   return FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InterpolatePointCloudToRegularGridFilter::humanName() const
 {
   return "Interpolate Point Cloud to Regular Grid";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InterpolatePointCloudToRegularGridFilter::defaultTags() const
+{
+  return {"Geometry", "Gaussian", "Kernel", "Interpolation", "Point Cloud", "Vertex Geometry"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 {
   Parameters params;
@@ -526,7 +499,15 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
         auto dynamicArrayPath = parentPath.createChildPath(interpolatedDataPathItem.getTargetName() + "Neighbors");
         auto* dynamicArrayToInterpolate = data.getDataAs<INeighborList>(dynamicArrayPath);
         auto* interpolatedArray = data.getDataAs<IDataArray>(interpolatedDataPathItem);
-        mapPointCloudDataByKernel(interpolatedArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
+
+        const auto& type = interpolatedArray->getDataType();
+        if(type == DataType::boolean) // Cant be executed will throw error
+        {
+          continue;
+        }
+
+        // NO BOOL
+        ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, interpolatedArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
 
@@ -537,7 +518,15 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
         auto dynamicArrayPath = interpolatedDataPath.createChildPath(copyDataPath.getTargetName() + " Neighbors");
         auto* dynamicArrayToCopy = data.getDataAs<INeighborList>(dynamicArrayPath);
         auto* copyArray = data.getDataAs<IDataArray>(copyDataPath);
-        mapPointCloudDataByKernel(copyArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
+
+        const auto& type = copyArray->getDataType();
+        if(type == DataType::boolean) // Cant be executed will throw error
+        {
+          continue;
+        }
+
+        // NO BOOL
+        ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, copyArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
       }
     }
 

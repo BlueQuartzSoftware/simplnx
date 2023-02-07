@@ -5,6 +5,7 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
 #include "complex/Utilities/ArrayThreshold.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 namespace complex
 {
@@ -109,67 +110,6 @@ public:
     }
   }
 
-  /**
-   * @brief execute
-   * @param input
-   * @param output
-   * @return
-   */
-  void execute(DataStructure& dataStructure, DataPath& inputArrayDataPath)
-  {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayDataPath);
-
-    DataType type = dataArray.getDataType();
-
-    switch(type)
-    {
-    case DataType::int8: {
-      filterData<int8>(dynamic_cast<const DataArray<int8>&>(dataArray));
-      break;
-    }
-    case DataType::uint8: {
-      filterData<uint8>(dynamic_cast<const DataArray<uint8>&>(dataArray));
-      break;
-    }
-    case DataType::int16: {
-      filterData<int16>(dynamic_cast<const DataArray<int16>&>(dataArray));
-      break;
-    }
-    case DataType::uint16: {
-      filterData<uint16>(dynamic_cast<const DataArray<uint16>&>(dataArray));
-      break;
-    }
-    case DataType::int32: {
-      filterData<int32>(dynamic_cast<const DataArray<int32>&>(dataArray));
-      break;
-    }
-    case DataType::uint32: {
-      filterData<uint32>(dynamic_cast<const DataArray<uint32>&>(dataArray));
-      break;
-    }
-    case DataType::int64: {
-      filterData<int64>(dynamic_cast<const DataArray<int64>&>(dataArray));
-      break;
-    }
-    case DataType::uint64: {
-      filterData<uint64>(dynamic_cast<const DataArray<uint64>&>(dataArray));
-      break;
-    }
-    case DataType::float32: {
-      filterData<float32>(dynamic_cast<const DataArray<float32>&>(dataArray));
-      break;
-    }
-    case DataType::float64: {
-      filterData<float64>(dynamic_cast<const DataArray<float64>&>(dataArray));
-      break;
-    }
-    case DataType::boolean: {
-      filterData<bool>(dynamic_cast<const DataArray<bool>&>(dataArray));
-      break;
-    }
-    }
-  }
-
 private:
   complex::ArrayThreshold::ComparisonType m_ComparisonOperator;
   complex::ArrayThreshold::ComparisonValue m_ComparisonValue;
@@ -182,6 +122,16 @@ public:
   ThresholdFilterHelper& operator=(ThresholdFilterHelper&&) = delete;      // Move Assignment Not Implemented
 };
 
+struct ExecuteThresholdHelper
+{
+  template <typename Type>
+  void operator()(ThresholdFilterHelper& helper, const IDataArray& iDataArray)
+  {
+    const auto& dataArray = dynamic_cast<const DataArray<Type>&>(iDataArray);
+    helper.filterData<Type>(dataArray);
+  }
+};
+
 /**
  * @brief InsertThreshold
  * @param numItems
@@ -190,10 +140,9 @@ public:
  * @param newArrayPtr
  * @param inverse
  */
-void InsertThreshold(int64_t numItems, BoolArray& currentArray, complex::IArrayThreshold::UnionOperator unionOperator, std::vector<bool>& newArrayPtr, bool inverse)
+void InsertThreshold(usize numItems, BoolArray& currentArray, complex::IArrayThreshold::UnionOperator unionOperator, std::vector<bool>& newArrayPtr, bool inverse)
 {
-
-  for(int64_t i = 0; i < numItems; i++)
+  for(usize i = 0; i < numItems; i++)
   {
     // invert the current comparison if necessary
     if(inverse)
@@ -230,7 +179,7 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
   }
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  BoolArray& outputResultArray = dataStructure.getDataRefAs<BoolArray>(outputResultArrayPath);
+  auto& outputResultArray = dataStructure.getDataRefAs<BoolArray>(outputResultArrayPath);
 
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultArray.getNumberOfTuples();
@@ -242,9 +191,11 @@ void ThresholdValue(std::shared_ptr<ArrayThreshold>& comparisonValue, DataStruct
 
   DataPath inputDataArrayPath = comparisonValue->getArrayPath();
 
-  ThresholdFilterHelper filter(compOperator, compValue, tempResultVector);
+  ThresholdFilterHelper helper(compOperator, compValue, tempResultVector);
 
-  filter.execute(dataStructure, inputDataArrayPath);
+  const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
+
+  ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray);
 
   if(replaceInput)
   {
@@ -272,18 +223,9 @@ void ThresholdSet(std::shared_ptr<ArrayThresholdSet>& inputComparisonSet, DataSt
     return;
   }
 
-  //  if(inverse)
-  //  {
-  //    inverse = !comparisonSet->getInvertComparison();
-  //  }
-  //  else
-  //  {
-  //    inverse = comparisonSet->getInvertComparison();
-  //  }
-
   // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
   // was essentially done in the preflight part.
-  BoolArray& outputResultArray = dataStructure.getDataRefAs<BoolArray>(outputResultArrayPath);
+  auto& outputResultArray = dataStructure.getDataRefAs<BoolArray>(outputResultArrayPath);
 
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultArray.getNumberOfTuples();
@@ -335,21 +277,31 @@ std::string MultiThresholdObjects::name() const
   return FilterTraits<MultiThresholdObjects>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects::className() const
 {
   return FilterTraits<MultiThresholdObjects>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid MultiThresholdObjects::uuid() const
 {
   return FilterTraits<MultiThresholdObjects>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string MultiThresholdObjects::humanName() const
 {
   return "Multi-Threshold Objects";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> MultiThresholdObjects::defaultTags() const
+{
+  return {"Find Outliers", "Threshold", "Isolate", "Data Management"};
+}
+
+//------------------------------------------------------------------------------
 Parameters MultiThresholdObjects::parameters() const
 {
   Parameters params;
@@ -361,35 +313,13 @@ Parameters MultiThresholdObjects::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer MultiThresholdObjects::clone() const
 {
   return std::make_unique<MultiThresholdObjects>();
 }
 
-std::vector<usize> getDims(const DataStructure& data, const std::set<DataPath>& dataPaths)
-{
-  if(dataPaths.empty())
-  {
-    return {0};
-  }
-  std::vector<usize> dims;
-
-  DataPath firstDataPath = *(dataPaths.begin());
-  const IDataArray* dataArray = data.getDataAs<IDataArray>(firstDataPath);
-  size_t numTuples = dataArray->getNumberOfTuples();
-
-  for(const auto& dataPath : dataPaths)
-  {
-    const IDataArray* currentDataArray = data.getDataAs<IDataArray>(dataPath);
-    if(numTuples != dataArray->getNumberOfTuples())
-    {
-      return {};
-    }
-  }
-
-  return {0};
-}
-
+// -----------------------------------------------------------------------------
 IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholds_Key);
@@ -414,7 +344,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
   // Check for Scalar arrays
   for(const auto& dataPath : thresholdPaths)
   {
-    const IDataArray* currentDataArray = data.getDataAs<IDataArray>(dataPath);
+    const auto* currentDataArray = data.getDataAs<IDataArray>(dataPath);
     if(currentDataArray != nullptr && currentDataArray->getNumberOfComponents() != 1)
     {
       auto errorMessage = fmt::format("Data Array is not a Scalar Data Array. Data Arrays must only have a single component. '{}:{}'", dataPath.toString(), currentDataArray->getNumberOfComponents());
@@ -424,12 +354,12 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
 
   // Check that all arrays the number of tuples match
   DataPath firstDataPath = *(thresholdPaths.begin());
-  const IDataArray* dataArray = data.getDataAs<IDataArray>(firstDataPath);
+  const auto* dataArray = data.getDataAs<IDataArray>(firstDataPath);
   size_t numTuples = dataArray->getNumberOfTuples();
 
   for(const auto& dataPath : thresholdPaths)
   {
-    const IDataArray* currentDataArray = data.getDataAs<IDataArray>(dataPath);
+    const auto* currentDataArray = data.getDataAs<IDataArray>(dataPath);
     if(numTuples != currentDataArray->getNumberOfTuples())
     {
       auto errorMessage =
@@ -473,8 +403,6 @@ Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const 
       firstValueFound = true;
     }
   }
-
-  // thresholdsObject.applyMaskValues(data, maskArrayPath);
 
   return {};
 }

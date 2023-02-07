@@ -41,7 +41,7 @@ std::string FindSurfaceAreaToVolumeFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindSurfaceAreaToVolumeFilter::defaultTags() const
 {
-  return {"#Statistics", "#Morphological", "#Volumes", "#Surface Area"};
+  return {"Statistics", "Morphological", "Volumes", "Surface Area"};
 }
 
 //------------------------------------------------------------------------------

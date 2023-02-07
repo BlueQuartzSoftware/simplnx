@@ -405,7 +405,7 @@ std::string RotateSampleRefFrameFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RotateSampleRefFrameFilter::defaultTags() const
 {
-  return {"#Processing", "#Conversion", "#ReferenceFrame"};
+  return {"Processing", "Conversion", "ReferenceFrame"};
 }
 
 //------------------------------------------------------------------------------

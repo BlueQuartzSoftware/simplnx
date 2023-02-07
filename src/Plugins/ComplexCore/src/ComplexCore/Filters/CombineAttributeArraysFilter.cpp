@@ -41,10 +41,10 @@ std::string CombineAttributeArraysFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CombineAttributeArraysFilter::defaultTags() const
 {
-  return {"#Core",
-          "#Memory Management"
-          "#Combine",
-          "#Arrays"};
+  return {"Core",
+          "Memory Management"
+          "Combine",
+          "Arrays"};
 }
 
 //------------------------------------------------------------------------------

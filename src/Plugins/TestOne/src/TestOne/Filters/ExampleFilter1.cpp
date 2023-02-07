@@ -34,26 +34,37 @@ constexpr StringLiteral k_Param10 = "param10";
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExampleFilter1::name() const
 {
   return FilterTraits<ExampleFilter1>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string ExampleFilter1::className() const
 {
   return FilterTraits<ExampleFilter1>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExampleFilter1::uuid() const
 {
   return FilterTraits<ExampleFilter1>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExampleFilter1::humanName() const
 {
   return "Example Filter 1";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExampleFilter1::defaultTags() const
+{
+  return {"Example", "Test"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExampleFilter1::parameters() const
 {
   Parameters params;
@@ -100,11 +111,13 @@ Parameters ExampleFilter1::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExampleFilter1::clone() const
 {
   return std::make_unique<ExampleFilter1>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   //  auto inputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputDir_Key);
@@ -157,6 +170,7 @@ IFilter::PreflightResult ExampleFilter1::preflightImpl(const DataStructure& data
   return {};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExampleFilter1::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return MakeWarningVoidResult(-100, "Example Warning from within an execute message");

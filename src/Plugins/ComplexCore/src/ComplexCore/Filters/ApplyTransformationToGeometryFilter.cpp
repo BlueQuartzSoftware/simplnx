@@ -122,7 +122,7 @@ std::string ApplyTransformationToGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ApplyTransformationToGeometryFilter::defaultTags() const
 {
-  return {"#ComplexCore", "Rotation", "Transforming"};
+  return {"ComplexCore", "Rotation", "Transforming"};
 }
 
 //------------------------------------------------------------------------------

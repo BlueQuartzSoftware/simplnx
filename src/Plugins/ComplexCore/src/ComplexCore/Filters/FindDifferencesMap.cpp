@@ -5,6 +5,7 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <optional>
 #include <vector>
@@ -116,38 +117,49 @@ private:
   IDataArray* m_DifferenceMap;
 };
 
-template <typename DataType>
-void ExecuteFindDifferenceMap(IDataArray* firstArrayPtr, IDataArray* secondArrayPtr, IDataArray* differenceMapPtr)
+struct ExecuteFindDifferenceMapFunctor
 {
-  size_t numTuples = firstArrayPtr->getNumberOfTuples();
-
+  template <typename DataType>
+  void operator()(IDataArray* firstArrayPtr, IDataArray* secondArrayPtr, IDataArray* differenceMapPtr)
   {
+    size_t numTuples = firstArrayPtr->getNumberOfTuples();
     FindDifferenceMapImpl<DataType> serial(firstArrayPtr, secondArrayPtr, differenceMapPtr);
     serial.generate(0, numTuples);
   }
-}
+};
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string FindDifferencesMap::name() const
 {
   return FilterTraits<FindDifferencesMap>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string FindDifferencesMap::className() const
 {
   return FilterTraits<FindDifferencesMap>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindDifferencesMap::uuid() const
 {
   return FilterTraits<FindDifferencesMap>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindDifferencesMap::humanName() const
 {
   return "Find Differences Map";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindDifferencesMap::defaultTags() const
+{
+  return {"Statistics", "ComplexCore"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindDifferencesMap::parameters() const
 {
   Parameters params;
@@ -159,11 +171,13 @@ Parameters FindDifferencesMap::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindDifferencesMap::clone() const
 {
   return std::make_unique<FindDifferencesMap>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
@@ -230,55 +244,16 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindDifferencesMap::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {
-  auto firstInputArrayPath = args.value<DataPath>(k_FirstInputArrayPath_Key);
-  auto secondInputArrayPath = args.value<DataPath>(k_SecondInputArrayPath_Key);
-  auto differenceMapArrayPath = args.value<DataPath>(k_DifferenceMapArrayPath_Key);
-
-  auto firstInputArray = data.getDataAs<IDataArray>(firstInputArrayPath);
-  auto secondInputArray = data.getDataAs<IDataArray>(secondInputArrayPath);
-  auto differenceMapArray = data.getDataAs<IDataArray>(differenceMapArrayPath);
+  auto firstInputArray = data.getDataAs<IDataArray>(args.value<DataPath>(k_FirstInputArrayPath_Key));
+  auto secondInputArray = data.getDataAs<IDataArray>(args.value<DataPath>(k_SecondInputArrayPath_Key));
+  auto differenceMapArray = data.getDataAs<IDataArray>(args.value<DataPath>(k_DifferenceMapArrayPath_Key));
 
   auto dataType = firstInputArray->getDataType();
-
-  switch(dataType)
-  {
-  case DataType::int8:
-    ExecuteFindDifferenceMap<int8>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::int16:
-    ExecuteFindDifferenceMap<int16>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::int32:
-    ExecuteFindDifferenceMap<int32>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::int64:
-    ExecuteFindDifferenceMap<int64>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::uint8:
-    ExecuteFindDifferenceMap<uint8>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::uint16:
-    ExecuteFindDifferenceMap<uint16>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::uint32:
-    ExecuteFindDifferenceMap<uint32>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::uint64:
-    ExecuteFindDifferenceMap<uint64>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::float32:
-    ExecuteFindDifferenceMap<float32>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::float64:
-    ExecuteFindDifferenceMap<float64>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  case DataType::boolean:
-    ExecuteFindDifferenceMap<bool>(firstInputArray, secondInputArray, differenceMapArray);
-    break;
-  }
+  ExecuteDataFunction(ExecuteFindDifferenceMapFunctor{}, dataType, firstInputArray, secondInputArray, differenceMapArray);
 
   return {};
 }
