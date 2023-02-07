@@ -79,6 +79,8 @@
 #include "ComplexCore/Filters/ReplaceElementAttributesWithNeighborValuesFilter.hpp"
 #include "ComplexCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
 
+#include "ComplexCore/Filters/ErodeDilateMaskFilter.hpp"
+#include "ComplexCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -166,6 +168,8 @@ namespace complex
     {complex::Uuid::FromString("30ae0a1e-3d94-5dab-b279-c5727ab5d7ff").value(), complex::FilterTraits<FillBadDataFilter>::uuid}, // FillBadData
     {complex::Uuid::FromString("7aa33007-4186-5d7f-ba9d-d0a561b3351d").value(), complex::FilterTraits<TriangleCentroidFilter>::uuid}, // TriangleCentroid  
     {complex::Uuid::FromString("17410178-4e5f-58b9-900e-8194c69200ab").value(), complex::FilterTraits<ReplaceElementAttributesWithNeighborValuesFilter>::uuid}, // ReplaceElementAttributesWithNeighborValues
+    {complex::Uuid::FromString("4fff1aa6-4f62-56c4-8ee9-8e28ec2fcbba").value(), complex::FilterTraits<ErodeDilateMaskFilter>::uuid}, // ErodeDilateMask
+    {complex::Uuid::FromString("d26e85ff-7e52-53ae-b095-b1d969c9e73c").value(), complex::FilterTraits<ErodeDilateCoordinationNumberFilter>::uuid}, // ErodeDilateCoordinationNumber
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
