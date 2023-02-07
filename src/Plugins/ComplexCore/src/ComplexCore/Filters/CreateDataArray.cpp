@@ -16,8 +16,6 @@ using namespace complex;
 namespace
 {
 constexpr int32 k_EmptyParameterError = -123;
-constexpr int32 k_RbrTupleDimsError = -196;
-constexpr int32 k_RbrTupleDimsInconsistent = -197;
 
 template <class T>
 void CreateAndInitArray(DataStructure& data, const DataPath& path, const std::string& initValue)
