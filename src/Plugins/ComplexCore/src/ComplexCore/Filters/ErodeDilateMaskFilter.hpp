@@ -24,12 +24,13 @@ public:
   ErodeDilateMaskFilter& operator=(ErodeDilateMaskFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Direction_Key = "direction";
+  static inline constexpr StringLiteral k_Operation_Key = "operation";
   static inline constexpr StringLiteral k_NumIterations_Key = "num_iterations";
   static inline constexpr StringLiteral k_XDirOn_Key = "x_dir_on";
   static inline constexpr StringLiteral k_YDirOn_Key = "y_dir_on";
   static inline constexpr StringLiteral k_ZDirOn_Key = "z_dir_on";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**
    * @brief Returns the name of the filter.
@@ -93,8 +94,7 @@ protected:
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure & data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-      const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

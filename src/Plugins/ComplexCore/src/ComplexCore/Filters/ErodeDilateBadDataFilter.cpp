@@ -56,9 +56,9 @@ Parameters ErodeDilateBadDataFilter::parameters() const
 
   params.insert(std::make_unique<ChoicesParameter>(k_Operation_Key, "Operation", "Whether to dilate or erode", 0ULL, ::k_OperationChoices));
   params.insert(std::make_unique<Int32Parameter>(k_NumIterations_Key, "Number of Iterations", "The number of iterations to use for erosion/dilation", 2));
-  params.insert(std::make_unique<BoolParameter>(k_XDirOn_Key, "X Direction", "Whether to erode/dilate in the X direction", false));
-  params.insert(std::make_unique<BoolParameter>(k_YDirOn_Key, "Y Direction", "Whether to erode/dilate in the Y direction", false));
-  params.insert(std::make_unique<BoolParameter>(k_ZDirOn_Key, "Z Direction", "Whether to erode/dilate in the Z direction", false));
+  params.insert(std::make_unique<BoolParameter>(k_XDirOn_Key, "X Direction", "Whether to erode/dilate in the X direction", true));
+  params.insert(std::make_unique<BoolParameter>(k_YDirOn_Key, "Y Direction", "Whether to erode/dilate in the Y direction", true));
+  params.insert(std::make_unique<BoolParameter>(k_ZDirOn_Key, "Z Direction", "Whether to erode/dilate in the Z direction", true));
 
   params.insertSeparator(Parameters::Separator{"Required Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},

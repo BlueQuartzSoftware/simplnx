@@ -20,20 +20,19 @@
  * and report errors.
  */
 
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
 
-#include "ComplexCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ErodeDilateCoordinationNumberFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: Instantiation and Parameter Check","[ComplexCore][ErodeDilateCoordinationNumberFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: Instantiation and Parameter Check", "[ComplexCore][ErodeDilateCoordinationNumberFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ErodeDilateCoordinationNumberFilter filter;
@@ -43,9 +42,9 @@ TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: Instantiation and P
   // Create default Parameters for the filter.
   args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CoordinationNumber_Key, std::make_any<int32>(1234356));
   args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_Loop_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType {DataPath(), DataPath(), DataPath()}));
-
+  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_IgnoredDataArrayPaths_Key,
+                      std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{DataPath(), DataPath(), DataPath()}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -56,12 +55,12 @@ TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: Instantiation and P
   REQUIRE(executeResult.result.valid());
 }
 
-//TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: Valid filter execution")
+// TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: Valid filter execution")
 //{
 //
-//}
+// }
 
-//TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: InValid filter execution")
+// TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter: InValid filter execution")
 //{
 //
-//}
+// }

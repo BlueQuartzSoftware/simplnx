@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 
 using namespace complex;
 
@@ -26,23 +27,88 @@ const std::atomic_bool& ErodeDilateMask::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ErodeDilateMask::operator()()
 {
-  /**
-  * This section of the code should contain the actual algorithmic codes that
-  * will accomplish the goal of the file.
-  *
-  * If you can parallelize the code there are a number of examples on how to do that.
-  *    GenerateIPFColors is one example
-  *
-  * If you need to determine what kind of array you have (Int32Array, Float32Array, etc)
-  * look to the ExecuteDataFunction() in complex/Utilities/FilterUtilities.hpp template 
-  * function to help with that code.
-  *   An Example algorithm class is `CombineAttributeArrays` and `RemoveFlaggedVertices`
-  * 
-  * There are other utility classes that can help alleviate the amount of code that needs
-  * to be written.
-  *
-  * REMOVE THIS COMMENT BLOCK WHEN YOU ARE FINISHED WITH THE FILTER_HUMAN_NAME
-  */
+
+  auto& mask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath);
+  const size_t totalPoints = mask.getNumberOfTuples();
+
+  std::vector<bool> maskCopy(totalPoints, false);
+
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
+
+  SizeVec3 udims = selectedImageGeom.getDimensions();
+
+  std::array<int64, 3> dims = {
+      static_cast<int64>(udims[0]),
+      static_cast<int64>(udims[1]),
+      static_cast<int64>(udims[2]),
+  };
+
+  std::array<int64, 6> neighpoints = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
+
+  for(int32_t iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
+  {
+    for(size_t j = 0; j < totalPoints; j++)
+    {
+      maskCopy[j] = mask[j];
+    }
+    for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
+    {
+      const int64 zStride = dims[0] * dims[1] * zIndex;
+      for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
+      {
+        const int64 yStride = dims[0] * yIndex;
+        for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
+        {
+          const int64 voxelIndex = zStride + yStride + xIndex;
+
+          if(!mask[voxelIndex])
+          {
+            for(int32_t neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
+            {
+              const int64 neighpoint = voxelIndex + neighpoints[neighPointIdx];
+              if(neighPointIdx == 0 && (zIndex == 0 || !m_InputValues->ZDirOn))
+              {
+                continue;
+              }
+              if(neighPointIdx == 5 && (zIndex == (dims[2] - 1) || !m_InputValues->ZDirOn))
+              {
+                continue;
+              }
+              if(neighPointIdx == 1 && (yIndex == 0 || !m_InputValues->YDirOn))
+              {
+                continue;
+              }
+              if(neighPointIdx == 4 && (yIndex == (dims[1] - 1) || !m_InputValues->YDirOn))
+              {
+                continue;
+              }
+              if(neighPointIdx == 2 && (xIndex == 0 || !m_InputValues->XDirOn))
+              {
+                continue;
+              }
+              if(neighPointIdx == 3 && (xIndex == (dims[0] - 1) || !m_InputValues->XDirOn))
+              {
+                continue;
+              }
+
+              if(m_InputValues->Operation == k_ErodeIndex && mask[neighpoint])
+              {
+                maskCopy[voxelIndex] = true;
+              }
+              if(m_InputValues->Operation == k_DilateIndex && mask[neighpoint])
+              {
+                maskCopy[neighpoint] = false;
+              }
+            }
+          }
+        }
+      }
+    }
+    for(size_t j = 0; j < totalPoints; j++)
+    {
+      mask[j] = maskCopy[j];
+    }
+  }
 
   return {};
 }

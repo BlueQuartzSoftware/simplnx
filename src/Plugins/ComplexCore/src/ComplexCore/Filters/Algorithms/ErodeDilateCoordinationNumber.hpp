@@ -5,23 +5,10 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  ErodeDilateCoordinationNumberInputValues inputValues;
-
-  inputValues.CoordinationNumber = filterArgs.value<int32>(k_CoordinationNumber_Key);
-  inputValues.Loop = filterArgs.value<bool>(k_Loop_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-
-  return ErodeDilateCoordinationNumber(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/NumberParameter.hpp"
 
 namespace complex
 {
@@ -32,7 +19,7 @@ struct COMPLEXCORE_EXPORT ErodeDilateCoordinationNumberInputValues
   bool Loop;
   DataPath FeatureIdsArrayPath;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
-
+  DataPath InputImageGeometry;
 };
 
 /**

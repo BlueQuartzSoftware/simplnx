@@ -20,20 +20,19 @@
  * and report errors.
  */
 
-
 #include <catch2/catch.hpp>
 
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 
-#include "ComplexCore/Filters/ErodeDilateMaskFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ErodeDilateMaskFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::ErodeDilateMaskFilter: Instantiation and Parameter Check","[ComplexCore][ErodeDilateMaskFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::ErodeDilateMaskFilter: Instantiation and Parameter Check", "[ComplexCore][ErodeDilateMaskFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ErodeDilateMaskFilter filter;
@@ -41,13 +40,12 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter: Instantiation and Parameter Check
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(ErodeDilateMaskFilter::k_Direction_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  args.insertOrAssign(ErodeDilateMaskFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(ErodeDilateMaskFilter::k_NumIterations_Key, std::make_any<int32>(1234356));
   args.insertOrAssign(ErodeDilateMaskFilter::k_XDirOn_Key, std::make_any<bool>(false));
   args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(false));
   args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(false));
   args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -58,12 +56,12 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter: Instantiation and Parameter Check
   REQUIRE(executeResult.result.valid());
 }
 
-//TEST_CASE("ComplexCore::ErodeDilateMaskFilter: Valid filter execution")
+// TEST_CASE("ComplexCore::ErodeDilateMaskFilter: Valid filter execution")
 //{
 //
-//}
+// }
 
-//TEST_CASE("ComplexCore::ErodeDilateMaskFilter: InValid filter execution")
+// TEST_CASE("ComplexCore::ErodeDilateMaskFilter: InValid filter execution")
 //{
 //
-//}
+// }

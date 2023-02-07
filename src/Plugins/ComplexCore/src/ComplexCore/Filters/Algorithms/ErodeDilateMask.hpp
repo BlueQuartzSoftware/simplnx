@@ -5,40 +5,42 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 
+namespace
+{
+const std::string k_ErodeString("Erode");
+const std::string k_DilateString("Dilate");
+const complex::ChoicesParameter::Choices k_OperationChoices = {k_ErodeString, k_DilateString};
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  ErodeDilateMaskInputValues inputValues;
+const complex::ChoicesParameter::ValueType k_ErodeIndex = 0ULL;
+const complex::ChoicesParameter::ValueType k_DilateIndex = 1ULL;
 
-  inputValues.Direction = filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key);
-  inputValues.NumIterations = filterArgs.value<int32>(k_NumIterations_Key);
-  inputValues.XDirOn = filterArgs.value<bool>(k_XDirOn_Key);
-  inputValues.YDirOn = filterArgs.value<bool>(k_YDirOn_Key);
-  inputValues.ZDirOn = filterArgs.value<bool>(k_ZDirOn_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-
-  return ErodeDilateMask(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+// const std::string k_BadData("Bad Data");
+// const std::string k_BooleanMask("Boolean Mask");
+// const std::string k_CoordinationNumber("Coordination Number");
+// const complex::ChoicesParameter::Choices k_AlgorithmChoices = {k_BadData, k_BooleanMask, k_CoordinationNumber};
+//
+// const complex::ChoicesParameter::ValueType k_BadDataIndex = 0ULL;
+// const complex::ChoicesParameter::ValueType k_BooleanMaskIndex = 1ULL;
+// const complex::ChoicesParameter::ValueType k_CoordinationNumberIndex = 2ULL;
+} // namespace
 
 namespace complex
 {
 
 struct COMPLEXCORE_EXPORT ErodeDilateMaskInputValues
 {
-  ChoicesParameter::ValueType Direction;
+  ChoicesParameter::ValueType Operation;
   int32 NumIterations;
   bool XDirOn;
   bool YDirOn;
   bool ZDirOn;
   DataPath MaskArrayPath;
-
+  DataPath InputImageGeometry;
 };
 
 /**
