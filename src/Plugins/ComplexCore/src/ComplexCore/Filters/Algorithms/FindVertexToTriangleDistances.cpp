@@ -352,6 +352,8 @@ public:
     auto totalElements = static_cast<int64>(end - start);
     auto progIncrement = static_cast<int64>(totalElements / 100);
     size_t numTriangles = m_SharedTriangleList.getNumberOfTuples();
+    std::vector<size_t> trianglesInd(numTriangles);         // allocate vector of all possible indexes
+    std::iota(trianglesInd.begin(), trianglesInd.end(), 0); // fill them with 0-(numTriangles - 1)
 
     for(usize v = start; v < end; v++)
     {
@@ -365,70 +367,48 @@ public:
       };
 
       int nhits = m_RTree.Search(sourcePoint.data(), sourcePoint.data(), func);
+      std::vector<size_t> trianglesToSearch;
       if(nhits > 0) // Point is within the RTree bounding box so just loop over those triangles that are in the RTree
       {
-        for(const auto& t : hitTriangleIds)
-        {
-          auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
-          auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
-          auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
-          const Vec3fa point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
-          const Vec3fa v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
-          const Vec3fa v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
-          const Vec3fa v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
-
-          std::cout << "      Point: " << point[0] << ", " << point[1] << ", " << point[2] << "\n      Triangle:\n"
-                    << "         V0: " << m_TriangleVertices[p * 3 + 0] << ", " << m_TriangleVertices[p * 3 + 1] << ", " << m_TriangleVertices[p * 3 + 2] << "\n"
-                    << "         V1: " << m_TriangleVertices[q * 3 + 0] << ", " << m_TriangleVertices[q * 3 + 1] << ", " << m_TriangleVertices[q * 3 + 2] << "\n"
-                    << "         V2: " << m_TriangleVertices[r * 3 + 0] << ", " << m_TriangleVertices[r * 3 + 1] << ", " << m_TriangleVertices[r * 3 + 2] << "\n"
-                    << "         Box: " << m_TriBounds[6 * t + 0] << ", " << m_TriBounds[6 * t + 1] << ", " << m_TriBounds[6 * t + 2] << ", " << m_TriBounds[6 * t + 3] << ", "
-                    << m_TriBounds[6 * t + 4] << ", " << m_TriBounds[6 * t + 5] << std::endl;
-
-          float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
-          std::cout << "      d=" << d << std::endl;
-
-          if(std::abs(d) < std::abs(m_Distances[v]))
-          {
-            m_Distances[v] = d;
-            m_ClosestTri[v] = static_cast<int64>(t);
-          }
-        }
+        trianglesToSearch = hitTriangleIds;
       }
-      else // Point was not in the RTree so we need to search against every triangle
+      else // Point was not in the RTree, so we need to search against every triangle
       {
-        for(usize t = 0; t < numTriangles; t++)
+        trianglesToSearch = trianglesInd;
+      }
+      for(const auto t : trianglesToSearch)
+      {
+        std::cout << "  Triangle: " << t << std::endl;
+        if(m_Filter->getCancel())
         {
-          std::cout << "  Triangle: " << t << std::endl;
-          if(m_Filter->getCancel())
-          {
-            return;
-          }
+          return;
+        }
 
-          auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
-          auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
-          auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
-          const Vec3fa point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
-          const Vec3fa v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
-          const Vec3fa v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
-          const Vec3fa v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
+        auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
+        auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
+        auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
+        const Vec3fa point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
+        const Vec3fa v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
+        const Vec3fa v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
+        const Vec3fa v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
 
-          std::cout << "      Point: " << point[0] << ", " << point[1] << ", " << point[2] << "\n      Triangle:\n"
-                    << "         V0: " << m_TriangleVertices[p * 3 + 0] << ", " << m_TriangleVertices[p * 3 + 1] << ", " << m_TriangleVertices[p * 3 + 2] << "\n"
-                    << "         V1: " << m_TriangleVertices[q * 3 + 0] << ", " << m_TriangleVertices[q * 3 + 1] << ", " << m_TriangleVertices[q * 3 + 2] << "\n"
-                    << "         V2: " << m_TriangleVertices[r * 3 + 0] << ", " << m_TriangleVertices[r * 3 + 1] << ", " << m_TriangleVertices[r * 3 + 2] << "\n"
-                    << "         Box: " << m_TriBounds[6 * t + 0] << ", " << m_TriBounds[6 * t + 1] << ", " << m_TriBounds[6 * t + 2] << ", " << m_TriBounds[6 * t + 3] << ", "
-                    << m_TriBounds[6 * t + 4] << ", " << m_TriBounds[6 * t + 5] << std::endl;
+        std::cout << "      Point: " << point[0] << ", " << point[1] << ", " << point[2] << "\n      Triangle:\n"
+                  << "         V0: " << m_TriangleVertices[p * 3 + 0] << ", " << m_TriangleVertices[p * 3 + 1] << ", " << m_TriangleVertices[p * 3 + 2] << "\n"
+                  << "         V1: " << m_TriangleVertices[q * 3 + 0] << ", " << m_TriangleVertices[q * 3 + 1] << ", " << m_TriangleVertices[q * 3 + 2] << "\n"
+                  << "         V2: " << m_TriangleVertices[r * 3 + 0] << ", " << m_TriangleVertices[r * 3 + 1] << ", " << m_TriangleVertices[r * 3 + 2] << "\n"
+                  << "         Box: " << m_TriBounds[6 * t + 0] << ", " << m_TriBounds[6 * t + 1] << ", " << m_TriBounds[6 * t + 2] << ", " << m_TriBounds[6 * t + 3] << ", " << m_TriBounds[6 * t + 4]
+                  << ", " << m_TriBounds[6 * t + 5] << std::endl;
 
-          float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
-          std::cout << "      d=" << d << std::endl;
+        float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
+        std::cout << "      d=" << d << std::endl;
 
-          if(std::abs(d) < std::abs(m_Distances[v]))
-          {
-            m_Distances[v] = d;
-            m_ClosestTri[v] = static_cast<int64>(t);
-          }
+        if(std::abs(d) < std::abs(m_Distances[v]))
+        {
+          m_Distances[v] = d;
+          m_ClosestTri[v] = static_cast<int64>(t);
         }
       }
+
       if(m_Distances[v] >= 0.0f)
       {
         m_Distances[v] = std::sqrt(m_Distances[v]);
@@ -549,7 +529,7 @@ Result<> FindVertexToTriangleDistances::operator()()
   auto& distancesArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->DistancesArrayPath);
   distancesArray.fill(std::numeric_limits<float32>::max());
   auto& closestTriangleIdsArray = m_DataStructure.getDataRefAs<Int64Array>(m_InputValues->ClosestTriangleIdArrayPath);
-  closestTriangleIdsArray.fill(-1); // -1 means it never found a closest triangle?
+  closestTriangleIdsArray.fill(-1); // -1 means it never found the closest triangle?
 
   // Allow data-based parallelization
   m_TotalElements = numVerts;
