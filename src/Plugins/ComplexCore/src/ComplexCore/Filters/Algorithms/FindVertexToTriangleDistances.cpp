@@ -30,20 +30,6 @@ public:
    */
   Matrix3X1() = default;
 
-  Matrix3X1(const std::vector<T>& ptr)
-  : m_Data(std::array<T, 3>{ptr[0], ptr[1], ptr[2]})
-  {
-  }
-
-  /**
-   * @brief Copies from the pointer ptr into the 3x1 Matrix
-   * @param ptr
-   */
-  Matrix3X1(nonstd::span<T> ptr)
-  : m_Data(std::array<T, 3>{ptr[0], ptr[1], ptr[2]})
-  {
-  }
-
   /**
    * @brief Copies the values into the matrix
    * @param v0
@@ -128,19 +114,19 @@ public:
   {
     SelfType outMat = this;
 
-    T denom = outMat[0] * outMat[0] + outMat[1] * outMat[1] + outMat[2] * outMat[2];
-    denom = sqrt(denom);
-    outMat[0] = outMat[0] / denom;
+    T denominator = outMat[0] * outMat[0] + outMat[1] * outMat[1] + outMat[2] * outMat[2];
+    denominator = sqrt(denominator);
+    outMat[0] = outMat[0] / denominator;
     if(outMat[0] > 1.0)
     {
       outMat[0] = 1.0;
     }
-    outMat[1] = outMat[1] / denom;
+    outMat[1] = outMat[1] / denominator;
     if(outMat[1] > 1.0)
     {
       outMat[1] = 1.0;
     }
-    outMat[2] = outMat[2] / denom;
+    outMat[2] = outMat[2] / denominator;
     if(outMat[2] > 1.0)
     {
       outMat[2] = 1.0;
@@ -156,23 +142,15 @@ public:
    */
   static bool normalize(T& i, T& j, T& k)
   {
-    T denom;
-    denom = std::sqrt(((i * i) + (j * j) + (k * k)));
-    if(denom == 0)
+    T denominator;
+    denominator = std::sqrt(((i * i) + (j * j) + (k * k)));
+    if(denominator == 0)
     {
       return false;
     }
-    i = i / denom;
-    j = j / denom;
-    k = k / denom;
-  }
-
-  /**
-   * @brief Returns the magnitude of the 3x1 vector
-   */
-  T magnitude() const
-  {
-    return sqrt(dot(*this));
+    i = i / denominator;
+    j = j / denominator;
+    k = k / denominator;
   }
 
   /**
@@ -293,9 +271,9 @@ Vec3fa closestPointTriangle(const Vec3fa& p, const Vec3fa& a, const Vec3fa& b, c
     return b + v * (c - b);
   }
 
-  const float denom = 1.f / (va + vb + vc);
-  const float v = vb * denom;
-  const float w = vc * denom;
+  const float denominator = 1.f / (va + vb + vc);
+  const float v = vb * denominator;
+  const float w = vc * denominator;
   const Vec3fa pointInTriangle = a + v * ab + w * ac;
 
   return pointInTriangle;
@@ -325,12 +303,12 @@ float32 PointTriangleDistance(const Vec3fa& point, const Vec3fa& vert0, const Ve
 class FindVertexToTriangleDistancesImpl
 {
 public:
-  FindVertexToTriangleDistancesImpl(FindVertexToTriangleDistances* filter, const IGeometry::SharedTriList& triangles, const IGeometry::SharedVertexList& verts,
+  FindVertexToTriangleDistancesImpl(FindVertexToTriangleDistances* filter, const IGeometry::SharedTriList& triangles, const IGeometry::SharedVertexList& vertices,
                                     IGeometry::SharedVertexList& sourcePoints, Float32Array& distances, Int64Array& closestTri, const std::vector<float>& triBounds, const Float64Array& normals,
                                     const RTreeType rtree)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
-  , m_TriangleVertices(verts)
+  , m_TriangleVertices(vertices)
   , m_SourcePoints(sourcePoints)
   , m_Distances(distances)
   , m_ClosestTri(closestTri)
@@ -501,8 +479,8 @@ void GetBoundingBoxAtTri(const IGeometry::SharedTriList& triList, const IGeometr
 Result<> FindVertexToTriangleDistances::operator()()
 {
   auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexDataContainer);
-  IGeometry::SharedVertexList& sourceVerts = vertexGeom.getVerticesRef();
-  usize numVerts = vertexGeom.getNumberOfVertices();
+  IGeometry::SharedVertexList& sourceVertices = vertexGeom.getVerticesRef();
+  m_TotalElements = vertexGeom.getNumberOfVertices();
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainer);
   auto numTris = static_cast<usize>(triangleGeom.getNumberOfFaces());
@@ -532,12 +510,10 @@ Result<> FindVertexToTriangleDistances::operator()()
   closestTriangleIdsArray.fill(-1); // -1 means it never found the closest triangle?
 
   // Allow data-based parallelization
-  m_TotalElements = numVerts;
-
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(false);
-  dataAlg.setRange(0, numVerts);
-  dataAlg.execute(FindVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVerts, distancesArray, closestTriangleIdsArray, triBoundsArray, normalsArray, m_RTree));
+  dataAlg.setRange(0, m_TotalElements);
+  dataAlg.execute(FindVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, triBoundsArray, normalsArray, m_RTree));
 
   return {};
 }
