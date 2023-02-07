@@ -30,26 +30,37 @@ void CreateAndInitArray(DataStructure& data, const DataPath& path, const std::st
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string CreateDataArray::name() const
 {
   return FilterTraits<CreateDataArray>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateDataArray::className() const
 {
   return FilterTraits<CreateDataArray>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CreateDataArray::uuid() const
 {
   return FilterTraits<CreateDataArray>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CreateDataArray::humanName() const
 {
   return "Create Data Array";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CreateDataArray::defaultTags() const
+{
+  return {"Create", "Data Structure", "Data Array", "Initialize", "Make"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CreateDataArray::parameters() const
 {
   Parameters params;
@@ -68,11 +79,13 @@ Parameters CreateDataArray::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CreateDataArray::clone() const
 {
   return std::make_unique<CreateDataArray>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel) const
 {
@@ -108,6 +121,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CreateDataArray::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto numericType = args.value<NumericType>(k_NumericType_Key);

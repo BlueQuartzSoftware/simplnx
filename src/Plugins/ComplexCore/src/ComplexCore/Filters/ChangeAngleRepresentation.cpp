@@ -80,7 +80,7 @@ std::string ChangeAngleRepresentation::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ChangeAngleRepresentation::defaultTags() const
 {
-  return {"#Processing", "#Conversion"};
+  return {"Processing", "Conversion"};
 }
 
 //------------------------------------------------------------------------------

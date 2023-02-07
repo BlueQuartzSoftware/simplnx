@@ -40,26 +40,37 @@ struct CopyDataToCroppedGeometryFunctor
 };
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string CropVertexGeometry::name() const
 {
   return FilterTraits<CropVertexGeometry>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string CropVertexGeometry::className() const
 {
   return FilterTraits<CropVertexGeometry>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid CropVertexGeometry::uuid() const
 {
   return FilterTraits<CropVertexGeometry>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string CropVertexGeometry::humanName() const
 {
   return "Crop Geometry (Vertex)";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> CropVertexGeometry::defaultTags() const
+{
+  return {"Crop", "Vertex Geometry", "Geometry", "Memory Management", "Cut"};
+}
+
+//------------------------------------------------------------------------------
 Parameters CropVertexGeometry::parameters() const
 {
   Parameters params;
@@ -76,11 +87,13 @@ Parameters CropVertexGeometry::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer CropVertexGeometry::clone() const
 {
   return std::make_unique<CropVertexGeometry>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& dataStructure, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto vertexGeomPath = args.value<DataPath>(k_VertexGeom_Key);
@@ -152,6 +165,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel) const
 {

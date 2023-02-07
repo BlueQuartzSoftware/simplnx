@@ -35,26 +35,37 @@
 
 using namespace complex;
 
+//------------------------------------------------------------------------------
 std::string ErrorWarningFilter::name() const
 {
   return FilterTraits<ErrorWarningFilter>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string ErrorWarningFilter::className() const
 {
   return FilterTraits<ErrorWarningFilter>::className;
 }
 
+//------------------------------------------------------------------------------
 complex::Uuid ErrorWarningFilter::uuid() const
 {
   return FilterTraits<ErrorWarningFilter>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ErrorWarningFilter::humanName() const
 {
   return "Error Warning and Test Filter";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ErrorWarningFilter::defaultTags() const
+{
+  return {"Example", "Test", "Error"};
+}
+
+//------------------------------------------------------------------------------
 complex::Parameters ErrorWarningFilter::parameters() const
 {
   Parameters params;
@@ -67,11 +78,13 @@ complex::Parameters ErrorWarningFilter::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ErrorWarningFilter::clone() const
 {
   return std::make_unique<ErrorWarningFilter>();
 }
 
+//------------------------------------------------------------------------------
 complex::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto preflightWarning = args.value<bool>(k_PreflightWarning_Key);
@@ -96,6 +109,7 @@ complex::IFilter::PreflightResult ErrorWarningFilter::preflightImpl(const DataSt
   return {std::move(resultOutputActions)};
 }
 
+//------------------------------------------------------------------------------
 complex::Result<> ErrorWarningFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel) const
 {

@@ -152,6 +152,7 @@ private:
 };
 } // namespace
 
+//------------------------------------------------------------------------------
 OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStructure& data, const Arguments& args) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
@@ -214,26 +215,37 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   return std::move(actions);
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighborListStatistics::name() const
 {
   return FilterTraits<FindNeighborListStatistics>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighborListStatistics::className() const
 {
   return FilterTraits<FindNeighborListStatistics>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindNeighborListStatistics::uuid() const
 {
   return FilterTraits<FindNeighborListStatistics>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighborListStatistics::humanName() const
 {
   return "Find Neighbor List Statistics";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindNeighborListStatistics::defaultTags() const
+{
+  return {"NeighborList", "Statistics", "Analytics"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindNeighborListStatistics::parameters() const
 {
   Parameters params;
@@ -264,11 +276,13 @@ Parameters FindNeighborListStatistics::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindNeighborListStatistics::clone() const
 {
   return std::make_unique<FindNeighborListStatistics>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
@@ -302,6 +316,7 @@ IFilter::PreflightResult FindNeighborListStatistics::preflightImpl(const DataStr
   return {std::move(createCompatibleArrays(data, args))};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel) const
 {

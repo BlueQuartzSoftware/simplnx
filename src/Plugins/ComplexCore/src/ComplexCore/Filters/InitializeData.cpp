@@ -149,26 +149,37 @@ struct InitializeArrayFunctor
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string InitializeData::name() const
 {
   return FilterTraits<InitializeData>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string InitializeData::className() const
 {
   return FilterTraits<InitializeData>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid InitializeData::uuid() const
 {
   return FilterTraits<InitializeData>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string InitializeData::humanName() const
 {
   return "Initialize Data";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> InitializeData::defaultTags() const
+{
+  return {"Memory Management", "Initialize", "Create", "Generate", "Data"};
+}
+
+//------------------------------------------------------------------------------
 Parameters InitializeData::parameters() const
 {
   Parameters params;
@@ -196,11 +207,13 @@ Parameters InitializeData::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer InitializeData::clone() const
 {
   return std::make_unique<InitializeData>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
@@ -287,6 +300,7 @@ IFilter::PreflightResult InitializeData::preflightImpl(const DataStructure& data
   return {};
 }
 
+//------------------------------------------------------------------------------
 Result<> InitializeData::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto cellArrayPaths = args.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);

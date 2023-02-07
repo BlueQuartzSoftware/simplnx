@@ -37,26 +37,37 @@ constexpr StringLiteral k_Param16 = "param16";
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string ExampleFilter2::name() const
 {
   return FilterTraits<ExampleFilter2>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string ExampleFilter2::className() const
 {
   return FilterTraits<ExampleFilter2>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid ExampleFilter2::uuid() const
 {
   return FilterTraits<ExampleFilter2>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string ExampleFilter2::humanName() const
 {
   return "Example Filter 2";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> ExampleFilter2::defaultTags() const
+{
+  return {"Example", "Test"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ExampleFilter2::parameters() const
 {
   Parameters params;
@@ -93,16 +104,19 @@ Parameters ExampleFilter2::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer ExampleFilter2::clone() const
 {
   return std::make_unique<ExampleFilter2>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult ExampleFilter2::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};
 }
 
+//------------------------------------------------------------------------------
 Result<> ExampleFilter2::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   return {};

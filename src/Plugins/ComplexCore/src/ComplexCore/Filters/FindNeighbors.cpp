@@ -17,26 +17,37 @@
 
 namespace complex
 {
+//------------------------------------------------------------------------------
 std::string FindNeighbors::name() const
 {
   return FilterTraits<FindNeighbors>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighbors::className() const
 {
   return FilterTraits<FindNeighbors>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid FindNeighbors::uuid() const
 {
   return FilterTraits<FindNeighbors>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string FindNeighbors::humanName() const
 {
   return "Find Feature Neighbors";
 }
 
+//------------------------------------------------------------------------------
+std::vector<std::string> FindNeighbors::defaultTags() const
+{
+  return {"Statistics", "Neighbors", "Features"};
+}
+
+//------------------------------------------------------------------------------
 Parameters FindNeighbors::parameters() const
 {
   Parameters params;
@@ -74,11 +85,13 @@ Parameters FindNeighbors::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer FindNeighbors::clone() const
 {
   return std::make_unique<FindNeighbors>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
@@ -148,6 +161,7 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
   return {std::move(actions)};
 }
 
+//------------------------------------------------------------------------------
 Result<> FindNeighbors::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto storeBoundaryCells = args.value<bool>(k_StoreBoundary_Key);
