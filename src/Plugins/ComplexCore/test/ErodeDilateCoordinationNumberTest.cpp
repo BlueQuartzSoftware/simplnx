@@ -20,8 +20,8 @@ namespace
 const DataPath k_FeatureIdsDataPath = DataPath({"Input Data", "EBSD Scan Data", "FeatureIds"});
 
 const DataPath k_SelectedGeometry = DataPath({"Input Data"});
-const std::string k_ExemplarCoordinationNumberDataPath("Exemplar Coordination Number");
-const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarCoordinationNumberDataPath, "EBSD Scan Data"});
+const std::string k_ExemplarErodeDataPath("Exemplar Coordination Number");
+const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarErodeDataPath, "EBSD Scan Data"});
 } // namespace
 
 TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter", "[ComplexCore][ErodeDilateCoordinationNumberFilter]")
@@ -53,5 +53,5 @@ TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter", "[ComplexCore][Ero
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarCoordinationNumberDataPath);
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarErodeDataPath);
 }
