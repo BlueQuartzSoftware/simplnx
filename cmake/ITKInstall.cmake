@@ -60,6 +60,10 @@ function(AddItkCopyInstallRules)
             set(INTER_DIR "${BTYPE}")
           endif()
 
+          if(NOT TARGET ${itk_LIBNAME})
+            message(STATUS "ITK Target '${itk_LIBNAME}' Does not exist.")
+            continue()
+          endif()
           # Find the current library's dependent Itk libraries
           get_target_property(ItkLibDeps ${itk_LIBNAME} IMPORTED_LINK_DEPENDENT_LIBRARIES_${UpperBType})
           #message(STATUS "    ItkLibDeps: ${ItkLibDeps}")
