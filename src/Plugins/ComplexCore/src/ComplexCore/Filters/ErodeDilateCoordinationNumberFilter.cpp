@@ -81,6 +81,11 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pIgnoredDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
 
+  if(pCoordinationNumberValue < 0 || pCoordinationNumberValue > 6)
+  {
+    MakeErrorResult(-16800, fmt::format("Coordination Number must be between 0 and 6. Current Value: {}", pCoordinationNumberValue));
+  }
+
   PreflightResult preflightResult;
 
   complex::Result<OutputActions> resultOutputActions;

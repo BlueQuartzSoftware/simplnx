@@ -18,13 +18,13 @@ using namespace complex::UnitTest;
 
 namespace
 {
-constexpr ChoicesParameter::ValueType k_Erode = 0ULL;
-constexpr ChoicesParameter::ValueType k_Dilate = 1ULL;
+constexpr ChoicesParameter::ValueType k_Erode = 1ULL;
+constexpr ChoicesParameter::ValueType k_Dilate = 0ULL;
 
 const DataPath k_FeatureIdsDataPath = DataPath({"Input Data", "EBSD Scan Data", "FeatureIds"});
 const DataPath k_SelectedGeometry = DataPath({"Input Data"});
-const std::string k_ExemplarCoordinationNumberDataPath("Exemplar Bad Data Erode");
-const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarCoordinationNumberDataPath, "EBSD Scan Data"});
+const std::string k_ExemplarBadDataDataPath("Exemplar Bad Data Erode");
+const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarBadDataDataPath, "EBSD Scan Data"});
 
 const std::string k_ExemplarDilateDataContainer("Exemplar Bad Data Dilate");
 const DataPath k_DilateCellAttributeMatrixDataPath = DataPath({k_ExemplarDilateDataContainer, "EBSD Scan Data"});
@@ -65,7 +65,7 @@ TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Erode)", "[ComplexCore][ErodeDi
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarCoordinationNumberDataPath);
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarBadDataDataPath);
 }
 
 TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Dilate)", "[ComplexCore][ErodeDilateBadDataFilter]")
@@ -102,5 +102,5 @@ TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Dilate)", "[ComplexCore][ErodeD
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_DilateCellAttributeMatrixDataPath, k_ExemplarCoordinationNumberDataPath);
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarBadDataDataPath);
 }
