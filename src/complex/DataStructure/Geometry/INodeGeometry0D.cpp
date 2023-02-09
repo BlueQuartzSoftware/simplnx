@@ -67,7 +67,7 @@ std::optional<INodeGeometry0D::BoundingBox> INodeGeometry0D::getBoundingBox() co
 {
   FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   FloatVec3 ur = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
-  
+
   try
   {
     const IGeometry::SharedVertexList& vertexList = getVerticesRef();
