@@ -197,5 +197,17 @@ protected:
    */
   std::optional<IdType> m_VertexDataArrayId;
   std::optional<IdType> m_VertexAttributeMatrixId;
+
+private:
+  /**
+   * @brief Helper function that returns whether or not this geometry is in a plane
+   * Returns empty if the vertex list or data store does not exist.
+   * @param dimensionIndex The dimensional index to check for equality.
+   * YZ plane --> dimensionIndex = 0
+   * XZ plane --> dimensionIndex = 1
+   * XY plane --> dimensionIndex = 2
+   * @return
+   */
+  std::optional<bool> isPlane(usize dimensionIndex) const;
 };
 } // namespace complex
