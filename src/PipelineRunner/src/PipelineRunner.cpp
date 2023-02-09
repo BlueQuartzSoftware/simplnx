@@ -185,16 +185,13 @@ int main(int argc, char* argv[])
       return PreflightPipelinePath(targetPath);
     }
     return ExecutePipelinePath(targetPath);
-  }
-  catch(const std::runtime_error& re)
+  } catch(const std::runtime_error& re)
   {
     std::cerr << "Runtime error: " << re.what() << std::endl;
-  }
-  catch(const std::exception& ex)
+  } catch(const std::exception& ex)
   {
     std::cerr << "Error occurred: " << ex.what() << std::endl;
-  }
-  catch(...)
+  } catch(...)
   {
     std::cerr << "Unknown failure occurred. Possible memory corruption" << std::endl;
   }
