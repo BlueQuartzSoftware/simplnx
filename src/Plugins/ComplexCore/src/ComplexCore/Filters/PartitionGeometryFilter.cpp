@@ -140,23 +140,23 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
   switch(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue))
   {
   case PartitionGeometryFilter::PartitioningMode::Basic: {
-    std::optional<FloatVec3> originResult;
+    Result<FloatVec3> originResult;
     if constexpr(std::is_same_v<Geom, ImageGeom> || std::is_same_v<Geom, RectGridGeom>)
     {
-      originResult = geometry.getOrigin();
+      originResult = {geometry.getOrigin()};
     }
     else
     {
       originResult = CalculateNodeBasedPartitionSchemeOrigin<Geom>(geometry);
     }
 
-    std::optional<FloatVec3> pLengthResult = CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
-    if(originResult.has_value() && pLengthResult.has_value())
+    Result<FloatVec3> pLengthResult = CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
+    if(originResult.valid() && pLengthResult.valid())
     {
       psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
                                      static_cast<usize>(pNumberOfPartitionsPerAxisValue[2])};
-      psGeomMetadata.geometryOrigin = *originResult;
-      psGeomMetadata.geometrySpacing = *pLengthResult;
+      psGeomMetadata.geometryOrigin = originResult.value();
+      psGeomMetadata.geometrySpacing = pLengthResult.value();
       psGeomMetadata.geometryUnits = geometry.getUnits();
     }
     break;
@@ -180,7 +180,13 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
     psGeomMetadata.geometryOrigin = pLowerLeftCoordValue;
     const FloatVec3 llCoord(pLowerLeftCoordValue[0], pLowerLeftCoordValue[1], pLowerLeftCoordValue[2]);
     const FloatVec3 urCoord(pUpperRightCoordValue[0], pUpperRightCoordValue[1], pUpperRightCoordValue[2]);
-    psGeomMetadata.geometrySpacing = CalculatePartitionLengthsOfBoundingBox({llCoord, urCoord}, numOfPartitionsPerAxisValue);
+
+    Result<FloatVec3> result = CalculatePartitionLengthsOfBoundingBox({llCoord, urCoord}, numOfPartitionsPerAxisValue);
+    if(result.valid())
+    {
+      psGeomMetadata.geometrySpacing = result.value();
+    }
+
     psGeomMetadata.geometryUnits = geometry.getUnits();
     break;
   }
@@ -506,22 +512,22 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBased
 // -----------------------------------------------------------------------------
 Result<> PartitionGeometryFilter::DataCheckDimensionality(const INodeGeometry0D& geometry)
 {
-  std::optional<bool> yzPlaneResult = geometry.isYZPlane();
-  if(yzPlaneResult.has_value() && *yzPlaneResult)
+  Result<bool> yzPlaneResult = geometry.isYZPlane();
+  if(yzPlaneResult.valid() && yzPlaneResult.value())
   {
     return {MakeErrorResult(-3040, "Unable to create a partitioning scheme with a X dimension size of 0.  Vertices are in an YZ plane.  Use the Advanced or Bounding Box "
                                    "partitioning modes to manually create a partitioning scheme.")};
   }
 
-  std::optional<bool> xzPlaneResult = geometry.isXZPlane();
-  if(xzPlaneResult.has_value() && *xzPlaneResult)
+  Result<bool> xzPlaneResult = geometry.isXZPlane();
+  if(xzPlaneResult.valid() && xzPlaneResult.value())
   {
     return {MakeErrorResult(-3041, "Unable to create a partitioning scheme with a Y dimension size of 0.  Vertices are in an XZ plane.  Use the Advanced or Bounding Box "
                                    "partitioning modes to manually create a partitioning scheme.")};
   }
 
-  std::optional<bool> xyPlaneResult = geometry.isXYPlane();
-  if(xyPlaneResult.has_value() && *xyPlaneResult)
+  Result<bool> xyPlaneResult = geometry.isXYPlane();
+  if(xyPlaneResult.valid() && xyPlaneResult.value())
   {
     return {MakeErrorResult(-3042, "Unable to create a partitioning scheme with a Z dimension size of 0.  Vertices are in an XY plane.  Use the Advanced or Bounding Box "
                                    "partitioning modes to manually create a partitioning scheme.")};

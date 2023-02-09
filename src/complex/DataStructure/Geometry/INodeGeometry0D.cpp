@@ -63,7 +63,7 @@ usize INodeGeometry0D::getNumberOfCells() const
   return vertices.getNumberOfTuples();
 }
 
-std::optional<INodeGeometry0D::BoundingBox> INodeGeometry0D::getBoundingBox() const
+Result<INodeGeometry0D::BoundingBox> INodeGeometry0D::getBoundingBox() const
 {
   FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   FloatVec3 ur = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
@@ -89,13 +89,13 @@ std::optional<INodeGeometry0D::BoundingBox> INodeGeometry0D::getBoundingBox() co
     }
   } catch(const std::bad_cast& exception)
   {
-    return {};
+    return MakeErrorResult<INodeGeometry0D::BoundingBox>(-2000, fmt::format("Could not the geometry's bounding box because an exception was thrown: {}", exception.what()));
   }
 
   return {std::make_pair(ll, ur)};
 }
 
-std::optional<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const
+Result<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const
 {
   try
   {
@@ -108,24 +108,24 @@ std::optional<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const
       pointSet.insert(vertexListStore.getComponentValue(tuple, dimensionIndex));
     }
 
-    return (pointSet.size() == 1);
+    return {(pointSet.size() == 1)};
   } catch(const std::bad_cast& exception)
   {
-    return {};
+    return MakeErrorResult<bool>(-3000, fmt::format("Could not determine whether the geometry is a plane because an exception was thrown: {}", exception.what()));
   }
 }
 
-std::optional<bool> INodeGeometry0D::isYZPlane() const
+Result<bool> INodeGeometry0D::isYZPlane() const
 {
   return isPlane(0);
 }
 
-std::optional<bool> INodeGeometry0D::isXYPlane() const
+Result<bool> INodeGeometry0D::isXYPlane() const
 {
   return isPlane(2);
 }
 
-std::optional<bool> INodeGeometry0D::isXZPlane() const
+Result<bool> INodeGeometry0D::isXZPlane() const
 {
   return isPlane(1);
 }
