@@ -191,8 +191,5 @@ int main(int argc, char* argv[])
   } catch(const std::exception& ex)
   {
     std::cerr << "Error occurred: " << ex.what() << std::endl;
-  } catch(...)
-  {
-    std::cerr << "Unknown failure occurred. Possible memory corruption" << std::endl;
   }
 }
