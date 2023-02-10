@@ -151,6 +151,13 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 # The ExecuteProcess Filter requires the `reproc` library
 # ------------------------------------------------------------------------------
 find_package("reproc++" CONFIG REQUIRED)
+get_target_property(reproc_dll_path reproc++ IMPORTED_LOCATION_RELEASE)
+get_filename_component(reproc_dll_path "${reproc_dll_path}" DIRECTORY)
+file(REAL_PATH "${reproc_dll_path}" reproc_dll_path)
+file(TO_CMAKE_PATH "${reproc_dll_path}" reproc_dll_path)
+get_property(COMPLEX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS)
+set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${reproc_dll_path})
+
 
 #------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
