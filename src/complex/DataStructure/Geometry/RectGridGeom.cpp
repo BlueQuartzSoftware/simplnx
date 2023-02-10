@@ -313,7 +313,7 @@ SizeVec3 RectGridGeom::getDimensions() const
   return m_Dimensions;
 }
 
-std::optional<FloatVec3> RectGridGeom::getOrigin() const
+Result<FloatVec3> RectGridGeom::getOrigin() const
 {
   const Float32Array* xBounds = getXBounds();
   const Float32Array* yBounds = getYBounds();
@@ -321,39 +321,39 @@ std::optional<FloatVec3> RectGridGeom::getOrigin() const
 
   if(xBounds == nullptr)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4000, "Unable to calculate the RectGridGeom origin - X Bounds array is not available.");
   }
 
   if(yBounds == nullptr)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4001, "Unable to calculate the RectGridGeom origin - Y Bounds array is not available.");
   }
 
   if(zBounds == nullptr)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4002, "Unable to calculate the RectGridGeom origin - Z Bounds array is not available.");
   }
 
   if(xBounds->getSize() == 0)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4003, "Unable to calculate the RectGridGeom origin - X Bounds array is empty.");
   }
 
   if(yBounds->getSize() == 0)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4004, "Unable to calculate the RectGridGeom origin - Y Bounds array is empty.");
   }
 
   if(zBounds->getSize() == 0)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4005, "Unable to calculate the RectGridGeom origin - Z Bounds array is empty.");
   }
 
   FloatVec3 origin = {0.0f, 0.0f, 0.0f};
   origin.setX(xBounds->at(0));
   origin.setY(yBounds->at(0));
   origin.setZ(zBounds->at(0));
-  return origin;
+  return {origin};
 }
 
 usize RectGridGeom::getNumXCells() const

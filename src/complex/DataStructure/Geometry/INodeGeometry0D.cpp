@@ -63,92 +63,71 @@ usize INodeGeometry0D::getNumberOfCells() const
   return vertices.getNumberOfTuples();
 }
 
-std::optional<INodeGeometry0D::BoundingBox> INodeGeometry0D::getBoundingBox() const
+Result<INodeGeometry0D::BoundingBox> INodeGeometry0D::getBoundingBox() const
 {
-  const IGeometry::SharedVertexList* vertexList = getVertices();
-  if(vertexList == nullptr)
-  {
-    return {};
-  }
-
-  const AbstractDataStore<float32>& vertexListStore = vertexList->getDataStoreRef();
-
   FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   FloatVec3 ur = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
 
-  for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
+  try
   {
-    float x = vertexListStore.getComponentValue(tuple, 0);
-    ll[0] = (x < ll[0]) ? x : ll[0];
-    ur[0] = (x > ur[0]) ? x : ur[0];
+    const IGeometry::SharedVertexList& vertexList = getVerticesRef();
+    auto& vertexListStore = vertexList.getIDataStoreRefAs<const DataStore<float32>>();
 
-    float y = vertexListStore.getComponentValue(tuple, 1);
-    ll[1] = (y < ll[1]) ? y : ll[1];
-    ur[1] = (y > ur[1]) ? y : ur[1];
+    for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
+    {
+      float x = vertexListStore.getComponentValue(tuple, 0);
+      ll[0] = (x < ll[0]) ? x : ll[0];
+      ur[0] = (x > ur[0]) ? x : ur[0];
 
-    float z = vertexListStore.getComponentValue(tuple, 2);
-    ll[2] = (z < ll[2]) ? z : ll[2];
-    ur[2] = (z > ur[2]) ? z : ur[2];
+      float y = vertexListStore.getComponentValue(tuple, 1);
+      ll[1] = (y < ll[1]) ? y : ll[1];
+      ur[1] = (y > ur[1]) ? y : ur[1];
+
+      float z = vertexListStore.getComponentValue(tuple, 2);
+      ll[2] = (z < ll[2]) ? z : ll[2];
+      ur[2] = (z > ur[2]) ? z : ur[2];
+    }
+  } catch(const std::bad_cast& exception)
+  {
+    return MakeErrorResult<INodeGeometry0D::BoundingBox>(-2000, fmt::format("Could not the geometry's bounding box because an exception was thrown: {}", exception.what()));
   }
 
   return {std::make_pair(ll, ur)};
 }
 
-std::optional<bool> INodeGeometry0D::isYZPlane() const
+Result<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const
 {
-  const IGeometry::SharedVertexList* vertexList = getVertices();
-  if(vertexList == nullptr)
+  try
   {
-    return {};
-  }
+    const IGeometry::SharedVertexList& vertexList = getVerticesRef();
+    auto& vertexListStore = vertexList.getIDataStoreRefAs<const DataStore<float32>>();
 
-  const AbstractDataStore<float32>& vertexListStore = vertexList->getDataStoreRef();
+    std::set<float32> pointSet;
+    for(usize tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
+    {
+      pointSet.insert(vertexListStore.getComponentValue(tuple, dimensionIndex));
+    }
 
-  std::set<float> setX;
-  for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
+    return {(pointSet.size() == 1)};
+  } catch(const std::bad_cast& exception)
   {
-    setX.insert(vertexListStore.getComponentValue(tuple, 0));
+    return MakeErrorResult<bool>(-3000, fmt::format("Could not determine whether the geometry is a plane because an exception was thrown: {}", exception.what()));
   }
-
-  return (setX.size() == 1);
 }
 
-std::optional<bool> INodeGeometry0D::isXYPlane() const
+Result<bool> INodeGeometry0D::isYZPlane() const
 {
-  const IGeometry::SharedVertexList* vertexList = getVertices();
-  if(vertexList == nullptr)
-  {
-    return {};
-  }
-
-  const AbstractDataStore<float32>& vertexListStore = vertexList->getDataStoreRef();
-
-  std::set<float> setZ;
-  for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
-  {
-    setZ.insert(vertexListStore.getComponentValue(tuple, 2));
-  }
-
-  return (setZ.size() == 1);
+  return isPlane(0);
 }
 
-std::optional<bool> INodeGeometry0D::isXZPlane() const
+Result<bool> INodeGeometry0D::isXYPlane() const
 {
-  const IGeometry::SharedVertexList* vertexList = getVertices();
-  if(vertexList == nullptr)
-  {
-    return {};
-  }
+  return isPlane(2);
+}
 
-  const AbstractDataStore<float32>& vertexListStore = vertexList->getDataStoreRef();
-
-  std::set<float> setY;
-  for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
-  {
-    setY.insert(vertexListStore.getComponentValue(tuple, 1));
-  }
-
-  return (setY.size() == 1);
+Result<bool> INodeGeometry0D::isXZPlane() const
+{
+  return isPlane(1);
 }
 
 void INodeGeometry0D::setVertexCoordinate(usize vertId, const Point3D<float32>& coordinate)

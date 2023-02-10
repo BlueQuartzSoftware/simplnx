@@ -75,28 +75,28 @@ public:
    * @brief Calculates and returns the bounding box for this geometry
    * @return
    */
-  std::optional<BoundingBox> getBoundingBox() const;
+  Result<BoundingBox> getBoundingBox() const;
 
   /**
    * @brief Returns whether or not this geometry is in a YZ plane.
    * Returns empty if the vertex list does not exist.
    * @return
    */
-  std::optional<bool> isYZPlane() const;
+  Result<bool> isYZPlane() const;
 
   /**
    * @brief Returns whether or not this geometry is in a XY plane
    * Returns empty if the vertex list does not exist.
    * @return
    */
-  std::optional<bool> isXYPlane() const;
+  Result<bool> isXYPlane() const;
 
   /**
    * @brief Returns whether or not this geometry is in a XZ plane
    * Returns empty if the vertex list does not exist.
    * @return
    */
-  std::optional<bool> isXZPlane() const;
+  Result<bool> isXZPlane() const;
 
   /**
    * @brief Gets the coordinates at the target vertex ID.
@@ -197,5 +197,17 @@ protected:
    */
   std::optional<IdType> m_VertexDataArrayId;
   std::optional<IdType> m_VertexAttributeMatrixId;
+
+private:
+  /**
+   * @brief Helper function that returns whether or not this geometry is in a plane
+   * Returns empty if the vertex list or data store does not exist.
+   * @param dimensionIndex The dimensional index to check for equality.
+   * YZ plane --> dimensionIndex = 0
+   * XZ plane --> dimensionIndex = 1
+   * XY plane --> dimensionIndex = 2
+   * @return
+   */
+  Result<bool> isPlane(usize dimensionIndex) const;
 };
 } // namespace complex

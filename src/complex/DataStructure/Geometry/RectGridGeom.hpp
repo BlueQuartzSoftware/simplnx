@@ -192,7 +192,7 @@ public:
    * @brief
    * @return FloatVec3
    */
-  std::optional<FloatVec3> getOrigin() const;
+  Result<FloatVec3> getOrigin() const;
 
   /**
    * @brief
