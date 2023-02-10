@@ -14,7 +14,7 @@ const float32 k_PartitionEdgePadding = 0.000001;
  * @param boundingBox The bounding box
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  */
-FloatVec3 CalculatePartitionLengthsOfBoundingBox(const INodeGeometry0D::BoundingBox& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const INodeGeometry0D::BoundingBox& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)
 {
   // Calculate the length per partition for each dimension, and set it into the partitioning scheme image geometry
   float32 lengthX = ((boundingBox.second[0] - boundingBox.first[0]) / static_cast<float32>(numberOfPartitionsPerAxis.getX()));
@@ -30,23 +30,25 @@ FloatVec3 CalculatePartitionLengthsOfBoundingBox(const INodeGeometry0D::Bounding
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  */
 template <typename Geom>
-std::optional<FloatVec3> CalculatePartitionLengthsByPartitionCount(const Geom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const Geom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
-  std::optional<INodeGeometry0D::BoundingBox> boundingBox = geometry.getBoundingBox();
-  if(!boundingBox.has_value())
+  Result<INodeGeometry0D::BoundingBox> result = geometry.getBoundingBox();
+  if(result.invalid())
   {
     return {};
   }
 
-  // Pad the edges
-  boundingBox->first[0] -= k_PartitionEdgePadding;
-  boundingBox->first[1] -= k_PartitionEdgePadding;
-  boundingBox->first[2] -= k_PartitionEdgePadding;
-  boundingBox->second[0] += k_PartitionEdgePadding;
-  boundingBox->second[1] += k_PartitionEdgePadding;
-  boundingBox->second[2] += k_PartitionEdgePadding;
+  INodeGeometry0D::BoundingBox boundingBox = result.value();
 
-  return CalculatePartitionLengthsOfBoundingBox(*boundingBox, numberOfPartitionsPerAxis);
+  // Pad the edges
+  boundingBox.first[0] -= k_PartitionEdgePadding;
+  boundingBox.first[1] -= k_PartitionEdgePadding;
+  boundingBox.first[2] -= k_PartitionEdgePadding;
+  boundingBox.second[0] += k_PartitionEdgePadding;
+  boundingBox.second[1] += k_PartitionEdgePadding;
+  boundingBox.second[2] += k_PartitionEdgePadding;
+
+  return CalculatePartitionLengthsOfBoundingBox(boundingBox, numberOfPartitionsPerAxis);
 }
 
 /**
@@ -55,7 +57,7 @@ std::optional<FloatVec3> CalculatePartitionLengthsByPartitionCount(const Geom& g
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  */
 template <>
-std::optional<FloatVec3> CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
   SizeVec3 dims = geometry.getDimensions();
   FloatVec3 spacing = geometry.getSpacing();
@@ -72,7 +74,7 @@ std::optional<FloatVec3> CalculatePartitionLengthsByPartitionCount(const ImageGe
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  */
 template <>
-std::optional<FloatVec3> CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
   const Float32Array* xBounds = geometry.getXBounds();
   const Float32Array* yBounds = geometry.getYBounds();
@@ -80,32 +82,32 @@ std::optional<FloatVec3> CalculatePartitionLengthsByPartitionCount(const RectGri
 
   if(xBounds == nullptr)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4000, "Unable to calculate partition lengths using the partition count - X Bounds array is not available.");
   }
 
   if(yBounds == nullptr)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4001, "Unable to calculate partition lengths using the partition count - Y Bounds array is not available.");
   }
 
   if(zBounds == nullptr)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4002, "Unable to calculate partition lengths using the partition count - Z Bounds array is not available.");
   }
 
   if(xBounds->getSize() == 0)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4003, "Unable to calculate partition lengths using the partition count - X Bounds array is empty.");
   }
 
   if(yBounds->getSize() == 0)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4004, "Unable to calculate partition lengths using the partition count - Y Bounds array is empty.");
   }
 
   if(zBounds->getSize() == 0)
   {
-    return {};
+    return MakeErrorResult<FloatVec3>(-4005, "Unable to calculate partition lengths using the partition count - Z Bounds array is empty.");
   }
 
   FloatVec3 lengthPerPartition = {0.0f, 0.0f, 0.0f};
@@ -122,7 +124,7 @@ std::optional<FloatVec3> CalculatePartitionLengthsByPartitionCount(const RectGri
   float32 maxZ = zStore.getValue(zBounds->getNumberOfTuples() - 1);
   lengthPerPartition.setZ(maxZ / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
 
-  return lengthPerPartition;
+  return {lengthPerPartition};
 }
 
 /**
@@ -130,22 +132,24 @@ std::optional<FloatVec3> CalculatePartitionLengthsByPartitionCount(const RectGri
  * @param geometry The geometry whose bounding box origin will be calculated
  */
 template <typename Geom>
-std::optional<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
+Result<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
 {
-  std::optional<INodeGeometry0D::BoundingBox> boundingBox = geometry.getBoundingBox();
-  if(!boundingBox.has_value())
+  Result<INodeGeometry0D::BoundingBox> result = geometry.getBoundingBox();
+  if(result.invalid())
   {
-    return {};
+    return {ConvertResultTo<FloatVec3>(ConvertResult(std::move(result)), {})};
   }
 
-  // Pad the edges
-  boundingBox->first[0] -= k_PartitionEdgePadding;
-  boundingBox->first[1] -= k_PartitionEdgePadding;
-  boundingBox->first[2] -= k_PartitionEdgePadding;
-  boundingBox->second[0] += k_PartitionEdgePadding;
-  boundingBox->second[1] += k_PartitionEdgePadding;
-  boundingBox->second[2] += k_PartitionEdgePadding;
+  INodeGeometry0D::BoundingBox boundingBox = result.value();
 
-  return (*boundingBox).first;
+  // Pad the edges
+  boundingBox.first[0] -= k_PartitionEdgePadding;
+  boundingBox.first[1] -= k_PartitionEdgePadding;
+  boundingBox.first[2] -= k_PartitionEdgePadding;
+  boundingBox.second[0] += k_PartitionEdgePadding;
+  boundingBox.second[1] += k_PartitionEdgePadding;
+  boundingBox.second[2] += k_PartitionEdgePadding;
+
+  return {boundingBox.first};
 }
 } // namespace complex
