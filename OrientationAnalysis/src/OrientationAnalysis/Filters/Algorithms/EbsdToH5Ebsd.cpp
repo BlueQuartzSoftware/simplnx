@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/EbsdMacros.h"
@@ -37,25 +38,29 @@ const std::atomic_bool& EbsdToH5Ebsd::getCancel()
 // -----------------------------------------------------------------------------
 Result<> EbsdToH5Ebsd::operator()()
 {
-
-  // Make sure any directory path is also available as the user may have just typed
-  // in a path without actually creating the full path
+  auto absPath = m_InputValues->OutputPath;
+  if(!absPath.is_absolute())
   {
-    std::stringstream ss;
-    ss << fs::absolute(m_InputValues->OutputPath).parent_path().string() << "/" << m_InputValues->OutputPath.stem().string();
-
-    // If the parent path does not exist then try to create it.
-    if(!fs::exists(fs::absolute(m_InputValues->OutputPath).parent_path()))
+    try
     {
-      if(!fs::create_directories(fs::absolute(m_InputValues->OutputPath).parent_path()))
-      {
-        return {MakeErrorResult(-99500, fmt::format("Error Creating output path for H5Ebsd '{}'", fs::absolute(m_InputValues->OutputPath).string()))};
-      }
+      absPath = fs::absolute(absPath);
+    } catch(const std::filesystem::filesystem_error& error)
+    {
+      return MakeErrorResult(-15000,
+                             fmt::format("EbsdToH5Ebsd::operator()() threw an error when creating absolute path from '{}'. Reported error is '{}'", m_InputValues->OutputPath.string(), error.what()));
     }
   }
 
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  Result<> createDirectoriesResult = complex::CreateOutputDirectories(absPath.parent_path());
+  if(createDirectoriesResult.invalid())
+  {
+    return createDirectoriesResult;
+  }
+
   // Create output H5Ebsd File
-  hid_t fileId = H5Support::H5Utilities::createFile(m_InputValues->OutputPath.string());
+  hid_t fileId = H5Support::H5Utilities::createFile(absPath.string());
   if(fileId < 0)
   {
     return MakeErrorResult(-99501, fmt::format("The output HDF5 file could not be created. Check permissions or if the file is in use by another program"));
