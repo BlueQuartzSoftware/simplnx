@@ -12,8 +12,8 @@
 
 namespace
 {
-const std::string k_ErodeString("Erode");
 const std::string k_DilateString("Dilate");
+const std::string k_ErodeString("Erode");
 const complex::ChoicesParameter::Choices k_OperationChoices = {k_DilateString, k_ErodeString};
 
 const complex::ChoicesParameter::ValueType k_DilateIndex = 0ULL;

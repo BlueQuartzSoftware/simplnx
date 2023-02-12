@@ -20,17 +20,19 @@ namespace
 constexpr ChoicesParameter::ValueType k_Dilate = 0ULL;
 constexpr ChoicesParameter::ValueType k_Erode = 1ULL;
 
-const DataPath k_MaskArrayDataPath = DataPath({"Input Data", "EBSD Scan Data", "Mask"});
-const DataPath k_SelectedGeometry = DataPath({"Input Data"});
-const std::string k_ExemplarErodeDataPath("Exemplar Mask Erode");
-const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarErodeDataPath, "EBSD Scan Data"});
+const std::string k_EbsdScanDataName("EBSD Scan Data");
 
-const std::string k_ExemplarDilateDataContainer("Exemplar Mask Dilate");
-const DataPath k_DilateCellAttributeMatrixDataPath = DataPath({k_ExemplarDilateDataContainer, "EBSD Scan Data"});
+const DataPath k_InputData({"Input Data"});
+const DataPath k_EbsdScanDataDataPath = k_InputData.createChildPath(k_EbsdScanDataName);
+const DataPath k_MaskArrayDataPath = k_EbsdScanDataDataPath.createChildPath("Mask");
+
 } // namespace
 
 TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Dilate)", "[ComplexCore][ErodeDilateMaskFilter]")
 {
+  const std::string k_ExemplarDataContainerName("Exemplar Mask Dilate");
+  const DataPath k_DilateCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
+
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -50,7 +52,7 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Dilate)", "[ComplexCore][ErodeDila
     args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(true));
     args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(true));
     args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayDataPath));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometry));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_InputData));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -60,11 +62,17 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Dilate)", "[ComplexCore][ErodeDila
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_DilateCellAttributeMatrixDataPath, k_ExemplarDilateDataContainer);
+  std::cout << "k_EbsdScanDataDataPath:      " << k_EbsdScanDataDataPath.toString() << std::endl;
+  std::cout << "k_ExemplarDataContainerName: " << k_ExemplarDataContainerName << std::endl;
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
 }
 
 TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Erode)", "[ComplexCore][ErodeDilateMaskFilter]")
 {
+
+  const std::string k_ExemplarDataContainerName("Exemplar Mask Erode");
+  const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
+
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -84,7 +92,7 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Erode)", "[ComplexCore][ErodeDilat
     args.insertOrAssign(ErodeDilateMaskFilter::k_YDirOn_Key, std::make_any<bool>(true));
     args.insertOrAssign(ErodeDilateMaskFilter::k_ZDirOn_Key, std::make_any<bool>(true));
     args.insertOrAssign(ErodeDilateMaskFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_MaskArrayDataPath));
-    args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometry));
+    args.insertOrAssign(ErodeDilateMaskFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_InputData));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -94,5 +102,7 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Erode)", "[ComplexCore][ErodeDilat
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarErodeDataPath);
+  std::cout << "k_EbsdScanDataDataPath:      " << k_EbsdScanDataDataPath.toString() << std::endl;
+  std::cout << "k_ExemplarDataContainerName: " << k_ExemplarDataContainerName << std::endl;
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
 }
