@@ -62,8 +62,7 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Dilate)", "[ComplexCore][ErodeDila
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
-  std::cout << "k_EbsdScanDataDataPath:      " << k_EbsdScanDataDataPath.toString() << std::endl;
-  std::cout << "k_ExemplarDataContainerName: " << k_ExemplarDataContainerName << std::endl;
+
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
 }
 
@@ -102,7 +101,6 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Erode)", "[ComplexCore][ErodeDilat
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
-  std::cout << "k_EbsdScanDataDataPath:      " << k_EbsdScanDataDataPath.toString() << std::endl;
-  std::cout << "k_ExemplarDataContainerName: " << k_ExemplarDataContainerName << std::endl;
+
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
 }

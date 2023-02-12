@@ -17,11 +17,14 @@ using namespace complex::UnitTest;
 
 namespace
 {
-const DataPath k_FeatureIdsDataPath = DataPath({"Input Data", "EBSD Scan Data", "FeatureIds"});
+const std::string k_EbsdScanDataName("EBSD Scan Data");
 
-const DataPath k_SelectedGeometry = DataPath({"Input Data"});
-const std::string k_ExemplarErodeDataPath("Exemplar Coordination Number");
-const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarErodeDataPath, "EBSD Scan Data"});
+const DataPath k_InputData({"Input Data"});
+const DataPath k_EbsdScanDataDataPath = k_InputData.createChildPath(k_EbsdScanDataName);
+const DataPath k_FeatureIdsDataPath = k_EbsdScanDataDataPath.createChildPath("FeatureIds");
+
+const std::string k_ExemplarDataContainerName("Exemplar Coordination Number");
+const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, k_EbsdScanDataName});
 } // namespace
 
 TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter", "[ComplexCore][ErodeDilateCoordinationNumberFilter]")
@@ -43,7 +46,7 @@ TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter", "[ComplexCore][Ero
     args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_Loop_Key, std::make_any<bool>(false));
     args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsDataPath));
     args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometry));
+    args.insertOrAssign(ErodeDilateCoordinationNumberFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_InputData));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -53,5 +56,6 @@ TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter", "[ComplexCore][Ero
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_ErodeCellAttributeMatrixDataPath, k_ExemplarErodeDataPath);
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
 }
