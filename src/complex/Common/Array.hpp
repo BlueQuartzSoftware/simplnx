@@ -668,34 +668,73 @@ public:
     return std::sqrt(dot(this));
   }
 
+  /**
+   * @brief Adds this Vec3 to another Vect3 and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
   inline Vec3 operator+(const Vec3& v) const
   {
     return Vec3((*this)[0] + v[0], (*this)[1] + v[1], (*this)[2] + v[2]);
   }
+  /**
+   * @brief Subtracts this Vec3 to another Vect3 and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
   inline Vec3 operator-(const Vec3& v) const
   {
     return Vec3((*this)[0] - v[0], (*this)[1] - v[1], (*this)[2] - v[2]);
   }
+  /**
+   * @brief Negates this Vec3 and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
   inline Vec3 operator-() const
   {
     return Vec3(-(*this)[0], -(*this)[1], -(*this)[2]);
   }
-  inline Vec3 operator*(const T& r) const
+  /**
+   * @brief Multiples this Vec3 by a scalar value and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 operator*(const T r) const
   {
     return Vec3((*this)[0] * r, (*this)[1] * r, (*this)[2] * r);
   }
+  /**
+   * @brief Multiples this Vec3 with another Vec3 using element wise multiplication and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
   inline Vec3 operator*(const Vec3& v) const
   {
     return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
   }
-  inline Vec3& operator/=(const T& r)
+  /**
+   * @brief Divides this Vec3 with another Vec3 using element wise division. Performs in-place division
+   * @param Vec3
+   * @return Current Instance is returned
+   */
+  inline Vec3& operator/=(const T r)
   {
-    (*this)[0] /= r, (*this)[1] /= r, (*this)[2] /= r;
+    (*this)[0] /= r;
+    (*this)[1] /= r;
+    (*this)[2] /= r;
     return *this;
   }
-  inline Vec3& operator*=(const T& r)
+  /**
+   * @brief Multiplies this Vec3 by a scalar value using element wise multiplication. Performs in-place.
+   * @param Vec3
+   * @return Current Instance is returned
+   */
+  inline Vec3& operator*=(const T r)
   {
-    (*this)[0] *= r, (*this)[1] *= r, (*this)[2] *= r;
+    (*this)[0] *= r;
+    (*this)[1] *= r;
+    (*this)[2] *= r;
     return *this;
   }
 };
