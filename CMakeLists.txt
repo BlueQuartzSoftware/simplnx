@@ -363,6 +363,8 @@ set(COMPLEX_HDRS
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/Matrix3x1.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Math/Matrix3x3.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/StatisticsCalculations.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
