@@ -9,7 +9,9 @@ namespace complex
 {
 /**
  * @class ErodeDilateBadDataFilter
- * @brief This filter will ....
+ * @brief This filter will either erode or dilate voxels that have a featureId = 0 by
+ * copying neighbor data into the voxel with featureId = 0. See the Markdown for
+ * a more comprehensive explanation
  */
 class COMPLEXCORE_EXPORT ErodeDilateBadDataFilter : public IFilter
 {

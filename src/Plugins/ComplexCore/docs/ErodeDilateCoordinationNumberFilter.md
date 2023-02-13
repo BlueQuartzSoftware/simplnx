@@ -6,7 +6,7 @@ Processing (Cleanup)
 
 ## Description
 
-This **Filter** smoothes the interface between *good* and *bad* data. The user can specify a *coordination number*,
+This **Filter** will smooth the interface between *good* and *bad* data. The user can specify a *coordination number*,
 which is the number of neighboring **Cells** of opposite type (i.e., *good* or *bad*) compared to a given **Cell** that
 is acceptable. For example, a single *bad* **Cell** surrounded by *good* **Cells** would have a *coordination number* of
 *6*. The number entered by the user is actually the maximum tolerated *coordination number*. If the user entered a value

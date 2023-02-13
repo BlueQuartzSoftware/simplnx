@@ -9,7 +9,9 @@ namespace complex
 {
 /**
  * @class ErodeDilateMaskFilter
- * @brief This filter will ....
+ * @brief This filter will erode or dilate data based on user supplied mask array.
+ * If the mask is _dilated_, the **Filter** grows the *true* regions by one **Cell** in an iterative sequence for a user
+defined number of iterations.
  */
 class COMPLEXCORE_EXPORT ErodeDilateMaskFilter : public IFilter
 {

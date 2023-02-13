@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class ErodeDilateCoordinationNumberFilter
- * @brief This filter will ....
+ * @brief This **Filter** will smooth the interface between *good* and *bad* data.
  */
 class COMPLEXCORE_EXPORT ErodeDilateCoordinationNumberFilter : public IFilter
 {
