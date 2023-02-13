@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <tuple>
 #include <vector>
 
@@ -207,7 +208,7 @@ public:
   }
 
   /**
-   * @brief operator == Tests for an element by element equivelance of the underlying data
+   * @brief operator == Tests for an element by element equivalence of the underlying data
    * @param rhs
    * @return bool
    */
@@ -305,7 +306,7 @@ public:
   }
 
   /**
-   * @brief Move assignmenmt operator
+   * @brief Move assignment operator
    * @param rhs
    * @return Vec2&
    */
@@ -639,6 +640,102 @@ public:
   Vec3<OutType> convertType()
   {
     return Vec3<OutType>(static_cast<OutType>((*this)[0]), static_cast<OutType>((*this)[1]), static_cast<OutType>((*this)[2]));
+  }
+
+  /**
+   * @brief Returns the cross product of this and an input Vec3
+   * @return Vec3<T>
+   */
+  inline Vec3 cross(const Vec3<T>& v) const
+  {
+    return Vec3<T>((*this)[1] * v[2] - (*this)[2] * v[1], (*this)[2] * v[0] - (*this)[0] * v[2], (*this)[0] * v[1] - (*this)[1] * v[0]);
+  }
+
+  /**
+   * @brief Returns the dot product of this and an input Vec3
+   * @return Vec3<T>
+   */
+  inline T dot(const Vec3<T>& v) const
+  {
+    return (*this)[0] * v[0] + (*this)[1] * v[1] + (*this)[2] * v[2];
+  }
+
+  /**
+   * @brief Returns the magnitude of the 3x1 vector
+   */
+  inline T magnitude()
+  {
+    return std::sqrt(dot(this));
+  }
+
+  /**
+   * @brief Adds this Vec3 to another Vect3 and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 operator+(const Vec3& v) const
+  {
+    return Vec3((*this)[0] + v[0], (*this)[1] + v[1], (*this)[2] + v[2]);
+  }
+  /**
+   * @brief Subtracts this Vec3 to another Vect3 and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 operator-(const Vec3& v) const
+  {
+    return Vec3((*this)[0] - v[0], (*this)[1] - v[1], (*this)[2] - v[2]);
+  }
+  /**
+   * @brief Negates this Vec3 and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 operator-() const
+  {
+    return Vec3(-(*this)[0], -(*this)[1], -(*this)[2]);
+  }
+  /**
+   * @brief Multiples this Vec3 by a scalar value and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 operator*(const T r) const
+  {
+    return Vec3((*this)[0] * r, (*this)[1] * r, (*this)[2] * r);
+  }
+  /**
+   * @brief Multiples this Vec3 with another Vec3 using element wise multiplication and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 operator*(const Vec3& v) const
+  {
+    return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
+  }
+  /**
+   * @brief Divides this Vec3 with another Vec3 using element wise division. Performs in-place division
+   * @param Vec3
+   * @return Current Instance is returned
+   */
+  inline Vec3& operator/=(const T r)
+  {
+    (*this)[0] /= r;
+    (*this)[1] /= r;
+    (*this)[2] /= r;
+    return *this;
+  }
+  /**
+   * @brief Multiplies this Vec3 by a scalar value using element wise multiplication. Performs in-place.
+   * @param Vec3
+   * @return Current Instance is returned
+   */
+  inline Vec3& operator*=(const T r)
+  {
+    (*this)[0] *= r;
+    (*this)[1] *= r;
+    (*this)[2] *= r;
+    return *this;
   }
 };
 

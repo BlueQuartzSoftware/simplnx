@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Array.hpp"
 #include "complex/Common/Types.hpp"
 
 #include <array>
@@ -198,6 +199,15 @@ public:
   ArrayType toArray() const
   {
     return m_Pos;
+  }
+
+  /**
+   * @brief
+   * @return
+   */
+  Vec3<T> toVec3() const
+  {
+    return Vec3(m_Pos.data());
   }
 
   /**
