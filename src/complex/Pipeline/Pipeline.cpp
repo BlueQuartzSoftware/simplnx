@@ -119,6 +119,11 @@ std::string Pipeline::getName() const
   return m_Name;
 }
 
+std::string Pipeline::getClassName() const
+{
+  return "Pipeline";
+}
+
 void Pipeline::setName(const std::string& name)
 {
   m_Name = name;

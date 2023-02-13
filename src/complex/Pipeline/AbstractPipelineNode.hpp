@@ -98,6 +98,12 @@ public:
   virtual std::string getName() const = 0;
 
   /**
+   * @brief Returns the filter's C++ class name
+   * @return
+   */
+  virtual std::string getClassName() const = 0;
+
+  /**
    * @brief Returns a pointer to the parent Pipeline. Returns nullptr if no
    * parent could be found.
    * @return Pipeline*

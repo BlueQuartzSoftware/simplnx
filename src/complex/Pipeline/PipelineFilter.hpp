@@ -74,6 +74,12 @@ public:
   std::string getName() const override;
 
   /**
+   * @brief Returns the filters C++ class name
+   * @return
+   */
+  std::string getClassName() const override;
+
+  /**
    * @brief Returns a pointer to the wrapped filter.
    * @return IFilter*
    */

@@ -50,6 +50,11 @@ AbstractPipelineNode::NodeType PipelineFilter::getType() const
   return NodeType::Filter;
 }
 
+std::string PipelineFilter::getClassName() const
+{
+  return m_Filter->className();
+}
+
 std::string PipelineFilter::getName() const
 {
   return m_Filter->humanName();

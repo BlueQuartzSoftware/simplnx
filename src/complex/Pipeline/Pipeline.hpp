@@ -96,6 +96,12 @@ public:
   std::string getName() const override;
 
   /**
+   * @brief Returns the class' C++ name
+   * @return
+   */
+  std::string getClassName() const override;
+
+  /**
    * @brief Sets the pipeline's name.
    * @param name
    */
