@@ -99,7 +99,7 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
 
   if(pOperationValue != ::k_DilateIndex && pOperationValue != ::k_ErodeIndex)
   {
-    MakeErrorResult(-16700, fmt::format("Operation Selection must be 0 (Erode) or 1 (Dilate). {} was passed into the filter. ", pOperationValue));
+    MakeErrorResult(-16700, fmt::format("Operation Selection must be 0 (Dilate) or 1 (Erode). {} was passed into the filter. ", pOperationValue));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

@@ -143,7 +143,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           if(coordinationNumber[voxelIndex] >= m_InputValues->CoordinationNumber && coordinationNumber[voxelIndex] > 0)
           {
             /******************************************************************
-             * If this section is slow it is because we are having to use a the
+             * If this section is slow it is because we are having to use the
              * ExecuteDataFunction<T>() in order to call "copyTuple()" because
              * "copyTuple()" isn't in the IArray API set. Oh well.
              */
