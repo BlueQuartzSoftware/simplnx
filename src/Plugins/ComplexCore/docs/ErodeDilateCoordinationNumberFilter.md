@@ -19,6 +19,11 @@ after one iteration, **Cells** that were acceptable may become unacceptable by t
 criteria due to the small changes to the structure during the *coarsening*. The user can opt to enable the _Loop Until
 Gone_ parameter, which will continue to run until no **Cells** fail the original criteria.
 
+
+| Before Filter                      | After Filter                       | 
+|--------------------------------------|--------------------------------------|
+| ![](Images/ErodeDilateCoordinationNUmber_Before.png) | ![](Images/ErodeDilateCoordinationNUmber_After.png) |
+
 ## Parameters
 
 | Name                | Type    | Description                                                                                                                        |
