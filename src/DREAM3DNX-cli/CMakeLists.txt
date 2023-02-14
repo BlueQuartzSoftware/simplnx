@@ -1,4 +1,4 @@
-project(NX-cli
+project(DREAM3DNX-cli
   VERSION 0.1.0
   DESCRIPTION "DREAM.3D NX CLI"
   LANGUAGES CXX)
@@ -8,26 +8,26 @@ set(CLI_HDRS
 )
 
 set(CLI_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/NX_cli.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/DREAM3DNX_cli.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/CliObserver.cpp
 )
 
-add_executable(NX-cli)
+add_executable(DREAM3DNX-cli)
 
-set_target_properties(NX-cli
+set_target_properties(DREAM3DNX-cli
   PROPERTIES
   DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
 )
 
-target_sources(NX-cli
+target_sources(DREAM3DNX-cli
   PRIVATE
   ${CLI_HDRS}
   ${CLI_SRCS}
 )
 
-target_link_libraries(NX-cli PRIVATE complex::complex)
+target_link_libraries(DREAM3DNX-cli PRIVATE complex::complex)
 
-source_group("NX CLI" FILES ${CLI_HDRS} ${CLI_SRCS})
+source_group("DREAM.3D NX CLI" FILES ${CLI_HDRS} ${CLI_SRCS})
 
 # -----------------------------------------------------------------------
 # Define install destination directories
@@ -39,7 +39,7 @@ if(UNIX AND NOT APPLE) # Linux we obey standard unix layout
 endif()
 
 # -- Create an Install Rule for the main app bundle target
-install(TARGETS NX-cli
+install(TARGETS DREAM3DNX-cli
   COMPONENT Applications
   RUNTIME DESTINATION ${DEST_DIR}
   LIBRARY DESTINATION ${DEST_DIR}

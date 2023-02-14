@@ -257,7 +257,7 @@ Result<> DisplayHelpMenu(const std::vector<Argument>& arguments)
 
 int main(int argc, char* argv[])
 {
-  std::cout << "NX CLI" << std::endl;
+  std::cout << "DREAM.3D NX CLI" << std::endl;
   complex::Application app;
   LoadApp(app);
 
