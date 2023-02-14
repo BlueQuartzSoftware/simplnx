@@ -5,7 +5,7 @@
 
 namespace complex
 {
-namespace PipelineRunner
+namespace CLI
 {
 /**
  * @class PipelineObserver
@@ -38,5 +38,5 @@ protected:
 private:
   std::vector<nod::scoped_connection> m_SignalConnections;
 };
-} // namespace PipelineRunner
+} // namespace CLI
 } // namespace complex
