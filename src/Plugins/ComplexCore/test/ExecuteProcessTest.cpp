@@ -23,9 +23,9 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
   Arguments args;
 
   fs::path processOutput(fmt::format("{}/ExecuteProcessUnitTestOutput.txt", unit_test::k_BuildDir));
-  std::string testCommand = fmt::format("{}/PipelineRunner_d", unit_test::k_BuildDir);
+  std::string testCommand = fmt::format("{}/NX-cli_d --help", unit_test::k_BuildDir);
 #if NDEBUG // release build
-  testCommand = fmt::format("{}/PipelineRunner", unit_test::k_BuildDir);
+  testCommand = fmt::format("{}/NX-cli --help", unit_test::k_BuildDir);
 #endif
 
   // Create default Parameters for the filter.
@@ -47,7 +47,7 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
   std::string firstLine;
   std::getline(processOutputFile, firstLine);
   firstLine = StringUtilities::rtrim(firstLine);
-  REQUIRE(firstLine == "PipelineRunner Version 7");
+  REQUIRE(firstLine == "NX CLI");
 }
 
 TEST_CASE("ComplexCore::ExecuteProcessFilter: InValid filter execution")
