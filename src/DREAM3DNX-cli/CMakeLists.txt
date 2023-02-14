@@ -49,9 +49,9 @@ install(TARGETS DREAM3DNX-cli
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
   set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-  set_target_properties(NX-cli
+  set_target_properties(DREAM3DNX-cli
     PROPERTIES
     INSTALL_RPATH \$ORIGIN/../lib)
-  target_link_options(NX-cli PUBLIC "-Wl,--disable-new-dtags")
-  target_compile_options(NX-cli PUBLIC "-no-pie")
+  target_link_options(DREAM3DNX-cli PUBLIC "-Wl,--disable-new-dtags")
+  target_compile_options(DREAM3DNX-cli PUBLIC "-no-pie")
 endif()
