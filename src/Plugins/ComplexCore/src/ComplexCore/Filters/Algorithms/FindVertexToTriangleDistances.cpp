@@ -363,13 +363,6 @@ public:
             m_Distances[v] = d;
             m_ClosestTri[v] = static_cast<int64>(t);
           }
-
-          std::cout << "RTree | x-min: " << std::min({m_TriangleVertices[p * 3 + 0], m_TriangleVertices[q * 3 + 0], m_TriangleVertices[r * 3 + 0]}) << "| x-max: "
-                    << std::max({m_TriangleVertices[p * 3 + 0], m_TriangleVertices[q * 3 + 0], m_TriangleVertices[r * 3 + 0]}) << "| y-min: "
-                    << std::min({m_TriangleVertices[p * 3 + 1], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[r * 3 + 1]}) << "| y-max: "
-                    << std::max({m_TriangleVertices[p * 3 + 1], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[r * 3 + 1]}) << "| z-min: "
-                    << std::min({m_TriangleVertices[p * 3 + 2], m_TriangleVertices[q * 3 + 2], m_TriangleVertices[r * 3 + 2]}) << "| z-max: "
-                    << std::max({m_TriangleVertices[p * 3 + 2], m_TriangleVertices[q * 3 + 2], m_TriangleVertices[r * 3 + 2]}) << std::endl;
         }
       }
       else // Point was not in the RTree, so we need to search against every triangle
@@ -396,13 +389,6 @@ public:
             m_Distances[v] = d;
             m_ClosestTri[v] = static_cast<int64>(t);
           }
-
-          std::cout << "Every | x-min: " << std::min({m_TriangleVertices[p * 3 + 0], m_TriangleVertices[q * 3 + 0], m_TriangleVertices[r * 3 + 0]}) << "| x-max: "
-                     << std::max({m_TriangleVertices[p * 3 + 0], m_TriangleVertices[q * 3 + 0], m_TriangleVertices[r * 3 + 0]}) << "| y-min: "
-                     << std::min({m_TriangleVertices[p * 3 + 1], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[r * 3 + 1]}) << "| y-max: "
-                     << std::max({m_TriangleVertices[p * 3 + 1], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[r * 3 + 1]}) << "| z-min: "
-                     << std::min({m_TriangleVertices[p * 3 + 2], m_TriangleVertices[q * 3 + 2], m_TriangleVertices[r * 3 + 2]}) << "| z-max: "
-                     << std::max({m_TriangleVertices[p * 3 + 2], m_TriangleVertices[q * 3 + 2], m_TriangleVertices[r * 3 + 2]}) << std::endl;
         }
       }
 
@@ -424,6 +410,7 @@ public:
       }
       counter++;
     }
+    m_Filter->sendThreadSafeProgressMessage(counter);
   }
 
 private:
@@ -510,13 +497,6 @@ Result<> FindVertexToTriangleDistances::operator()()
   std::vector<float> triBoundsArray(numTris * 6, 0.0F);
   for(size_t triIndex = 0; triIndex < numTris; triIndex++)
   {
-    //    triBoundsArray[6 * triIndex] = std::min({vertices[3 * triangles[3 * triIndex]], vertices[3 * triangles[3 * triIndex + 1]], vertices[3 * triangles[3 * triIndex + 2]]});
-    //    triBoundsArray[6 * triIndex + 1] = std::max({vertices[3 * triangles[3 * triIndex]], vertices[3 * triangles[3 * triIndex + 1]], vertices[3 * triangles[3 * triIndex + 2]]});
-    //    triBoundsArray[6 * triIndex + 2] = std::min({vertices[3 * triangles[3 * triIndex] + 1], vertices[3 * triangles[3 * triIndex + 1] + 1], vertices[3 * triangles[3 * triIndex + 2] + 1]});
-    //    triBoundsArray[6 * triIndex + 3] = std::max({vertices[3 * triangles[3 * triIndex] + 1], vertices[3 * triangles[3 * triIndex + 1] + 1], vertices[3 * triangles[3 * triIndex + 2] + 1]});
-    //    triBoundsArray[6 * triIndex + 4] = std::min({vertices[3 * triangles[3 * triIndex] + 2], vertices[3 * triangles[3 * triIndex + 1] + 2], vertices[3 * triangles[3 * triIndex + 2] + 2]});
-    //    triBoundsArray[6 * triIndex + 5] = std::max({vertices[3 * triangles[3 * triIndex] + 2], vertices[3 * triangles[3 * triIndex + 1] + 2], vertices[3 * triangles[3 * triIndex + 2] + 2]});
-
     GetBoundingBoxAtTri(triangles, vertices, triIndex, {triBoundsArray.data() + (6 * triIndex), 6});
     m_RTree.Insert(triBoundsArray.data() + (6 * triIndex), triBoundsArray.data() + (6 * triIndex) + 3, triIndex); // Note, all values including zero are fine in this version
   }
@@ -529,7 +509,7 @@ Result<> FindVertexToTriangleDistances::operator()()
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setParallelizationEnabled(false);
+  dataAlg.setParallelizationEnabled(true);
   dataAlg.setRange(0, m_TotalElements);
   dataAlg.execute(FindVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree));
 
