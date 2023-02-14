@@ -65,6 +65,20 @@ const std::set<IGeometry::Type>& IGeometry::GetAllGeomTypes()
   return types;
 }
 
+const std::vector<std::string>& IGeometry::GetAllLengthUnitStrings()
+{
+  static const std::vector<std::string> lengthUnitStrs = {
+      LengthUnitToString(LengthUnit::Yoctometer), LengthUnitToString(LengthUnit::Zeptometer), LengthUnitToString(LengthUnit::Attometer),  LengthUnitToString(LengthUnit::Femtometer),
+      LengthUnitToString(LengthUnit::Picometer),  LengthUnitToString(LengthUnit::Nanometer),  LengthUnitToString(LengthUnit::Micrometer), LengthUnitToString(LengthUnit::Millimeter),
+      LengthUnitToString(LengthUnit::Centimeter), LengthUnitToString(LengthUnit::Decimeter),  LengthUnitToString(LengthUnit::Meter),      LengthUnitToString(LengthUnit::Decameter),
+      LengthUnitToString(LengthUnit::Hectometer), LengthUnitToString(LengthUnit::Kilometer),  LengthUnitToString(LengthUnit::Megameter),  LengthUnitToString(LengthUnit::Gigameter),
+      LengthUnitToString(LengthUnit::Terameter),  LengthUnitToString(LengthUnit::Petameter),  LengthUnitToString(LengthUnit::Exameter),   LengthUnitToString(LengthUnit::Zettameter),
+      LengthUnitToString(LengthUnit::Yottameter), LengthUnitToString(LengthUnit::Angstrom),   LengthUnitToString(LengthUnit::Mil),        LengthUnitToString(LengthUnit::Inch),
+      LengthUnitToString(LengthUnit::Foot),       LengthUnitToString(LengthUnit::Mile),       LengthUnitToString(LengthUnit::Fathom),     LengthUnitToString(LengthUnit::Unspecified),
+      LengthUnitToString(LengthUnit::Unknown)};
+  return lengthUnitStrs;
+}
+
 const LinkedGeometryData& IGeometry::getLinkedGeometryData() const
 {
   return m_LinkedGeometryData;

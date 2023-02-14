@@ -5,17 +5,27 @@
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 namespace complex
 {
 /**
  * @class ImportBinaryCTNorthstarFilter
- * @brief This filter will ....
+ * @brief This filter will import a NorthStar Imaging data set consisting of a single .nsihdr and one
+ * or more .nsidat files. The data is read into an Image Geometry. The user can import a subvolume
+ * instead of reading the entire data set into memory.  The user should note that when using the
+ * subvolume feature that the ending voxels are inclusive. The .nsihdr file will be read during
+ * preflight and the .nsidat file(s) will be extracted from there. The expectation is that the .nsidat
+ * files are in the same directory as the .nsihdr files.
+
  */
 class COMPLEXCORE_EXPORT ImportBinaryCTNorthstarFilter : public IFilter
 {
 public:
-  ImportBinaryCTNorthstarFilter() = default;
-  ~ImportBinaryCTNorthstarFilter() noexcept override = default;
+  ImportBinaryCTNorthstarFilter();
+  ~ImportBinaryCTNorthstarFilter() noexcept override;
 
   ImportBinaryCTNorthstarFilter(const ImportBinaryCTNorthstarFilter&) = delete;
   ImportBinaryCTNorthstarFilter(ImportBinaryCTNorthstarFilter&&) noexcept = delete;
@@ -25,13 +35,20 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputHeaderFile_Key = "input_header_file";
-  static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
   static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
   static inline constexpr StringLiteral k_ImportSubvolume_Key = "import_subvolume";
   static inline constexpr StringLiteral k_StartVoxelCoord_Key = "start_voxel_coord";
   static inline constexpr StringLiteral k_EndVoxelCoord_Key = "end_voxel_coord";
+
+  struct ImageGeometryInfo
+  {
+    std::vector<float32> Origin;
+    std::vector<float32> Spacing;
+    std::vector<usize> Dimensions;
+  };
 
   /**
    * @brief Returns the name of the filter.
@@ -95,8 +112,10 @@ protected:
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure & data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-      const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+
+private:
+  int32 m_InstanceId;
 };
 } // namespace complex
 

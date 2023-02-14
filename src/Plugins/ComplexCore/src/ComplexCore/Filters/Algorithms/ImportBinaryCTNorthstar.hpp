@@ -2,36 +2,17 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
+#include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  ImportBinaryCTNorthstarInputValues inputValues;
-
-  inputValues.InputHeaderFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputHeaderFile_Key);
-  inputValues.DataContainerName = filterArgs.value<StringParameter::ValueType>(k_DataContainerName_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  inputValues.DensityArrayName = filterArgs.value<DataPath>(k_DensityArrayName_Key);
-  inputValues.LengthUnit = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
-  inputValues.VolumeDescription = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_VolumeDescription_Key);
-  inputValues.DataFileInfo = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_DataFileInfo_Key);
-  inputValues.ImportSubvolume = filterArgs.value<bool>(k_ImportSubvolume_Key);
-  inputValues.StartVoxelCoord = filterArgs.value<VectorInt32Parameter::ValueType>(k_StartVoxelCoord_Key);
-  inputValues.EndVoxelCoord = filterArgs.value<VectorInt32Parameter::ValueType>(k_EndVoxelCoord_Key);
-  inputValues.ImportedVolumeDescription = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_ImportedVolumeDescription_Key);
-
-  return ImportBinaryCTNorthstar(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+namespace fs = std::filesystem;
 
 namespace complex
 {
@@ -39,17 +20,14 @@ namespace complex
 struct COMPLEXCORE_EXPORT ImportBinaryCTNorthstarInputValues
 {
   FileSystemPathParameter::ValueType InputHeaderFile;
-  StringParameter::ValueType DataContainerName;
-  DataPath CellAttributeMatrixName;
-  DataPath DensityArrayName;
-  ChoicesParameter::ValueType LengthUnit;
-  <<<NOT_IMPLEMENTED>>> VolumeDescription;
-  <<<NOT_IMPLEMENTED>>> DataFileInfo;
+  DataPath DensityArrayPath;
+  std::vector<std::pair<fs::path, usize>> DataFilePaths;
+  SizeVec3 OriginalGeometryDims;
+  SizeVec3 ImportedGeometryDims;
   bool ImportSubvolume;
-  VectorInt32Parameter::ValueType StartVoxelCoord;
-  VectorInt32Parameter::ValueType EndVoxelCoord;
-  <<<NOT_IMPLEMENTED>>> ImportedVolumeDescription;
-
+  IntVec3 StartVoxelCoord;
+  IntVec3 EndVoxelCoord;
+  ChoicesParameter::ValueType LengthUnit;
 };
 
 /**
