@@ -1,5 +1,5 @@
 ---
-Checks: '-abseil-*,
+Checks: "-abseil-*,
   bugprone-*,
   -boost-*,
   -cert-*,
@@ -28,9 +28,7 @@ Checks: '-abseil-*,
   -readability-function-cognitive-complexity,
   -readability-function-size,
   -readability-uppercase-literal-suffix,
-  -readability-magic-numbers,
-  -cppcoreguidelines-pro-bounds-constant-array-index
-'
+  -readability-magic-numbers"
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'complex/.*\.hpp'
 FormatStyle: file
