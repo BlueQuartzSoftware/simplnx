@@ -7,8 +7,9 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
-  AlignSectionsFeatureCentroidFilter
   AlignGeometries
+  AlignSectionsFeatureCentroidFilter
+  AlignSectionsListFilter
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHull
   ArrayCalculatorFilter
@@ -31,6 +32,9 @@ set(FilterList
   CropImageGeometry
   CropVertexGeometry
   DeleteData
+  ErodeDilateBadDataFilter
+  ErodeDilateCoordinationNumberFilter
+  ErodeDilateMaskFilter
   ExecuteProcessFilter
   ExportDREAM3DFilter
   ExtractComponentAsArrayFilter
@@ -73,8 +77,8 @@ set(FilterList
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
-  ResampleImageGeomFilter
   ReplaceElementAttributesWithNeighborValuesFilter
+  ResampleImageGeomFilter
   RobustAutomaticThreshold
   RotateSampleRefFrameFilter
   ScalarSegmentFeaturesFilter
@@ -87,12 +91,6 @@ set(FilterList
   TriangleNormalFilter
   WriteASCIIDataFilter
   WriteBinaryDataFilter
-  AlignSectionsListFilter
-
-
-  ErodeDilateBadDataFilter
-  ErodeDilateMaskFilter
-  ErodeDilateCoordinationNumberFilter
 )
 
 set(ActionList
@@ -107,6 +105,9 @@ set(AlgorithmList
   CombineAttributeArrays
   ConvertColorToGrayScale
   ConvertData
+  ErodeDilateBadData
+  ErodeDilateCoordinationNumber
+  ErodeDilateMask
   ExecuteProcess
   ExtractComponentAsArray
   ExtractVertexGeometry
@@ -118,24 +119,20 @@ set(AlgorithmList
   FindTriangleGeomCentroids
   FindTriangleGeomSizes
   GenerateColorTable
+  ImportVolumeGraphicsFile
   LaplacianSmoothing
   PartitionGeometry
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   RawBinaryReader
-  ResampleImageGeom
   ReplaceElementAttributesWithNeighborValues
+  ResampleImageGeom
   ScalarSegmentFeatures
   SharedFeatureFace
   SplitAttributeArray
   StlFileReader
   TriangleCentroid
   TupleTransfer
-  ImportVolumeGraphicsFile
-
-  ErodeDilateBadData
-  ErodeDilateMask
-  ErodeDilateCoordinationNumber
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
