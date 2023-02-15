@@ -38,6 +38,7 @@
 #include "ComplexCore/Filters/FeatureDataCSVWriterFilter.hpp"
 #include "ComplexCore/Filters/FillBadDataFilter.hpp"
 #include "ComplexCore/Filters/FindArrayStatisticsFilter.hpp"
+#include "ComplexCore/Filters/FindBoundaryCellsFilter.hpp"
 #include "ComplexCore/Filters/FindDifferencesMap.hpp"
 #include "ComplexCore/Filters/FindEuclideanDistMapFilter.hpp"
 #include "ComplexCore/Filters/FindFeatureCentroidsFilter.hpp"
@@ -116,6 +117,7 @@ namespace complex
     {complex::Uuid::FromString("52a069b4-6a46-5810-b0ec-e0693c636034").value(), complex::FilterTraits<ExtractInternalSurfacesFromTriangleGeometry>::uuid}, // ExtractInternalSurfacesFromTriangleGeometry
     {complex::Uuid::FromString("737b8d5a-8622-50f9-9a8a-bfdb57608891").value(), complex::FilterTraits<FeatureDataCSVWriterFilter>::uuid}, // FeatureDataCSVWriter
     {complex::Uuid::FromString("bf35f515-294b-55ed-8c69-211b7e69cb56").value(), complex::FilterTraits<FindArrayStatisticsFilter>::uuid}, // FindArrayStatistics
+    {complex::Uuid::FromString("8a1106d4-c67f-5e09-a02a-b2e9b99d031e").value(), complex::FilterTraits<FindBoundaryCellsFilter>::uuid}, // FindBoundaryCellsFilter
     {complex::Uuid::FromString("29086169-20ce-52dc-b13e-824694d759aa").value(), complex::FilterTraits<FindDifferencesMap>::uuid}, // FindDifferenceMap
     {complex::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), complex::FilterTraits<FindEuclideanDistMapFilter>::uuid}, // FindEuclideanDistMap
     {complex::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), complex::FilterTraits<FindFeatureCentroidsFilter>::uuid}, // FindFeatureCentroids
