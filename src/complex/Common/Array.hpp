@@ -663,9 +663,9 @@ public:
   /**
    * @brief Returns the magnitude of the 3x1 vector
    */
-  inline T magnitude()
+  inline T magnitude() const
   {
-    return std::sqrt(dot(this));
+    return std::sqrt(dot(*this));
   }
 
   /**

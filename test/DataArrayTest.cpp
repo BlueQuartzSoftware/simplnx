@@ -1,4 +1,5 @@
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/Common/Array.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -6,10 +7,38 @@
 
 #include <catch2/catch.hpp>
 
+#include <cmath>
 #include <memory>
 #include <vector>
 
 using namespace complex;
+
+TEST_CASE("Array")
+{
+  FloatVec3 vec0(3.0F, 4.0F, 5.0F);
+
+  IntVec3 v0(1, 2, 3);
+  IntVec3 v1(0, 0, 0);
+  v1.setValues(1, 2, 3);
+  REQUIRE(v1[0] == 1);
+  REQUIRE(v1[1] == 2);
+  REQUIRE(v1[2] == 3);
+
+  auto v1Tuple = v1.toTuple();
+  FloatVec3 v1F32 = v1.convertType<float>();
+
+  FloatVec3 v2(-3.0F, -4.0F, -5.0F);
+  FloatVec3 cross = vec0.cross(v2);
+  REQUIRE(cross[0] == 0);
+  REQUIRE(cross[1] == 0);
+  REQUIRE(cross[2] == 0);
+
+  float32 dot = v2.dot(vec0);
+  REQUIRE(dot == -50.0F);
+
+  float32 mag = vec0.magnitude();
+  REQUIRE(mag == std::sqrt(50.0F));
+}
 
 TEST_CASE("DataArrayCreation")
 {
