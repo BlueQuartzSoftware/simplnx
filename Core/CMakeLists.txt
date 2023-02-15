@@ -13,7 +13,6 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # These are all the filters in the plugin. All filters should be kept in the
 # Core/src/Core/Filters/ directory.
 set(FilterList
-    ErodeDilateBadDataFilter
     FindNeighborhoodsFilter
     RemoveFlaggedFeaturesFilter
 )
@@ -22,7 +21,6 @@ set(FilterList
 # This should be integrated with the `create_complex_plugin` function call
 # ------------------------------------------------------------------------------
 set(AlgorithmList
-  ErodeDilateBadData
   FindNeighborhoods
   RemoveFlaggedFeatures
 )
