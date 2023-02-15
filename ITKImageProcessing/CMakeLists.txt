@@ -79,7 +79,7 @@ set(FilterList
 
   # ITKBinaryDilateImage
   # ITKBinaryErodeImage
-  # ITKBinaryMorphologicalClosingImage
+  ITKBinaryMorphologicalClosingImage
   # ITKBinaryMorphologicalOpeningImage
   # ITKBinaryOpeningByReconstructionImage
   # ITKBinaryProjectionImage
