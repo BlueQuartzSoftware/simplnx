@@ -7,7 +7,7 @@ DREAM3D Review (Memory/Management)
 
 ## Description ##
 
-This **Filter** splits an \f$n\f$-component **Attribute Array** into \f$ n \f$ scalar arrays, where each array is one of the original components.  Any arbitrary component array may be split in this manner, and the output arrays will have the same primitive type as the input array.  The original array is not modified (unless the option to remove the original array is selected); instead, \f$ n \f$ new arrays are created.  For example, consider an unsigned 8-bit array with three components:
+This **Filter** splits an n-component **Attribute Array** into **n** scalar arrays, where each array is one of the original components.  Any arbitrary component array may be split in this manner, and the output arrays will have the same primitive type as the input array.  The original array is not modified (unless the option to remove the original array is selected); instead, **n** new arrays are created.  For example, consider an unsigned 8-bit array with three components:
 
     { v1 v2 v3 }, { v4 v5 v6 }, { v7 v8 v9 } ...
   

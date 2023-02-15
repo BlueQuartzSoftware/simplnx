@@ -1,5 +1,4 @@
-# Find Volume Fractions of Ensembles  #
-
+# Find Volume Fractions of Ensembles
 
 ## Group (Subgroup) ##
 

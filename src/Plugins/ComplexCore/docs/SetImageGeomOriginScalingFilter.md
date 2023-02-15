@@ -1,4 +1,4 @@
-# Set Origin & Resolution (Image Geometry)  
+# Set Origin & Spacing (Image Geometry)  
 
 
 ## Group (Subgroup) ##
@@ -7,7 +7,7 @@ Core (Spatial)
 
 ## Description ##
 
-This **Filter** changes the origin and/or the resolution of an **Image Geometry**. For example, if the current origin is at (0, 0, 0) and the user would like the origin to be (10, 4, 8), then the user should enter the following input values:
+This **Filter** changes the origin and/or the spacing of an **Image Geometry**. For example, if the current origin is at (0, 0, 0) and the user would like the origin to be (10, 4, 8), then the user should enter the following input values:
 
 + X Origin: 10
 + Y Origin: 4
@@ -18,9 +18,9 @@ This **Filter** changes the origin and/or the resolution of an **Image Geometry*
 | Name    | Type      |  Description |
 |---------|-----------|--------|
 | Origin | float (3x) | New origin for the **Image Geometry** |
-| Resolution | float (3x) | New resolution for the **Image Geometry** |
+| Spacing | float (3x) | New spacing for the **Image Geometry** |
 | Change Origin | bool | Whether a new origin should be applied to the **Image Geometry** |
-| Change Resolution | bool | Whether a new resolution should be applied to the **Image Geometry** |
+| Change Spacing | bool | Whether a new spacing should be applied to the **Image Geometry** |
 
 ## Required Geometry ##
 

@@ -1,4 +1,4 @@
-# WriteASCIIData
+# Write ASCII Data
 
 
 ## Group (Subgroup) ##
@@ -12,7 +12,7 @@ This **Filter** accepts DataArray(s) as input, extracts the data, creates the fi
 ## Parameters ##
 
 | Name | Type | Decision |
-|-------|---------------|------------|-----------------|----------------|----------|
+|-------|-----|----------|
 | Output Type | OutputSytle enum class | Whether data is printed to one file or multiple |
 | Output Path | Filesystem::path | Directory to store printed array files |
 | File Name | string | The file name used for generated file in single file mode |
@@ -27,7 +27,8 @@ None
 ## Required Objects ##
 
 | Kind | Default Name | Type | Component Dimensions | Description |
-**DataArray** | Attribute Arrays to Export | DataArray | any | any | Specifies **DataArray** to have their values printed |
+|--|--|--|--|--|
+| **DataArray** | Attribute Arrays to Export | DataArray |  any | Specifies **DataArray** to have their values printed |
 
 ## Created Objects ##
 

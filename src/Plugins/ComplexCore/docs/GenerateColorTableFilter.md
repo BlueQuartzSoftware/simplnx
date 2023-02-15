@@ -1,4 +1,4 @@
-# GenerateColorTable  #
+# Generate Color Table
 
 ## Description ##
 
