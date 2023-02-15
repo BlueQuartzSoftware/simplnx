@@ -1,4 +1,4 @@
-# Partition Geometry #
+# Partition Geometry
 
 ## Group (Subgroup) ##
 
