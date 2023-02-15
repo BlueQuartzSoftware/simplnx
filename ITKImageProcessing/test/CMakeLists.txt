@@ -36,7 +36,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
 
   # ITKBinaryDilateImageTest.cpp
   # ITKBinaryErodeImageTest.cpp
-  # ITKBinaryMorphologicalClosingImageTest.cpp
+  ITKBinaryMorphologicalClosingImageTest.cpp
   # ITKBinaryMorphologicalOpeningImageTest.cpp
   # ITKBinaryOpeningByReconstructionImageTest.cpp
   # ITKBinaryProjectionImageTest.cpp
