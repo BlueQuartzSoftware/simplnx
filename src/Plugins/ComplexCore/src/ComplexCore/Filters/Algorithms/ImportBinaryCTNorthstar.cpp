@@ -2,9 +2,7 @@
 
 #include "complex/Common/ScopeGuard.hpp"
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
-
-#include "ComplexCore/Filters/ImportBinaryCTNorthstarFilter.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 
 using namespace complex;
 
@@ -24,13 +22,16 @@ Result<> SanityCheckFileSizeVersusAllocatedSize(size_t allocatedBytes, size_t fi
     return MakeErrorResult(-4000, fmt::format("File size ({} bytes) is less than allocated size ({} bytes).", fileSize, allocatedBytes));
   }
 
-  // File Size and Allocated Size are equal so we  are good to go
+  // File Size and Allocated Size are equal, so we  are good to go
   return {};
 }
 
 // -----------------------------------------------------------------------------
 Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ImportBinaryCTNorthstarInputValues* inputValues)
 {
+  auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputValues->ImageGeometryPath);
+  geom.setUnits(static_cast<IGeometry::LengthUnit>(inputValues->LengthUnit));
+
   auto& density = dataStructure.getDataRefAs<Float32Array>(inputValues->DensityArrayPath);
   density.fill(0xABCDEF);
 
@@ -49,8 +50,8 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
     Result<> result = SanityCheckFileSizeVersusAllocatedSize(allocatedBytes, fileSize);
     if(result.invalid())
     {
-      return MakeErrorResult(-38705, fmt::format("The size of file '{}' on the file system ({} bytes) is less than the stated size in the binary CT header ''. ({} bytes).", dataFilePath.string(),
-                                                 fileSize, inputValues->InputHeaderFile.string(), allocatedBytes));
+      return MakeErrorResult(-38705, fmt::format("The size of file '{}' on the file system ({} bytes) is less than the stated size in the binary CT header. ({} bytes).", dataFilePath.string(),
+                                                 fileSize, allocatedBytes));
     }
 
     FILE* f = fopen(dataFilePath.string().c_str(), "rb");
@@ -62,7 +63,6 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
     auto fileGuard = MakeScopeGuard([f]() noexcept { fclose(f); });
 
     usize fileZSlice = 0;
-    usize index = 0;
 
     // Now start reading the data in chunks if needed.
     std::vector<float32> buffer(deltaX);
@@ -89,8 +89,8 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
           return MakeErrorResult(-38707, fmt::format("Could not seek to position {} in file '{}'.", fpOffset, dataFileInput.first.string()));
         }
 
-        index = (inputValues->ImportedGeometryDims[0] * inputValues->ImportedGeometryDims[1] * (z - inputValues->StartVoxelCoord[2])) +
-                (inputValues->ImportedGeometryDims[0] * (y - inputValues->StartVoxelCoord[1])) + (0);
+        usize index = (inputValues->ImportedGeometryDims[0] * inputValues->ImportedGeometryDims[1] * (z - inputValues->StartVoxelCoord[2])) +
+                      (inputValues->ImportedGeometryDims[0] * (y - inputValues->StartVoxelCoord[1])) + (0);
         if(fread(buffer.data(), sizeof(float32), deltaX, f) != deltaX)
         {
           return MakeErrorResult(-38708, fmt::format("Error reading file at position {} in file '{}'.", fpOffset, dataFileInput.first.string()));
@@ -117,12 +117,12 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
 } // namespace
 
 // -----------------------------------------------------------------------------
-ImportBinaryCTNorthstar::ImportBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+ImportBinaryCTNorthstar::ImportBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                                                  ImportBinaryCTNorthstarInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
+, m_MessageHandler(messageHandler)
 {
 }
 

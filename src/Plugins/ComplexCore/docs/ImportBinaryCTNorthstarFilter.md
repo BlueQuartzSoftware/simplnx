@@ -16,14 +16,11 @@ The .nsihdr file will be read during preflight and the .nsidat file(s) will be e
 
 | Name | Type | Description |
 |------|------|-------------|
-| Input Header File | String | Path to the .nsihdr files |
+| Input Header File | String | Path to the .nsihdr file |
 | Length Unit | integer | Enumeration value into the units table. Default is mm |
-| ImportSubVolume | Boolean | Is a subvolume being imported instead of the entire volume |
+| Import Subvolume | Boolean | Import a subvolume instead of the entire volume |
 | Starting Voxel | 3xInteger | The voxel indices to start the subvolume import at. |
 | Ending Voxel | 3xInteger | The voxel indices to end the subvolume import at (Inclusive). |
-| DataContainer Name | String | Name of the DataContaienr |
-| AttributeMatrix Name | String | Name of the AttributeMatrix |
-| Density Array Name | String | Name of the Density data array |
 
 ## Required Geometry ###
 
@@ -37,9 +34,9 @@ Not Applicable
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Data Container** | CT DataContainer | DataContainer | N/A |  |
+| **Image Geometry** | CT Image Geometry | ImageGeom | N/A |  |
 | **Attribute Matrix** | CT Scan Data | Attribute Matrix | N/A |  |
-| **Element Attribute Array** | Density | float | (1) | Density Data|
+| **Data Array** | Density | float | (1) | Density Data |
 
 ## License & Copyright ##
 

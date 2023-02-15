@@ -4,13 +4,9 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
 
 namespace fs = std::filesystem;
 
@@ -20,6 +16,7 @@ namespace complex
 struct COMPLEXCORE_EXPORT ImportBinaryCTNorthstarInputValues
 {
   FileSystemPathParameter::ValueType InputHeaderFile;
+  DataPath ImageGeometryPath;
   DataPath DensityArrayPath;
   std::vector<std::pair<fs::path, usize>> DataFilePaths;
   SizeVec3 OriginalGeometryDims;
@@ -39,7 +36,7 @@ struct COMPLEXCORE_EXPORT ImportBinaryCTNorthstarInputValues
 class COMPLEXCORE_EXPORT ImportBinaryCTNorthstar
 {
 public:
-  ImportBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportBinaryCTNorthstarInputValues* inputValues);
+  ImportBinaryCTNorthstar(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ImportBinaryCTNorthstarInputValues* inputValues);
   ~ImportBinaryCTNorthstar() noexcept;
 
   ImportBinaryCTNorthstar(const ImportBinaryCTNorthstar&) = delete;

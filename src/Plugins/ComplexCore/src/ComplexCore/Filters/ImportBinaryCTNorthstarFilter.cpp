@@ -2,9 +2,7 @@
 
 #include "ComplexCore/Filters/Algorithms/ImportBinaryCTNorthstar.hpp"
 
-#include "complex/Common/Array.hpp"
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -12,7 +10,6 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -255,8 +252,6 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ImportBinaryCTNorthsta
 {
   ImportBinaryCTNorthstarFilter::ImageGeometryInfo imageGeomInfo;
 
-  int32 error = 0;
-
   std::string buffer;
   std::string trimmedBuffer;
   std::vector<std::string> tokens;
@@ -265,7 +260,6 @@ Result<std::pair<std::vector<std::pair<fs::path, usize>>, ImportBinaryCTNorthsta
   std::vector<float32> maxLocation = {0.0f, 0.0f, 0.0f};
   std::vector<float32> minLocation = {0.0f, 0.0f, 0.0f};
   std::vector<float32> spacing = {0.0f, 0.0f, 0.0f};
-  bool done = false;
 
   std::ifstream inHeaderStream(headerFilePath.string());
   usize lineCount = 0;
@@ -372,18 +366,21 @@ Parameters ImportBinaryCTNorthstarFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Parameters"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputHeaderFile_Key, "Input Header File", "", fs::path("DefaultInputFileName"), FileSystemPathParameter::ExtensionsType{".nsihdr"},
-                                                          FileSystemPathParameter::PathType::InputFile));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ImportSubvolume_Key, "Import Subvolume", "", false));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_StartVoxelCoord_Key, "Starting XYZ Voxel", "", std::vector<int32>({0, 0, 0}), std::vector<std::string>(3)));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_EndVoxelCoord_Key, "Ending XYZ Voxel", "", std::vector<int32>({1, 1, 1}), std::vector<std::string>(3)));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputHeaderFile_Key, "Input Header File", "The path to the .nsihdr file", fs::path("DefaultInputFileName"),
+                                                          FileSystemPathParameter::ExtensionsType{".nsihdr"}, FileSystemPathParameter::PathType::InputFile));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ImportSubvolume_Key, "Import Subvolume", "Import a subvolume instead of the entire volume", false));
+  params.insert(
+      std::make_unique<VectorInt32Parameter>(k_StartVoxelCoord_Key, "Starting XYZ Voxel for Subvolume", "The starting subvolume voxel", std::vector<int32>({0, 0, 0}), std::vector<std::string>(3)));
+  params.insert(std::make_unique<VectorInt32Parameter>(k_EndVoxelCoord_Key, "Ending XYZ Voxel for Subvolume", "The ending subvolume voxel (inclusive)", std::vector<int32>({1, 1, 1}),
+                                                       std::vector<std::string>(3)));
 
-  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "", 0, IGeometry::GetAllLengthUnitStrings()));
+  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Image Geometry Path", "", DataPath{{"ImageGeometry"}}));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "", "CellData"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_DensityArrayName_Key, "Density Array", "", "Density"));
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Image Geometry Path", "The path that will be used to create the Image Geometry.", DataPath{{"CT Image Geometry"}}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "The name used to create the Cell Attribute Matrix.", "CT Scan Data"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_DensityArrayName_Key, "Density Array", "The name used to create the Density data array.", "Density"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ImportSubvolume_Key, k_StartVoxelCoord_Key, true);
@@ -464,7 +461,7 @@ IFilter::PreflightResult ImportBinaryCTNorthstarFilter::preflightImpl(const Data
       return {MakeErrorResult<OutputActions>(-38714, fmt::format("Starting Z Voxel > Ending Z Voxel ({} > {})", pStartVoxelCoordValue[2], pEndVoxelCoordValue[2]))};
     }
 
-    if(pStartVoxelCoordValue[0] < 0 || pStartVoxelCoordValue[1] < 0 || pStartVoxelCoordValue[1] < 0)
+    if(pStartVoxelCoordValue[0] < 0 || pStartVoxelCoordValue[1] < 0 || pStartVoxelCoordValue[2] < 0)
     {
       return {MakeErrorResult<OutputActions>(-38715, fmt::format("Start Voxel < ZERO ({}, {}, {})", pStartVoxelCoordValue[0], pStartVoxelCoordValue[1], pStartVoxelCoordValue[2]))};
     }
@@ -472,15 +469,15 @@ IFilter::PreflightResult ImportBinaryCTNorthstarFilter::preflightImpl(const Data
     std::vector<usize> origDims = geometryInfo.Dimensions;
     if(pEndVoxelCoordValue[0] >= origDims[0])
     {
-      return {MakeErrorResult<OutputActions>(-38716, fmt::format("Ending X Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[0], origDims[0]))};
+      return {MakeErrorResult<OutputActions>(-38716, fmt::format("Ending X Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[0], origDims[0] - 1))};
     }
     if(pEndVoxelCoordValue[1] >= origDims[1])
     {
-      return {MakeErrorResult<OutputActions>(-38717, fmt::format("Ending Y Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[1], origDims[1]))};
+      return {MakeErrorResult<OutputActions>(-38717, fmt::format("Ending Y Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[1], origDims[1] - 1))};
     }
     if(pEndVoxelCoordValue[2] >= origDims[2])
     {
-      return {MakeErrorResult<OutputActions>(-38718, fmt::format("Ending Z Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[2], origDims[2]))};
+      return {MakeErrorResult<OutputActions>(-38718, fmt::format("Ending Z Voxel > Original Volume Dimension ({} >= {})", pEndVoxelCoordValue[2], origDims[2] - 1))};
     }
   }
 
@@ -533,6 +530,8 @@ Result<> ImportBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure
   inputValues.InputHeaderFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputHeaderFile_Key);
 
   auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.ImageGeometryPath = pImageGeometryPathValue;
+
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pDensityArrayNameValue = filterArgs.value<std::string>(k_DensityArrayName_Key);
   DataPath densityArrayPath = pImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
