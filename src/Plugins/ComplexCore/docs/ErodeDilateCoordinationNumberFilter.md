@@ -22,7 +22,7 @@ Gone_ parameter, which will continue to run until no **Cells** fail the original
 
 | Before Filter                      | After Filter                       | 
 |--------------------------------------|--------------------------------------|
-| ![](Images/ErodeDilateCoordinationNUmber_Before.png) | ![](Images/ErodeDilateCoordinationNUmber_After.png) |
+| ![](Images/ErodeDilateCoordinationNumber_Before.png) | ![](Images/ErodeDilateCoordinationNumber_After.png) |
 
 ## Parameters
 

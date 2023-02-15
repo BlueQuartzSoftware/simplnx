@@ -1,4 +1,4 @@
-# Extract Vertex Geometry #
+# Extract Vertex Geometry
 
 ## Group (Subgroup) ##
 
