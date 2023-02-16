@@ -44,6 +44,7 @@ set(FilterList
   FillBadDataFilter
   FindArrayStatisticsFilter
   FindBoundaryCellsFilter
+  FindBoundingBoxFeaturesFilter
   FindDifferencesMap
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
@@ -116,6 +117,7 @@ set(AlgorithmList
   FillBadData
   FindArrayStatistics
   FindBoundaryCells
+  FindBoundingBoxFeatures
   FindEuclideanDistMap
   FindFeatureCentroids
   FindSurfaceAreaToVolume
