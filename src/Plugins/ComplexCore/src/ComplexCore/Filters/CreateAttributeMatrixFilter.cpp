@@ -40,11 +40,12 @@ Parameters CreateAttributeMatrixFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataObjectPath, "DataObject Path", "The complete path to the Attribute Matrix being created", DataPath{}));
+
   DynamicTableInfo tableInfo;
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "DIM {}"));
-
   params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Attribute Matrix Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Dimensions", tableInfo));
+
   return params;
 }
 
