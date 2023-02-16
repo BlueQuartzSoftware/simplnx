@@ -35,17 +35,10 @@ Result<> FindBoundaryCells::operator()()
   auto featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto boundaryCells = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->BoundaryCellsArrayName);
 
-  int64 neighPoints[6] = {0, 0, 0, 0, 0, 0};
-  neighPoints[0] = -1 * (xPoints * yPoints);
-  neighPoints[1] = -1 * (xPoints);
-  neighPoints[2] = -1;
-  neighPoints[3] = 1;
-  neighPoints[4] = xPoints;
-  neighPoints[5] = xPoints * yPoints;
+  const int64 neighPoints[6] = {(-1 * (xPoints * yPoints)), (-1 * (xPoints)), -1, 1, xPoints, (xPoints * yPoints)};
 
   int32 feature = 0;
   int8 onSurf = 0;
-  int32 good = 0;
   int64 neighbor = 0;
 
   int ignoreFeatureZeroVal = 0;
@@ -88,35 +81,34 @@ Result<> FindBoundaryCells::operator()()
             }
           }
 
-          for(int64 l = 0; l < 6; l++)
+          for(int8 l = 0; l < 6; l++)
           {
-            good = 1;
             neighbor = zStride + yStride + k + neighPoints[l];
-            if(l == 0 && i == 0)
-            {
-              good = 0;
-            }
             if(l == 5 && i == (zPoints - 1))
             {
-              good = 0;
+              continue;
             }
             if(l == 1 && j == 0)
             {
-              good = 0;
+              continue;
             }
             if(l == 4 && j == (yPoints - 1))
             {
-              good = 0;
+              continue;
             }
             if(l == 2 && k == 0)
             {
-              good = 0;
+              continue;
             }
             if(l == 3 && k == (xPoints - 1))
             {
-              good = 0;
+              continue;
             }
-            if(good == 1 && featureIds[neighbor] != feature && featureIds[neighbor] > ignoreFeatureZeroVal)
+            if(l == 0 && i == 0)
+            {
+              continue;
+            }
+            if(featureIds[neighbor] != feature && featureIds[neighbor] > ignoreFeatureZeroVal)
             {
               onSurf++;
             }

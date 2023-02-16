@@ -114,8 +114,7 @@ Result<> FindBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.IncludeVolumeBoundary = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  const auto pBoundaryCellsArrayNameValue = filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key);
-  inputValues.BoundaryCellsArrayName = inputValues.FeatureIdsArrayPath.getParent().createChildPath(pBoundaryCellsArrayNameValue);
+  inputValues.BoundaryCellsArrayName = inputValues.FeatureIdsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
 
   return FindBoundaryCells(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
