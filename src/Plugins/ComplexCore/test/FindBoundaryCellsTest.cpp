@@ -44,3 +44,36 @@ TEST_CASE("ComplexCore::FindBoundaryCellsFilter: Valid filter execution", "[Find
 
   UnitTest::CompareArrays<int8>(dataStructure, k_ExemplarBoundaryCellsPath, k_ComputedBoundaryCellsPath);
 }
+
+TEST_CASE("ComplexCore::FindBoundaryCellsFilter: Invalid filter execution", "[FindBoundaryCellsFilter]")
+{
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_FindBoundaryCellsExemplar.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry);
+  imageGeom->setDimensions({250, 250, 250});
+  imageGeom->setSpacing({1, 1, 1});
+  imageGeom->setOrigin({0, 0, 0});
+
+  const DataPath k_WrongGeometryPath({Constants::k_ImageGeometry});
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  FindBoundaryCellsFilter filter;
+  Arguments args;
+
+  // test mismatching geometry & featureId dimensions
+  args.insertOrAssign(FindBoundaryCellsFilter::k_IgnoreFeatureZero_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindBoundaryCellsFilter::k_IncludeVolumeBoundary_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindBoundaryCellsFilter::k_GeometryPath_Key, std::make_any<DataPath>(k_WrongGeometryPath));
+  args.insertOrAssign(FindBoundaryCellsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(FindBoundaryCellsFilter::k_BoundaryCellsArrayName_Key, std::make_any<std::string>(k_ComputedBoundaryCellsName));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
+}
