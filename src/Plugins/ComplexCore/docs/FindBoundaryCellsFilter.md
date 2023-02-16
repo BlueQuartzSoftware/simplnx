@@ -14,6 +14,11 @@ This **Filter** determines, for each **Cell**, the number of neighboring **Cells
 3. Determine the number of those neighboring **Cells** belonging to a different **Feature** than the current **Cell**. 
 4. Repeat 1-3 for all **Cells**
 
+
+| Small IN100 Feature Ids Input | Small IN100 Boundary Cells Output |
+|--|--|
+| ![Feature Ids](Images/FindBoundaryCellsInput.png) | ![Boundary Cells](Images/FindBoundaryCellsOutput.png) |
+
 ## Parameters ##
 
 | Name             | Type | Description |
@@ -39,7 +44,7 @@ Image
 
 ## Example Pipelines ##
 
-+ (04) Two Phase Cubic Hexagonal Particles Equiaxed
++ FindBoundaryCells.d3dpipeline
 
 ## License & Copyright ##
 
