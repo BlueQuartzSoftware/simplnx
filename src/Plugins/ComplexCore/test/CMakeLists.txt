@@ -18,6 +18,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
   ComputeMomentInvariants2DTest.cpp
+  ComputeFeatureRectTest.cpp
   ConditionalSetValueTest.cpp
   ConvertColorToGrayScaleTest.cpp
   ConvertDataTest.cpp
