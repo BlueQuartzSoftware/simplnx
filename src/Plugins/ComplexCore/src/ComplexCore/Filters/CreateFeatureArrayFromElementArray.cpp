@@ -109,13 +109,13 @@ Parameters CreateFeatureArrayFromElementArray::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Element Data"});
+  params.insertSeparator(Parameters::Separator{"Input Element Data"});
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Element Data to Copy to Feature Data", "Element Data to Copy to Feature Data", DataPath{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insertSeparator(Parameters::Separator{"Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedArrayName_Key, "Copied Attribute Array", "The path to the copied AttributeArray", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Created Feature Data"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedArrayName_Key, "Created Feature Attribute Array", "The path to the copied AttributeArray", DataPath{}));
 
   return params;
 }
@@ -140,10 +140,15 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  DataType dataType = selectedCellArray.getDataType();
+  // Get the target Attribute Matrix that the output array will be stored with
+  // the proper tuple shape
+  DataPath amPath = pCreatedArrayNameValue.getParent();
+  auto& featureAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
+  auto amTupleShape = featureAttributeMatrix.getShape();
 
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, std::vector<usize>{1}, selectedCellArrayStore.getComponentShape(), pCreatedArrayNameValue);
+    DataType dataType = selectedCellArray.getDataType();
+    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, amTupleShape, selectedCellArrayStore.getComponentShape(), pCreatedArrayNameValue);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
