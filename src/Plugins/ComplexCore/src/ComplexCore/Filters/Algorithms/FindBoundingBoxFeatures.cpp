@@ -53,8 +53,10 @@ void FindBoundingBoxFeatures::findBoundingBoxFeatures()
     phases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PhasesArrayPath);
   }
   auto& biasedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName);
+  biasedFeatures.fill(false);
 
   const usize size = centroids.getNumberOfTuples();
+  float boundBox[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
   float32 coords[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
   float32 x = 0.0f;
   float32 y = 0.0f;
@@ -84,9 +86,14 @@ void FindBoundingBoxFeatures::findBoundingBoxFeatures()
     {
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Phase {} of {}", iter, numPhases));
     }
-    // bound box for each phase
+    // reset boundBox for each phase
     const BoundingBox<float32> bb = imageGeometry.getBoundingBoxf();
-    float32 boundBox[6] = {bb.getMinX(), bb.getMaxX(), bb.getMinY(), bb.getMaxY(), bb.getMinZ(), bb.getMaxZ()};
+    boundBox[0] = bb.getMinX();
+    boundBox[1] = bb.getMinY();
+    boundBox[2] = bb.getMinZ();
+    boundBox[3] = bb.getMaxX();
+    boundBox[4] = bb.getMaxY();
+    boundBox[5] = bb.getMaxZ();
 
     for(usize i = 1; i < size; i++)
     {
@@ -187,6 +194,7 @@ void FindBoundingBoxFeatures::findBoundingBoxFeatures2D()
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
   const auto& surfaceFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->SurfaceFeaturesArrayPath);
   auto& biasedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName);
+  biasedFeatures.fill(false);
 
   const usize size = centroids.getNumberOfTuples();
   constexpr float32 xOrigin = 0.0f;

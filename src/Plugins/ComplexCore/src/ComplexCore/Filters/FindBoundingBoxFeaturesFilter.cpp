@@ -85,7 +85,7 @@ IFilter::PreflightResult FindBoundingBoxFeaturesFilter::preflightImpl(const Data
   auto pCentroidsArrayPathValue = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
   auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
   auto pPhasesArrayPathValue = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
-  auto pBiasedFeaturesArrayNameValue = filterArgs.value<DataPath>(k_BiasedFeaturesArrayName_Key);
+  auto pBiasedFeaturesArrayNameValue = filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
@@ -96,23 +96,14 @@ IFilter::PreflightResult FindBoundingBoxFeaturesFilter::preflightImpl(const Data
   {
     cellFeatureArrayDataPaths.push_back(pPhasesArrayPathValue);
   }
-  if(dataStructure.validateNumberOfTuples(cellFeatureArrayDataPaths))
+  if(!dataStructure.validateNumberOfTuples(cellFeatureArrayDataPaths))
   {
     return {MakeErrorResult<OutputActions>(-7460, fmt::format("The selected input cell feature arrays have mismatching number of tuples. Make sure the selected centroids, surface features (and "
                                                               "phases) are created from the same geometry's cell data attribute matrix."))};
   }
 
-  const usize numCells = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath).getNumberOfCells();
-  const auto& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue);
-  const usize numSurfaceFeatures = surfaceFeatures.getSize();
-  if(numSurfaceFeatures != numCells)
-  {
-    return {MakeErrorResult<OutputActions>(-7461, fmt::format("The selected Image geometry '{}' and one or more of the input cell feature arrays have mismatching number of elements. Make sure the "
-                                                              "selected input arrays were created for the selected Image geometry.",
-                                                              pImageGeometryPath.toString()))};
-  }
-
-  auto action = std::make_unique<CreateArrayAction>(DataType::int8, surfaceFeatures.getTupleShape(), std::vector<usize>{1}, pBiasedFeaturesArrayNameValue);
+  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue).getTupleShape(), std::vector<usize>{1},
+                                                    pCentroidsArrayPathValue.getParent().createChildPath(pBiasedFeaturesArrayNameValue));
   resultOutputActions.value().actions.push_back(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -129,7 +120,7 @@ Result<> FindBoundingBoxFeaturesFilter::executeImpl(DataStructure& dataStructure
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
   inputValues.SurfaceFeaturesArrayPath = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
   inputValues.PhasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
-  inputValues.BiasedFeaturesArrayName = filterArgs.value<DataPath>(k_BiasedFeaturesArrayName_Key);
+  inputValues.BiasedFeaturesArrayName = inputValues.CentroidsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key));
 
   return FindBoundingBoxFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
