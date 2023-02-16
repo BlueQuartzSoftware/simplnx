@@ -1,5 +1,6 @@
-# ITK::Acos Image Filter (KW) 
+# ITK::Acos Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

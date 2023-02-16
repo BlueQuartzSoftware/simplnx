@@ -1,5 +1,6 @@
-# ITK::Sqrt Image Filter (KW) 
+# ITK::Sqrt Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

@@ -1,5 +1,6 @@
-# ITK::Dilate Object Morphology Image Filter (KW) 
+# ITK::Dilate Object Morphology Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

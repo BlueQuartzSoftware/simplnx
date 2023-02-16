@@ -1,5 +1,6 @@
-# ITK::Relabel Component Image Filter (KW) 
+# ITK::Relabel Component Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

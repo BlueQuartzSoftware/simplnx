@@ -1,4 +1,4 @@
-# Generate Quaternion Conjugate #
+# Generate Quaternion Conjugate
 
 ## Group (Subgroup) ##
 

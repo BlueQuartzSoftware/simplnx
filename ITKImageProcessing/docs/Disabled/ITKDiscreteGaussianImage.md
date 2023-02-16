@@ -1,5 +1,6 @@
-# ITK::Discrete Gaussian Image Filter (KW) 
+# ITK::Discrete Gaussian Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

@@ -1,5 +1,6 @@
-# ITK::Binomial Blur Image Filter (KW) 
+# ITK::Binomial Blur Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

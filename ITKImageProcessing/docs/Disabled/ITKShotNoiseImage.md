@@ -1,5 +1,6 @@
-# ITK::Shot Noise Image Filter (KW) 
+# ITK::Shot Noise Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

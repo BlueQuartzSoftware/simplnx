@@ -1,5 +1,6 @@
-# ITK::Valued Regional Maxima Image Filter (KW) 
+# ITK::Valued Regional Maxima Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

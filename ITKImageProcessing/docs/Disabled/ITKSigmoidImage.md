@@ -1,5 +1,6 @@
-# ITK::Sigmoid Image Filter (KW) 
+# ITK::Sigmoid Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

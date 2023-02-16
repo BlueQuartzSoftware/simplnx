@@ -1,5 +1,6 @@
-# ITK::H Convex Image Filter (KW) 
+# ITK::H Convex Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

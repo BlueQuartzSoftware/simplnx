@@ -1,5 +1,6 @@
-# ITK::Black Top Hat Image Filter (KW) 
+# ITK::Black Top Hat Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

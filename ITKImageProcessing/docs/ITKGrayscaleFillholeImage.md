@@ -1,5 +1,6 @@
-# ITK::Grayscale Fillhole Image Filter (KW) 
+# ITK::Grayscale Fillhole Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

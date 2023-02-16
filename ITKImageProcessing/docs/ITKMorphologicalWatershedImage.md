@@ -1,5 +1,6 @@
-# ITK::Morphological Watershed Image Filter (KW) 
+# ITK::Morphological Watershed Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

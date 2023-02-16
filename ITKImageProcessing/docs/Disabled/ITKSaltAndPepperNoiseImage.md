@@ -1,5 +1,6 @@
-# ITK::Salt And Pepper Noise Image Filter (KW) 
+# ITK::Salt And Pepper Noise Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

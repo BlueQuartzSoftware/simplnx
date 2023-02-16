@@ -1,5 +1,6 @@
-# ITK::Cos Image Filter (KW) 
+# ITK::Cos Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

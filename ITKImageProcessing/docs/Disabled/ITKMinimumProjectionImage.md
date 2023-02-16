@@ -1,5 +1,6 @@
-# ITK::Minimum Projection Image Filter (KW) 
+# ITK::Minimum Projection Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

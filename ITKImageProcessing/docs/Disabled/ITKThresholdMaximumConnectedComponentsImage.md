@@ -1,5 +1,6 @@
-# ITK::Threshold Maximum Connected Components Image Filter (KW) 
+# ITK::Threshold Maximum Connected Components Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

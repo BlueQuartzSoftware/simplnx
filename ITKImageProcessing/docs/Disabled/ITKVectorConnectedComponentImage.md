@@ -1,5 +1,6 @@
-# ITK::Vector Connected Component Image Filter (KW) 
+# ITK::Vector Connected Component Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

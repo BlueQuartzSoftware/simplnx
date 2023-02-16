@@ -1,4 +1,4 @@
-# RodriguesConvertor #
+# Rodrigues Convertor
 
 ## Group (Subgroup) ##
 

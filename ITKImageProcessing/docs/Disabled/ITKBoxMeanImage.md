@@ -1,5 +1,6 @@
-# ITK::Box Mean Image Filter (KW) 
+# ITK::Box Mean Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

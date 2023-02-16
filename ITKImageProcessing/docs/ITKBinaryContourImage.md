@@ -1,5 +1,6 @@
-# ITK::Binary Contour Image Filter (KW) 
+# ITK::Binary Contour Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 
