@@ -4,6 +4,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -76,6 +77,7 @@ IFilter::UniquePointer FindBoundaryCellsFilter::clone() const
 IFilter::PreflightResult FindBoundaryCellsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                 const std::atomic_bool& shouldCancel) const
 {
+  auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pBoundaryCellsArrayNameValue = filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key);
 
@@ -85,7 +87,18 @@ IFilter::PreflightResult FindBoundaryCellsFilter::preflightImpl(const DataStruct
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto action = std::make_unique<CreateArrayAction>(DataType::int8, dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue).getTupleShape(), std::vector<usize>{1}, boundaryCellsArrayPath);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const usize numFeatureIds = featureIds.getSize();
+  const usize numCells = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath).getNumberOfCells();
+  if(numFeatureIds != numCells)
+  {
+    return {MakeErrorResult<OutputActions>(
+        -5320,
+        fmt::format("The selected Image geometry '{}' and feature ids array '{}' have mismatching number of elements. Make sure the selected feature ids was created for the selected Image geometry.",
+                    pImageGeometryPath.toString(), pFeatureIdsArrayPathValue.toString()))};
+  }
+
+  auto action = std::make_unique<CreateArrayAction>(DataType::int8, featureIds.getTupleShape(), std::vector<usize>{1}, boundaryCellsArrayPath);
   resultOutputActions.value().actions.push_back(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
