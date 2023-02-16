@@ -1,11 +1,11 @@
-# Find Boundary Cells (Image)  #
+# Find Boundary Cells (Image)
 
 
-## Group (Subgroup) ##
+## Group (Subgroup)
 
 Generic (Spatial)
 
-## Description ##
+## Description
 
 This **Filter** determines, for each **Cell**, the number of neighboring **Cells** that are owned by a different **Feature**.  The algorithm for determining this is as follows: 
 
@@ -19,38 +19,38 @@ This **Filter** determines, for each **Cell**, the number of neighboring **Cells
 |--|--|
 | ![Feature Ids](Images/FindBoundaryCellsInput.png) | ![Boundary Cells](Images/FindBoundaryCellsOutput.png) |
 
-## Parameters ##
+## Parameters
 
 | Name             | Type | Description |
 |------------------|------|-------------|
 | Ignore Feature 0 | bool | Do not use feature 0 |
 | Include Volume Boundary | bool | Include the Cell boundaries |
 
-## Required Geometry ##
+## Required Geometry
 
 Image 
 
-## Required Objects ##
+## Required Objects
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Cell Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Cell** belongs. |
 
-## Created Objects ##
+## Created Objects
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Cell Attribute Array** | BoundaryCells | int8_t | (1) | The number of neighboring **Cells** of a given **Cell** that belong to a different **Feature** than itself. Values will range from *0* to *6* |
 
-## Example Pipelines ##
+## Example Pipelines 
 
 + FindBoundaryCells.d3dpipeline
 
-## License & Copyright ##
+## License & Copyright
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM.3D Mailing Lists
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 
