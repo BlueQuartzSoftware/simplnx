@@ -18,6 +18,7 @@ set(FilterList
   CalculateTriangleAreasFilter
   ChangeAngleRepresentation
   CombineAttributeArraysFilter
+  ComputeFeatureRectFilter
   ConditionalSetValue
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
@@ -105,6 +106,7 @@ set(AlgorithmList
   ArrayCalculator
   CalculateArrayHistogram
   CombineAttributeArrays
+  ComputeFeatureRect
   ConvertColorToGrayScale
   ConvertData
   ErodeDilateBadData

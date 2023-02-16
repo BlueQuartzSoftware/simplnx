@@ -17,6 +17,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CalculateTriangleAreasFilterTest.cpp
   ChangeAngleRepresentationTest.cpp
   CombineAttributeArraysTest.cpp
+  ComputeFeatureRectTest.cpp
   ConditionalSetValueTest.cpp
   ConvertColorToGrayScaleTest.cpp
   ConvertDataTest.cpp

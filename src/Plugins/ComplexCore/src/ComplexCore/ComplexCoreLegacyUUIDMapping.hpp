@@ -83,6 +83,7 @@
 #include "ComplexCore/Filters/TriangleDihedralAngleFilter.hpp"
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/Filters/WriteASCIIDataFilter.hpp"
+#include "ComplexCore/Filters/ComputeFeatureRectFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -175,6 +176,7 @@ namespace complex
     {complex::Uuid::FromString("4fff1aa6-4f62-56c4-8ee9-8e28ec2fcbba").value(), complex::FilterTraits<ErodeDilateMaskFilter>::uuid}, // ErodeDilateMask
     {complex::Uuid::FromString("d26e85ff-7e52-53ae-b095-b1d969c9e73c").value(), complex::FilterTraits<ErodeDilateCoordinationNumberFilter>::uuid}, // ErodeDilateCoordinationNumber
     {complex::Uuid::FromString("3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254").value(), complex::FilterTraits<ErodeDilateBadDataFilter>::uuid}, // ErodeDilateBadData
+    {complex::Uuid::FromString("6eda8dbf-dbd8-562a-ae1a-f2904157c189").value(), complex::FilterTraits<ComputeFeatureRectFilter>::uuid}, // ComputeFeatureRect
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
