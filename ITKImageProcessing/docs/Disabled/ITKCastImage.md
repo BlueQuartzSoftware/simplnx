@@ -1,5 +1,6 @@
-# ITK::Cast Image Filter (KW) 
+# ITK::Cast Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

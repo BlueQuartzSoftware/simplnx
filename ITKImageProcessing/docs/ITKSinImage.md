@@ -1,5 +1,6 @@
-# ITK::Sin Image Filter (KW) 
+# ITK::Sin Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

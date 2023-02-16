@@ -1,5 +1,6 @@
-# ITK::Image Reader (KW) 
+# ITK::Image Reader
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

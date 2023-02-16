@@ -1,5 +1,6 @@
-# ITK::Shift Scale Image Filter (KW) 
+# ITK::Shift Scale Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

@@ -1,5 +1,6 @@
-# ITK::Log Image Filter (KW) 
+# ITK::Log Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

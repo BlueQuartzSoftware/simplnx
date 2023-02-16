@@ -1,5 +1,6 @@
-# ITK::Import Images (3D Stack) (KW) 
+# ITK::Import Images (3D Stack)
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

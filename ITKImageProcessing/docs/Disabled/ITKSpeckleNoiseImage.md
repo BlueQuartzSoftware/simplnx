@@ -1,5 +1,6 @@
-# ITK::Speckle Noise Image Filter (KW) 
+# ITK::Speckle Noise Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

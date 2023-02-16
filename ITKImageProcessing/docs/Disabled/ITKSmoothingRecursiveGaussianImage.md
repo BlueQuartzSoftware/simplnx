@@ -1,5 +1,6 @@
-# ITK::Smoothing Recursive Gaussian Image Filter (KW) 
+# ITK::Smoothing Recursive Gaussian Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

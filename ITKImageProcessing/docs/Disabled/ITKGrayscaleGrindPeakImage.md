@@ -1,5 +1,6 @@
-# ITK::Grayscale Grind Peak Image Filter (KW) 
+# ITK::Grayscale Grind Peak Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

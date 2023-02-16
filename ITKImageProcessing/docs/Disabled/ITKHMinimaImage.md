@@ -1,5 +1,6 @@
-# ITK::H Minima Image Filter (KW) 
+# ITK::H Minima Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

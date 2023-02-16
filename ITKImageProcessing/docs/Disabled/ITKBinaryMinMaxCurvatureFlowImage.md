@@ -1,5 +1,6 @@
-# ITK::Binary Min Max Curvature Flow Image Filter (KW) 
+# ITK::Binary Min Max Curvature Flow Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

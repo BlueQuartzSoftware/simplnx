@@ -59,7 +59,7 @@ Parameters NeighborOrientationCorrelationFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<Float32Parameter>(k_MinConfidence_Key, "Minimum Confidence Index", "Sets the minimum value of 'confidence' a Cell must have", 0.1f));
   params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)", "Angular tolerance used to compare with neighboring Cells", 5.0f));
-  params.insert(std::make_unique<Int32Parameter>(k_Level_Key, "Cleanup Level", "Minimum number of neighbor Cells that must have orientations within above tolerace to allow Cell to be changed", 6));
+  params.insert(std::make_unique<Int32Parameter>(k_Level_Key, "Cleanup Level", "Minimum number of neighbor Cells that must have orientations within above tolerance to allow Cell to be changed", 6));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "Path to the target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));

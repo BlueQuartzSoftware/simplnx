@@ -1,5 +1,6 @@
-# ITK::RGB To Luminance Image Filter (KW) 
+# ITK::RGB To Luminance Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

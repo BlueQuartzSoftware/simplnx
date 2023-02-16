@@ -1,5 +1,6 @@
-# ITK::Rescale Intensity Image Filter (KW) 
+# ITK::Rescale Intensity Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

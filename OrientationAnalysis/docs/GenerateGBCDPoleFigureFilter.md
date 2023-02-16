@@ -39,7 +39,7 @@ Triangle
 ## Created Objects ##
 
 | Kind | Default Name | Description |
-|------|--------------|------|----------------------|-------------|
+|------|--------------|-------------|
 | Image Geometry | [ImageGeometry] | The Image Geometry to be created |
 | Cell Attribute Matrix | Cell Data | The name of the cell attribute matrix created for the Image Geometry |
 | Cell Intensity Array | Intensity | The data array to be created from the pole figures and stored in the Image Geometry cell attribute matrix |

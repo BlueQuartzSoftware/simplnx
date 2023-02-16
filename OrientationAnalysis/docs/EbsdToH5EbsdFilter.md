@@ -1,4 +1,4 @@
-# Import Orientation File(s) to H5EBSD #
+# Import Orientation File(s) to H5EBSD
 
 ## Group (Subgroup) ##
 

@@ -1,5 +1,6 @@
-# ITK::FFT Normalized Correlation Image Filter (KW) 
+# ITK::FFT Normalized Correlation Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

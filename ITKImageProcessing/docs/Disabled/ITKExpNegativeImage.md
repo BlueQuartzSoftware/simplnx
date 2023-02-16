@@ -1,5 +1,6 @@
-# ITK::Exp Negative Image Filter (KW) 
+# ITK::Exp Negative Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

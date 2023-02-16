@@ -1,5 +1,6 @@
-# ITK::Sum Projection Image Filter (KW) 
+# ITK::Sum Projection Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

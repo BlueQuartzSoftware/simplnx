@@ -1,5 +1,6 @@
-# ITK::Zero Crossing Image Filter (KW) 
+# ITK::Zero Crossing Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

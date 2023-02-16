@@ -1,5 +1,6 @@
-# ITK::Standard Deviation Projection Image Filter (KW) 
+# ITK::Standard Deviation Projection Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

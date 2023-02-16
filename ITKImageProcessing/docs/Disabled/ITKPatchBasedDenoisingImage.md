@@ -1,5 +1,6 @@
-# ITK::Patch Based Denoising Image Filter (KW) 
+# ITK::Patch Based Denoising Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

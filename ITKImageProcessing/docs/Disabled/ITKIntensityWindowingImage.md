@@ -1,5 +1,6 @@
-# ITK::Intensity Windowing Image Filter (KW) 
+# ITK::Intensity Windowing Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 

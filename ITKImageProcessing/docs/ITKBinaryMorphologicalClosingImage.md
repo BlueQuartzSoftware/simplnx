@@ -1,5 +1,6 @@
-# ITK::Binary Morphological Closing Image Filter (KW) 
+# ITK::Binary Morphological Closing Image Filter
 
+This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup) ##
 
