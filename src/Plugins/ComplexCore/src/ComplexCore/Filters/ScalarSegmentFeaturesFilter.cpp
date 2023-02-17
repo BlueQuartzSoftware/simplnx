@@ -118,14 +118,17 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingGeomError, fmt::format("A Grid Geometry is required for {}", humanName())}})};
   }
 
+  const auto* gridGeometryPtr = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
+  auto gridDims = gridGeometryPtr->getDimensions();
+  const std::vector<usize> cellTupleDims = {gridDims[2], gridDims[1], gridDims[0]};
   std::vector<DataPath> dataPaths;
 
   usize numTuples = 0;
   // Input Array
-  if(const auto* inputDataArray = dataStructure.getDataAs<IDataArray>(inputDataPath))
+  if(const auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(inputDataPath))
   {
-    numTuples = inputDataArray->getNumberOfTuples();
-    if(inputDataArray->getNumberOfComponents() == 1)
+    numTuples = inputDataArrayPtr->getNumberOfTuples();
+    if(inputDataArrayPtr->getNumberOfComponents() == 1)
     {
       dataPaths.push_back(inputDataPath);
     }
@@ -142,13 +145,13 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   // Good Voxels
   if(useGoodVoxels)
   {
-    const complex::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
-    if(nullptr == goodVoxelsArray)
+    const complex::IDataArray* goodVoxelsArrayPtr = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
+    if(nullptr == goodVoxelsArrayPtr)
     {
       return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString())}})};
     }
-    const GoodVoxelsArrayType* maskArray = dataStructure.getDataAs<GoodVoxelsArrayType>(goodVoxelsPath);
-    if(maskArray == nullptr)
+    const GoodVoxelsArrayType* maskArrayPtr = dataStructure.getDataAs<GoodVoxelsArrayType>(goodVoxelsPath);
+    if(maskArrayPtr == nullptr)
     {
       return {nonstd::make_unexpected(
           std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool.", goodVoxelsPath.toString())}})};
@@ -161,10 +164,12 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
     return {nonstd::make_unexpected(std::vector<Error>{Error{-651, fmt::format("Input arrays do not have matching tuple counts.")}})};
   }
 
-  // Create output DataStructure Items
+  // Create the Cell Level FeatureIds array
+  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath);
+
+  // Create the Feature Attribute Matrix
   auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellFeaturesPath, std::vector<usize>{numTuples});
   auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{numTuples}, std::vector<usize>{1}, activeArrayPath);
-  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{numTuples}, std::vector<usize>{1}, featureIdsPath);
 
   OutputActions actions;
   actions.actions.push_back(std::move(createAttributeMatrixAction));
