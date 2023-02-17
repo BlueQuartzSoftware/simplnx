@@ -155,6 +155,8 @@ public:
 
   static const std::set<Type>& GetAllGeomTypes();
 
+  static const std::vector<std::string>& GetAllLengthUnitStrings();
+
   /**
    * @brief Returns the DataPaths of DataArrays that are associated or "Linked" to
    * a specific part of the geometry. @see the docs for LinkedGeometryPath.
