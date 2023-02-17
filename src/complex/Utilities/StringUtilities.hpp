@@ -134,6 +134,22 @@ inline std::string trimmed(std::string_view str)
  * @brief
  *
  * @param value input string to check
+ * @param startingStr The starting string to check the input string for.
+ * @return True or False if the given string starts with the given startingStr
+ */
+inline bool starts_with(std::string_view value, std::string_view startingStr)
+{
+  if(startingStr.size() > value.size())
+  {
+    return false;
+  }
+  return std::equal(startingStr.begin(), startingStr.end(), value.begin());
+}
+
+/**
+ * @brief
+ *
+ * @param value input string to check
  * @param ending The ending to check the input string for.
  * @return True or False if the given string ends with the given ending
  */

@@ -62,6 +62,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
   ImportCSVDataTest.cpp
+  ImportBinaryCTNorthstarTest.cpp
   ImportHDF5DatasetTest.cpp
   ImportVolumeGraphicsFileTest.cpp
   InitializeDataTest.cpp
