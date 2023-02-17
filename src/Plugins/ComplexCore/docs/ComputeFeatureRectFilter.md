@@ -1,4 +1,4 @@
-# Compute FeatureRect  #
+# Compute Feature Rect  #
 
 
 ## Group (Subgroup) ##
@@ -7,7 +7,7 @@ Reconstruction (Reconstruction)
 
 ## Description ##
 
-This **Filter** computes the XYZ minimum and maximum coordinates for each **Feature** in a segmentation. This data can be important for finding the smallest ecompasing volume. This values are given in **Pixel** coordinates.
+This **Filter** computes the XYZ minimum and maximum coordinates for each **Feature** in a segmentation. This data can be important for finding the smallest encompassing volume. This values are given in **Pixel** coordinates.
 
 |       | 0 | 1 | 2 | 3 | 4 |
 |-------|---|---|---|---|---|
@@ -35,7 +35,7 @@ N/A
 
 ## Required Geometry ##
 
-ImageGeometry
+N/A
 
 ## Required Objects ##
 

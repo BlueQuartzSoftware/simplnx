@@ -9,7 +9,9 @@ namespace complex
 {
 /**
  * @class ComputeFeatureRectFilter
- * @brief This filter will ....
+ * @brief This filter computes the XYZ minimum and maximum coordinates for each Feature in a segmentation.
+ * This data can be important for finding the smallest encompassing volume. The values are given in pixel
+ * coordinates.
  */
 class COMPLEXCORE_EXPORT ComputeFeatureRectFilter : public IFilter
 {
