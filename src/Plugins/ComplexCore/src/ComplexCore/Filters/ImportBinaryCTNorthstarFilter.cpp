@@ -501,7 +501,6 @@ IFilter::PreflightResult ImportBinaryCTNorthstarFilter::preflightImpl(const Data
   resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
 
   DataPath densityArrayPath = pImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
-  //  std::vector<usize> tupleDims = {importedGeometryInfo.Dimensions[2], importedGeometryInfo.Dimensions[1], importedGeometryInfo.Dimensions[0]};
   resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(DataType::float32, importedGeometryInfo.Dimensions, std::vector<usize>{1}, densityArrayPath));
 
   // Set the preflight updated values
@@ -529,13 +528,11 @@ Result<> ImportBinaryCTNorthstarFilter::executeImpl(DataStructure& dataStructure
   ImportBinaryCTNorthstarInputValues inputValues;
 
   inputValues.InputHeaderFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputHeaderFile_Key);
-
-  auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.ImageGeometryPath = pImageGeometryPathValue;
+  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
 
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pDensityArrayNameValue = filterArgs.value<std::string>(k_DensityArrayName_Key);
-  DataPath densityArrayPath = pImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
+  DataPath densityArrayPath = inputValues.ImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
   inputValues.DensityArrayPath = densityArrayPath;
 
   inputValues.DataFilePaths = s_HeaderCache[m_InstanceId].DataFilePaths;
