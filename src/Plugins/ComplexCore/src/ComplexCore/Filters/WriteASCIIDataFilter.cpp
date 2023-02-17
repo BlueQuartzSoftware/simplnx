@@ -96,10 +96,6 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pOutputStyleValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
-  auto pOutputPathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  auto pFileExtensionValue = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
-  auto pMaxValPerLineValue = filterArgs.value<int32>(k_MaxValPerLine_Key);
-  auto pDelimiterValue = filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key);
   auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
   // Declare the preflightResult variable
@@ -163,7 +159,7 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
   }
 
   const std::string delimiter = OStreamUtilities::DelimiterToString(filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key));
-  int32 maxValPerLine = filterArgs.value<int32>(k_MaxValPerLine_Key);
+  auto maxValPerLine = filterArgs.value<int32>(k_MaxValPerLine_Key);
   auto selectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   auto fileType = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
   auto directoryPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
