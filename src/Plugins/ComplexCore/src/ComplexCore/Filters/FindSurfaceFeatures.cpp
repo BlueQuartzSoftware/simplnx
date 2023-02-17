@@ -10,6 +10,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
 
@@ -264,10 +265,14 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  std::vector<usize> tupleDims = std::vector<usize>{1};
+  if(const auto& surfaceFeaturesParent = dataStructure.getDataAs<AttributeMatrix>(pSurfaceFeaturesArrayPathValue.getParent()); surfaceFeaturesParent != nullptr)
   {
-    auto createSurfaceFeaturesAction = std::make_unique<CreateArrayAction>(DataType::boolean, std::vector<usize>{1}, std::vector<usize>{1}, pSurfaceFeaturesArrayPathValue);
-    resultOutputActions.value().actions.push_back(std::move(createSurfaceFeaturesAction));
+    tupleDims = surfaceFeaturesParent->getShape();
   }
+
+  auto createSurfaceFeaturesAction = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, pSurfaceFeaturesArrayPathValue);
+  resultOutputActions.value().actions.push_back(std::move(createSurfaceFeaturesAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -276,25 +281,30 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
 Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel) const
 {
-  auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
-  auto pMarkFeature0NeighborsValue = filterArgs.value<bool>(k_MarkFeature0Neighbors);
+  const auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
+  const auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  const auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
+  const auto pMarkFeature0NeighborsValue = filterArgs.value<bool>(k_MarkFeature0Neighbors);
 
   // Resize the surface features array to the proper size
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  BoolArray& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue);
-  DataStore<bool>& surfaceFeaturesStore = surfaceFeatures.getIDataStoreRefAs<DataStore<bool>>();
+  auto& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue);
+  auto& surfaceFeaturesStore = surfaceFeatures.getIDataStoreRefAs<DataStore<bool>>();
 
-  usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
-  usize maxFeature = featureIds[featureIdsMaxIdx];
+  const usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
+  const usize maxFeature = featureIds[featureIdsMaxIdx];
+  const std::vector<usize> surfaceFeaturesTupleShape = {maxFeature + 1};
 
-  surfaceFeaturesStore.reshapeTuples(std::vector<usize>{maxFeature + 1});
-  surfaceFeaturesStore.fill(0);
+  Result<> resizeResults = ResizeDataArray<bool>(dataStructure, pSurfaceFeaturesArrayPathValue, surfaceFeaturesTupleShape);
+  if(resizeResults.invalid())
+  {
+    return resizeResults;
+  }
+  surfaceFeaturesStore.fill(false);
 
   // Find surface features
-  ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
-  usize geometryDimensionality = featureGeometry.getDimensionality();
+  const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
+  const usize geometryDimensionality = featureGeometry.getDimensionality();
   if(geometryDimensionality == 3)
   {
     findSurfaceFeatures3D(dataStructure, pFeatureGeometryPathValue, pFeatureIdsArrayPathValue, pSurfaceFeaturesArrayPathValue, pMarkFeature0NeighborsValue, shouldCancel);
