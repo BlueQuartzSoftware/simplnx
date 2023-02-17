@@ -7,7 +7,19 @@ Core (Generation)
 
 ## Description ##
 
-This **Filter** copies one or more DataObjects
+This **Filter** deep copies one or more DataObjects.
+
+**In the case of copying _DataObject_s that inherit from _BaseGroup_**, such as _DataGroup_ or _AttributeMatrix_, **it will copy all of the child objects recursively**, that is to say all of an object's children and childrens' children and so on will be copied if applicable.
+
+Commonly used _BaseGroup_ children:
+- **_ALL_** Geometries
+- _DataGroup_
+- _AttributeMatrix_
+- _GridMontage_
+
+See the DataStructure section of the reference manual for a complete hierarchy.
+
+When the _Copy to New Parent_ is toggled true a new parameter will appear. This parameter, _Copied Parent Group_, allows for the selected arrays to all be copied into whatever data container you place here.
 
 ## Parameters ##
 

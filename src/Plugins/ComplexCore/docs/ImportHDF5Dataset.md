@@ -41,9 +41,9 @@ We can input component dimensions of **2** and set our destination attribute mat
 
 | Name | Type | Description |
 |------|------| ----------- |
-| HDF5 File | QString | The path to the HDF5 file |
+| HDF5 File | String | The path to the HDF5 file |
 | Checked Datasets | N/A | The checked datasets in the file tree to import |
-| Component Dimensions | QString | The component dimensions that the imported dataset will have.  This is a comma-delimited list of dimensional values |
+| Component Dimensions | String | The component dimensions that the imported dataset will have.  This is a comma-delimited list of dimensional values |
 
 ## Required Geometry ##
 
@@ -53,13 +53,13 @@ Not Applicable
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Attribute Matrix**  | None         | DataArrayPath | N/A | **Attribute Matrix** used to store imported data |
+| **Attribute Matrix**  | None | DataArrayPath | N/A | **Attribute Matrix** used to store imported data |
 
 ## Created Objects ##
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Attribute Array(s)** | Name of dataset(s) from HDF5 file | Type from HDF5 file | Input as a filter parameter | The created Attribute Array(s) |
+| **Data Array(s)** | Name of dataset(s) from HDF5 file | Type from HDF5 file | Input as a filter parameter | The created Attribute Array(s) |
 
 ## Example Pipelines ##
 

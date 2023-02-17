@@ -7,7 +7,9 @@ Core (Generation)
 
 ## Description ##
 
-This **Filter** creates a new **Data Container**.
+This **Filter** creates a new **DataGroup**.
+
+Unlike _AttributeMatrix_, _DataGroup_s are capable of holding any _DataObject_ of any size.
 
 ## Parameters ##
 

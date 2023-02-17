@@ -24,7 +24,7 @@ None
 ## Created Objects ##
 | Kind                     | Default Name  | Type   | Component Dimensions | Description                             |
 |--------------------------|---------------|--------|----------------------|-----------------------------------------|
-| **Face Attribute Array** | FaceCentroids | double | (1)                  | Specifies the centroid of each **Face** |
+| **Face Attribute Array** | FaceCentroids | float32 | (1)                  | Specifies the centroid of each **Face** |
 
 
 ## Example Pipelines ##
