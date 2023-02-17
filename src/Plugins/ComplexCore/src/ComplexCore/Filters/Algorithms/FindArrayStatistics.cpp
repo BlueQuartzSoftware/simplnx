@@ -83,6 +83,12 @@ public:
 
     for(usize i = start; i < end; i++)
     {
+      // Check if there is any data for this feature Id which could happen if
+      // the featureId values are non-contiguous
+      if(m_FeatureDataMap.find(i) == m_FeatureDataMap.end())
+      {
+        continue;
+      }
       if(m_Length)
       {
         uint64 val = static_cast<uint64>(m_FeatureDataMap[i].size());
@@ -370,9 +376,58 @@ struct FindArrayStatisticsFunctor
       }
     }
 
+    using InputDataArrayType = DataArray<T>;
+
+    // -------------------------------------------------------------------------
+    // Need to initialize the output data arrays
+    if(inputValues->FindLength)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<UInt64Array>(inputValues->LengthArrayName);
+      arrayPtr->fill(0ULL);
+    }
+    if(inputValues->FindMin)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->MinimumArrayName);
+      arrayPtr->fill(static_cast<T>(0));
+    }
+    if(inputValues->FindMax)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->MaximumArrayName);
+      arrayPtr->fill(static_cast<T>(0));
+    }
+    if(inputValues->FindMean)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->MeanArrayName);
+      arrayPtr->fill(0.0F);
+    }
+    if(inputValues->FindMedian)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->MedianArrayName);
+      arrayPtr->fill(0.0F);
+    }
+    if(inputValues->FindStdDeviation)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->StdDeviationArrayName);
+      arrayPtr->fill(0.0F);
+    }
+    if(inputValues->FindSummation)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->SummationArrayName);
+      arrayPtr->fill(0.0F);
+    }
+    if(inputValues->FindHistogram)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->HistogramArrayName);
+      arrayPtr->fill(0.0F);
+    }
+    // End Initialization
+    // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
     // this level checks whether computing by index or not and preps the calculations accordingly
     findStatistics<T>(inputArray, featureIds, maskCompare, inputValues, arrays, numFeatures);
 
+    // -------------------------------------------------------------------------
     // compute the standardized data based on whether computing by index or not
     if(inputValues->StandardizeData)
     {

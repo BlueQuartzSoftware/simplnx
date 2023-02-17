@@ -153,7 +153,19 @@ Parameters FindArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<Int32Parameter>(k_NumBins_Key, "Number of Bins", "Number of bins in histogram", 0));
   params.insert(std::make_unique<StringParameter>(k_HistogramArrayName_Key, "Histogram Array Name", "The name of the histogram array", "Historgram"));
 
-  params.insertSeparator(Parameters::Separator{"Statistics Options"});
+  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Whether to use a boolean mask array to ignore certain points flagged as false from the statistics", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The path to the data array that specifies if the point is to be counted in the statistics", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  params.insertSeparator(Parameters::Separator{"Algorithm Options"});
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "Whether the statistics should be computed on a Feature/Ensemble basis", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  params.insertSeparator(Parameters::Separator{"Calculated Output Arrays"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FindLength_Key, "Find Length", "Whether to compute the length of the input array", false));
   params.insert(std::make_unique<StringParameter>(k_LengthArrayName_Key, "Length Array Name", "The name of the length array", "Length"));
 
@@ -177,18 +189,6 @@ Parameters FindArrayStatisticsFilter::parameters() const
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StandardizeData_Key, "Standardize Data", "", false));
   params.insert(std::make_unique<StringParameter>(k_StandardizedArrayName_Key, "Standardized Data Array Name", "The name of the standardized data array", "Standardized"));
-
-  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Whether to use a boolean mask array to ignore certain points flagged as false from the statistics", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The path to the data array that specifies if the point is to be counted in the statistics", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-
-  params.insertSeparator(Parameters::Separator{"Optional Algorithm Options"});
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "Whether the statistics should be computed on a Feature/Ensemble basis", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath({"CellData", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FindHistogram_Key, k_HistogramArrayName_Key, true);

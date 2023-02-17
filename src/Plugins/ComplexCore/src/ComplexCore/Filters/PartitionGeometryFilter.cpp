@@ -246,13 +246,14 @@ Parameters PartitionGeometryFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Geometry Details"});
+  params.insertSeparator(Parameters::Separator{"Input Geometry Details"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryToPartition_Key, "Geometry to Partition", "The input geometry that will be partitioned", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
                                                                                                       IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral, IGeometry::Type::Image,
                                                                                                       IGeometry::Type::RectGrid}));
-  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_AttributeMatrixPath_Key, "Cell Attribute Matrix (Vertex=>Node Geometry, Cell=>Image/Rectilinear)",
-                                                                    "The attribute matrix that represents the cell data for the geometry.", DataPath{}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_AttributeMatrixPath_Key, "Input Geometry Cell Attribute Matrix ",
+                                                                    "The attribute matrix that represents the cell data for the geometry.(Vertex=>Node Geometry, Cell=>Image/Rectilinear)",
+                                                                    DataPath{}));
   params.insertSeparator(Parameters::Separator{"Partitioning Scheme Details"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_PartitioningMode_Key, "Select the partitioning mode",
                                                                     "Mode can be 'Basic (0)', 'Advanced (1)', 'Bounding Box (2)', 'Existing Partitioning Scheme (3)'", 0, ::k_Choices));
@@ -279,14 +280,15 @@ Parameters PartitionGeometryFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_VertexMaskPath_Key, "Vertex Mask", "The complete path to the vertex mask array.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Created Geometry Objects"});
+  params.insertSeparator(Parameters::Separator{"Created DataStructure Objects"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureAttrMatrixName_Key, "Feature Attribute Matrix Name",
-                                                          "The name of the feature attribute matrix that will be created as a child of the input geometry.", "Feature Data"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_PartitionIdsArrayName_Key, "Partition Ids Array Name", "The name of the partition ids output array", "Partition Ids"));
+                                                          "The name of the feature attribute matrix that will be created as a child of the input geometry.", "Partition Feature Data"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_PartitionIdsArrayName_Key, "Partition Ids Array Name",
+                                                          "The name of the partition ids output array stored in the input cell attribute matrix", "Partition Ids"));
 
   params.insertSeparator(Parameters::Separator{"Created Partitioning Scheme Objects"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_PSGeometry_Key, "Partitioning Scheme Geometry", "The complete path to the Partitioning Scheme Geometry being created",
-                                                             DataPath({"[Partitioning Scheme Geometry]"})));
+                                                             DataPath({"Partitioning Scheme Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_PSGeometryAMName_Key, "Partitioning Scheme Attribute Matrix",
                                                           "The name of the partitioning scheme cell attribute matrix that will be created as a child of the Partitioning Scheme geometry.",
                                                           "Cell Data"));
@@ -478,7 +480,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
     dap = pPSGeometryValue;
     dap = dap.createChildPath(pPSGeometryAMNameValue).createChildPath(pPSGeometryDataArrayNameValue);
-    action = std::make_unique<CreateArrayAction>(DataType::int32, psDims, std::vector<usize>{1}, dap);
+    action = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{psMetadata.geometryDims[2], psMetadata.geometryDims[1], psMetadata.geometryDims[0]}, std::vector<usize>{1}, dap);
     resultOutputActions.value().actions.push_back(std::move(action));
   }
 
