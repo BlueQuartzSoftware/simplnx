@@ -500,7 +500,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   {
     if(includeIndex)
     {
-      outputStrm << "Feature_IDs" << delimiter;
+      outputStrm << "Indices" << delimiter;
     }
     for(size_t writerIndex = 0; writerIndex < writersCount; writerIndex++)
     {
