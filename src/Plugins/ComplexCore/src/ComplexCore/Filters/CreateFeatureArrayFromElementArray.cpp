@@ -142,9 +142,14 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
 
   // Get the target Attribute Matrix that the output array will be stored with
   // the proper tuple shape
+  std::vector<usize> amTupleShape = {1ULL};
   DataPath amPath = pCreatedArrayNameValue.getParent();
-  auto& featureAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
-  auto amTupleShape = featureAttributeMatrix.getShape();
+  // First try getting the amPath as an AttributeMatrix
+  auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(amPath);
+  if(featureAttributeMatrixPtr != nullptr)
+  {
+    amTupleShape = featureAttributeMatrixPtr->getShape();
+  }
 
   {
     DataType dataType = selectedCellArray.getDataType();
