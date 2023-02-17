@@ -276,7 +276,6 @@ void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     // Allow data-based parallelization
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numFeatures);
-    dataAlg.setParallelizationEnabled(false);
     dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(featureValueMap, inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMedian,
                                                       inputValues->FindStdDeviation, inputValues->FindSummation, arrays, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
                                                       inputValues->UseFullRange, inputValues->NumBins));
