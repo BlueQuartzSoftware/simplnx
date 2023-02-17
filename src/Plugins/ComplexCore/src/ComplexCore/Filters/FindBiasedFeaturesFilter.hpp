@@ -8,20 +8,20 @@
 namespace complex
 {
 /**
- * @class FindBoundingBoxFeaturesFilter
+ * @class FindBiasedFeaturesFilter
  * @brief This filter determines which Features are biased by the outer surfaces of the sample.
  */
-class COMPLEXCORE_EXPORT FindBoundingBoxFeaturesFilter : public IFilter
+class COMPLEXCORE_EXPORT FindBiasedFeaturesFilter : public IFilter
 {
 public:
-  FindBoundingBoxFeaturesFilter() = default;
-  ~FindBoundingBoxFeaturesFilter() noexcept override = default;
+  FindBiasedFeaturesFilter() = default;
+  ~FindBiasedFeaturesFilter() noexcept override = default;
 
-  FindBoundingBoxFeaturesFilter(const FindBoundingBoxFeaturesFilter&) = delete;
-  FindBoundingBoxFeaturesFilter(FindBoundingBoxFeaturesFilter&&) noexcept = delete;
+  FindBiasedFeaturesFilter(const FindBiasedFeaturesFilter&) = delete;
+  FindBiasedFeaturesFilter(FindBiasedFeaturesFilter&&) noexcept = delete;
 
-  FindBoundingBoxFeaturesFilter& operator=(const FindBoundingBoxFeaturesFilter&) = delete;
-  FindBoundingBoxFeaturesFilter& operator=(FindBoundingBoxFeaturesFilter&&) noexcept = delete;
+  FindBiasedFeaturesFilter& operator=(const FindBiasedFeaturesFilter&) = delete;
+  FindBiasedFeaturesFilter& operator=(FindBiasedFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_CalcByPhase_Key = "calc_by_phase";
@@ -97,5 +97,5 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, FindBoundingBoxFeaturesFilter, "d46f2fd7-dc68-4b57-bca3-693016512b2f");
+COMPLEX_DEF_FILTER_TRAITS(complex, FindBiasedFeaturesFilter, "d46f2fd7-dc68-4b57-bca3-693016512b2f");
 /* LEGACY UUID FOR THIS FILTER 450c2f00-9ddf-56e1-b4c1-0e74e7ad2349 */

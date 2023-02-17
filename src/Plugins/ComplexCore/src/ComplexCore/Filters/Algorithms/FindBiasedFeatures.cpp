@@ -1,4 +1,4 @@
-#include "FindBoundingBoxFeatures.hpp"
+#include "FindBiasedFeatures.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -6,8 +6,7 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-FindBoundingBoxFeatures::FindBoundingBoxFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                 FindBoundingBoxFeaturesInputValues* inputValues)
+FindBiasedFeatures::FindBiasedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindBiasedFeaturesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -16,16 +15,16 @@ FindBoundingBoxFeatures::FindBoundingBoxFeatures(DataStructure& dataStructure, c
 }
 
 // -----------------------------------------------------------------------------
-FindBoundingBoxFeatures::~FindBoundingBoxFeatures() noexcept = default;
+FindBiasedFeatures::~FindBiasedFeatures() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& FindBoundingBoxFeatures::getCancel()
+const std::atomic_bool& FindBiasedFeatures::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> FindBoundingBoxFeatures::operator()()
+Result<> FindBiasedFeatures::operator()()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 imageDimensions = imageGeometry.getDimensions();
@@ -42,7 +41,7 @@ Result<> FindBoundingBoxFeatures::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void FindBoundingBoxFeatures::findBoundingBoxFeatures()
+void FindBiasedFeatures::findBoundingBoxFeatures()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
@@ -187,7 +186,7 @@ void FindBoundingBoxFeatures::findBoundingBoxFeatures()
 }
 
 // -----------------------------------------------------------------------------
-void FindBoundingBoxFeatures::findBoundingBoxFeatures2D()
+void FindBiasedFeatures::findBoundingBoxFeatures2D()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 imageDimensions = imageGeometry.getDimensions();

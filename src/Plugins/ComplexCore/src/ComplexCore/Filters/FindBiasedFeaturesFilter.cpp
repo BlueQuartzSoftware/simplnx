@@ -1,11 +1,10 @@
-#include "FindBoundingBoxFeaturesFilter.hpp"
+#include "FindBiasedFeaturesFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/FindBoundingBoxFeatures.hpp"
+#include "ComplexCore/Filters/Algorithms/FindBiasedFeatures.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
@@ -16,37 +15,37 @@ using namespace complex;
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string FindBoundingBoxFeaturesFilter::name() const
+std::string FindBiasedFeaturesFilter::name() const
 {
-  return FilterTraits<FindBoundingBoxFeaturesFilter>::name.str();
+  return FilterTraits<FindBiasedFeaturesFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-std::string FindBoundingBoxFeaturesFilter::className() const
+std::string FindBiasedFeaturesFilter::className() const
 {
-  return FilterTraits<FindBoundingBoxFeaturesFilter>::className;
+  return FilterTraits<FindBiasedFeaturesFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-Uuid FindBoundingBoxFeaturesFilter::uuid() const
+Uuid FindBiasedFeaturesFilter::uuid() const
 {
-  return FilterTraits<FindBoundingBoxFeaturesFilter>::uuid;
+  return FilterTraits<FindBiasedFeaturesFilter>::uuid;
 }
 
 //------------------------------------------------------------------------------
-std::string FindBoundingBoxFeaturesFilter::humanName() const
+std::string FindBiasedFeaturesFilter::humanName() const
 {
   return "Find Biased Features (Bounding Box)";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> FindBoundingBoxFeaturesFilter::defaultTags() const
+std::vector<std::string> FindBiasedFeaturesFilter::defaultTags() const
 {
   return {"Generic", "Spatial"};
 }
 
 //------------------------------------------------------------------------------
-Parameters FindBoundingBoxFeaturesFilter::parameters() const
+Parameters FindBiasedFeaturesFilter::parameters() const
 {
   Parameters params;
 
@@ -71,14 +70,14 @@ Parameters FindBoundingBoxFeaturesFilter::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer FindBoundingBoxFeaturesFilter::clone() const
+IFilter::UniquePointer FindBiasedFeaturesFilter::clone() const
 {
-  return std::make_unique<FindBoundingBoxFeaturesFilter>();
+  return std::make_unique<FindBiasedFeaturesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult FindBoundingBoxFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult FindBiasedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pCalcByPhaseValue = filterArgs.value<bool>(k_CalcByPhase_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
@@ -110,10 +109,10 @@ IFilter::PreflightResult FindBoundingBoxFeaturesFilter::preflightImpl(const Data
 }
 
 //------------------------------------------------------------------------------
-Result<> FindBoundingBoxFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel) const
+Result<> FindBiasedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
-  FindBoundingBoxFeaturesInputValues inputValues;
+  FindBiasedFeaturesInputValues inputValues;
 
   inputValues.CalcByPhase = filterArgs.value<bool>(k_CalcByPhase_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
@@ -122,6 +121,6 @@ Result<> FindBoundingBoxFeaturesFilter::executeImpl(DataStructure& dataStructure
   inputValues.PhasesArrayPath = filterArgs.value<DataPath>(k_PhasesArrayPath_Key);
   inputValues.BiasedFeaturesArrayName = inputValues.CentroidsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_BiasedFeaturesArrayName_Key));
 
-  return FindBoundingBoxFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return FindBiasedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

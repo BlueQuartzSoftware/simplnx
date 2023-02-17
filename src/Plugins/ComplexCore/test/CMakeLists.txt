@@ -43,8 +43,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FeatureDataCSVWriterTest.cpp
   FillBadDataTest.cpp
   FindArrayStatisticsTest.cpp
+  FindBiasedFeaturesTest.cpp
   FindBoundaryCellsTest.cpp
-  FindBoundingBoxFeaturesTest.cpp
   FindDifferencesMapTest.cpp
   FindEuclideanDistMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
