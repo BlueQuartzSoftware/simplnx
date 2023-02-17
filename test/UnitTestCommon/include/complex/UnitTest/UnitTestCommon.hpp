@@ -95,6 +95,7 @@ inline constexpr StringLiteral k_ActiveName("Active");
 inline constexpr StringLiteral k_NumElements("NumElements");
 inline constexpr StringLiteral k_SlipVector("SlipVector");
 inline constexpr StringLiteral k_AvgEulerAngles("AvgEulerAngles");
+inline constexpr StringLiteral k_SurfaceFeatures("SurfaceFeatures");
 
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
 inline constexpr StringLiteral k_Image_Quality("Image Quality");
