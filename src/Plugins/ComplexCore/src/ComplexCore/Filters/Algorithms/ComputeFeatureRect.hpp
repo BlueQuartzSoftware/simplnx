@@ -8,17 +8,6 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  ComputeFeatureRectInputValues inputValues;
-
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.FeatureRectArrayPath = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
-
-  return ComputeFeatureRect(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 
@@ -26,14 +15,8 @@ struct COMPLEXCORE_EXPORT ComputeFeatureRectInputValues
 {
   DataPath FeatureIdsArrayPath;
   DataPath FeatureRectArrayPath;
-
+  std::optional<std::string> ParentDataObjectName;
 };
-
-/**
- * @class ConditionalSetValue
- * @brief This filter replaces values in the target array with a user specified value
- * where a bool mask array specifies.
- */
 
 class COMPLEXCORE_EXPORT ComputeFeatureRect
 {
