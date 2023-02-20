@@ -53,12 +53,12 @@ DataStructure CreateTestData()
   rect->fill(0);
 
   auto& rectStore = rect->getIDataStoreRefAs<UInt32DataStore>();
-  rectStore.setComponent(1, 0, 1);
+  rectStore.setComponent(1, 0, 0);
   rectStore.setComponent(1, 1, 1);
-  rectStore.setComponent(1, 2, 0);
-  rectStore.setComponent(1, 3, 3);
+  rectStore.setComponent(1, 2, 1);
+  rectStore.setComponent(1, 3, 0);
   rectStore.setComponent(1, 4, 3);
-  rectStore.setComponent(1, 5, 0);
+  rectStore.setComponent(1, 5, 3);
 
   return dataStructure;
 }
