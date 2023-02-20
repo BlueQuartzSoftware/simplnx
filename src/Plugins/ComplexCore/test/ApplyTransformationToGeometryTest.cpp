@@ -1,5 +1,5 @@
-#include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "ComplexCore/Filters/StlFileReaderFilter.hpp"
 
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
@@ -115,9 +115,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
 
     // Create default Parameters for the filter.
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_GeometryToTransform_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(geometryPath));
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformType_Key, std::make_any<complex::ChoicesParameter::ValueType>(4));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(4));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({100.0F, 100.0F, 100.0F}));
 
     // Preflight the filter and check result
@@ -168,10 +168,10 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
 
     // Create default Parameters for the filter.
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_GeometryToTransform_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(geometryPath));
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformType_Key, std::make_any<complex::ChoicesParameter::ValueType>(3));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_RotationAxisAngle_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(3));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -221,9 +221,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
 
     // Create default Parameters for the filter.
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_GeometryToTransform_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(geometryPath));
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformType_Key, std::make_any<complex::ChoicesParameter::ValueType>(5));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(5));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({2.0F, 3.0F, 4.0F}));
 
     // Preflight the filter and check result
@@ -274,9 +274,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
 
     // Create default Parameters for the filter.
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_GeometryToTransform_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(geometryPath));
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformType_Key, std::make_any<complex::ChoicesParameter::ValueType>(2));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(2));
 
     // This should reflect the geometry across the x-axis.
     DynamicTableParameter::ValueType dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}}};
@@ -355,9 +355,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[Comp
 
     // Create default Parameters for the filter.
     DataPath triangleAreasDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleAreasName);
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_GeometryToTransform_Key, std::make_any<DataPath>(geometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(geometryPath));
 
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformType_Key, std::make_any<complex::ChoicesParameter::ValueType>(1));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(1));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>({precomputedName}));
 
     // Preflight the filter and check result
