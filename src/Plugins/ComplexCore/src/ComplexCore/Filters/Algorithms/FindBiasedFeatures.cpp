@@ -190,14 +190,13 @@ void FindBiasedFeatures::findBoundingBoxFeatures2D()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 imageDimensions = imageGeometry.getDimensions();
+  const FloatVec3 imageOrigin = imageGeometry.getOrigin();
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
   const auto& surfaceFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->SurfaceFeaturesArrayPath);
   auto& biasedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName);
   biasedFeatures.fill(false);
 
   const usize size = centroids.getNumberOfTuples();
-  constexpr float32 xOrigin = 0.0f;
-  constexpr float32 yOrigin = 0.0f;
 
   float32 coords[4] = {0.0f, 0.0f, 0.0f, 0.0f};
   float32 x = 0.0f;
@@ -207,6 +206,8 @@ void FindBiasedFeatures::findBoundingBoxFeatures2D()
   int32 sideToMove = 0;
   int32 move = 0;
 
+  float32 xOrigin = 0.0f;
+  float32 yOrigin = 0.0f;
   int32 xPoints = 0, yPoints = 0;
   FloatVec3 spacing;
 
@@ -217,6 +218,8 @@ void FindBiasedFeatures::findBoundingBoxFeatures2D()
   {
     xPoints = static_cast<int32>(imageDimensions[1]);
     yPoints = static_cast<int32>(imageDimensions[2]);
+    xOrigin = imageOrigin[1];
+    yOrigin = imageOrigin[2];
     spacing = imageGeometry.getSpacing();
     centroidShift0 = 1;
     centroidShift1 = 2;
@@ -225,6 +228,8 @@ void FindBiasedFeatures::findBoundingBoxFeatures2D()
   {
     xPoints = static_cast<int32>(imageDimensions[0]);
     yPoints = static_cast<int32>(imageDimensions[2]);
+    xOrigin = imageOrigin[0];
+    yOrigin = imageOrigin[2];
     spacing = imageGeometry.getSpacing();
     centroidShift0 = 0;
     centroidShift1 = 2;
@@ -233,6 +238,8 @@ void FindBiasedFeatures::findBoundingBoxFeatures2D()
   {
     xPoints = static_cast<int32>(imageDimensions[0]);
     yPoints = static_cast<int32>(imageDimensions[1]);
+    xOrigin = imageOrigin[0];
+    yOrigin = imageOrigin[1];
     spacing = imageGeometry.getSpacing();
     centroidShift0 = 0;
     centroidShift1 = 1;
