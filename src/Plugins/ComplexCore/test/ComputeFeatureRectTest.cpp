@@ -111,7 +111,7 @@ TEST_CASE("ComplexCore::ComputeFeatureRectFilter: Valid filter execution")
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  
+
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
