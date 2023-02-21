@@ -62,7 +62,8 @@ IFilter::UniquePointer ComputeFeatureRectFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   auto pFeatureRectArrayPathValue = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
@@ -107,7 +108,8 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel) const
 {
   ComputeFeatureRectInputValues inputValues;
 
