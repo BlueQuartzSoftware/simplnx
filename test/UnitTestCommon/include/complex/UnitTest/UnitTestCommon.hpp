@@ -72,7 +72,7 @@ inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
 inline constexpr StringLiteral k_Fit("Fit");
 inline constexpr StringLiteral k_SEMSignal("SEM Signal");
 
-inline constexpr StringLiteral k_SmallIN1002("Small IN1002");
+inline constexpr StringLiteral k_SmallIN1002("Small IN100 2D");
 inline constexpr StringLiteral k_SmallIN100("Small IN100");
 inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
 inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
