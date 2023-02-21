@@ -1,7 +1,6 @@
 #include "ComputeFeatureRect.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 
 using namespace complex;
 
@@ -57,7 +56,16 @@ Result<> ComputeFeatureRect::operator()()
     cornersDataStore.setComponent(i, 5, std::numeric_limits<uint32>::min());
   }
   std::vector<usize> imageDims = featureIds.getTupleShape();
-  usize xDim = imageDims[0], yDim = imageDims[1], zDim = imageDims[2];
+
+  /*
+   * Array dimension ordering is flipped compared to geometry dimension ordering.
+   * We want the geometry dimension ordering, so we are flipping the indices below.
+   */
+  std::reverse(imageDims.rbegin(), imageDims.rend());
+
+  usize xDim = imageDims[0];
+  usize yDim = imageDims[1];
+  usize zDim = imageDims[2];
 
   usize index = 0;
   // Store the coordinates in the corners array
@@ -89,33 +97,26 @@ Result<> ComputeFeatureRect::operator()()
 
         usize numComps = 6;
         usize featureIdStartIdx = featureId * numComps;
-        uint32 val = corners[featureIdStartIdx + 0];
         if(x < corners[featureIdStartIdx + 0])
         {
           corners[featureIdStartIdx + 0] = x;
         }
-        val = corners[featureIdStartIdx + 1];
         if(y < corners[featureIdStartIdx + 1])
         {
           corners[featureIdStartIdx + 1] = y;
         }
-        val = corners[featureIdStartIdx + 2];
         if(z < corners[featureIdStartIdx + 2])
         {
           corners[featureIdStartIdx + 2] = z;
         }
-
-        val = corners[featureIdStartIdx + 3];
         if(x > corners[featureIdStartIdx + 3])
         {
           corners[featureIdStartIdx + 3] = x;
         }
-        val = corners[featureIdStartIdx + 4];
         if(y > corners[featureIdStartIdx + 4])
         {
           corners[featureIdStartIdx + 4] = y;
         }
-        val = corners[featureIdStartIdx + 5];
         if(z > corners[featureIdStartIdx + 5])
         {
           corners[featureIdStartIdx + 5] = z;

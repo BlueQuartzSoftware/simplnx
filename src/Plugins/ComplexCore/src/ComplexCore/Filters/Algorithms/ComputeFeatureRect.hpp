@@ -5,8 +5,6 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 
 namespace complex
 {
@@ -15,7 +13,6 @@ struct COMPLEXCORE_EXPORT ComputeFeatureRectInputValues
 {
   DataPath FeatureIdsArrayPath;
   DataPath FeatureRectArrayPath;
-  std::optional<std::string> ParentDataObjectName;
 };
 
 class COMPLEXCORE_EXPORT ComputeFeatureRect
