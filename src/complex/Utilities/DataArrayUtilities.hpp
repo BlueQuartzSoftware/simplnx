@@ -692,7 +692,7 @@ Result<> ResizeDataArray(DataStructure& dataStructure, const DataPath& arrayPath
   }
 
   // the array's parent is not in an Attribute Matrix so we can safely reshape to the new tuple shape
-  dataArray->getIDataStoreRefAs<DataStore<T>>().reshapeTuples(newShape);
+  dataArray->template getIDataStoreRefAs<DataStore<T>>().reshapeTuples(newShape);
   return {};
 }
 
