@@ -2,12 +2,8 @@
 
 #include "ComplexCore/Filters/Algorithms/ComputeFeatureRect.hpp"
 
-#include "complex/DataStructure/AttributeMatrix.hpp"
-#include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 
@@ -86,6 +82,21 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
     std::reverse(tDims.rbegin(), tDims.rend());
   }
 
+  /*
+   * This output Feature Rect array assumes that the original dataset has dimensions that are no larger than uint32.
+   * This may not be true in the future, and should probably be reviewed and updated later.
+   */
+  for(usize i = 0; i < tDims.size(); i++)
+  {
+    const auto& dim = tDims[i];
+    if(dim > std::numeric_limits<uint32>::max())
+    {
+      return {MakeErrorResult<OutputActions>(
+          -2000, fmt::format("Data Object at '{}': Dimension {} has a value of {}, which is larger than the maximum uint32 value ({}).  Please contact BlueQuartz Software for further information.",
+                             pFeatureRectArrayPathValue.toString(), i + 1, dim, std::numeric_limits<uint32>::max()))};
+    }
+  }
+
   complex::Result<OutputActions> resultOutputActions;
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, tDims, std::vector<usize>{6}, pFeatureRectArrayPathValue);
   resultOutputActions.value().actions.push_back(std::move(createArrayAction));
@@ -102,12 +113,6 @@ Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, con
 
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.FeatureRectArrayPath = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
-
-  DataPath parentPath = inputValues.FeatureRectArrayPath.getParent();
-  if(!parentPath.empty())
-  {
-    inputValues.ParentDataObjectName = parentPath.getTargetName();
-  }
 
   return ComputeFeatureRect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

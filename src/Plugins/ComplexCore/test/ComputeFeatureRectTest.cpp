@@ -1,8 +1,6 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Filter/IFilter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ComputeFeatureRectFilter.hpp"
 
 #include <catch2/catch.hpp>
@@ -24,7 +22,7 @@ DataStructure CreateTestData()
   DataStructure dataStructure;
 
   ImageGeom* iGeom = ImageGeom::Create(dataStructure, k_ImageGeometryName);
-  std::vector<usize> dims = {5, 5, 1};
+  std::vector<usize> dims = {5, 5, 5};
   iGeom->setDimensions(dims);
   AttributeMatrix* cellAM = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, iGeom->getId());
   cellAM->setShape({dims[2], dims[1], dims[0]});
@@ -45,20 +43,56 @@ DataStructure CreateTestData()
   featureIdsStore[17] = 1;
   featureIdsStore[18] = 1;
 
+  featureIdsStore[31] = 2;
+  featureIdsStore[32] = 2;
+  featureIdsStore[33] = 2;
+
+  featureIdsStore[36] = 2;
+  featureIdsStore[37] = 2;
+  featureIdsStore[38] = 2;
+
+  featureIdsStore[41] = 2;
+  featureIdsStore[42] = 2;
+  featureIdsStore[43] = 2;
+
+  featureIdsStore[56] = 3;
+  featureIdsStore[57] = 3;
+  featureIdsStore[58] = 3;
+
+  featureIdsStore[61] = 3;
+  featureIdsStore[62] = 3;
+  featureIdsStore[63] = 3;
+
+  featureIdsStore[66] = 3;
+  featureIdsStore[67] = 3;
+  featureIdsStore[68] = 3;
+
   AttributeMatrix* featureAM = AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, iGeom->getId());
-  featureAM->setShape({2});
+  featureAM->setShape({4});
 
   std::vector<usize> compDims = {6};
-  UInt32Array* rect = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_RectCoordsExemplaryArrayName, {2}, {6}, featureAM->getId());
-  rect->fill(0);
-
+  UInt32Array* rect = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_RectCoordsExemplaryArrayName, {4}, {6}, featureAM->getId());
   auto& rectStore = rect->getIDataStoreRefAs<UInt32DataStore>();
-  rectStore.setComponent(1, 0, 0);
+  rectStore.setComponent(1, 0, 1);
   rectStore.setComponent(1, 1, 1);
-  rectStore.setComponent(1, 2, 1);
-  rectStore.setComponent(1, 3, 0);
+  rectStore.setComponent(1, 2, 0);
+  rectStore.setComponent(1, 3, 3);
   rectStore.setComponent(1, 4, 3);
-  rectStore.setComponent(1, 5, 3);
+  rectStore.setComponent(1, 5, 0);
+
+  rectStore.setComponent(2, 0, 1);
+  rectStore.setComponent(2, 1, 1);
+  rectStore.setComponent(2, 2, 1);
+  rectStore.setComponent(2, 3, 3);
+  rectStore.setComponent(2, 4, 3);
+  rectStore.setComponent(2, 5, 1);
+
+  rectStore.setComponent(3, 0, 1);
+  rectStore.setComponent(3, 1, 1);
+  rectStore.setComponent(3, 2, 2);
+  rectStore.setComponent(3, 3, 3);
+  rectStore.setComponent(3, 4, 3);
+  rectStore.setComponent(3, 5, 2);
 
   return dataStructure;
 }
@@ -92,15 +126,13 @@ TEST_CASE("ComplexCore::ComputeFeatureRectFilter: Valid filter execution")
   REQUIRE_NOTHROW(exemplaryCoords.getIDataStoreRefAs<UInt32DataStore>());
   const auto& exemplaryCoordsDataStore = exemplaryCoords.getIDataStoreRefAs<UInt32DataStore>();
 
-  REQUIRE(coordsDataStore.getComponentValue(1, 0) == exemplaryCoordsDataStore.getComponentValue(1, 0));
-  REQUIRE(coordsDataStore.getComponentValue(1, 1) == exemplaryCoordsDataStore.getComponentValue(1, 1));
-  REQUIRE(coordsDataStore.getComponentValue(1, 2) == exemplaryCoordsDataStore.getComponentValue(1, 2));
-  REQUIRE(coordsDataStore.getComponentValue(1, 3) == exemplaryCoordsDataStore.getComponentValue(1, 3));
-  REQUIRE(coordsDataStore.getComponentValue(1, 4) == exemplaryCoordsDataStore.getComponentValue(1, 4));
-  REQUIRE(coordsDataStore.getComponentValue(1, 5) == exemplaryCoordsDataStore.getComponentValue(1, 5));
+  REQUIRE(coordsDataStore.getNumberOfTuples() == exemplaryCoordsDataStore.getNumberOfTuples());
+  REQUIRE(coordsDataStore.getNumberOfComponents() == exemplaryCoordsDataStore.getNumberOfComponents());
+  for(usize tuple = 1; tuple < coordsDataStore.getNumberOfTuples(); tuple++)
+  {
+    for(usize comp = 0; comp < coordsDataStore.getNumberOfComponents(); comp++)
+    {
+      REQUIRE(coordsDataStore.getComponentValue(tuple, comp) == exemplaryCoordsDataStore.getComponentValue(tuple, comp));
+    }
+  }
 }
-
-// TEST_CASE("ComplexCore::ComputeFeatureRectFilter: InValid filter execution")
-//{
-//
-// }
