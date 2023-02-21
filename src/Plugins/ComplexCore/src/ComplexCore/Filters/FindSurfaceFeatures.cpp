@@ -16,9 +16,9 @@ using namespace complex;
 
 namespace
 {
-bool isPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32Array& featureIds)
+bool IsPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32Array& featureIds)
 {
-  usize yStride = point.getY() * xPoints;
+  const usize yStride = point.getY() * xPoints;
 
   if(point.getX() <= 0 || point.getX() >= xPoints - 1)
   {
@@ -52,7 +52,7 @@ bool isPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yP
   return false;
 }
 
-bool isPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32Array& featureIds)
+bool IsPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32Array& featureIds)
 {
   usize yStride = point.getY() * xPoints;
   usize zStride = point.getZ() * xPoints * yPoints;
@@ -104,20 +104,20 @@ bool isPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yP
 void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
-  const ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  BoolArray& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
+  const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
+  auto& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
 
-  usize xPoints = featureGeometry.getNumXCells();
-  usize yPoints = featureGeometry.getNumYCells();
-  usize zPoints = featureGeometry.getNumZCells();
+  const usize xPoints = featureGeometry.getNumXCells();
+  const usize yPoints = featureGeometry.getNumYCells();
+  const usize zPoints = featureGeometry.getNumZCells();
 
   for(usize z = 0; z < zPoints; z++)
   {
-    usize zStride = z * xPoints * yPoints;
+    const usize zStride = z * xPoints * yPoints;
     for(usize y = 0; y < yPoints; y++)
     {
-      usize yStride = y * xPoints;
+      const usize yStride = y * xPoints;
       for(usize x = 0; x < xPoints; x++)
       {
         if(shouldCancel)
@@ -125,10 +125,10 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
           return;
         }
 
-        int32 gnum = featureIds[zStride + yStride + x];
+        const int32 gnum = featureIds[zStride + yStride + x];
         if(gnum != 0 && !surfaceFeatures[gnum])
         {
-          if(isPointASurfaceFeature(Point3D{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
+          if(IsPointASurfaceFeature(Point3D{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
           {
             surfaceFeatures[gnum] = true;
           }
@@ -141,9 +141,9 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
 void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& featureGeometryPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& surfaceFeaturesArrayPathValue,
                            bool markFeature0Neighbors, const std::atomic_bool& shouldCancel)
 {
-  const ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
-  BoolArray& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
+  const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(featureGeometryPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPathValue);
+  auto& surfaceFeatures = dataStructure.getDataRefAs<BoolArray>(surfaceFeaturesArrayPathValue);
 
   usize xPoints = 0;
   usize yPoints = 0;
@@ -166,7 +166,7 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
 
   for(usize y = 0; y < yPoints; y++)
   {
-    usize yStride = y * xPoints;
+    const usize yStride = y * xPoints;
     for(usize x = 0; x < xPoints; x++)
     {
       if(shouldCancel)
@@ -174,12 +174,12 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
         return;
       }
 
-      int32 gnum = featureIds[yStride + x];
+      const int32 gnum = featureIds[yStride + x];
       if(gnum != 0 && surfaceFeatures[gnum] == 0)
       {
-        if(isPointASurfaceFeature(Point2D{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
+        if(IsPointASurfaceFeature(Point2D{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
         {
-          surfaceFeatures[gnum] = 1;
+          surfaceFeatures[gnum] = true;
         }
       }
     }
