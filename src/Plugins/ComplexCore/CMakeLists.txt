@@ -43,6 +43,7 @@ set(FilterList
   FeatureDataCSVWriterFilter
   FillBadDataFilter
   FindArrayStatisticsFilter
+  FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindDifferencesMap
   FindEuclideanDistMapFilter
@@ -115,6 +116,7 @@ set(AlgorithmList
   ExtractVertexGeometry
   FillBadData
   FindArrayStatistics
+  FindBiasedFeatures
   FindBoundaryCells
   FindEuclideanDistMap
   FindFeatureCentroids
