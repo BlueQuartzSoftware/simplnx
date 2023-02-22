@@ -1,5 +1,6 @@
 #include "RotateSampleRefFrameFilter.hpp"
 
+#include "complex/Common/Constants.hpp"
 #include "complex/Common/Numbers.hpp"
 #include "complex/Common/Range.hpp"
 #include "complex/Common/Range3D.hpp"
@@ -22,6 +23,7 @@
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/ImageRotationUtilities.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelData3DAlgorithm.hpp"
@@ -29,7 +31,9 @@
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <Eigen/Dense>
+
 #include <fmt/core.h>
+
 #include <nonstd/span.hpp>
 
 #include <algorithm>
@@ -39,13 +43,13 @@
 #include <stdexcept>
 
 using namespace complex;
+using namespace complex::ImageRotationUtilities;
 
 namespace
 {
 const std::string k_TempGeometryName = ".rotated_image_geometry";
 
 using RotationRepresentationType = RotateSampleRefFrameFilter::RotationRepresentation;
-using Matrix3FRType = Eigen::Matrix<float32, 3, 3, Eigen::RowMajor>;
 
 constexpr float32 k_Threshold = 0.01f;
 
@@ -53,43 +57,16 @@ const Eigen::Vector3f k_XAxis = Eigen::Vector3f::UnitX();
 const Eigen::Vector3f k_YAxis = Eigen::Vector3f::UnitY();
 const Eigen::Vector3f k_ZAxis = Eigen::Vector3f::UnitZ();
 
-/**
- * @brief Internal struct to pass around the arguments
- */
-struct RotateArgs
-{
-  int64 xp = 0;
-  int64 yp = 0;
-  int64 zp = 0;
-  float32 xRes = 0.0f;
-  float32 yRes = 0.0f;
-  float32 zRes = 0.0f;
-  int64 xpNew = 0;
-  int64 ypNew = 0;
-  int64 zpNew = 0;
-  float32 xResNew = 0.0f;
-  float32 yResNew = 0.0f;
-  float32 zResNew = 0.0f;
-  float32 xMinNew = 0.0f;
-  float32 yMinNew = 0.0f;
-  float32 zMinNew = 0.0f;
-};
-
 template <typename T>
 class RotateDataArray
 {
 public:
-  RotateDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const RotateArgs& args, const Matrix3FRType& rotationMatrix, bool sliceBySlice)
+  RotateDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const RotateArgs& args, const Matrix3fR& rotationMatrix, bool sliceBySlice)
   : m_OldCellArray(oldCellArray)
   , m_NewCellArray(newCellArray)
   , m_SliceBySlice(sliceBySlice)
   , m_Params(args)
   {
-    // We have to inline the 3x3 Matrix transpose here because of the "const" nature of the 'convert' function
-    Matrix3FRType transpose = rotationMatrix.transpose();
-    // Need to use row based Eigen matrix so that the values get mapped to the right place in the raw array.
-    // Raw array is faster than Eigen
-    Eigen::Map<Matrix3FRType>(&m_RotMatrixInv[0][0], transpose.rows(), transpose.cols()) = transpose;
   }
   ~RotateDataArray() = default;
 
@@ -102,24 +79,27 @@ public:
   {
     const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-    std::array<float32, 3> coordsOld = {0.0f, 0.0f, 0.0f};
+
+    Matrix3fR inverseTransform = m_RotMatrix.inverse();
+    Eigen::Vector3f coordsNew;
 
     for(int64 k = 0; k < m_Params.zpNew; k++)
     {
-      int64 ktot = (m_Params.xpNew * m_Params.ypNew) * k;
+      int64 const ktot = (m_Params.xpNew * m_Params.ypNew) * k;
       for(int64 j = 0; j < m_Params.ypNew; j++)
       {
         int64 jtot = (m_Params.xpNew) * j;
         for(int64 i = 0; i < m_Params.xpNew; i++)
         {
 
-          int64 newIndex = ktot + jtot + i;
+          int64 const newIndex = ktot + jtot + i;
           int64 oldIndex = -1;
 
-          std::array<float32, 3> coordsNew = {(static_cast<float32>(i) * m_Params.xResNew) + m_Params.xMinNew, (static_cast<float32>(j) * m_Params.yResNew) + m_Params.yMinNew,
-                                              (static_cast<float32>(k) * m_Params.zResNew) + m_Params.zMinNew};
+          coordsNew[0] = (static_cast<float32>(i) * m_Params.xResNew) + m_Params.xMinNew;
+          coordsNew[1] = (static_cast<float32>(j) * m_Params.yResNew) + m_Params.yMinNew;
+          coordsNew[2] = (static_cast<float32>(k) * m_Params.zResNew) + m_Params.zMinNew;
 
-          MatrixMath::Multiply3x3with3x1(m_RotMatrixInv, coordsNew.data(), coordsOld.data());
+          Eigen::Array3f coordsOld = inverseTransform * coordsNew;
 
           auto colOld = static_cast<int64>(std::nearbyint(coordsOld[0] / m_Params.xRes));
           auto rowOld = static_cast<int64>(std::nearbyint(coordsOld[1] / m_Params.yRes));
@@ -162,88 +142,12 @@ public:
 private:
   const IDataArray& m_OldCellArray;
   IDataArray& m_NewCellArray;
-  float32 m_RotMatrixInv[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+  Matrix3fR m_RotMatrix;
   bool m_SliceBySlice = false;
   RotateArgs m_Params;
 };
 
-/**
- * @brief Class that implements the actual rotation
- */
-class SampleRefFrameRotator
-{
-public:
-  SampleRefFrameRotator(nonstd::span<int64> newIndices, const RotateArgs& args, const Matrix3FRType& rotationMatrix, bool sliceBySlice)
-  : m_NewIndices(newIndices)
-  , m_SliceBySlice(sliceBySlice)
-  , m_Params(args)
-  {
-    // We have to inline the 3x3 Matrix transpose here because of the "const" nature of the 'convert' function
-    Matrix3FRType transpose = rotationMatrix.transpose();
-    // Need to use row based Eigen matrix so that the values get mapped to the right place in the raw array
-    // Raw array is faster than Eigen
-    Eigen::Map<Matrix3FRType>(&m_RotMatrixInv[0][0], transpose.rows(), transpose.cols()) = transpose;
-  }
-  ~SampleRefFrameRotator() = default;
-
-  SampleRefFrameRotator(const SampleRefFrameRotator&) = default;
-  SampleRefFrameRotator(SampleRefFrameRotator&&) noexcept = delete;
-  SampleRefFrameRotator& operator=(const SampleRefFrameRotator&) = delete;
-  SampleRefFrameRotator& operator=(SampleRefFrameRotator&&) noexcept = delete;
-
-  void convert(int64 zStart, int64 zEnd, int64 yStart, int64 yEnd, int64 xStart, int64 xEnd) const
-  {
-    for(int64 k = zStart; k < zEnd; k++)
-    {
-      int64 ktot = (m_Params.xpNew * m_Params.ypNew) * k;
-      for(int64 j = yStart; j < yEnd; j++)
-      {
-        int64 jtot = (m_Params.xpNew) * j;
-        for(int64 i = xStart; i < xEnd; i++)
-        {
-          int64 index = ktot + jtot + i;
-          m_NewIndices[index] = -1;
-
-          std::array<float32, 3> coords = {0.0f, 0.0f, 0.0f};
-          std::array<float32, 3> coordsNew = {0.0f, 0.0f, 0.0f};
-
-          coords[0] = (static_cast<float32>(i) * m_Params.xResNew) + m_Params.xMinNew;
-          coords[1] = (static_cast<float32>(j) * m_Params.yResNew) + m_Params.yMinNew;
-          coords[2] = (static_cast<float32>(k) * m_Params.zResNew) + m_Params.zMinNew;
-
-          MatrixMath::Multiply3x3with3x1(m_RotMatrixInv, coords.data(), coordsNew.data());
-
-          auto colOld = static_cast<int64>(std::nearbyint(coordsNew[0] / m_Params.xRes));
-          auto rowOld = static_cast<int64>(std::nearbyint(coordsNew[1] / m_Params.yRes));
-          auto planeOld = static_cast<int64>(std::nearbyint(coordsNew[2] / m_Params.zRes));
-
-          if(m_SliceBySlice)
-          {
-            planeOld = k;
-          }
-
-          if(colOld >= 0 && colOld < m_Params.xp && rowOld >= 0 && rowOld < m_Params.yp && planeOld >= 0 && planeOld < m_Params.zp)
-          {
-            m_NewIndices[index] = (m_Params.xp * m_Params.yp * planeOld) + (m_Params.xp * rowOld) + colOld;
-          }
-        }
-      }
-    }
-  }
-
-  void operator()(const Range3D& range) const
-  {
-    convert(range[4], range[5], range[2], range[3], range[0], range[1]);
-  }
-
-private:
-  nonstd::span<int64> m_NewIndices;
-  float32 m_RotMatrixInv[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-  bool m_SliceBySlice = false;
-  RotateArgs m_Params;
-};
-
-void DetermineMinMax(const Matrix3FRType& rotationMatrix, const FloatVec3& spacing, usize col, usize row, usize plane, float32& xMin, float32& xMax, float32& yMin, float32& yMax, float32& zMin,
+void DetermineMinMax(const Matrix3fR& rotationMatrix, const FloatVec3& spacing, usize col, usize row, usize plane, float32& xMin, float32& xMax, float32& yMin, float32& yMax, float32& zMin,
                      float32& zMax)
 {
   Eigen::Vector3f coords(static_cast<float32>(col) * spacing[0], static_cast<float32>(row) * spacing[1], static_cast<float32>(plane) * spacing[2]);
@@ -288,7 +192,7 @@ float32 DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNe
   return spacing[index];
 }
 
-RotateArgs CreateRotateArgs(const ImageGeom& imageGeom, const Matrix3FRType& rotationMatrix)
+RotateArgs CreateRotateArgs(const ImageGeom& imageGeom, const Matrix3fR& rotationMatrix)
 {
   const SizeVec3 origDims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
@@ -354,23 +258,6 @@ bool closeEnough(const K& a, const K& b, const K& epsilon = std::numeric_limits<
   return (epsilon > fabs(a - b));
 }
 
-// Requires table to be 3 x 3
-Matrix3FRType ConvertTableToMatrix(const std::vector<std::vector<float64>>& table)
-{
-  Matrix3FRType matrix;
-
-  for(usize i = 0; i < table.size(); i++)
-  {
-    const auto& row = table[i];
-    for(usize j = 0; j < row.size(); j++)
-    {
-      matrix(i, j) = row[j];
-    }
-  }
-
-  return matrix;
-}
-
 constexpr RotationRepresentationType CastIndexToRotationRepresentation(uint64 index)
 {
   switch(index)
@@ -387,61 +274,86 @@ constexpr RotationRepresentationType CastIndexToRotationRepresentation(uint64 in
   }
 }
 
-Result<Matrix3FRType> ConvertAxisAngleToRotationMatrix(const std::vector<float32>& rotationAxisVec, float32 rotationAngle)
+Result<Matrix3fR> ConvertAxisAngleToRotationMatrix(const std::vector<float32>& pRotationValue)
 {
-  const Eigen::Vector3f rotationAxis(rotationAxisVec.data());
-  float32 norm = rotationAxis.norm();
-  std::vector<Warning> warnings;
-  if(!closeEnough(norm, 1.0f, k_Threshold))
-  {
-    warnings.push_back(Warning{-45003, fmt::format("Axis angle is not normalized (norm is {}). Filter will automatically normalize the value.", norm)});
-  }
+  Matrix3fR transformationMatrix;
 
-  float32 rotationAngleRadians = rotationAngle * (numbers::pi / 180.0);
+  // Convert Degrees to Radians for the last element
+  const float rotAngle = pRotationValue[3] * Constants::k_PiOver180F;
+  // Ensure the axis part is normalized
+  FloatVec3 normalizedAxis(pRotationValue[0], pRotationValue[1], pRotationValue[2]);
+  MatrixMath::Normalize3x1<float32>(normalizedAxis.data());
 
-  Eigen::AngleAxisf axisAngle(rotationAngleRadians, rotationAxis.normalized());
+  const float cosTheta = cos(rotAngle);
+  const float oneMinusCosTheta = 1 - cosTheta;
+  const float sinTheta = sin(rotAngle);
+  const float l = normalizedAxis[0];
+  const float m = normalizedAxis[1];
+  const float n = normalizedAxis[2];
 
-  Matrix3FRType rotationMatrix = axisAngle.toRotationMatrix();
+  // First Row:
+  transformationMatrix(0, 0) = l * l * (oneMinusCosTheta) + cosTheta;
+  transformationMatrix(0, 1) = m * l * (oneMinusCosTheta) - (n * sinTheta);
+  transformationMatrix(0, 2) = n * l * (oneMinusCosTheta) + (m * sinTheta);
 
-  return {rotationMatrix, std::move(warnings)};
+  // Second Row:
+  transformationMatrix(1, 0) = l * m * (oneMinusCosTheta) + (n * sinTheta);
+  transformationMatrix(1, 1) = m * m * (oneMinusCosTheta) + cosTheta;
+  transformationMatrix(1, 2) = n * m * (oneMinusCosTheta) - (l * sinTheta);
+
+  // Third Row:
+  transformationMatrix(2, 0) = l * n * (oneMinusCosTheta) - (m * sinTheta);
+  transformationMatrix(2, 1) = m * n * (oneMinusCosTheta) + (l * sinTheta);
+  transformationMatrix(2, 2) = n * n * (oneMinusCosTheta) + cosTheta;
+
+  return {transformationMatrix};
 }
 
-Result<Matrix3FRType> ConvertRotationTableToRotationMatrix(const std::vector<std::vector<float64>>& rotationMatrixTable)
+Result<Matrix3fR> ConvertRotationTableToRotationMatrix(const std::vector<std::vector<float64>>& rotationMatrixTable)
 {
   if(rotationMatrixTable.size() != 3)
   {
-    return MakeErrorResult<Matrix3FRType>(-45004, "Rotation Matrix must be 3 x 3");
+    return MakeErrorResult<Matrix3fR>(-45004, "Rotation Matrix must be 3 x 3");
   }
 
   for(const auto& row : rotationMatrixTable)
   {
     if(row.size() != 3)
     {
-      return MakeErrorResult<Matrix3FRType>(-45005, "Rotation Matrix must be 3 x 3");
+      return MakeErrorResult<Matrix3fR>(-45005, "Rotation Matrix must be 3 x 3");
     }
   }
-
-  Matrix3FRType rotationMatrix = ConvertTableToMatrix(rotationMatrixTable);
+  Matrix3fR rotationMatrix;
+  const usize numTableRows = rotationMatrixTable.size();
+  const usize numTableCols = rotationMatrixTable[0].size();
+  for(size_t rowIndex = 0; rowIndex < numTableRows; rowIndex++)
+  {
+    std::vector<double> row = rotationMatrixTable[rowIndex];
+    for(size_t colIndex = 0; colIndex < numTableCols; colIndex++)
+    {
+      rotationMatrix(rowIndex, colIndex) = static_cast<float>(row[colIndex]);
+    }
+  }
 
   float32 determinant = rotationMatrix.determinant();
 
   if(!closeEnough(determinant, 1.0f, k_Threshold))
   {
-    return MakeErrorResult<Matrix3FRType>(-45006, fmt::format("Rotation Matrix must have a determinant of 1 (is {})", determinant));
+    return MakeErrorResult<Matrix3fR>(-45006, fmt::format("Rotation Matrix must have a determinant of 1 (is {})", determinant));
   }
 
-  Matrix3FRType transpose = rotationMatrix.transpose();
-  Matrix3FRType inverse = rotationMatrix.inverse();
+  Matrix3fR transpose = rotationMatrix.transpose();
+  Matrix3fR inverse = rotationMatrix.inverse();
 
   if(!transpose.isApprox(inverse, k_Threshold))
   {
-    return MakeErrorResult<Matrix3FRType>(-45007, "Rotation Matrix's inverse and transpose must be equal");
+    return MakeErrorResult<Matrix3fR>(-45007, "Rotation Matrix's inverse and transpose must be equal");
   }
 
   return {rotationMatrix};
 }
 
-Result<Matrix3FRType> ComputeRotationMatrix(const Arguments& args)
+Result<Matrix3fR> ComputeRotationMatrix(const Arguments& args)
 {
   auto rotationRepresentationIndex = args.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
 
@@ -450,18 +362,12 @@ Result<Matrix3FRType> ComputeRotationMatrix(const Arguments& args)
   switch(rotationRepresentation)
   {
   case RotationRepresentationType::AxisAngle: {
-    auto rotationAxisVec = args.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
-    auto rotationAngle = rotationAxisVec[3];
-
-    return ConvertAxisAngleToRotationMatrix(rotationAxisVec, rotationAngle);
+    auto pRotationValue = args.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
+    return ConvertAxisAngleToRotationMatrix(pRotationValue);
   }
   case RotationRepresentationType::RotationMatrix: {
     auto rotationMatrixTable = args.value<DynamicTableParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
-
     return ConvertRotationTableToRotationMatrix(rotationMatrixTable);
-  }
-  default: {
-    throw std::runtime_error("RotateSampleRefFrameFilter: Unsupported RotationRepresentation");
   }
   }
 }
@@ -551,7 +457,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  Result<Matrix3FRType> matrixResult = ComputeRotationMatrix(filterArgs);
+  Result<Matrix3fR> matrixResult = ComputeRotationMatrix(filterArgs);
 
   if(matrixResult.invalid())
   {
@@ -560,7 +466,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     return {std::move(result)};
   }
 
-  Matrix3FRType rotationMatrix = matrixResult.value();
+  Matrix3fR rotationMatrix = matrixResult.value();
 
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
@@ -685,21 +591,11 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
 
   auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(destImagePath);
 
-  Result<Matrix3FRType> matrixResult = ComputeRotationMatrix(filterArgs);
+  Result<Matrix3fR> matrixResult = ComputeRotationMatrix(filterArgs);
 
-  Matrix3FRType rotationMatrix = matrixResult.value();
+  Matrix3fR rotationMatrix = matrixResult.value();
 
   RotateArgs rotateArgs = CreateRotateArgs(srcImageGeom, rotationMatrix);
-
-  int64 newNumCellTuples = rotateArgs.xpNew * rotateArgs.ypNew * rotateArgs.zpNew;
-
-  // Compute the mapping of old indices from the original geometry to the new indices in the new geometry.
-  // std::vector<int64> newIndices(newNumCellTuples, -1);
-
-  //  ParallelData3DAlgorithm parallelAlgorithm;
-  //  parallelAlgorithm.setRange(Range3D(0, rotateArgs.xpNew, 0, rotateArgs.ypNew, 0, rotateArgs.zpNew));
-  //  parallelAlgorithm.setParallelizationEnabled(true);
-  //  parallelAlgorithm.execute(SampleRefFrameRotator(newIndices, rotateArgs, rotationMatrix, sliceBySlice));
 
   auto selectedCellDataChildren = GetAllChildArrayDataPaths(dataStructure, srcImageGeom.getCellDataPath());
   auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};

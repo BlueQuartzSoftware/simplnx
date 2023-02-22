@@ -19,6 +19,11 @@ template <typename T>
 class BoundingBox
 {
 public:
+  //========================================= STL INTERFACE COMPATIBILITY =================================
+  using size_type = usize;
+  using reference = T&;
+  using const_reference = const T&;
+
   /**
    * @brief PointType is an alias for the type of Point3D used by the
    * BoundingBox based on the templated value type.
@@ -229,7 +234,25 @@ public:
     bool zValid = m_Bounds[2] <= m_Bounds[5];
     return xValid && yValid && zValid;
   }
+  /**
+   * @brief access specified element
+   * @param index
+   * @return reference
+   */
+  inline reference operator[](size_type index)
+  {
+    return m_Bounds[index];
+  }
 
+  /**
+   * @brief access specified element
+   * @param index
+   * @return const_reference
+   */
+  inline const_reference operator[](size_type index) const
+  {
+    return m_Bounds[index];
+  }
   /**
    * @brief Returns a std::array representation of the bounding box.
    * @return std::array<T, 6>

@@ -9,7 +9,6 @@
 #include <fmt/format.h>
 
 #include <optional>
-#include <string>
 
 namespace complex
 {

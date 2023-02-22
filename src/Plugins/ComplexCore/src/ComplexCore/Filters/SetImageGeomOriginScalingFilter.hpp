@@ -6,6 +6,10 @@
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include <atomic>
+#include <string>
+#include <vector>
+
 namespace complex
 {
 class COMPLEXCORE_EXPORT SetImageGeomOriginScalingFilter : public IFilter

@@ -2,8 +2,19 @@
 
 #include "ComplexCore/Filters/Algorithms/ApplyTransformationToGeometry.hpp"
 
+#include "complex/Common/Constants.hpp"
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/StringArray.hpp"
+#include "complex/Filter/Actions/CopyDataObjectAction.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
+#include "complex/Filter/Actions/RenameDataAction.hpp"
+#include "complex/Filter/Actions/UpdateImageGeomAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -14,8 +25,24 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/GeometryHelpers.hpp"
+#include "complex/Utilities/ImageRotationUtilities.hpp"
+#include "complex/Utilities/Math/MatrixMath.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
+#include "complex/Utilities/ParallelData3DAlgorithm.hpp"
+#include "complex/Utilities/ParallelTaskAlgorithm.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
+
+namespace
+{
+const std::string k_TempGeometryName = ".transformed_image_geometry";
+
+}
 
 namespace complex
 {
@@ -54,19 +81,6 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 {
   Parameters params;
 
-  /**
-   * Please separate the parameters into groups generally of the following:
-   *
-   * params.insertSeparator(Parameters::Separator{"Input Parameters"});
-   * params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-   * params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
-   * params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-   * params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
-   *
-   * .. or create appropriate separators as needed. The UI in COMPLEX no longer
-   * does this for the developer by using catgories as in SIMPL
-   */
-
   // Create the parameter descriptors that are needed for this filter
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
@@ -76,7 +90,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   DynamicTableInfo tableInfo;
   tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"1", "2", "3", "4"}));
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"1", "2", "3", "4"}));
-  DynamicTableInfo::TableDataType defaultTable{{{1.0F, 0.0F, 0.0F, 0.0F}, {0.0F, 1.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F, 0.0F}, {0.0F, 0.0F, 0.0F, 1.0F}}};
+  const DynamicTableInfo::TableDataType defaultTable{{{1.0F, 0.0F, 0.0F, 0.0F}, {0.0F, 1.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F, 0.0F}, {0.0F, 0.0F, 0.0F, 1.0F}}};
   params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "Transformation Matrix", "", defaultTable, tableInfo));
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Rotation_Key, "Rotation Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0F, 0.0F, 1.0F, 90.0F},
@@ -101,7 +115,6 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
                                                                complex::GetAllNumericTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-
   params.linkParameters(k_UseDataArraySelection_Key, k_DataArraySelection_Key, true);
   params.linkParameters(k_UseDataArraySelection_Key, k_InterpolationType_Key, true);
   params.linkParameters(k_UseDataArraySelection_Key, k_CellAttributeMatrixPath_Key, true);
@@ -126,63 +139,245 @@ IFilter::UniquePointer ApplyTransformationToGeometryFilter::clone() const
 IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                             const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Write any preflight sanity checking codes in this function
-   ***************************************************************************/
-
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
   auto pTransformationMatrixTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationType_Key);
-  auto pInterpolationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
-  auto pUseDataArraySelectionValue = filterArgs.value<bool>(k_UseDataArraySelection_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key);
-  auto pRotationAxisValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
-  auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
-  auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
   auto pComputedTransformationMatrixValue = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
-  auto pCellAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
-  auto pDataArraySelectionValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
+  auto pSelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
   PreflightResult preflightResult;
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
 
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
+  auto* igeom = dataStructure.getDataAs<IGeometry>(pSelectedGeometryPathValue);
 
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
+  if(igeom == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(-82000, "Input Geometry must be either ImageGeom or Vertex, Edge, Triangle, Quad, Hexahedron, Tetrahedron.")};
+  }
 
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
+  std::vector<size_t> cDims = {4, 4};
+
+  // Reset the final Transformation Matrix to all Zeros before we fill it with what the user has entered.
+  ImageRotationUtilities::Matrix4fR m_TransformationMatrix;
+
+  switch(pTransformationMatrixTypeValue)
+  {
+  case k_NoTransformIdx: // No-Op
+  {
+    resultOutputActions.warnings().push_back(Warning{82001, "No transformation has been selected, so this filter will perform no operations"});
+  }
+  case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
+  {
+    break;
+  }
+  case k_ManualTransformationMatrixIdx: // Manual transformation matrix
+  {
+    const usize numTableRows = tableData.size();
+    const usize numTableCols = tableData[0].size();
+    if(numTableRows != 4)
+    {
+      return {MakeErrorResult<OutputActions>(-82002, "Manually entered transformation matrix must have exactly 4 rows")};
+    }
+    if(numTableCols != 4)
+    {
+      return {MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
+    }
+    m_TransformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(tableData);
+    break;
+  }
+  case k_RotationIdx: // Rotation via axis-angle
+  {
+    auto pRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
+    m_TransformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
+    break;
+  }
+  case k_TranslationIdx: // Translation
+  {
+    auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
+    m_TransformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(pTranslationValue);
+    break;
+  }
+  case k_ScaleIdx: // Scale
+  {
+    auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
+    m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
+    break;
+  }
+  default: {
+    return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
+  }
+  }
+
+  // if ImageGeom was selected to be transformed: This should work because if we didn't pass
+  // the earlier test, we should not have gotten to here.
+  const ImageGeom* imageGeom = dataStructure.getDataAs<ImageGeom>(pSelectedGeometryPathValue);
+  if(imageGeom != nullptr)
+  {
+    auto pInterpolationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
+    auto pUseDataArraySelectionValue = filterArgs.value<bool>(k_UseDataArraySelection_Key);
+    auto pDataArraySelectionValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
+
+    // For nearest neighbor we can use any data array as we are only going to copy from a hit cell, no interpolation
+    auto pCellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
+    auto* attriPtr = dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
+    if(nullptr == attriPtr)
+    {
+      return {MakeErrorResult<OutputActions>(
+          -82006, fmt::format("DataPath '{}' is not an Cell AttributeMatrix. Please select the Cell level AttributeMatrix of the Image Geometry", pCellAttributeMatrixPath.toString()))};
+    }
+    std::vector<std::string> selectedCellArrayNames = attriPtr->getDataMap().getNames();
+
+    if(pInterpolationTypeValue == k_LinearInterpolationIdx)
+    {
+      if(pUseDataArraySelectionValue)
+      {
+        selectedCellArrayNames.clear();
+        for(const auto& dataArrayPath : pDataArraySelectionValue)
+        {
+          selectedCellArrayNames.emplace_back(dataArrayPath.getTargetName());
+        }
+      }
+      else
+      {
+        resultOutputActions.warnings().push_back(
+            Warning{82004, "Linear Interpolation has been selected but no Cell arrays are selected to be interpolated. No data will be transferred to the new geometry"});
+      }
+
+      for(const auto& attrArrayName : selectedCellArrayNames)
+      {
+        const StringArray* strArrayPtr = dataStructure.getDataAs<StringArray>(pCellAttributeMatrixPath.createChildPath(attrArrayName));
+        if(nullptr != strArrayPtr)
+        {
+          resultOutputActions.errors().push_back(
+              {82009, fmt::format("Input Type Error, cannot run linear interpolation String arrays. '{}'", pCellAttributeMatrixPath.createChildPath(attrArrayName).toString())});
+        }
+
+        const BoolArray* boolArrayPtr = dataStructure.getDataAs<BoolArray>(pCellAttributeMatrixPath.createChildPath(attrArrayName));
+        if(nullptr != boolArrayPtr)
+        {
+          resultOutputActions.errors().push_back(
+              {82009, fmt::format("Input Type Error, cannot run linear interpolation Boolean arrays. '{}'", pCellAttributeMatrixPath.createChildPath(attrArrayName).toString())});
+        }
+      }
+    }
+
+    auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(*imageGeom, m_TransformationMatrix);
+
+    // If the user is purely doing a translation then just adjust the origin and be done.
+    if(pTransformationMatrixTypeValue == k_TranslationIdx)
+    {
+      auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
+      FloatVec3 originVec = {rotateArgs.originalOrigin[0] + pTranslationValue[0], rotateArgs.originalOrigin[1] + pTranslationValue[1], rotateArgs.originalOrigin[2] + pTranslationValue[2]};
+      auto spacingVec = imageGeom->getSpacing();
+      auto action = std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue);
+    }
+    else // We are Rotating or scaling. we need to create a brand new Image Geometry
+    {
+      auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+      DataPath destImagePath = srcImagePath;      // filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
+      auto pRemoveOriginalGeometry = true;        // filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+      const auto& selectedImageGeom = *imageGeom; // dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+
+      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
+      const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
+      auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
+      origin[0] += rotateArgs.xMinNew;
+      origin[1] += rotateArgs.yMinNew;
+      origin[2] += rotateArgs.zMinNew;
+
+      std::vector<usize> dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX)
+
+      std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
+
+      if(pRemoveOriginalGeometry)
+      {
+        // Generate a new name for the current Image Geometry
+        auto tempPathVector = srcImagePath.getPathVector();
+        std::string tempName = "." + tempPathVector.back();
+        tempPathVector.back() = tempName;
+        DataPath tempPath(tempPathVector);
+        // Rename the current image geometry
+        resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(srcImagePath, tempName));
+        // After the execute function has been done, delete the moved image geometry
+        resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+
+        tempPathVector = srcImagePath.getPathVector();
+        tempName = k_TempGeometryName;
+        tempPathVector.back() = tempName;
+        destImagePath = DataPath({tempPathVector});
+      }
+
+      {
+        const AttributeMatrix* selectedCellData = selectedImageGeom.getCellData();
+        if(selectedCellData == nullptr)
+        {
+          return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+        }
+        std::string cellDataName = selectedCellData->getName();
+        ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
+
+        resultOutputActions.value().actions.push_back(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
+
+        // Create the Cell AttributeMatrix in the Destination Geometry
+        DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
+
+        for(const auto& [id, object] : *selectedCellData)
+        {
+          const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+          DataType dataType = srcArray.getDataType();
+          IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+          DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
+          resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
+        }
+
+        // Store the preflight updated value(s) into the preflightUpdatedValues vector using
+        // the appropriate methods.
+        // These values should have been updated during the preflightImpl(...) method
+        const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
+
+        preflightUpdatedValues.push_back(
+            {"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
+        preflightUpdatedValues.push_back(
+            {"Rotated Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin)});
+      }
+
+      // copy over the rest of the data
+      auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+      if(childPaths.has_value())
+      {
+        for(const auto& childPath : childPaths.value())
+        {
+          std::string copiedChildName = complex::StringUtilities::replace(childPath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
+          DataPath copiedChildPath = DataPath::FromString(copiedChildName).value();
+          if(dataStructure.getDataAs<BaseGroup>(childPath) != nullptr)
+          {
+            std::vector<DataPath> allCreatedPaths = {copiedChildPath};
+            auto pathsToBeCopied = GetAllChildDataPathsRecursive(dataStructure, childPath);
+            if(pathsToBeCopied.has_value())
+            {
+              for(const auto& sourcePath : pathsToBeCopied.value())
+              {
+                std::string createdPathName = complex::StringUtilities::replace(sourcePath.toString(), srcImagePath.getTargetName(), destImagePath.getTargetName());
+                allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
+              }
+            }
+            resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
+          }
+          else
+          {
+            resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
+          }
+        }
+      }
+
+      if(pRemoveOriginalGeometry)
+      {
+        resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
+      }
+    }
+  }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -192,8 +387,16 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                           const std::atomic_bool& shouldCancel) const
 {
-
   ApplyTransformationToGeometryInputValues inputValues;
+
+  //  for(size_t rowIndex = 0; rowIndex < numTableRows; rowIndex++)
+  //  {
+  //    std::vector<double> row = tableData[rowIndex];
+  //    for(size_t colIndex = 0; colIndex < numTableCols; colIndex++)
+  //    {
+  //      m_TransformationMatrix(rowIndex, colIndex) = static_cast<float>(row[colIndex]);
+  //    }
+  //  }
 
   //  inputValues.TransformationMatrixType = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationMatrixType_Key);
   //  inputValues.InterpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);

@@ -11,6 +11,9 @@
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/ImageRotationUtilities.hpp"
+
+#include <Eigen/Dense>
 
 /**
 * This is example code to put in the Execute Method of the filter.
@@ -33,6 +36,7 @@
 
 namespace
 {
+
 const std::string k_NoTransform("No Transform");
 const std::string k_PrecomputedTransformationMatrix("Pre-Computed Transformation Matrix (4x4)");
 const std::string k_ManualTransformationMatrix("Manual Transformation Matrix");
@@ -61,16 +65,19 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT ApplyTransformationToGeometryInputValues
 {
-  ChoicesParameter::ValueType TransformationMatrixType;
-  ChoicesParameter::ValueType InterpolationType;
-  bool UseDataArraySelection;
-  float32 ManualTransformationMatrix;
+  DataPath SelectedGeometryPath;
+
+  ChoicesParameter::ValueType TransformationSelection;
+  ChoicesParameter::ValueType InterpolationSelection;
+
+  complex::ImageRotationUtilities::Matrix4fR TransformationMatrix;
+  DataPath ComputedTransformationMatrix;
 
   VectorFloat32Parameter::ValueType RotationAxis;
   VectorFloat32Parameter::ValueType Translation;
   VectorFloat32Parameter::ValueType Scale;
-  DataPath ComputedTransformationMatrix;
   DataPath CellAttributeMatrixPath;
+  bool UseDataArraySelection;
   MultiArraySelectionParameter::ValueType DataArraySelection;
 };
 
