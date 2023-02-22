@@ -8,6 +8,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -70,12 +71,13 @@ struct COMPLEXCORE_EXPORT ApplyTransformationToGeometryInputValues
   ChoicesParameter::ValueType TransformationSelection;
   ChoicesParameter::ValueType InterpolationSelection;
 
-  complex::ImageRotationUtilities::Matrix4fR TransformationMatrix;
   DataPath ComputedTransformationMatrix;
-
-  VectorFloat32Parameter::ValueType RotationAxis;
+  DynamicTableParameter::ValueType ManualMatrixTableData;
+  VectorFloat32Parameter::ValueType Rotation;
   VectorFloat32Parameter::ValueType Translation;
   VectorFloat32Parameter::ValueType Scale;
+
+  DataPath SelectedGeometryPathValue;
   DataPath CellAttributeMatrixPath;
   bool UseDataArraySelection;
   MultiArraySelectionParameter::ValueType DataArraySelection;

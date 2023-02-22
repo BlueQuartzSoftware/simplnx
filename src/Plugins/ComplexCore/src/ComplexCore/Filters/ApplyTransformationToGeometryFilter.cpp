@@ -271,7 +271,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
       FloatVec3 originVec = {rotateArgs.originalOrigin[0] + pTranslationValue[0], rotateArgs.originalOrigin[1] + pTranslationValue[1], rotateArgs.originalOrigin[2] + pTranslationValue[2]};
       auto spacingVec = imageGeom->getSpacing();
-      auto action = std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue);
+      resultOutputActions.value().actions.push_back(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
     else // We are Rotating or scaling. we need to create a brand new Image Geometry
     {
@@ -389,26 +389,17 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
 {
   ApplyTransformationToGeometryInputValues inputValues;
 
-  //  for(size_t rowIndex = 0; rowIndex < numTableRows; rowIndex++)
-  //  {
-  //    std::vector<double> row = tableData[rowIndex];
-  //    for(size_t colIndex = 0; colIndex < numTableCols; colIndex++)
-  //    {
-  //      m_TransformationMatrix(rowIndex, colIndex) = static_cast<float>(row[colIndex]);
-  //    }
-  //  }
-
-  //  inputValues.TransformationMatrixType = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationMatrixType_Key);
-  //  inputValues.InterpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
-  //  inputValues.UseDataArraySelection = filterArgs.value<bool>(k_UseDataArraySelection_Key);
-  //  inputValues.ManualTransformationMatrix = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_ManualTransformationMatrix_Key);
-  //  inputValues.RotationAngle = filterArgs.value<float32>(k_RotationAngle_Key);
-  //  inputValues.RotationAxis = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxis_Key);
-  //  inputValues.Translation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
-  //  inputValues.Scale = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
-  //  inputValues.ComputedTransformationMatrix = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
-  //  inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
-  //  inputValues.DataArraySelection = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
+  inputValues.TransformationSelection = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationType_Key);
+  inputValues.InterpolationSelection = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
+  inputValues.ComputedTransformationMatrix = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
+  inputValues.UseDataArraySelection = filterArgs.value<bool>(k_UseDataArraySelection_Key);
+  inputValues.ManualMatrixTableData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key);
+  inputValues.Rotation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
+  inputValues.Translation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
+  inputValues.Scale = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
+  inputValues.SelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
+  inputValues.DataArraySelection = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
 
   return ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
