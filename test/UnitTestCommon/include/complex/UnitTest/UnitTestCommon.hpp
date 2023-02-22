@@ -72,7 +72,7 @@ inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
 inline constexpr StringLiteral k_Fit("Fit");
 inline constexpr StringLiteral k_SEMSignal("SEM Signal");
 
-inline constexpr StringLiteral k_SmallIN1002("Small IN1002");
+inline constexpr StringLiteral k_SmallIN1002("Small IN100 2D");
 inline constexpr StringLiteral k_SmallIN100("Small IN100");
 inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
 inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
@@ -95,6 +95,7 @@ inline constexpr StringLiteral k_ActiveName("Active");
 inline constexpr StringLiteral k_NumElements("NumElements");
 inline constexpr StringLiteral k_SlipVector("SlipVector");
 inline constexpr StringLiteral k_AvgEulerAngles("AvgEulerAngles");
+inline constexpr StringLiteral k_SurfaceFeatures("SurfaceFeatures");
 
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
 inline constexpr StringLiteral k_Image_Quality("Image Quality");
