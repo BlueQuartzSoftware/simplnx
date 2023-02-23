@@ -310,6 +310,12 @@ public:
   static const std::set<GroupType>& GetAllGroupTypes();
 
   /**
+   * @brief Creates a set of all the BaseGroup GroupTypes.
+   * @return std::set<GroupType>
+   */
+  static const std::set<GroupType>& GetAllGeometryGroupTypes();
+
+  /**
    * @brief Converts the set of BaseGroup GroupTypes to strings.
    * @param groupTypes
    * @return std::set<std::string>
