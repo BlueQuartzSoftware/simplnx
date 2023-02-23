@@ -198,6 +198,13 @@ const std::set<BaseGroup::GroupType>& BaseGroup::GetAllGroupTypes()
   return types;
 }
 
+const std::set<BaseGroup::GroupType>& BaseGroup::GetAllGeometryGroupTypes()
+{
+  static const std::set<GroupType> types = {GroupType::ImageGeom,    GroupType::RectGridGeom, GroupType::VertexGeom,      GroupType::EdgeGeom,
+                                            GroupType::TriangleGeom, GroupType::QuadGeom,     GroupType::TetrahedralGeom, GroupType::HexahedralGeom};
+  return types;
+}
+
 std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupType>& groupTypes)
 {
   static const std::map<GroupType, std::string> k_TypeToStringMap = {{GroupType::BaseGroup, "BaseGroup"},
