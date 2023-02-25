@@ -377,7 +377,6 @@ Result<> ReadH5Ebsd::operator()()
 
     if(sampleTransAngle > 0)
     {
-      // const Uuid k_CorePluginId = *Uuid::FromString("65a0a3fc-8c93-5405-8ac6-182e7f313a69");
       const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
       auto* filterList = Application::Instance()->getFilterList();
 

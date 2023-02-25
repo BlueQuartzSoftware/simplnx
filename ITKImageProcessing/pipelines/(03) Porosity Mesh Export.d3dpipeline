@@ -1,0 +1,260 @@
+{
+  "isDisabled": false,
+  "name": "(03) Porosity Mesh Export.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_data_name": "Cell Data",
+        "image_data_array_path": "ImageDataContainer/Cell Data/ImageData",
+        "image_geometry_path": "ImageDataContainer",
+        "image_transform_choice": 0,
+        "input_file_list_info": {
+          "end_index": 174,
+          "file_extension": ".tif",
+          "file_prefix": "slice_",
+          "file_suffix": "",
+          "increment_index": 1,
+          "input_path": "Data/Porosity_Image/",
+          "ordering": 0,
+          "padding_digits": 2,
+          "start_index": 11
+        },
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ITKImportImageStack",
+        "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "ImageDataContainer/Cell Data/ImageData",
+              "comparison": 2,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "ImageDataContainer/Cell Data/Mask"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "active_array_path": "Active",
+        "cell_feature_group_path": "CellFeatureData",
+        "feature_ids_path": "FeatureIds",
+        "grid_geometry_path": "ImageDataContainer",
+        "input_array_path": "ImageDataContainer/Cell Data/ImageData",
+        "mask_path": "ImageDataContainer/Cell Data/Mask",
+        "randomize_features": true,
+        "scalar_tolerance": 0,
+        "use_mask": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ScalarSegmentFeaturesFilter",
+        "uuid": "e067cd97-9bbf-4c92-89a6-3cb4fdb76c93"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "face_data_group_name": "Face Data",
+        "face_feature_attribute_matrix_name": "Face Feature Data",
+        "face_labels_array_name": "TriangleDataContainer/Face Data/FaceLabels",
+        "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
+        "fix_problem_voxels": true,
+        "generate_triple_lines": false,
+        "grid_geometry_data_path": "ImageDataContainer",
+        "node_types_array_name": "TriangleDataContainer/Vertex Data/NodeTypes",
+        "selected_data_array_paths": [],
+        "triangle_geometry_name": "TriangleDataContainer",
+        "vertex_data_group_name": "Vertex Data"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::QuickSurfaceMeshFilter",
+        "uuid": "13dd00bd-ad49-4e04-95eb-3267952fd6e5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "iteration_steps": 15,
+        "lambda": 0.20000000298023224,
+        "mu_factor": 0.20000000298023224,
+        "quad_point_lambda": 0.10000000149011612,
+        "surface_mesh_node_type_array_path": "TriangleDataContainer/Vertex Data/NodeTypes",
+        "surface_point_lambda": 0.0,
+        "surface_quad_point_lambda": 0.0,
+        "surface_triple_line_lambda": 0.0,
+        "triangle_geometry_data_path": "TriangleDataContainer",
+        "triple_line_lambda": 0.10000000149011612,
+        "use_taubin_smoothing": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::LaplacianSmoothingFilter",
+        "uuid": "0dd0916e-9305-4a7b-98cf-a6cfb97cb501"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "components_to_extract": [
+          [
+            0.0
+          ]
+        ],
+        "delete_original_array": true,
+        "multicomponent_array": "TriangleDataContainer/Face Data/FaceLabels",
+        "postfix": "-",
+        "select_components_to_extract": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::SplitAttributeArrayFilter",
+        "uuid": "55da791f-4d1c-4413-8673-742f27d2b22b"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "TriangleDataContainer/Face Data/FaceLabels-0",
+              "comparison": 0,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "TriangleDataContainer/Face Data/FaceLabels-0 Mask"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "TriangleDataContainer/Face Data/FaceLabels-1",
+              "comparison": 0,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "TriangleDataContainer/Face Data/FaceLabels-1 Mask"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "conditional_array_path": "TriangleDataContainer/Face Data/FaceLabels-0 Mask",
+        "remove_value": "0",
+        "replace_value": "1",
+        "selected_array_path": "TriangleDataContainer/Face Data/FaceLabels-0",
+        "use_conditional": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ConditionalSetValue",
+        "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "conditional_array_path": "TriangleDataContainer/Face Data/FaceLabels-1 Mask",
+        "remove_value": "0",
+        "replace_value": "1",
+        "selected_array_path": "TriangleDataContainer/Face Data/FaceLabels-1",
+        "use_conditional": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ConditionalSetValue",
+        "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "move_values": true,
+        "normalize_data": false,
+        "selected_data_array_paths": [
+          "TriangleDataContainer/Face Data/FaceLabels-0",
+          "TriangleDataContainer/Face Data/FaceLabels-1"
+        ],
+        "stacked_data_array_name": "TriangleDataContainer/Face Data/Face Labels"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CombineAttributeArraysFilter",
+        "uuid": "2436b614-e96d-47f0-9f6f-41d6fe97acd4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/Porosity_Analysis.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

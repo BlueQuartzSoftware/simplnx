@@ -315,13 +315,10 @@ Parameters ITKImageReader::parameters() const
                                                           FileSystemPathParameter::PathType::InputFile, false));
 
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry Path", "The 'DataPath' within the 'DataStructure' to store the created Image Geometry",
-                                                             complex::DataPath({"Image Geometry"})));
-
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Created Cell Data Path", "The 'DataPath' within the 'DataStructure' to store the imported image data", ImageGeom::k_CellDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The 'DataPath' within the 'DataStructure' to store the imported image",
-                                                         DataPath({"Image Geometry", "Cell Data", "Image Data"})));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
+  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array",
+                                                         DataPath({"ImageDataContainer", ImageGeom::k_CellDataName, "ImageData"})));
 
   return params;
 }
