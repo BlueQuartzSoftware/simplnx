@@ -30,6 +30,7 @@ public:
   static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
   static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_path";
   static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
+  static inline constexpr StringLiteral k_ImageTransformChoice_Key = "image_transform_choice";
 
   /**
    * @brief Returns the name of the filter.
