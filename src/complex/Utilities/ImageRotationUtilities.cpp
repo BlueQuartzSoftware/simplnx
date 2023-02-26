@@ -66,6 +66,7 @@ float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
   return spacing[index];
 }
 
+//------------------------------------------------------------------------------
 ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& transformationMatrix)
 {
   const SizeVec3 origDims = imageGeom.getDimensions();
@@ -117,27 +118,45 @@ ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom
   return params;
 }
 
-Point3D<float32> GetCoords(const USizeVec3& m_Dimensions, const FloatVec3& m_Spacing, const FloatVec3& m_Origin, usize idx)
+std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transformationMatrix)
 {
-  usize column = idx % m_Dimensions[0];
-  usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
-  usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
+  std::stringstream out;
+  for(size_t rowIndex = 0; rowIndex < 4; rowIndex++)
+  {
+    out << "[";
+    for(size_t colIndex = 0; colIndex < 4; colIndex++)
+    {
+      out << " " << transformationMatrix(rowIndex, colIndex);
+    }
+    out << "]\n";
+  }
+  return out.str();
+}
 
-  Point3D<float32> coords;
-  coords[0] = column * m_Spacing[0] + m_Origin[0] + (0.5f * m_Spacing[0]);
-  coords[1] = row * m_Spacing[1] + m_Origin[1] + (0.5f * m_Spacing[1]);
-  coords[2] = plane * m_Spacing[2] + m_Origin[2] + (0.5f * m_Spacing[2]);
-  return coords;
+ImageRotationUtilities::Matrix4fR CopyPrecomputedToTransformationMatrix(const Float32Array& precomputed)
+{
+  ImageRotationUtilities::Matrix4fR transformationMatrix;
+  transformationMatrix.fill(0.0F);
+
+  for(int64_t rowIndex = 0; rowIndex < 4; rowIndex++)
+  {
+    for(int64_t colIndex = 0; colIndex < 4; colIndex++)
+    {
+      transformationMatrix(rowIndex, colIndex) = precomputed[4 * rowIndex + colIndex];
+    }
+  }
+  return transformationMatrix;
 }
 
 ImageRotationUtilities::Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
+  transformationMatrix.fill(0.0F);
 
-  for(size_t rowIndex = 0; rowIndex < 4; rowIndex++)
+  for(int64_t rowIndex = 0; rowIndex < 4; rowIndex++)
   {
     std::vector<double> row = tableData[rowIndex];
-    for(size_t colIndex = 0; colIndex < 4; colIndex++)
+    for(int64_t colIndex = 0; colIndex < 4; colIndex++)
     {
       transformationMatrix(rowIndex, colIndex) = static_cast<float>(row[colIndex]);
     }
@@ -148,6 +167,7 @@ ImageRotationUtilities::Matrix4fR GenerateManualTransformationMatrix(const Dynam
 ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
+  transformationMatrix.fill(0.0F);
 
   // Convert Degrees to Radians for the last element
   float rotAngle = pRotationValue[3] * Constants::k_PiOver180F;
@@ -191,6 +211,7 @@ ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const Vec
 ImageRotationUtilities::Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
+  transformationMatrix.fill(0.0F);
   transformationMatrix(0, 0) = 1.0f;
   transformationMatrix(1, 1) = 1.0f;
   transformationMatrix(2, 2) = 1.0f;
@@ -204,6 +225,7 @@ ImageRotationUtilities::Matrix4fR GenerateTranslationTransformationMatrix(const 
 ImageRotationUtilities::Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
+  transformationMatrix.fill(0.0F);
   transformationMatrix(0, 0) = pScaleValue[0];
   transformationMatrix(1, 1) = pScaleValue[1];
   transformationMatrix(2, 2) = pScaleValue[2];
@@ -219,8 +241,8 @@ size_t FindOctant(const RotateArgs& params, size_t index, FloatVec3 coord)
   float zResHalf = params.zRes * 0.5;
 
   // Get the center coord of the original source voxel
-  auto centerPt = GetCoords(params.originalDims, params.originalSpacing, params.originalOrigin, index);
-  Eigen::Vector3f centerPoint(centerPt[0], centerPt[1], centerPt[2]);
+  auto centerPoint = GetCoords<Eigen::Vector3f>(params.originalDims, params.originalSpacing, params.originalOrigin, index);
+  // Eigen::Vector3f centerPoint(centerPt[0], centerPt[1], centerPt[2]);
 
   // Form the 8 corner coords for the voxel
   // clang-format off

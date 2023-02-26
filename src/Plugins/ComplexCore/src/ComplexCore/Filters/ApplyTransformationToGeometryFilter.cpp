@@ -40,7 +40,6 @@ using namespace complex;
 
 namespace
 {
-const std::string k_TempGeometryName = ".transformed_image_geometry";
 
 }
 
@@ -91,7 +90,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"1", "2", "3", "4"}));
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"1", "2", "3", "4"}));
   const DynamicTableInfo::TableDataType defaultTable{{{1.0F, 0.0F, 0.0F, 0.0F}, {0.0F, 1.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F, 0.0F}, {0.0F, 0.0F, 0.0F, 1.0F}}};
-  params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "Transformation Matrix", "", defaultTable, tableInfo));
+  params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "Transformation Matrix", "The 4x4 Transformation Matrix", defaultTable, tableInfo));
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Rotation_Key, "Rotation Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0F, 0.0F, 1.0F, 90.0F},
                                                          std::vector<std::string>{"x", "y", "z", "w (Deg)"}));
@@ -203,12 +202,15 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   {
     auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
     m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
+
     break;
   }
   default: {
     return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
   }
   }
+
+  preflightUpdatedValues.push_back({"Generated Transformation Matrix", ImageRotationUtilities::GenerateTransformationMatrixDescription(m_TransformationMatrix)});
 
   // if ImageGeom was selected to be transformed: This should work because if we didn't pass
   // the earlier test, we should not have gotten to here.
@@ -397,9 +399,10 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputValues.Rotation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
   inputValues.Translation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
   inputValues.Scale = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
-  inputValues.SelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.SelectedGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
   inputValues.DataArraySelection = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
+  inputValues.RemoveOriginalGeometry = true;
 
   return ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

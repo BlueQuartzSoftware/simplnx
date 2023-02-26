@@ -60,30 +60,44 @@ struct RotateArgs
 
 /**
  * @brief
+ * @param transformationMatrix
+ * @return
+ */
+COMPLEX_EXPORT std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transformationMatrix);
+
+/**
+ * @brief
+ * @param precomputed
+ * @return
+ */
+COMPLEX_EXPORT Matrix4fR CopyPrecomputedToTransformationMatrix(const Float32Array& precomputed);
+
+/**
+ * @brief
  * @param tableData
  * @return
  */
-COMPLEX_EXPORT ImageRotationUtilities::Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData);
+COMPLEX_EXPORT Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData);
 
 /**
  * @brief
  * @param pRotationValue
  * @return
  */
-COMPLEX_EXPORT ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue);
+COMPLEX_EXPORT Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue);
 
 /**
  * @brief
  * @param pTranslationValue
  * @return
  */
-COMPLEX_EXPORT ImageRotationUtilities::Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue);
+COMPLEX_EXPORT Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue);
 /**
  * @brief
  * @param pScaleValue
  * @return
  */
-COMPLEX_EXPORT ImageRotationUtilities::Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue);
+COMPLEX_EXPORT Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue);
 
 /**
  * @brief Function to determine the min and max coordinates (bounding box) of the transformed Image Geometry.
@@ -169,7 +183,45 @@ T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, Data
  * @param idx
  * @return
  */
-COMPLEX_EXPORT Point3D<float32> GetCoords(const USizeVec3& m_Dimensions, const FloatVec3& m_Spacing, const FloatVec3& m_Origin, usize idx);
+// COMPLEX_EXPORT Point3D<float32> GetCoords(const USizeVec3& m_Dimensions, const FloatVec3& m_Spacing, const FloatVec3& m_Origin, usize idx);
+
+template <typename ArrayType>
+ArrayType GetCoords(const USizeVec3& m_Dimensions, const FloatVec3& m_Spacing, const FloatVec3& m_Origin, usize idx)
+{
+  usize column = idx % m_Dimensions[0];
+  usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
+  usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
+
+  ArrayType coords;
+  coords[0] = column * m_Spacing[0] + m_Origin[0] + (0.5f * m_Spacing[0]);
+  coords[1] = row * m_Spacing[1] + m_Origin[1] + (0.5f * m_Spacing[1]);
+  coords[2] = plane * m_Spacing[2] + m_Origin[2] + (0.5f * m_Spacing[2]);
+  return coords;
+}
+
+template <typename ArrayType>
+std::optional<SizeVec3> ComputeCellIndex(const USizeVec3& m_Dimensions, const FloatVec3& m_Spacing, const FloatVec3& m_Origin, const ArrayType& coords)
+{
+  SizeVec3 index(0, 0, 0);
+
+  for(usize i = 0; i < 3; i++)
+  {
+    if(coords[i] < m_Origin[i])
+    {
+      return {};
+    }
+    if(coords[i] > (m_Origin[i] + m_Dimensions[i] * m_Spacing[i]))
+    {
+      return {};
+    }
+    index[i] = static_cast<usize>((coords[i] - m_Origin[i]) / m_Spacing[i]);
+    if(index[i] > m_Dimensions[i])
+    {
+      return {};
+    }
+  }
+  return index;
+}
 
 /**
  * @brief FindOctant
@@ -406,6 +458,100 @@ public:
 
     m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
   }
+};
+
+//------------------------------------------------------------------------------
+template <typename T>
+class RotateImageGeometryWithNearestNeighbor
+{
+public:
+  RotateImageGeometryWithNearestNeighbor(const IDataArray& oldCellArray, IDataArray& newCellArray, const RotateArgs& args, const Matrix4fR& rotationMatrix, bool sliceBySlice)
+  : m_OldCellArray(oldCellArray)
+  , m_NewCellArray(newCellArray)
+  , m_RotMatrix(rotationMatrix)
+  , m_SliceBySlice(sliceBySlice)
+  , m_Params(args)
+  {
+  }
+  ~RotateImageGeometryWithNearestNeighbor() = default;
+
+  RotateImageGeometryWithNearestNeighbor(const RotateImageGeometryWithNearestNeighbor&) = default;
+  RotateImageGeometryWithNearestNeighbor(RotateImageGeometryWithNearestNeighbor&&) noexcept = default;
+  RotateImageGeometryWithNearestNeighbor& operator=(const RotateImageGeometryWithNearestNeighbor&) = delete;
+  RotateImageGeometryWithNearestNeighbor& operator=(RotateImageGeometryWithNearestNeighbor&&) noexcept = delete;
+
+  void convert() const
+  {
+
+    DataStructure tempDataStructure;
+    ImageGeom* srcImageGeom = ImageGeom::Create(tempDataStructure, "source image geom");
+    srcImageGeom->setDimensions(m_Params.originalDims);
+    srcImageGeom->setSpacing(m_Params.originalSpacing);
+    srcImageGeom->setOrigin(m_Params.originalOrigin);
+
+    ImageGeom* destImageGeom = ImageGeom::Create(tempDataStructure, "dest image geom");
+    destImageGeom->setDimensions(m_Params.transformedDims);
+    destImageGeom->setSpacing(m_Params.transformedSpacing);
+    destImageGeom->setOrigin(m_Params.transformedOrigin);
+
+    const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+
+    Matrix4fR inverseTransform = m_RotMatrix.inverse();
+    Eigen::Vector4f coordsNew;
+    coordsNew[3] = 0.0F;
+    Eigen::Array4f coordsOld;
+    for(int64 k = 0; k < m_Params.zpNew; k++)
+    {
+      int64 const ktot = (m_Params.xpNew * m_Params.ypNew) * k;
+      for(int64 j = 0; j < m_Params.ypNew; j++)
+      {
+        int64 jtot = (m_Params.xpNew) * j;
+        for(int64 i = 0; i < m_Params.xpNew; i++)
+        {
+          int64 const newIndex = ktot + jtot + i;
+          coordsNew = Eigen::Vector4f(destImageGeom->getCoordsf(newIndex).toArray().data());
+          // Transform back to the old coordinate
+          coordsOld = inverseTransform * coordsNew;
+          // Now compute the old Cell Index from teh old coordinate
+          SizeVec3 oldGeomIndices;
+          auto errorResult = srcImageGeom->computeCellIndex({coordsOld[0], coordsOld[1], coordsOld[2]}, oldGeomIndices);
+
+          if(errorResult == ImageGeom::ErrorType::NoError)
+          {
+            if(m_SliceBySlice)
+            {
+              oldGeomIndices[2] = k;
+            }
+            size_t oldIndex = (m_Params.originalDims[0] * m_Params.originalDims[1] * oldGeomIndices[2]) + (m_Params.originalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
+            if(!newDataStore.copyFrom(oldIndex, oldDataStore, newIndex, 1))
+            {
+              std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), oldIndex,
+                                       m_OldCellArray.getName(), newIndex)
+                        << std::endl;
+              break;
+            }
+          }
+          else
+          {
+            newDataStore.fillTuple(i, 0);
+          }
+        }
+      }
+    }
+  }
+
+  void operator()() const
+  {
+    convert();
+  }
+
+private:
+  const IDataArray& m_OldCellArray;
+  IDataArray& m_NewCellArray;
+  const Matrix4fR& m_RotMatrix;
+  bool m_SliceBySlice = false;
+  RotateArgs m_Params;
 };
 
 #if 0

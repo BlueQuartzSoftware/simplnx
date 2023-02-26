@@ -38,6 +38,8 @@
 namespace
 {
 
+const std::string k_TempGeometryName = ".transformed_image_geometry";
+
 const std::string k_NoTransform("No Transform");
 const std::string k_PrecomputedTransformationMatrix("Pre-Computed Transformation Matrix (4x4)");
 const std::string k_ManualTransformationMatrix("Manual Transformation Matrix");
@@ -77,10 +79,10 @@ struct COMPLEXCORE_EXPORT ApplyTransformationToGeometryInputValues
   VectorFloat32Parameter::ValueType Translation;
   VectorFloat32Parameter::ValueType Scale;
 
-  DataPath SelectedGeometryPathValue;
   DataPath CellAttributeMatrixPath;
   bool UseDataArraySelection;
   MultiArraySelectionParameter::ValueType DataArraySelection;
+  bool RemoveOriginalGeometry;
 };
 
 /**
@@ -109,6 +111,12 @@ private:
   const ApplyTransformationToGeometryInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  Result<> applyImageGeometryTransformation();
+
+  Result<> applyNodeGeometryTransformation();
+
+  ImageRotationUtilities::Matrix4fR m_TransformationMatrix;
 };
 
 } // namespace complex

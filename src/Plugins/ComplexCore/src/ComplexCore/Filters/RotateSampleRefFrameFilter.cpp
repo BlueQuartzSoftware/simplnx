@@ -56,97 +56,7 @@ constexpr float32 k_Threshold = 0.01f;
 const Eigen::Vector3f k_XAxis = Eigen::Vector3f::UnitX();
 const Eigen::Vector3f k_YAxis = Eigen::Vector3f::UnitY();
 const Eigen::Vector3f k_ZAxis = Eigen::Vector3f::UnitZ();
-
-template <typename T>
-class RotateDataArray
-{
-public:
-  RotateDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const RotateArgs& args, const Matrix3fR& rotationMatrix, bool sliceBySlice)
-  : m_OldCellArray(oldCellArray)
-  , m_NewCellArray(newCellArray)
-  , m_SliceBySlice(sliceBySlice)
-  , m_Params(args)
-  {
-  }
-  ~RotateDataArray() = default;
-
-  RotateDataArray(const RotateDataArray&) = default;
-  RotateDataArray(RotateDataArray&&) noexcept = default;
-  RotateDataArray& operator=(const RotateDataArray&) = delete;
-  RotateDataArray& operator=(RotateDataArray&&) noexcept = delete;
-
-  void convert() const
-  {
-    const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-
-    Matrix3fR inverseTransform = m_RotMatrix.inverse();
-    Eigen::Vector3f coordsNew;
-
-    for(int64 k = 0; k < m_Params.zpNew; k++)
-    {
-      int64 const ktot = (m_Params.xpNew * m_Params.ypNew) * k;
-      for(int64 j = 0; j < m_Params.ypNew; j++)
-      {
-        int64 jtot = (m_Params.xpNew) * j;
-        for(int64 i = 0; i < m_Params.xpNew; i++)
-        {
-
-          int64 const newIndex = ktot + jtot + i;
-          int64 oldIndex = -1;
-
-          coordsNew[0] = (static_cast<float32>(i) * m_Params.xResNew) + m_Params.xMinNew;
-          coordsNew[1] = (static_cast<float32>(j) * m_Params.yResNew) + m_Params.yMinNew;
-          coordsNew[2] = (static_cast<float32>(k) * m_Params.zResNew) + m_Params.zMinNew;
-
-          Eigen::Array3f coordsOld = inverseTransform * coordsNew;
-
-          auto colOld = static_cast<int64>(std::nearbyint(coordsOld[0] / m_Params.xRes));
-          auto rowOld = static_cast<int64>(std::nearbyint(coordsOld[1] / m_Params.yRes));
-          auto planeOld = static_cast<int64>(std::nearbyint(coordsOld[2] / m_Params.zRes));
-
-          if(m_SliceBySlice)
-          {
-            planeOld = k;
-          }
-
-          if(colOld >= 0 && colOld < m_Params.xp && rowOld >= 0 && rowOld < m_Params.yp && planeOld >= 0 && planeOld < m_Params.zp)
-          {
-            oldIndex = (m_Params.xp * m_Params.yp * planeOld) + (m_Params.xp * rowOld) + colOld;
-          }
-
-          if(oldIndex >= 0)
-          {
-            if(!newDataStore.copyFrom(oldIndex, oldDataStore, newIndex, 1))
-            {
-              std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), oldIndex,
-                                       m_OldCellArray.getName(), newIndex)
-                        << std::endl;
-              break;
-            }
-          }
-          else
-          {
-            newDataStore.fillTuple(i, 0);
-          }
-        }
-      }
-    }
-  }
-
-  void operator()() const
-  {
-    convert();
-  }
-
-private:
-  const IDataArray& m_OldCellArray;
-  IDataArray& m_NewCellArray;
-  Matrix3fR m_RotMatrix;
-  bool m_SliceBySlice = false;
-  RotateArgs m_Params;
-};
-
+#if 0
 void DetermineMinMax(const Matrix3fR& rotationMatrix, const FloatVec3& spacing, usize col, usize row, usize plane, float32& xMin, float32& xMax, float32& yMin, float32& yMax, float32& zMin,
                      float32& zMax)
 {
@@ -352,25 +262,26 @@ Result<Matrix3fR> ConvertRotationTableToRotationMatrix(const std::vector<std::ve
 
   return {rotationMatrix};
 }
+#endif
 
-Result<Matrix3fR> ComputeRotationMatrix(const Arguments& args)
-{
-  auto rotationRepresentationIndex = args.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
-
-  RotationRepresentationType rotationRepresentation = CastIndexToRotationRepresentation(rotationRepresentationIndex);
-
-  switch(rotationRepresentation)
-  {
-  case RotationRepresentationType::AxisAngle: {
-    auto pRotationValue = args.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
-    return ConvertAxisAngleToRotationMatrix(pRotationValue);
-  }
-  case RotationRepresentationType::RotationMatrix: {
-    auto rotationMatrixTable = args.value<DynamicTableParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
-    return ConvertRotationTableToRotationMatrix(rotationMatrixTable);
-  }
-  }
-}
+// Result<Matrix3fR> ComputeRotationMatrix(const Arguments& args)
+//{
+//   auto rotationRepresentationIndex = args.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
+//
+//   RotationRepresentationType rotationRepresentation = CastIndexToRotationRepresentation(rotationRepresentationIndex);
+//
+//   switch(rotationRepresentation)
+//   {
+//   case RotationRepresentationType::AxisAngle: {
+//     auto pRotationValue = args.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
+//     return ConvertAxisAngleToRotationMatrix(pRotationValue);
+//   }
+//   case RotationRepresentationType::RotationMatrix: {
+//     auto rotationMatrixTable = args.value<DynamicTableParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
+//     return ConvertRotationTableToRotationMatrix(rotationMatrixTable);
+//   }
+//   }
+// }
 
 } // namespace
 
@@ -417,13 +328,15 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentation_Key, "Rotation Representation", "Which form used to represent rotation (axis angle or rotation matrix)",
                                                                     to_underlying(RotationRepresentation::AxisAngle), ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxisAngle_Key, "Rotation Axis-Angle [<ijk>w]", "Axis-Angle in sample reference frame to rotate about.",
-                                                         VectorFloat32Parameter::ValueType{0.0f, 0.0f, 0.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
+                                                         VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place Rotation", "Performs the rotation in-place for the given Image Geometry", true));
 
   DynamicTableInfo tableInfo;
-  tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo(3));
-  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(3));
-  params.insert(std::make_unique<DynamicTableParameter>(k_RotationMatrix_Key, "Rotation Matrix", "Axis in sample reference frame to rotate about", tableInfo));
+  tableInfo.setColsInfo(DynamicTableInfo::StaticVectorInfo({"1", "2", "3", "4"}));
+  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"1", "2", "3", "4"}));
+  const DynamicTableInfo::TableDataType defaultTable{{{1.0F, 0.0F, 0.0F, 0.0F}, {0.0F, 1.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F, 0.0F}, {0.0F, 0.0F, 0.0F, 1.0F}}};
+  params.insert(std::make_unique<DynamicTableParameter>(k_RotationMatrix_Key, "Transformation Matrix", "The 4x4 Transformation Matrix", defaultTable, tableInfo));
+
   params.linkParameters(k_RotationRepresentation_Key, k_RotationAxisAngle_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
   params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));
 
@@ -457,20 +370,26 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  Result<Matrix3fR> matrixResult = ComputeRotationMatrix(filterArgs);
+  ImageRotationUtilities::Matrix4fR rotationMatrix;
 
-  if(matrixResult.invalid())
+  auto rotationRepresentationIndex = filterArgs.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
+  switch(rotationRepresentationIndex)
   {
-    Result<OutputActions> result = {nonstd::make_unexpected(std::move(matrixResult.errors()))};
-    result.warnings() = std::move(matrixResult.warnings());
-    return {std::move(result)};
+  case static_cast<uint64>(RotationRepresentationType::AxisAngle): {
+    auto pRotationValue = filterArgs.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
+    rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
+    break;
   }
-
-  Matrix3fR rotationMatrix = matrixResult.value();
+  case static_cast<uint64>(RotationRepresentationType::RotationMatrix): {
+    auto rotationMatrixTable = filterArgs.value<DynamicTableParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
+    rotationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(rotationMatrixTable);
+    break;
+  }
+  }
 
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
-  RotateArgs rotateArgs = CreateRotateArgs(selectedImageGeom, rotationMatrix);
+  ImageRotationUtilities::RotateArgs rotateArgs = ImageRotationUtilities::CreateRotationArgs(selectedImageGeom, rotationMatrix);
   const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
   const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
   auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
@@ -591,11 +510,24 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
 
   auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(destImagePath);
 
-  Result<Matrix3fR> matrixResult = ComputeRotationMatrix(filterArgs);
+  ImageRotationUtilities::Matrix4fR rotationMatrix;
 
-  Matrix3fR rotationMatrix = matrixResult.value();
+  auto rotationRepresentationIndex = filterArgs.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
+  switch(rotationRepresentationIndex)
+  {
+  case static_cast<uint64>(RotationRepresentationType::AxisAngle): {
+    auto pRotationValue = filterArgs.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
+    rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
+    break;
+  }
+  case static_cast<uint64>(RotationRepresentationType::RotationMatrix): {
+    auto rotationMatrixTable = filterArgs.value<DynamicTableParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
+    rotationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(rotationMatrixTable);
+    break;
+  }
+  }
 
-  RotateArgs rotateArgs = CreateRotateArgs(srcImageGeom, rotationMatrix);
+  ImageRotationUtilities::RotateArgs rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, rotationMatrix);
 
   auto selectedCellDataChildren = GetAllChildArrayDataPaths(dataStructure, srcImageGeom.getCellDataPath());
   auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
@@ -603,6 +535,7 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
   // The actual rotating of the dataStructure arrays is done in parallel where parallel here
   // refers to the cropping of each DataArray being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
+  taskRunner.setParallelizationEnabled(true);
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
@@ -619,7 +552,8 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
     messageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcName));
 
-    ExecuteParallelFunction<::RotateDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, rotateArgs, rotationMatrix, sliceBySlice);
+    ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, rotateArgs, rotationMatrix,
+                                                                                            sliceBySlice);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
