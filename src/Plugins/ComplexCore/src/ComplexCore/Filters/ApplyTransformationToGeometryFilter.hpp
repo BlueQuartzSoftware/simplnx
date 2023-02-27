@@ -26,14 +26,14 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_TransformationType_Key = "transformation_type";
   static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type";
-  static inline constexpr StringLiteral k_UseDataArraySelection_Key = "use_data_array_selection";
+  // static inline constexpr StringLiteral k_UseDataArraySelection_Key = "use_data_array_selection";
   static inline constexpr StringLiteral k_ManualTransformationMatrix_Key = "manual_transformation_matrix";
   static inline constexpr StringLiteral k_Rotation_Key = "rotation";
   static inline constexpr StringLiteral k_Translation_Key = "translation";
   static inline constexpr StringLiteral k_Scale_Key = "scale";
   static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix";
   static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
-  static inline constexpr StringLiteral k_DataArraySelection_Key = "data_array_selection";
+  // static inline constexpr StringLiteral k_DataArraySelection_Key = "data_array_selection";
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**

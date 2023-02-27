@@ -104,26 +104,20 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Geometry", "The target geometry on which to perform the transformation", DataPath{},
                                                              IGeometry::GetAllGeomTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Image Geometry Cell Data Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseDataArraySelection_Key, "Select Data Arrays", "The data arrays to interpolate onto the transformed geometry", false));
-  params.insert(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Interpolation Type", "", k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
+  params.insertSeparator(Parameters::Separator{"Image Geometry Parameters"});
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Interpolation Type", "", k_NoInterpolationIdx, k_InterpolationChoices));
 
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix", "The path to the Cell level data that should be interpolated", DataPath{}));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_DataArraySelection_Key, "Data Array Selection", "The list of arrays to calculate histogram(s) for",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
-                                                               complex::GetAllNumericTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_UseDataArraySelection_Key, k_DataArraySelection_Key, true);
-  params.linkParameters(k_UseDataArraySelection_Key, k_InterpolationType_Key, true);
-  params.linkParameters(k_UseDataArraySelection_Key, k_CellAttributeMatrixPath_Key, true);
-  params.linkParameters(k_UseDataArraySelection_Key, k_DataArraySelection_Key, true);
-
   params.linkParameters(k_TransformationType_Key, k_ComputedTransformationMatrix_Key, k_PrecomputedTransformationMatrixIdx);
   params.linkParameters(k_TransformationType_Key, k_ManualTransformationMatrix_Key, k_ManualTransformationMatrixIdx);
   params.linkParameters(k_TransformationType_Key, k_Rotation_Key, k_RotationIdx);
   params.linkParameters(k_TransformationType_Key, k_Translation_Key, k_TranslationIdx);
   params.linkParameters(k_TransformationType_Key, k_Scale_Key, k_ScaleIdx);
+
+  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, k_NearestNeighborInterpolationIdx);
+  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, k_LinearInterpolationIdx);
 
   return params;
 }
@@ -218,52 +212,70 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   if(imageGeom != nullptr)
   {
     auto pInterpolationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
-    auto pUseDataArraySelectionValue = filterArgs.value<bool>(k_UseDataArraySelection_Key);
-    auto pDataArraySelectionValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
+    // auto pDataArraySelectionValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
 
     // For nearest neighbor we can use any data array as we are only going to copy from a hit cell, no interpolation
     auto pCellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
-    auto* attriPtr = dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
-    if(nullptr == attriPtr)
+    const auto* srcCellAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
+    if(nullptr == srcCellAttrMatrixPtr)
     {
       return {MakeErrorResult<OutputActions>(
           -82006, fmt::format("DataPath '{}' is not an Cell AttributeMatrix. Please select the Cell level AttributeMatrix of the Image Geometry", pCellAttributeMatrixPath.toString()))};
     }
-    std::vector<std::string> selectedCellArrayNames = attriPtr->getDataMap().getNames();
+    std::vector<std::string> selectedCellArrayNames = srcCellAttrMatrixPtr->getDataMap().getNames();
 
     if(pInterpolationTypeValue == k_LinearInterpolationIdx)
     {
-      if(pUseDataArraySelectionValue)
-      {
-        selectedCellArrayNames.clear();
-        for(const auto& dataArrayPath : pDataArraySelectionValue)
-        {
-          selectedCellArrayNames.emplace_back(dataArrayPath.getTargetName());
-        }
-      }
-      else
-      {
-        resultOutputActions.warnings().push_back(
-            Warning{82004, "Linear Interpolation has been selected but no Cell arrays are selected to be interpolated. No data will be transferred to the new geometry"});
-      }
+      //      if(pDataArraySelectionValue.empty())
+      //      {
+      //        resultOutputActions.warnings().push_back(
+      //            Warning{82004, "Linear Interpolation has been selected but no Cell arrays are selected to be interpolated. No data will be transferred to the new geometry"});
+      //      }
 
-      for(const auto& attrArrayName : selectedCellArrayNames)
+      // Remove all the DataArrays from the src Cell AttributeMatrix and substitute with just what the user wants to interpolate on.
+      selectedCellArrayNames.clear();
+      for(const auto& arrayName : srcCellAttrMatrixPtr->getDataMap().getNames())
       {
-        const StringArray* strArrayPtr = dataStructure.getDataAs<StringArray>(pCellAttributeMatrixPath.createChildPath(attrArrayName));
+
+        DataPath dataArrayPath = pCellAttributeMatrixPath.createChildPath(arrayName);
+        const StringArray* strArrayPtr = dataStructure.getDataAs<StringArray>(dataArrayPath);
         if(nullptr != strArrayPtr)
         {
-          resultOutputActions.errors().push_back(
-              {82009, fmt::format("Input Type Error, cannot run linear interpolation String arrays. '{}'", pCellAttributeMatrixPath.createChildPath(attrArrayName).toString())});
+          resultOutputActions.warnings().push_back(
+              Warning{82009, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on String Arrays", dataArrayPath.toString())});
+          continue;
         }
 
-        const BoolArray* boolArrayPtr = dataStructure.getDataAs<BoolArray>(pCellAttributeMatrixPath.createChildPath(attrArrayName));
+        const BoolArray* boolArrayPtr = dataStructure.getDataAs<BoolArray>(dataArrayPath);
         if(nullptr != boolArrayPtr)
         {
-          resultOutputActions.errors().push_back(
-              {82009, fmt::format("Input Type Error, cannot run linear interpolation Boolean arrays. '{}'", pCellAttributeMatrixPath.createChildPath(attrArrayName).toString())});
+          resultOutputActions.warnings().push_back(
+              Warning{82010, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on Bool Arrays", dataArrayPath.toString())});
+          continue;
         }
+
+        const INeighborList* neighborListPtr = dataStructure.getDataAs<INeighborList>(dataArrayPath);
+        if(nullptr != neighborListPtr)
+        {
+          resultOutputActions.warnings().push_back(
+              Warning{82011, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on NeighborList Arrays", dataArrayPath.toString())});
+          continue;
+        }
+
+        selectedCellArrayNames.emplace_back(arrayName);
       }
     }
+    //    else if(pInterpolationTypeValue == k_NearestNeighborInterpolationIdx)
+    //    {
+    //      auto childPathsResult = GetAllChildDataPaths(dataStructure, pCellAttributeMatrixPath, DataObject::Type::DataObject);
+    //      if(childPathsResult.has_value())
+    //      {
+    //        for(const auto& child : childPathsResult.value())
+    //        {
+    //          selectedCellArrayNames.emplace_back(child.getTargetName());
+    //        }
+    //      }
+    //    }
 
     auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(*imageGeom, m_TransformationMatrix);
 
@@ -275,7 +287,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       auto spacingVec = imageGeom->getSpacing();
       resultOutputActions.value().actions.push_back(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
-    else // We are Rotating or scaling. we need to create a brand new Image Geometry
+    else // We are Rotating or scaling, manual transformation or precomputed. we need to create a brand new Image Geometry
     {
       auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
       DataPath destImagePath = srcImagePath;      // filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
@@ -289,27 +301,27 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       origin[1] += rotateArgs.yMinNew;
       origin[2] += rotateArgs.zMinNew;
 
-      std::vector<usize> dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX)
-
-      std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
-
       if(pRemoveOriginalGeometry)
       {
-        // Generate a new name for the current Image Geometry
-        auto tempPathVector = srcImagePath.getPathVector();
-        std::string tempName = "." + tempPathVector.back();
-        tempPathVector.back() = tempName;
-        DataPath tempPath(tempPathVector);
-        // Rename the current image geometry
-        resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(srcImagePath, tempName));
-        // After the execute function has been done, delete the moved image geometry
-        resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+        //        // Generate a new name for the current Image Geometry
+        //        auto tempPathVector = srcImagePath.getPathVector();
+        //        std::string tempName = "." + tempPathVector.back();
+        //        tempPathVector.back() = tempName;
+        //        DataPath tempPath(tempPathVector);
+        //        // Rename the current image geometry
+        //        resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(srcImagePath, tempName));
+        //        // After the execute function has been done, delete the moved image geometry
+        //        resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
 
-        tempPathVector = srcImagePath.getPathVector();
-        tempName = k_TempGeometryName;
-        tempPathVector.back() = tempName;
+        // Create an Image Geometry name with a "." as a prefix to the original Image Geometry Name
+        std::vector<std::string> tempPathVector = srcImagePath.getPathVector();
+        tempPathVector.back() = "." + tempPathVector.back();
         destImagePath = DataPath({tempPathVector});
       }
+
+      std::vector<usize> dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX), opposite of ImageGeometry dimensions
+
+      std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
 
       {
         const AttributeMatrix* selectedCellData = selectedImageGeom.getCellData();
@@ -317,21 +329,22 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         {
           return {MakeErrorResult<OutputActions>(-5551, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
         }
-        std::string cellDataName = selectedCellData->getName();
-        ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
-
+        const std::string cellDataName = selectedCellData->getName();
+        ignorePaths.push_back(srcImagePath.createChildPath(cellDataName)); // This is needed so that we don't attempt to copy it later on
+        // Create the new Image Geometry
         resultOutputActions.value().actions.push_back(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
 
-        // Create the Cell AttributeMatrix in the Destination Geometry
-        DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
+        // Create a DataPath object that points to the Cell AttributeMatrix in the new ImageGeometry
+        DataPath targetCellAttrMatrix = destImagePath.createChildPath(cellDataName);
 
-        for(const auto& [id, object] : *selectedCellData)
+        // Create the DataArrays in the target Cell Attribute Matrix, based on the interpolation type
+        for(const auto& cellArrayName : selectedCellArrayNames)
         {
-          const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
-          DataType dataType = srcArray.getDataType();
-          IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-          DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
-          resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
+          const DataPath srcCellArrayDataPath = srcImagePath.createChildPath(cellDataName).createChildPath(cellArrayName);
+          const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcCellArrayDataPath);
+          const IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+          resultOutputActions.value().actions.push_back(
+              std::make_unique<CreateArrayAction>(srcArray.getDataType(), dataArrayShape, std::move(componentShape), targetCellAttrMatrix.createChildPath(srcArray.getName())));
         }
 
         // Store the preflight updated value(s) into the preflightUpdatedValues vector using
@@ -342,10 +355,10 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         preflightUpdatedValues.push_back(
             {"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom->getDimensions(), srcImageGeom->getSpacing(), srcImageGeom->getOrigin())});
         preflightUpdatedValues.push_back(
-            {"Rotated Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin)});
+            {"Transformed Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin)});
       }
 
-      // copy over the rest of the data
+      // copy over the rest of the data from the src Image Geometry into the Target Image Geometry
       auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
       if(childPaths.has_value())
       {
@@ -376,6 +389,9 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
       if(pRemoveOriginalGeometry)
       {
+        // After the execute function has been done, delete the original image geometry
+        resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(srcImagePath));
+        // Rename the target Image Geometry (the one that just got created) to the original image geometry's name
         resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
       }
     }
@@ -394,14 +410,12 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputValues.TransformationSelection = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationType_Key);
   inputValues.InterpolationSelection = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
   inputValues.ComputedTransformationMatrix = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
-  inputValues.UseDataArraySelection = filterArgs.value<bool>(k_UseDataArraySelection_Key);
   inputValues.ManualMatrixTableData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key);
   inputValues.Rotation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
   inputValues.Translation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
   inputValues.Scale = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
   inputValues.SelectedGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
-  inputValues.DataArraySelection = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
   inputValues.RemoveOriginalGeometry = true;
 
   return ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();

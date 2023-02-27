@@ -2,8 +2,10 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/Common/Constants.hpp"
+#include "complex/Common/Range.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
@@ -11,8 +13,10 @@
 
 #include <Eigen/Dense>
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
+#include <mutex>
 
 namespace complex::ImageRotationUtilities
 {
@@ -23,13 +27,13 @@ const Eigen::Vector3f k_ZAxis = Eigen::Vector3f::UnitZ();
 using Matrix3fR = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
 using Matrix4fR = Eigen::Matrix<float, 4, 4, Eigen::RowMajor>;
 
-using Transform3f = Eigen::Transform<float, 3, Eigen::Affine>;
-using MatrixTranslation = Eigen::Matrix<float, 1, 3, Eigen::RowMajor>;
+// using Transform3f = Eigen::Transform<float, 3, Eigen::Affine>;
+// using MatrixTranslation = Eigen::Matrix<float, 1, 3, Eigen::RowMajor>;
 
-using Vector3s = Eigen::Array<size_t, 1, 3>;
+// using Vector3s = Eigen::Array<size_t, 1, 3>;
 using Vector3i64 = Eigen::Array<int64_t, 1, 3>;
 
-using Int64Vec3Type = complex::Vec3<int64_t>;
+// using Int64Vec3Type = complex::Vec3<int64_t>;
 
 struct RotateArgs
 {
@@ -176,61 +180,13 @@ T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, cons
 }
 
 /**
- * @brief
- * @param m_Dimensions
- * @param m_Spacing
- * @param m_Origin
- * @param idx
- * @return
- */
-// COMPLEX_EXPORT Point3D<float32> GetCoords(const USizeVec3& m_Dimensions, const FloatVec3& m_Spacing, const FloatVec3& m_Origin, usize idx);
-
-template <typename ArrayType>
-ArrayType GetCoords(const USizeVec3& m_Dimensions, const FloatVec3& m_Spacing, const FloatVec3& m_Origin, usize idx)
-{
-  usize column = idx % m_Dimensions[0];
-  usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
-  usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
-
-  ArrayType coords;
-  coords[0] = column * m_Spacing[0] + m_Origin[0] + (0.5f * m_Spacing[0]);
-  coords[1] = row * m_Spacing[1] + m_Origin[1] + (0.5f * m_Spacing[1]);
-  coords[2] = plane * m_Spacing[2] + m_Origin[2] + (0.5f * m_Spacing[2]);
-  return coords;
-}
-
-template <typename ArrayType>
-std::optional<SizeVec3> ComputeCellIndex(const USizeVec3& m_Dimensions, const FloatVec3& m_Spacing, const FloatVec3& m_Origin, const ArrayType& coords)
-{
-  SizeVec3 index(0, 0, 0);
-
-  for(usize i = 0; i < 3; i++)
-  {
-    if(coords[i] < m_Origin[i])
-    {
-      return {};
-    }
-    if(coords[i] > (m_Origin[i] + m_Dimensions[i] * m_Spacing[i]))
-    {
-      return {};
-    }
-    index[i] = static_cast<usize>((coords[i] - m_Origin[i]) / m_Spacing[i]);
-    if(index[i] > m_Dimensions[i])
-    {
-      return {};
-    }
-  }
-  return index;
-}
-
-/**
  * @brief FindOctant
  * @param params
  * @param index
  * @param coord
  * @return
  */
-COMPLEX_EXPORT size_t FindOctant(const RotateArgs& params, size_t index, FloatVec3 coord);
+COMPLEX_EXPORT size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord);
 
 using OctantOffsetArrayType = std::array<Vector3i64, 8>;
 
@@ -294,28 +250,85 @@ inline void FindInterpolationValues(const RotateArgs& params, size_t index, size
 }
 
 /**
+ * @brief
+ */
+class FilterProgressCallback
+{
+public:
+  FilterProgressCallback(const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel)
+  : m_MessageHandler(mesgHandler)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+
+  void sendThreadSafeProgressMessage(int64_t counter)
+  {
+    //    std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+    //
+    //    int64_t& progCounter = ::s_ProgressValues[m_InstanceIndex];
+    //    progCounter += counter;
+    //    int64_t progressInt = static_cast<int64_t>((static_cast<float>(progCounter) / m_TotalElements) * 100.0f);
+    //
+    //    // int64_t progIncrement = m_TotalElements / 100;
+    //    int64_t& lastProgressInt = ::s_LastProgressInt[m_InstanceIndex];
+    //
+    //    if(lastProgressInt != progressInt)
+    //    {
+    //      QString ss = QObject::tr("Transforming || %1% Completed").arg(progressInt);
+    //      notifyStatusMessage(ss);
+    //    }
+    //
+    //    lastProgressInt = progressInt;
+  }
+
+  void sendThreadSafeProgressMessage(const std::string& progressMessage)
+  {
+    static std::mutex mutex;
+    const std::lock_guard<std::mutex> lock(mutex);
+    auto now = std::chrono::steady_clock::now();
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000)
+    {
+      m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, progressMessage});
+      m_InitialTime = std::chrono::steady_clock::now();
+    }
+  }
+
+  const std::atomic_bool& getCancel()
+  {
+    return m_ShouldCancel;
+  }
+
+private:
+  const IFilter::MessageHandler& m_MessageHandler;
+  const std::atomic_bool& m_ShouldCancel;
+  mutable std::mutex m_ProgressMessage_Mutex;
+  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
+};
+
+/**
  * @brief The RotateImageGeometryWithTrilinearInterpolation class
  */
 template <typename T>
 class RotateImageGeometryWithTrilinearInterpolation
 {
-private:
-  const IDataArray* m_SourceArray;
-  IDataArray* m_TargetArray;
-  ImageRotationUtilities::RotateArgs m_Params;
-  Matrix4fR m_TransformationMatrix;
-
 public:
-  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& rotateArgs, const Matrix4fR transformationMatrix)
+  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& rotateArgs, const Matrix4fR transformationMatrix,
+                                                FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(rotateArgs)
   , m_TransformationMatrix(std::move(transformationMatrix))
+  , m_FilterCallback(filterCallback)
   {
   }
+  ~RotateImageGeometryWithTrilinearInterpolation() = default;
 
+  RotateImageGeometryWithTrilinearInterpolation(const RotateImageGeometryWithTrilinearInterpolation&) = default;
+  RotateImageGeometryWithTrilinearInterpolation(RotateImageGeometryWithTrilinearInterpolation&&) noexcept = default;
+  RotateImageGeometryWithTrilinearInterpolation& operator=(const RotateImageGeometryWithTrilinearInterpolation&) = delete;
+  RotateImageGeometryWithTrilinearInterpolation& operator=(RotateImageGeometryWithTrilinearInterpolation&&) noexcept = delete;
   /**
-   * @brief CalculateInterpolatedValue
+   * @brief calculateInterpolatedValue
    *
    * This comes from https://www.cs.purdue.edu/homes/cs530/slides/04.DataStructure.pdf, page 36.
    *
@@ -329,7 +342,7 @@ public:
    * @param indices
    * @return
    */
-  T CalculateInterpolatedValue(std::vector<T>& pValues, Eigen::Vector3f& uvw, size_t numComps, size_t compIndex) const
+  T calculateInterpolatedValue(std::vector<T>& pValues, Eigen::Vector3f& uvw, size_t numComps, size_t compIndex) const
   {
     constexpr size_t P1 = 0;
     constexpr size_t P2 = 1;
@@ -377,14 +390,14 @@ public:
 
     const DataArrayType& sourceArray = dynamic_cast<const DataArrayType&>(*m_SourceArray);
     const size_t numComps = sourceArray.getNumberOfComponents();
-    //    if(numComps == 0)
-    //    {
-    //      m_Filter->setErrorCondition(-1000, "Invalid DataArray with ZERO components");
-    //      m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
-    //      return;
-    //    }
-    //
-    //    m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
+    if(numComps == 0)
+    {
+      // m_Filter->setErrorCondition(-1000, "Invalid DataArray with ZERO components");
+      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
+      return;
+    }
+
+    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
 
     const auto& oldDataStore = m_SourceArray->getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& newDataStore = m_TargetArray->getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -413,13 +426,13 @@ public:
 
     for(int64_t k = 0; k < m_Params.zpNew; k++)
     {
-      //      if(m_Filter->getCancel() || m_Filter->getErrorCode() < 0)
-      //      {
-      //        break;
-      //      }
+      if(m_FilterCallback->getCancel())
+      {
+        break;
+      }
+      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.zpNew));
       int64_t ktot = (m_Params.xpNew * m_Params.ypNew) * k;
 
-      //      m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.zpNew));
       for(int64_t j = 0; j < m_Params.ypNew; j++)
       {
         int64_t jtot = (m_Params.xpNew) * j;
@@ -439,12 +452,14 @@ public:
           if(errorResult == ImageGeom::ErrorType::NoError)
           {
             size_t oldIndex = (m_Params.originalDims[0] * m_Params.originalDims[1] * oldGeomIndices[2]) + (m_Params.originalDims[0] * m_Params.originalDims[1]) + oldGeomIndices[0];
-            int octant = FindOctant(m_Params, oldIndex, {coordsOld.data()});
+            auto centerPoint = origImageGeom->getCoordsf(oldIndex);
+
+            int octant = FindOctant(m_Params, centerPoint, coordsOld);
 
             FindInterpolationValues(m_Params, oldIndex, octant, oldGeomIndices, coordsOld, sourceArray, pValues, uvw);
             for(size_t compIndex = 0; compIndex < numComps; compIndex++)
             {
-              T value = CalculateInterpolatedValue(pValues, uvw, numComps, compIndex);
+              T value = calculateInterpolatedValue(pValues, uvw, numComps, compIndex);
               newDataStore.setComponent(newIndex, compIndex, value);
             }
           }
@@ -455,28 +470,30 @@ public:
         }
       }
     }
-    // m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
+    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
   }
+
+private:
+  const IDataArray* m_SourceArray;
+  IDataArray* m_TargetArray;
+  ImageRotationUtilities::RotateArgs m_Params;
+  Matrix4fR m_TransformationMatrix;
+  FilterProgressCallback* m_FilterCallback = nullptr;
 };
 
 //------------------------------------------------------------------------------
 template <typename T>
 class RotateImageGeometryWithNearestNeighbor
 {
-private:
-  const IDataArray* m_SourceArray;
-  IDataArray* m_TargetArray;
-  ImageRotationUtilities::RotateArgs m_Params;
-  const Matrix4fR& m_TransformationMatrix;
-  bool m_SliceBySlice = false;
-
 public:
-  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR transformationMatrix, bool sliceBySlice)
+  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR transformationMatrix, bool sliceBySlice,
+                                         FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(args)
   , m_TransformationMatrix(std::move(transformationMatrix))
   , m_SliceBySlice(sliceBySlice)
+  , m_FilterCallback(filterCallback)
   {
   }
   ~RotateImageGeometryWithNearestNeighbor() = default;
@@ -509,6 +526,12 @@ public:
     Eigen::Array4f coordsOld;
     for(int64 k = 0; k < m_Params.zpNew; k++)
     {
+      if(m_FilterCallback->getCancel())
+      {
+        break;
+      }
+      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.zpNew));
+
       int64 const ktot = (m_Params.xpNew * m_Params.ypNew) * k;
       for(int64 j = 0; j < m_Params.ypNew; j++)
       {
@@ -548,67 +571,83 @@ public:
         }
       }
     }
+    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", m_SourceArray->getName()));
   }
 
   void operator()() const
   {
     convert();
   }
+
+private:
+  const IDataArray* m_SourceArray;
+  IDataArray* m_TargetArray;
+  ImageRotationUtilities::RotateArgs m_Params;
+  const Matrix4fR& m_TransformationMatrix;
+  bool m_SliceBySlice = false;
+  FilterProgressCallback* m_FilterCallback = nullptr;
 };
 
-#if 0
 /**
- * @brief ExecuteParallelFunction
- * @param sourceArray
- * @param runner
- * @param args
+ * @brief The ApplyTransformationToNodeGeometry class will apply a transformation to a node based geometry.
  */
-template <template <class, class> class ClassT, class ParallelRunnerT, class FilterType, class... ArgsT>
-auto ExecuteParallelFunction(IDataArray*& sourceArray, ParallelRunnerT&& runner, FilterType* filter, ArgsT&&... args)
+class ApplyTransformationToNodeGeometry
 {
 
-  if(DataArray<int8_t>* array = std::dynamic_pointer_cast<DataArray<int8_t>>(sourceArray))
+public:
+  ApplyTransformationToNodeGeometry(IGeometry::SharedVertexList& verticesPtr, const Matrix4fR& transformationMatrix, FilterProgressCallback* filterCallback)
+  : m_Vertices(verticesPtr)
+  , m_TransformationMatrix(transformationMatrix)
+  , m_FilterCallback(filterCallback)
   {
-    return runner.template execute<>(ClassT<int8_t, FilterType>(std::forward<ArgsT>(args)...));
   }
-  if(DataArray<int16_t>* array = std::dynamic_pointer_cast<DataArray<int16_t>>(sourceArray))
+  ~ApplyTransformationToNodeGeometry() = default;
+
+  ApplyTransformationToNodeGeometry(const ApplyTransformationToNodeGeometry&) = default;           // Copy Constructor Not Implemented
+  ApplyTransformationToNodeGeometry(ApplyTransformationToNodeGeometry&&) = delete;                 // Move Constructor Not Implemented
+  ApplyTransformationToNodeGeometry& operator=(const ApplyTransformationToNodeGeometry&) = delete; // Copy Assignment Not Implemented
+  ApplyTransformationToNodeGeometry& operator=(ApplyTransformationToNodeGeometry&&) = delete;      // Move Assignment Not Implemented
+
+  void convert(size_t start, size_t end) const
   {
-    return runner.template execute<>(ClassT<int16_t, FilterType>(std::forward<ArgsT>(args)...));
-  }
-  if(DataArray<int32_t>* array = std::dynamic_pointer_cast<DataArray<int32_t>>(sourceArray))
-  {
-    return runner.template execute<>(ClassT<int32_t, FilterType>(std::forward<ArgsT>(args)...));
-  }
-  if(DataArray<int64_t>* array = std::dynamic_pointer_cast<DataArray<int64_t>>(sourceArray))
-  {
-    return runner.template execute<>(ClassT<int64_t, FilterType>(std::forward<ArgsT>(args)...));
-  }
-  if(DataArray<uint8_t>* array = std::dynamic_pointer_cast<DataArray<uint8_t>>(sourceArray))
-  {
-    return runner.template execute<>(ClassT<uint8_t, FilterType>(std::forward<ArgsT>(args)...));
-  }
-  if(DataArray<uint16_t>* array = std::dynamic_pointer_cast<DataArray<uint16_t>>(sourceArray))
-  {
-    return runner.template execute<>(ClassT<uint16_t, FilterType>(std::forward<ArgsT>(args)...));
-  }
-  if(DataArray<uint32_t>* array = std::dynamic_pointer_cast<DataArray<uint32_t>>(sourceArray))
-  {
-    return runner.template execute<>(ClassT<uint32_t, FilterType>(std::forward<ArgsT>(args)...));
-  }
-  if(DataArray<uint64_t>* array = std::dynamic_pointer_cast<DataArray<uint64_t>>(sourceArray))
-  {
-    return runner.template execute<>(ClassT<uint64_t, FilterType>(std::forward<ArgsT>(args)...));
-  }
-  if(DataArray<float>* array = std::dynamic_pointer_cast<DataArray<float>>(sourceArray))
-  {
-    return runner.template execute<>(ClassT<float, FilterType>(std::forward<ArgsT>(args)...));
-  }
-  if(DataArray<double>* array = std::dynamic_pointer_cast<DataArray<double>>(sourceArray))
-  {
-    return runner.template execute<>(ClassT<double, FilterType>(std::forward<ArgsT>(args)...));
+    int64_t progCounter = 0;
+    size_t totalElements = (end - start);
+    size_t progIncrement = static_cast<int64_t>(totalElements / 100);
+
+    for(size_t i = start; i < end; i++)
+    {
+      if(m_FilterCallback->getCancel())
+      {
+        return;
+      }
+      const Eigen::Vector4f position(m_Vertices[3 * i + 0], m_Vertices[3 * i + 1], m_Vertices[3 * i + 2], 1);
+      Eigen::Vector4f transformedPosition = m_TransformationMatrix * position;
+      m_Vertices[3 * i + 0] = transformedPosition[0];
+      m_Vertices[3 * i + 1] = transformedPosition[1];
+      m_Vertices[3 * i + 2] = transformedPosition[2];
+
+      if(progCounter > progIncrement)
+      {
+        m_FilterCallback->sendThreadSafeProgressMessage(progCounter);
+        progCounter = 0;
+      }
+      progCounter++;
+    }
   }
 
-  throw std::runtime_error("Can not interpolate data type. Bool, String, StatsData?");
-}
-#endif
+  /**
+   * @brief operator () This is called from the TBB stye of code
+   * @param r The range to compute the values
+   */
+  void operator()(const Range& r) const
+  {
+    convert(r.min(), r.max());
+  }
+
+private:
+  const Matrix4fR m_TransformationMatrix;
+  IGeometry::SharedVertexList& m_Vertices;
+  FilterProgressCallback* m_FilterCallback = nullptr;
+};
+
 } // namespace complex::ImageRotationUtilities

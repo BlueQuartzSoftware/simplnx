@@ -233,7 +233,7 @@ ImageRotationUtilities::Matrix4fR GenerateScaleTransformationMatrix(const Vector
   return transformationMatrix;
 }
 
-size_t FindOctant(const RotateArgs& params, size_t index, FloatVec3 coord)
+size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord)
 {
 
   float xResHalf = params.xRes * 0.5;
@@ -241,7 +241,7 @@ size_t FindOctant(const RotateArgs& params, size_t index, FloatVec3 coord)
   float zResHalf = params.zRes * 0.5;
 
   // Get the center coord of the original source voxel
-  auto centerPoint = GetCoords<Eigen::Vector3f>(params.originalDims, params.originalSpacing, params.originalOrigin, index);
+  // auto centerPoint = GetCoords<Eigen::Vector3f>(params.originalDims, params.originalSpacing, params.originalOrigin, index);
   // Eigen::Vector3f centerPoint(centerPt[0], centerPt[1], centerPt[2]);
 
   // Form the 8 corner coords for the voxel
@@ -258,15 +258,18 @@ size_t FindOctant(const RotateArgs& params, size_t index, FloatVec3 coord)
   };
   // clang-format on
 
-  FloatVec3 temp;
-  // Now figure out which corner the inverse transformed point is closest to
-  // this will give us which octant the point lies.
+  // FloatVec3 temp;
+  //  Now figure out which corner the inverse transformed point is closest to
+  //  this will give us which octant the point lies.
   float minDistance = std::numeric_limits<float>::max();
   size_t minIndex = 0;
   for(size_t i = 0; i < 8; i++)
   {
-    auto tempVec = (unitSquareCoords[i] - coord);
-    float const distance = tempVec.dot(tempVec);
+//    auto tempVec = (unitSquareCoords[i] - coord);
+//    float const distance = tempVec.dot(tempVec);
+
+    float const distance = unitSquareCoords[i][0]*coord[0] + unitSquareCoords[i][1]*coord[1]+ unitSquareCoords[i][2]*coord[2];
+
     if(distance < minDistance)
     {
       minDistance = distance;

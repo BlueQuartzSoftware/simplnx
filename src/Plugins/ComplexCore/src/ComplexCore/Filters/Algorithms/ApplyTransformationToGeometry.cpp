@@ -2,8 +2,10 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace complex;
@@ -40,15 +42,9 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   DataPath destImagePath;
   if(m_InputValues->RemoveOriginalGeometry)
   {
-    // Generate a new name for the current Image Geometry
-    auto tempPathVector = m_InputValues->SelectedGeometryPath.getPathVector();
-    std::string tempName = "." + tempPathVector.back();
-    tempPathVector.back() = tempName;
-    DataPath tempPath(tempPathVector);
-
-    tempPathVector = m_InputValues->SelectedGeometryPath.getPathVector();
-    tempName = k_TempGeometryName;
-    tempPathVector.back() = tempName;
+    // Create an Image Geometry name with a "." as a prefix to the original Image Geometry Name
+    std::vector<std::string> tempPathVector = m_InputValues->SelectedGeometryPath.getPathVector();
+    tempPathVector.back() = "." + tempPathVector.back();
     destImagePath = DataPath({tempPathVector});
   }
 
@@ -57,11 +53,10 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 
   const auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, m_TransformationMatrix);
 
-  int64_t newNumCellTuples = rotateArgs.xpNew * rotateArgs.ypNew * rotateArgs.zpNew;
-  int64_t m_TotalElements = newNumCellTuples;
-
   auto selectedCellDataChildren = GetAllChildArrayDataPaths(m_DataStructure, srcImageGeom.getCellDataPath());
   auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
+
+  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
   // The actual rotating of the dataStructure arrays is done in parallel where parallel here
   // refers to the cropping of each DataArray being done on a separate thread.
@@ -72,7 +67,7 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
 
   const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
-  auto& destCellDataAM = destImageGeom.getCellDataRef();
+  // auto& destCellDataAM = destImageGeom.getCellDataRef();
 
   for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {
@@ -81,19 +76,19 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
       return {};
     }
 
-    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
-    auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
     m_MessageHandler(fmt::format("Applying Transform || Copying Data Array {}", srcDataObject->getName()));
 
     if(m_InputValues->InterpolationSelection == k_NearestNeighborInterpolationIdx)
     {
-      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, m_TransformationMatrix,
-                                                                                              false);
+      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
+                                                                                              m_TransformationMatrix, false, &filterProgressCallback);
     }
     else if(m_InputValues->InterpolationSelection == k_LinearInterpolationIdx)
     {
-      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs,
-                                                                                                     m_TransformationMatrix);
+      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
+                                                                                                     m_TransformationMatrix, &filterProgressCallback);
     }
 
     if(getCancel())
@@ -104,41 +99,23 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
-#if 0
-  for(const auto& selectedDataArrayPath :)
-  {
-    // Get the source array from our "cached" Cell AttributeMatrix
-    IDataArray::Pointer sourceArray = m_SourceAttributeMatrix->getAttributeArray(attrArrayName);
-    // Get the target attribute array from our destination Cell AttributeMatrix which has *NOT* been allocated yet.
-    IDataArray::Pointer targetArray = m->getAttributeMatrix(attrMatName)->getAttributeArray(attrArrayName);
-
-
-    // So this little work-around is because if we just try to resize the DataArray<T> will think the sizes are the same
-    // and never actually allocate the data. So we just resize to 1 tuple, and then to the real size.
-    targetArray->resizeTuples(1);                // Allocate the memory for this data array
-    targetArray->resizeTuples(newNumCellTuples); // Allocate the memory for this data array
-    if(m_InterpolationType == k_NearestNeighborInterpolation)
-    {
-    }
-    else if(m_InterpolationType == k_LinearInterpolation)
-    {
-      ImageRotationUtilities::ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation>(sourceArray, taskRunner, this, this, sourceArray, targetArray, m_Params,
-                                                                                                                             m_TransformationMatrix);
-    }
-    if(getCancel() || getErrorCode() < 0)
-    {
-      break;
-    }
-
-  }
-  taskRunner.wait();
-#endif
   return {};
 }
 
 // -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 {
+  INodeGeometry0D& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+
+  IGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
+
+  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
+
+  // Allow data-based parallelization
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0, vertexList.getNumberOfTuples());
+  dataAlg.execute(ImageRotationUtilities::ApplyTransformationToNodeGeometry(vertexList, m_TransformationMatrix, &filterProgressCallback));
+
   return {};
 }
 
@@ -158,7 +135,7 @@ Result<> ApplyTransformationToGeometry::operator()()
   }
   case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
   {
-    Float32Array& precomputed = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ComputedTransformationMatrix);
+    const Float32Array& precomputed = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ComputedTransformationMatrix);
     m_TransformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(precomputed);
     break;
   }

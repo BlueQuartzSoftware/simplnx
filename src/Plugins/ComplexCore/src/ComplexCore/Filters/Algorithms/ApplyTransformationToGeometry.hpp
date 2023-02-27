@@ -16,25 +16,6 @@
 
 #include <Eigen/Dense>
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  ApplyTransformationToGeometryInputValues inputValues;
-
-  inputValues.TransformationMatrixType = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationMatrixType_Key);
-  inputValues.InterpolationType = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
-  inputValues.UseDataArraySelection = filterArgs.value<bool>(k_UseDataArraySelection_Key);
-  inputValues.ManualTransformationMatrix = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_ManualTransformationMatrix_Key);
-  inputValues.RotationAngle = filterArgs.value<float32>(k_RotationAngle_Key);
-  inputValues.RotationAxis = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxis_Key);
-  inputValues.Translation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
-  inputValues.Scale = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
-  inputValues.ComputedTransformationMatrix = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
-  inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
-  inputValues.DataArraySelection = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
-
-  return ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace
 {
 
@@ -55,12 +36,14 @@ const complex::ChoicesParameter::ValueType k_RotationIdx = 3ULL;
 const complex::ChoicesParameter::ValueType k_TranslationIdx = 4ULL;
 const complex::ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
 
+const std::string k_NoInterpolation("No Interpolation");
 const std::string k_NearestNeighborInterpolation("Nearest Neighbor");
 const std::string k_LinearInterpolation("Linear Interpolation");
-const complex::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation};
+const complex::ChoicesParameter::Choices k_InterpolationChoices = {k_NoInterpolation, k_NearestNeighborInterpolation, k_LinearInterpolation};
 
-const complex::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
-const complex::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
+const complex::ChoicesParameter::ValueType k_NoInterpolationIdx = 0ULL;
+const complex::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 1ULL;
+const complex::ChoicesParameter::ValueType k_LinearInterpolationIdx = 2ULL;
 } // namespace
 
 namespace complex
@@ -80,8 +63,6 @@ struct COMPLEXCORE_EXPORT ApplyTransformationToGeometryInputValues
   VectorFloat32Parameter::ValueType Scale;
 
   DataPath CellAttributeMatrixPath;
-  bool UseDataArraySelection;
-  MultiArraySelectionParameter::ValueType DataArraySelection;
   bool RemoveOriginalGeometry;
 };
 
