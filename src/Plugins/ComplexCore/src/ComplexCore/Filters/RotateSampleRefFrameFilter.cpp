@@ -536,23 +536,24 @@ Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, c
   // refers to the cropping of each DataArray being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
+  const DataPath srcCelLDataAMPath = srcImageGeom.getCellDataPath();
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
+
+  const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
-  for(const auto& [dataId, oldDataObject] : srcCellDataAM)
+  for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {
     if(shouldCancel)
     {
       return {};
     }
 
-    const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
-    const std::string srcName = oldDataArray.getName();
+    const auto* srcDataArray = dataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    auto* destDataArray = dataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    messageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
 
-    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    messageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcName));
-
-    ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, rotateArgs, rotationMatrix,
+    ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, rotationMatrix,
                                                                                             sliceBySlice);
   }
 

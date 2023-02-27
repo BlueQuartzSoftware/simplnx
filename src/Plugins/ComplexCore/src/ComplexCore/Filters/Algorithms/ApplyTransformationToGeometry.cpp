@@ -55,7 +55,7 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(destImagePath);
 
-  auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, m_TransformationMatrix);
+  const auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, m_TransformationMatrix);
 
   int64_t newNumCellTuples = rotateArgs.xpNew * rotateArgs.ypNew * rotateArgs.zpNew;
   int64_t m_TotalElements = newNumCellTuples;
@@ -66,25 +66,40 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   // The actual rotating of the dataStructure arrays is done in parallel where parallel here
   // refers to the cropping of each DataArray being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
-  taskRunner.setParallelizationEnabled(false);
+  taskRunner.setParallelizationEnabled(true);
+
+  const DataPath srcCelLDataAMPath = srcImageGeom.getCellDataPath();
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
+
+  const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
-  for(const auto& [dataId, oldDataObject] : srcCellDataAM)
+  for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
 
-    const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
-    const std::string srcName = oldDataArray.getName();
+    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    m_MessageHandler(fmt::format("Applying Transform || Copying Data Array {}", srcDataObject->getName()));
 
-    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcName));
+    if(m_InputValues->InterpolationSelection == k_NearestNeighborInterpolationIdx)
+    {
+      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, m_TransformationMatrix,
+                                                                                              false);
+    }
+    else if(m_InputValues->InterpolationSelection == k_LinearInterpolationIdx)
+    {
+      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs,
+                                                                                                     m_TransformationMatrix);
+    }
 
-    ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, rotateArgs, m_TransformationMatrix,
-                                                                                            false);
+    if(getCancel())
+    {
+      break;
+    }
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

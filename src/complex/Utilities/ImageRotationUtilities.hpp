@@ -141,7 +141,7 @@ COMPLEX_EXPORT ImageRotationUtilities::RotateArgs CreateRotationArgs(const Image
  * @return
  */
 template <typename T>
-T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, DataArray<T>& sourceArray, size_t compIndex)
+T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, const DataArray<T>& sourceArray, size_t compIndex)
 {
   if(xyzIndex[0] < 0)
   {
@@ -264,7 +264,7 @@ static const std::array<OctantOffsetArrayType, 8> k_AllOctantOffsets{k_IndexOffs
  * @param uvw
  */
 template <typename T>
-inline void FindInterpolationValues(const RotateArgs& params, size_t index, size_t octant, Vector3s oldIndicesU, Eigen::Array4f& oldCoords, DataArray<T>& sourceArray, std::vector<T>& pValues,
+inline void FindInterpolationValues(const RotateArgs& params, size_t index, size_t octant, SizeVec3 oldIndicesU, Eigen::Array4f& oldCoords, const DataArray<T>& sourceArray, std::vector<T>& pValues,
                                     Eigen::Vector3f& uvw)
 {
   const std::array<Vector3i64, 8>& indexOffset = k_AllOctantOffsets[octant];
@@ -296,23 +296,21 @@ inline void FindInterpolationValues(const RotateArgs& params, size_t index, size
 /**
  * @brief The RotateImageGeometryWithTrilinearInterpolation class
  */
-template <typename T, class FilterType>
+template <typename T>
 class RotateImageGeometryWithTrilinearInterpolation
 {
 private:
-  FilterType* m_Filter = nullptr;
-  IDataArray* m_SourceArray;
+  const IDataArray* m_SourceArray;
   IDataArray* m_TargetArray;
   ImageRotationUtilities::RotateArgs m_Params;
   Matrix4fR m_TransformationMatrix;
 
 public:
-  RotateImageGeometryWithTrilinearInterpolation(FilterType* filter, IDataArray*& sourceArray, IDataArray*& targetArray, RotateArgs& rotateArgs, Matrix4fR& transformationMatrix)
-  : m_Filter(filter)
-  , m_SourceArray(sourceArray)
+  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& rotateArgs, const Matrix4fR transformationMatrix)
+  : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(rotateArgs)
-  , m_TransformationMatrix(transformationMatrix)
+  , m_TransformationMatrix(std::move(transformationMatrix))
   {
   }
 
@@ -377,29 +375,35 @@ public:
   {
     using DataArrayType = DataArray<T>;
 
-    DataArrayType& sourceArray = *(m_SourceArray);
+    const DataArrayType& sourceArray = dynamic_cast<const DataArrayType&>(*m_SourceArray);
     const size_t numComps = sourceArray.getNumberOfComponents();
-    if(numComps == 0)
-    {
-      m_Filter->setErrorCondition(-1000, "Invalid DataArray with ZERO components");
-      m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
-      return;
-    }
+    //    if(numComps == 0)
+    //    {
+    //      m_Filter->setErrorCondition(-1000, "Invalid DataArray with ZERO components");
+    //      m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
+    //      return;
+    //    }
+    //
+    //    m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
 
-    m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
+    const auto& oldDataStore = m_SourceArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_TargetArray->getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    DataArrayType* targetArrayPtr = std::dynamic_pointer_cast<DataArrayType>(m_TargetArray);
+    DataArrayType& targetArray = dynamic_cast<DataArrayType&>(*m_TargetArray);
 
-    DataStructure dataStructure;
-    ImageGeom* origImageGeom = ImageGeom::Create(dataStructure, "Temp");
+    DataStructure tempDataStructure;
+    ImageGeom* origImageGeom = ImageGeom::Create(tempDataStructure, "Temp");
     origImageGeom->setDimensions(m_Params.originalDims);
     origImageGeom->setSpacing(m_Params.originalSpacing);
     origImageGeom->setOrigin(m_Params.originalOrigin);
 
-    Vector3s origImageGeomDims(m_Params.originalDims);
+    ImageGeom* destImageGeom = ImageGeom::Create(tempDataStructure, "dest image geom");
+    destImageGeom->setDimensions(m_Params.transformedDims);
+    destImageGeom->setSpacing(m_Params.transformedSpacing);
+    destImageGeom->setOrigin(m_Params.transformedOrigin);
 
     // Tri linearInterpolationData<T> interpolationValues;
-    SizeVec3 oldGeomIndices = {std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()};
+    // SizeVec3 oldGeomIndices = {std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()};
 
     Eigen::Vector4f coordsNew;
     std::vector<T> pValues(8 * numComps);
@@ -409,13 +413,13 @@ public:
 
     for(int64_t k = 0; k < m_Params.zpNew; k++)
     {
-      if(m_Filter->getCancel() || m_Filter->getErrorCode() < 0)
-      {
-        break;
-      }
+      //      if(m_Filter->getCancel() || m_Filter->getErrorCode() < 0)
+      //      {
+      //        break;
+      //      }
       int64_t ktot = (m_Params.xpNew * m_Params.ypNew) * k;
 
-      m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.zpNew));
+      //      m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.zpNew));
       for(int64_t j = 0; j < m_Params.ypNew; j++)
       {
         int64_t jtot = (m_Params.xpNew) * j;
@@ -423,40 +427,35 @@ public:
         {
           int64_t newIndex = ktot + jtot + i;
 
-          coordsNew[0] = (static_cast<float>(i) * m_Params.xResNew) + m_Params.xMinNew + 0.5F * m_Params.xResNew;
-          coordsNew[1] = (static_cast<float>(j) * m_Params.yResNew) + m_Params.yMinNew + 0.5F * m_Params.yResNew;
-          coordsNew[2] = (static_cast<float>(k) * m_Params.zResNew) + m_Params.zMinNew + 0.5F * m_Params.zResNew;
-          coordsNew[3] = 1.0F; // We take translation into account
-
+          coordsNew = Eigen::Vector4f(destImageGeom->getCoordsf(newIndex).toArray().data());
+          // Transform back to the old coordinate
           Eigen::Array4f coordsOld = inverseTransform * coordsNew;
 
+          // Now compute the old Cell Index from the old coordinate
+          SizeVec3 oldGeomIndices;
           auto errorResult = origImageGeom->computeCellIndex(coordsOld.data(), oldGeomIndices);
 
           // Now we know what voxel the new cell center maps back to in the original geometry.
           if(errorResult == ImageGeom::ErrorType::NoError)
           {
-            size_t oldIndex = (origImageGeomDims[0] * origImageGeomDims[1] * oldGeomIndices[2]) + (origImageGeomDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
+            size_t oldIndex = (m_Params.originalDims[0] * m_Params.originalDims[1] * oldGeomIndices[2]) + (m_Params.originalDims[0] * m_Params.originalDims[1]) + oldGeomIndices[0];
             int octant = FindOctant(m_Params, oldIndex, {coordsOld.data()});
 
             FindInterpolationValues(m_Params, oldIndex, octant, oldGeomIndices, coordsOld, sourceArray, pValues, uvw);
             for(size_t compIndex = 0; compIndex < numComps; compIndex++)
             {
               T value = CalculateInterpolatedValue(pValues, uvw, numComps, compIndex);
-              targetArrayPtr->setComponent(newIndex, compIndex, value);
+              newDataStore.setComponent(newIndex, compIndex, value);
             }
           }
           else
           {
-            T value = static_cast<T>(0);
-            targetArrayPtr->fillTuple(newIndex, value);
+            newDataStore.fillTuple(newIndex, static_cast<T>(0));
           }
         }
       }
     }
-
-    sourceArray->resizeTuples(0);
-
-    m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
+    // m_Filter->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
   }
 };
 
@@ -464,13 +463,20 @@ public:
 template <typename T>
 class RotateImageGeometryWithNearestNeighbor
 {
+private:
+  const IDataArray* m_SourceArray;
+  IDataArray* m_TargetArray;
+  ImageRotationUtilities::RotateArgs m_Params;
+  const Matrix4fR& m_TransformationMatrix;
+  bool m_SliceBySlice = false;
+
 public:
-  RotateImageGeometryWithNearestNeighbor(const IDataArray& oldCellArray, IDataArray& newCellArray, const RotateArgs& args, const Matrix4fR& rotationMatrix, bool sliceBySlice)
-  : m_OldCellArray(oldCellArray)
-  , m_NewCellArray(newCellArray)
-  , m_RotMatrix(rotationMatrix)
-  , m_SliceBySlice(sliceBySlice)
+  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR transformationMatrix, bool sliceBySlice)
+  : m_SourceArray(sourceArray)
+  , m_TargetArray(targetArray)
   , m_Params(args)
+  , m_TransformationMatrix(std::move(transformationMatrix))
+  , m_SliceBySlice(sliceBySlice)
   {
   }
   ~RotateImageGeometryWithNearestNeighbor() = default;
@@ -494,10 +500,10 @@ public:
     destImageGeom->setSpacing(m_Params.transformedSpacing);
     destImageGeom->setOrigin(m_Params.transformedOrigin);
 
-    const auto& oldDataStore = m_OldCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& newDataStore = m_NewCellArray.getIDataStoreRefAs<AbstractDataStore<T>>();
+    const auto& oldDataStore = m_SourceArray->getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& newDataStore = m_TargetArray->getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    Matrix4fR inverseTransform = m_RotMatrix.inverse();
+    Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
     Eigen::Vector4f coordsNew;
     coordsNew[3] = 0.0F;
     Eigen::Array4f coordsOld;
@@ -513,10 +519,12 @@ public:
           coordsNew = Eigen::Vector4f(destImageGeom->getCoordsf(newIndex).toArray().data());
           // Transform back to the old coordinate
           coordsOld = inverseTransform * coordsNew;
-          // Now compute the old Cell Index from teh old coordinate
-          SizeVec3 oldGeomIndices;
-          auto errorResult = srcImageGeom->computeCellIndex({coordsOld[0], coordsOld[1], coordsOld[2]}, oldGeomIndices);
 
+          // Now compute the old Cell Index from the old coordinate
+          SizeVec3 oldGeomIndices;
+          auto errorResult = srcImageGeom->computeCellIndex(coordsOld.data(), oldGeomIndices);
+
+          // Now we know what voxel the new cell center maps back to in the original geometry.
           if(errorResult == ImageGeom::ErrorType::NoError)
           {
             if(m_SliceBySlice)
@@ -524,17 +532,18 @@ public:
               oldGeomIndices[2] = k;
             }
             size_t oldIndex = (m_Params.originalDims[0] * m_Params.originalDims[1] * oldGeomIndices[2]) + (m_Params.originalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
-            if(!newDataStore.copyFrom(oldIndex, oldDataStore, newIndex, 1))
+
+            if(!newDataStore.copyFrom(newIndex, oldDataStore, oldIndex, 1))
             {
-              std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), oldIndex,
-                                       m_OldCellArray.getName(), newIndex)
+              std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_SourceArray->getName(), oldIndex,
+                                       m_SourceArray->getName(), newIndex)
                         << std::endl;
               break;
             }
           }
           else
           {
-            newDataStore.fillTuple(i, 0);
+            newDataStore.fillTuple(newIndex, 0);
           }
         }
       }
@@ -545,13 +554,6 @@ public:
   {
     convert();
   }
-
-private:
-  const IDataArray& m_OldCellArray;
-  IDataArray& m_NewCellArray;
-  const Matrix4fR& m_RotMatrix;
-  bool m_SliceBySlice = false;
-  RotateArgs m_Params;
 };
 
 #if 0

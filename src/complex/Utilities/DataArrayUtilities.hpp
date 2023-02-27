@@ -880,7 +880,7 @@ public:
       int64 newIndices_I = m_NewIndices[i];
       if(newIndices_I >= 0)
       {
-        if(!newDataStore.copyFrom(i, oldDataStore, newIndices_I, 1))
+        if(!newDataStore.copyFrom(newIndices_I, oldDataStore, i, 1))
         {
           std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), newIndices_I, i)
                     << std::endl;
