@@ -180,7 +180,7 @@ int TraverseFile(const std::string& fileName)
   return 0;
 }
 
-const std::string k_ExemplarFilePath = fmt::format("{}/6_5_h5ebsd_exemplar.h5ebsd", unit_test::k_DataDir);
+const std::string k_ExemplarFilePath = fmt::format("{}/6_5_h5ebsd_exemplar/6_5_h5ebsd_exemplar.h5ebsd", unit_test::k_TestFilesDir);
 
 const auto k_HighToLow = static_cast<ChoicesParameter::ValueType>(complex::FilePathGenerator::Ordering::HighToLow);
 const int32 k_StartIndex = 1;

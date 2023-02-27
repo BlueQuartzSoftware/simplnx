@@ -1,5 +1,6 @@
 #include "CreateEnsembleInfo.hpp"
 
+#include "OrientationAnalysis/utilities/PhaseType.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/StringArray.hpp"
@@ -30,7 +31,7 @@ uint32 PhaseTypeFromString(const std::string& phaseType)
 
   if(iterator == std::end(EnsembleInfoParameter::k_PhaseTypes))
   {
-    return static_cast<uint32>(PhaseType::Unknown);
+    return static_cast<uint32>(PhaseType::Type::Unknown);
   }
 
   return static_cast<uint32>(iterator - EnsembleInfoParameter::k_PhaseTypes.begin());
@@ -70,7 +71,7 @@ Result<> CreateEnsembleInfo::operator()()
   }
 
   crystalStructures[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
-  phaseTypes[0] = static_cast<uint32>(PhaseType::Unknown);
+  phaseTypes[0] = static_cast<uint32>(PhaseType::Type::Unknown);
 
   for(int i = 0; i < numPhases; i++)
   {
@@ -85,7 +86,7 @@ Result<> CreateEnsembleInfo::operator()()
 
     // Phase Type
     uint32_t phaseType = PhaseTypeFromString(m_InputValues->Ensemble[i][1]); // static_cast<uint32_t>(phaseTypes[i]);
-    if(static_cast<PhaseType>(phaseType) == PhaseType::Unknown)
+    if(static_cast<PhaseType::Type>(phaseType) == PhaseType::Type::Unknown)
     {
       return MakeErrorResult(-10007, fmt::format("Incorrect phase type '{}'", phaseType)); // The phase type name was not found in the lookup table
     }

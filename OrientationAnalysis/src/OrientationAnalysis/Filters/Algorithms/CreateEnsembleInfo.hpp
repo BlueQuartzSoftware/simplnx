@@ -9,17 +9,6 @@
 
 namespace complex
 {
-// The lists here are IN ORDER of the enumerations from the EBSDLib. DO NOT CHANGE THE ORDER.
-enum class PhaseType : uint32
-{
-  Primary = 0,        //!<
-  Precipitate = 1,    //!<
-  Transformation = 2, //!<
-  Matrix = 3,         //!<
-  Boundary = 4,       //!<
-  Unknown = 999,      //!<
-  Any = 4294967295U
-};
 
 struct ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfoInputValues
 {
