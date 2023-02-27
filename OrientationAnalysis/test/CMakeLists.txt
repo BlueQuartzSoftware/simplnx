@@ -9,10 +9,14 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   AlignSectionsMisorientationTest.cpp
   AlignSectionsMutualInformationTest.cpp
   BadDataNeighborOrientationCheckTest.cpp
+  ConvertQuaternionTest.cpp
   ConvertOrientationsTest.cpp
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
+  EnsembleInfoReaderTest.cpp
+  ExportGBCDGMTFileTest.cpp
+  ExportGBCDTriangleDataTest.cpp
   FindAvgOrientationsTest.cpp
   FindFeatureReferenceMisorientationsTest.cpp
   FindGBCDTest.cpp
@@ -22,49 +26,38 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindShapesFilterTest.cpp
   FindTriangleGeomShapesTest.cpp
   GenerateFaceIPFColoringTest.cpp
+  GenerateFaceMisorientationColoringTest.cpp
   GenerateFZQuaternionsTest.cpp
+  GenerateGBCDPoleFigureTest.cpp
   GenerateIPFColorsTest.cpp
+  GenerateQuaternionConjugateTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
   ReadCtfDataTest.cpp
   ReadH5EbsdTest.cpp
   RotateEulerRefFrameTest.cpp
-  GenerateFaceMisorientationColoringTest.cpp
-  GenerateGBCDPoleFigureTest.cpp
-  ExportGBCDGMTFileTest.cpp
-  ExportGBCDTriangleDataTest.cpp
-  ConvertQuaternionTest.cpp
-  GenerateQuaternionConjugateTest.cpp
   RodriguesConvertorTest.cpp
 )
 set(DISABLED_TESTS
 
   # ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
-  ConvertQuaternionTest.cpp
 
-  # CreateEnsembleInfoTest.cpp    # MISSING 1 or more Parameter Implementations
   CreateLambertSphereTest.cpp
   EMsoftSO3SamplerTest.cpp
 
-  # EbsdToH5EbsdTest.cpp    # MISSING 1 or more Parameter Implementations
-  EnsembleInfoReaderTest.cpp
   FindAvgCAxesTest.cpp
   FindBoundaryStrengthsTest.cpp
   FindCAxisLocationsTest.cpp
   FindDistsToCharactGBsTest.cpp
   FindFeatureNeighborCAxisMisalignmentsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
-  FindGBCDTest.cpp
   FindGBCDMetricBasedTest.cpp
   FindGBPDMetricBasedTest.cpp
   FindSlipTransmissionMetricsTest.cpp
   FindTwinBoundariesTest.cpp
   FindTwinBoundarySchmidFactorsTest.cpp
-  GenerateFaceIPFColoringTest.cpp
-  GenerateFaceMisorientationColoringTest.cpp
   GenerateOrientationMatrixTransposeTest.cpp
-  GenerateQuaternionConjugateTest.cpp
   INLWriterTest.cpp
 
   # ImportEbsdMontageTest.cpp    # MISSING 1 or more Parameter Implementations
@@ -73,7 +66,6 @@ set(DISABLED_TESTS
   # OrientationUtilityTest.cpp    # MISSING 1 or more Parameter Implementations
 
   ReplaceElementAttributesWithNeighborValuesTest.cpp
-  RodriguesConvertorTest.cpp
   Stereographic3DTest.cpp
   WritePoleFigureTest.cpp
   WriteStatsGenOdfAngleFileTest.cpp
@@ -128,6 +120,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_align_sections_mutual_information.tar.gz SHA512 363c52bf3b7677e06508fdb92350457d37bbd58ab2d26259e61ec9317f9146b85ec50c58151f69a0b38fc487f79af2896c8fef4e98d1e87c29af1cf19cbf884b)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_stats_test.tar.gz SHA512 cb1d1c004ab5a3cb29cc10f7b6c291dd5819e57e303242b8162cd0b268dea24b1d3e5e3811ec4f5ee216179b6eb6b81c76ee7d37b7c49e83c6ab336147b4b14e)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_Ang_Files.tar.gz SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_h5ebsd_exemplar.tar.gz SHA512 9e5936b6e8e6fd51ecc7c17521ff29898bb0e8bc3d516741c47ae65577b4f2e0f3df8f485f19ecf93f1848b70aeeb98b91c2c5742965107acabeaa40182d898d)
 
 endif()
 

@@ -35,6 +35,7 @@ set(FilterList
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
   EbsdToH5EbsdFilter
+  EnsembleInfoReaderFilter
   ExportGBCDGMTFileFilter
   ExportGBCDTriangleDataFilter
   FindAvgOrientationsFilter
@@ -67,8 +68,6 @@ set(STUB_FILTERS
   CreateLambertSphere
   EMsoftSO3Sampler
 
-  # EbsdToH5Ebsd # MISSING 1 or more Parameter Implementations
-  EnsembleInfoReader
   FindAvgCAxes
   FindBoundaryStrengths
   FindCAxisLocations
@@ -164,6 +163,7 @@ set(filter_algorithms
   CreateEnsembleInfo
   EBSDSegmentFeatures
   EbsdToH5Ebsd
+  EnsembleInfoReader
   ExportGBCDGMTFile
   ExportGBCDTriangleData
   FindAvgOrientations
@@ -212,6 +212,16 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math" PREFIX 
                     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X1.hpp"
              )
 
+
+set(PLUGIN_EXTRA_SOURCES
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/inicpp.h"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.cpp"
+)
+target_sources(${PLUGIN_NAME} PRIVATE ${PLUGIN_EXTRA_SOURCES})
+source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities" PREFIX ${PLUGIN_NAME} FILES ${PLUGIN_EXTRA_SOURCES})
+
+
 # ------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
 # can use the target_link_libraries() cmake call
@@ -238,15 +248,37 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 # -----------------------------------------------------------------------
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
   set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
-  add_custom_target(${PLUGIN_NAME}PipelineFolderCopy ALL
+  add_custom_target(${PLUGIN_NAME}_Pipeline_Folder_Copy ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
     ${PIPELINE_DEST_DIR}
     COMMENT "Copying Pipeline Folder into Binary Directory")
-  set_target_properties(${PLUGIN_NAME}PipelineFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
+  set_target_properties(${PLUGIN_NAME}_Pipeline_Folder_Copy PROPERTIES FOLDER ZZ_COPY_FILES)
 
   set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
   install(DIRECTORY
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
+    DESTINATION "${INSTALL_DESTINATION}"
+    COMPONENT Applications
+  )
+endif()
+
+
+if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/data")
+ 
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/data/${PLUGIN_NAME}")
+
+  message(STATUS "DATA_DEST_DIR: ${DATA_DEST_DIR}")
+  message(STATUS "${PLUGIN_NAME}_SOURCE_DIR/data: ${${PLUGIN_NAME}_SOURCE_DIR}/data")
+
+  add_custom_target(${PLUGIN_NAME}_Data_Folder_Copy ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/data"
+    ${DATA_DEST_DIR}
+    COMMENT "Copying ${PLUGIN_NAME} Data Folder into Binary Directory")
+  set_target_properties(${PLUGIN_NAME}_Data_Folder_Copy PROPERTIES FOLDER ZZ_COPY_FILES)
+
+  set(INSTALL_DESTINATION "data/${PLUGIN_NAME}")
+  install(DIRECTORY
+    "${${PLUGIN_NAME}_SOURCE_DIR}/data/"
     DESTINATION "${INSTALL_DESTINATION}"
     COMPONENT Applications
   )
