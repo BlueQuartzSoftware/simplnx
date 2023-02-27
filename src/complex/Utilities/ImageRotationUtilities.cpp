@@ -4,6 +4,7 @@
 namespace complex::ImageRotationUtilities
 {
 
+//------------------------------------------------------------------------------
 FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR& transformationMatrix)
 {
   auto origImageGeomBox = imageGeometry.getBoundingBoxf();
@@ -22,7 +23,7 @@ FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR&
 
   for(size_t i = 0; i < 8; i++)
   {
-    Eigen::Vector4f coords(imageGeomCornerCoords[i][0], imageGeomCornerCoords[i][1], imageGeomCornerCoords[i][2], 1.0F);
+    const Eigen::Vector4f coords(imageGeomCornerCoords[i][0], imageGeomCornerCoords[i][1], imageGeomCornerCoords[i][2], 1.0F);
 
     Eigen::Vector4f newCoords = transformationMatrix * coords;
 
@@ -38,30 +39,32 @@ FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR&
   return minMaxValues;
 }
 
-float CosBetweenVectors(const Eigen::Vector3f& a, const Eigen::Vector3f& b)
+//------------------------------------------------------------------------------
+float CosBetweenVectors(const Eigen::Vector3f& vectorA, const Eigen::Vector3f& vectorB)
 {
-  const float normA = a.norm();
-  const float normB = b.norm();
+  const float normA = vectorA.norm();
+  const float normB = vectorB.norm();
 
   if(normA == 0.0f || normB == 0.0f)
   {
     return 1.0f;
   }
 
-  return a.dot(b) / (normA * normB);
+  return vectorA.dot(vectorB) / (normA * normB);
 }
 
+//------------------------------------------------------------------------------
 float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
 {
-  float xAngle = std::abs(CosBetweenVectors(k_XAxis, axisNew));
-  float yAngle = std::abs(CosBetweenVectors(k_YAxis, axisNew));
-  float zAngle = std::abs(CosBetweenVectors(k_ZAxis, axisNew));
+  const float xAngle = std::abs(CosBetweenVectors(k_XAxis, axisNew));
+  const float yAngle = std::abs(CosBetweenVectors(k_YAxis, axisNew));
+  const float zAngle = std::abs(CosBetweenVectors(k_ZAxis, axisNew));
 
-  std::array<float, 3> axes = {xAngle, yAngle, zAngle};
+  const std::array<float, 3> axes = {xAngle, yAngle, zAngle};
 
-  auto iter = std::max_element(axes.cbegin(), axes.cend());
+  const auto* iterPtr = std::max_element(axes.cbegin(), axes.cend());
 
-  size_t index = std::distance(axes.cbegin(), iter);
+  const size_t index = std::distance(axes.cbegin(), iterPtr);
 
   return spacing[index];
 }
@@ -72,59 +75,60 @@ ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom
   const SizeVec3 origDims = imageGeom.getDimensions();
   const FloatVec3 spacing = imageGeom.getSpacing();
 
-  Matrix3fR rotationMatrix = transformationMatrix.block(0, 0, 3, 3);
+  const Matrix3fR rotationMatrix = transformationMatrix.block(0, 0, 3, 3);
 
   FloatVec6 minMaxCoords = DetermineMinMaxCoords(imageGeom, transformationMatrix);
 
-  Eigen::Vector3f xAxisNew = rotationMatrix * k_XAxis;
-  Eigen::Vector3f yAxisNew = rotationMatrix * k_YAxis;
-  Eigen::Vector3f zAxisNew = rotationMatrix * k_ZAxis;
+  const Eigen::Vector3f xAxisNew = rotationMatrix * k_XAxis;
+  const Eigen::Vector3f yAxisNew = rotationMatrix * k_YAxis;
+  const Eigen::Vector3f zAxisNew = rotationMatrix * k_ZAxis;
 
-  float xResNew = DetermineSpacing(spacing, xAxisNew);
-  float yResNew = DetermineSpacing(spacing, yAxisNew);
-  float zResNew = DetermineSpacing(spacing, zAxisNew);
+  const float xResNew = DetermineSpacing(spacing, xAxisNew);
+  const float yResNew = DetermineSpacing(spacing, yAxisNew);
+  const float zResNew = DetermineSpacing(spacing, zAxisNew);
 
-  IGeometry::MeshIndexType xpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / xResNew));
-  IGeometry::MeshIndexType ypNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / yResNew));
-  IGeometry::MeshIndexType zpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / zResNew));
+  const IGeometry::MeshIndexType xpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / xResNew));
+  const IGeometry::MeshIndexType ypNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / yResNew));
+  const IGeometry::MeshIndexType zpNew = static_cast<int64_t>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / zResNew));
 
   ImageRotationUtilities::RotateArgs params;
 
-  params.originalDims = imageGeom.getDimensions();
-  params.originalSpacing = imageGeom.getSpacing();
-  params.originalOrigin = imageGeom.getOrigin();
+  params.OriginalDims = imageGeom.getDimensions();
+  params.OriginalSpacing = imageGeom.getSpacing();
+  params.OriginalOrigin = imageGeom.getOrigin();
 
-  params.xp = origDims[0];
+  params.xp = static_cast<int64>(origDims[0]);
   params.xRes = spacing[0];
-  params.yp = origDims[1];
+  params.yp = static_cast<int64>(origDims[1]);
   params.yRes = spacing[1];
-  params.zp = origDims[2];
+  params.zp = static_cast<int64>(origDims[2]);
   params.zRes = spacing[2];
 
-  params.transformedSpacing = {xResNew, yResNew, zResNew};
-  params.transformedDims = {xpNew, ypNew, zpNew};
-  params.transformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
+  params.TransformedDims = {xpNew, ypNew, zpNew};
+  params.TransformedSpacing = {xResNew, yResNew, zResNew};
+  params.TransformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
 
-  params.xpNew = xpNew;
+  params.xpNew = static_cast<int64>(xpNew);
   params.xResNew = xResNew;
   params.xMinNew = minMaxCoords[0];
-  params.ypNew = ypNew;
+  params.ypNew = static_cast<int64>(ypNew);
   params.yResNew = yResNew;
   params.yMinNew = minMaxCoords[2];
-  params.zpNew = zpNew;
+  params.zpNew = static_cast<int64>(zpNew);
   params.zResNew = zResNew;
   params.zMinNew = minMaxCoords[4];
 
   return params;
 }
 
+//------------------------------------------------------------------------------
 std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transformationMatrix)
 {
   std::stringstream out;
-  for(size_t rowIndex = 0; rowIndex < 4; rowIndex++)
+  for(int64 rowIndex = 0; rowIndex < 4; rowIndex++)
   {
     out << "[";
-    for(size_t colIndex = 0; colIndex < 4; colIndex++)
+    for(int64 colIndex = 0; colIndex < 4; colIndex++)
     {
       out << " " << transformationMatrix(rowIndex, colIndex);
     }
@@ -133,6 +137,7 @@ std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities
   return out.str();
 }
 
+//------------------------------------------------------------------------------
 ImageRotationUtilities::Matrix4fR CopyPrecomputedToTransformationMatrix(const Float32Array& precomputed)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
@@ -148,6 +153,7 @@ ImageRotationUtilities::Matrix4fR CopyPrecomputedToTransformationMatrix(const Fl
   return transformationMatrix;
 }
 
+//------------------------------------------------------------------------------
 ImageRotationUtilities::Matrix4fR GenerateManualTransformationMatrix(const DynamicTableParameter::ValueType& tableData)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
@@ -164,40 +170,38 @@ ImageRotationUtilities::Matrix4fR GenerateManualTransformationMatrix(const Dynam
   return transformationMatrix;
 }
 
+//------------------------------------------------------------------------------
 ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::ValueType& pRotationValue)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
   transformationMatrix.fill(0.0F);
 
   // Convert Degrees to Radians for the last element
-  float rotAngle = pRotationValue[3] * Constants::k_PiOver180F;
+  const float rotAngle = pRotationValue[3] * Constants::k_PiOver180F;
   // Ensure the axis part is normalized
   FloatVec3 normalizedAxis(pRotationValue[0], pRotationValue[1], pRotationValue[2]);
   MatrixMath::Normalize3x1<float32>(normalizedAxis.data());
 
-  float cosTheta = cos(rotAngle);
-  float oneMinusCosTheta = 1 - cosTheta;
-  float sinTheta = sin(rotAngle);
-  float l = normalizedAxis[0];
-  float m = normalizedAxis[1];
-  float n = normalizedAxis[2];
+  const float cosTheta = cos(rotAngle);
+  const float oneMinusCosTheta = 1 - cosTheta;
+  const float sinTheta = sin(rotAngle);
 
   // First Row:
-  transformationMatrix(0) = l * l * (oneMinusCosTheta) + cosTheta;
-  transformationMatrix(1) = m * l * (oneMinusCosTheta) - (n * sinTheta);
-  transformationMatrix(2) = n * l * (oneMinusCosTheta) + (m * sinTheta);
+  transformationMatrix(0) = normalizedAxis[0] * normalizedAxis[0] * (oneMinusCosTheta) + cosTheta;
+  transformationMatrix(1) = normalizedAxis[1] * normalizedAxis[0] * (oneMinusCosTheta) - (normalizedAxis[2] * sinTheta);
+  transformationMatrix(2) = normalizedAxis[2] * normalizedAxis[0] * (oneMinusCosTheta) + (normalizedAxis[1] * sinTheta);
   transformationMatrix(3) = 0.0F;
 
   // Second Row:
-  transformationMatrix(4) = l * m * (oneMinusCosTheta) + (n * sinTheta);
-  transformationMatrix(5) = m * m * (oneMinusCosTheta) + cosTheta;
-  transformationMatrix(6) = n * m * (oneMinusCosTheta) - (l * sinTheta);
+  transformationMatrix(4) = normalizedAxis[0] * normalizedAxis[1] * (oneMinusCosTheta) + (normalizedAxis[2] * sinTheta);
+  transformationMatrix(5) = normalizedAxis[1] * normalizedAxis[1] * (oneMinusCosTheta) + cosTheta;
+  transformationMatrix(6) = normalizedAxis[2] * normalizedAxis[1] * (oneMinusCosTheta) - (normalizedAxis[0] * sinTheta);
   transformationMatrix(7) = 0.0F;
 
   // Third Row:
-  transformationMatrix(8) = l * n * (oneMinusCosTheta) - (m * sinTheta);
-  transformationMatrix(9) = m * n * (oneMinusCosTheta) + (l * sinTheta);
-  transformationMatrix(10) = n * n * (oneMinusCosTheta) + cosTheta;
+  transformationMatrix(8) = normalizedAxis[0] * normalizedAxis[2] * (oneMinusCosTheta) - (normalizedAxis[1] * sinTheta);
+  transformationMatrix(9) = normalizedAxis[1] * normalizedAxis[2] * (oneMinusCosTheta) + (normalizedAxis[0] * sinTheta);
+  transformationMatrix(10) = normalizedAxis[1] * normalizedAxis[1] * (oneMinusCosTheta) + cosTheta;
   transformationMatrix(11) = 0.0F;
 
   // Fourth Row:
@@ -208,6 +212,7 @@ ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const Vec
   return transformationMatrix;
 }
 
+//------------------------------------------------------------------------------
 ImageRotationUtilities::Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
@@ -222,6 +227,7 @@ ImageRotationUtilities::Matrix4fR GenerateTranslationTransformationMatrix(const 
   return transformationMatrix;
 }
 
+//------------------------------------------------------------------------------
 ImageRotationUtilities::Matrix4fR GenerateScaleTransformationMatrix(const VectorFloat32Parameter::ValueType& pScaleValue)
 {
   ImageRotationUtilities::Matrix4fR transformationMatrix;
@@ -233,16 +239,13 @@ ImageRotationUtilities::Matrix4fR GenerateScaleTransformationMatrix(const Vector
   return transformationMatrix;
 }
 
+//------------------------------------------------------------------------------
 size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord)
 {
 
-  float xResHalf = params.xRes * 0.5;
-  float yResHalf = params.yRes * 0.5;
-  float zResHalf = params.zRes * 0.5;
-
-  // Get the center coord of the original source voxel
-  // auto centerPoint = GetCoords<Eigen::Vector3f>(params.originalDims, params.originalSpacing, params.originalOrigin, index);
-  // Eigen::Vector3f centerPoint(centerPt[0], centerPt[1], centerPt[2]);
+  const float xResHalf = params.xRes * 0.5F;
+  const float yResHalf = params.yRes * 0.5F;
+  const float zResHalf = params.zRes * 0.5F;
 
   // Form the 8 corner coords for the voxel
   // clang-format off
@@ -265,10 +268,10 @@ size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const E
   size_t minIndex = 0;
   for(size_t i = 0; i < 8; i++)
   {
-//    auto tempVec = (unitSquareCoords[i] - coord);
-//    float const distance = tempVec.dot(tempVec);
+    //    auto tempVec = (unitSquareCoords[i] - coord);
+    //    float const distance = tempVec.dot(tempVec);
 
-    float const distance = unitSquareCoords[i][0]*coord[0] + unitSquareCoords[i][1]*coord[1]+ unitSquareCoords[i][2]*coord[2];
+    float const distance = unitSquareCoords[i][0] * coord[0] + unitSquareCoords[i][1] * coord[1] + unitSquareCoords[i][2] * coord[2];
 
     if(distance < minDistance)
     {
