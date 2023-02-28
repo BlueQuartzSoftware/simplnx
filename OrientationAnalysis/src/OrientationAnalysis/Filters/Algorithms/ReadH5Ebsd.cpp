@@ -211,15 +211,20 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* mInputValue
   // Copy the Phase Values from the EBSDReader to the DataStructure
   auto* phasePtr = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(eulerNames[3]));           // get the phase data from the EbsdReader
   complex::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::H5Ebsd::Phases); // get the phase data from the DataStructure
-  auto& phaseData = dataStructure.getDataRefAs<complex::Int32Array>(phaseDataPath);
-  for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
+  complex::Int32Array* phaseDataArrayPtr = nullptr;
+
+  if(selectedArrayNames.find(eulerNames[3]) != selectedArrayNames.end())
   {
-    phaseData[tupleIndex] = phasePtr[tupleIndex];
+    phaseDataArrayPtr = dataStructure.getDataAs<complex::Int32Array>(phaseDataPath);
+    for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
+    {
+      (*phaseDataArrayPtr)[tupleIndex] = phasePtr[tupleIndex];
+    }
   }
 
   if(selectedArrayNames.find(EbsdLib::CellData::EulerAngles) != selectedArrayNames.end())
   {
-    //  radianconversion = M_PI / 180.0;
+    //  radian conversion = M_PI / 180.0;
     auto* euler0 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[0]));
     auto* euler1 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[1]));
     auto* euler2 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[2]));
@@ -239,11 +244,11 @@ complex::Result<> LoadEbsdData(const complex::ReadH5EbsdInputValues* mInputValue
       eulerData[3 * elementIndex + 2] = euler2[elementIndex] * degToRad;
     }
     // THIS IS ONLY TO BRING OXFORD DATA INTO THE SAME HEX REFERENCE AS EDAX HEX REFERENCE
-    if(manufacturer == EbsdLib::Ctf::Manufacturer)
+    if(manufacturer == EbsdLib::Ctf::Manufacturer && phaseDataArrayPtr != nullptr)
     {
       for(size_t elementIndex = 0; elementIndex < totalPoints; elementIndex++)
       {
-        if(xtalData[phaseData[elementIndex]] == EbsdLib::CrystalStructure::Hexagonal_High)
+        if(xtalData[(*phaseDataArrayPtr)[elementIndex]] == EbsdLib::CrystalStructure::Hexagonal_High)
         {
           eulerData[3 * elementIndex + 2] = eulerData[3 * elementIndex + 2] + (30.0F * degToRad);
         }
