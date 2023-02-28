@@ -299,3 +299,51 @@ get_filename_component(COMPLEX_PLUGINS_SOURCE_DIR ${ITKImageProcessing_SOURCE_DI
 # message(STATUS "ITKImageProcessing_SOURCE_DIR: ${ITKImageProcessing_SOURCE_DIR}")
 include(${COMPLEX_PLUGINS_SOURCE_DIR}/cmake/ITKInstall.cmake)
 AddItkCopyInstallRules(LIBS ${ItkComponents})
+
+
+# -----------------------------------------------------------------------
+# Install example pipelines
+# -----------------------------------------------------------------------
+if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
+  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
+  add_custom_target(${PLUGIN_NAME}PipelineFolderCopy ALL
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
+                    ${PIPELINE_DEST_DIR}
+                    COMMENT "Copying Pipeline Folder into Binary Directory")
+  set_target_properties(${PLUGIN_NAME}PipelineFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
+
+  set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
+  install(DIRECTORY
+          "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
+          DESTINATION "${INSTALL_DESTINATION}"
+          COMPONENT Applications
+          )
+endif()
+
+# -----------------------------------------------------------------------
+# Download Example Data Files
+# -----------------------------------------------------------------------
+include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+
+file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
+
+# -----------------------------------------------------------------------
+# Copy the data files from their downloaded location into the `Data`
+# directory of the CMAKE_LIBRARY_OUTPUT_DIRECTORY
+# -----------------------------------------------------------------------
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Porosity_Image.tar.gz SHA512 950c71b4f4721f14ea532ed5830b0786f49d2855b950bdf867c335b9fb0eb5dc28727b0899d665af0a2bc56816e1e66a08a008ef06a62b71efea4a6e46bff168)
+set(DREAM3D_DATA_ARCHIVES "Porosity_Image")
+foreach(archive ${DREAM3D_DATA_ARCHIVES})
+  add_custom_target(Copy_${archive} ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${DREAM3D_DATA_DIR}/TestFiles/${archive} ${DATA_DEST_DIR}/${archive}
+    COMMENT "Copying ${archive} into Binary Directory"
+    DEPENDS Fetch_${archive})
+  set_target_properties(Copy_${archive} PROPERTIES FOLDER ZZ_COPY_FILES)
+
+  install(DIRECTORY 
+    ${DREAM3D_DATA_DIR_NORM}/TestFiles/${archive}
+    DESTINATION Data/
+    COMPONENT Applications
+  )
+endforeach()
