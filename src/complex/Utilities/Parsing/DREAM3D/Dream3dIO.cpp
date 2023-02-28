@@ -899,6 +899,23 @@ IDataArray* readLegacyDataArray(DataStructure& dataStructure, const complex::HDF
   return dataArray;
 }
 
+IDataArray* readLegacyNodeConnectivityList(DataStructure& dataStructure, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName, bool preflight = false)
+{
+  H5::DatasetReader dataArrayReader = geomGroup.openDataset(arrayName);
+  DataObject::IdType parentId = geometry->getId();
+
+  auto size = H5Dget_storage_size(dataArrayReader.getId());
+
+  std::vector<usize> tDims;
+  std::vector<usize> cDims;
+  readLegacyDataArrayDims(dataArrayReader, tDims, cDims);
+
+  IDataArray* dataArray = nullptr;
+
+  dataArray = createLegacyDataArray<uint64>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
+  return dataArray;
+}
+
 template <typename T>
 void createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const complex::HDF5::GroupReader& parentReader, const complex::HDF5::DatasetReader& datasetReader,
                               const std::vector<usize>& tupleDims)
@@ -1094,7 +1111,7 @@ DataObject* readLegacyTriangleGeom(DataStructure& dataStructure, const complex::
   auto geom = TriangleGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedTriList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::TriListName);
+  auto* sharedTriList = dynamic_cast<UInt64Array*>(readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::TriListName));
 
   geom->setVertices(*sharedVertexList);
   geom->setFaceList(*sharedTriList);
@@ -1107,7 +1124,7 @@ DataObject* readLegacyTetrahedralGeom(DataStructure& dataStructure, const comple
   auto geom = TetrahedralGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedTetList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::TetraListName);
+  auto* sharedTetList = dynamic_cast<UInt64Array*>(readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::TetraListName));
 
   geom->setVertices(*sharedVertexList);
   geom->setPolyhedraList(*sharedTetList);
@@ -1141,7 +1158,7 @@ DataObject* readLegacyQuadGeom(DataStructure& dataStructure, const complex::HDF5
   auto geom = QuadGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedQuadList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::QuadListName);
+  auto* sharedQuadList = dynamic_cast<UInt64Array*>(readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::QuadListName));
 
   geom->setVertices(*sharedVertexList);
   geom->setFaceList(*sharedQuadList);
@@ -1154,7 +1171,7 @@ DataObject* readLegacyHexGeom(DataStructure& dataStructure, const complex::HDF5:
   auto geom = HexahedralGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedHexList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::HexListName);
+  auto* sharedHexList = dynamic_cast<UInt64Array*>(readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::HexListName));
 
   geom->setVertices(*sharedVertexList);
   geom->setPolyhedraList(*sharedHexList);
@@ -1168,7 +1185,7 @@ DataObject* readLegacyEdgeGeom(DataStructure& dataStructure, const complex::HDF5
   auto edge = dynamic_cast<EdgeGeom*>(geom);
   readGenericGeomDims(geom, geomGroup);
   auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  auto* sharedEdgeList = readLegacyGeomArrayAs<UInt64Array>(dataStructure, geom, geomGroup, Legacy::EdgeListName);
+  auto* sharedEdgeList = dynamic_cast<UInt64Array*>(readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::EdgeListName));
 
   geom->setVertices(*sharedVertexList);
   geom->setEdgeList(*sharedEdgeList);
