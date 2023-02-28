@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "apply_transformation_sanity_check_node.d3dpipeline",
+  "name": "ApplyTransformation_Node.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -177,7 +177,7 @@
       "args": {
         "cell_attribute_matrix_path": "",
         "computed_transformation_matrix": "",
-        "interpolation_type": 2,
+        "interpolation_type": 0,
         "manual_transformation_matrix": [
           [
             1.0,
@@ -232,7 +232,7 @@
     },
     {
       "args": {
-        "export_file_path": "/tmp/blade.dream3d",
+        "export_file_path": "Data/Output/ApplyTransformation_Node.dream3d",
         "write_xdmf_file": true
       },
       "comments": "",

@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "apply_transformation_sanity_check.d3dpipeline",
+  "name": "ApplyTransformation_Demo.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {

@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "apply_transformation_sanity_check_image.d3dpipeline",
+  "name": "ApplyTransformation_Image.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -374,7 +374,7 @@
     },
     {
       "args": {
-        "export_file_path": "/tmp/apply_transformation_test.dream3d",
+        "export_file_path": "Data/Output/Transformation/ApplyTransformation_Image.dream3d",
         "write_xdmf_file": true
       },
       "comments": "",
