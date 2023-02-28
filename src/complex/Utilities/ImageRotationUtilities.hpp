@@ -58,10 +58,10 @@ struct RotateArgs
 
 /**
  * @brief
- * @param transformationMatrix
+ * @param transform
  * @return
  */
-COMPLEX_EXPORT std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transformationMatrix);
+COMPLEX_EXPORT std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transform);
 
 /**
  * @brief

@@ -122,18 +122,16 @@ ImageRotationUtilities::RotateArgs CreateRotationArgs(const ImageGeom& imageGeom
 }
 
 //------------------------------------------------------------------------------
-std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transformationMatrix)
+std::string GenerateTransformationMatrixDescription(const ImageRotationUtilities::Matrix4fR& transform)
 {
+
   std::stringstream out;
-  for(int64 rowIndex = 0; rowIndex < 4; rowIndex++)
-  {
-    out << "[";
-    for(int64 colIndex = 0; colIndex < 4; colIndex++)
-    {
-      out << " " << transformationMatrix(rowIndex, colIndex);
-    }
-    out << "]\n";
-  }
+
+  out << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(0, 0), transform(0, 1), transform(0, 2), transform(0, 3)) << "\n"
+      << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(1, 0), transform(1, 1), transform(1, 2), transform(1, 3)) << "\n"
+      << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(2, 0), transform(2, 1), transform(2, 2), transform(2, 3)) << "\n"
+      << fmt::format("| {:+f}  {:+f}  {:+f}  {:+f} |", transform(3, 0), transform(3, 1), transform(3, 2), transform(3, 3)) << std::endl;
+
   return out.str();
 }
 
@@ -201,7 +199,7 @@ ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const Vec
   // Third Row:
   transformationMatrix(8) = normalizedAxis[0] * normalizedAxis[2] * (oneMinusCosTheta) - (normalizedAxis[1] * sinTheta);
   transformationMatrix(9) = normalizedAxis[1] * normalizedAxis[2] * (oneMinusCosTheta) + (normalizedAxis[0] * sinTheta);
-  transformationMatrix(10) = normalizedAxis[1] * normalizedAxis[1] * (oneMinusCosTheta) + cosTheta;
+  transformationMatrix(10) = normalizedAxis[2] * normalizedAxis[2] * (oneMinusCosTheta) + cosTheta;
   transformationMatrix(11) = 0.0F;
 
   // Fourth Row:
@@ -261,16 +259,12 @@ size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const E
   };
   // clang-format on
 
-  // FloatVec3 temp;
   //  Now figure out which corner the inverse transformed point is closest to
   //  this will give us which octant the point lies.
   float minDistance = std::numeric_limits<float>::max();
   size_t minIndex = 0;
   for(size_t i = 0; i < 8; i++)
   {
-    //    auto tempVec = (unitSquareCoords[i] - coord);
-    //    float const distance = tempVec.dot(tempVec);
-
     float const distance = unitSquareCoords[i][0] * coord[0] + unitSquareCoords[i][1] * coord[1] + unitSquareCoords[i][2] * coord[2];
 
     if(distance < minDistance)

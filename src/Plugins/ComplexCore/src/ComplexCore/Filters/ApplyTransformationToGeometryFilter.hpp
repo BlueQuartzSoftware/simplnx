@@ -24,6 +24,7 @@ public:
   ApplyTransformationToGeometryFilter& operator=(ApplyTransformationToGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
   static inline constexpr StringLiteral k_TransformationType_Key = "transformation_type";
   static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type";
   static inline constexpr StringLiteral k_ManualTransformationMatrix_Key = "manual_transformation_matrix";
@@ -32,7 +33,6 @@ public:
   static inline constexpr StringLiteral k_Scale_Key = "scale";
   static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix";
   static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
-  static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
 
   /**
    * @brief Returns the name of the filter.
