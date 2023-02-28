@@ -86,6 +86,7 @@
 #include "ComplexCore/Filters/TriangleNormalFilter.hpp"
 #include "ComplexCore/Filters/WriteASCIIDataFilter.hpp"
 #include "ComplexCore/Filters/RemoveFlaggedFeaturesFilter.hpp"
+#include "ComplexCore/Filters/ComputeMomentInvariants2DFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -182,6 +183,8 @@ namespace complex
     {complex::Uuid::FromString("3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254").value(), complex::FilterTraits<ErodeDilateBadDataFilter>::uuid}, // ErodeDilateBadData
     {complex::Uuid::FromString("a8463056-3fa7-530b-847f-7f4cb78b8602").value(), complex::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid}, // RemoveFlaggedFeatures
     {complex::Uuid::FromString("e0555de5-bdc6-5bea-ba2f-aacfbec0a022").value(), complex::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid}, // ExtractFlaggedFeatures
+    {complex::Uuid::FromString("27a132b2-a592-519a-8cb7-38599a7f28ec").value(), complex::FilterTraits<ComputeMomentInvariants2DFilter>::uuid}, // ComputeMomentInvariants2D
+    {complex::Uuid::FromString("27a132b2-a592-519a-8cb7-38599a7f28ec").value(), complex::FilterTraits<ComputeMomentInvariants2DFilter>::uuid}, // ComputeMomentInvariants2D
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
