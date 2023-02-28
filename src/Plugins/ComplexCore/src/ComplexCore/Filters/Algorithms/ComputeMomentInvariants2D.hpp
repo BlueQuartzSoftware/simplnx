@@ -6,6 +6,8 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include <Eigen/Dense>
+
 namespace complex
 {
 
@@ -30,6 +32,9 @@ struct COMPLEXCORE_EXPORT ComputeMomentInvariants2DInputValues
 class COMPLEXCORE_EXPORT ComputeMomentInvariants2D
 {
 public:
+  using DoubleMatrixType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+  using IntMatrixType = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
   ComputeMomentInvariants2D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeMomentInvariants2DInputValues* inputValues);
   ~ComputeMomentInvariants2D() noexcept;
 
@@ -41,6 +46,11 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+
+  static DoubleMatrixType ComputeMomentInvariants(const DoubleMatrixType& input, const usize* inputDims, usize maxOrder);
+  static int Factorial(int n);
+  static DoubleMatrixType Binomial(usize maxOrder);
+  static DoubleMatrixType GetBigX(usize maxOrder, usize dim);
 
 private:
   DataStructure& m_DataStructure;
