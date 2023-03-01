@@ -163,3 +163,59 @@ function(create_data_copy_rules)
     endforeach()
   endif()
 endfunction()
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+function(pad_string output str padchar length)
+  string(LENGTH "${str}" _strlen)
+  math(EXPR _strlen "${length} - ${_strlen}")
+
+  if(_strlen GREATER 0)
+    string(REPEAT ${padchar} ${_strlen} _pad)
+    string(APPEND ${_pad} str )
+  endif()
+
+  set(${output} "${_pad}" PARENT_SCOPE)
+endfunction()
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+function(create_pipeline_tests)
+  set(optionsArgs)
+  set(oneValueArgs PLUGIN_NAME)
+  set(multiValueArgs PIPELINE_LIST)
+  cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  
+  set(TEST_PIPELINE_LIST_FILE ${${ARGS_PLUGIN_NAME}_BINARY_DIR}/test/Prebuilt_Pipeline_Tests.txt)
+  FILE(WRITE ${TEST_PIPELINE_LIST_FILE} )
+  set(TEST_SCRIPT_FILE_EXT "sh")
+  set(EXE_EXT "")
+  if(WIN32)
+    set(TEST_SCRIPT_FILE_EXT "bat")
+    set(EXE_EXT ".exe")
+  endif()
+  set(test_index  "0")
+  foreach(pipeline_file_path ${ARGS_PIPELINE_LIST} )
+    math(EXPR test_index "${test_index} + 1")
+    # get the padding string to prefix in front of the test_index
+    pad_string(padding "${test_index}" "0" "3")
+
+    FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "[${padding}${test_index}]    ${pipeline_file_path}\n")
+    
+    get_filename_component(test ${pipeline_file_path} NAME_WE)
+
+    set(CTEST_DRIVER_FILE "${${ARGS_PLUGIN_NAME}_BINARY_DIR}/test/prebuilt_pipeline_tests/${padding}${test_index}_${test}.${TEST_SCRIPT_FILE_EXT}")
+    configure_file("${complex_SOURCE_DIR}/test/cmake/ctest_pipeline_driver.${TEST_SCRIPT_FILE_EXT}" 
+                  "${CTEST_DRIVER_FILE}" @ONLY)
+
+    string(REPLACE "/" "_" test "${test}")
+    
+    add_test(NAME ${ARGS_PLUGIN_NAME}_Pipeline_${padding}${test_index} COMMAND "${CTEST_DRIVER_FILE}" )
+  endforeach()
+
+
+
+endfunction()
+

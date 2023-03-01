@@ -292,3 +292,50 @@ if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
     COMPONENT Applications
   )
 endif()
+
+# -----------------------------------------------------------------------
+# Download Example Data Files
+# -----------------------------------------------------------------------
+include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+
+file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
+
+# -----------------------------------------------------------------------
+# These data files are pulled from the 'complex data archive' on github,
+# decompressed and then copied to the build folder. Install rules are also
+# generated for each of the data sets.
+# -----------------------------------------------------------------------
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ASCII_Data.tar.gz SHA512 4696b919510aa400b9de6c72d0abe66e7c8be2a4effd350bfd07c4fc24d25ccb45c22e7aca5ad162d88db3e04d700b86f7d1d7e954db90ef00b31b5b46955ed4)
+
+set(DREAM3D_DATA_ARCHIVES "ASCII_Data")
+foreach(archive ${DREAM3D_DATA_ARCHIVES})
+  add_custom_target(Copy_${archive} ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${DREAM3D_DATA_DIR}/TestFiles/${archive} ${DATA_DEST_DIR}/${archive}
+    COMMENT "Copying ${archive} into Binary Directory"
+    DEPENDS Fetch_${archive})
+  set_target_properties(Copy_${archive} PROPERTIES FOLDER ZZ_COPY_FILES)
+
+  install(DIRECTORY 
+    ${DREAM3D_DATA_DIR_NORM}/TestFiles/${archive}
+    DESTINATION Data/
+    COMPONENT Applications
+  )
+endforeach()
+
+# -----------------------------------------------------------------------
+# Create build folder copy rules and install rules for the 'data' folder
+# for this plugin
+# -----------------------------------------------------------------------
+add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
+  COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
+  )
+set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER ZZ_COPY_FILES)
+
+install(DIRECTORY 
+  ${${PLUGIN_NAME}_SOURCE_DIR}/data
+  DESTINATION Data/
+  COMPONENT Applications
+)
+

@@ -157,7 +157,6 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_volume_fraction_feature_count.dream3d.tar.gz SHA512 e4205186dee5b97bef3fb5f265bc12f8379a68860f70de33a483680eba0433a35c9c98db56bc92c949fb215f73f5f7698f83394697e81604c8c4b8a06874943f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_boundary_cells.tar.gz SHA512 bced17620701ca6f68e8477783b169fde07f500615ee3becbd06d6f8543b832b9e01252324b6a7dfa046c0deb4355eb5647586011d2c8bbed41332b3bdfe0c7e)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_biased_features.tar.gz SHA512 5a9df4c5a660768b19973b4ee3c6a59e1a997ea63823ef5931327a4857cc179d4f5dbf346130543d7ec13bee020c2caca483f1d4a730ee10a92b247cf3b0fe86)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ASCII_Data.tar.gz SHA512 4696b919510aa400b9de6c72d0abe66e7c8be2a4effd350bfd07c4fc24d25ccb45c22e7aca5ad162d88db3e04d700b86f7d1d7e954db90ef00b31b5b46955ed4)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Example.tar.gz SHA512 b7ea2b8bb5ecb29cb20d69e5820ebf513433c7740ce5cc9e6c1e44b539941dd3cf1a627442ace2cd430fe64437a479a62a172e6d398edf992ccdfc906ebceeba)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME GenerateColorTableTest.tar.gz SHA512 2b660e327f730f868dd5ccf0bc39509d731b53011c755eda64f21cc2f28ff5a5c0c1b933666e2bca49b46cfb05d03ad3b9380d338bc2794cd562aef4e7480274)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME PartitionGeometryTest.tar.gz SHA512 8074dbcff86ed206d9185065a56258b766eb24367b3481e8600e9b48542de23dbd715ef8f9eca1c9718ca5e05a9c48997f613bde6f4357b8bba206241caecbbd)
@@ -180,4 +179,32 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_vertex_to_triangle_distances.tar.gz SHA512 d679cde985c326a249c2b52c6e5732dcead263127a8e7f5578c4bf450730a691c840af75a0162d2bbb38eb97f9572cf72a3e1b01d3fd6c670db59619f46aeec9)
 
 endif()
+
+
+# -----------------------------------------------------------------------------
+# Include any example pipelines into the unit testing
+# -----------------------------------------------------------------------------
+include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+
+# These should be relative to the 
+set(PREBUILT_PIPELINE_NAMES
+  # Example or other test pipelines
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Demo.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Image.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Node.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ArrayCalculatorExample.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ExecuteProcess.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBiasedFeatures.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBoundaryCells.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_CSV_Data.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_STL_Model.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReplaceElementAttributesWithNeighbor.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Triangle_Face_Data_Demo.d3dpipeline"
+
+  # These are workflow files
+  #"${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII_Data.d3dworkflow"
+)
+
+create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 
