@@ -25,7 +25,7 @@ using Remove = AlgorithmTypeOptions<true, false>;
 using Extract = AlgorithmTypeOptions<false, true>;
 
 template <class AlgorithmTypeOptions = Remove>
-bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std::vector<int32>& storageArray)
+bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
   SizeVec3 uDims = imageGeom.getDimensions();
@@ -40,6 +40,11 @@ bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std
   int64 kStride = 0, jStride = 0;
   for(int64 k = 0; k < dims[2]; k++)
   {
+    if(shouldCancel)
+    {
+      return false;
+    }
+
     kStride = dims[0] * dims[1] * k;
     for(int64 j = 0; j < dims[1]; j++)
     {
@@ -188,13 +193,18 @@ std::vector<bool> FlagFeatures(Int32Array& featureIds, BoolArray& flaggedFeature
   return activeObjects;
 }
 
-void FindVoxelArrays(const Int32Array& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays)
+void FindVoxelArrays(const Int32Array& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
 
   int32 featureName, neighbor;
   for(usize j = 0; j < totalPoints; j++)
   {
+    if(shouldCancel)
+    {
+      return;
+    }
+
     featureName = featureIds[j];
     neighbor = neighbors[j];
     if(neighbor >= 0)
@@ -213,10 +223,11 @@ void FindVoxelArrays(const Int32Array& featureIds, const std::vector<int32>& nei
 class RunCropImageGeometryImpl
 {
 public:
-  RunCropImageGeometryImpl(CropImageGeometry& filter, Arguments& args, DataStructure& dataStructure)
+  RunCropImageGeometryImpl(CropImageGeometry& filter, Arguments& args, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_Args(args)
   , m_DataStructure(dataStructure)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -230,6 +241,11 @@ public:
       throw std::runtime_error("Preflight failed when cropping the geometry in extract flagged features!");
     }
 
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     auto executeResult = m_Filter.execute(m_DataStructure, m_Args);
     if(preflightResult.outputActions.invalid())
     {
@@ -241,6 +257,7 @@ private:
   CropImageGeometry& m_Filter;
   Arguments& m_Args;
   DataStructure& m_DataStructure;
+  const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
 
@@ -271,14 +288,30 @@ Result<> RemoveFlaggedFeatures::operator()()
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto function = static_cast<Functionality>(m_InputValues->ExtractFeatures);
 
+  std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
+  if(activeObjects.empty())
+  {
+    return MakeErrorResult(-45433, "All Features were flagged and would all be removed. The filter has quit.");
+  }
+
+  if(getCancel())
+  {
+    return {};
+  }
+
   // Valid values Functionality::Extract and Functionality::ExtractThenRemove
   if(function != Functionality::Remove)
   {
     std::vector<int32> bounds((featureIds.getNumberOfTuples() * featureIds.getNumberOfComponents()) * 6, -1);
-    bool invalid = IdentifyNeighborsOrBounds<Extract>(imageGeom, featureIds, bounds);
+    bool invalid = IdentifyNeighborsOrBounds<Extract>(imageGeom, featureIds, bounds, getCancel());
     if(invalid)
     {
       return MakeErrorResult(-45430, "Extraction was instantiated wrong!");
+    }
+
+    if(getCancel())
+    {
+      return {};
     }
 
     ParallelTaskAlgorithm taskRunner;
@@ -290,8 +323,15 @@ Result<> RemoveFlaggedFeatures::operator()()
     args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->ImageGeometryPath));
     args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
 
-    for(usize i = 1; i < flaggedFeatures.getNumberOfTuples(); i++)
+    usize maxTuple = flaggedFeatures.getNumberOfTuples();
+    std::string paddingWidth = std::to_string(std::to_string(maxTuple).size());
+    for(usize i = 1; i < maxTuple; i++)
     {
+      if(getCancel())
+      {
+        return {};
+      }
+
       if(!flaggedFeatures[i])
       {
         continue;
@@ -303,21 +343,31 @@ Result<> RemoveFlaggedFeatures::operator()()
       args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{static_cast<uint64>(bounds[index + 1]), static_cast<uint64>(bounds[index + 3]),
                                                                                                                     static_cast<uint64>(bounds[index + 5])}));
 
-      args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>({fmt::format("{}-{}", m_InputValues->CreatedImageGeometryPrefix, i)}));
+      args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>({fmt::format(("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)}));
 
-      taskRunner.execute(RunCropImageGeometryImpl(filter, args, m_DataStructure));
+      taskRunner.execute(RunCropImageGeometryImpl(filter, args, m_DataStructure, getCancel()));
     }
     taskRunner.wait();
+  }
+
+  if(getCancel())
+  {
+    return {};
   }
 
   // Valid values Functionality::Remove and Functionality::ExtractThenRemove
   if(function != Functionality::Extract)
   {
     std::vector<int32> neighbors((featureIds.getNumberOfTuples() * featureIds.getNumberOfComponents()), -1);
-    std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
+    //std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
     if(activeObjects.empty())
     {
       return MakeErrorResult(-45433, "All Features were flagged and would all be removed. The filter has quit.");
+    }
+
+    if(getCancel())
+    {
+      return {};
     }
 
     if(m_InputValues->FillRemovedFeatures)
@@ -326,11 +376,21 @@ Result<> RemoveFlaggedFeatures::operator()()
       do
       {
         std::fill(neighbors.begin(), neighbors.end(), -1);
-        shouldLoop = IdentifyNeighborsOrBounds(imageGeom, featureIds, neighbors);
+        shouldLoop = IdentifyNeighborsOrBounds(imageGeom, featureIds, neighbors, getCancel());
+
+        if(getCancel())
+        {
+          return {};
+        }
 
         std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
-        FindVoxelArrays(featureIds, neighbors, voxelArrays);
+        FindVoxelArrays(featureIds, neighbors, voxelArrays, getCancel());
       } while(shouldLoop);
+    }
+
+    if(getCancel())
+    {
+      return {};
     }
 
     DataPath featureGroupPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();

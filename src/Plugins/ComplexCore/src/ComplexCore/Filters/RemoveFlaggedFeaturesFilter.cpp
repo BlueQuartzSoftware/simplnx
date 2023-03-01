@@ -65,8 +65,9 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(
-      std::make_unique<StringParameter>(k_CreatedImageGeometryPrefix_Key, "Created Image Geometry Prefix", "The prefix name for each of new cropped (extracted) geometry", "Extracted_Feature"));
+  params.insert(std::make_unique<StringParameter>(k_CreatedImageGeometryPrefix_Key, "Created Image Geometry Prefix",
+                                                  "The prefix name for each of new cropped (extracted) geometry \n\nNOTE: a '-' will automatically be added between the prefix and number",
+                                                  "Extracted_Feature"));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FlaggedFeaturesArrayPath_Key, "Flagged Features", "Specifies whether the Feature will remain in the structure or not", DataPath{},

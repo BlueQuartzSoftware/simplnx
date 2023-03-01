@@ -15,11 +15,12 @@ using namespace complex::Constants;
 
 namespace
 {
-const std::string k_NewImgGeom = "NewImgGeom";
+const std::string k_NewImgGeomPrefix = "NewImgGeom";
+const std::string k_NewImgGeom = k_NewImgGeomPrefix + "-3";
 const DataPath k_ImageGeomPath({k_DataContainer});
 const DataPath k_FeatureIdsPath({k_DataContainer, k_CellData, k_FeatureIds});
 const DataPath k_FlaggedFeaturesPath({k_DataContainer, k_CellFeatureData, k_ActiveName});
-const DataPath k_NewFeatureIdsPath({k_NewImgGeom + "-3", k_CellData, k_FeatureIds});
+const DataPath k_NewFeatureIdsPath({k_NewImgGeom, k_CellData, k_FeatureIds});
 
 void FillDataStructure(DataStructure& dataStructure)
 {
@@ -69,7 +70,6 @@ void FillDataStructure(DataStructure& dataStructure)
   testStore[3] = 2185;
 }
 
-
 template <bool UseRemove, bool UseExtract>
 struct TestTypeOptions
 {
@@ -96,24 +96,24 @@ void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& 
   REQUIRE(featureIdsResult[10] == 0);
   REQUIRE(featureIdsResult[11] == 1);
   REQUIRE(featureIdsResult[12] == 2);
-  if constexpr (TestTypeOptions::UsingRemove)
+  if constexpr(TestTypeOptions::UsingRemove)
   {
     REQUIRE(featureIdsResult[13] == 0);
     REQUIRE(featureIdsResult[14] == 0);
     REQUIRE(featureIdsResult[15] == 0);
   }
-  if constexpr (TestTypeOptions::UsingExtract)
+  if constexpr(TestTypeOptions::UsingExtract)
   {
     REQUIRE(featureIdsResult[13] == 3);
     REQUIRE(featureIdsResult[14] == 3);
     REQUIRE(featureIdsResult[15] == 0);
   }
 
-  if constexpr (TestTypeOptions::UsingRemove)
+  if constexpr(TestTypeOptions::UsingRemove)
   {
     REQUIRE(cellFeatureAMResult.getNumTuples() == 3);
   }
-  if constexpr (TestTypeOptions::UsingExtract)
+  if constexpr(TestTypeOptions::UsingExtract)
   {
     REQUIRE(cellFeatureAMResult.getNumTuples() == 4);
   }
@@ -122,7 +122,7 @@ void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& 
   REQUIRE(testArrayResult[1] == 4041);
   REQUIRE(testArrayResult[2] == 10128);
 
-  if constexpr (TestTypeOptions::UsingExtract)
+  if constexpr(TestTypeOptions::UsingExtract)
   {
     REQUIRE(testArrayResult[3] == 2185);
   }
@@ -134,7 +134,7 @@ void ValidateNewGeom(const Int32Array& featureIdsResult, const AttributeMatrix& 
   REQUIRE(featureIdsResult[1] == 3);
   REQUIRE(featureIdsResult[2] == 0);
 }
-}
+} // namespace
 
 TEST_CASE("ComplexCore::RemoveFlaggedFeatures: Test Remove Algorithm", "[ComplexCore][RemoveFlaggedFeatures]")
 { // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -175,7 +175,7 @@ TEST_CASE("ComplexCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Comple
   // Create default Parameters for the filter.
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(1));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_ImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CreatedImageGeometryPrefix_Key, std::make_any<std::string>(k_NewImgGeom));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CreatedImageGeometryPrefix_Key, std::make_any<std::string>(k_NewImgGeomPrefix));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
 
@@ -193,8 +193,8 @@ TEST_CASE("ComplexCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Comple
   ValidateResults<Extract>(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
   auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath);
-  auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom + "-3", k_CellFeatureData}));
-  auto& newTestArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom + "-3", k_CellFeatureData, k_Int32DataSet}));
+  auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData}));
+  auto& newTestArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom, k_CellFeatureData, k_Int32DataSet}));
   ValidateNewGeom(newFeatureIdsResult, newCellFeatureAMResult, newTestArrayResult);
 }
 
@@ -209,7 +209,7 @@ TEST_CASE("ComplexCore::RemoveFlaggedFeatures: Test Extract then Remove Algorith
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_Functionality_Key, std::make_any<ChoicesParameter::ValueType>(2));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FillRemovedFeatures_Key, std::make_any<bool>(false));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_ImageGeometry_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CreatedImageGeometryPrefix_Key, std::make_any<std::string>(k_NewImgGeom));
+  args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CreatedImageGeometryPrefix_Key, std::make_any<std::string>(k_NewImgGeomPrefix));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_FlaggedFeaturesArrayPath_Key, std::make_any<DataPath>(k_FlaggedFeaturesPath));
   args.insertOrAssign(RemoveFlaggedFeaturesFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
@@ -228,7 +228,7 @@ TEST_CASE("ComplexCore::RemoveFlaggedFeatures: Test Extract then Remove Algorith
   ValidateResults(featureIdsResult, cellFeatureAMResult, testArrayResult);
 
   auto& newFeatureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_NewFeatureIdsPath);
-  auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom + "-3", k_CellFeatureData}));
-  auto& newTestArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom + "-3", k_CellFeatureData, k_Int32DataSet}));
+  auto& newCellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_NewImgGeom, k_CellFeatureData}));
+  auto& newTestArrayResult = dataStructure.getDataRefAs<Int32Array>(DataPath({k_NewImgGeom, k_CellFeatureData, k_Int32DataSet}));
   ValidateNewGeom(newFeatureIdsResult, newCellFeatureAMResult, newTestArrayResult);
 }
