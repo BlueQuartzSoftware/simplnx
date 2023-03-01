@@ -78,6 +78,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   RawBinaryReaderTest.cpp
+  RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedVerticesTest.cpp
   RemoveMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
