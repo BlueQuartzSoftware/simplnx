@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -160,15 +161,15 @@ bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std
   return shouldLoop;
 }
 
-std::vector<bool> FlagFeatures(Int32Array& featureIds, BoolArray& flaggedFeatures, const bool fillRemovedFeatures)
+std::vector<bool> FlagFeatures(Int32Array& featureIds, std::unique_ptr<MaskCompare>& flaggedFeatures, const bool fillRemovedFeatures)
 {
   bool good = false;
   usize totalPoints = featureIds.getNumberOfTuples();
-  usize totalFeatures = flaggedFeatures.getNumberOfTuples();
+  usize totalFeatures = flaggedFeatures->getNumberOfTuples();
   std::vector<bool> activeObjects(totalFeatures, true);
   for(usize i = 1; i < totalFeatures; i++)
   {
-    if(!flaggedFeatures[i])
+    if(!flaggedFeatures->isTrue(i))
     {
       good = true;
     }
@@ -230,11 +231,14 @@ void FindVoxelArrays(const Int32Array& featureIds, const std::vector<int32>& nei
 class RunCropImageGeometryImpl
 {
 public:
-  RunCropImageGeometryImpl(CropImageGeometry& filter, Arguments args, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
-  : m_Filter(filter)
-  , m_Args(std::move(args))
-  , m_DataStructure(dataStructure)
+  RunCropImageGeometryImpl(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const DataPath& imageGeometryPath, const std::vector<uint64>& minVoxelVector,
+                           const std::vector<uint64>& maxVoxelVector, const DataPath& createdImgGeomPath)
+  : m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
+  , m_ImageGeometryPath(imageGeometryPath)
+  , m_MinVoxelVector(minVoxelVector)
+  , m_MaxVoxelVector(maxVoxelVector)
+  , m_CreatedImgGeomPath(createdImgGeomPath)
   {
   }
 
@@ -242,7 +246,20 @@ public:
 
   void operator()() const
   {
-    auto preflightResult = m_Filter.preflight(m_DataStructure, m_Args);
+    CropImageGeometry filter;
+
+    Arguments args;
+
+    args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
+    args.insertOrAssign(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_ImageGeometryPath));
+    args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
+
+    args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key, std::make_any<std::vector<uint64>>(m_MinVoxelVector));
+    args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(m_MaxVoxelVector));
+    args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>(m_CreatedImgGeomPath));
+
+    auto preflightResult = filter.preflight(m_DataStructure, args);
     if(preflightResult.outputActions.invalid())
     {
       throw std::runtime_error("Preflight failed when cropping the geometry in extract flagged features!");
@@ -253,7 +270,7 @@ public:
       return;
     }
 
-    auto executeResult = m_Filter.execute(m_DataStructure, m_Args);
+    auto executeResult = filter.execute(m_DataStructure, args);
     if(preflightResult.outputActions.invalid())
     {
       throw std::runtime_error("Execute failed when cropping the geometry in extract flagged features!");
@@ -261,10 +278,12 @@ public:
   }
 
 private:
-  CropImageGeometry& m_Filter;
-  Arguments m_Args; // Must copy to be thread safe else risk data-race condition
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
+  const DataPath& m_ImageGeometryPath;
+  const std::vector<uint64>& m_MinVoxelVector;
+  const std::vector<uint64>& m_MaxVoxelVector;
+  const DataPath& m_CreatedImgGeomPath;
 };
 } // namespace
 
@@ -310,9 +329,20 @@ void RemoveFlaggedFeatures::sendThreadSafeProgressMessage(size_t counter)
 Result<> RemoveFlaggedFeatures::operator()()
 {
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& flaggedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->FlaggedFeaturesArrayPath);
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto function = static_cast<Functionality>(m_InputValues->ExtractFeatures);
+
+  std::unique_ptr<MaskCompare> flaggedFeatures = nullptr;
+  try
+  {
+    flaggedFeatures = InstantiateMaskCompare(m_DataStructure, m_InputValues->FlaggedFeaturesArrayPath);
+  } catch(const std::out_of_range& exception)
+  {
+    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // somewhere else that is NOT going through the normal complex::IFilter API of Preflight and Execute
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->FlaggedFeaturesArrayPath.toString());
+    return MakeErrorResult(-53900, message);
+  }
 
   if(getCancel())
   {
@@ -337,9 +367,11 @@ Result<> RemoveFlaggedFeatures::operator()()
     }
 
     ParallelTaskAlgorithm taskRunner;
-    CropImageGeometry filter;
 
-    usize maxTuple = flaggedFeatures.getNumberOfTuples();
+    // This has to be run in serial for the time being because adding to the dataStructure is not thread-safe
+    taskRunner.setParallelizationEnabled(false);
+
+    usize maxTuple = flaggedFeatures->getNumberOfTuples();
     std::string paddingWidth = std::to_string(std::to_string(maxTuple).size());
     for(usize i = 1; i < maxTuple; i++)
     {
@@ -348,30 +380,19 @@ Result<> RemoveFlaggedFeatures::operator()()
         return {};
       }
 
-      if(!flaggedFeatures[i])
+      if(!flaggedFeatures->isTrue(i))
       {
         continue;
       }
 
-      // Seems inefficient create an argument everytime, but this is done to prevent a data-race condition and the object is passed by std::move
-      // later to avoid a copy
-      Arguments args;
-
-      args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
-      args.insertOrAssign(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
-      args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->ImageGeometryPath));
-      args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
-
       usize index = 6 * i;
-      args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key,
-                          std::make_any<std::vector<uint64>>(std::vector<uint64>{static_cast<uint64>(bounds[index]), static_cast<uint64>(bounds[index + 2]), static_cast<uint64>(bounds[index + 4])}));
-      args.insertOrAssign(CropImageGeometry::k_MaxVoxel_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{static_cast<uint64>(bounds[index + 1]), static_cast<uint64>(bounds[index + 3]),
-                                                                                                                    static_cast<uint64>(bounds[index + 5])}));
+      std::vector<uint64> minVoxels = {static_cast<uint64>(bounds[index]), static_cast<uint64>(bounds[index + 2]), static_cast<uint64>(bounds[index + 4])};
+      std::vector<uint64> maxVoxels = {static_cast<uint64>(bounds[index + 1]), static_cast<uint64>(bounds[index + 3]), static_cast<uint64>(bounds[index + 5])};
 
-      args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>({fmt::format(("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)}));
+      DataPath createdImgGeomPath({fmt::format(("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
 
       m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Extracting Feature {} in parallel", i)});
-      taskRunner.execute(RunCropImageGeometryImpl(filter, std::move(args), m_DataStructure, getCancel()));
+      taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, getCancel(), m_InputValues->ImageGeometryPath, minVoxels, maxVoxels, createdImgGeomPath));
     }
     taskRunner.wait();
 
@@ -429,7 +450,7 @@ Result<> RemoveFlaggedFeatures::operator()()
 
     m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
     DataPath featureGroupPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();
-    if(!RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures.getNumberOfTuples()))
+    if(!RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures->getNumberOfTuples()))
     {
       return MakeErrorResult(-45434, "The removal has failed!");
     }
