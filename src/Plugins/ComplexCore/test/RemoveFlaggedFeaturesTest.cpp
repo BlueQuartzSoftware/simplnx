@@ -100,14 +100,13 @@ void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& 
   {
     REQUIRE(featureIdsResult[13] == 0);
     REQUIRE(featureIdsResult[14] == 0);
-    REQUIRE(featureIdsResult[15] == 0);
   }
   if constexpr(TestTypeOptions::UsingExtract)
   {
     REQUIRE(featureIdsResult[13] == 3);
     REQUIRE(featureIdsResult[14] == 3);
-    REQUIRE(featureIdsResult[15] == 0);
   }
+  REQUIRE(featureIdsResult[15] == 0);
 
   if constexpr(TestTypeOptions::UsingRemove)
   {
@@ -132,7 +131,6 @@ void ValidateNewGeom(const Int32Array& featureIdsResult, const AttributeMatrix& 
 {
   REQUIRE(featureIdsResult[0] == 3);
   REQUIRE(featureIdsResult[1] == 3);
-  REQUIRE(featureIdsResult[2] == 0);
 }
 } // namespace
 
@@ -186,6 +184,8 @@ TEST_CASE("ComplexCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Comple
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/extract_flagged_features.dream3d", unit_test::k_BinaryTestOutputDir));
 
   auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
   auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData}));

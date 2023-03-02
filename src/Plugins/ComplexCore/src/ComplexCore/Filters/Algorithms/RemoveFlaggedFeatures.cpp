@@ -133,7 +133,7 @@ bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std
           int64 featureShift = featureName * 6;
           for(uint8 l = 0; l < 6; l++) // unsigned is faster with modulo
           {
-            int64 current = indices[l >> 1]; // indices[l / 2]
+            int64 current = indices[l/2];
             if(storageArray[featureShift + l] != -1)
             {
               if((l + 1) & 1) // if l % 2 == 0
