@@ -149,7 +149,7 @@ Result<> CalculateFeatureSizesFilter::executeImpl(DataStructure& data, const Arg
 
     DataPath volumesPath = featureAttributeMatrixPath.createChildPath(volumesName);
     DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
-    DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);xz
+    DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
     auto& volumes = data.getDataRefAs<Float32Array>(volumesPath);
     auto& equivalentDiameters = data.getDataRefAs<Float32Array>(equivalentDiametersPath);
     auto& numElements = data.getDataRefAs<Int32Array>(numElementsPath);
