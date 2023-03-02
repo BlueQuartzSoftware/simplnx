@@ -179,6 +179,7 @@ namespace complex
     {complex::Uuid::FromString("d26e85ff-7e52-53ae-b095-b1d969c9e73c").value(), complex::FilterTraits<ErodeDilateCoordinationNumberFilter>::uuid}, // ErodeDilateCoordinationNumber
     {complex::Uuid::FromString("3adfe077-c3c9-5cd0-ad74-cf5f8ff3d254").value(), complex::FilterTraits<ErodeDilateBadDataFilter>::uuid}, // ErodeDilateBadData
     {complex::Uuid::FromString("a8463056-3fa7-530b-847f-7f4cb78b8602").value(), complex::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid}, // RemoveFlaggedFeatures
+    {complex::Uuid::FromString("e0555de5-bdc6-5bea-ba2f-aacfbec0a022").value(), complex::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid}, // ExtractFlaggedFeatures
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
