@@ -13,7 +13,8 @@ namespace
 class FindFeatureCentroidsImpl1
 {
 public:
-  FindFeatureCentroidsImpl1(FindFeatureCentroids* filter, double* sum, double* center, size_t* count, std::array<size_t, 3> dims, const complex::ImageGeom& imageGeom, const Int32Array& featureIds)
+  FindFeatureCentroidsImpl1(FindFeatureCentroids* filter, double* sum, double* center, size_t* count, std::array<size_t, 3> dims, const complex::ImageGeom& imageGeom, const Int32Array& featureIds,
+                            const std::atomic_bool& shouldCancel, size_t progressIncrement)
   : m_Filter(filter)
   , m_Sum(sum)
   , m_Center(center)
@@ -21,13 +22,30 @@ public:
   , m_Dims(dims)
   , m_ImageGeom(imageGeom)
   , m_FeatureIds(featureIds)
+  , m_ShouldCancel(shouldCancel)
+  , m_ProgressIncrement(progressIncrement)
   {
   }
   ~FindFeatureCentroidsImpl1() = default;
   void compute(int64_t minFeatureId, int64_t maxFeatureId) const
   {
+    size_t progCounter = 0;
+    size_t totalElements = static_cast<int64_t>(minFeatureId - maxFeatureId);
+
     for(size_t i = 0; i < m_Dims[2]; i++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+
+      if(progCounter > m_ProgressIncrement)
+      {
+        m_Filter->sendThreadSafeProgressMessage(progCounter);
+        progCounter = 0;
+      }
+      progCounter++;
+
       size_t zStride = i * m_Dims[0] * m_Dims[1];
       for(size_t j = 0; j < m_Dims[1]; j++)
       {
@@ -79,10 +97,11 @@ private:
   double* m_Sum = nullptr;
   double* m_Center = nullptr;
   size_t* m_Count = nullptr;
-  size_t m_TotalFeatures = 0;
   std::array<size_t, 3> m_Dims = {0, 0, 0};
   const complex::ImageGeom& m_ImageGeom;
   const Int32Array& m_FeatureIds;
+  const std::atomic_bool& m_ShouldCancel;
+  size_t m_ProgressIncrement = 100;
 };
 
 } // namespace
@@ -127,11 +146,13 @@ Result<> FindFeatureCentroids::operator()()
   std::vector<double> center(totalFeatures * 3, 0.0);
   std::vector<size_t> count(totalFeatures * 3, 0.0);
 
+  auto progressIncrement = totalFeatures / 100;
+
   // The first part can be expensive so parallelize the algorithm
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, totalFeatures);
   dataAlg.setParallelizationEnabled(true);
-  dataAlg.execute(FindFeatureCentroidsImpl1(this, sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIds));
+  dataAlg.execute(FindFeatureCentroidsImpl1(this, sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIds, getCancel(), progressIncrement));
 
   // Here we are only looping over the number of features so let this just go in serial mode.
   for(size_t featureId = 0; featureId < totalFeatures; featureId++)
@@ -156,4 +177,21 @@ Result<> FindFeatureCentroids::operator()()
   }
 
   return {};
+}
+
+// -----------------------------------------------------------------------------
+void FindFeatureCentroids::sendThreadSafeProgressMessage(size_t counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  m_ProgressCounter += counter;
+
+  auto now = std::chrono::steady_clock::now();
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
+  {
+    auto progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / static_cast<double>(m_TotalElements)) * 100.0);
+    std::string progressMessage = "Calculating... ";
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
+    m_InitialTime = std::chrono::steady_clock::now();
+  }
 }

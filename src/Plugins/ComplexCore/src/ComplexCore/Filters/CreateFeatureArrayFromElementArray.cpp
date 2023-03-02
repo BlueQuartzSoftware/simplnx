@@ -17,7 +17,7 @@ struct CopyCellDataFunctor
 {
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const DataPath& selectedCellArrayPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& createdArrayNameValue,
-                      const std::atomic_bool& shouldCancel)
+                      const std::atomic_bool& shouldCancel, const complex::IFilter::MessageHandler& messageHandler)
   {
     const DataArray<T>& selectedCellArray = dataStructure.getDataRefAs<DataArray<T>>(selectedCellArrayPathValue);
     const DataStore<T> selectedCellArrayStore = selectedCellArray.template getIDataStoreRefAs<DataStore<T>>();
@@ -32,12 +32,25 @@ struct CopyCellDataFunctor
     std::map<int32, usize> featureMap;
     Result<> result;
 
+    usize progressCounter = 0;
+    std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
     usize totalCellArrayTuples = selectedCellArray.getNumberOfTuples();
     for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
     {
       if(shouldCancel)
       {
         return {};
+      }
+
+      progressCounter++;
+
+      auto now = std::chrono::steady_clock::now();
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - initialTime).count() > 1000) // every second update
+      {
+        auto progressInt = static_cast<size_t>((static_cast<double>(progressCounter) / static_cast<double>(totalCellArrayTuples)) * 100.0);
+        std::string progressMessage = "Copying... ";
+        messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
+        initialTime = std::chrono::steady_clock::now();
       }
 
       // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
@@ -179,6 +192,7 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
   auto& createdArrayStore = createdArray.getIDataStoreRefAs<IDataStore>();
   createdArrayStore.reshapeTuples(std::vector<usize>{maxValue + 1});
 
-  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel,
+                             messageHandler);
 }
 } // namespace complex

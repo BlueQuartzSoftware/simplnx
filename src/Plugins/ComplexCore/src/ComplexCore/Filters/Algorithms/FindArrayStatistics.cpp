@@ -17,9 +17,11 @@ template <typename T>
 class FindArrayStatisticsByIndexImpl
 {
 public:
-  FindArrayStatisticsByIndexImpl(std::unordered_map<int32, std::list<T>>& featureDataMap, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
-                                 std::vector<IDataArray*>& arrays, bool hist, float64 histmin, float64 histmax, bool histfullrange, int32 numBins)
-  : m_FeatureDataMap(featureDataMap)
+  FindArrayStatisticsByIndexImpl(FindArrayStatistics* filter, std::unordered_map<int32, std::list<T>>& featureDataMap, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation,
+                                 bool summation, std::vector<IDataArray*>& arrays, bool hist, float64 histmin, float64 histmax, bool histfullrange, int32 numBins, const std::atomic_bool& shouldCancel,
+                                 size_t progressIncrement)
+  : m_Filter(filter)
+  , m_FeatureDataMap(featureDataMap)
   , m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -33,6 +35,8 @@ public:
   , m_HistFullRange(histfullrange)
   , m_NumBins(numBins)
   , m_Arrays(arrays)
+  , m_ShouldCancel(shouldCancel)
+  , m_ProgressIncrement(progressIncrement)
   {
   }
 
@@ -81,8 +85,23 @@ public:
       throw std::invalid_argument("FindArrayStatisticsByIndexImpl::compute() could not dynamic_cast 'Histogram' array to needed type. Check input array selection.");
     }
 
+    size_t progCounter = 0;
+    size_t totalElements = static_cast<int64_t>(start - end);
+
     for(usize i = start; i < end; i++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
+
+      if(progCounter > m_ProgressIncrement)
+      {
+        m_Filter->sendThreadSafeProgressMessage(progCounter);
+        progCounter = 0;
+      }
+      progCounter++;
+
       // Check if there is any data for this feature Id which could happen if
       // the featureId values are non-contiguous
       if(m_FeatureDataMap.find(i) == m_FeatureDataMap.end())
@@ -142,6 +161,7 @@ public:
   }
 
 private:
+  FindArrayStatistics* m_Filter;
   std::unordered_map<int32, std::list<T>>& m_FeatureDataMap;
   bool m_Length;
   bool m_Min;
@@ -156,14 +176,17 @@ private:
   bool m_HistFullRange;
   int32 m_NumBins;
   std::vector<IDataArray*>& m_Arrays;
+  const std::atomic_bool& m_ShouldCancel;
+  size_t m_ProgressIncrement = 100;
 };
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, const FindArrayStatisticsInputValues* inputValues)
+void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, const FindArrayStatisticsInputValues* inputValues, FindArrayStatistics* filter)
 {
   if(inputValues->FindLength)
   {
+    filter->sendMessage("Finding Total Length");
     auto* array0 = dynamic_cast<DataArray<uint64>*>(arrays[0]);
     if(array0 == nullptr)
     {
@@ -174,6 +197,7 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
   }
   if(inputValues->FindMin)
   {
+    filter->sendMessage("Finding Minimum");
     auto* array1 = dynamic_cast<DataArray<T>*>(arrays[1]);
     if(array1 == nullptr)
     {
@@ -184,6 +208,7 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
   }
   if(inputValues->FindMax)
   {
+    filter->sendMessage("Finding Maximum");
     auto* array2 = dynamic_cast<DataArray<T>*>(arrays[2]);
     if(array2 == nullptr)
     {
@@ -194,6 +219,7 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
   }
   if(inputValues->FindMean)
   {
+    filter->sendMessage("Finding Total Mean");
     auto* array3 = dynamic_cast<Float32Array*>(arrays[3]);
     if(array3 == nullptr)
     {
@@ -204,6 +230,7 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
   }
   if(inputValues->FindMedian)
   {
+    filter->sendMessage("Finding Total Median");
     auto* array4 = dynamic_cast<Float32Array*>(arrays[4]);
     if(array4 == nullptr)
     {
@@ -214,6 +241,7 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
   }
   if(inputValues->FindStdDeviation)
   {
+    filter->sendMessage("Finding Standard Deviation");
     auto* array5 = dynamic_cast<Float32Array*>(arrays[5]);
     if(array5 == nullptr)
     {
@@ -224,6 +252,7 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
   }
   if(inputValues->FindSummation)
   {
+    filter->sendMessage("Finding Summation");
     auto* array6 = dynamic_cast<Float32Array*>(arrays[6]);
     if(array6 == nullptr)
     {
@@ -234,6 +263,7 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
   }
   if(inputValues->FindHistogram)
   {
+    filter->sendMessage("Finding Histogram");
     auto* array7 = dynamic_cast<Float32Array*>(arrays[7]);
     if(array7 == nullptr)
     {
@@ -250,8 +280,8 @@ void findStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
 
 // -----------------------------------------------------------------------------
 template <typename T>
-void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, const std::unique_ptr<MaskCompare>& mask, const FindArrayStatisticsInputValues* inputValues,
-                    std::vector<IDataArray*>& arrays, usize numFeatures)
+void findStatistics(FindArrayStatistics* filter, const DataArray<T>& source, const Int32Array* featureIds, const std::unique_ptr<MaskCompare>& mask, const FindArrayStatisticsInputValues* inputValues,
+                    std::vector<IDataArray*>& arrays, usize numFeatures, const std::atomic_bool& shouldCancel)
 {
   usize numTuples = source.getNumberOfTuples();
   if(inputValues->ComputeByIndex)
@@ -273,12 +303,13 @@ void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
       }
     }
 
+    auto progressIncrement = numFeatures / 100;
     // Allow data-based parallelization
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numFeatures);
-    dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(featureValueMap, inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMedian,
+    dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(filter, featureValueMap, inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindMedian,
                                                       inputValues->FindStdDeviation, inputValues->FindSummation, arrays, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange,
-                                                      inputValues->UseFullRange, inputValues->NumBins));
+                                                      inputValues->UseFullRange, inputValues->NumBins, shouldCancel, progressIncrement));
   }
   else
   {
@@ -302,7 +333,7 @@ void findStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     data.shrink_to_fit();
 
     // compute the statistics for the entire array
-    findStatisticsImpl<T>(data, arrays, inputValues);
+    findStatisticsImpl<T>(data, arrays, inputValues, filter);
   }
 }
 
@@ -353,7 +384,8 @@ void standardizeData(const DataArray<T>& data, bool useMask, const std::unique_p
 struct FindArrayStatisticsFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IDataArray*>& arrays, usize numFeatures, const FindArrayStatisticsInputValues* inputValues)
+  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IDataArray*>& arrays, usize numFeatures, const FindArrayStatisticsInputValues* inputValues,
+                      const std::atomic_bool& shouldCancel, FindArrayStatistics* filter)
   {
     const auto& inputArray = static_cast<const DataArray<T>&>(inputIDataArray);
     Int32Array* featureIds = nullptr;
@@ -425,7 +457,7 @@ struct FindArrayStatisticsFunctor
 
     // -------------------------------------------------------------------------
     // this level checks whether computing by index or not and preps the calculations accordingly
-    findStatistics<T>(inputArray, featureIds, maskCompare, inputValues, arrays, numFeatures);
+    findStatistics<T>(filter, inputArray, featureIds, maskCompare, inputValues, arrays, numFeatures, shouldCancel);
 
     // -------------------------------------------------------------------------
     // compute the standardized data based on whether computing by index or not
@@ -465,6 +497,29 @@ FindArrayStatistics::~FindArrayStatistics() noexcept = default;
 const std::atomic_bool& FindArrayStatistics::getCancel()
 {
   return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+void FindArrayStatistics::sendMessage(const std::string& action)
+{
+  m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Processing: {}", action)});
+}
+
+// -----------------------------------------------------------------------------
+void FindArrayStatistics::sendThreadSafeProgressMessage(size_t counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  m_ProgressCounter += counter;
+
+  auto now = std::chrono::steady_clock::now();
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
+  {
+    auto progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / static_cast<double>(m_TotalElements)) * 100.0);
+    std::string progressMessage = "Calculating... ";
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
+    m_InitialTime = std::chrono::steady_clock::now();
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -531,7 +586,7 @@ Result<> FindArrayStatistics::operator()()
 
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
-  ExecuteDataFunction(FindArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues);
+  ExecuteDataFunction(FindArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, getCancel(), this);
 
   return {};
 }
