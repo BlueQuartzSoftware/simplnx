@@ -391,7 +391,7 @@ Result<> RemoveFlaggedFeatures::operator()()
 
       DataPath createdImgGeomPath({fmt::format(("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
 
-      m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Extracting Feature {} in parallel", i)});
+      m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Extracting Feature {}", i)});
       taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, getCancel(), m_InputValues->ImageGeometryPath, minVoxels, maxVoxels, createdImgGeomPath));
     }
     taskRunner.wait();
