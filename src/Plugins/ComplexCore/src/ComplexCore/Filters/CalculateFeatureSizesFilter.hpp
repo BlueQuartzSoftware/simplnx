@@ -78,32 +78,6 @@ public:
 
 protected:
   /**
-   * @brief findSizes Determines the size of each Feature independent of geometry
-   * @param dataStructure
-   * @param args
-   * @return Return<>
-   */
-  Result<> findSizes(DataStructure& data, const Arguments& args) const;
-
-  /**
-   * @brief findSizesImage Specialization for determining Feature sizes on ImageGeometries
-   * @param dataStructure
-   * @param args
-   * @param image
-   * @return Return<>
-   */
-  Result<> findSizesImage(DataStructure& data, const Arguments& args, ImageGeom* image) const;
-
-  /**
-   * @brief findSizesUnstructured Determines the size of each Feature for non-ImageGeometries
-   * @param dataStructure
-   * @param args
-   * @param igeom
-   * @return Return<>
-   */
-  Result<> findSizesUnstructured(DataStructure& data, const Arguments& args, IGeometry* igeom) const;
-
-  /**
    * @brief
    * @param data
    * @param args
