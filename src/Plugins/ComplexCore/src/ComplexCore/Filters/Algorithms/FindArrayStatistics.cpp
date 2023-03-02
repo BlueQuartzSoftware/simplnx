@@ -17,8 +17,9 @@ template <typename T>
 class FindArrayStatisticsByIndexImpl
 {
 public:
-  FindArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool stdDeviation, bool summation, std::vector<IDataArray*>& arrays, bool hist, float64 histmin, float64 histmax,
-                                 bool histfullrange, int32 numBins, const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source)
+  FindArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool stdDeviation, bool summation, bool hist, float64 histmin, float64 histmax, bool histfullrange, int32 numBins,
+                                 const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, UInt64Array* lengthArray, DataArray<T>* minArray,
+                                 DataArray<T>* maxArray, Float32Array* meanArray, Float32Array* stdDevArray, Float32Array* summationArray, Float32Array* histArray)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -31,9 +32,15 @@ public:
   , m_HistFullRange(histfullrange)
   , m_NumBins(numBins)
   , m_Mask(mask)
-  , m_Arrays(arrays)
   , m_FeatureIds(featureIds)
   , m_Source(source)
+  , m_LengthArray(lengthArray)
+  , m_MinArray(minArray)
+  , m_MaxArray(maxArray)
+  , m_MeanArray(meanArray)
+  , m_StdDevArray(stdDevArray)
+  , m_SummationArray(summationArray)
+  , m_HistArray(histArray)
   {
   }
 
@@ -41,42 +48,6 @@ public:
 
   void compute(usize start, usize end) const
   {
-    auto* lengthArray = dynamic_cast<DataArray<uint64>*>(m_Arrays[0]);
-    if(m_Length && lengthArray == nullptr)
-    {
-      throw std::invalid_argument("FindArrayStatisticsByIndexImpl::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
-    }
-    auto* minArray = dynamic_cast<DataArray<T>*>(m_Arrays[1]);
-    if(m_Min && minArray == nullptr)
-    {
-      throw std::invalid_argument("FindArrayStatisticsByIndexImpl::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
-    }
-    auto* maxArray = dynamic_cast<DataArray<T>*>(m_Arrays[2]);
-    if(m_Max && maxArray == nullptr)
-    {
-      throw std::invalid_argument("FindArrayStatisticsByIndexImpl::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
-    }
-    auto* meanArray = dynamic_cast<Float32Array*>(m_Arrays[3]);
-    if(m_Mean && meanArray == nullptr)
-    {
-      throw std::invalid_argument("FindArrayStatisticsByIndexImpl::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
-    }
-    auto* stdDevArray = dynamic_cast<Float32Array*>(m_Arrays[5]);
-    if(m_StdDeviation && stdDevArray == nullptr)
-    {
-      throw std::invalid_argument("FindArrayStatisticsByIndexImpl::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
-    }
-    auto* summationArray = dynamic_cast<Float32Array*>(m_Arrays[6]);
-    if(m_Summation && summationArray == nullptr)
-    {
-      throw std::invalid_argument("FindArrayStatisticsByIndexImpl::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
-    }
-    auto* histArray = dynamic_cast<Float32Array*>(m_Arrays[7]);
-    if(m_Histogram && histArray == nullptr)
-    {
-      throw std::invalid_argument("FindArrayStatisticsByIndexImpl::compute() could not dynamic_cast 'Histogram' array to needed type. Check input array selection.");
-    }
-
     const usize numTuples = m_Source.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
@@ -113,25 +84,29 @@ public:
       }
     }
 
-    auto* histDataStore = histArray->getDataStore();
+    AbstractDataStore<float32>* histDataStore = nullptr;
+    if(m_HistArray != nullptr)
+    {
+      histDataStore = m_HistArray->getDataStore();
+    }
     for(usize j = start; j < end; j++)
     {
       const usize localFeatureIndex = j - start;
       if(m_Length)
       {
-        lengthArray->initializeTuple(j, length[localFeatureIndex]);
+        m_LengthArray->initializeTuple(j, length[localFeatureIndex]);
       }
       if(m_Min)
       {
-        minArray->initializeTuple(j, min[localFeatureIndex]);
+        m_MinArray->initializeTuple(j, min[localFeatureIndex]);
       }
       if(m_Max)
       {
-        maxArray->initializeTuple(j, max[localFeatureIndex]);
+        m_MaxArray->initializeTuple(j, max[localFeatureIndex]);
       }
       if(m_Summation)
       {
-        summationArray->initializeTuple(j, static_cast<float32>(summation[localFeatureIndex]));
+        m_SummationArray->initializeTuple(j, static_cast<float32>(summation[localFeatureIndex]));
       }
 
       float32 meanValue = 0.0f;
@@ -149,7 +124,7 @@ public:
 
       if(m_Mean)
       {
-        meanArray->initializeTuple(j, meanValue);
+        m_MeanArray->initializeTuple(j, meanValue);
       }
       if(m_StdDeviation)
       {
@@ -179,7 +154,7 @@ public:
             stdDevVal = static_cast<float32>(std::sqrt(squaredSum / static_cast<float64>(difference.size())));
           }
         }
-        stdDevArray->initializeTuple(j, stdDevVal);
+        m_StdDevArray->initializeTuple(j, stdDevVal);
       }
       if(m_Histogram && histDataStore != nullptr)
       {
@@ -250,9 +225,15 @@ private:
   bool m_HistFullRange;
   int32 m_NumBins;
   const std::unique_ptr<MaskCompare>& m_Mask = nullptr;
-  std::vector<IDataArray*>& m_Arrays;
   const Int32Array* m_FeatureIds = nullptr;
   const DataArray<T>& m_Source;
+  UInt64Array* m_LengthArray = nullptr;
+  DataArray<T>* m_MinArray = nullptr;
+  DataArray<T>* m_MaxArray = nullptr;
+  Float32Array* m_MeanArray = nullptr;
+  Float32Array* m_StdDevArray = nullptr;
+  Float32Array* m_SummationArray = nullptr;
+  Float32Array* m_HistArray = nullptr;
 };
 
 template <typename T>
@@ -409,11 +390,19 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
 {
   if(inputValues->ComputeByIndex)
   {
+    auto* lengthArray = dynamic_cast<DataArray<uint64>*>(arrays[0]);
+    auto* minArray = dynamic_cast<DataArray<T>*>(arrays[1]);
+    auto* maxArray = dynamic_cast<DataArray<T>*>(arrays[2]);
+    auto* meanArray = dynamic_cast<Float32Array*>(arrays[3]);
+    auto* stdDevArray = dynamic_cast<Float32Array*>(arrays[5]);
+    auto* summationArray = dynamic_cast<Float32Array*>(arrays[6]);
+    auto* histArray = dynamic_cast<Float32Array*>(arrays[7]);
+
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numFeatures);
     dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindStdDeviation,
-                                                      inputValues->FindSummation, arrays, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
-                                                      inputValues->NumBins, mask, featureIds, source));
+                                                      inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
+                                                      inputValues->NumBins, mask, featureIds, source, lengthArray, minArray, maxArray, meanArray, stdDevArray, summationArray, histArray));
     if(inputValues->FindMedian)
     {
       auto* medianArray = dynamic_cast<Float32Array*>(arrays[4]);
@@ -531,41 +520,73 @@ struct FindArrayStatisticsFunctor
     if(inputValues->FindLength)
     {
       auto* arrayPtr = dataStructure.getDataAs<UInt64Array>(inputValues->LengthArrayName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563503, "FindArrayStatisticsFunctor could not dynamic_cast 'Length' array to needed type. Check input array selection.");
+      }
       arrayPtr->fill(0ULL);
     }
     if(inputValues->FindMin)
     {
       auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->MinimumArrayName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563504, "FindArrayStatisticsFunctor could not dynamic_cast 'Min' array to needed type. Check input array selection.");
+      }
       arrayPtr->fill(static_cast<T>(std::numeric_limits<T>::max()));
     }
     if(inputValues->FindMax)
     {
       auto* arrayPtr = dataStructure.getDataAs<InputDataArrayType>(inputValues->MaximumArrayName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563505, "FindArrayStatisticsFunctor could not dynamic_cast 'Max' array to needed type. Check input array selection.");
+      }
       arrayPtr->fill(static_cast<T>(std::numeric_limits<T>::min()));
     }
     if(inputValues->FindMean)
     {
       auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->MeanArrayName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563506, "FindArrayStatisticsFunctor could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
+      }
       arrayPtr->fill(0.0F);
     }
     if(inputValues->FindMedian)
     {
       auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->MedianArrayName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563507, "FindArrayStatisticsFunctor could not dynamic_cast 'Median' array to needed type. Check input array selection.");
+      }
       arrayPtr->fill(0.0F);
     }
     if(inputValues->FindStdDeviation)
     {
       auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->StdDeviationArrayName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563508, "FindArrayStatisticsFunctor could not dynamic_cast 'Standard Deviation' array to needed type. Check input array selection.");
+      }
       arrayPtr->fill(0.0F);
     }
     if(inputValues->FindSummation)
     {
       auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->SummationArrayName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563509, "FindArrayStatisticsFunctor could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
+      }
       arrayPtr->fill(0.0F);
     }
     if(inputValues->FindHistogram)
     {
       auto* arrayPtr = dataStructure.getDataAs<Float32Array>(inputValues->HistogramArrayName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563510, "FindArrayStatisticsFunctor could not dynamic_cast 'Histogram' array to needed type. Check input array selection.");
+      }
       arrayPtr->fill(0.0F);
     }
     // End Initialization
