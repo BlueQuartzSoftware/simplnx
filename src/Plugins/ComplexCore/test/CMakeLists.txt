@@ -189,13 +189,15 @@ include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
 # These should be relative to the 
 set(PREBUILT_PIPELINE_NAMES
   # Example or other test pipelines
+  
+  # Currently Broken; Waiting on another PR. https://github.com/BlueQuartzSoftware/complex/pull/472
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Demo.d3dpipeline"
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Image.d3dpipeline"
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ApplyTransformation_Node.d3dpipeline"
+
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ArrayCalculatorExample.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ExecuteProcess.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBiasedFeatures.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBoundaryCells.d3dpipeline"
+
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_CSV_Data.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_STL_Model.d3dpipeline"
@@ -204,7 +206,10 @@ set(PREBUILT_PIPELINE_NAMES
 
   # These are workflow files
   #"${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII_Data.d3dworkflow"
-)
 
+  # These depend on files that are output from OrientationAnalysis Plugin
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBiasedFeatures.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/FindBoundaryCells.d3dpipeline"
+)
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
 

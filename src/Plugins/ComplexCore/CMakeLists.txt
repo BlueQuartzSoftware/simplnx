@@ -307,8 +307,9 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ASCII_Data.tar.gz SHA512 4696b919510aa400b9de6c72d0abe66e7c8be2a4effd350bfd07c4fc24d25ccb45c22e7aca5ad162d88db3e04d700b86f7d1d7e954db90ef00b31b5b46955ed4)
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME STL_Models.tar.gz SHA512 14d5bbb1dcc241a5ad9b17e7647144926f22fca9af5e426798c2ed423d8d3b5d89d8c66ce9e6854bfcdbaea7f72b69980477ab837498e3dca89b5cd2870e2cff)
 
-set(DREAM3D_DATA_ARCHIVES "ASCII_Data")
+set(DREAM3D_DATA_ARCHIVES ASCII_Data STL_Models)
 foreach(archive ${DREAM3D_DATA_ARCHIVES})
   add_custom_target(Copy_${archive} ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${DREAM3D_DATA_DIR}/TestFiles/${archive} ${DATA_DEST_DIR}/${archive}

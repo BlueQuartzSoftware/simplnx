@@ -77,6 +77,15 @@ if(COMPLEX_ENABLE_MULTICORE)
   set_property(GLOBAL PROPERTY COMPLEX_EXTRA_LIBRARY_DIRS ${COMPLEX_EXTRA_LIBRARY_DIRS} ${tbb_dll_path})
 endif()
 
+# -----------------------------------------------------------------------
+# Create the ${DREAM3D_DATA_DIR} if necessary
+# -----------------------------------------------------------------------
+if("${DREAM3D_DATA_DIR}" STREQUAL "")
+  message(WARNING "DREAM3D_DATA_DIR is not defined externally. Defining to ${complex_BINARY_DIR}/DREAM3D_Data")
+  set(DREAM3D_DATA_DIR "${complex_BINARY_DIR}/DREAM3D_Data")
+endif()
+file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
+
 add_library(complex SHARED)
 add_library(complex::complex ALIAS complex)
 

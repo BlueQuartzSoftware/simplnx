@@ -215,7 +215,4 @@ function(create_pipeline_tests)
     add_test(NAME ${ARGS_PLUGIN_NAME}_Pipeline_${padding}${test_index} COMMAND "${CTEST_DRIVER_FILE}" )
   endforeach()
 
-
-
 endfunction()
-
