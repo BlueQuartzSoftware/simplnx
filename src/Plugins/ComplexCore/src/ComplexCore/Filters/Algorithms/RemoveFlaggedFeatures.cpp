@@ -8,8 +8,6 @@
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 
-#include <fstream>
-
 using namespace complex;
 
 namespace
@@ -25,7 +23,7 @@ using Remove = AlgorithmTypeOptions<true, false>;
 using Extract = AlgorithmTypeOptions<false, true>;
 
 template <class AlgorithmTypeOptions = Remove>
-bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel)
+bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, RemoveFlaggedFeatures* filter)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
   SizeVec3 uDims = imageGeom.getDimensions();
@@ -36,6 +34,8 @@ bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std
 
   bool shouldLoop = false;
 
+  auto progressIncrement = dims[2] / 100;
+  usize progressCounter = 0;
   int32 featureName;
   int64 kStride = 0, jStride = 0;
   for(int64 k = 0; k < dims[2]; k++)
@@ -44,6 +44,13 @@ bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std
     {
       return false;
     }
+
+    if(progressCounter > progressIncrement)
+    {
+      filter->sendThreadSafeProgressMessage(progressCounter);
+      progressCounter = 0;
+    }
+    progressCounter++;
 
     kStride = dims[0] * dims[1] * k;
     for(int64 j = 0; j < dims[1]; j++)
@@ -223,9 +230,9 @@ void FindVoxelArrays(const Int32Array& featureIds, const std::vector<int32>& nei
 class RunCropImageGeometryImpl
 {
 public:
-  RunCropImageGeometryImpl(CropImageGeometry& filter, Arguments& args, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
+  RunCropImageGeometryImpl(CropImageGeometry& filter, Arguments args, DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
-  , m_Args(args)
+  , m_Args(std::move(args))
   , m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
   {
@@ -255,7 +262,7 @@ public:
 
 private:
   CropImageGeometry& m_Filter;
-  Arguments& m_Args;
+  Arguments m_Args; // Must copy to be thread safe else risk data-race condition
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -281,18 +288,31 @@ const std::atomic_bool& RemoveFlaggedFeatures::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+void RemoveFlaggedFeatures::sendThreadSafeProgressMessage(size_t counter)
+{
+  /* This filter is does not currently use multithreading so lock is unnecessary.
+   * If this fact changes one MUST UNCOMMENT the below line! */
+  // std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  m_ProgressCounter += counter;
+
+  auto now = std::chrono::steady_clock::now();
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
+  {
+    auto progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / static_cast<double>(m_TotalElements)) * 100.0);
+    std::string progressMessage = "Processing Image... ";
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
+    m_InitialTime = std::chrono::steady_clock::now();
+  }
+}
+
+// -----------------------------------------------------------------------------
 Result<> RemoveFlaggedFeatures::operator()()
 {
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto& flaggedFeatures = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->FlaggedFeaturesArrayPath);
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto function = static_cast<Functionality>(m_InputValues->ExtractFeatures);
-
-  std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
-  if(activeObjects.empty())
-  {
-    return MakeErrorResult(-45433, "All Features were flagged and would all be removed. The filter has quit.");
-  }
 
   if(getCancel())
   {
@@ -302,8 +322,10 @@ Result<> RemoveFlaggedFeatures::operator()()
   // Valid values Functionality::Extract and Functionality::ExtractThenRemove
   if(function != Functionality::Remove)
   {
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Extraction")});
+
     std::vector<int32> bounds((featureIds.getNumberOfTuples() * featureIds.getNumberOfComponents()) * 6, -1);
-    bool invalid = IdentifyNeighborsOrBounds<Extract>(imageGeom, featureIds, bounds, getCancel());
+    bool invalid = IdentifyNeighborsOrBounds<Extract>(imageGeom, featureIds, bounds, getCancel(), this);
     if(invalid)
     {
       return MakeErrorResult(-45430, "Extraction was instantiated wrong!");
@@ -316,12 +338,6 @@ Result<> RemoveFlaggedFeatures::operator()()
 
     ParallelTaskAlgorithm taskRunner;
     CropImageGeometry filter;
-    Arguments args;
-
-    args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
-    args.insertOrAssign(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
-    args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->ImageGeometryPath));
-    args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
 
     usize maxTuple = flaggedFeatures.getNumberOfTuples();
     std::string paddingWidth = std::to_string(std::to_string(maxTuple).size());
@@ -337,6 +353,15 @@ Result<> RemoveFlaggedFeatures::operator()()
         continue;
       }
 
+      // Seems inefficient create an argument everytime, but this is done to prevent a data-race condition and the object is passed by std::move
+      // later to avoid a copy
+      Arguments args;
+
+      args.insertOrAssign(CropImageGeometry::k_UpdateOrigin_Key, std::make_any<bool>(true));
+      args.insertOrAssign(CropImageGeometry::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+      args.insertOrAssign(CropImageGeometry::k_SelectedImageGeometry_Key, std::make_any<DataPath>(m_InputValues->ImageGeometryPath));
+      args.insertOrAssign(CropImageGeometry::k_RenumberFeatures_Key, std::make_any<bool>(false));
+
       usize index = 6 * i;
       args.insertOrAssign(CropImageGeometry::k_MinVoxel_Key,
                           std::make_any<std::vector<uint64>>(std::vector<uint64>{static_cast<uint64>(bounds[index]), static_cast<uint64>(bounds[index + 2]), static_cast<uint64>(bounds[index + 4])}));
@@ -345,9 +370,12 @@ Result<> RemoveFlaggedFeatures::operator()()
 
       args.insertOrAssign(CropImageGeometry::k_CreatedImageGeometry_Key, std::make_any<DataPath>({fmt::format(("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)}));
 
-      taskRunner.execute(RunCropImageGeometryImpl(filter, args, m_DataStructure, getCancel()));
+      m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Now Extracting Feature {} in parallel", i)});
+      taskRunner.execute(RunCropImageGeometryImpl(filter, std::move(args), m_DataStructure, getCancel()));
     }
     taskRunner.wait();
+
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
   }
 
   if(getCancel())
@@ -358,8 +386,10 @@ Result<> RemoveFlaggedFeatures::operator()()
   // Valid values Functionality::Remove and Functionality::ExtractThenRemove
   if(function != Functionality::Extract)
   {
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
+
     std::vector<int32> neighbors((featureIds.getNumberOfTuples() * featureIds.getNumberOfComponents()), -1);
-    //std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
+    std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
     if(activeObjects.empty())
     {
       return MakeErrorResult(-45433, "All Features were flagged and would all be removed. The filter has quit.");
@@ -373,16 +403,20 @@ Result<> RemoveFlaggedFeatures::operator()()
     if(m_InputValues->FillRemovedFeatures)
     {
       bool shouldLoop = false;
+      usize count = 0;
       do
       {
+        count++;
+        m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
         std::fill(neighbors.begin(), neighbors.end(), -1);
-        shouldLoop = IdentifyNeighborsOrBounds(imageGeom, featureIds, neighbors, getCancel());
+        shouldLoop = IdentifyNeighborsOrBounds(imageGeom, featureIds, neighbors, getCancel(), this);
 
         if(getCancel())
         {
           return {};
         }
 
+        m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling bad voxels...")});
         std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
         FindVoxelArrays(featureIds, neighbors, voxelArrays, getCancel());
       } while(shouldLoop);
@@ -393,6 +427,7 @@ Result<> RemoveFlaggedFeatures::operator()()
       return {};
     }
 
+    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
     DataPath featureGroupPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();
     if(!RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures.getNumberOfTuples()))
     {
