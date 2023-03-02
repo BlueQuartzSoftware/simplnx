@@ -506,7 +506,7 @@ void FindArrayStatistics::sendMessage(const std::string& action)
 }
 
 // -----------------------------------------------------------------------------
-void FindArrayStatistics::sendThreadSafeProgressMessage(size_t counter) //only use when computing by index
+void FindArrayStatistics::sendThreadSafeProgressMessage(size_t counter) // only use when computing by index
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
@@ -570,7 +570,7 @@ Result<> FindArrayStatistics::operator()()
   if(m_InputValues->ComputeByIndex)
   {
     // This will use thread-safe message so set total elements to num features
-    m_TotalElements = numFeatures; //only used when computing by index
+    m_TotalElements = numFeatures; // only used when computing by index
     const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
     numFeatures = FindNumFeatures(featureIds);
 
