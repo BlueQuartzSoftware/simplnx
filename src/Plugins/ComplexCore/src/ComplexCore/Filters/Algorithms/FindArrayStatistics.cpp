@@ -275,7 +275,9 @@ public:
     for(usize j = start; j < end; j++)
     {
       std::vector<T> featureSource;
-      featureSource.reserve(numTuples);
+      usize reserveSize = 10; // not sure what to put here so making a guess
+      featureSource.reserve(reserveSize);
+      usize numPushBacks = 0;
       for(usize i = 0; i < numTuples; ++i)
       {
         if(m_Mask != nullptr && !m_Mask->isTrue(i))
@@ -284,7 +286,13 @@ public:
         }
         if((*m_FeatureIds)[i] == static_cast<int32>(j))
         {
+          if(numPushBacks >= reserveSize)
+          {
+            reserveSize *= 10;
+            featureSource.reserve(reserveSize);
+          }
           featureSource.push_back(m_Source[i]);
+          ++numPushBacks;
         }
       }
       const float32 val = StaticicsCalculations::findMedian(featureSource);
