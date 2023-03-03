@@ -1,5 +1,5 @@
-#include "Core/Core_test_dirs.hpp"
-#include "Core/Filters/FindNeighborhoodsFilter.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/FindNeighborhoodsFilter.hpp"
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
@@ -20,7 +20,7 @@ const std::string k_Neighborhoods("Neighborhoods");
 const std::string k_NeighborhoodList("NeighborhoodList");
 } // namespace
 
-TEST_CASE("Core::FindNeighborhoods", "[Core][FindNeighborhoods]")
+TEST_CASE("ComplexCore::FindNeighborhoods", "[ComplexCore][FindNeighborhoods]")
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test.dream3d", unit_test::k_TestFilesDir));
