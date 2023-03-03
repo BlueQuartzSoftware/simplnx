@@ -1,11 +1,61 @@
 #pragma once
 
 #include "complex/Common/Types.hpp"
+#include "complex/Filter/IFilter.hpp"
 
+#include <chrono>
+#include <mutex>
 #include <stdexcept>
 
 namespace complex
 {
+class COMPLEX_EXPORT ThreadSafeMessenger
+{
+public:
+  ThreadSafeMessenger(const IFilter::MessageHandler& messageHandler, usize milliDelay = 1000);
+  ~ThreadSafeMessenger() = default;
+
+  ThreadSafeMessenger(const ThreadSafeMessenger&) = delete;
+  ThreadSafeMessenger(ThreadSafeMessenger&&) noexcept = delete;
+  ThreadSafeMessenger& operator=(const ThreadSafeMessenger&) = delete;
+  ThreadSafeMessenger& operator=(ThreadSafeMessenger&&) noexcept = delete;
+
+  void updateProgress(size_t counter);
+
+private:
+  const IFilter::MessageHandler& m_MessageHandler;
+  usize m_MilliDelay; // Default = 1 second
+
+  mutable std::mutex m_ProgressMessage_Mutex;
+  size_t m_TotalElements = 0;
+  size_t m_ProgressCounter = 0;
+  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
+};
+
+class COMPLEX_EXPORT ThreadSafeMultiTaskMessenger
+{
+public:
+  ThreadSafeMultiTaskMessenger(const IFilter::MessageHandler& messageHandler, usize milliDelay = 1000);
+  ~ThreadSafeMultiTaskMessenger() = default;
+
+  ThreadSafeMultiTaskMessenger(const ThreadSafeMultiTaskMessenger&) = delete;
+  ThreadSafeMultiTaskMessenger(ThreadSafeMultiTaskMessenger&&) noexcept = delete;
+  ThreadSafeMultiTaskMessenger& operator=(const ThreadSafeMultiTaskMessenger&) = delete;
+  ThreadSafeMultiTaskMessenger& operator=(ThreadSafeMultiTaskMessenger&&) noexcept = delete;
+
+  void updateProgress(size_t counter);
+
+private:
+  const IFilter::MessageHandler& m_MessageHandler;
+  usize m_MilliDelay = 1000; // Default = 1 second
+
+  mutable std::mutex m_ProgressMessage_Mutex;
+  size_t m_TotalElements = 0;
+  size_t m_ProgressCounter = 0;
+  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
+};
+
+
 template <bool UseBoolean, bool UseInt8V, bool UseUInt8V, bool UseInt16V, bool UseUInt16V, bool UseInt32V, bool UseUInt32V, bool UseInt64V, bool UseUInt64V, bool UseFloat32V, bool UseFloat64V>
 struct ArrayTypeOptions
 {
