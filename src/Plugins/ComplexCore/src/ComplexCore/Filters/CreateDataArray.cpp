@@ -146,8 +146,10 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
     tupleDims = parentAM->getShape();
     if(useDims)
     {
-      return {ConvertResultTo<OutputActions>(MakeWarningVoidResult(-78603, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                                           "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."), {})};
+      return {ConvertResultTo<OutputActions>(
+          MakeWarningVoidResult(-78603, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                                        "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."),
+          {})};
     }
   }
 
