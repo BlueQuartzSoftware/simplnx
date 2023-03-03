@@ -239,29 +239,6 @@ Result<> H5EbsdReaderParameter::validate(const std::any& valueRef) const
     return {nonstd::make_unexpected(std::move(errors))};
   }
 
-  int64_t dims[3];
-  float res[3];
-  reader->getDimsAndResolution(dims[0], dims[1], dims[2], res[0], res[1], res[2]);
-  /* Sanity check what we are trying to load to make sure it can fit in our address space.
-   * Note that this does not guarantee the user has enough left, just that the
-   * size of the volume can fit in the address space of the program
-   */
-  int64_t max = std::numeric_limits<int64_t>::max();
-
-  if(dims[0] * dims[1] * dims[2] > max)
-  {
-    errors.push_back({-2005, fmt::format("The total number of elements '%1' is greater than this program can hold. Try the 64 bit version", dims[0] * dims[1] * dims[2])});
-    return {nonstd::make_unexpected(std::move(errors))};
-  }
-
-  if(dims[0] > max || dims[1] > max || dims[2] > max)
-  {
-    errors.push_back({-2005, fmt::format("One of the dimensions is greater than the max index for this sysem. Try the 64 bit version"
-                                         " dim[0]={}  dim[1]={}  dim[2]={}",
-                                         dims[0], dims[1], dims[2])});
-    return {nonstd::make_unexpected(std::move(errors))};
-  }
-
   if(!errors.empty())
   {
     return {nonstd::make_unexpected(std::move(errors))};
