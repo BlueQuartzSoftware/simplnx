@@ -146,6 +146,7 @@ Result<> FindFeatureCentroids::operator()()
   std::vector<double> center(totalFeatures * 3, 0.0);
   std::vector<size_t> count(totalFeatures * 3, 0.0);
 
+  m_TotalElements = totalFeatures;
   auto progressIncrement = totalFeatures / 100;
 
   // The first part can be expensive so parallelize the algorithm
