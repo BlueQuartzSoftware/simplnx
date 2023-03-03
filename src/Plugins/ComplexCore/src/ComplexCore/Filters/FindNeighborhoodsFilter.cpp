@@ -1,6 +1,6 @@
 #include "FindNeighborhoodsFilter.hpp"
 
-#include "Core/Filters/Algorithms/FindNeighborhoods.hpp"
+#include "Algorithms/FindNeighborhoods.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"

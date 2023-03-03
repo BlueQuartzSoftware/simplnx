@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Core_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -11,7 +11,7 @@ namespace complex
  * @class FindNeighborhoodsFilter
  * @brief This filter will ....
  */
-class CORE_EXPORT FindNeighborhoodsFilter : public IFilter
+class COMPLEXCORE_EXPORT FindNeighborhoodsFilter : public IFilter
 {
 public:
   FindNeighborhoodsFilter() = default;
