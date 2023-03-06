@@ -1,6 +1,8 @@
 
 #include "ImageRotationUtilities.hpp"
 
+#include <algorithm>
+
 namespace complex::ImageRotationUtilities
 {
 
@@ -62,9 +64,9 @@ float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
 
   const std::array<float, 3> axes = {xAngle, yAngle, zAngle};
 
-  const auto* iterPtr = std::max_element(axes.cbegin(), axes.cend());
+  const std::array<float,3>::const_iterator maxElementIter = std::max_element(axes.cbegin(), axes.cend());
 
-  const size_t index = std::distance(axes.cbegin(), iterPtr);
+  const size_t index = std::distance(axes.cbegin(), maxElementIter);
 
   return spacing[index];
 }
