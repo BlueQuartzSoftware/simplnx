@@ -762,8 +762,8 @@ Result<DataStructure> ImportDataStructureV8(const complex::HDF5::FileReader& fil
  * @param cDims
  */
 template <typename T>
-DataArray<T>* createLegacyDataArray(DataStructure& dataStructure, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims,
-                                  bool preflight = false)
+DataArray<T>* createLegacyDataArray(DataStructure& dataStructure, DataObject::IdType parentId, const HDF5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims,
+                                    const std::vector<usize>& cDims, bool preflight = false)
 {
   using DataArrayType = DataArray<T>;
   using EmptyDataStoreType = EmptyDataStore<T>;
@@ -899,9 +899,9 @@ IDataArray* readLegacyDataArray(DataStructure& dataStructure, const complex::HDF
   return dataArray;
 }
 
-UInt64Array* readLegacyNodeConnectivityList(DataStructure& dataStructure, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName, bool preflight = false)
+UInt64Array* readLegacyNodeConnectivityList(DataStructure& dataStructure, IGeometry* geometry, const HDF5::GroupReader& geomGroup, const std::string& arrayName, bool preflight = false)
 {
-  H5::DatasetReader dataArrayReader = geomGroup.openDataset(arrayName);
+  HDF5::DatasetReader dataArrayReader = geomGroup.openDataset(arrayName);
   DataObject::IdType parentId = geometry->getId();
 
   auto size = H5Dget_storage_size(dataArrayReader.getId());

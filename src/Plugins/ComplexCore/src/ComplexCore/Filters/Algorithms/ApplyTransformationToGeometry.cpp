@@ -94,8 +94,7 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     else if(m_InputValues->InterpolationSelection == k_LinearInterpolationIdx)
     {
       ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation, NoBooleanType>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr,
-                                                                                                                    rotateArgs,
-                                                                                                     m_TransformationMatrix, &filterProgressCallback);
+                                                                                                                    rotateArgs, m_TransformationMatrix, &filterProgressCallback);
     }
 
     if(getCancel())
