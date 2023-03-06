@@ -127,7 +127,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 {
   auto pTransformationMatrixTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_TransformationType_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key);
-  auto pComputedTransformationMatrixValue = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
+  auto pComputedTransformationMatrixPath = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
   auto pSelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   // PreflightResult preflightResult;
@@ -156,6 +156,12 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   }
   case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
   {
+    const Float32Array* precomputedMatrixPtr = dataStructure.getDataAs<Float32Array>(pComputedTransformationMatrixPath);
+    if(nullptr == precomputedMatrixPtr)
+    {
+      return {MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
+    }
+    transformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(*precomputedMatrixPtr);
     break;
   }
   case k_ManualTransformationMatrixIdx: // Manual transformation matrix
@@ -261,6 +267,13 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
       FloatVec3 originVec = {rotateArgs.OriginalOrigin[0] + pTranslationValue[0], rotateArgs.OriginalOrigin[1] + pTranslationValue[1], rotateArgs.OriginalOrigin[2] + pTranslationValue[2]};
       auto spacingVec = imageGeomPtr->getSpacing();
+      resultOutputActions.value().actions.push_back(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
+    }
+    else if(pTransformationMatrixTypeValue == k_ScaleIdx)
+    {
+      auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
+      FloatVec3 spacingVec = {rotateArgs.OriginalSpacing[0] * pScaleValue[0], rotateArgs.OriginalSpacing[1] * pScaleValue[1], rotateArgs.OriginalSpacing[2] * pScaleValue[2]};
+      auto originVec = imageGeomPtr->getOrigin();
       resultOutputActions.value().actions.push_back(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
     else // We are Rotating or scaling, manual transformation or precomputed. we need to create a brand new Image Geometry

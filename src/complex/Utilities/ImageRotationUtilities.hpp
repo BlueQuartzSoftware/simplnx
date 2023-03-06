@@ -471,12 +471,12 @@ template <typename T>
 class RotateImageGeometryWithNearestNeighbor
 {
 public:
-  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR transformationMatrix, bool sliceBySlice,
+  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
                                          FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(args)
-  , m_TransformationMatrix(std::move(transformationMatrix))
+  , m_TransformationMatrix(transformationMatrix)
   , m_SliceBySlice(sliceBySlice)
   , m_FilterCallback(filterCallback)
   {

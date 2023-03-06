@@ -39,6 +39,12 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     return {};
   }
 
+  // Pure Scale for image geom, just return
+  if(m_InputValues->TransformationSelection == k_ScaleIdx)
+  {
+    return {};
+  }
+
   DataPath destImagePath;
   if(m_InputValues->RemoveOriginalGeometry)
   {
