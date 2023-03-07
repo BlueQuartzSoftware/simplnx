@@ -49,6 +49,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindEuclideanDistMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
   FindFeaturePhasesFilterTest.cpp
+  FindNeighborhoodsTest.cpp
   FindNeighborListStatisticsTest.cpp
   FindNeighborsTest.cpp
   FindNumFeaturesTest.cpp
