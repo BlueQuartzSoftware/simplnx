@@ -62,13 +62,13 @@ void ThreadSafeMessenger::setTotalElements(usize totalElements)
 }
 
 // -----------------------------------------------------------------------------
-usize ThreadSafeMessenger::getProgressIncrement()
+usize ThreadSafeMessenger::getProgressIncrement() const
 {
   return m_ProgressIncrement;
 }
 
 // -----------------------------------------------------------------------------
-usize ThreadSafeMessenger::getTotalElements()
+usize ThreadSafeMessenger::getTotalElements() const
 {
   return m_TotalElements;
 }
@@ -147,51 +147,54 @@ bool ThreadSafeMultiTaskMessenger::addArray(uint64 id, usize progressIncrement, 
 // -----------------------------------------------------------------------------
 bool ThreadSafeMultiTaskMessenger::setProgressIncrement(usize progressIncrement, uint64 id)
 {
-  if(m_Data.count(id))
+
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  if(!m_Data.count(id))
   {
-    std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-    (m_Data[id]).first[1] = progressIncrement;
-    return true;
+    return false;
   }
 
-  return false;
+  (m_Data[id]).first[1] = progressIncrement;
+  return true;
 }
 
 // -----------------------------------------------------------------------------
 bool ThreadSafeMultiTaskMessenger::setTotalElements(usize totalElements, uint64 id)
 {
-  if(m_Data.count(id))
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  if(!m_Data.count(id))
   {
-    std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-    (m_Data[id]).first[2] = totalElements;
-    return true;
+    return false;
   }
 
-  return false;
+  (m_Data[id]).first[2] = totalElements;
+  return true;
 }
 
 // -----------------------------------------------------------------------------
 usize ThreadSafeMultiTaskMessenger::getProgressIncrement(uint64 id) const
 {
-  if(m_Data.count(id))
+  if(!m_Data.count(id))
   {
-    return (m_Data.at(id)).first[1];
+    // should be treated as a fail: just throw an if around the returned
+    // value to error check
+    return 0;
   }
 
-  // should be treated as a fail: just throw an if around the returned
-  // value to error check
-  return 0;
+  return (m_Data.at(id)).first[1];
 }
 
 // -----------------------------------------------------------------------------
 usize ThreadSafeMultiTaskMessenger::getTotalElements(uint64 id) const
 {
-  if(m_Data.count(id))
+  if(!m_Data.count(id))
   {
-    return (m_Data.at(id)).first[2];
+    // should be treated as a fail: just throw an if around the returned
+    // value to error check
+    return 0;
   }
 
-  // should be treated as a fail: just throw an if around the returned
-  // value to error check
-  return 0;
+  return (m_Data.at(id)).first[2];
 }
