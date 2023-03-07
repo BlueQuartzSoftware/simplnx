@@ -78,6 +78,7 @@ set(FilterList
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RawBinaryReaderFilter
+  RemoveFlaggedFeaturesFilter
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
   RenameDataObject
@@ -133,6 +134,7 @@ set(AlgorithmList
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   RawBinaryReader
+  RemoveFlaggedFeatures
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
   ScalarSegmentFeatures

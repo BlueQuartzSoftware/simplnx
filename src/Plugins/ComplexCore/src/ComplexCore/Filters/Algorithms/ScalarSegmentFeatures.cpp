@@ -221,12 +221,16 @@ Result<> ScalarSegmentFeatures::operator()()
 
   execute(gridGeom);
 
-  IDataArray* activeArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->pActiveArrayPath);
+  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->pActiveArrayPath);
   auto totalFeatures = activeArray->getNumberOfTuples();
   if(totalFeatures < 2)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-87000, "The number of Features was 0 or 1 which means no Features were detected. A threshold value may be set too high"}})};
   }
+
+  // make sure all values are initialized and "re-reserve" index 0
+  activeArray->getDataStore()->fill(1);
+  (*activeArray)[0] = 0;
 
   // By default we randomize grains
   if(m_InputValues->pShouldRandomizeFeatureIds)
