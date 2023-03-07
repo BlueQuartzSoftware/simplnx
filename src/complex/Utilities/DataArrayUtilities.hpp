@@ -739,6 +739,10 @@ struct MaskCompare
   virtual bool isTrue(usize index) const = 0;
 
   virtual void setValue(usize index, bool val) = 0;
+
+  virtual usize getNumberOfTuples() = 0;
+
+  virtual usize getNumberOfComponents() = 0;
 };
 
 struct BoolMaskCompare : public MaskCompare
@@ -766,6 +770,14 @@ struct BoolMaskCompare : public MaskCompare
   {
     m_Array[index] = val;
   }
+  usize getNumberOfTuples() override
+  {
+    return m_Array.getNumberOfTuples();
+  }
+  usize getNumberOfComponents() override
+  {
+    return m_Array.getNumberOfComponents();
+  }
 };
 
 struct UInt8MaskCompare : public MaskCompare
@@ -791,6 +803,14 @@ struct UInt8MaskCompare : public MaskCompare
   void setValue(usize index, bool val) override
   {
     m_Array[index] = static_cast<uint8>(val);
+  }
+  usize getNumberOfTuples() override
+  {
+    return m_Array.getNumberOfTuples();
+  }
+  usize getNumberOfComponents() override
+  {
+    return m_Array.getNumberOfComponents();
   }
 };
 
