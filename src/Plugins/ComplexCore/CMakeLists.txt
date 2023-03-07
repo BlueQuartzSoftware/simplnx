@@ -49,6 +49,7 @@ set(FilterList
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
   FindFeaturePhasesFilter
+  FindNeighborhoodsFilter
   FindNeighborListStatistics
   FindNeighbors
   FindNumFeaturesFilter
@@ -120,6 +121,7 @@ set(AlgorithmList
   FindBoundaryCells
   FindEuclideanDistMap
   FindFeatureCentroids
+  FindNeighborhoods
   FindSurfaceAreaToVolume
   FindTriangleGeomCentroids
   FindTriangleGeomSizes
