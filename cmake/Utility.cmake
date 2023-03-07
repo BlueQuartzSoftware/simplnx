@@ -180,7 +180,7 @@ function(pad_string output str padchar length)
 endfunction()
 
 #------------------------------------------------------------------------------
-#
+# This function creates a CTest for each Pipeline path passed into it.
 #------------------------------------------------------------------------------
 function(create_pipeline_tests)
   set(optionsArgs)
@@ -189,13 +189,11 @@ function(create_pipeline_tests)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
   
   set(TEST_PIPELINE_LIST_FILE ${${ARGS_PLUGIN_NAME}_BINARY_DIR}/test/Prebuilt_Pipeline_Tests.txt)
-  FILE(WRITE ${TEST_PIPELINE_LIST_FILE} )
-  set(TEST_SCRIPT_FILE_EXT "sh")
-  set(EXE_EXT "")
-  if(WIN32)
-    set(TEST_SCRIPT_FILE_EXT "bat")
-    set(EXE_EXT ".exe")
-  endif()
+  FILE(WRITE ${TEST_PIPELINE_LIST_FILE} "# ${ARGS_PLUGIN_NAME} Example Pipelines Test List")
+
+  get_target_property(PIPELINE_RUNNER_NAME PipelineRunner NAME)
+  get_target_property(PIPELINE_RUNNER_DEBUG PipelineRunner DEBUG_POSTFIX)
+  
   set(test_index  "0")
   foreach(pipeline_file_path ${ARGS_PIPELINE_LIST} )
     math(EXPR test_index "${test_index} + 1")
@@ -204,15 +202,15 @@ function(create_pipeline_tests)
 
     FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "[${padding}${test_index}]    ${pipeline_file_path}\n")
     
-    get_filename_component(test ${pipeline_file_path} NAME_WE)
+    get_filename_component(test_file_name ${pipeline_file_path} NAME_WE)
+    string(REPLACE "/" "-" test_file_name "${test_file_name}")
 
-    set(CTEST_DRIVER_FILE "${${ARGS_PLUGIN_NAME}_BINARY_DIR}/test/prebuilt_pipeline_tests/${padding}${test_index}_${test}.${TEST_SCRIPT_FILE_EXT}")
-    configure_file("${complex_SOURCE_DIR}/test/cmake/ctest_pipeline_driver.${TEST_SCRIPT_FILE_EXT}" 
-                  "${CTEST_DRIVER_FILE}" @ONLY)
-
-    string(REPLACE "/" "_" test "${test}")
-    
-    add_test(NAME ${ARGS_PLUGIN_NAME}_Pipeline_${padding}${test_index} COMMAND "${CTEST_DRIVER_FILE}" )
+    add_test(NAME "${ARGS_PLUGIN_NAME} ${padding}${test_index} ${test_file_name}"
+            COMMAND "${PIPELINE_RUNNER_NAME}$<$<CONFIG:Debug>:${PIPELINE_RUNNER_DEBUG}>" "${pipeline_file_path}" 
+            #CONFIGURATIONS Debug
+            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
   endforeach()
 
 endfunction()
+
+#set_tests_properties(dependsTest12 PROPERTIES DEPENDS "baseTest1;baseTest2")

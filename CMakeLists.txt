@@ -649,6 +649,12 @@ target_include_directories(complex
     $<INSTALL_INTERFACE:include>
 )
 
+
+#------------------------------------------------------------------------------
+# Pipeline Runner Executable
+#------------------------------------------------------------------------------
+add_subdirectory(${complex_SOURCE_DIR}/src/PipelineRunner)
+
 #------------------------------------------------------------------------------
 # Complex Plugins Section
 #------------------------------------------------------------------------------
@@ -762,6 +768,3 @@ if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-# -----------------------------
-# Pipeline Runner
-add_subdirectory(${complex_SOURCE_DIR}/src/PipelineRunner)
