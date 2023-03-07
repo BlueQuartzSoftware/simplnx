@@ -13,14 +13,12 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # These are all the filters in the plugin. All filters should be kept in the
 # Core/src/Core/Filters/ directory.
 set(FilterList
-    RemoveFlaggedFeaturesFilter
 )
 # ------------------------------------------------------------------------------
 # Algorithms
 # This should be integrated with the `create_complex_plugin` function call
 # ------------------------------------------------------------------------------
 set(AlgorithmList
-  RemoveFlaggedFeatures
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
