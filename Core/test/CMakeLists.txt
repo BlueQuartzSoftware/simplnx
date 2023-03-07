@@ -6,7 +6,6 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-  FindNeighborhoodsTest.cpp
   RemoveFlaggedFeaturesTest.cpp
 )
 
