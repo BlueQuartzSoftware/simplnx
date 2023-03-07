@@ -1,8 +1,9 @@
 #include "CreateGeometryFilter.hpp"
 
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Filter/Actions/CreateGeometry1DAction.hpp"
 #include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Filter/Actions/CreateGeometry3DAction.hpp"
@@ -114,6 +115,8 @@ Parameters CreateGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GeometryType_Key, "Geometry Type", "The type of Geometry to create", 0, GetAllGeometryTypesAsStrings()));
+  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnitType_Key, "Length Unit", "The length unit to be used in the geometry", to_underlying(IGeometry::LengthUnit::Millimeter),
+                                                   IGeometry::GetAllLengthUnitStrings()));
   params.insert(std::make_unique<BoolParameter>(k_WarningsAsErrors_Key, "Treat Geometry Warnings as Errors", "Whether run time warnings for Geometries should be treated as errors", false));
   params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling",
                                                    "Determines if the arrays that make up the geometry primitives should be Moved or Copied to the created Geometry object.", 0,
@@ -386,6 +389,10 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& data, const Arguments&
   auto geometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
   auto treatWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
   auto moveArrays = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key) == k_MoveArray;
+
+  auto iGeometry = data.getDataAs<IGeometry>(geometryPath);
+  auto lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key));
+  iGeometry->setUnits(lengthUnit);
 
   DataPath sharedVertexListArrayPath;
   DataPath sharedFaceListArrayPath;
