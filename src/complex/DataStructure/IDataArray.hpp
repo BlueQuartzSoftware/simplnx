@@ -144,18 +144,12 @@ public:
 
   /**
    * @brief Returns the StoreType of the underlying IDataStore specifying if
-   * the IDataStore is in memory, out of core, empty, or unknown.
-   * Returns Unknown if no store could be found.
+   * the IDataStore is in memory, out of core, or empty.
    * @return IDataStore::StoreType
    */
   IDataStore::StoreType getStoreType() const
   {
-    const IDataStore* store = getIDataStore();
-    if(store == nullptr)
-    {
-      return IDataStore::StoreType::Unknown;
-    }
-    return store->getStoreType();
+    return getIDataStoreRef().getStoreType();
   }
 
   /**

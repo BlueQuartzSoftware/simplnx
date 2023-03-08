@@ -25,7 +25,6 @@ public:
 
   enum class StoreType : int32
   {
-    Unknown = -1,
     InMemory = 0,
     OutOfCore,
     Empty,
