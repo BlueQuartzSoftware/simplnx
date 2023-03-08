@@ -186,22 +186,6 @@ public:
   NeighborListIO& operator=(NeighborListIO&& rhs) = delete;
 };
 
-// -----------------------------------------------------------------------------
-// Declare our extern templates
-extern template class NeighborListIO<int8>;
-extern template class NeighborListIO<uint8>;
-extern template class NeighborListIO<int16>;
-extern template class NeighborListIO<uint16>;
-extern template class NeighborListIO<int32>;
-extern template class NeighborListIO<uint32>;
-extern template class NeighborListIO<int64>;
-extern template class NeighborListIO<uint64>;
-
-extern template class NeighborListIO<float32>;
-extern template class NeighborListIO<float64>;
-
-// extern template class NeighborList<usize>;
-
 using Int8NeighborIO = NeighborListIO<int8>;
 using Int16NeighborIO = NeighborListIO<int16>;
 using Int32NeighborIO = NeighborListIO<int32>;
