@@ -2,7 +2,6 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Output.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
 
 #include <optional>
 #include <vector>

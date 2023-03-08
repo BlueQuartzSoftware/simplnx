@@ -63,7 +63,7 @@ void WriteNsiBinaryDataFiles(const fs::path& binaryFilePath1, const fs::path& bi
     REQUIRE(binaryDataStream.good() == true);
 
     std::array<float32, array1Size> floatArray = {};
-    std::generate(floatArray.begin(), floatArray.end(), [val = usize(0)]() mutable { return val++; });
+    std::generate(floatArray.begin(), floatArray.end(), [val = usize(0)]() mutable { return static_cast<float32>(val++); });
     binaryDataStream.write(reinterpret_cast<const char*>(&floatArray), sizeof(float32) * floatArray.size());
 
     binaryDataStream.close();
@@ -73,7 +73,7 @@ void WriteNsiBinaryDataFiles(const fs::path& binaryFilePath1, const fs::path& bi
     REQUIRE(binaryDataStream.good() == true);
 
     std::array<float32, array2Size> floatArray = {};
-    std::generate(floatArray.begin(), floatArray.end(), [val = usize(array1Size)]() mutable { return val++; });
+    std::generate(floatArray.begin(), floatArray.end(), [val = usize(array1Size)]() mutable { return static_cast<float32>(val++); });
     binaryDataStream.write(reinterpret_cast<const char*>(&floatArray), sizeof(float32) * floatArray.size());
 
     binaryDataStream.close();

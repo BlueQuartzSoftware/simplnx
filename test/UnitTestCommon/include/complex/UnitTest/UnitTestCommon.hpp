@@ -10,6 +10,7 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -17,7 +18,7 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 #include <fmt/format.h>
@@ -224,11 +225,12 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
  */
 inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
 {
-  Pipeline pipeline;
-  bool writeXdmf = true;
-
-  auto result = DREAM3D::WriteFile(filepath, dataStructure, pipeline, writeXdmf);
+  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filepath);
   COMPLEX_RESULT_REQUIRE_VALID(result);
+  complex::HDF5::FileWriter fileWriter = std::move(result.value());
+
+  const Result<> result2 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  COMPLEX_RESULT_REQUIRE_VALID(result2);
 }
 
 /**
@@ -526,7 +528,7 @@ inline DataStructure CreateDataStructure()
   Float32Array* ci_data = CreateTestDataArray<float>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
   Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
   Int32Array* phases_data = CreateTestDataArray<int32>(dataStructure, "Phases", tupleShape, {numComponents}, scanData->getId());
-  USizeArray* voxelIndices = CreateTestDataArray<usize>(dataStructure, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
+  UInt64Array* voxelIndices = CreateTestDataArray<uint64>(dataStructure, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
 
   BoolArray* conditionalArray = CreateTestDataArray<bool>(dataStructure, Constants::k_ConditionalArray, tupleShape, {1}, scanData->getId());
   conditionalArray->fill(true);
@@ -574,7 +576,7 @@ inline DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShap
 
   // DataStore<usize>::ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   // Create Scalar type data
-  DataStore<usize>::ShapeType componentShape = {1ULL};
+  DataStore<uint64>::ShapeType componentShape = {1ULL};
 
   CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
   CreateTestDataArray<uint8>(dataStructure, Constants::k_Uint8DataSet, tupleShape, componentShape, levelOneId);

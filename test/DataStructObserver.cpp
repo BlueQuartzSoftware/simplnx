@@ -7,6 +7,8 @@
 #include "complex/DataStructure/Messaging/DataRenamedMessage.hpp"
 #include "complex/DataStructure/Messaging/DataReparentedMessage.hpp"
 
+using namespace complex;
+
 DataStructObserver::DataStructObserver(DataStructure& dataStruct)
 : AbstractDataStructureObserver()
 , m_DataStructure(dataStruct)

@@ -103,10 +103,6 @@ Result<> CheckValueConvertsToArrayType(const std::string& value, const DataObjec
   {
     return CheckValuesUnsignedInt<uint64>(value, Constants::k_UInt64);
   }
-  if(TemplateHelpers::CanDynamicCast<DataArray<usize>>()(&inputDataArray))
-  {
-    return CheckValuesUnsignedInt<usize>(value, Constants::k_USize);
-  }
 
   return {MakeErrorResult(-259, fmt::format("Input DataObject could not be cast to any primitive type."))};
 }
@@ -228,10 +224,6 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
   if(TemplateHelpers::CanDynamicCast<BoolArray>()(inputDataArray))
   {
     return ReplaceArray<bool>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
-  }
-  if(TemplateHelpers::CanDynamicCast<DataArray<usize>>()(inputDataArray))
-  {
-    return ReplaceArray<usize>(dataStructure, dataPath, tupleShape, mode, *inputDataArray);
   }
 
   return MakeErrorResult(-401, fmt::format("The input array at DataPath '{}' was of an unsupported type", dataPath.toString()));

@@ -1,5 +1,6 @@
 #include "ConvertColorToGrayScale.hpp"
 
+#include "complex/Common/Array.hpp"
 #include "complex/Common/Range.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"

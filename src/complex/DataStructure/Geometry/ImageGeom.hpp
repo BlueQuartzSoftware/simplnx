@@ -93,6 +93,12 @@ public:
   std::string getTypeName() const override;
 
   /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  static std::string GetTypeName();
+
+  /**
    * @brief
    * @return DataObject*
    */
@@ -339,23 +345,6 @@ public:
    * @return ErrorType
    */
   ErrorType computeCellIndex(const Point3D<float32>& coords, SizeVec3& index) const;
-
-  /**
-   * @brief Reads values from HDF5
-   * @param dataStructureReader
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupId, bool preflight = false) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   /**

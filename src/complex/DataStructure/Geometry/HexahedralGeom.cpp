@@ -3,8 +3,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 #include <stdexcept>
 
@@ -56,6 +54,11 @@ BaseGroup::GroupType HexahedralGeom::getGroupType() const
 }
 
 std::string HexahedralGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string HexahedralGeom::GetTypeName()
 {
   return k_TypeName;
 }

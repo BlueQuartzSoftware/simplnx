@@ -1,11 +1,13 @@
 #pragma once
 
 #include "complex/Common/Result.hpp"
+#include "complex/Core/Application.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
+#include "complex/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
@@ -298,6 +300,14 @@ Result<> ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr,
  */
 COMPLEX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray);
 
+template <class T>
+uint64 CalculateDataSize(const IDataStore::ShapeType& tupleShape, const IDataStore::ShapeType& componentShape)
+{
+  uint64 numValues = std::accumulate(tupleShape.begin(), tupleShape.end(), 1ULL, std::multiplies<>());
+  uint64 numComponents = std::accumulate(componentShape.begin(), componentShape.end(), 1ULL, std::multiplies<>());
+  return numValues * numComponents * sizeof(T);
+}
+
 /**
  * @brief Creates a DataStore with the given properties
  * @tparam T Primitive Type (int, float, ...)
@@ -307,15 +317,18 @@ COMPLEX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueA
  * @return
  */
 template <class T>
-std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape, IDataAction::Mode mode)
+std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape, IDataAction::Mode mode,
+                                                      std::string dataFormat = "")
 {
   switch(mode)
   {
   case IDataAction::Mode::Preflight: {
-    return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
+    return std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape, dataFormat);
   }
   case IDataAction::Mode::Execute: {
-    return std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
+    uint64 dataSize = CalculateDataSize<T>(tupleShape, componentShape);
+    Application::GetOrCreateInstance()->getIOCollection()->checkStoreDataFormat(dataSize, dataFormat);
+    return Application::GetOrCreateInstance()->getIOCollection()->createDataStoreWithType<T>(dataFormat, tupleShape, componentShape);
   }
   default: {
     throw std::runtime_error("Invalid mode");
@@ -334,7 +347,7 @@ std::unique_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
  * @return
  */
 template <class T>
-Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode)
+Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode, std::string dataFormat = "")
 {
 
   auto parentPath = path.getParent();
@@ -373,7 +386,7 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   std::string name = path[last];
 
-  auto store = CreateDataStore<T>(tupleShape, compShape, mode);
+  auto store = CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
   auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), dataObjectId);
   if(dataArray == nullptr)
   {

@@ -1,8 +1,13 @@
 #pragma once
 
+#include "complex/Common/Array.hpp"
+#include "complex/Common/BoundingBox.hpp"
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
+
+#include <optional>
 
 namespace complex
 {
@@ -52,6 +57,9 @@ public:
    * @param vertices The coordinate array that will now be used for the vertex coordinates
    */
   void setVertices(const SharedVertexList& vertices);
+
+  std::optional<IdType> getVertexListId() const;
+  void setVertexListId(const std::optional<IdType>& vertices);
 
   /**
    * @brief Resizes the vertex list to the target size.
@@ -129,6 +137,8 @@ public:
    */
   const std::optional<IdType>& getVertexAttributeMatrixId() const;
 
+  void setVertexDataId(const OptionalId& vertexDataId);
+
   /**
    * @brief Returns pointer to the Attribute Matrix that holds data assigned to each vertex coordinate
    * @return
@@ -165,22 +175,6 @@ public:
    */
   void setVertexAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
 protected:
   INodeGeometry0D(DataStructure& dataStructure, std::string name);
 
@@ -193,7 +187,7 @@ protected:
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
   /* ***************************************************************************
-   * These variables are the Ids of the arrays from the complex::DataStructure object.
+   * These variables are the Ids of the arrays from the DataStructure object.
    */
   std::optional<IdType> m_VertexDataArrayId;
   std::optional<IdType> m_VertexAttributeMatrixId;

@@ -1,8 +1,12 @@
 #pragma once
 
-#include "complex/Common/Point3D.hpp"
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/complex_export.hpp"
+
+#include "complex/Common/Array.hpp"
+#include "complex/Common/Point3D.hpp"
+
+#include <optional>
 
 namespace complex
 {
@@ -78,6 +82,12 @@ public:
   std::string getTypeName() const override;
 
   /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  static std::string GetTypeName();
+
+  /**
    * @brief
    * @return DataObject*
    */
@@ -132,6 +142,14 @@ public:
    * @return const Float32Array*
    */
   const Float32Array* getZBounds() const;
+
+  OptionalId getXBoundsId() const;
+  OptionalId getYBoundsId() const;
+  OptionalId getZBoundsId() const;
+
+  void setXBoundsId(const OptionalId& xBoundsId);
+  void setYBoundsId(const OptionalId& yBoundsId);
+  void setZBoundsId(const OptionalId& zBoundsId);
 
   /**
    * @brief
@@ -319,23 +337,6 @@ public:
    * @param zCoord
    */
   std::optional<usize> getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
-
-  /**
-   * @brief Reads values from HDF5
-   * @param dataStructureReader
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 
 protected:
   /**

@@ -4,8 +4,6 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 #include <stdexcept>
 
@@ -57,6 +55,11 @@ TriangleGeom* TriangleGeom::Import(DataStructure& dataStructure, std::string nam
 }
 
 std::string TriangleGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string TriangleGeom::GetTypeName()
 {
   return k_TypeName;
 }
@@ -232,7 +235,7 @@ IGeometry::StatusCode TriangleGeom::findElementCentroids()
   return 1;
 }
 
-complex::Point3D<float64> TriangleGeom::getParametricCenter() const
+::Point3D<float64> TriangleGeom::getParametricCenter() const
 {
   return {1.0 / 3.0, 1.0 / 3.0, 0.0};
 }

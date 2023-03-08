@@ -1,5 +1,4 @@
 #include "CreateImageGeometryAction.hpp"
-
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 
 #include <fmt/core.h>
@@ -49,7 +48,7 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
   }
 
   // Create the ImageGeometry
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath).value());
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath));
   if(imageGeom == nullptr)
   {
     return MakeErrorResult(-5705, fmt::format("{}Failed to create ImageGeometry:'{}'", prefix, getCreatedPath().toString()));

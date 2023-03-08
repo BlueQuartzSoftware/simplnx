@@ -14,19 +14,23 @@
 #include "complex/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "complex/DataStructure/IO/HDF5/NeighborListIO.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <nlohmann/json.hpp>
 
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <string_view>
+#include <utility>
 
 using namespace complex;
 
@@ -712,14 +716,14 @@ void WriteXdmf(std::ostream& out, const DataStructure& dataStructure, std::strin
 }
 } // namespace
 
-void complex::DREAM3D::WriteXdmf(const std::filesystem::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath)
+void DREAM3D::WriteXdmf(const std::filesystem::path& filePath, const DataStructure& dataStructure, std::string_view hdf5FilePath)
 {
   std::ofstream file(filePath);
 
   ::WriteXdmf(file, dataStructure, hdf5FilePath);
 }
 
-complex::DREAM3D::FileVersionType complex::DREAM3D::GetFileVersion(const H5::FileReader& fileReader)
+DREAM3D::FileVersionType DREAM3D::GetFileVersion(const complex::HDF5::FileReader& fileReader)
 {
   auto fileVersionAttribute = fileReader.getAttribute(k_FileVersionTag);
   if(!fileVersionAttribute.isValid())
@@ -729,7 +733,7 @@ complex::DREAM3D::FileVersionType complex::DREAM3D::GetFileVersion(const H5::Fil
   return fileVersionAttribute.readAsString();
 }
 
-complex::DREAM3D::PipelineVersionType complex::DREAM3D::GetPipelineVersion(const H5::FileReader& fileReader)
+DREAM3D::PipelineVersionType DREAM3D::GetPipelineVersion(const complex::HDF5::FileReader& fileReader)
 {
   auto pipelineGroup = fileReader.openGroup(k_PipelineJsonTag);
   auto pipelineVersionAttribute = pipelineGroup.getAttribute(k_PipelineVersionTag);
@@ -740,16 +744,9 @@ complex::DREAM3D::PipelineVersionType complex::DREAM3D::GetPipelineVersion(const
   return pipelineVersionAttribute.readAsValue<PipelineVersionType>();
 }
 
-Result<DataStructure> ImportDataStructureV8(const H5::FileReader& fileReader, bool preflight)
+Result<DataStructure> ImportDataStructureV8(const complex::HDF5::FileReader& fileReader, bool preflight)
 {
-  H5::ErrorType errorCode = 0;
-  H5::DataStructureReader dataStructureReader;
-  auto dataStructure = dataStructureReader.readH5Group(fileReader, errorCode, preflight);
-  if(errorCode < 0)
-  {
-    return MakeErrorResult<DataStructure>(errorCode, fmt::format("Failed to import DataStructure"));
-  }
-  return {std::move(dataStructure)};
+  return HDF5::DataStructureReader::ReadFile(fileReader, preflight);
 }
 
 // Begin legacy DCA importing
@@ -765,8 +762,8 @@ Result<DataStructure> ImportDataStructureV8(const H5::FileReader& fileReader, bo
  * @param cDims
  */
 template <typename T>
-IDataArray* createLegacyDataArray(DataStructure& dataStructure, DataObject::IdType parentId, const H5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims, const std::vector<usize>& cDims,
-                                  bool preflight = false)
+IDataArray* createLegacyDataArray(DataStructure& dataStructure, DataObject::IdType parentId, const complex::HDF5::DatasetReader& dataArrayReader, const std::vector<usize>& tDims,
+                                  const std::vector<usize>& cDims, bool preflight = false)
 {
   using DataArrayType = DataArray<T>;
   using EmptyDataStoreType = EmptyDataStore<T>;
@@ -781,7 +778,7 @@ IDataArray* createLegacyDataArray(DataStructure& dataStructure, DataObject::IdTy
 
   if(!dataArrayReader.readIntoSpan(dataStore->createSpan()))
   {
-    throw std::runtime_error(fmt::format("Error reading HDF5 Data set {}", complex::H5::Support::GetObjectPath(dataArrayReader.getId())));
+    throw std::runtime_error(fmt::format("Error reading HDF5 Data set {}", complex::HDF5::Support::GetObjectPath(dataArrayReader.getId())));
   }
   // Insert the DataArray into the DataStructure
   return DataArray<T>::Create(dataStructure, daName, std::move(dataStore), parentId);
@@ -793,7 +790,7 @@ IDataArray* createLegacyDataArray(DataStructure& dataStructure, DataObject::IdTy
  * @param tDims
  * @param cDims
  */
-void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vector<usize>& tDims, std::vector<usize>& cDims)
+void readLegacyDataArrayDims(const complex::HDF5::DatasetReader& dataArrayReader, std::vector<usize>& tDims, std::vector<usize>& cDims)
 {
   {
     auto compAttrib = dataArrayReader.getAttribute(Legacy::CompDims);
@@ -816,7 +813,7 @@ void readLegacyDataArrayDims(const H5::DatasetReader& dataArrayReader, std::vect
   }
 }
 
-void readLegacyStringArray(DataStructure& dataStructure, const H5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
+void readLegacyStringArray(DataStructure& dataStructure, const complex::HDF5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
 {
   const std::string daName = dataArrayReader.getName();
 
@@ -837,7 +834,7 @@ void readLegacyStringArray(DataStructure& dataStructure, const H5::DatasetReader
   }
 }
 
-IDataArray* readLegacyDataArray(DataStructure& dataStructure, const H5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
+IDataArray* readLegacyDataArray(DataStructure& dataStructure, const complex::HDF5::DatasetReader& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
 {
   auto size = H5Dget_storage_size(dataArrayReader.getId());
   auto typeId = dataArrayReader.getTypeId();
@@ -874,7 +871,7 @@ IDataArray* readLegacyDataArray(DataStructure& dataStructure, const H5::DatasetR
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT8) > 0)
   {
-    const auto typeAttrib = dataArrayReader.getAttribute(complex::Constants::k_ObjectTypeTag);
+    const auto typeAttrib = dataArrayReader.getAttribute(Constants::k_ObjectTypeTag);
     if(typeAttrib.isValid() && typeAttrib.readAsString() == "DataArray<bool>")
     {
       dataArray = createLegacyDataArray<bool>(dataStructure, parentId, dataArrayReader, tDims, cDims, preflight);
@@ -903,11 +900,12 @@ IDataArray* readLegacyDataArray(DataStructure& dataStructure, const H5::DatasetR
 }
 
 template <typename T>
-void createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader,
+void createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType parentId, const complex::HDF5::GroupReader& parentReader, const complex::HDF5::DatasetReader& datasetReader,
                               const std::vector<usize>& tupleDims)
 {
   auto numTuples = std::accumulate(tupleDims.cbegin(), tupleDims.cend(), static_cast<usize>(1), std::multiplies<>());
-  auto data = NeighborList<T>::ReadHdf5Data(parentReader, datasetReader);
+
+  auto data = HDF5::NeighborListIO<T>::ReadHdf5Data(parentReader, datasetReader);
   auto* neighborList = NeighborList<T>::Create(dataStructure, datasetReader.getName(), numTuples, parentId);
   for(usize i = 0; i < data.size(); ++i)
   {
@@ -915,7 +913,7 @@ void createLegacyNeighborList(DataStructure& dataStructure, DataObject ::IdType 
   }
 }
 
-void readLegacyNeighborList(DataStructure& dataStructure, const H5::GroupReader& parentReader, const H5::DatasetReader& datasetReader, DataObject::IdType parentId)
+void readLegacyNeighborList(DataStructure& dataStructure, const complex::HDF5::GroupReader& parentReader, const complex::HDF5::DatasetReader& datasetReader, DataObject::IdType parentId)
 {
   auto typeId = datasetReader.getTypeId();
 
@@ -971,21 +969,21 @@ void readLegacyNeighborList(DataStructure& dataStructure, const H5::GroupReader&
   H5Tclose(typeId);
 }
 
-bool isLegacyNeighborList(const H5::DatasetReader& arrayReader)
+bool isLegacyNeighborList(const complex::HDF5::DatasetReader& arrayReader)
 {
   const auto objectTypeAttribute = arrayReader.getAttribute("ObjectType");
   const std::string objectType = objectTypeAttribute.readAsString();
   return objectType == "NeighborList<T>";
 }
 
-bool isLegacyStringArray(const H5::DatasetReader& arrayReader)
+bool isLegacyStringArray(const complex::HDF5::DatasetReader& arrayReader)
 {
   const auto objectTypeAttribute = arrayReader.getAttribute("ObjectType");
   const std::string objectType = objectTypeAttribute.readAsString();
   return objectType == "StringDataArray";
 }
 
-void readLegacyAttributeMatrix(DataStructure& dataStructure, const H5::GroupReader& amGroupReader, DataObject& parent, bool preflight = false)
+void readLegacyAttributeMatrix(DataStructure& dataStructure, const complex::HDF5::GroupReader& amGroupReader, DataObject& parent, bool preflight = false)
 {
   DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
@@ -1057,7 +1055,7 @@ void readLegacyAttributeMatrix(DataStructure& dataStructure, const H5::GroupRead
 }
 
 // Begin legacy geometry import methods
-void readGenericGeomDims(IGeometry* geom, const H5::GroupReader& geomGroup)
+void readGenericGeomDims(IGeometry* geom, const complex::HDF5::GroupReader& geomGroup)
 {
   auto sDimAttribute = geomGroup.getAttribute("SpatialDimensionality");
   auto sDims = sDimAttribute.readAsValue<int32>();
@@ -1069,19 +1067,19 @@ void readGenericGeomDims(IGeometry* geom, const H5::GroupReader& geomGroup)
   geom->setUnitDimensionality(uDims);
 }
 
-IDataArray* readLegacyGeomArray(DataStructure& dataStructure, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
+IDataArray* readLegacyGeomArray(DataStructure& dataStructure, IGeometry* geometry, const complex::HDF5::GroupReader& geomGroup, const std::string& arrayName)
 {
   auto dataArraySet = geomGroup.openDataset(arrayName);
   return readLegacyDataArray(dataStructure, dataArraySet, geometry->getId());
 }
 
 template <typename T>
-T* readLegacyGeomArrayAs(DataStructure& dataStructure, IGeometry* geometry, const H5::GroupReader& geomGroup, const std::string& arrayName)
+T* readLegacyGeomArrayAs(DataStructure& dataStructure, IGeometry* geometry, const complex::HDF5::GroupReader& geomGroup, const std::string& arrayName)
 {
   return dynamic_cast<T*>(readLegacyGeomArray(dataStructure, geometry, geomGroup, arrayName));
 }
 
-DataObject* readLegacyVertexGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyVertexGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
 {
   auto* geom = VertexGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
@@ -1091,7 +1089,7 @@ DataObject* readLegacyVertexGeom(DataStructure& dataStructure, const H5::GroupRe
   return geom;
 }
 
-DataObject* readLegacyTriangleGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyTriangleGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
 {
   auto geom = TriangleGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
@@ -1104,7 +1102,7 @@ DataObject* readLegacyTriangleGeom(DataStructure& dataStructure, const H5::Group
   return geom;
 }
 
-DataObject* readLegacyTetrahedralGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyTetrahedralGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
 {
   auto geom = TetrahedralGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
@@ -1117,7 +1115,7 @@ DataObject* readLegacyTetrahedralGeom(DataStructure& dataStructure, const H5::Gr
   return geom;
 }
 
-DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
 {
   auto geom = RectGridGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
@@ -1138,7 +1136,7 @@ DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const H5::Group
   return geom;
 }
 
-DataObject* readLegacyQuadGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyQuadGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
 {
   auto geom = QuadGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
@@ -1151,7 +1149,7 @@ DataObject* readLegacyQuadGeom(DataStructure& dataStructure, const H5::GroupRead
   return geom;
 }
 
-DataObject* readLegacyHexGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyHexGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
 {
   auto geom = HexahedralGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
@@ -1164,7 +1162,7 @@ DataObject* readLegacyHexGeom(DataStructure& dataStructure, const H5::GroupReade
   return geom;
 }
 
-DataObject* readLegacyEdgeGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyEdgeGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
 {
   auto geom = EdgeGeom::Create(dataStructure, name);
   auto edge = dynamic_cast<EdgeGeom*>(geom);
@@ -1178,7 +1176,7 @@ DataObject* readLegacyEdgeGeom(DataStructure& dataStructure, const H5::GroupRead
   return geom;
 }
 
-DataObject* readLegacyImageGeom(DataStructure& dataStructure, const H5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyImageGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
 {
   auto geom = ImageGeom::Create(dataStructure, name);
   auto image = dynamic_cast<ImageGeom*>(geom);
@@ -1210,7 +1208,7 @@ DataObject* readLegacyImageGeom(DataStructure& dataStructure, const H5::GroupRea
 }
 // End legacy Geometry importing
 
-void readLegacyDataContainer(DataStructure& dataStructure, const H5::GroupReader& dcGroup, bool preflight = false)
+void readLegacyDataContainer(DataStructure& dataStructure, const complex::HDF5::GroupReader& dcGroup, bool preflight = false)
 {
   DataObject* container = nullptr;
   const std::string dcName = dcGroup.getName();
@@ -1274,7 +1272,7 @@ void readLegacyDataContainer(DataStructure& dataStructure, const H5::GroupReader
   }
 }
 
-Result<DataStructure> ImportLegacyDataStructure(const H5::FileReader& fileReader, bool preflight)
+Result<DataStructure> ImportLegacyDataStructure(const complex::HDF5::FileReader& fileReader, bool preflight)
 {
   DataStructure dataStructure;
 
@@ -1291,7 +1289,7 @@ Result<DataStructure> ImportLegacyDataStructure(const H5::FileReader& fileReader
   return {std::move(dataStructure)};
 }
 
-Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const H5::FileReader& fileReader, bool preflight)
+Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const complex::HDF5::FileReader& fileReader, bool preflight)
 {
   const auto fileVersion = GetFileVersion(fileReader);
   if(fileVersion == k_CurrentFileVersion)
@@ -1307,19 +1305,19 @@ Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(con
                                         fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}", fileVersion, k_CurrentFileVersion, Legacy::FileVersion));
 }
 
-Result<complex::DataStructure> complex::DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath)
+Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath)
 {
-  H5::FileReader fileReader(filePath);
+  complex::HDF5::FileReader fileReader(filePath);
   if(!fileReader.isValid())
   {
-    return MakeErrorResult<DataStructure>(-1, fmt::format("complex::DREAM3D::ImportDataStructureFromFile: Unable to open '{}' for reading", filePath.string()));
+    return MakeErrorResult<DataStructure>(-1, fmt::format("DREAM3D::ImportDataStructureFromFile: Unable to open '{}' for reading", filePath.string()));
   }
 
-  H5::ErrorType error = 0;
+  complex::HDF5::ErrorType error = 0;
   return ImportDataStructureFromFile(fileReader, error);
 }
 
-Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const H5::FileReader& fileReader)
+Result<Pipeline> DREAM3D::ImportPipelineFromFile(const complex::HDF5::FileReader& fileReader)
 {
   if(GetPipelineVersion(fileReader) != k_CurrentPipelineVersion)
   {
@@ -1338,22 +1336,22 @@ Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const H5::Fil
   return Pipeline::FromJson(pipelineJson);
 }
 
-Result<complex::Pipeline> complex::DREAM3D::ImportPipelineFromFile(const std::filesystem::path& filePath)
+Result<Pipeline> DREAM3D::ImportPipelineFromFile(const std::filesystem::path& filePath)
 {
   if(!std::filesystem::exists(filePath))
   {
-    return MakeErrorResult<Pipeline>(-1, fmt::format("complex::DREAM3D::ImportPipelineFromFile: File does not exist. '{}'", filePath.string()));
+    return MakeErrorResult<Pipeline>(-1, fmt::format("DREAM3D::ImportPipelineFromFile: File does not exist. '{}'", filePath.string()));
   }
-  H5::FileReader fileReader(filePath);
+  complex::HDF5::FileReader fileReader(filePath);
   if(!fileReader.isValid())
   {
-    return MakeErrorResult<Pipeline>(-1, fmt::format("complex::DREAM3D::ImportPipelineFromFile: Unable to open '{}' for reading", filePath.string()));
+    return MakeErrorResult<Pipeline>(-1, fmt::format("DREAM3D::ImportPipelineFromFile: Unable to open '{}' for reading", filePath.string()));
   }
 
   return ImportPipelineFromFile(fileReader);
 }
 
-Result<complex::DREAM3D::FileData> complex::DREAM3D::ReadFile(const H5::FileReader& fileReader, bool preflight)
+Result<DREAM3D::FileData> DREAM3D::ReadFile(const complex::HDF5::FileReader& fileReader, bool preflight)
 {
   // Pipeline pipeline;
   auto pipeline = ImportPipelineFromFile(fileReader);
@@ -1371,20 +1369,20 @@ Result<complex::DREAM3D::FileData> complex::DREAM3D::ReadFile(const H5::FileRead
   return {DREAM3D::FileData{std::move(pipeline.value()), std::move(dataStructure.value())}};
 }
 
-Result<complex::DREAM3D::FileData> complex::DREAM3D::ReadFile(const std::filesystem::path& path)
+Result<DREAM3D::FileData> DREAM3D::ReadFile(const std::filesystem::path& path)
 {
-  H5::FileReader reader(path);
-  H5::ErrorType error = 0;
+  complex::HDF5::FileReader reader(path);
+  complex::HDF5::ErrorType error = 0;
 
   Result<FileData> fileData = ReadFile(reader, error);
   if(error < 0)
   {
-    return MakeErrorResult<FileData>(-1, fmt::format("complex::DREAM3D::ReadFile: Unable to read '{}'", path.string()));
+    return MakeErrorResult<FileData>(-1, fmt::format("DREAM3D::ReadFile: Unable to read '{}'", path.string()));
   }
   return {std::move(fileData)};
 }
 
-H5::ErrorType WritePipeline(H5::FileWriter& fileWriter, const Pipeline& pipeline)
+complex::HDF5::ErrorType WritePipeline(complex::HDF5::FileWriter& fileWriter, const Pipeline& pipeline)
 {
   if(!fileWriter.isValid())
   {
@@ -1411,23 +1409,28 @@ H5::ErrorType WritePipeline(H5::FileWriter& fileWriter, const Pipeline& pipeline
   return pipelineDatasetWriter.writeString(pipelineString);
 }
 
-H5::ErrorType WriteDataStructure(H5::FileWriter& fileWriter, const DataStructure& dataStructure)
+complex::HDF5::ErrorType WriteDataStructure(complex::HDF5::FileWriter& fileWriter, const DataStructure& dataStructure)
 {
-  return dataStructure.writeHdf5(fileWriter);
+  Result<> result = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  if(result.invalid())
+  {
+    return result.errors()[0].code;
+  }
+  return 0;
 }
 
-H5::ErrorType WriteFileVersion(H5::FileWriter& fileWriter)
+complex::HDF5::ErrorType WriteFileVersion(complex::HDF5::FileWriter& fileWriter)
 {
   auto fileVersionAttribute = fileWriter.createAttribute(k_FileVersionTag);
   return fileVersionAttribute.writeString(k_CurrentFileVersion);
 }
 
-H5::ErrorType complex::DREAM3D::WriteFile(H5::FileWriter& fileWriter, const FileData& fileData)
+complex::HDF5::ErrorType DREAM3D::WriteFile(complex::HDF5::FileWriter& fileWriter, const FileData& fileData)
 {
   return WriteFile(fileWriter, fileData.first, fileData.second);
 }
 
-H5::ErrorType complex::DREAM3D::WriteFile(H5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure)
+complex::HDF5::ErrorType DREAM3D::WriteFile(complex::HDF5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure)
 {
   auto errorCode = WriteFileVersion(fileWriter);
   if(errorCode < 0)
@@ -1444,20 +1447,20 @@ H5::ErrorType complex::DREAM3D::WriteFile(H5::FileWriter& fileWriter, const Pipe
   return errorCode;
 }
 
-Result<> complex::DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf)
+Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf)
 {
-  Result<H5::FileWriter> fileWriterResult = H5::FileWriter::CreateFile(path);
+  auto fileWriterResult = complex::HDF5::FileWriter::CreateFile(path);
   if(fileWriterResult.invalid())
   {
     return ConvertResult(std::move(fileWriterResult));
   }
 
-  H5::FileWriter fileWriter = std::move(fileWriterResult.value());
+  complex::HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
 
-  H5::ErrorType error = WriteFile(fileWriter, Pipeline(), dataStructure);
+  complex::HDF5::ErrorType error = WriteFile(fileWriter, pipeline, dataStructure);
   if(error < 0)
   {
-    return MakeErrorResult(-2, fmt::format("complex::DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error {}", error));
+    return MakeErrorResult(error, fmt::format("DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error"));
   }
 
   if(writeXdmf)

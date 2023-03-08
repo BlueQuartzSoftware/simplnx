@@ -1,10 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-
-#include <array>
 
 namespace complex
 {
@@ -118,6 +114,15 @@ public:
    */
   std::string getTypeName() const override
   {
+    return GetTypeName();
+  }
+
+  /**
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
+   */
+  static std::string GetTypeName()
+  {
     return ScalarDataConstants::k_TypeName;
   }
 
@@ -223,27 +228,6 @@ public:
   bool operator!=(value_type rhs) const
   {
     return m_Data != rhs;
-  }
-
-  /**
-   * @brief Writes the ScalarData to HDF5 using the provided parent ID.
-   * @param parentId
-   * @param dataId
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-
-    H5::DatasetWriter::DimsType dims = {1};
-    std::array<T, 1> dataVector = {m_Data};
-    auto error = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
-    if(error == 0)
-    {
-      error = writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
-    }
-    return error;
   }
 
 protected:

@@ -1,7 +1,12 @@
 #pragma once
 
+#include "complex/Common/Types.hpp"
+#include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Output.hpp"
 #include "complex/complex_export.hpp"
+
+#include <string>
+#include <vector>
 
 namespace complex
 {
@@ -13,7 +18,7 @@ class COMPLEX_EXPORT CreateArrayAction : public IDataCreationAction
 public:
   CreateArrayAction() = delete;
 
-  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path);
+  CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "");
 
   ~CreateArrayAction() noexcept override;
 
@@ -60,9 +65,18 @@ public:
    */
   std::vector<DataPath> getAllCreatedPaths() const override;
 
+  /**
+   * @brief Returns the data formatting name for use in creating the appropriate data store.
+   * An empty string results in creating an in-memory DataStore.
+   * Other formats must be defined in external plugins.
+   * @return std::string
+   */
+  std::string dataFormat() const;
+
 private:
   DataType m_Type;
   std::vector<usize> m_Dims;
   std::vector<usize> m_CDims;
+  std::string m_DataFormat = "";
 };
 } // namespace complex

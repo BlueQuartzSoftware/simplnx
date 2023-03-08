@@ -14,9 +14,6 @@ class DataAddedMessage;
 class DataRemovedMessage;
 class DataRenamedMessage;
 class DataReparentedMessage;
-} // namespace complex
-
-using namespace complex;
 
 /**
  * @brief
@@ -52,3 +49,4 @@ private:
   usize m_RenamedCount = 0;
   usize m_ReparentedCount = 0;
 };
+} // namespace complex

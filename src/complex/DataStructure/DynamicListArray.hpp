@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 
 #include <cstring>
@@ -131,6 +132,11 @@ public:
    * @return std::string
    */
   std::string getTypeName() const override
+  {
+    return GetTypeName();
+  }
+
+  static std::string GetTypeName()
   {
     return DynamicListArrayConstants::k_TypeName;
   }
@@ -378,17 +384,6 @@ protected:
     {
       this->m_Array[i] = linkInit;
     }
-  }
-
-  /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    throw std::runtime_error("");
   }
 
 private:

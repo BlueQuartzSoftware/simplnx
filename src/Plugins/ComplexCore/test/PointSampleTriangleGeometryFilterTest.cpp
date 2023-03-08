@@ -10,7 +10,9 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -97,7 +99,7 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
@@ -195,11 +197,11 @@ TEST_CASE("ComplexCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
     }
     std::string outputFilePath = fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, k_OutputFile);
     // std::cout << "Writing Output file to " << outputFilePath << std::endl;
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(outputFilePath);
-    H5::FileWriter fileWriter = std::move(result.value());
+    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(outputFilePath);
+    complex::HDF5::FileWriter fileWriter = std::move(result.value());
 
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    COMPLEX_RESULT_REQUIRE_VALID(resultH5);
     //    for(size_t i = 0; i < 6; i++)
     //    {
     //      printf("%0.8f    %0.8f\n", minMaxTriVerts[i], minMaxVerts[i]);

@@ -6,7 +6,7 @@
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <nonstd/span.hpp>
@@ -42,7 +42,7 @@ std::vector<size_t> createDimensionVector(const std::string& cDimsStr)
 }
 
 template <typename T>
-Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const H5::DatasetReader& datasetReader)
+Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const complex::HDF5::DatasetReader& datasetReader)
 {
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
   auto& absDataStore = dataArray.getDataStoreRef();
@@ -54,6 +54,39 @@ Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
                                                 dataArray.getNumberOfComponents()))};
   }
   return {};
+}
+
+DataType toCommonType(complex::HDF5::Type h5TypeEnum)
+{
+  switch(h5TypeEnum)
+  {
+  case complex::HDF5::Type::int8:
+    return DataType::int8;
+  case complex::HDF5::Type::int16:
+    return DataType::int16;
+  case complex::HDF5::Type::int32:
+    return DataType::int32;
+  case complex::HDF5::Type::int64:
+    return DataType::int64;
+  case complex::HDF5::Type::uint8:
+    return DataType::uint8;
+  case complex::HDF5::Type::uint16:
+    return DataType::uint16;
+  case complex::HDF5::Type::uint32:
+    return DataType::uint32;
+  case complex::HDF5::Type::uint64:
+    return DataType::uint64;
+  case complex::HDF5::Type::float32:
+    return DataType::float32;
+  case complex::HDF5::Type::float64:
+    return DataType::float64;
+  case complex::HDF5::Type::string:
+    [[fallthrough]];
+  case complex::HDF5::Type::unknown:
+    [[fallthrough]];
+  default:
+    return static_cast<DataType>(-1);
+  }
 }
 } // namespace
 
@@ -152,7 +185,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
   const AttributeMatrix* parentAM = pSelectedAttributeMatrixValue.has_value() ? dataStructure.getDataAs<AttributeMatrix>(pSelectedAttributeMatrixValue.value()) : nullptr;
 
   int err = 0;
-  H5::FileReader h5FileReader(inputFilePath);
+  complex::HDF5::FileReader h5FileReader(inputFilePath);
   hid_t fileId = h5FileReader.getId();
   if(fileId < 0)
   {
@@ -168,7 +201,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     }
 
     // Read dataset into DREAM.3D structure
-    H5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
+    complex::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
     std::vector<hsize_t> dims = datasetReader.getDimensions();
     std::string objectName = datasetReader.getName();
 
@@ -298,13 +331,14 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
     }
     else
     {
-      auto type = datasetReader.getDataType();
+      Result<HDF5::Type> type = datasetReader.getDataType();
       if(type.invalid())
       {
         return {nonstd::make_unexpected(std::vector<Error>{
             Error{-20015, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, datasetReader.getType())}})};
       }
-      auto action = std::make_unique<CreateArrayAction>(type.value(), tDims, cDims, dataArrayPath);
+      DataType dataType = ::toCommonType(type.value());
+      auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
       resultOutputActions.value().actions.push_back(std::move(action));
     }
   } // End For Loop over dataset imoprt info list
@@ -322,7 +356,7 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
   fs::path inputFilePath(inputFile);
   auto datasetImportInfoList = pImportHDF5FileValue.datasets;
 
-  H5::FileReader h5FileReader(inputFilePath);
+  complex::HDF5::FileReader h5FileReader(inputFilePath);
   hid_t fileId = h5FileReader.getId();
   if(fileId < 0)
   {
@@ -333,7 +367,7 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
     std::string datasetPath = datasetImportInfo.dataSetPath;
-    H5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
+    complex::HDF5::DatasetReader datasetReader = h5FileReader.openDataset(datasetPath);
     std::string objectName = datasetReader.getName();
 
     // Read dataset into DREAM.3D structure
@@ -342,43 +376,43 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
     auto type = datasetReader.getType();
     switch(type)
     {
-    case H5::Type::float32: {
+    case complex::HDF5::Type::float32: {
       fillArrayResults = fillDataArray<float32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::float64: {
+    case complex::HDF5::Type::float64: {
       fillArrayResults = fillDataArray<float64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::int8: {
+    case complex::HDF5::Type::int8: {
       fillArrayResults = fillDataArray<int8>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::int16: {
+    case complex::HDF5::Type::int16: {
       fillArrayResults = fillDataArray<int16>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::int32: {
+    case complex::HDF5::Type::int32: {
       fillArrayResults = fillDataArray<int32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::int64: {
+    case complex::HDF5::Type::int64: {
       fillArrayResults = fillDataArray<int64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::uint8: {
+    case complex::HDF5::Type::uint8: {
       fillArrayResults = fillDataArray<uint8>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::uint16: {
+    case complex::HDF5::Type::uint16: {
       fillArrayResults = fillDataArray<uint16>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::uint32: {
+    case complex::HDF5::Type::uint32: {
       fillArrayResults = fillDataArray<uint32>(dataStructure, dataArrayPath, datasetReader);
       break;
     }
-    case H5::Type::uint64: {
+    case complex::HDF5::Type::uint64: {
       fillArrayResults = fillDataArray<uint64>(dataStructure, dataArrayPath, datasetReader);
       break;
     }

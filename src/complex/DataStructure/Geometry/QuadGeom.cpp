@@ -3,8 +3,6 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 #include <stdexcept>
 
@@ -56,6 +54,11 @@ QuadGeom* QuadGeom::Import(DataStructure& dataStructure, std::string name, IdTyp
 }
 
 std::string QuadGeom::getTypeName() const
+{
+  return GetTypeName();
+}
+
+std::string QuadGeom::GetTypeName()
 {
   return k_TypeName;
 }
@@ -268,7 +271,7 @@ IGeometry::StatusCode QuadGeom::findUnsharedEdges()
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
   auto unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdges, std::move(dataStore), getId());
-  GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
+  GeometryHelpers::Connectivity::Find2DUnsharedEdges<MeshIndexType>(getFaces(), unsharedEdgeList);
   if(unsharedEdgeList == nullptr)
   {
     m_UnsharedEdgeListId.reset();

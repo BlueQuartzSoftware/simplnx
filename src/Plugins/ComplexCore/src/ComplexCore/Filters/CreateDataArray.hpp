@@ -26,6 +26,7 @@ public:
   static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
   static inline constexpr StringLiteral k_DataPath_Key = "output_data_array";
   static inline constexpr StringLiteral k_InitilizationValue_Key = "initialization_value";
+  static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
 
   /**
    * @brief Returns the filter's name.

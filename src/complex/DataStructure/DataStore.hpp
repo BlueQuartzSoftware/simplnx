@@ -1,10 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5AttributeReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <fmt/core.h>
 #include <nonstd/span.hpp>
@@ -14,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -30,6 +27,7 @@ template <typename T>
 class DataStore : public AbstractDataStore<T>
 {
 public:
+  using parent_type = AbstractDataStore<T>;
   using value_type = typename AbstractDataStore<T>::value_type;
   using reference = typename AbstractDataStore<T>::reference;
   using const_reference = typename AbstractDataStore<T>::const_reference;
@@ -57,7 +55,8 @@ public:
    * @param initValue
    */
   DataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue)
-  : m_ComponentShape(componentShape)
+  : parent_type()
+  , m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
@@ -76,7 +75,8 @@ public:
    * @param componentShape
    */
   DataStore(std::unique_ptr<value_type[]> buffer, ShapeType tupleShape, ShapeType componentShape)
-  : m_ComponentShape(std::move(componentShape))
+  : parent_type()
+  , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_Data(std::move(buffer))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
@@ -89,7 +89,8 @@ public:
    * @param other
    */
   DataStore(const DataStore& other)
-  : m_ComponentShape(other.m_ComponentShape)
+  : parent_type()
+  , m_ComponentShape(other.m_ComponentShape)
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
@@ -105,7 +106,8 @@ public:
    * @param other
    */
   DataStore(DataStore&& other) noexcept
-  : m_ComponentShape(std::move(other.m_ComponentShape))
+  : parent_type()
+  , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_Data(std::move(other.m_Data))
   , m_NumComponents(std::move(other.m_NumComponents))
@@ -316,68 +318,6 @@ public:
     return {data(), this->getSize()};
   }
 
-  /**
-   * @brief Writes the data store to HDF5. Returns the HDF5 error code should
-   * one be encountered. Otherwise, returns 0.
-   * @param datasetWriter
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
-  {
-    if(!datasetWriter.isValid())
-    {
-      return -1;
-    }
-
-    // Consolidate the Tuple and Component Dims into a single array which is used
-    // to write the entire data array to HDF5
-    std::vector<hsize_t> h5dims;
-    for(const auto& value : m_TupleShape)
-    {
-      h5dims.push_back(static_cast<hsize_t>(value));
-    }
-    for(const auto& value : m_ComponentShape)
-    {
-      h5dims.push_back(static_cast<hsize_t>(value));
-    }
-
-    usize count = this->getSize();
-    const T* dataPtr = data();
-    herr_t err = datasetWriter.writeSpan(h5dims, nonstd::span<const T>{dataPtr, count});
-    if(err < 0)
-    {
-      return err;
-    }
-
-    // Write shape attributes to the dataset
-    auto tupleAttribute = datasetWriter.createAttribute(complex::H5::k_TupleShapeTag);
-    err = tupleAttribute.writeVector({m_TupleShape.size()}, m_TupleShape);
-    if(err < 0)
-    {
-      return err;
-    }
-
-    auto componentAttribute = datasetWriter.createAttribute(complex::H5::k_ComponentShapeTag);
-    err = componentAttribute.writeVector({m_ComponentShape.size()}, m_ComponentShape);
-
-    return err;
-  }
-
-  static std::unique_ptr<DataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
-  {
-    auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
-    auto componentShape = IDataStore::ReadComponentShape(datasetReader);
-
-    // Create DataStore
-    auto dataStore = std::make_unique<DataStore<T>>(tupleShape, componentShape, static_cast<T>(0));
-    if(!datasetReader.readIntoSpan(dataStore->createSpan()))
-    {
-      throw std::runtime_error(fmt::format("Error reading data array from DataStore from HDF5 at {}/{}", H5::Support::GetObjectPath(datasetReader.getParentId()), datasetReader.getName()));
-    }
-
-    return dataStore;
-  }
-
   std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
   {
     FILE* file = fopen(absoluteFilePath.c_str(), "wb");
@@ -416,7 +356,6 @@ using Int16DataStore = DataStore<int16>;
 using Int32DataStore = DataStore<int32>;
 using Int64DataStore = DataStore<int64>;
 
-using USizeDataStore = DataStore<usize>;
 using BoolDataStore = DataStore<bool>;
 
 using Float32DataStore = DataStore<float32>;

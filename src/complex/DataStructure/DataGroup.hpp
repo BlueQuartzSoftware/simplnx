@@ -102,12 +102,10 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief Reads the DataStructure group from a target HDF5 group.
-   * @param dataStructureReader
-   * @param groupReader
-   * @return H5::Error
+   * @brief Returns typename of the DataObject as a std::string.
+   * @return std::string
    */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
+  static std::string GetTypeName();
 
 protected:
   /**
@@ -135,13 +133,5 @@ protected:
    * @return bool
    */
   bool canInsert(const DataObject* obj) const override;
-
-  /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
 };
 } // namespace complex

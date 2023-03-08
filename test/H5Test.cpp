@@ -1,4 +1,3 @@
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
@@ -11,15 +10,21 @@
 #include "complex/DataStructure/Geometry/QuadGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/DataStructure/StringArray.hpp"
+#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
+
+#include "GeometryTestUtilities.hpp"
+
 #include "complex/unit_test/complex_test_dirs.hpp"
 
 #include <catch2/catch.hpp>
@@ -35,9 +40,9 @@
 namespace fs = std::filesystem;
 using namespace complex;
 
-static_assert(std::is_same_v<hid_t, H5::IdType>, "H5::IdType must be the same type as hid_t");
-static_assert(std::is_same_v<herr_t, H5::ErrorType>, "H5::ErrorType must be the same type as herr_t");
-static_assert(std::is_same_v<hsize_t, H5::SizeType>, "H5::SizeType must be the same type as hsize_t");
+static_assert(std::is_same_v<hid_t, complex::HDF5::IdType>, "H5::IdType must be the same type as hid_t");
+static_assert(std::is_same_v<herr_t, complex::HDF5::ErrorType>, "H5::ErrorType must be the same type as herr_t");
+static_assert(std::is_same_v<hsize_t, complex::HDF5::SizeType>, "H5::SizeType must be the same type as hsize_t");
 
 namespace
 {
@@ -112,11 +117,11 @@ TEST_CASE("Read Legacy DREAM.3D Data")
   }
 
   {
-    const std::string grainData = "Grain Data";
-    REQUIRE(dataStructure.getData(DataPath({geomName, grainData})) != nullptr);
-    REQUIRE(dataStructure.getDataAs<NeighborList<int32_t>>(DataPath({geomName, grainData, "NeighborList"})) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumElements"})) != nullptr);
-    REQUIRE(dataStructure.getDataAs<Int32Array>(DataPath({geomName, grainData, "NumNeighbors"})) != nullptr);
+    DataPath grainDataPath({geomName, "Grain Data"});
+    REQUIRE(dataStructure.getData(grainDataPath) != nullptr);
+    REQUIRE(dataStructure.getDataAs<NeighborList<int32_t>>(grainDataPath.createChildPath("NeighborList")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumElements")) != nullptr);
+    REQUIRE(dataStructure.getDataAs<Int32Array>(grainDataPath.createChildPath("NumNeighbors")) != nullptr);
   }
 }
 #endif
@@ -193,10 +198,8 @@ DataStructure CreateDataStructure()
   return dataStructure;
 }
 
-TEST_CASE("Image Geometry IO")
+TEST_CASE("ImageGeometryIO")
 {
-  Application app;
-
   fs::path dataDir = GetDataDir();
 
   if(!fs::exists(dataDir))
@@ -204,58 +207,57 @@ TEST_CASE("Image Geometry IO")
     REQUIRE(fs::create_directories(dataDir));
   }
 
-  fs::path filePath = GetDataDir() / "image_geometry_io.h5";
+  const DataPath imageGeomPath({"ImageGeom"});
+  const std::string cellDataName = "CellData";
+  const DataPath cellDataPath = imageGeomPath.createChildPath(cellDataName);
+  const CreateImageGeometryAction::DimensionType dims = {10, 10, 10};
+  const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
+  const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
 
-  // Write HDF5 file
-  try
+  DataStructure originalDataStructure;
+  auto action = CreateImageGeometryAction(imageGeomPath, dims, origin, spacing, cellDataName);
+  Result<> actionResult = action.apply(originalDataStructure, IDataAction::Mode::Execute);
+  COMPLEX_RESULT_REQUIRE_VALID(actionResult);
+
+  fs::path filePath = dataDir / "ImageGeometryIO.dream3d";
+
+  std::string filePathString = filePath.string();
+
   {
-    DataStructure dataStructure = CreateDataStructure();
+    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePathString);
+    COMPLEX_RESULT_REQUIRE_VALID(result);
 
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
-    REQUIRE(result.valid());
-
-    H5::FileWriter fileWriter = std::move(result.value());
+    complex::HDF5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
-    herr_t err;
-    err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
-  } catch(const std::exception& e)
-  {
-    FAIL(e.what());
+    Result<> writeResult = HDF5::DataStructureWriter::WriteFile(originalDataStructure, fileWriter);
+    COMPLEX_RESULT_REQUIRE_VALID(writeResult);
   }
 
-  // Read HDF5 file
-  try
   {
-    auto fileReader = H5::FileReader(filePath);
+    complex::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
-    herr_t err;
-    auto dataStructure = DataStructure::readFromHdf5(fileReader, err);
-    REQUIRE(err >= 0);
+    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    DataStructure newDataStructure = std::move(readResult.value());
 
-    filePath = GetDataDir() / "image_geometry_io_2.h5";
+    auto* imageGeom = newDataStructure.getDataAs<ImageGeom>(imageGeomPath);
+    REQUIRE(imageGeom != nullptr);
 
-    // Write DataStructure to another file
-    try
-    {
-      Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
-      REQUIRE(result.valid());
+    REQUIRE(imageGeom->getDimensions() == SizeVec3(dims));
+    REQUIRE(imageGeom->getOrigin() == FloatVec3(origin));
+    REQUIRE(imageGeom->getSpacing() == FloatVec3(spacing));
 
-      H5::FileWriter fileWriter = std::move(result.value());
-      REQUIRE(fileWriter.isValid());
+    auto* cellData = imageGeom->getCellData();
+    REQUIRE(cellData != nullptr);
 
-      err = dataStructure.writeHdf5(fileWriter);
-      REQUIRE(err >= 0);
-    } catch(const std::exception& e)
-    {
-      FAIL(e.what());
-    }
+    REQUIRE(cellData->getName() == cellDataName);
+    REQUIRE(imageGeom->getCellDataPath() == cellDataPath);
 
-  } catch(const std::exception& e)
-  {
-    FAIL(e.what());
+    auto cellDataShape = std::vector<usize>(dims.crbegin(), dims.crend());
+
+    REQUIRE(cellData->getShape() == cellDataShape);
   }
 }
 
@@ -583,17 +585,16 @@ TEST_CASE("Node Based Geometry IO")
   // Write HDF5 file
   try
   {
-    DataStructure dataStructure = CreateNodeBasedGeometries();
-    nodeData = getNodeGeomData(dataStructure);
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
-    REQUIRE(result.valid());
+    DataStructure ds = CreateNodeBasedGeometries();
+    nodeData = getNodeGeomData(ds);
+    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePathString);
+    COMPLEX_RESULT_REQUIRE_VALID(result);
 
-    H5::FileWriter fileWriter = std::move(result.value());
+    complex::HDF5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
-    herr_t err;
-    err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    auto resultH5 = HDF5::DataStructureWriter::WriteFile(ds, fileWriter);
+    COMPLEX_RESULT_REQUIRE_VALID(resultH5);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -602,12 +603,13 @@ TEST_CASE("Node Based Geometry IO")
   // Read HDF5 file
   try
   {
-    H5::FileReader fileReader(filePathString);
+    complex::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
-    herr_t err;
-    auto dataStructure = DataStructure::readFromHdf5(fileReader, err);
-    REQUIRE(err >= 0);
+    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    DataStructure dataStructure = std::move(readResult.value());
+
     checkNodeGeomData(dataStructure, nodeData);
   } catch(const std::exception& e)
   {
@@ -635,15 +637,14 @@ TEST_CASE("NeighborList IO")
   {
     DataStructure dataStructure;
     CreateNeighborList(dataStructure);
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
-    REQUIRE(result.valid());
+    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePathString);
+    COMPLEX_RESULT_REQUIRE_VALID(result);
 
-    H5::FileWriter fileWriter = std::move(result.value());
+    complex::HDF5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
-    herr_t err;
-    err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    Result<> writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    COMPLEX_RESULT_REQUIRE_VALID(writeResult);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -652,12 +653,13 @@ TEST_CASE("NeighborList IO")
   // Read HDF5 file
   try
   {
-    H5::FileReader fileReader(filePathString);
+    complex::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
-    herr_t err;
-    auto dataStructure = DataStructure::readFromHdf5(fileReader, err);
-    REQUIRE(err >= 0);
+    herr_t err = 0;
+    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    DataStructure dataStructure = std::move(readResult.value());
 
     // auto neighborList = dataStructure.getDataAs<NeighborList<int64>>(DataPath({k_NeighborGroupName, "NeighborList"}));
     auto neighborList = dataStructure.getData(DataPath({k_NeighborGroupName, "NeighborList"}));
@@ -688,15 +690,14 @@ TEST_CASE("DataArray<bool> IO")
   {
     DataStructure dataStructure;
     CreateArrayTypes(dataStructure);
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePathString);
-    REQUIRE(result.valid());
+    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePathString);
+    COMPLEX_RESULT_REQUIRE_VALID(result);
 
-    H5::FileWriter fileWriter = std::move(result.value());
+    complex::HDF5::FileWriter fileWriter = std::move(result.value());
     REQUIRE(fileWriter.isValid());
 
-    herr_t err;
-    err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    Result<> writeResult = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    COMPLEX_RESULT_REQUIRE_VALID(writeResult);
   } catch(const std::exception& e)
   {
     FAIL(e.what());
@@ -705,12 +706,12 @@ TEST_CASE("DataArray<bool> IO")
   // Read HDF5 file
   try
   {
-    H5::FileReader fileReader(filePathString);
+    complex::HDF5::FileReader fileReader(filePathString);
     REQUIRE(fileReader.isValid());
 
-    herr_t err;
-    auto dataStructure = DataStructure::readFromHdf5(fileReader, err);
-    REQUIRE(err >= 0);
+    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader);
+    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    DataStructure dataStructure = std::move(readResult.value());
 
     REQUIRE(dataStructure.getDataAs<DataArray<int8>>(DataPath({"Int8Array"})) != nullptr);
     REQUIRE(dataStructure.getDataAs<DataArray<int16>>(DataPath({"Int16Array"})) != nullptr);

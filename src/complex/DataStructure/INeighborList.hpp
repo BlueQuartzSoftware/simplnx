@@ -20,6 +20,8 @@ public:
    */
   std::string getTypeName() const override;
 
+  static std::string GetTypeName();
+
   /**
    * @brief setNumNeighborsArrayName
    * @param name

@@ -30,8 +30,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateImageGeometryTest.cpp
   CropImageGeometryTest.cpp
   CropVertexGeometryTest.cpp
-  DREAM3DFileTest.cpp
   DeleteDataTest.cpp
+  DREAM3DFileTest.cpp
   ErodeDilateBadDataTest.cpp
   ErodeDilateCoordinationNumberTest.cpp
   ErodeDilateMaskTest.cpp

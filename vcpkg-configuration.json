@@ -5,6 +5,7 @@
       "kind": "git",
       "repository": "https://github.com/bluequartzsoftware/complex-registry",
       "packages": [
+        "blosc",
         "boost-mp11",
         "catch2",
         "ebsdlib",
@@ -13,17 +14,21 @@
         "fmt",
         "h5support",
         "hdf5",
+        "lz4",
         "itk",
         "nlohmann-json",
         "nod",
         "pybind11",
         "reproc",
+        "snappy",
         "span-lite",
         "tbb",
         "vcpkg-cmake",
-        "vcpkg-cmake-config"
+        "vcpkg-cmake-config",
+        "zlib",
+        "zstd"
       ],
-      "baseline": "5b3640f2d351a59b710fb5c97a9096b3c54ced38"
+      "baseline": "e36e5c537beddb430e78dc1ed91b95729032086e"
     }
   ]
 }

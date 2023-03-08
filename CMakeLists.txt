@@ -11,6 +11,9 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_TESTS FEATURE "tests")
 option(COMPLEX_ENABLE_MULTICORE "Enable multicore support" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_MULTICORE FEATURE "parallel")
 
+option(COMPLEX_ENABLE_COMPRESSORS "Install data compressors" OFF)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_COMPRESSORS FEATURE "compressors")
+
 option(COMPLEX_DOWNLOAD_TEST_FILES "Download the test files" ON)
 
 project(complex
@@ -38,7 +41,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(COMPLEX_DEBUG_POSTFIX "_d")
 set_property(GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX ${COMPLEX_DEBUG_POSTFIX})
 get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)
-
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -183,13 +185,18 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/Any.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Array.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Bit.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
   ${COMPLEX_SOURCE_DIR}/Common/ComplexConstants.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Constants.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/BoundingBox.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/DataVector.hpp
   ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/IteratorUtility.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Numbers.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Point2D.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Point3D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range2D.hpp
+  ${COMPLEX_SOURCE_DIR}/Common/Range3D.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Ray.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Result.hpp
   ${COMPLEX_SOURCE_DIR}/Common/RgbColor.hpp
@@ -200,29 +207,52 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/TypesUtility.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Uuid.hpp
 
-  ${COMPLEX_SOURCE_DIR}/Common/Range.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Range2D.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Range3D.hpp
-
   ${COMPLEX_SOURCE_DIR}/Core/Application.hpp
+  ${COMPLEX_SOURCE_DIR}/Core/Preferences.hpp
+
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.hpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/AttributeMatrixFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataArrayFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/NeighborListFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/StringArrayFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IOConstants.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStoreIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EmptyDataStoreIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.hpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/AttributeMatrixIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/BaseGroupIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataArrayIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ScalarDataIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.hpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.hpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.hpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.hpp
@@ -339,25 +369,26 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
   ${COMPLEX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
+  ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ArrayThreshold.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FilterUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/StringUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelAlgorithmUtilities.hpp
 
@@ -368,22 +399,25 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupWriter.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5IDataFactory.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Constants.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.hpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
 )
@@ -399,23 +433,10 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Common/Range3D.cpp
 
   ${COMPLEX_SOURCE_DIR}/Core/Application.cpp
+  ${COMPLEX_SOURCE_DIR}/Core/Preferences.cpp
+
   ${COMPLEX_SOURCE_DIR}/Filter/FilterHandle.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/FilterList.cpp
-
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/AttributeMatrixFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/DataGroupFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/EdgeGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/GridMontageFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/HexahedralGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ImageGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/NeighborListFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/QuadGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/RectGridGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/ScalarDataFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/StringArrayFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TetrahedralGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/TriangleGeomFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/DataStructure/Factory/VertexGeomFactory.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/AbstractDataStructureMessage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataAddedMessage.cpp
@@ -424,6 +445,40 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Messaging/DataReparentedMessage.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.cpp
+
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/AttributeMatrixIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/BaseGroupIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/DataGroupIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/EdgeGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TetrahedralGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.cpp
+  ${COMPLEX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.cpp
 
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.cpp
@@ -446,7 +501,6 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridMontage.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.cpp
 
-  ${COMPLEX_SOURCE_DIR}/DataStructure/AbstractDataStore.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/AttributeMatrix.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
   ${COMPLEX_SOURCE_DIR}/DataStructure/DataGroup.cpp
@@ -532,25 +586,28 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5AttributeWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataFactoryManager.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DatasetWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5DataStructureWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5FileWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5GroupWriter.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5IDataFactory.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectReader.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5ObjectWriter.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/AttributeIO.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/DatasetIO.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/FileIO.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/GroupIO.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/AttributeReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/DatasetReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/FileReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/GroupReader.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Readers/ObjectReader.cpp
+
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/AttributeWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/DatasetWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/FileWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/GroupWriter.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/HDF5/Writers/ObjectWriter.cpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
 )
-
 
 # Add Core FilterParameters
 foreach(param ${CoreParameters})
@@ -617,7 +674,6 @@ set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 
 option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 if(COMPLEX_ENABLE_INSTALL)
-
   install(TARGETS complex
     EXPORT complexTargets
   )

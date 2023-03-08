@@ -6,7 +6,7 @@
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Pipeline/PipelineFilter.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 namespace
 {

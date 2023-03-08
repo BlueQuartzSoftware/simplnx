@@ -78,10 +78,6 @@ Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode)
   {
     CAI_BODY(bool)
   }
-  if(TemplateHelpers::CanDynamicCast<DataArray<size_t>>()(inputDataArray))
-  {
-    CAI_BODY(size_t)
-  }
 
   static constexpr StringLiteral prefix = "CopyArrayInstanceAction: ";
   return MakeErrorResult(k_UnsupportedTypeError, fmt::format("{}The input array at DataPath '{}' was of an unsupported type", prefix, m_SelectedDataPath.toString()));
