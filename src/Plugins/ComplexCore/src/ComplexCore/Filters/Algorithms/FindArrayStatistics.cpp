@@ -201,12 +201,12 @@ public:
                 histogram[m_NumBins - 1]++;
               }
             } // end of numTuples loop
-          } // end of increment else
-        } // end of length if
+          }   // end of increment else
+        }     // end of length if
         histDataStore->setTuple(j, histogram);
       } // end of m_Histogram if
-    } // end of outermost for loop
-  } // end of compute
+    }   // end of outermost for loop
+  }     // end of compute
 
   void operator()(const Range& range) const
   {
