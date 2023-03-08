@@ -44,7 +44,7 @@ const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
 
 INodeGeometry3D::OptionalId INodeGeometry3D::getPolyhedraDataId() const
 {
-  return m_PolyhedronListId;
+  return m_PolyhedronAttributeMatrixId;
 }
 
 void INodeGeometry3D::setPolyhedraList(const SharedFaceList& polyhedra)
@@ -115,6 +115,11 @@ const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getUnsharedFacesI
   return m_UnsharedFaceListId;
 }
 
+void INodeGeometry3D::setUnsharedFacedId(const OptionalId& id)
+{
+  m_UnsharedFaceListId = id;
+}
+
 const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getUnsharedFaces() const
 {
   return getDataStructureRef().getDataAs<SharedFaceList>(m_UnsharedFaceListId);
@@ -133,7 +138,7 @@ const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraAttri
 
 void INodeGeometry3D::setPolyhedraDataId(const OptionalId& polyDataId)
 {
-  m_PolyhedronListId = polyDataId;
+  m_PolyhedronAttributeMatrixId = polyDataId;
 }
 
 AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix()

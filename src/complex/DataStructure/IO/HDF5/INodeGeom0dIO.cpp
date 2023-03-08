@@ -35,13 +35,15 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
 
   complex::HDF5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(geometry.getName());
 
-  result = WriteDataId(groupWriter, geometry.getVertexListId(), IOConstants::k_VertexListTag);
+  DataObject::OptionalId vertexListId = geometry.getVertexListId();
+
+  result = WriteDataId(groupWriter, vertexListId, IOConstants::k_VertexListTag);
   if(result.invalid())
   {
     return result;
   }
 
-  if(geometry.getVertexListId().has_value())
+  if(vertexListId.has_value())
   {
     usize numVerts = geometry.getNumberOfVertices();
     auto datasetWriter = groupWriter.createDatasetWriter("_VertexIndices");
@@ -59,7 +61,7 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     }
   }
 
-  result = WriteDataId(groupWriter, geometry.getSharedVertexDataArrayId(), IOConstants::k_VertexDataTag);
+  result = WriteDataId(groupWriter, geometry.getVertexAttributeMatrixId(), IOConstants::k_VertexDataTag);
   if(result.invalid())
   {
     return result;

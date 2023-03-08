@@ -165,7 +165,7 @@ const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getVertexAttribut
 
 void INodeGeometry0D::setVertexDataId(const OptionalId& vertexDataId)
 {
-  m_VertexDataArrayId = vertexDataId;
+  m_VertexAttributeMatrixId = vertexDataId;
 }
 
 AttributeMatrix* INodeGeometry0D::getVertexAttributeMatrix()

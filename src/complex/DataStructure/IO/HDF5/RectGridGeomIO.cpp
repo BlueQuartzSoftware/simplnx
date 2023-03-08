@@ -51,7 +51,6 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   geometry->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
   geometry->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
   geometry->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
-  geometry->setElementSizesId(ReadDataId(groupReader, IOConstants::k_VoxelSizesTag));
 
   return {};
 }
@@ -97,12 +96,6 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
   }
 
   result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_ZBoundsTag);
-  if(result.invalid())
-  {
-    return result;
-  }
-
-  result = WriteDataId(groupWriter, geometry.getElementSizesId(), IOConstants::k_VoxelSizesTag);
   if(result.invalid())
   {
     return result;

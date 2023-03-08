@@ -43,7 +43,7 @@ Result<> INodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWr
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getEdgeListDataArrayId(), IOConstants::k_EdgeDataTag);
+  result = WriteDataId(groupWriter, geometry.getEdgeAttributeMatrixId(), IOConstants::k_EdgeDataTag);
   if(result.invalid())
   {
     return result;

@@ -85,6 +85,12 @@ public:
   const std::optional<IdType>& getUnsharedFacesId() const;
 
   /**
+   * @brief
+   * @return
+   */
+  void setUnsharedFacedId(const OptionalId& id);
+
+  /**
    * @brief Creates and assigns the unshared face list array for the current values.
    */
   virtual StatusCode findUnsharedFaces() = 0;

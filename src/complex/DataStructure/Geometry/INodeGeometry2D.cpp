@@ -135,7 +135,7 @@ const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceAttributeM
 
 void INodeGeometry2D::setFaceDataId(const OptionalId& faceDataId)
 {
-  m_FaceListId = faceDataId;
+  m_FaceAttributeMatrixId = faceDataId;
 }
 
 AttributeMatrix* INodeGeometry2D::getFaceAttributeMatrix()
