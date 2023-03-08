@@ -58,6 +58,19 @@ protected:
   static Result<> WriteDataId(object_writer_type& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag);
   static Result<> WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, object_writer_type& objectWriter, bool importable);
   IDataIO();
+
+  template <class IOClassT>
+  static Result<> WriteDataObjectImpl(IOClassT* instance, DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter)
+  {
+    using T = typename IOClassT::data_type;
+    const auto* targetData = dynamic_cast<const T*>(dataObject);
+    if(targetData == nullptr)
+    {
+      return MakeErrorResult(-800, "Provided DataObject could not be cast to the target type");
+    }
+
+    return instance->writeData(dataStructureWriter, *targetData, parentWriter, true);
+  }
 };
 } // namespace HDF5
 } // namespace complex

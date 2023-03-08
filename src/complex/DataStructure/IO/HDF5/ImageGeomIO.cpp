@@ -141,12 +141,6 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
 
 Result<> ImageGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
 {
-  auto* targetData = dynamic_cast<const data_type*>(dataObject);
-  if(targetData == nullptr)
-  {
-    return MakeErrorResult(-800, "Provided DataObject could not be cast to the target type");
-  }
-
-  return writeData(dataStructureWriter, *targetData, parentWriter, true);
+  return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
 } // namespace complex::HDF5

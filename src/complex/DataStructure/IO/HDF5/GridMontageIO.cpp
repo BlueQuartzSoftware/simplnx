@@ -34,13 +34,6 @@ Result<> GridMontageIO::writeData(DataStructureWriter& dataStructureWriter, cons
 
 Result<> GridMontageIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
 {
-  auto* targetData = dynamic_cast<const data_type*>(dataObject);
-  if(targetData == nullptr)
-  {
-    std::string ss = "Provided DataObject could not be cast to the target type";
-    return MakeErrorResult(-800, ss);
-  }
-
-  return writeData(dataStructureWriter, *targetData, parentWriter, true);
+  return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
 } // namespace complex::HDF5
