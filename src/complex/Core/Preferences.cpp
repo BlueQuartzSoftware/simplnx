@@ -72,7 +72,7 @@ void Preferences::addDefaultValues(AbstractPlugin& plugin, std::string& valueNam
 {
   const std::string pluginName = plugin.getName();
   auto pluginGroup = m_DefaultValues[k_Plugin_Key];
-  if(pluginGroup.contains(pluginName) == false)
+  if(!pluginGroup.contains(pluginName))
   {
     pluginGroup[pluginName] = nlohmann::json::object();
   }
@@ -91,7 +91,7 @@ bool Preferences::contains(const std::string& name) const
 }
 bool Preferences::pluginContains(const std::string& pluginName, const std::string& name) const
 {
-  if(m_Values[k_Plugin_Key].contains(pluginName) == false)
+  if(!m_Values[k_Plugin_Key].contains(pluginName))
   {
     return false;
   }
@@ -109,7 +109,7 @@ nlohmann::json Preferences::value(const std::string& name) const
   {
     return m_DefaultValues[name];
   }
-  return nlohmann::json();
+  return {};
 }
 
 nlohmann::json Preferences::defaultValue(const std::string& name) const
@@ -118,7 +118,7 @@ nlohmann::json Preferences::defaultValue(const std::string& name) const
   {
     return m_DefaultValues[name];
   }
-  return nlohmann::json();
+  return {};
 }
 
 void Preferences::setValue(const std::string& name, const nlohmann::json& value)
@@ -137,7 +137,7 @@ nlohmann::json Preferences::pluginValue(const std::string& pluginName, const std
     return m_DefaultValues[k_Plugin_Key][valueName];
   }
 
-  return nlohmann::json();
+  return {};
 }
 nlohmann::json Preferences::defaultPluginValue(const std::string& pluginName, const std::string& valueName) const
 {
@@ -146,7 +146,7 @@ nlohmann::json Preferences::defaultPluginValue(const std::string& pluginName, co
     return m_DefaultValues[k_Plugin_Key][valueName];
   }
 
-  return nlohmann::json();
+  return {};
 }
 
 void Preferences::setPluginValue(const std::string& pluginName, const std::string& valueName, const nlohmann::json& value)
@@ -156,13 +156,13 @@ void Preferences::setPluginValue(const std::string& pluginName, const std::strin
 
 Result<> Preferences::saveToFile(const std::filesystem::path& filepath) const
 {
-  if(std::filesystem::create_directories(filepath.parent_path()) == false)
+  if(!std::filesystem::create_directories(filepath.parent_path()))
   {
     return MakeErrorResult(k_FailedToCreateDirectory_Code, k_FailedToCreateDirectory_Message);
   }
 
   std::ofstream fileStream(filepath);
-  if(fileStream.is_open() == false)
+  if(!fileStream.is_open())
   {
     return MakeErrorResult(k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
   }
@@ -173,13 +173,13 @@ Result<> Preferences::saveToFile(const std::filesystem::path& filepath) const
 
 Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 {
-  if(std::filesystem::exists(filepath) == false)
+  if(!std::filesystem::exists(filepath))
   {
     return MakeErrorResult(k_FileDoesNotExist_Code, k_FileDoesNotExist_Message);
   }
 
   std::ifstream fileStream(filepath);
-  if(fileStream.is_open() == false)
+  if(!fileStream.is_open())
   {
     return MakeErrorResult(k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
   }

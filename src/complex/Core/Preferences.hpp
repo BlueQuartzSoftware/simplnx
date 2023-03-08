@@ -5,7 +5,7 @@
 #include "complex/Common/Result.hpp"
 #include "complex/Common/StringLiteral.hpp"
 
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 
 #include <filesystem>
 #include <string>
@@ -19,18 +19,19 @@ class COMPLEX_EXPORT Preferences
   friend class AbstractPlugin;
 
 public:
-  static constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";
-  static constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";
+  static inline constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";
+  static inline constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";
 
   static std::filesystem::path DefaultFilePath(const std::string& applicationName);
 
   Preferences();
-  virtual ~Preferences() noexcept;
+  ~Preferences() noexcept;
 
   bool contains(const std::string& name) const;
   bool pluginContains(const std::string& pluginName, const std::string& name) const;
 
   nlohmann::json value(const std::string& name) const;
+
   template <typename T>
   T valueAs(const std::string& name) const
   {
@@ -38,6 +39,7 @@ public:
   }
 
   nlohmann::json defaultValue(const std::string& name) const;
+
   template <typename T>
   T defaultValueAs(const std::string& name) const
   {
@@ -47,6 +49,7 @@ public:
   void setValue(const std::string& name, const nlohmann::json& value);
 
   nlohmann::json pluginValue(const std::string& pluginName, const std::string& valueName) const;
+
   template <typename T>
   T pluginValueAs(const std::string& pluginName, const std::string& valueName) const
   {
@@ -54,6 +57,7 @@ public:
   }
 
   nlohmann::json defaultPluginValue(const std::string& pluginName, const std::string& name) const;
+
   template <typename T>
   T defaultPluginValueAs(const std::string& pluginName, const std::string& name) const
   {

@@ -99,9 +99,9 @@ public:
   /**
    * @brief Returns a shared pointer to the application preferences.
    * The application should be in charge of saving or loading values.
-   * @return std::shared_ptr<Preferences>
+   * @return Preferences
    */
-  std::shared_ptr<Preferences> getPreferences();
+  Preferences* getPreferences();
 
   /**
    * @brief Saves user preferences to the default filepath.
@@ -187,6 +187,6 @@ private:
   std::vector<Uuid> m_Complex_Uuids; // duplicate allowed conditionally; index must match m_Simpl_Uuids
   std::shared_ptr<DataIOCollection> m_DataIOCollection;
   name_type_map m_NamedTypesMap;
-  std::shared_ptr<Preferences> m_Preferences = nullptr;
+  std::unique_ptr<Preferences> m_Preferences = nullptr;
 };
 } // namespace complex

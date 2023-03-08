@@ -162,7 +162,7 @@ void Application::loadPreferences()
 {
   if(m_Preferences == nullptr)
   {
-    m_Preferences = std::make_shared<Preferences>();
+    m_Preferences = std::make_unique<Preferences>();
   }
   std::string applicationName = getApplicationName(this);
   const auto filepath = Preferences::DefaultFilePath(applicationName);
@@ -253,9 +253,9 @@ const AbstractPlugin* Application::getPlugin(const Uuid& uuid) const
   return nullptr;
 }
 
-std::shared_ptr<Preferences> Application::getPreferences()
+Preferences* Application::getPreferences()
 {
-  return m_Preferences;
+  return m_Preferences.get();
 }
 
 JsonPipelineBuilder* Application::getPipelineBuilder() const

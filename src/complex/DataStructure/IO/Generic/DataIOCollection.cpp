@@ -65,7 +65,7 @@ void DataIOCollection::checkStoreDataFormat(uint64 dataSize, std::string& dataFo
   {
     return;
   }
-  auto preferences = Application::GetOrCreateInstance()->getPreferences();
+  const Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
   const uint64 largeDataSize = preferences->valueAs<uint64>(Preferences::k_LargeDataSize_Key);
   const std::string largeDataFormat = preferences->valueAs<std::string>(Preferences::k_PreferredLargeDataFormat_Key);
   if(dataSize > largeDataSize && hasDataStoreCreationFunction(largeDataFormat))
