@@ -186,26 +186,27 @@ public:
               {
                 continue;
               }
-              if((*m_FeatureIds)[i] == static_cast<int32>(j))
+              if((*m_FeatureIds)[i] != static_cast<int32>(j))
               {
-                const auto value = static_cast<float32>(m_Source[i]);
-                const auto bin = static_cast<int32>((value - histMin) / increment); // find bin for this input array value
-                if((bin >= 0) && (bin < m_NumBins))                                 // make certain bin is in range
-                {
-                  ++histogram[bin]; // increment histogram element corresponding to this input array value
-                }
-                else if(value == histMax)
-                {
-                  histogram[m_NumBins - 1]++;
-                }
+                continue;
               }
-            }
-          }
-        }
+              const auto value = static_cast<float32>(m_Source[i]);
+              const auto bin = static_cast<int32>((value - histMin) / increment); // find bin for this input array value
+              if((bin >= 0) && (bin < m_NumBins))                                 // make certain bin is in range
+              {
+                ++histogram[bin]; // increment histogram element corresponding to this input array value
+              }
+              else if(value == histMax)
+              {
+                histogram[m_NumBins - 1]++;
+              }
+            } // end of numTuples loop
+          } // end of increment else
+        } // end of length if
         histDataStore->setTuple(j, histogram);
-      }
-    }
-  }
+      } // end of m_Histogram if
+    } // end of outermost for loop
+  } // end of compute
 
   void operator()(const Range& range) const
   {
@@ -265,16 +266,17 @@ public:
         {
           continue;
         }
-        if((*m_FeatureIds)[i] == static_cast<int32>(j))
+        if((*m_FeatureIds)[i] != static_cast<int32>(j))
         {
-          if(numPushBacks >= reserveSize)
-          {
-            reserveSize *= 10;
-            featureSource.reserve(reserveSize);
-          }
-          featureSource.push_back(m_Source[i]);
-          ++numPushBacks;
+          continue;
         }
+        if(numPushBacks >= reserveSize)
+        {
+          reserveSize *= 10;
+          featureSource.reserve(reserveSize);
+        }
+        featureSource.push_back(m_Source[i]);
+        ++numPushBacks;
       }
       const float32 val = StaticicsCalculations::findMedian(featureSource);
       m_MedianArray->initializeTuple(j, val);
