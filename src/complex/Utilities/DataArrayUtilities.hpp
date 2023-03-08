@@ -327,8 +327,9 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
   }
   case IDataAction::Mode::Execute: {
     uint64 dataSize = CalculateDataSize<T>(tupleShape, componentShape);
-    Application::GetOrCreateInstance()->getIOCollection()->checkStoreDataFormat(dataSize, dataFormat);
-    return Application::GetOrCreateInstance()->getIOCollection()->createDataStoreWithType<T>(dataFormat, tupleShape, componentShape);
+    auto ioCollection = Application::GetOrCreateInstance()->getIOCollection();
+    ioCollection->checkStoreDataFormat(dataSize, dataFormat);
+    return ioCollection->createDataStoreWithType<T>(dataFormat, tupleShape, componentShape);
   }
   default: {
     throw std::runtime_error("Invalid mode");
