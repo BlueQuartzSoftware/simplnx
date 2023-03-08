@@ -5,7 +5,7 @@
 
 #include <H5Apublic.h>
 
-complex::DataType complex::HDF5::toCommonType(Type typeEnum)
+std::optional<complex::DataType> complex::HDF5::toCommonType(Type typeEnum)
 {
   switch(typeEnum)
   {
@@ -34,7 +34,7 @@ complex::DataType complex::HDF5::toCommonType(Type typeEnum)
   case Type::unknown:
     [[fallthrough]];
   default:
-    return static_cast<DataType>(-1);
+    return {};
   }
 }
 
@@ -110,7 +110,6 @@ complex::HDF5::IdType complex::HDF5::getIdForType(Type type)
     return H5T_NATIVE_DOUBLE;
   default:
     throw std::runtime_error("getIdForType does not support this type");
-    return -1;
   }
 }
 

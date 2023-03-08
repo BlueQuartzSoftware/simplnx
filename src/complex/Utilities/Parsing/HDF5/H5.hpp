@@ -4,6 +4,7 @@
 #include "complex/complex_export.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -34,7 +35,7 @@ enum class Type
  * @param typeEnum
  * @return DataType
  */
-DataType COMPLEX_EXPORT toCommonType(Type typeEnum);
+std::optional<DataType> COMPLEX_EXPORT toCommonType(Type typeEnum);
 
 /**
  * @brief Returns a Type enum representing the corresponding type matching the

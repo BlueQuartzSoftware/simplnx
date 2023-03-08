@@ -6,6 +6,7 @@
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
@@ -54,39 +55,6 @@ Result<> fillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
                                                 dataArray.getNumberOfComponents()))};
   }
   return {};
-}
-
-DataType toCommonType(complex::HDF5::Type h5TypeEnum)
-{
-  switch(h5TypeEnum)
-  {
-  case complex::HDF5::Type::int8:
-    return DataType::int8;
-  case complex::HDF5::Type::int16:
-    return DataType::int16;
-  case complex::HDF5::Type::int32:
-    return DataType::int32;
-  case complex::HDF5::Type::int64:
-    return DataType::int64;
-  case complex::HDF5::Type::uint8:
-    return DataType::uint8;
-  case complex::HDF5::Type::uint16:
-    return DataType::uint16;
-  case complex::HDF5::Type::uint32:
-    return DataType::uint32;
-  case complex::HDF5::Type::uint64:
-    return DataType::uint64;
-  case complex::HDF5::Type::float32:
-    return DataType::float32;
-  case complex::HDF5::Type::float64:
-    return DataType::float64;
-  case complex::HDF5::Type::string:
-    [[fallthrough]];
-  case complex::HDF5::Type::unknown:
-    [[fallthrough]];
-  default:
-    return static_cast<DataType>(-1);
-  }
 }
 } // namespace
 
@@ -337,7 +305,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
         return {nonstd::make_unexpected(std::vector<Error>{
             Error{-20015, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, datasetReader.getType())}})};
       }
-      DataType dataType = ::toCommonType(type.value());
+      DataType dataType = complex::HDF5::toCommonType(type.value()).value();
       auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
       resultOutputActions.value().actions.push_back(std::move(action));
     }
