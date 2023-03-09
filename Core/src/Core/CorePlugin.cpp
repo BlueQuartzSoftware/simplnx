@@ -25,11 +25,6 @@ CorePlugin::CorePlugin()
 
 CorePlugin::~CorePlugin() = default;
 
-std::vector<complex::H5::IDataFactory*> CorePlugin::getDataFactories() const
-{
-  return {};
-}
-
 std::map<complex::Uuid, complex::Uuid> CorePlugin::getSimplToComplexMap() const
 {
   return complex::k_SIMPL_to_Core;

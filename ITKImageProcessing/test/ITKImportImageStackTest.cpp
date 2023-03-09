@@ -14,8 +14,6 @@
 
 #include <filesystem>
 
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
-
 using namespace complex;
 
 namespace fs = std::filesystem;

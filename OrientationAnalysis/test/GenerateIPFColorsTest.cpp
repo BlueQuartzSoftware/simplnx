@@ -24,7 +24,7 @@ Compare the data sets. The values should be exactly the same.
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -88,10 +88,11 @@ TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][Gener
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
     {
-      Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/GenerateIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir));
-      H5::FileWriter fileWriter = std::move(result.value());
-      herr_t err = dataStructure.writeHdf5(fileWriter);
-      REQUIRE(err >= 0);
+      // Write out the DataStructure for later viewing/debugging
+      Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/GenerateIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir));
+      complex::HDF5::FileWriter fileWriter = std::move(result.value());
+      auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+      COMPLEX_RESULT_REQUIRE_VALID(resultH5);
     }
 
     DataPath ipfColors({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_Ipf_Colors});
