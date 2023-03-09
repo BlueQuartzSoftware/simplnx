@@ -130,7 +130,7 @@ void ThreadSafeTaskMessenger::setUpdateDelay(usize milliseconds)
 }
 
 // -----------------------------------------------------------------------------
-bool ThreadSafeTaskMessenger::addArray(uint64 id, usize progressIncrement, usize totalElements, std::string&& arrayName)
+bool ThreadSafeTaskMessenger::addArray(uint64 id, usize totalElements, std::string&& arrayName)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
@@ -139,7 +139,7 @@ bool ThreadSafeTaskMessenger::addArray(uint64 id, usize progressIncrement, usize
     return false;
   }
 
-  m_Data.emplace(id, std::make_pair<ArrayValues, std::string>({0, progressIncrement, totalElements}, std::move(arrayName)));
+  m_Data.emplace(id, std::make_pair<ArrayValues, std::string>({0, (totalElements / 100), totalElements}, std::move(arrayName)));
 
   return true;
 }

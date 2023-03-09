@@ -62,7 +62,6 @@ public:
     else
     {
       size_t progressCounter = 0;
-      m_Messenger.updateProgress(progressCounter, arrayID);
       for(usize i = 0; i < end; i++)
       {
         if(m_ShouldCancel)
@@ -128,18 +127,10 @@ Result<> CalculateArrayHistogram::operator()()
 {
   const auto numBins = m_InputValues->NumberOfBins;
   const auto selectedArrayPaths = m_InputValues->SelectedArrayPaths;
-  ThreadSafeTaskMessenger messenger(m_MessageHandler, "Calculating...");
-
-  for(const auto& arrayPath : selectedArrayPaths)
-  {
-    auto iArray = m_DataStructure.getDataAs<IDataArray>(arrayPath);
-    auto totalElements = iArray->getSize();
-    messenger.addArray(iArray->getId(), (totalElements / 100), totalElements, iArray->getName());
-  }
 
   std::tuple<bool, float64, float64> range = std::make_tuple(m_InputValues->UserDefinedRange, m_InputValues->MinRange, m_InputValues->MaxRange); // Custom bool, min, max
   ParallelTaskAlgorithm taskRunner;
-
+  ThreadSafeTaskMessenger messenger(m_MessageHandler, "Calculating...");
   for(int32 i = 0; i < selectedArrayPaths.size(); i++)
   {
     if(getCancel())
@@ -149,6 +140,7 @@ Result<> CalculateArrayHistogram::operator()()
     std::atomic<usize> overflow = 0;
     const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(selectedArrayPaths[i]);
     auto& histogram = m_DataStructure.getDataRefAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i));
+    messenger.addArray(inputData.getId(), inputData.getSize(), inputData.getName());
 
     ExecuteParallelFunction<GenerateHistogramFromData>(inputData.getDataType(), taskRunner, numBins, inputData, histogram, overflow, range, getCancel(), messenger);
 
