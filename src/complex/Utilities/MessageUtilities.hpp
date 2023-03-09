@@ -176,7 +176,7 @@ public:
 private:
   const IFilter::MessageHandler& m_MessageHandler;
   std::string m_ProgressMessage = "Executing...";
-  usize m_MilliDelay; // Default = 1 second
+  usize m_MilliDelay = 1000; // Default = 1 second
 
   std::map<uint64, std::pair<ArrayValues, std::string>> m_Data = {};
 

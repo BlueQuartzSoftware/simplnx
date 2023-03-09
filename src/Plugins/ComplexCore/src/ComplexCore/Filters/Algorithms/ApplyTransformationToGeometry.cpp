@@ -5,6 +5,7 @@
 #include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
+#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 

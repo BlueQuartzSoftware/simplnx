@@ -19,8 +19,9 @@ public:
   AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default;     // Copy Constructor Default Implemented
   AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&) noexcept = default; // Move Constructor Default Implemented
 
-  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray, ThreadSafeTaskMessenger& messenger)
-  : m_Filter(filter)
+  AlignSectionsTransferDataImpl(const std::atomic_bool& shouldCancel, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray,
+                                ThreadSafeTaskMessenger& messenger)
+  : m_ShouldCancel(shouldCancel)
   , m_Dims(std::move(dims))
   , m_Xshifts(std::move(xShifts))
   , m_Yshifts(std::move(yShifts))
@@ -50,7 +51,7 @@ public:
       }
       count++;
 
-      if(m_Filter->getCancel())
+      if(m_ShouldCancel)
       {
         return;
       }
@@ -94,7 +95,7 @@ public:
   }
 
 private:
-  AlignSections* m_Filter = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
   SizeVec3 m_Dims;
   std::vector<int64_t> m_Xshifts;
   std::vector<int64_t> m_Yshifts;
@@ -154,7 +155,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     messenger.addArray(cellArray.getId(), udims[2], cellArray.getName());
 
-    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray, messenger);
+    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, getCancel(), udims, xShifts, yShifts, cellArray, messenger);
   }
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();
