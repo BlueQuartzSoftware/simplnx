@@ -49,7 +49,13 @@ std::filesystem::path getHomeDirectory()
 
 std::filesystem::path Preferences::DefaultFilePath(const std::string& applicationName)
 {
-  return getHomeDirectory() / applicationName / k_DefaultFileName.str();
+#if defined(__APPLE__)
+  return getHomeDirectory() / "Library/Preferences" / applicationName / k_DefaultFileName.str();
+#elif defined(_WIN32)
+  return getHomeDirectory() / "AppData/Local" / applicationName / k_DefaultFileName.str();
+#else
+  return getHomeDirectory() / ".config/" / applicationName / k_DefaultFileName.str();
+#endif
 }
 
 Preferences::Preferences()
