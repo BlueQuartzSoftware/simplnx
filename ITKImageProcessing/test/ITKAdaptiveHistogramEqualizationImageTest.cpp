@@ -15,7 +15,7 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
 #include "ITKImageProcessing/Filters/ITKAdaptiveHistogramEqualizationImage.hpp"
@@ -178,10 +178,9 @@ TEST_CASE("ITKAdaptiveHistogramEqualizationImageFilter(histo)", "[ITKImageProces
   }
 
   {
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryTestOutputDir));
-    H5::FileWriter fileWriter = std::move(result.value());
-
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryTestOutputDir));
+    complex::HDF5::FileWriter fileWriter = std::move(result.value());
+    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    COMPLEX_RESULT_REQUIRE_VALID(resultH5);
   }
 }

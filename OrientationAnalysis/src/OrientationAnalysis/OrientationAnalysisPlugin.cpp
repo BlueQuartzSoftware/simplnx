@@ -74,11 +74,6 @@ OrientationAnalysisPlugin::OrientationAnalysisPlugin()
 
 OrientationAnalysisPlugin::~OrientationAnalysisPlugin() = default;
 
-std::vector<complex::H5::IDataFactory*> OrientationAnalysisPlugin::getDataFactories() const
-{
-  return {};
-}
-
 std::map<complex::Uuid, complex::Uuid> OrientationAnalysisPlugin::getSimplToComplexMap() const
 {
   return complex::k_SIMPL_to_OrientationAnalysis;
