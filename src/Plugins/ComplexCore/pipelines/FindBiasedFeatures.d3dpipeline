@@ -13,8 +13,6 @@
             "DataContainer/CellData/Confidence Index",
             "DataContainer/CellData/SEM Signal",
             "DataContainer/CellData/Fit",
-            "DataContainer/CellData/X Position",
-            "DataContainer/CellData/Y Position",
             "DataContainer/CellData/EulerAngles",
             "DataContainer/CellData/Phases",
             "DataContainer/CellEnsembleData",

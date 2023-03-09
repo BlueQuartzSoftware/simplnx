@@ -1,12 +1,12 @@
 {
-  "name": "nx_6.json",
+  "name": "Import_CSV_Data.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
       "args": {
         "dimensions": [
-          100,
-          100,
+          60,
+          80,
           100
         ],
         "geometry_data_path": "[Image Geometry]",
@@ -29,10 +29,10 @@
     {
       "args": {
         "delimiter_choice": 0,
-        "input_file": "TestFiles/ASCII_Data/Confidence Index.csv",
+        "input_file": "Data/ASCII_Data/ConfidenceIndex.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
-        "n_tuples": 1000000,
+        "n_tuples": 480000,
         "output_data_array": "[Image Geometry]/Cell Data/Confidence Index",
         "scalar_type": 8
       },
@@ -44,10 +44,10 @@
     {
       "args": {
         "delimiter_choice": 0,
-        "input_file": "TestFiles/ASCII_Data/FeatureIds.csv",
+        "input_file": "Data/ASCII_Data/FeatureIds.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
-        "n_tuples": 1000000,
+        "n_tuples": 480000,
         "output_data_array": "[Image Geometry]/Cell Data/FeatureIds",
         "scalar_type": 4
       },
@@ -59,10 +59,10 @@
     {
       "args": {
         "delimiter_choice": 0,
-        "input_file": "TestFiles/ASCII_Data/Image Quality.csv",
+        "input_file": "Data/ASCII_Data/ImageQuality.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
-        "n_tuples": 1000000,
+        "n_tuples": 480000,
         "output_data_array": "[Image Geometry]/Cell Data/Image Quality",
         "scalar_type": 8
       },
@@ -74,10 +74,10 @@
     {
       "args": {
         "delimiter_choice": 0,
-        "input_file": "TestFiles/ASCII_Data/IPFColor.csv",
+        "input_file": "Data/ASCII_Data/IPFColor.csv",
         "n_comp": 3,
         "n_skip_lines": 0,
-        "n_tuples": 1000000,
+        "n_tuples": 480000,
         "output_data_array": "[Image Geometry]/Cell Data/IPFColors",
         "scalar_type": 0
       },

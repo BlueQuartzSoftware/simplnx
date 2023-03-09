@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <reproc++/drain.hpp>
@@ -34,6 +35,27 @@ const std::atomic_bool& ExecuteProcess::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExecuteProcess::operator()()
 {
+  auto absPath = m_InputValues->LogFile;
+  if(!absPath.is_absolute())
+  {
+    try
+    {
+      absPath = fs::absolute(absPath);
+    } catch(const std::filesystem::filesystem_error& error)
+    {
+      return MakeErrorResult(-15000,
+                             fmt::format("ExecuteProcess::operator()() threw an error when creating absolute path from '{}'. Reported error is '{}'", m_InputValues->LogFile.string(), error.what()));
+    }
+  }
+
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  Result<> createDirectoriesResult = complex::CreateOutputDirectories(absPath.parent_path());
+  if(createDirectoriesResult.invalid())
+  {
+    return createDirectoriesResult;
+  }
+
   // open the log file for storing the process output
   std::ofstream outFile;
   outFile.open(m_InputValues->LogFile, std::ios_base::out);

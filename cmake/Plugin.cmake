@@ -325,8 +325,9 @@ function(create_complex_plugin_unit_test)
   endif()
 
   if(NOT EXISTS "${DREAM3D_DATA_DIR}")
-    message(STATUS "DREAM3D_Data does not exist at path '${DREAM3D_DATA_DIR}', Unit testing will not work.")
-    set(DREAM3D_DATA_DIR "DREAM3D_DATA_DIR DOES NOT EXIST")
+    file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}")
+    message(STATUS "DREAM3D_Data does not exist at path '${DREAM3D_DATA_DIR}'. It will be created.")
+    #set(DREAM3D_DATA_DIR "DREAM3D_DATA_DIR DOES NOT EXIST")
   endif()
 
   file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
