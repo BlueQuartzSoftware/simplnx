@@ -2,8 +2,6 @@
 
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5ObjectWriter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <algorithm>
@@ -110,7 +108,7 @@ void DataObject::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>
 {
 }
 
-bool DataObject::AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId)
+bool DataObject::AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const OptionalId& parentId)
 {
   return dataStructure.finishAddingObject(data, parentId);
 }
@@ -298,28 +296,7 @@ std::vector<DataPath> DataObject::getDataPaths() const
   return paths;
 }
 
-H5::ErrorType DataObject::writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter, bool importable) const
+void DataObject::flush() const
 {
-  // Add to DataStructureWriter for use in linking
-  dataStructureWriter.addH5Writer(objectWriter, getId());
-
-  auto typeAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectTypeTag);
-  auto error = typeAttributeWriter.writeString(getTypeName());
-  if(error < 0)
-  {
-    return error;
-  }
-
-  auto idAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ObjectIdTag);
-  error = idAttributeWriter.writeValue(getId());
-  if(error < 0)
-  {
-    return error;
-  }
-
-  auto importableAttributeWriter = objectWriter.createAttribute(complex::Constants::k_ImportableTag);
-  error = importableAttributeWriter.writeValue<int32>(importable ? 1 : 0);
-
-  return error;
 }
 } // namespace complex

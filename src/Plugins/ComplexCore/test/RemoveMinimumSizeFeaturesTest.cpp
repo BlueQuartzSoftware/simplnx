@@ -6,7 +6,7 @@
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 #include <catch2/catch.hpp>
 

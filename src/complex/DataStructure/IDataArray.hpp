@@ -142,6 +142,22 @@ public:
     getIDataStoreRef().reshapeTuples(tupleShape);
   }
 
+  /**
+   * @brief Returns the StoreType of the underlying IDataStore specifying if
+   * the IDataStore is in memory, out of core, or empty.
+   * @return IDataStore::StoreType
+   */
+  IDataStore::StoreType getStoreType() const
+  {
+    return getIDataStoreRef().getStoreType();
+  }
+
+  /**
+   * @brief Returns the data format used for storing the array data.
+   * @return data format as string
+   */
+  virtual std::string getDataFormat() const = 0;
+
 protected:
   IDataArray(DataStructure& dataStructure, std::string name)
   : IArray(dataStructure, std::move(name))

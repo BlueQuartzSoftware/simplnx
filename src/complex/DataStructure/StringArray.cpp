@@ -3,15 +3,11 @@
 
 #include "fmt/format.h"
 
+#include <numeric>
 #include <stdexcept>
 
 namespace complex
 {
-std::string StringArray::GetTypeName()
-{
-  return k_TypeName;
-}
-
 StringArray* StringArray::Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId)
 {
   return CreateWithValues(dataStructure, name, {}, parentId);
@@ -75,7 +71,7 @@ DataObject::Type StringArray::getDataObjectType() const
 }
 std::string StringArray::getTypeName() const
 {
-  return GetTypeName();
+  return k_TypeName;
 }
 
 IArray::ArrayType StringArray::getArrayType() const
@@ -208,19 +204,5 @@ void StringArray::reshapeTuples(const std::vector<usize>& tupleShape)
   {
     m_Strings.resize(numTuples);
   }
-}
-
-H5::ErrorType StringArray::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-
-  // writeVectorOfStrings may resize the collection
-  collection_type strings = m_Strings;
-  const auto err = datasetWriter.writeVectorOfStrings(strings);
-  if(err < 0)
-  {
-    return err;
-  }
-  return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
 }
 } // namespace complex

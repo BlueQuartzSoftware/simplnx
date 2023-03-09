@@ -1,60 +1,90 @@
 #include "H5.hpp"
 
-#include "complex/Utilities/StringUtilities.hpp"
+#include <stdexcept>
+#include <vector>
 
 #include <H5Apublic.h>
 
-#include <stdexcept>
+std::optional<complex::DataType> complex::HDF5::toCommonType(Type typeEnum)
+{
+  switch(typeEnum)
+  {
+  case Type::int8:
+    return DataType::int8;
+  case Type::int16:
+    return DataType::int16;
+  case Type::int32:
+    return DataType::int32;
+  case Type::int64:
+    return DataType::int64;
+  case Type::uint8:
+    return DataType::uint8;
+  case Type::uint16:
+    return DataType::uint16;
+  case Type::uint32:
+    return DataType::uint32;
+  case Type::uint64:
+    return DataType::uint64;
+  case Type::float32:
+    return DataType::float32;
+  case Type::float64:
+    return DataType::float64;
+  case Type::string:
+    [[fallthrough]];
+  case Type::unknown:
+    [[fallthrough]];
+  default:
+    return {};
+  }
+}
 
-using namespace complex;
-
-H5::Type H5::getTypeFromId(IdType typeId)
+complex::HDF5::Type complex::HDF5::getTypeFromId(IdType typeId)
 {
   if(H5Tequal(typeId, H5T_NATIVE_INT8))
   {
-    return H5::Type::int8;
+    return Type::int8;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT16))
   {
-    return H5::Type::int16;
+    return Type::int16;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT32))
   {
-    return H5::Type::int32;
+    return Type::int32;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_INT64))
   {
-    return H5::Type::int64;
+    return Type::int64;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT8))
   {
-    return H5::Type::uint8;
+    return Type::uint8;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT16))
   {
-    return H5::Type::uint16;
+    return Type::uint16;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT32))
   {
-    return H5::Type::uint32;
+    return Type::uint32;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_UINT64))
   {
-    return H5::Type::uint64;
+    return Type::uint64;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_FLOAT))
   {
-    return H5::Type::float32;
+    return Type::float32;
   }
   else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE))
   {
-    return H5::Type::float64;
+    return Type::float64;
   }
 
-  return H5::Type::unknown;
+  return Type::unknown;
 }
 
-H5::IdType H5::getIdForType(Type type)
+complex::HDF5::IdType complex::HDF5::getIdForType(Type type)
 {
   switch(type)
   {
@@ -79,14 +109,13 @@ H5::IdType H5::getIdForType(Type type)
   case Type::float64:
     return H5T_NATIVE_DOUBLE;
   default:
-    throw std::runtime_error("H5::getIdForType does not support this type");
-    return -1;
+    throw std::runtime_error("getIdForType does not support this type");
   }
 }
 
-std::string H5::GetNameFromBuffer(std::string_view buffer)
+std::string complex::HDF5::GetNameFromBuffer(std::string_view buffer)
 {
-  usize substrIndex = buffer.find_last_of('/');
+  size_t substrIndex = buffer.find_last_of('/');
   if(substrIndex > 0)
   {
     substrIndex++;
@@ -94,28 +123,37 @@ std::string H5::GetNameFromBuffer(std::string_view buffer)
   return std::string(buffer.substr(substrIndex));
 }
 
-std::string H5::GetPathFromId(IdType identifier)
+std::string complex::HDF5::GetPathFromId(IdType id)
 {
-  ssize_t nameLength = H5Iget_name(identifier, nullptr, 0);
+  ssize_t nameLength = H5Iget_name(id, nullptr, 0);
   if(nameLength <= 0)
   {
-    throw std::runtime_error("complex::H5::Support::GetName failed: H5Iget_name call failed");
+    throw std::runtime_error("complex::HDF5::GetName failed: H5Iget_name call failed to get name length");
   }
   std::string buffer(nameLength, 'A');
-  ssize_t size = H5Iget_name(identifier, buffer.data(), buffer.size() + 1);
+  ssize_t size = H5Iget_name(id, buffer.data(), buffer.size() + 1);
   if(size <= 0)
   {
-    throw std::runtime_error("complex::H5::Support::GetName failed: H5Iget_name call failed");
+    throw std::runtime_error("complex::HDF5::GetName failed: H5Iget_name call failed to read buffer");
   }
   return buffer;
 }
 
-std::string H5::GetNameFromId(IdType identifier)
+std::string complex::HDF5::GetNameFromId(IdType id)
 {
-  return GetNameFromBuffer(GetPathFromId(identifier));
+  return GetNameFromBuffer(GetPathFromId(id));
 }
 
-std::string GetParentPath(const std::string& objectPath)
+std::string complex::HDF5::GetParentPath(const std::string& objectPath)
 {
-  return StringUtilities::chop(objectPath, "/");
+  if(objectPath.empty())
+  {
+    return "";
+  }
+  auto back = objectPath.find_last_not_of("/");
+  if(back == std::string::npos)
+  {
+    return "";
+  }
+  return objectPath.substr(0, ++back);
 }

@@ -1,7 +1,5 @@
 #include "RgbColor.hpp"
 
-using namespace complex::RgbColor;
-
 namespace complex
 {
 namespace RgbColor

@@ -21,6 +21,15 @@
 #include <mach-o/dyld.h>
 #endif
 
+#include <fmt/core.h>
+
+#include "complex/Core/Application.hpp"
+#include "complex/DataStructure/IO/Generic/DataIOCollection.hpp"
+#include "complex/DataStructure/IO/Generic/IDataIOManager.hpp"
+#include "complex/Filter/FilterList.hpp"
+#include "complex/Plugin/AbstractPlugin.hpp"
+#include "complex/Plugin/PluginLoader.hpp"
+
 using namespace complex;
 
 namespace
@@ -65,21 +74,30 @@ std::filesystem::path findCurrentPath()
   static_assert(false, "Unsupported platform for findCurrentPath()");
 #endif
 }
+
+std::string getApplicationName(Application* app)
+{
+  return "DREAM3DNX";
+}
 } // namespace
 
 Application* Application::s_Instance = nullptr;
 
 Application::Application()
 : m_FilterList(std::make_unique<FilterList>())
-, m_DataReader(std::make_unique<H5::DataFactoryManager>())
+, m_DataIOCollection(std::make_shared<DataIOCollection>())
 {
+  loadPreferences();
   assignInstance();
+  initDefaultDataTypes();
 }
 
 Application::Application(int argc, char** argv)
 : Application()
 {
+  loadPreferences();
   assignInstance();
+  initDefaultDataTypes();
 }
 
 void Application::assignInstance()
@@ -88,16 +106,45 @@ void Application::assignInstance()
   m_CurrentPath = findCurrentPath();
 }
 
+void Application::initDefaultDataTypes()
+{
+  addDataType(DataObject::Type::DynamicListArray, "DynamicListArray");
+  addDataType(DataObject::Type::ScalarData, "ScalarData");
+  addDataType(DataObject::Type::DataGroup, "DataGroup");
+  addDataType(DataObject::Type::AttributeMatrix, "AttributeMatrix");
+  addDataType(DataObject::Type::DataArray, "Data Array<T>");
+  addDataType(DataObject::Type::RectGridGeom, "Rect Grid Geom");
+  addDataType(DataObject::Type::ImageGeom, "Image Geom");
+  addDataType(DataObject::Type::VertexGeom, "Vertex Geom");
+  addDataType(DataObject::Type::EdgeGeom, "Edge Geom");
+  addDataType(DataObject::Type::QuadGeom, "Quad Geom");
+  addDataType(DataObject::Type::TriangleGeom, "Triangle Geom");
+  addDataType(DataObject::Type::HexahedralGeom, "Hexahedral Geom");
+  addDataType(DataObject::Type::TetrahedralGeom, "Tetrahedral Geom");
+  addDataType(DataObject::Type::NeighborList, "NeighborList");
+  addDataType(DataObject::Type::StringArray, "String Array");
+}
+
 Application::~Application()
 {
   if(Instance() == this)
   {
     s_Instance = nullptr;
+    savePreferences();
   }
 }
 
 Application* Application::Instance()
 {
+  return s_Instance;
+}
+
+Application* Application::GetOrCreateInstance()
+{
+  if(s_Instance == nullptr)
+  {
+    new Application();
+  }
   return s_Instance;
 }
 
@@ -109,6 +156,27 @@ std::filesystem::path Application::getCurrentPath() const
 std::filesystem::path Application::getCurrentDir() const
 {
   return m_CurrentPath.parent_path();
+}
+
+void Application::loadPreferences()
+{
+  if(m_Preferences == nullptr)
+  {
+    m_Preferences = std::make_unique<Preferences>();
+  }
+  std::string applicationName = getApplicationName(this);
+  const auto filepath = Preferences::DefaultFilePath(applicationName);
+  m_Preferences->loadFromFile(filepath);
+}
+void Application::savePreferences()
+{
+  if(m_Preferences == nullptr)
+  {
+    return;
+  }
+  std::string applicationName = getApplicationName(this);
+  const auto filepath = Preferences::DefaultFilePath(applicationName);
+  m_Preferences->saveToFile(filepath);
 }
 
 std::optional<Uuid> Application::getComplexUuid(const Uuid& simplUuid)
@@ -185,14 +253,24 @@ const AbstractPlugin* Application::getPlugin(const Uuid& uuid) const
   return nullptr;
 }
 
+Preferences* Application::getPreferences()
+{
+  return m_Preferences.get();
+}
+
 JsonPipelineBuilder* Application::getPipelineBuilder() const
 {
   return nullptr;
 }
 
-H5::DataFactoryManager* Application::getH5FactoryManager() const
+std::shared_ptr<DataIOCollection> Application::getIOCollection() const
 {
-  return m_DataReader.get();
+  return m_DataIOCollection;
+}
+
+std::shared_ptr<IDataIOManager> Application::getIOManager(const std::string& formatName) const
+{
+  return m_DataIOCollection->getManager(formatName);
 }
 
 void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
@@ -205,6 +283,10 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
   getFilterList()->addPlugin(pluginLoader);
 
   auto plugin = pluginLoader->getPlugin();
+  if(plugin == nullptr)
+  {
+    return;
+  }
 
   std::map<Uuid, Uuid> simplToComplexUuids = plugin->getSimplToComplexMap();
   for(auto const& [simplUuid, complexUuid] : simplToComplexUuids)
@@ -225,12 +307,22 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
     throw std::runtime_error(fmt::format("UUID maps are not of the same size! SIMPL UUID Vector size: {} Complex UUID Vector size: {}", m_Simpl_Uuids.size(), m_Complex_Uuids.size()));
   }
 
-  if((plugin != nullptr) && (m_DataReader != nullptr))
+  for(const auto& pluginIO : plugin->getDataIOManagers())
   {
-    auto factories = plugin->getDataFactories();
-    for(auto factory : factories)
-    {
-      m_DataReader->addFactory(factory);
-    }
+    m_DataIOCollection->addIOManager(pluginIO);
   }
+}
+
+void Application::addDataType(DataObject::Type type, const std::string& name)
+{
+  m_NamedTypesMap[name] = type;
+}
+
+DataObject::Type Application::getDataType(const std::string& name) const
+{
+  if(m_NamedTypesMap.find(name) == m_NamedTypesMap.end())
+  {
+    return DataObject::Type::DataObject;
+  }
+  return m_NamedTypesMap.at(name);
 }

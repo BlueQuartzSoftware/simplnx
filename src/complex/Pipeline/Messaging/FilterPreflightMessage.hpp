@@ -1,13 +1,12 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
 #include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
 #include <vector>
 
 namespace complex
 {
-struct Error;
-struct Warning;
 class PipelineFilter;
 
 /**

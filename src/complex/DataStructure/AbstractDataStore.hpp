@@ -1,22 +1,19 @@
 #pragma once
 
+#include "complex/Common/IteratorUtility.hpp"
+#include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <functional>
 #include <iterator>
+#include <vector>
 
 namespace complex
 {
-namespace H5
-{
-class DatasetWriter;
-} // namespace H5
-
 /**
  * @class AbstractDataStore
  * @brief The AbstractDataStore class serves as an interface class for the
@@ -445,7 +442,10 @@ public:
    * @brief Returns the DataStore's DataType as an enum
    * @return DataType
    */
-  DataType getDataType() const override;
+  DataType getDataType() const override
+  {
+    return GetDataType<T>();
+  }
 
   /**
    * @brief Returns the size of the stored type of the data store.
@@ -454,6 +454,15 @@ public:
   usize getTypeSize() const override
   {
     return sizeof(T);
+  }
+
+  /**
+   * @brief Returns the data format used for storing the array data.
+   * @return data format as string
+   */
+  std::string getDataFormat() const override
+  {
+    return "";
   }
 
   /**
@@ -616,18 +625,33 @@ public:
     return getValue(index);
   }
 
+  std::optional<ShapeType> getChunkShape() const override
+  {
+    return {};
+  }
+
+  /**
+   * @brief Returns the data for a particular data chunk. Returns an empty span if the data is not chunked.
+   * @param chunkPosition
+   * @return chunk data as span
+   */
+  virtual std::vector<T> getChunkValues(const ShapeType& chunkPosition) const
+  {
+    return {};
+  }
+
+  /**
+   * @brief Flushes the data store to its respective target.
+   * In-memory DataStores are not affected.
+   */
+  virtual void flush() const
+  {
+  }
+
 protected:
   /**
    * @brief Default constructor
    */
-  AbstractDataStore()
-  {
-  }
+  AbstractDataStore() = default;
 };
-
-template <typename Iter>
-typename Iter::difference_type distance(Iter first, Iter last)
-{
-  return last - first;
-}
 } // namespace complex

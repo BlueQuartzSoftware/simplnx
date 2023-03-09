@@ -92,9 +92,6 @@ DataStructure createDataStructure()
   Float64Array* mcArray12 = Float64Array::CreateWithStore<DataStore<float64>>(dataStructure, "MultiComponent Array double", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
   fillDataArray<float64>(mcArray12);
 
-  USizeArray* mcArray13 = USizeArray::CreateWithStore<DataStore<usize>>(dataStructure, "MultiComponent Array size_t", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<usize>(mcArray13);
-
   return dataStructure;
 }
 
@@ -172,7 +169,4 @@ TEST_CASE("ComplexCore::SplitAttributeArray", "[ComplexCore][SplitAttributeArray
   TestSplitByType<uint64>(dataStructure, "uint64");
   TestSplitByType<float>(dataStructure, "float");
   TestSplitByType<double>(dataStructure, "double");
-#ifndef __APPLE__
-  TestSplitByType<usize>(dataStructure, "size_t");
-#endif
 }

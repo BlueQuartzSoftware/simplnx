@@ -23,6 +23,8 @@
 #include <memory>
 #include <vector>
 
+using namespace complex;
+
 namespace
 {
 constexpr StringLiteral k_RectGridGeo = "Rect Grid Geom";

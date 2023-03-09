@@ -3,6 +3,8 @@
 
 #include "complex/Common/StringLiteral.hpp"
 #include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureReader.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
@@ -195,10 +197,10 @@ TEST_CASE("ComplexCore::CropImageGeometry(Execute_Filter)", "[ComplexCore][CropI
 
   {
     // Write out the DataStructure for later viewing/debugging
-    Result<H5::FileWriter> ioResult = H5::FileWriter::CreateFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
-    H5::FileWriter fileWriter = std::move(ioResult.value());
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    Result<complex::HDF5::FileWriter> ioResult = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/crop_image_geom_test.dream3d", unit_test::k_BinaryDir));
+    complex::HDF5::FileWriter fileWriter = std::move(ioResult.value());
+    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    COMPLEX_RESULT_REQUIRE_VALID(resultH5);
   }
 
   auto& newImageGeom = dataStructure.getDataRefAs<ImageGeom>(k_NewImageGeomPath);

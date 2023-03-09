@@ -7,7 +7,7 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -72,7 +72,7 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_NoImportPathError, "Import file path not provided."}})};
   }
-  H5::FileReader fileReader(importData.FilePath);
+  complex::HDF5::FileReader fileReader(importData.FilePath);
   if(!fileReader.isValid())
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedOpenFileReaderError, "Failed to open the HDF5 file at the specified path."}})};

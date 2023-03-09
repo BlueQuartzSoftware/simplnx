@@ -13,8 +13,8 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -163,6 +163,7 @@ Pipeline CreateExportPipeline()
     args.insert("tuple_dimensions", DynamicTableInfo::TableDataType{{1.0}});
     args.insert("initialization_value", std::make_any<std::string>("7"));
     args.insert("output_data_array", DataPath({DataNames::k_ArrayName}));
+    args.insert("data_format", std::string(""));
     pipeline.push_back(k_CreateDataArrayHandle, args);
   }
   {
@@ -252,6 +253,7 @@ Pipeline CreateMultiImportPipeline()
   {
     Arguments args;
     args.insert("export_file_path", GetReMultiExportDataPath());
+    args.insert("write_xdmf_file", true);
     pipeline.push_back(k_ExportD3DHandle, args);
   }
   return pipeline;
@@ -274,7 +276,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
   // Write .dream3d file
   {
     auto fileData = CreateFileData();
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(GetIODataPath());
+    Result<HDF5::FileWriter> result = HDF5::FileWriter::CreateFile(GetIODataPath());
     REQUIRE(result.valid());
 
     auto errorCode = DREAM3D::WriteFile(result.value(), fileData);
@@ -283,7 +285,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
 
   // Read .dream3d file
   {
-    H5::FileReader fileReader(GetIODataPath());
+    HDF5::FileReader fileReader(GetIODataPath());
     auto fileResult = DREAM3D::ReadFile(fileReader);
     COMPLEX_RESULT_REQUIRE_VALID(fileResult);
 

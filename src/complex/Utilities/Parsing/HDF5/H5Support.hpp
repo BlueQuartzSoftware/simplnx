@@ -1,6 +1,5 @@
 #pragma once
 
-#include "complex/Common/Types.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/complex_export.hpp"
 
@@ -70,9 +69,7 @@
     returnError = error;                                                                                                                                                                               \
   }
 
-namespace complex
-{
-namespace H5
+namespace complex::HDF5
 {
 namespace Support
 {
@@ -115,7 +112,8 @@ inline bool COMPLEX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName)
 herr_t COMPLEX_EXPORT FindAttr(hid_t /*locationId*/, const char* name, const H5A_info_t* /*info*/, void* opData);
 
 /**
- * @brief Inquires if an attribute named attributeName exists attached to the object locationId.
+ * @brief Inquires if an attribute named attributeName exists attached to the
+ * object locationId.
  * @param locationId The location to search
  * @param attributeName The attribute to search for
  * @return Standard H5 Error condition
@@ -342,5 +340,4 @@ inline hid_t COMPLEX_EXPORT GetDatasetType(hid_t locationId, const std::string& 
 }
 
 } // namespace Support
-} // namespace H5
-} // namespace complex
+} // namespace complex::HDF5

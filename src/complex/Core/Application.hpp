@@ -1,7 +1,9 @@
 #pragma once
 
+#include "complex/Core/Preferences.hpp"
+#include "complex/DataStructure/DataObject.hpp"
 #include "complex/Filter/FilterList.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataFactoryManager.hpp"
+#include "complex/Plugin/AbstractPlugin.hpp"
 #include "complex/complex_export.hpp"
 
 #include <filesystem>
@@ -11,7 +13,8 @@
 
 namespace complex
 {
-class AbstractPlugin;
+class DataIOCollection;
+class IDataIOManager;
 class JsonPipelineBuilder;
 
 /**
@@ -28,6 +31,8 @@ class JsonPipelineBuilder;
 class COMPLEX_EXPORT Application
 {
 public:
+  using name_type_map = std::map<std::string, DataObject::Type>;
+
   /**
    * @brief Constructs an Application using default values and replaces the
    * current Instance pointer.
@@ -57,6 +62,8 @@ public:
    * @return Application*
    */
   static Application* Instance();
+
+  static Application* GetOrCreateInstance();
 
   /**
    * @brief Finds and loads plugins in the target directory.
@@ -90,20 +97,39 @@ public:
   const AbstractPlugin* getPlugin(const Uuid& uuid) const;
 
   /**
+   * @brief Returns a shared pointer to the application preferences.
+   * The application should be in charge of saving or loading values.
+   * @return Preferences
+   */
+  Preferences* getPreferences();
+
+  /**
+   * @brief Saves user preferences to the default filepath.
+   * This method does not save default values.
+   */
+  void savePreferences();
+
+  /**
+   * @brief Loads user preferences from the default filepath.
+   */
+  void loadPreferences();
+
+  /**
    * @brief Returns a pointer to the JsonPipelineBuilder. It is the caller's
    * responsibility to delete the pointer when they are done with it.
    * @return JsonPipelineBuilder*
    */
   JsonPipelineBuilder* getPipelineBuilder() const;
 
-  /**
-   * @brief Returns a pointer to the Application's H5::DataFactoryManager.
-   *
-   * The pointer is owned by the Application and will remain valid for as long
-   * as the Application exists.
-   * @return DataFactoryManager*
-   */
-  H5::DataFactoryManager* getH5FactoryManager() const;
+  std::shared_ptr<DataIOCollection> getIOCollection() const;
+
+  std::shared_ptr<IDataIOManager> getIOManager(const std::string& formatName) const;
+
+  template <typename T>
+  std::shared_ptr<T> getIOManagerAs(const std::string& formatName) const
+  {
+    return std::dynamic_pointer_cast<T>(getIOManager(formatName));
+  }
 
   /**
    * @brief Returns a filepath pointing to the current executable.
@@ -129,12 +155,18 @@ public:
    */
   std::vector<Uuid> getSimplUuid(const Uuid& complexUuid);
 
+  void addDataType(DataObject::Type type, const std::string& name);
+
+  DataObject::Type getDataType(const std::string& name) const;
+
 private:
   /**
    * @brief Assigns Application as the current instance and sets the current
    * executable path.
    */
   void assignInstance();
+
+  void initDefaultDataTypes();
 
   /**
    * @brief Loads the plugin at the specified filepath and updates the
@@ -151,8 +183,10 @@ private:
   // Variables
   std::unique_ptr<complex::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
-  std::unique_ptr<H5::DataFactoryManager> m_DataReader;
   std::vector<Uuid> m_Simpl_Uuids;   // no duplicates; index must match m_Complex_Uuids
   std::vector<Uuid> m_Complex_Uuids; // duplicate allowed conditionally; index must match m_Simpl_Uuids
+  std::shared_ptr<DataIOCollection> m_DataIOCollection;
+  name_type_map m_NamedTypesMap;
+  std::unique_ptr<Preferences> m_Preferences = nullptr;
 };
 } // namespace complex

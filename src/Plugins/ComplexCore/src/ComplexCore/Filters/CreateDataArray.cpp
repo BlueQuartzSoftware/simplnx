@@ -77,6 +77,8 @@ Parameters CreateDataArray::parameters() const
   params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions (Slowest to Fastest Dimensions)",
                                                         "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));
+  params.insert(std::make_unique<StringParameter>(k_DataFormat_Key, "Data Format",
+                                                  "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
   return params;
 }
 
@@ -95,6 +97,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
   auto initValue = filterArgs.value<std::string>(k_InitilizationValue_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
+  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
   if(initValue.empty())
   {
@@ -116,7 +119,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   }
 
   OutputActions actions;
-  auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath, dataFormat);
   actions.actions.push_back(std::move(action));
 
   return {std::move(actions)};

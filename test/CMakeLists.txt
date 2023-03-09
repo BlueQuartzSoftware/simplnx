@@ -21,7 +21,7 @@ MATH(EXPR COMPLEX_PLUGIN_COUNT "${COMPLEX_PLUGIN_COUNT}+2")
 
 add_subdirectory(UnitTestCommon)
 
-add_executable(complex_test 
+add_executable(complex_test
   ${COMPLEX_TEST_DIRS_HEADER}
   complex_test_main.cpp
   ArgumentsTest.cpp
@@ -35,6 +35,7 @@ add_executable(complex_test
   GeometryTest.cpp
   GeometryTestUtilities.hpp
   H5Test.cpp
+  IOFormat.cpp
   MontageTest.cpp
   PluginTest.cpp
   ParametersTest.cpp

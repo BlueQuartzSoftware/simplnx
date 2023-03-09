@@ -83,11 +83,6 @@ void FindThreshold(const IDataArray& inputObject, const Float32Array& gradMagnit
     FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
   }
 
-  if(auto inputArray = dynamic_cast<const USizeArray*>(&inputObject); inputArray != nullptr)
-  {
-    FindThreshold(*inputArray, gradMagnitudeArray, maskArray);
-  }
-
   if(auto inputArray = dynamic_cast<const Float32Array*>(&inputObject); inputArray != nullptr)
   {
     FindThreshold(*inputArray, gradMagnitudeArray, maskArray);

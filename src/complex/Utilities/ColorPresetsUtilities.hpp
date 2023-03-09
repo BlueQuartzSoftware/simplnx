@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Result.hpp"
+#include "complex/complex_export.hpp"
 
 #include <filesystem>
 #include <nlohmann/json.hpp>

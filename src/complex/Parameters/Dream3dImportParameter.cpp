@@ -2,7 +2,7 @@
 
 #include "complex/Common/Any.hpp"
 #include "complex/Common/StringLiteral.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
+#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -160,7 +160,7 @@ Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
     return MakeErrorResult(-3, fmt::format("Path '{}' is not a file", path.string()));
   }
 
-  H5::FileReader fileReader(path);
+  complex::HDF5::FileReader fileReader(path);
   if(!fileReader.isValid())
   {
     return MakeErrorResult(-4, fmt::format("HDF5 file at path '{}' could not be read", path.string()));
