@@ -111,16 +111,19 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 )
 
 # ------------------------------------------------------------------------------
-# Add in all the parameters.
+# Add any filter parameters to the `complex` target
 # This should be integrated with the `create_complex_plugin` function call
+#
+# The `complex` target will need to know about any dependent libraries and any
+# include directories that are needed for the parameter.
 # ------------------------------------------------------------------------------
-set(Parameter_List
+set(complex_injected_parameters
   H5EbsdReaderParameter
   #EbsdToH5EbsdParameter
 )
 
-foreach(source ${Parameter_List})
-  target_sources(${PLUGIN_NAME} PRIVATE
+foreach(source ${complex_injected_parameters})
+  target_sources(complex PRIVATE
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.h
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.cpp)
 
@@ -128,6 +131,14 @@ foreach(source ${Parameter_List})
     FILES ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.h
     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Parameters/${source}.cpp)
 endforeach()
+
+target_include_directories(complex PUBLIC )
+
+# ------------------------------------------------------------------------------
+# Add a link library to complex because it now depends on EbsdLib. Complex will
+# be able to find the include dirs from the CMake EbsdLib target
+# ------------------------------------------------------------------------------
+target_link_libraries(complex PUBLIC EbsdLib::EbsdLib)
 
 # ------------------------------------------------------------------------------
 # Include filters that need to be compiled but not available to the general user

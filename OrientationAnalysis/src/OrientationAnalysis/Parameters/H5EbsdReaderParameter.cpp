@@ -8,6 +8,7 @@
 #include "EbsdLib/IO/TSL/AngFields.h"
 
 #include <fmt/core.h>
+
 #include <nlohmann/json.hpp>
 
 #include <filesystem>
@@ -220,27 +221,10 @@ Result<> H5EbsdReaderParameter::validate(const std::any& valueRef) const
     return {nonstd::make_unexpected(std::move(errors))};
   }
 
-  // Get the list of data arrays in the EBSD file
-  std::set<std::string> daNames = reader->getDataArrayNames();
-
-  EbsdLib::OEM oem = {EbsdLib::OEM::Unknown};
   std::string manufacturerString = reader->getManufacturer();
-  if(manufacturerString == EbsdLib::Ang::Manufacturer)
-  {
-    oem = EbsdLib::OEM::EDAX;
-  }
-  else if(manufacturerString == EbsdLib::Ctf::Manufacturer)
-  {
-    oem = EbsdLib::OEM::Oxford;
-  }
-  else
+  if(manufacturerString != EbsdLib::Ang::Manufacturer && manufacturerString != EbsdLib::Ctf::Manufacturer)
   {
     errors.push_back({-2004, fmt::format("Original Data source could not be determined. It should be TSL, HKL or HEDM")});
-    return {nonstd::make_unexpected(std::move(errors))};
-  }
-
-  if(!errors.empty())
-  {
     return {nonstd::make_unexpected(std::move(errors))};
   }
 

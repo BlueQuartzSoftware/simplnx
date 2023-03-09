@@ -1,10 +1,9 @@
 #pragma once
 
-#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
-
 #include "complex/Filter/ParameterTraits.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/Utilities/FilePathGenerator.hpp"
+#include "complex/complex_export.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 
@@ -12,7 +11,7 @@
 
 namespace complex
 {
-class ORIENTATIONANALYSIS_EXPORT H5EbsdReaderParameter : public ValueParameter
+class COMPLEX_EXPORT H5EbsdReaderParameter : public ValueParameter
 {
 
 public:
@@ -31,13 +30,19 @@ public:
 
   H5EbsdReaderParameter() = delete;
 
+  /**
+   * @brief Constructor
+   * @param name internal string key for the parameter
+   * @param humanName Human facing string for the parameter
+   * @param helpText The help text that should be displayed to a user
+   * @param defaultValue The default value for the parameter
+   */
   H5EbsdReaderParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
 
   ~H5EbsdReaderParameter() override = default;
 
   H5EbsdReaderParameter(const H5EbsdReaderParameter&) = delete;
   H5EbsdReaderParameter(H5EbsdReaderParameter&&) noexcept = delete;
-
   H5EbsdReaderParameter& operator=(const H5EbsdReaderParameter&) = delete;
   H5EbsdReaderParameter& operator=(H5EbsdReaderParameter&&) noexcept = delete;
 
