@@ -389,6 +389,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelAlgorithmUtilities.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/RTree.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
