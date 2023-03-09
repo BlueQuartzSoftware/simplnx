@@ -247,11 +247,12 @@ Result<> ErodeDilateBadData::operator()()
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
+    ThreadSafeTaskMessenger messenger2(m_MessageHandler, "Updating Feature Ids...");
     // Now update the feature Ids
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
-    messenger.addArray(featureIDataArray->getId(), totalPoints, featureIDataArray->getName());
+    messenger2.addArray(featureIDataArray->getId(), totalPoints, featureIDataArray->getName());
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(m_InputValues->Operation, featureIds, neighbors, featureIDataArray, getCancel(), messenger));
+    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(m_InputValues->Operation, featureIds, neighbors, featureIDataArray, getCancel(), messenger2));
   }
 
   return {};
