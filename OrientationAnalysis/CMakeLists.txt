@@ -259,20 +259,18 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
   set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
   add_custom_target(${PLUGIN_NAME}_Pipeline_Folder_Copy ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
-    ${PIPELINE_DEST_DIR}
-    COMMENT "Copying Pipeline Folder into Binary Directory")
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
+                    ${PIPELINE_DEST_DIR}
+                    COMMENT "Copying Pipeline Folder into Binary Directory")
   set_target_properties(${PLUGIN_NAME}_Pipeline_Folder_Copy PROPERTIES FOLDER ZZ_COPY_FILES)
 
   set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
   install(DIRECTORY
-    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
-    DESTINATION "${INSTALL_DESTINATION}"
-    COMPONENT Applications
-  )
+          "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
+          DESTINATION "${INSTALL_DESTINATION}"
+          COMPONENT Applications
+        )
 endif()
-
-file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 
 # -----------------------------------------------------------------------
 # Download Example Data Files
@@ -280,9 +278,12 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
 set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
 
+file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
+
 # -----------------------------------------------------------------------
-# Copy the data files from their downloaded location into the `Data`
-# directory of the CMAKE_LIBRARY_OUTPUT_DIRECTORY
+# These data files are pulled from the 'complex data archive' on github,
+# decompressed and then copied to the build folder. Install rules are also
+# generated for each of the data sets.
 # -----------------------------------------------------------------------
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME T12-MAI-2010.tar.gz SHA512 e33f224d19ad774604aa28a3263a00221a3a5909040685a3d14b6cba78e36d174b045223c28b462ab3eaea0fbc1c9f0657b1bd791a947799b9f088b13d777568)
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Textured_Copper.tar.gz SHA512 cb231a13abbc21fe2046fc0fc7be9753ea51440bce1827bd20ee225499cd38be07d67955ff8c09d15ad91c4c1934e2a0e34406a703e7e49fbe53068b29ef440e)
@@ -302,3 +303,19 @@ foreach(archive ${DREAM3D_DATA_ARCHIVES})
     COMPONENT Applications
   )
 endforeach()
+
+# -----------------------------------------------------------------------
+# Create build folder copy rules and install rules for the 'data' folder
+# for this plugin
+# -----------------------------------------------------------------------
+add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
+  COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
+  )
+set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER ZZ_COPY_FILES)
+
+install(DIRECTORY 
+  ${${PLUGIN_NAME}_SOURCE_DIR}/data
+  DESTINATION Data/
+  COMPONENT Applications
+)
