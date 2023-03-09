@@ -157,6 +157,7 @@ Pipeline CreateExportPipeline()
   }
   {
     Arguments args;
+    args.insert("advanced_options", std::make_any<bool>(true));
     args.insert("numeric_type", std::make_any<NumericType>(NumericType::int8));
     args.insert("component_count", std::make_any<uint64>(3));
 

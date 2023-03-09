@@ -6,7 +6,7 @@ Core (Generation)
 
 ## Description ##
 
-This **Filter** creates an **Attribute Array** of any primitive type with any number of components along a _single component dimension_. For example, a scalar as (1) or a 3-vector as (3), but _not_ a matrix as (3, 3). The array is initialized to a user define value or with random values within a specified range.
+This **Filter** creates an **Data Array** of any primitive type with any number of components along a _single component dimension_. For example, a scalar as (1) or a 3-vector as (3), but _not_ a matrix as (3, 3). The array is initialized to a user define value or with random values within a specified range.
 
 When initializing a multicomponent array square bracket notation can be used to specify different initialization values for each component. For example say that I want to intialize a 2 component array where the first component is 0 and the second component is 1 we would use the following input string for the *Initialization Value*
 
@@ -17,6 +17,10 @@ We are using semicolons instead of commas or decimal points due to different int
 Another example is if you want to create a floating point array where each tuple has 10 components but you just want the value of 2.5 to be used for each, then simply use:
 
     2.5
+
+When creating a Data Array within an Attribute matrix, the tuple dimensions will **always** be taken direct from the Attribute Matrix. This means that the *Set Tuple Dimensions* parameter can be unchecked to hide the tuple dimensions entry table. 
+
+If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the tuple dimensions themselves.
 
 ### Scalar Type Values ###
 
@@ -55,7 +59,8 @@ must have a user entry or the default value _0_ will be used.
 
 | Name             | Type | Description |
 |------------------|------|-------------|
-| Scalar Type | Enumeration | Primitive data type for created array |
+| Set Tuple Dimensions | bool | This allows the user to set the tuple dimensions directly rather than just inheriting them. This option is NOT required if you are creating the Data Array in an Attribute Matrix |
+| Numeric Type | Enumeration | Primitive data type for created array |
 | Number of Components | int32_t | The number of components that each tuple contains. Matrix are row major form within SIMPL|
 | Initialization Value | float | Initialization value for array |
 
