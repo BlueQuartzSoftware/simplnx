@@ -18,6 +18,12 @@ public:
   ThreadSafeMessenger(const IFilter::MessageHandler& messageHandler, std::string&& progressMessage = "Executing...", usize milliDelay = 1000);
   ~ThreadSafeMessenger() = default;
 
+  ThreadSafeMessenger(const ThreadSafeMessenger&) = delete;
+  ThreadSafeMessenger(ThreadSafeMessenger&&) noexcept = delete;
+  ThreadSafeMessenger& operator=(const ThreadSafeMessenger&) = delete;
+  ThreadSafeMessenger& operator=(ThreadSafeMessenger&&) noexcept = delete;
+
+
   /**
    * @brief This function accepts a number to increment the counter by and handles all of the message assembly and send off
    * [!!Utilizes Mutex Locks!!] be wary calling this excessively in parallel as it can slow the program down
@@ -79,19 +85,24 @@ private:
 
 
 /**
- * @class ThreadSafeMultiTaskMessenger
+ * @class ThreadSafeTaskMessenger
  * @brief This is a task messenger for running multiple arrays in parallel that need progress updates.
  * the thought behind this is based on the ParallelTaskAlgorithm intended use case
  */
-class COMPLEX_EXPORT ThreadSafeMultiTaskMessenger
+class COMPLEX_EXPORT ThreadSafeTaskMessenger
 {
   using ArrayValues = std::array<usize, 3>; // {progress counter, progress increment, total elements}
 
   /*!!!!The C++11 standard guarantees that const method access to containers is safe from different threads (ie, both use const methods)!!!!*/
 
 public:
-  ThreadSafeMultiTaskMessenger(const IFilter::MessageHandler& messageHandler, std::string&& progressMessage = "Executing...", usize milliDelay = 1000);
-  ~ThreadSafeMultiTaskMessenger() = default;
+  ThreadSafeTaskMessenger(const IFilter::MessageHandler& messageHandler, std::string&& progressMessage = "Executing...", usize milliDelay = 1000);
+  ~ThreadSafeTaskMessenger() = default;
+
+  ThreadSafeTaskMessenger(const ThreadSafeTaskMessenger&) = delete;
+  ThreadSafeTaskMessenger(ThreadSafeTaskMessenger&&) noexcept = delete;
+  ThreadSafeTaskMessenger& operator=(const ThreadSafeTaskMessenger&) = delete;
+  ThreadSafeTaskMessenger& operator=(ThreadSafeTaskMessenger&&) noexcept = delete;
 
   /**
    * @brief This function accepts a number to increment the counter by and handles all of the message assembly and send off

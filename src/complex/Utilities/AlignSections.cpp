@@ -4,6 +4,7 @@
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+#include "complex/Utilities/MessageUtilities.hpp"
 
 #include <chrono>
 
