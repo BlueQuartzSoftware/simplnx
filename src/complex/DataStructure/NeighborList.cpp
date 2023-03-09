@@ -359,14 +359,6 @@ DataType COMPLEX_EXPORT NeighborList<uint64>::getDataType() const
   return DataType::uint64;
 }
 
-#if defined(__APPLE__)
-template <>
-DataType COMPLEX_EXPORT NeighborList<unsigned long>::getDataType() const
-{
-  return DataType::uint64;
-}
-#endif
-
 template <>
 DataType COMPLEX_EXPORT NeighborList<float32>::getDataType() const
 {
@@ -378,11 +370,6 @@ DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const
 {
   return DataType::float64;
 }
-
-#if !defined(__APPLE__) && !defined(_MSC_VER)
-#undef COMPLEX_EXPORT
-#define COMPLEX_EXPORT
-#endif
 
 template class COMPLEX_EXPORT NeighborList<int8>;
 template class COMPLEX_EXPORT NeighborList<uint8>;
@@ -398,8 +385,4 @@ template class COMPLEX_EXPORT NeighborList<uint64>;
 
 template class COMPLEX_EXPORT NeighborList<float32>;
 template class COMPLEX_EXPORT NeighborList<float64>;
-
-#if defined(__APPLE__) || defined(_MSC_VER)
-template class COMPLEX_EXPORT NeighborList<usize>;
-#endif
 } // namespace complex

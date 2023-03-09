@@ -330,11 +330,6 @@ DataType COMPLEX_EXPORT NeighborList<uint32>::getDataType() const;
 template <>
 DataType COMPLEX_EXPORT NeighborList<uint64>::getDataType() const;
 
-#if defined(__APPLE__)
-template <>
-DataType COMPLEX_EXPORT NeighborList<unsigned long>::getDataType() const;
-#endif
-
 template <>
 DataType COMPLEX_EXPORT NeighborList<float32>::getDataType() const;
 
@@ -371,8 +366,6 @@ using Int8NeighborList = NeighborList<int8>;
 using Int16NeighborList = NeighborList<int16>;
 using Int32NeighborList = NeighborList<int32>;
 using Int64NeighborList = NeighborList<int64>;
-
-using USizeNeighborList = NeighborList<usize>;
 
 using Float32NeighborList = NeighborList<float32>;
 using Float64NeighborList = NeighborList<float64>;
