@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "arguments": "C:/Users/jmarquis/workspace/build/VisualStudio/Bin/Release/PipelineRunner \"C:/Users/jmarquis/workspace/build/VisualStudio/Bin/Release/Pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline\"",
+        "arguments": "PipelineRunner",
         "blocking": false,
         "output_log_file": "Data/Output/ComplexCore/ExecuteProcessOutput.txt",
         "timeout": 30000

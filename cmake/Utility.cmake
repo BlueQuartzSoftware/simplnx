@@ -163,3 +163,54 @@ function(create_data_copy_rules)
     endforeach()
   endif()
 endfunction()
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+function(pad_string output str padchar length)
+  string(LENGTH "${str}" _strlen)
+  math(EXPR _strlen "${length} - ${_strlen}")
+
+  if(_strlen GREATER 0)
+    string(REPEAT ${padchar} ${_strlen} _pad)
+    string(APPEND ${_pad} str )
+  endif()
+
+  set(${output} "${_pad}" PARENT_SCOPE)
+endfunction()
+
+#------------------------------------------------------------------------------
+# This function creates a CTest for each Pipeline path passed into it.
+#------------------------------------------------------------------------------
+function(create_pipeline_tests)
+  set(optionsArgs)
+  set(oneValueArgs PLUGIN_NAME)
+  set(multiValueArgs PIPELINE_LIST)
+  cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  
+  set(TEST_PIPELINE_LIST_FILE ${${ARGS_PLUGIN_NAME}_BINARY_DIR}/test/Prebuilt_Pipeline_Tests.txt)
+  FILE(WRITE ${TEST_PIPELINE_LIST_FILE} "# ${ARGS_PLUGIN_NAME} Example Pipelines Test List")
+
+  get_target_property(PIPELINE_RUNNER_NAME PipelineRunner NAME)
+  get_target_property(PIPELINE_RUNNER_DEBUG PipelineRunner DEBUG_POSTFIX)
+  
+  set(test_index  "0")
+  foreach(pipeline_file_path ${ARGS_PIPELINE_LIST} )
+    math(EXPR test_index "${test_index} + 1")
+    # get the padding string to prefix in front of the test_index
+    pad_string(padding "${test_index}" "0" "3")
+
+    FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "[${padding}${test_index}]    ${pipeline_file_path}\n")
+    
+    get_filename_component(test_file_name ${pipeline_file_path} NAME_WE)
+    string(REPLACE "/" "-" test_file_name "${test_file_name}")
+
+    add_test(NAME "${ARGS_PLUGIN_NAME} ${padding}${test_index} ${test_file_name}"
+            COMMAND "${PIPELINE_RUNNER_NAME}$<$<CONFIG:Debug>:${PIPELINE_RUNNER_DEBUG}>" "${pipeline_file_path}" 
+            #CONFIGURATIONS Debug
+            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+  endforeach()
+
+endfunction()
+
+#set_tests_properties(dependsTest12 PROPERTIES DEPENDS "baseTest1;baseTest2")

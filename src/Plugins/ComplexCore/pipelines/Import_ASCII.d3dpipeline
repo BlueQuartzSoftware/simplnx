@@ -75,7 +75,7 @@
           ],
           "Header Line": 1,
           "Header Mode": 1,
-          "Input File Path": "Data/SmallIN100/Slice_1.ang",
+          "Input File Path": "Data/Small_IN100/Slice_1.ang",
           "Number of Lines": 38021,
           "Semicolon As Delimiter": false,
           "Space As Delimiter": true,
@@ -199,7 +199,7 @@
     },
     {
       "args": {
-        "export_file_path": "Data/Output/SmallIN100/EnsembleData.dream3d",
+        "export_file_path": "Data/Output/Small_IN100/EnsembleData.dream3d",
         "write_xdmf_file": true
       },
       "comments": "",
