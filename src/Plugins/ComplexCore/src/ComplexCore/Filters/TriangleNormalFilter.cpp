@@ -8,6 +8,7 @@
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
+#include "complex/Utilities/MessageUtilities.hpp"
 
 using namespace complex;
 
@@ -23,24 +24,28 @@ constexpr complex::int32 k_MissingFeatureAttributeMatrix = -75969;
 class CalculateNormalsImpl
 {
 public:
-  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64Array& normals, const std::atomic_bool& shouldCancel)
+  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64Array& normals, const std::atomic_bool& shouldCancel, ThreadSafeMessenger& messenger)
   : m_TriangleGeom(triangleGeom)
   , m_Normals(normals)
   , m_ShouldCancel(shouldCancel)
+  , m_Messenger(messenger)
   {
   }
   virtual ~CalculateNormalsImpl() = default;
 
   void generate(size_t start, size_t end) const
   {
+    const auto progressIncrement = m_Messenger.getProgressIncrement();
+    usize progressCount = 0;
+
     std::array<float32, 3> normal = {0.0f, 0.0f, 0.0f};
     for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
-
       if(m_ShouldCancel)
       {
         break;
       }
+
       std::array<Point3Df, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
@@ -53,7 +58,14 @@ public:
       m_Normals[triangleIndex * 3] = static_cast<float64>(normal[0]);
       m_Normals[triangleIndex * 3 + 1] = static_cast<float64>(normal[1]);
       m_Normals[triangleIndex * 3 + 2] = static_cast<float64>(normal[2]);
+      
+      progressCount++;
+      if(progressCount > progressIncrement)
+      {
+        m_Messenger.updateProgress(progressCount);
+      }
     }
+    m_Messenger.updateProgress(progressCount);
   }
 
   void operator()(const Range& range) const
@@ -65,6 +77,7 @@ private:
   const TriangleGeom* m_TriangleGeom = nullptr;
   Float64Array& m_Normals;
   const std::atomic_bool& m_ShouldCancel;
+  ThreadSafeMessenger& m_Messenger;
 };
 } // namespace
 
@@ -166,10 +179,15 @@ Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const A
   DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pNormalsName);
   auto& normals = dataStructure.getDataRefAs<Float64Array>(pNormalsArrayPath);
 
+  usize totalElements = triangleGeom->getNumberOfFaces();
+  ThreadSafeMessenger messenger(messageHandler, "Finding Normals...");
+  messenger.setTotalElements(totalElements);
+  messenger.setProgressIncrement(totalElements / 100);
+
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
-  dataAlg.execute(CalculateNormalsImpl(triangleGeom, normals, shouldCancel));
+  dataAlg.setRange(0ULL, totalElements);
+  dataAlg.execute(CalculateNormalsImpl(triangleGeom, normals, shouldCancel, messenger));
 
   return {};
 }
