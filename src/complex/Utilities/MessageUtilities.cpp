@@ -74,7 +74,7 @@ usize ThreadSafeMessenger::getTotalElements() const
 }
 
 // -----------------------------------------------------------------------------
-ThreadSafeMultiTaskMessenger::ThreadSafeMultiTaskMessenger(const IFilter::MessageHandler& messageHandler, std::string&& progressMessage, const usize milliDelay)
+ThreadSafeTaskMessenger::ThreadSafeTaskMessenger(const IFilter::MessageHandler& messageHandler, std::string&& progressMessage, const usize milliDelay)
 : m_MessageHandler(messageHandler)
 , m_ProgressMessage(std::move(progressMessage))
 , m_MilliDelay(milliDelay)
@@ -83,7 +83,7 @@ ThreadSafeMultiTaskMessenger::ThreadSafeMultiTaskMessenger(const IFilter::Messag
 }
 
 // -----------------------------------------------------------------------------
-bool ThreadSafeMultiTaskMessenger::updateProgress(usize counter, uint64 id)
+bool ThreadSafeTaskMessenger::updateProgress(usize counter, uint64 id)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
@@ -101,9 +101,9 @@ bool ThreadSafeMultiTaskMessenger::updateProgress(usize counter, uint64 id)
     sStream << m_ProgressMessage;
     for(auto const& [key, pair] : m_Data)
     {
-      sStream << " || " << m_Data[id].second << " : ";
-      auto percentage = static_cast<int32_t>((static_cast<double>(m_Data[id].first[0]) / static_cast<double>(m_Data[id].first[2])) * 100.0);
-      sStream << percentage;
+      sStream << " || " << pair.second << " : ";
+      auto percentage = static_cast<int32_t>((static_cast<double>(pair.first[0]) / static_cast<double>(pair.first[2])) * 100.0);
+      sStream << percentage << " %";
     }
 
     m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, sStream.str()});
@@ -114,7 +114,7 @@ bool ThreadSafeMultiTaskMessenger::updateProgress(usize counter, uint64 id)
 }
 
 // -----------------------------------------------------------------------------
-void ThreadSafeMultiTaskMessenger::setProgressMessage(std::string&& progressMessage)
+void ThreadSafeTaskMessenger::setProgressMessage(std::string&& progressMessage)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
@@ -122,7 +122,7 @@ void ThreadSafeMultiTaskMessenger::setProgressMessage(std::string&& progressMess
 }
 
 // -----------------------------------------------------------------------------
-void ThreadSafeMultiTaskMessenger::setUpdateDelay(usize milliseconds)
+void ThreadSafeTaskMessenger::setUpdateDelay(usize milliseconds)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
@@ -130,11 +130,11 @@ void ThreadSafeMultiTaskMessenger::setUpdateDelay(usize milliseconds)
 }
 
 // -----------------------------------------------------------------------------
-bool ThreadSafeMultiTaskMessenger::addArray(uint64 id, usize progressIncrement, usize totalElements, std::string&& arrayName)
+bool ThreadSafeTaskMessenger::addArray(uint64 id, usize progressIncrement, usize totalElements, std::string&& arrayName)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
-  if(!m_Data.count(id))
+  if(m_Data.count(id))
   {
     return false;
   }
@@ -145,7 +145,7 @@ bool ThreadSafeMultiTaskMessenger::addArray(uint64 id, usize progressIncrement, 
 }
 
 // -----------------------------------------------------------------------------
-bool ThreadSafeMultiTaskMessenger::setProgressIncrement(usize progressIncrement, uint64 id)
+bool ThreadSafeTaskMessenger::setProgressIncrement(usize progressIncrement, uint64 id)
 {
 
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
@@ -160,7 +160,7 @@ bool ThreadSafeMultiTaskMessenger::setProgressIncrement(usize progressIncrement,
 }
 
 // -----------------------------------------------------------------------------
-bool ThreadSafeMultiTaskMessenger::setTotalElements(usize totalElements, uint64 id)
+bool ThreadSafeTaskMessenger::setTotalElements(usize totalElements, uint64 id)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
 
@@ -174,11 +174,11 @@ bool ThreadSafeMultiTaskMessenger::setTotalElements(usize totalElements, uint64 
 }
 
 // -----------------------------------------------------------------------------
-usize ThreadSafeMultiTaskMessenger::getProgressIncrement(uint64 id) const
+usize ThreadSafeTaskMessenger::getProgressIncrement(uint64 id) const
 {
   if(!m_Data.count(id))
   {
-    // should be treated as a fail: just throw an if around the returned
+    // should be treated as a fail: just throw an if not around the returned
     // value to error check
     return 0;
   }
@@ -187,11 +187,11 @@ usize ThreadSafeMultiTaskMessenger::getProgressIncrement(uint64 id) const
 }
 
 // -----------------------------------------------------------------------------
-usize ThreadSafeMultiTaskMessenger::getTotalElements(uint64 id) const
+usize ThreadSafeTaskMessenger::getTotalElements(uint64 id) const
 {
   if(!m_Data.count(id))
   {
-    // should be treated as a fail: just throw an if around the returned
+    // should be treated as a fail: just throw an if not around the returned
     // value to error check
     return 0;
   }
