@@ -55,11 +55,6 @@ TetrahedralGeom* TetrahedralGeom::Import(DataStructure& dataStructure, std::stri
 
 std::string TetrahedralGeom::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string TetrahedralGeom::GetTypeName()
-{
   return k_TypeName;
 }
 

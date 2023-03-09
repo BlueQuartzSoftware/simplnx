@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Bit.hpp"
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStore.hpp"
@@ -628,7 +629,10 @@ public:
     {
       return "DataArray<bool>";
     }
-    return "DataArray: UNKNOWN TYPE";
+    else
+    {
+      static_assert(dependent_false<T>, "Unsupported type T in DataArray");
+    }
   }
 
   /**

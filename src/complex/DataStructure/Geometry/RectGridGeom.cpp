@@ -56,11 +56,6 @@ RectGridGeom* RectGridGeom::Import(DataStructure& dataStructure, std::string nam
 
 std::string RectGridGeom::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string RectGridGeom::GetTypeName()
-{
   return k_TypeName;
 }
 

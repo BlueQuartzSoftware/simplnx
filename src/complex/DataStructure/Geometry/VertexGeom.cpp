@@ -62,11 +62,6 @@ IGeometry::Type VertexGeom::getGeomType() const
 
 std::string VertexGeom::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string VertexGeom::GetTypeName()
-{
   return k_TypeName;
 }
 

@@ -18,7 +18,7 @@ DataObject::Type EdgeGeomIO::getDataType() const
 
 std::string EdgeGeomIO::getTypeName() const
 {
-  return data_type::GetTypeName();
+  return data_type::k_TypeName;
 }
 
 Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,

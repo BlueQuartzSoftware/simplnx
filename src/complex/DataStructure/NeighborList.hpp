@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
 
@@ -7,7 +8,7 @@ namespace complex
 {
 namespace NeighborListConstants
 {
-static inline constexpr StringLiteral k_TypeName = "NeighborList<T>";
+inline constexpr StringLiteral k_TypeName = "NeighborList<T>";
 }
 
 /**
@@ -224,7 +225,10 @@ public:
     {
       return "NeighborList<float64>";
     }
-    return "NeighborList: UNKNOWN TYPE";
+    else
+    {
+      static_assert(dependent_false<T>, "Unsupported type T in NeighborList");
+    }
   }
 
   /**

@@ -56,11 +56,6 @@ TriangleGeom* TriangleGeom::Import(DataStructure& dataStructure, std::string nam
 
 std::string TriangleGeom::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string TriangleGeom::GetTypeName()
-{
   return k_TypeName;
 }
 

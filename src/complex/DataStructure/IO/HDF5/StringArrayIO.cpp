@@ -17,7 +17,7 @@ DataObject::Type StringArrayIO::getDataType() const
 
 std::string StringArrayIO::getTypeName() const
 {
-  return data_type::GetTypeName();
+  return data_type::k_TypeName;
 }
 
 Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,

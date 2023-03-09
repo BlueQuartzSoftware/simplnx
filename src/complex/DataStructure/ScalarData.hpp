@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/DataObject.hpp"
 
 namespace complex
@@ -7,7 +8,7 @@ namespace complex
 
 namespace ScalarDataConstants
 {
-constexpr StringLiteral k_TypeName = "ScalarData";
+inline constexpr StringLiteral k_TypeName = "ScalarData";
 }
 
 /**
@@ -109,21 +110,68 @@ public:
   }
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
+   * @brief Static function to get the typename
+   * @return
    */
-  std::string getTypeName() const override
+  static std::string GetTypeName()
   {
-    return GetTypeName();
+    if constexpr(std::is_same_v<T, int8>)
+    {
+      return "ScalarData<int8>";
+    }
+    else if constexpr(std::is_same_v<T, uint8>)
+    {
+      return "ScalarData<uint8>";
+    }
+    else if constexpr(std::is_same_v<T, int16>)
+    {
+      return "ScalarData<int16>";
+    }
+    else if constexpr(std::is_same_v<T, uint16>)
+    {
+      return "ScalarData<uint16>";
+    }
+    else if constexpr(std::is_same_v<T, int32>)
+    {
+      return "ScalarData<int32>";
+    }
+    else if constexpr(std::is_same_v<T, uint32>)
+    {
+      return "ScalarData<uint32>";
+    }
+    else if constexpr(std::is_same_v<T, int64>)
+    {
+      return "ScalarData<int64>";
+    }
+    else if constexpr(std::is_same_v<T, uint64>)
+    {
+      return "ScalarData<uint64>";
+    }
+    else if constexpr(std::is_same_v<T, float32>)
+    {
+      return "ScalarData<float32>";
+    }
+    else if constexpr(std::is_same_v<T, float64>)
+    {
+      return "ScalarData<float64>";
+    }
+    else if constexpr(std::is_same_v<T, bool>)
+    {
+      return "ScalarData<bool>";
+    }
+    else
+    {
+      static_assert(dependent_false<T>, "Unsupported type T in ScalarData");
+    }
   }
 
   /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
    */
-  static std::string GetTypeName()
+  std::string getTypeName() const override
   {
-    return ScalarDataConstants::k_TypeName;
+    return GetTypeName();
   }
 
   /**

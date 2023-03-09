@@ -19,7 +19,7 @@ DataObject::Type TetrahedralGeomIO::getDataType() const
 
 std::string TetrahedralGeomIO::getTypeName() const
 {
-  return data_type::GetTypeName();
+  return data_type::k_TypeName;
 }
 
 Result<> TetrahedralGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,

@@ -18,7 +18,7 @@ DataObject::Type TriangleGeomIO::getDataType() const
 
 std::string TriangleGeomIO::getTypeName() const
 {
-  return data_type::GetTypeName();
+  return data_type::k_TypeName;
 }
 
 Result<> TriangleGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,

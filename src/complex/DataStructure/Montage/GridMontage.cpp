@@ -51,11 +51,6 @@ GridMontage* GridMontage::Import(DataStructure& dataStructure, std::string name,
 
 std::string GridMontage::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string GridMontage::GetTypeName()
-{
   return k_TypeName;
 }
 

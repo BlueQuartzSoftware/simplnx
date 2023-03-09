@@ -20,11 +20,6 @@ INeighborList::~INeighborList() = default;
 
 std::string INeighborList::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string INeighborList::GetTypeName()
-{
   return NeighborListConstants::k_TypeName;
 }
 

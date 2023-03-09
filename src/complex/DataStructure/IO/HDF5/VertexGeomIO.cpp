@@ -17,7 +17,7 @@ DataObject::Type VertexGeomIO::getDataType() const
 
 std::string VertexGeomIO::getTypeName() const
 {
-  return data_type::GetTypeName();
+  return data_type::k_TypeName;
 }
 
 Result<> VertexGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,

@@ -93,12 +93,6 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
-   */
-  static std::string GetTypeName();
-
-  /**
    * @brief
    * @return DataObject*
    */

@@ -56,11 +56,6 @@ ImageGeom* ImageGeom::Import(DataStructure& dataStructure, std::string name, IdT
 
 std::string ImageGeom::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string ImageGeom::GetTypeName()
-{
   return k_TypeName;
 }
 

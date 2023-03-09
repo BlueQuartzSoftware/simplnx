@@ -82,12 +82,6 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief Returns the typename of the DataObject as a std::string.
-   * @return std::string
-   */
-  static std::string GetTypeName();
-
-  /**
    * @brief Returns a shallow copy of the current DataObject but does not add
    * it to the DataStructure. It is up to the caller to delete the returned
    * value.

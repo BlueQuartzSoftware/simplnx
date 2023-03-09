@@ -21,7 +21,7 @@ DataObject::Type RectGridGeomIO::getDataType() const
 
 std::string RectGridGeomIO::getTypeName() const
 {
-  return data_type::GetTypeName();
+  return data_type::k_TypeName;
 }
 
 Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,

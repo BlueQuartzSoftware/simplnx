@@ -55,11 +55,6 @@ BaseGroup::GroupType EdgeGeom::getGroupType() const
 
 std::string EdgeGeom::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string EdgeGeom::GetTypeName()
-{
   return k_TypeName;
 }
 

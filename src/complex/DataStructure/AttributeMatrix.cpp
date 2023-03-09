@@ -75,11 +75,6 @@ DataObject* AttributeMatrix::shallowCopy()
 
 std::string AttributeMatrix::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string AttributeMatrix::GetTypeName()
-{
   return k_TypeName;
 }
 

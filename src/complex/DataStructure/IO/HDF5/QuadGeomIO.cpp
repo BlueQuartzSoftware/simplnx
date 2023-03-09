@@ -17,7 +17,7 @@ DataObject::Type QuadGeomIO::getDataType() const
 
 std::string QuadGeomIO::getTypeName() const
 {
-  return data_type::GetTypeName();
+  return data_type::k_TypeName;
 }
 
 Result<> QuadGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,

@@ -76,11 +76,6 @@ DataObject* DataGroup::shallowCopy()
 
 std::string DataGroup::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string DataGroup::GetTypeName()
-{
   return k_TypeName;
 }
 

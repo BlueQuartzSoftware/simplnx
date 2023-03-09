@@ -29,15 +29,15 @@ public:
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(scalarName);
-    auto dataVector = datasetReader.readAsVector<T>();
-    if(dataVector.size() != 1)
+    std::array<T, 1> buffer{};
+    bool result = datasetReader.readIntoSpan<T>(nonstd::span<T>{buffer});
+    if(!result)
     {
       std::string ss = "Failed to read ScalarData. Incorrect number of values";
       return MakeErrorResult(-458, ss);
     }
 
-    T buffer = dataVector.front();
-    ScalarData<T>* scalar = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer, parentId);
+    ScalarData<T>* scalar = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer[0], parentId);
     if(scalar == nullptr)
     {
       std::string ss = "Failed to read ScalarData. No data imported";
@@ -61,12 +61,13 @@ public:
 
     complex::HDF5::DatasetWriter::DimsType dims = {1};
     std::array<T, 1> dataVector = {scalarData.getValue()};
-    Result<> error = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
-    if(error.valid())
+    auto h5Error = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
+    if(h5Error < 0)
     {
-      error = WriteObjectAttributes(dataStructureWriter, datasetWriter, importable);
+      return MakeErrorResult(-460, "Failed to write ScalarData");
     }
-    return error;
+    Result<> result = WriteObjectAttributes(dataStructureWriter, scalarData, datasetWriter, importable);
+    return result;
   }
 
   /**

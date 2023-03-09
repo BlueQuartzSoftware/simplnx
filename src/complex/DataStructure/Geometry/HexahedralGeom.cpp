@@ -55,11 +55,6 @@ BaseGroup::GroupType HexahedralGeom::getGroupType() const
 
 std::string HexahedralGeom::getTypeName() const
 {
-  return GetTypeName();
-}
-
-std::string HexahedralGeom::GetTypeName()
-{
   return k_TypeName;
 }
 

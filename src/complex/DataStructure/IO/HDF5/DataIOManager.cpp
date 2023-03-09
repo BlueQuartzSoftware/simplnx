@@ -56,6 +56,18 @@ void DataIOManager::addCoreFactories()
   addFactory<Float32NeighborIO>();
   addFactory<Float64NeighborIO>();
 
+  addFactory<ScalarDataIO<uint8>>();
+  addFactory<ScalarDataIO<uint16>>();
+  addFactory<ScalarDataIO<uint32>>();
+  addFactory<ScalarDataIO<uint64>>();
+  addFactory<ScalarDataIO<int8>>();
+  addFactory<ScalarDataIO<int16>>();
+  addFactory<ScalarDataIO<int32>>();
+  addFactory<ScalarDataIO<int64>>();
+  addFactory<ScalarDataIO<float32>>();
+  addFactory<ScalarDataIO<float64>>();
+  addFactory<ScalarDataIO<bool>>();
+
   addFactory<AttributeMatrixIO>();
   addFactory<DataGroupIO>();
   addFactory<EdgeGeomIO>();

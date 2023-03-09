@@ -101,12 +101,6 @@ public:
    */
   std::string getTypeName() const override;
 
-  /**
-   * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
-   */
-  static std::string GetTypeName();
-
 protected:
   /**
    * @brief Creates the DataGroup for the target DataStructure and with the

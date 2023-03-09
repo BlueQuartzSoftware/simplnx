@@ -16,12 +16,6 @@ public:
 
   static inline constexpr StringLiteral k_TypeName = "StringArray";
 
-  /**
-   * @brief Static function to get the typename
-   * @return std::string
-   */
-  static std::string GetTypeName();
-
   static StringArray* Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId = {});
   static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId = {});
 
