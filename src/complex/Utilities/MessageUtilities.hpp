@@ -128,15 +128,15 @@ public:
   void setUpdateDelay(usize milliseconds);
 
   /**
-   * @brief This stores the required values to update an objects progress
+   * @brief This stores the required values to update an objects progress, progress increment is implicitly calculated to
+   * 1% of the total in this function, so no need to set unless you want a custom increment
    * [!!Utilizes Mutex Locks!!] be wary calling this excessively in parallel as it can slow the program down
    * @param id the id of the DataObject being tracked
-   * @param progressIncrement this is a helper variable that will determine how often update progress is called
    * @param totalElements this is the total number of elements (that will be counted) to be parsed in parallel
    * @param arrayName This is the name that will be displayed next to the percentage in the message
    * @return this will return false if the object already exists in the structure
    */
-  bool addArray(uint64 id, usize progressIncrement, usize totalElements, std::string&& arrayName);
+  bool addArray(uint64 id, usize totalElements, std::string&& arrayName);
 
   /**
    * @brief This sets the count at which the updateProgress function SHOULD be called for that id, ie this is a vessel to carry the value to calling function
@@ -183,5 +183,4 @@ private:
   mutable std::mutex m_ProgressMessage_Mutex;
   std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
 };
-
 } // namespace complex
