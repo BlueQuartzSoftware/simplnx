@@ -89,6 +89,7 @@
 #include "ComplexCore/Filters/ComputeMomentInvariants2DFilter.hpp"
 #include "ComplexCore/Filters/ExecuteProcessFilter.hpp"
 #include "ComplexCore/Filters/FindVertexToTriangleDistancesFilter.hpp"
+#include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -187,6 +188,7 @@ namespace complex
     {complex::Uuid::FromString("e0555de5-bdc6-5bea-ba2f-aacfbec0a022").value(), complex::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid}, // ExtractFlaggedFeatures
     {complex::Uuid::FromString("27a132b2-a592-519a-8cb7-38599a7f28ec").value(), complex::FilterTraits<ComputeMomentInvariants2DFilter>::uuid}, // ComputeMomentInvariants2D
 	  {complex::Uuid::FromString("fcdde553-36b4-5731-bc88-fc499806cb4e").value(), complex::FilterTraits<FindVertexToTriangleDistancesFilter>::uuid}, // FindVertexToTriangleDistances
+    {complex::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), complex::FilterTraits<ApplyTransformationToGeometryFilter>::uuid}, // ApplyTransformationToGeometry
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

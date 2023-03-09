@@ -427,9 +427,9 @@ void Normalize3x3(T g[3][3])
  * @param g
  */
 template <typename T>
-void Normalize3x1(T g[3])
+void Normalize3x1(T* g)
 {
-  double denom;
+  T denom;
   denom = g[0] * g[0] + g[1] * g[1] + g[2] * g[2];
   denom = sqrt(denom);
   g[0] = g[0] / denom;

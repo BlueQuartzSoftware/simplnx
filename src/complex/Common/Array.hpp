@@ -973,7 +973,7 @@ public:
    * @param other
    */
   Vec6(const Vec6& other)
-  : Array<T, 4>(other)
+  : Array<T, 6>(other)
   {
   }
 
@@ -982,7 +982,7 @@ public:
    * @param other
    */
   Vec6(Vec6&& other) noexcept
-  : Array<T, 4>(std::move(other))
+  : Array<T, 6>(std::move(other))
   {
   }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Array.hpp"
+#include "complex/Common/EulerAngle.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
