@@ -334,9 +334,12 @@ add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
   )
 set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 
-install(DIRECTORY 
-  ${${PLUGIN_NAME}_SOURCE_DIR}/data
-  DESTINATION Data/
+set(Installed_Data_Files
+)
+
+install(FILES 
+  ${Installed_Data_Files}
+  DESTINATION Data/${PLUGIN_NAME}
   COMPONENT Applications
 )
 
