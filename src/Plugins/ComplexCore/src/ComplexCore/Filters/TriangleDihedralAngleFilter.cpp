@@ -211,7 +211,7 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
   auto& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
 
   usize totalElements = triangleGeom->getNumberOfFaces();
-  ThreadSafeMessenger messenger(messageHandler, "Finding Centroids...");
+  ThreadSafeMessenger messenger(messageHandler, "Finding Dihedral Angles...");
   messenger.setTotalElements(totalElements);
   messenger.setProgressIncrement(totalElements / 100);
 
