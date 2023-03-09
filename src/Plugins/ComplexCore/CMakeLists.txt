@@ -328,11 +328,11 @@ endforeach()
 # Create build folder copy rules and install rules for the 'data' folder
 # for this plugin
 # -----------------------------------------------------------------------
-add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
-  COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
-  )
-set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER ZZ_COPY_FILES)
+# add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
+#   COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
+#   COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
+#   )
+# set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 
 set(Installed_Data_Files
 )
