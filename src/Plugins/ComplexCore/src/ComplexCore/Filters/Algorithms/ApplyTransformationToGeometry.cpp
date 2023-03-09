@@ -1,82 +1,18 @@
 #include "ApplyTransformationToGeometry.hpp"
 
+#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
-
-#include <Eigen/Dense>
-#include <fmt/format.h>
-
-#include <cstdint>
+#include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace complex;
 
-class ApplyTransformationToGeometryImpl
-{
-
-public:
-  ApplyTransformationToGeometryImpl(ApplyTransformationToGeometry& filter, const std::vector<float>& transformationMatrix, IGeometry::SharedVertexList* verticesPtr,
-                                    const std::atomic_bool& shouldCancel, size_t progIncrement)
-  : m_Filter(filter)
-  , m_TransformationMatrix(transformationMatrix)
-  , m_Vertices(verticesPtr)
-  , m_ShouldCancel(shouldCancel)
-  , m_ProgIncrement(progIncrement)
-  {
-  }
-  ~ApplyTransformationToGeometryImpl() = default;
-
-  ApplyTransformationToGeometryImpl(const ApplyTransformationToGeometryImpl&) = default;           // Copy Constructor defaulted
-  ApplyTransformationToGeometryImpl(ApplyTransformationToGeometryImpl&&) = delete;                 // Move Constructor Not Implemented
-  ApplyTransformationToGeometryImpl& operator=(const ApplyTransformationToGeometryImpl&) = delete; // Copy Assignment Not Implemented
-  ApplyTransformationToGeometryImpl& operator=(ApplyTransformationToGeometryImpl&&) = delete;      // Move Assignment Not Implemented
-
-  void convert(size_t start, size_t end) const
-  {
-    using ProjectiveMatrix = Eigen::Matrix<float, 4, 4, Eigen::RowMajor>;
-    Eigen::Map<const ProjectiveMatrix> transformation(m_TransformationMatrix.data());
-
-    size_t progCounter = 0;
-    size_t totalElements = static_cast<int64_t>(end - start);
-
-    IGeometry::SharedVertexList& vertices = *(m_Vertices);
-    for(size_t i = start; i < end; i++)
-    {
-      if(m_ShouldCancel)
-      {
-        return;
-      }
-      Eigen::Vector4f position(vertices[3 * i + 0], vertices[3 * i + 1], vertices[3 * i + 2], 1);
-      Eigen::Vector4f transformedPosition = transformation * position;
-      vertices[i * 3 + 0] = transformedPosition[0];
-      vertices[i * 3 + 1] = transformedPosition[1];
-      vertices[i * 3 + 2] = transformedPosition[2];
-
-      if(progCounter > m_ProgIncrement)
-      {
-        m_Filter.sendThreadSafeProgressMessage(progCounter);
-        progCounter = 0;
-      }
-      progCounter++;
-    }
-    m_Filter.sendThreadSafeProgressMessage(progCounter);
-  }
-
-  void operator()(const Range& range) const
-  {
-    convert(range.min(), range.max());
-  }
-
-private:
-  ApplyTransformationToGeometry& m_Filter;
-  const std::vector<float>& m_TransformationMatrix;
-  IGeometry::SharedVertexList* m_Vertices;
-  const std::atomic_bool& m_ShouldCancel;
-  size_t m_ProgIncrement = 0;
-};
-
 // -----------------------------------------------------------------------------
-ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& dataStructure, ApplyTransformationToGeometryInputValues* inputValues, const std::atomic_bool& shouldCancel,
-                                                             const IFilter::MessageHandler& mesgHandler)
+ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                             ApplyTransformationToGeometryInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -88,40 +24,159 @@ ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& data
 ApplyTransformationToGeometry::~ApplyTransformationToGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> ApplyTransformationToGeometry::operator()()
+const std::atomic_bool& ApplyTransformationToGeometry::getCancel()
 {
-  auto& geom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->pGeometryToTransform);
+  return m_ShouldCancel;
+}
 
-  IGeometry::SharedVertexList* vertexList = geom.getVertices();
+// -----------------------------------------------------------------------------
+Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
+{
 
-  m_TotalElements = vertexList->getNumberOfTuples();
-  // Needed for Threaded Progress Messages
-  m_ProgressCounter = 0;
-  m_LastProgressInt = 0;
-  size_t progIncrement = m_TotalElements / 100;
+  // Pure translation for Image Geom, just return
+  if(m_InputValues->TransformationSelection == k_TranslationIdx)
+  {
+    return {};
+  }
 
-  // Allow data-based parallelization
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, m_TotalElements);
-  dataAlg.execute(ApplyTransformationToGeometryImpl(*this, m_InputValues->transformationMatrix, vertexList, m_ShouldCancel, progIncrement));
+  // Pure Scale for image geom, just return
+  if(m_InputValues->TransformationSelection == k_ScaleIdx)
+  {
+    return {};
+  }
+
+  DataPath destImagePath;
+  if(m_InputValues->RemoveOriginalGeometry)
+  {
+    // Create an Image Geometry name with a "." as a prefix to the original Image Geometry Name
+    std::vector<std::string> tempPathVector = m_InputValues->SelectedGeometryPath.getPathVector();
+    tempPathVector.back() = "." + tempPathVector.back();
+    destImagePath = DataPath({tempPathVector});
+  }
+
+  auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
+  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(destImagePath);
+
+  const auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, m_TransformationMatrix);
+
+  auto selectedCellDataChildren = GetAllChildArrayDataPaths(m_DataStructure, srcImageGeom.getCellDataPath());
+  auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
+
+  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
+
+  // The actual rotating of the dataStructure arrays is done in parallel where parallel here
+  // refers to the cropping of each DataArray being done on a separate thread.
+  ParallelTaskAlgorithm taskRunner;
+  taskRunner.setParallelizationEnabled(true);
+
+  const DataPath srcCelLDataAMPath = srcImageGeom.getCellDataPath();
+  const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
+
+  const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
+  // auto& destCellDataAM = destImageGeom.getCellDataRef();
+
+  for(const auto& [dataId, srcDataObject] : srcCellDataAM)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
+    const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    m_MessageHandler(fmt::format("Applying Transform || Copying Data Array {}", srcDataObject->getName()));
+
+    if(m_InputValues->InterpolationSelection == k_NearestNeighborInterpolationIdx)
+    {
+      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
+                                                                                              m_TransformationMatrix, false, &filterProgressCallback);
+    }
+    else if(m_InputValues->InterpolationSelection == k_LinearInterpolationIdx)
+    {
+      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation, NoBooleanType>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr,
+                                                                                                                    rotateArgs, m_TransformationMatrix, &filterProgressCallback);
+    }
+
+    if(getCancel())
+    {
+      break;
+    }
+  }
+
+  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+
   return {};
 }
 
 // -----------------------------------------------------------------------------
-void ApplyTransformationToGeometry::sendThreadSafeProgressMessage(size_t counter)
+Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  INodeGeometry0D& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
 
-  m_ProgressCounter += counter;
-  size_t progressInt = static_cast<size_t>((static_cast<float>(m_ProgressCounter) / m_TotalElements) * 100.0f);
+  IGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
 
-  size_t progIncrement = m_TotalElements / 100;
+  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
-  if(m_ProgressCounter > 1 && m_LastProgressInt != progressInt)
+  // Allow data-based parallelization
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0, vertexList.getNumberOfTuples());
+  dataAlg.execute(ImageRotationUtilities::ApplyTransformationToNodeGeometry(vertexList, m_TransformationMatrix, &filterProgressCallback));
+
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<> ApplyTransformationToGeometry::operator()()
+{
+  if(!m_InputValues->RemoveOriginalGeometry)
   {
-    std::string progressMessage = "Transforming...";
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
+    return MakeErrorResult(-84500, fmt::format("Keeping the original geometry is not supported."));
   }
 
-  m_LastProgressInt = progressInt;
+  switch(m_InputValues->TransformationSelection)
+  {
+  case k_NoTransformIdx: // No-Op
+  {
+    return {};
+  }
+  case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
+  {
+    const Float32Array& precomputed = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ComputedTransformationMatrix);
+    m_TransformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(precomputed);
+    break;
+  }
+  case k_ManualTransformationMatrixIdx: // Manual transformation matrix
+  {
+    m_TransformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(m_InputValues->ManualMatrixTableData);
+    break;
+  }
+  case k_RotationIdx: // Rotation via axis-angle
+  {
+    m_TransformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(m_InputValues->Rotation);
+    break;
+  }
+  case k_TranslationIdx: // Translation
+  {
+    m_TransformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(m_InputValues->Translation);
+    break;
+  }
+  case k_ScaleIdx: // Scale
+  {
+    m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(m_InputValues->Scale);
+    break;
+  }
+  }
+
+  auto* geometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
+
+  if(geometryPtr != nullptr) // Function for applying Image Transformation
+  {
+    applyImageGeometryTransformation();
+  }
+  else
+  {
+    applyNodeGeometryTransformation();
+  }
+
+  return {};
 }

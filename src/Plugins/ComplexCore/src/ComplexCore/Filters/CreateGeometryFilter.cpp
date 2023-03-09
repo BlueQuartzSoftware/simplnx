@@ -151,6 +151,7 @@ Parameters CreateGeometryFilter::parameters() const
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64}, ArraySelectionParameter::AllowedComponentShapes{{8}}));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryName_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex attribute matrix to be created with the geometry",
                                                           INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_EdgeAttributeMatrixName_Key, "Edge Attribute Matrix", "The name of the edge attribute matrix to be created with the geometry",
@@ -159,7 +160,6 @@ Parameters CreateGeometryFilter::parameters() const
                                                           INodeGeometry2D::k_FaceDataName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell attribute matrix to be created with the geometry",
                                                           IGridGeometry::k_CellDataName));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryName_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"[Geometry]"})));
 
   // setup linked parameters
   // image

@@ -463,7 +463,7 @@ ImageGeom::ErrorType ImageGeom::computeCellIndex(const Point3D<float32>& coords,
       return static_cast<ImageGeom::ErrorType>(i * 2 + 1);
     }
     index[i] = static_cast<usize>((coords[i] - m_Origin[i]) / m_Spacing[i]);
-    if(index[i] > m_Dimensions[i])
+    if(index[i] >= m_Dimensions[i])
     {
       return static_cast<ImageGeom::ErrorType>(i * 2 + 1);
     }
