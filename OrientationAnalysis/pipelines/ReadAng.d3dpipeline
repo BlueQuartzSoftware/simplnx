@@ -8,7 +8,7 @@
         "cell_attribute_matrix_name": "Cell Data",
         "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
         "data_container_name": "DataContainer",
-        "input_file": "Data/SmallIN100/Slice_1.ang"
+        "input_file": "Data/Small_IN100/Slice_1.ang"
       },
       "filter": {
         "name": "complex::ReadAngDataFilter",
@@ -20,7 +20,7 @@
       "args": {
         "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
         "cell_ip_fcolors_array_name": "IPFColors",
-        "CellPhasesArrayPath": "DataContainer/Cell Data/Phases",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/Cell Ensemble Data/CrystalStructures",
         "good_voxels_array_path": "",
         "reference_dir": [

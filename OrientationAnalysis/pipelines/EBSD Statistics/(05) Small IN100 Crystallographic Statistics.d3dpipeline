@@ -1,0 +1,193 @@
+{
+  "isDisabled": false,
+  "name": "(05) SmallIN100 Crystallographic Statistics.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "Import_File_Data": {
+          "data_paths": [
+            "DataContainer/CellEnsembleData",
+            "DataContainer/CellEnsembleData/CrystalStructures",
+            "DataContainer/CellEnsembleData/LatticeConstants",
+            "DataContainer",
+            "DataContainer/CellData",
+            "DataContainer/CellData/Confidence Index",
+            "DataContainer/CellData/EulerAngles",
+            "DataContainer/CellData/Fit",
+            "DataContainer/CellData/Image Quality",
+            "DataContainer/CellData/Phases",
+            "DataContainer/CellData/SEM Signal",
+            "DataContainer/CellData/Mask",
+            "DataContainer/CellData/Quats",
+            "DataContainer/CellFeatureData",
+            "DataContainer/CellFeatureData/Active",
+            "DataContainer/CellData/FeatureIds",
+            "DataContainer/CellFeatureData/Phases",
+            "DataContainer/CellFeatureData/NumNeighbors2",
+            "DataContainer/NewGrain Data",
+            "DataContainer/CellData/ParentIds",
+            "DataContainer/CellFeatureData/ParentIds",
+            "DataContainer/NewGrain Data/Active",
+            "DataContainer/CellData/IPFColors",
+            "DataContainer/CellFeatureData/Centroids",
+            "DataContainer/CellFeatureData/EquivalentDiameters",
+            "DataContainer/CellFeatureData/NumElements",
+            "DataContainer/CellFeatureData/Omega3s",
+            "DataContainer/CellFeatureData/AxisLengths",
+            "DataContainer/CellFeatureData/AxisEulerAngles",
+            "DataContainer/CellFeatureData/AspectRatios",
+            "DataContainer/CellFeatureData/Shape Volumes",
+            "DataContainer/CellFeatureData/NumNeighbors",
+            "DataContainer/CellFeatureData/NeighborList",
+            "DataContainer/CellFeatureData/SharedSurfaceAreaList",
+            "DataContainer/CellFeatureData/Neighborhoods",
+            "DataContainer/CellFeatureData/NeighborhoodList",
+            "DataContainer/CellData/GBManhattanDistances",
+            "DataContainer/CellData/TJManhattanDistances",
+            "DataContainer/CellData/QPManhattanDistances",
+            "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"
+          ],
+          "file_path": "Data/Output/Statistics/SmallIN100_Morph.dream3d"
+        },
+        "Imported Pipeline": {
+          "isDisabled": false,
+          "name": "Untitled Pipeline",
+          "pipeline": []
+        }
+      },
+      "filter": {
+        "name": "complex::ImportDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "removed_data_path": "DataContainer/CellFeatureData/AvgQuats"
+      },
+      "filter": {
+        "name": "complex::DeleteData",
+        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
+      },
+      "isDisabled": true
+    },
+    {
+      "args": {
+        "avg_euler_angles_array_path": "AvgEulerAngles",
+        "avg_quats_array_path": "AvgQuats",
+        "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "cell_feature_ids_array_path": "DataContainer/CellData/FeatureIds",
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "cell_quats_array_path": "DataContainer/CellData/Quats",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures"
+      },
+      "filter": {
+        "name": "complex::FindAvgOrientationsFilter",
+        "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_misorientations_array_name": "AvgMisorientations",
+        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "find_avg_misors": false,
+        "misorientation_list_array_name": "MisorientationList",
+        "neighbor_list_array_path": "DataContainer/CellFeatureData/NeighborhoodList"
+      },
+      "filter": {
+        "name": "complex::FindMisorientationsFilter",
+        "uuid": "0b68fe25-b5ef-4805-ae32-20acb8d4e823"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "lambdas_array_name": "Schmid_Lambdas",
+        "loading_direction": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "override_system": false,
+        "phis_array_name": "Schmid_Phis",
+        "poles_array_name": "Poles",
+        "schmids_array_name": "Schmids",
+        "slip_direction": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "slip_plane": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "slip_systems_array_name": "SlipSystems",
+        "store_angle_components": false
+      },
+      "filter": {
+        "name": "complex::FindSchmidsFilter",
+        "uuid": "b4681855-0a3d-4237-97f2-5aec509115c4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "cell_feature_attribute_matrix_path": "CellFeatureData",
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
+        "g_beuclidean_distances_array_path": "CellData/GBEuclideanDistances",
+        "quats_array_path": "DataContainer/CellData/Quats",
+        "reference_orientation": 0
+      },
+      "filter": {
+        "name": "complex::FindFeatureReferenceMisorientationsFilter",
+        "uuid": "24b54daf-3bf5-4331-93f6-03a49f719bf1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "kernel_average_misorientations_array_name": "KernelAverageMisorientations",
+        "kernel_size": [
+          1,
+          1,
+          1
+        ],
+        "quats_array_path": "DataContainer/CellData/Quats",
+        "selected_image_geometry_path": "DataContainer"
+      },
+      "filter": {
+        "name": "complex::FindKernelAvgMisorientationsFilter",
+        "uuid": "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d",
+        "write_xdmf_file": true
+      },
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

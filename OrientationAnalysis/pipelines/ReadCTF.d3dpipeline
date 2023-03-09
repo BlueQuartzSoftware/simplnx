@@ -22,7 +22,7 @@
       "args": {
         "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
         "cell_ip_fcolors_array_name": "IPFColors",
-        "CellPhasesArrayPath": "DataContainer/Cell Data/Phases",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "good_voxels_array_path": "",
         "reference_dir": [

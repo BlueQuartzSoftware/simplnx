@@ -124,3 +124,33 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
 
 endif()
 
+# -----------------------------------------------------------------------------
+# Include any example pipelines into the unit testing
+# -----------------------------------------------------------------------------
+include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+
+# These should be relative to the 
+set(PREBUILT_PIPELINE_NAMES
+  # THIS GROUP MUST GO FIRST because the .h5ebsd file is needed for some of the examples below
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(08) Small IN100 Full Reconstruction.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(01) Small IN100 Morphological Statistics.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(05) Small IN100 Crystallographic Statistics.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(01) Small IN100 Quick Mesh.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(02) Small IN100 Smooth Mesh.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(03) Small IN100 Mesh Statistics.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(04) Small IN100 GBCD.d3dpipeline"
+
+  # Example or other test pipelines
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/AlignSectionsMutualInformation.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/CI_Histogram.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Edax_IPF_Colors.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EnembleInfoReader.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadAng.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadCTF.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/TxCopper_Exposed.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/TxCopper_Unexposed.d3dpipeline"
+
+)
+
+create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})

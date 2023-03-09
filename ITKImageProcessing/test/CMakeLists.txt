@@ -182,3 +182,19 @@ target_sources(${PLUGIN_NAME}UnitTest PUBLIC
   ${${PLUGIN_NAME}_SOURCE_DIR}/test/MD5.hpp
   ${${PLUGIN_NAME}_SOURCE_DIR}/test/MD5.cpp
 )
+
+# -----------------------------------------------------------------------------
+# Include any example pipelines into the unit testing
+# -----------------------------------------------------------------------------
+include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
+
+# These should be relative to the 
+set(PREBUILT_PIPELINE_NAMES
+  # Example or other test pipelines
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(03) Porosity Mesh Export.d3dpipeline"
+
+)
+
+create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
+
