@@ -9,7 +9,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -148,11 +148,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Translation", "[Comp
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_translation.dream3d", unit_test::k_BinaryTestOutputDir));
-  H5::FileWriter fileWriter = std::move(result.value());
+  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_translation.dream3d", unit_test::k_BinaryTestOutputDir));
+  complex::HDF5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[ComplexCore][ApplyTransformationToGeometryFilter]")
@@ -201,11 +201,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Rotation", "[Complex
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
-  H5::FileWriter fileWriter = std::move(result.value());
+  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
+  complex::HDF5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCore][ApplyTransformationToGeometryFilter]")
@@ -254,11 +254,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Scale", "[ComplexCor
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_scale.dream3d", unit_test::k_BinaryTestOutputDir));
-  H5::FileWriter fileWriter = std::move(result.value());
+  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_scale.dream3d", unit_test::k_BinaryTestOutputDir));
+  complex::HDF5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCore][ApplyTransformationToGeometryFilter]")
@@ -310,11 +310,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Manual", "[ComplexCo
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_manual.dream3d", unit_test::k_BinaryTestOutputDir));
-  H5::FileWriter fileWriter = std::move(result.value());
+  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+  complex::HDF5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
 }
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[ComplexCore][ApplyTransformationToGeometryFilter]")
@@ -388,9 +388,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter_Precomputed", "[Comp
     }
     REQUIRE(verticesEqual);
   }
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryTestOutputDir));
-  H5::FileWriter fileWriter = std::move(result.value());
+  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryTestOutputDir));
+  complex::HDF5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
 }

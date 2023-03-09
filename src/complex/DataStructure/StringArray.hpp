@@ -1,7 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/IArray.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
 
 namespace complex
 {
@@ -16,12 +15,6 @@ public:
   using const_iterator = typename collection_type::const_iterator;
 
   static inline constexpr StringLiteral k_TypeName = "StringArray";
-
-  /**
-   * @brief Static function to get the typename
-   * @return std::string
-   */
-  static std::string GetTypeName();
 
   static StringArray* Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId = {});
   static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, collection_type strings, const std::optional<IdType>& parentId = {});
@@ -96,15 +89,6 @@ public:
    * @brief Resizes the internal array to accomondate
    */
   void reshapeTuples(const std::vector<usize>& tupleShape) override;
-
-  /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable = true
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable = true) const override;
 
 protected:
   StringArray(DataStructure& dataStructure, std::string name);

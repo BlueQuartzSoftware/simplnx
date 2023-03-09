@@ -3,7 +3,7 @@
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -146,10 +146,10 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
   // Write out the DataStructure for later viewing/debugging
   std::string filePath = fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryTestOutputDir);
   // std::cout << "Writing file to: " << filePath << std::endl;
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(filePath);
-  H5::FileWriter fileWriter = std::move(result.value());
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePath);
+  complex::HDF5::FileWriter fileWriter = std::move(result.value());
+  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
 }
 
 TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")

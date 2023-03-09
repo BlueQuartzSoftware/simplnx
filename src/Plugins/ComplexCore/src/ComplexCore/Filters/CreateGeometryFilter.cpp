@@ -16,6 +16,7 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/DataObjectUtilities.hpp"
 
 #include <sstream>
 #include <string>

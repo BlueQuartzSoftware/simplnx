@@ -13,13 +13,6 @@ public:
 
   static inline constexpr usize k_NumEdgeVerts = 2;
 
-  INodeGeometry1D() = delete;
-  INodeGeometry1D(const INodeGeometry1D&) = default;
-  INodeGeometry1D(INodeGeometry1D&&) = default;
-
-  INodeGeometry1D& operator=(const INodeGeometry1D&) = delete;
-  INodeGeometry1D& operator=(INodeGeometry1D&&) noexcept = delete;
-
   ~INodeGeometry1D() noexcept override = default;
 
   /**
@@ -51,6 +44,9 @@ public:
    * @return
    */
   void setEdgeList(const SharedEdgeList& edges);
+
+  std::optional<IdType> getEdgeListId() const;
+  void setEdgeListId(const std::optional<IdType>& edgeList);
 
   /**
    * @brief Resizes the edge list to the target size.
@@ -195,21 +191,17 @@ public:
    */
   void setEdgeAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
+  void setEdgeDataId(const std::optional<IdType>& edgeDataId);
 
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
+  std::optional<IdType> getElementContainingVertId() const;
+  std::optional<IdType> getElementNeighborsId() const;
+  std::optional<IdType> getElementCentroidsId() const;
+  std::optional<IdType> getElementSizesId() const;
+
+  void setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId);
+  void setElementNeighborsId(const std::optional<IdType>& elementNeighborsId);
+  void setElementCentroidsId(const std::optional<IdType>& centroidsId);
+  void setElementSizesId(const std::optional<IdType>& sizesId);
 
 protected:
   INodeGeometry1D(DataStructure& dataStructure, std::string name);
@@ -223,7 +215,7 @@ protected:
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
   /* ***************************************************************************
-   * These variables are the Ids of the arrays from the complex::DataStructure object.
+   * These variables are the Ids of the arrays from the DataStructure object.
    */
   std::optional<IdType> m_EdgeDataArrayId;
   std::optional<IdType> m_EdgeAttributeMatrixId;

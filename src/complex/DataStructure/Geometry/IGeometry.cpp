@@ -1,8 +1,5 @@
 #include "IGeometry.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 IGeometry::IGeometry(DataStructure& dataStructure, std::string name)
@@ -18,6 +15,16 @@ IGeometry::IGeometry(DataStructure& dataStructure, std::string name, IdType impo
 const Float32Array* IGeometry::getElementSizes() const
 {
   return getDataStructureRef().getDataAs<Float32Array>(m_ElementSizesId);
+}
+
+DataObject::OptionalId IGeometry::getElementSizesId() const
+{
+  return m_ElementSizesId;
+}
+
+void IGeometry::setElementSizesId(const OptionalId& sizesId)
+{
+  m_ElementSizesId = sizesId;
 }
 
 void IGeometry::deleteElementSizes()
@@ -194,37 +201,6 @@ std::string IGeometry::LengthUnitToString(LengthUnit unit)
   return "Unknown";
 }
 
-H5::ErrorType IGeometry::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  H5::ErrorType error = BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_ElementSizesId = ReadH5DataId(groupReader, H5Constants::k_ElementSizesTag);
-
-  return error;
-}
-
-H5::ErrorType IGeometry::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = BaseGroup::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_ElementSizesId, H5Constants::k_ElementSizesTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-
 void IGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
   BaseGroup::checkUpdatedIdsImpl(updatedIds);
@@ -236,36 +212,5 @@ void IGeometry::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>
       m_ElementSizesId = updatedId.second;
     }
   }
-}
-
-std::optional<IGeometry::IdType> IGeometry::ReadH5DataId(const H5::ObjectReader& objectReader, const std::string& attributeName)
-{
-  if(!objectReader.isValid())
-  {
-    return {};
-  }
-
-  auto attribute = objectReader.getAttribute(attributeName);
-  auto identifier = attribute.readAsValue<IdType>();
-  if(identifier == 0)
-  {
-    return {};
-  }
-  return identifier;
-}
-
-H5::ErrorType IGeometry::WriteH5DataId(H5::ObjectWriter& objectWriter, const std::optional<IdType>& dataId, const std::string& attributeName)
-{
-  if(!objectWriter.isValid())
-  {
-    return -1;
-  }
-
-  auto attribute = objectWriter.createAttribute(attributeName);
-  if(dataId.has_value())
-  {
-    return attribute.writeValue<IdType>(dataId.value());
-  }
-  return attribute.writeValue<IdType>(0);
 }
 } // namespace complex

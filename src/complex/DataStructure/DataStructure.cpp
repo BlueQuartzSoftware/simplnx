@@ -11,10 +11,6 @@
 #include "complex/DataStructure/Observers/AbstractDataStructureObserver.hpp"
 #include "complex/Filter/ValueParameter.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 
 #include <fmt/core.h>
 
@@ -743,27 +739,6 @@ void DataStructure::applyAllDataStructure()
   m_RootGroup.setDataStructure(this);
 }
 
-H5::ErrorType DataStructure::writeHdf5(H5::GroupWriter& parentGroupWriter) const
-{
-  H5::DataStructureWriter dataStructureWriter;
-  auto groupWriter = parentGroupWriter.createGroupWriter(Constants::k_DataStructureTag);
-  auto idAttribute = groupWriter.createAttribute(Constants::k_NextIdTag);
-  H5::ErrorType err = idAttribute.writeValue(m_NextId);
-  if(err < 0)
-  {
-    return err;
-  }
-
-  err = m_RootGroup.writeH5Group(dataStructureWriter, groupWriter);
-  return err;
-}
-
-DataStructure DataStructure::readFromHdf5(const H5::GroupReader& groupReader, H5::ErrorType& err)
-{
-  H5::DataStructureReader dataStructureReader;
-  return dataStructureReader.readH5Group(groupReader, err);
-}
-
 bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const
 {
   if(dataPaths.empty())
@@ -937,4 +912,16 @@ void DataStructure::recurseHeirarchyToText(std::ostream& outputStream, const std
   }
 }
 
+void DataStructure::flush() const
+{
+  for(const auto& weakPtr : m_DataObjects)
+  {
+    std::shared_ptr<DataObject> sharedObj = weakPtr.second.lock();
+    if(sharedObj == nullptr)
+    {
+      continue;
+    }
+    sharedObj->flush();
+  }
+}
 } // namespace complex

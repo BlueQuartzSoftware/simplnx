@@ -8,6 +8,7 @@ set(FilterList
   ErrorWarningFilter
   ExampleFilter1
   ExampleFilter2
+  # CreateOutOfCoreArray
   TestFilter
   DynamicTableExample
 )

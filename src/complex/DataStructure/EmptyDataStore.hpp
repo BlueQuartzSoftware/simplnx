@@ -1,8 +1,6 @@
 #pragma once
 
 #include "complex/DataStructure/AbstractDataStore.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
 #include <fmt/format.h>
 
@@ -37,12 +35,14 @@ public:
    * @brief Constructs an empty data store with the specified tupleSize and tupleCount.
    * @param tupleSize
    * @param tupleCount
+   * @param inMemory Stores whether or not the created data will be kept in memory or handled out of core
    */
-  EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape)
+  EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::string dataFormat = "")
   : m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_DataFormat(dataFormat)
   {
   }
 
@@ -55,6 +55,7 @@ public:
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
+  , m_DataFormat(other.m_DataFormat)
   {
   }
 
@@ -67,6 +68,7 @@ public:
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_NumComponents(std::move(other.m_NumComponents))
   , m_NumTuples(std::move(other.m_NumTuples))
+  , m_DataFormat(other.m_DataFormat)
   {
   }
 
@@ -114,7 +116,16 @@ public:
    */
   IDataStore::StoreType getStoreType() const override
   {
-    return IDataStore::StoreType::Empty;
+    return m_DataFormat.empty() ? IDataStore::StoreType::Empty : IDataStore::StoreType::EmptyOutOfCore;
+  }
+
+  /**
+   * @brief Checks and returns if the created data store should be in memory or handled out of core.
+   * @return bool
+   */
+  std::string dataFormat() const
+  {
+    return m_DataFormat;
   }
 
   /**
@@ -200,31 +211,6 @@ public:
     return std::make_unique<EmptyDataStore<T>>(this->getTupleShape(), this->getComponentShape());
   }
 
-  /**
-   * @brief Throws a runtime error due to the inability to write values to HDF5.
-   * @param datasetWriter
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DatasetWriter& datasetWriter) const override
-  {
-    throw std::runtime_error("");
-  }
-
-  /**
-   * @brief Creates and returns an EmptyDataStore from the provided DatasetReader
-   * @param datasetReader
-   * @return std::unique_ptr<EmptyDataStore>
-   */
-  static std::unique_ptr<EmptyDataStore> ReadHdf5(const H5::DatasetReader& datasetReader)
-  {
-    auto tupleShape = IDataStore::ReadTupleShape(datasetReader);
-    auto componentShape = IDataStore::ReadComponentShape(datasetReader);
-
-    // Create DataStore
-    auto dataStore = std::make_unique<EmptyDataStore<T>>(tupleShape, componentShape);
-    return dataStore;
-  }
-
   std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
   {
     return {-10175, fmt::format("EmptyDataStore cannot read or write files", absoluteFilePath)};
@@ -235,5 +221,6 @@ private:
   ShapeType m_TupleShape;
   size_t m_NumComponents = {0};
   size_t m_NumTuples = {0};
+  std::string m_DataFormat = "";
 };
 } // namespace complex

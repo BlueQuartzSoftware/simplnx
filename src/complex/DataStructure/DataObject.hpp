@@ -1,8 +1,8 @@
 #pragma once
 
+#include "complex/Common/StringLiteral.hpp"
+#include "complex/Common/Types.hpp"
 #include "complex/DataStructure/Metadata.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5.hpp"
-#include "complex/Utilities/TooltipGenerator.hpp"
 #include "complex/complex_export.hpp"
 
 #include <iostream>
@@ -17,13 +17,6 @@ namespace complex
 class BaseGroup;
 class DataPath;
 class DataStructure;
-
-namespace H5
-{
-class DataStructureWriter;
-class GroupWriter;
-class ObjectWriter;
-} // namespace H5
 
 /**
  * @class DataObject
@@ -94,7 +87,12 @@ public:
    * @brief The IdType alias serves as an ID type for DataObjects within their
    * respective DataStructure.
    */
-  using IdType = uint64;
+  using IdType = types::uint64;
+
+  /**
+   * @brief The OptionalId alias specifies that the target DataObject is not required.
+   */
+  using OptionalId = std::optional<IdType>;
 
   /**
    * @brief The ParentCollectionType alias describes the format by which parent
@@ -112,6 +110,8 @@ public:
    * @return
    */
   static bool IsValidName(std::string_view name);
+
+  static std::set<std::string> StringListFromDataObjectType(const std::set<Type>& dataObjectTypes);
 
   /**
    * @brief Copy constructor.
@@ -239,27 +239,13 @@ public:
    */
   const Metadata& getMetadata() const;
 
-  /**
-   * @brief Returns true if this DataObject has the given parentPath as a parent
-   * @return bool
-   */
   bool hasParent(const DataPath& parentPath) const;
 
   /**
-   * @brief Writes the DataObject to the target HDF5 group.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable = true
-   * @return H5::ErrorType
+   * @brief Flushes the DataObject to its respective target.
+   * In-memory DataObjects are not affected.
    */
-  virtual H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable = true) const = 0;
-
-  /**
-   * @brief Converts the set of DataObject Types to strings.
-   * @param dataObjectTypes
-   * @return std::set<std::string>
-   */
-  static std::set<std::string> StringListFromDataObjectType(const std::set<Type>& dataObjectTypes);
+  virtual void flush() const;
 
 protected:
   /**
@@ -311,7 +297,7 @@ protected:
    * @param parentId
    * @return bool
    */
-  static bool AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const std::optional<IdType>& parentId);
+  static bool AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const OptionalId& parentId);
 
   /**
    * @brief Marks the specified BaseGroup as a parent.
@@ -338,16 +324,6 @@ protected:
    * @param dataStructure
    */
   virtual void setDataStructure(DataStructure* dataStructure);
-
-  /**
-   * @brief Writes the dataType as a string attribute for the target HDF5 object.
-   * Returns the HDF5 error should one occur.
-   * @param dataStructureWriter
-   * @param objectWriter
-   * @param importable = true
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeH5ObjectAttributes(H5::DataStructureWriter& dataStructureWriter, H5::ObjectWriter& objectWriter, bool importable = true) const;
 
 private:
   DataStructure* m_DataStructure = nullptr;

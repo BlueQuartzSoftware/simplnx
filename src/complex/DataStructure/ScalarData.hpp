@@ -1,17 +1,14 @@
 #pragma once
 
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/DataStructure/DataObject.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DatasetWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-
-#include <array>
 
 namespace complex
 {
 
 namespace ScalarDataConstants
 {
-constexpr StringLiteral k_TypeName = "ScalarData";
+inline constexpr StringLiteral k_TypeName = "ScalarData";
 }
 
 /**
@@ -113,12 +110,68 @@ public:
   }
 
   /**
+   * @brief Static function to get the typename
+   * @return
+   */
+  static std::string GetTypeName()
+  {
+    if constexpr(std::is_same_v<T, int8>)
+    {
+      return "ScalarData<int8>";
+    }
+    else if constexpr(std::is_same_v<T, uint8>)
+    {
+      return "ScalarData<uint8>";
+    }
+    else if constexpr(std::is_same_v<T, int16>)
+    {
+      return "ScalarData<int16>";
+    }
+    else if constexpr(std::is_same_v<T, uint16>)
+    {
+      return "ScalarData<uint16>";
+    }
+    else if constexpr(std::is_same_v<T, int32>)
+    {
+      return "ScalarData<int32>";
+    }
+    else if constexpr(std::is_same_v<T, uint32>)
+    {
+      return "ScalarData<uint32>";
+    }
+    else if constexpr(std::is_same_v<T, int64>)
+    {
+      return "ScalarData<int64>";
+    }
+    else if constexpr(std::is_same_v<T, uint64>)
+    {
+      return "ScalarData<uint64>";
+    }
+    else if constexpr(std::is_same_v<T, float32>)
+    {
+      return "ScalarData<float32>";
+    }
+    else if constexpr(std::is_same_v<T, float64>)
+    {
+      return "ScalarData<float64>";
+    }
+    else if constexpr(std::is_same_v<T, bool>)
+    {
+      return "ScalarData<bool>";
+    }
+    else
+    {
+      static_assert(dependent_false<T>, "Unsupported type T in ScalarData");
+    }
+  }
+
+  /**
    * @brief Returns typename of the DataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override
   {
-    return ScalarDataConstants::k_TypeName;
+    return GetTypeName();
   }
 
   /**
@@ -223,27 +276,6 @@ public:
   bool operator!=(value_type rhs) const
   {
     return m_Data != rhs;
-  }
-
-  /**
-   * @brief Writes the ScalarData to HDF5 using the provided parent ID.
-   * @param parentId
-   * @param dataId
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
-  {
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-
-    H5::DatasetWriter::DimsType dims = {1};
-    std::array<T, 1> dataVector = {m_Data};
-    auto error = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
-    if(error == 0)
-    {
-      error = writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
-    }
-    return error;
   }
 
 protected:

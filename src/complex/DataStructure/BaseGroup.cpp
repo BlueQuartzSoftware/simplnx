@@ -1,8 +1,7 @@
 #include "BaseGroup.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 using namespace complex;
 
@@ -126,7 +125,7 @@ BaseGroup::ConstIterator BaseGroup::find(const std::string& name) const
 
 bool BaseGroup::isParentOf(const DataObject* dataObj) const
 {
-  const auto origDataPaths = getDataPaths();
+  const std::vector<DataPath> origDataPaths = getDataPaths();
   return std::find_if(origDataPaths.begin(), origDataPaths.end(), [dataObj](const DataPath& path) { return dataObj->hasParent(path); }) != origDataPaths.end();
 }
 
@@ -237,23 +236,6 @@ std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupTyp
 std::vector<std::string> BaseGroup::GetChildrenNames()
 {
   return m_DataMap.getNames();
-}
-
-H5::ErrorType BaseGroup::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  return m_DataMap.readH5Group(dataStructureReader, groupReader, getId(), preflight);
-}
-
-H5::ErrorType BaseGroup::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto error = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return m_DataMap.writeH5Group(dataStructureWriter, groupWriter);
 }
 
 void BaseGroup::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)

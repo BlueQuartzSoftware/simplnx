@@ -7,7 +7,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -44,11 +44,11 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    REQUIRE(executeResult.result.valid());
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeomDataPath);
     REQUIRE(triangleGeom.getNumberOfFaces() == 92);
@@ -109,9 +109,9 @@ TEST_CASE("ComplexCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
     REQUIRE(executeResult.result.valid());
   }
 
-  Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/LaplacianSmoothing.dream3d", unit_test::k_BinaryTestOutputDir));
-  H5::FileWriter fileWriter = std::move(result.value());
+  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/LaplacianSmoothing.dream3d", unit_test::k_BinaryTestOutputDir));
+  complex::HDF5::FileWriter fileWriter = std::move(result.value());
 
-  herr_t err = dataStructure.writeHdf5(fileWriter);
-  REQUIRE(err >= 0);
+  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
 }

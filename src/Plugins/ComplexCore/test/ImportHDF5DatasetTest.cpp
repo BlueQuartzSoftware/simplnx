@@ -6,8 +6,8 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/ImportHDF5DatasetParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <catch2/catch.hpp>
@@ -23,9 +23,9 @@ std::string m_FilePath = unit_test::k_BinaryDir.str() + "/ImportHDF5DatasetTest.
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-H5::ErrorType writePointer1DArrayDataset(H5::GroupWriter& ptrGroupWriter)
+complex::HDF5::ErrorType writePointer1DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  H5::ErrorType err = 1;
+  complex::HDF5::ErrorType err = 1;
 
   // Create the Dimensions
   std::vector<hsize_t> dims(1);
@@ -39,9 +39,9 @@ H5::ErrorType writePointer1DArrayDataset(H5::GroupWriter& ptrGroupWriter)
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = H5::Support::HdfTypeForPrimitiveAsStr<T>();
+  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer1DArrayDataset<" + dsetName + ">";
-  H5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
   err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   REQUIRE(err >= 0);
 
@@ -52,9 +52,9 @@ H5::ErrorType writePointer1DArrayDataset(H5::GroupWriter& ptrGroupWriter)
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-H5::ErrorType writePointer2DArrayDataset(H5::GroupWriter& ptrGroupWriter)
+complex::HDF5::ErrorType writePointer2DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  H5::ErrorType err = 1;
+  complex::HDF5::ErrorType err = 1;
 
   // Create the Dimensions
   std::vector<hsize_t> dims(2);
@@ -69,9 +69,9 @@ H5::ErrorType writePointer2DArrayDataset(H5::GroupWriter& ptrGroupWriter)
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = H5::Support::HdfTypeForPrimitiveAsStr<T>();
+  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer2DArrayDataset<" + dsetName + ">";
-  H5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
   err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   REQUIRE(err >= 0);
 
@@ -82,9 +82,9 @@ H5::ErrorType writePointer2DArrayDataset(H5::GroupWriter& ptrGroupWriter)
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-H5::ErrorType writePointer3DArrayDataset(H5::GroupWriter& ptrGroupWriter)
+complex::HDF5::ErrorType writePointer3DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  H5::ErrorType err = 1;
+  complex::HDF5::ErrorType err = 1;
 
   // Create the Dimensions
   std::vector<hsize_t> dims(3);
@@ -100,9 +100,9 @@ H5::ErrorType writePointer3DArrayDataset(H5::GroupWriter& ptrGroupWriter)
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = H5::Support::HdfTypeForPrimitiveAsStr<T>();
+  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer3DArrayDataset<" + dsetName + ">";
-  H5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
   err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   REQUIRE(err >= 0);
 
@@ -113,9 +113,9 @@ H5::ErrorType writePointer3DArrayDataset(H5::GroupWriter& ptrGroupWriter)
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-H5::ErrorType writePointer4DArrayDataset(H5::GroupWriter& ptrGroupWriter)
+complex::HDF5::ErrorType writePointer4DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  H5::ErrorType err = 1;
+  complex::HDF5::ErrorType err = 1;
 
   // Create the Dimensions
   std::vector<hsize_t> dims(4);
@@ -132,9 +132,9 @@ H5::ErrorType writePointer4DArrayDataset(H5::GroupWriter& ptrGroupWriter)
     data[i] = static_cast<T>(i * 5);
   }
 
-  std::string dsetName = H5::Support::HdfTypeForPrimitiveAsStr<T>();
+  std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer4DArrayDataset<" + dsetName + ">";
-  H5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
+  complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
   err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
   REQUIRE(err >= 0);
 
@@ -152,13 +152,13 @@ void writeHDF5File()
     }
   }
 
-  auto writerResults = H5::FileWriter::CreateFile(m_FilePath);
-  REQUIRE(writerResults.valid());
-  H5::FileWriter fileWriter = std::move(writerResults.value());
+  auto writerResults = complex::HDF5::FileWriter::CreateFile(m_FilePath);
+  COMPLEX_RESULT_REQUIRE_VALID(writerResults);
+  complex::HDF5::FileWriter fileWriter = std::move(writerResults.value());
   REQUIRE(fileWriter.isValid());
 
   // Create the Pointer group
-  H5::GroupWriter ptrGroupWriter = fileWriter.createGroupWriter("Pointer");
+  complex::HDF5::GroupWriter ptrGroupWriter = fileWriter.createGroupWriter("Pointer");
   REQUIRE(ptrGroupWriter.isValid());
 
   REQUIRE(writePointer1DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
@@ -271,7 +271,7 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
 
   // Fill in Dataset Path with a valid path so that we can continue our error checks
   importInfoList.clear();
-  std::string typeStr = H5::Support::HdfTypeForPrimitiveAsStr<int8_t>();
+  std::string typeStr = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<int8_t>();
   importInfo.dataSetPath = "Pointer/Pointer1DArrayDataset<" + typeStr + ">";
   importInfoList.push_back(importInfo);
   val = {levelZeroPath, m_FilePath, importInfoList};
@@ -352,7 +352,7 @@ void DatasetTest(ImportHDF5Dataset& filter, std::list<ImportHDF5DatasetParameter
     return;
   }
 
-  std::string typeStr = H5::Support::HdfTypeForPrimitiveAsStr<T>();
+  std::string typeStr = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
 
   DataStructure dataStructure;
   DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);

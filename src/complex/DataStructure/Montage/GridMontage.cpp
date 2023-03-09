@@ -2,8 +2,6 @@
 
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
 
 #include <stdexcept>
 
@@ -257,51 +255,4 @@ usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const Dimension
   const usize numDeep = dims[2];
 
   return tilePos[0] + tilePos[1] * numCols + tilePos[2] * numCols * numRows;
-}
-
-H5::ErrorType GridMontage::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  auto rowCountAttribute = groupReader.getAttribute(H5Constants::k_RowCountTag);
-  m_RowCount = rowCountAttribute.readAsValue<uint64_t>();
-
-  auto colCountAttribute = groupReader.getAttribute(H5Constants::k_ColCountTag);
-  m_ColumnCount = colCountAttribute.readAsValue<uint64_t>();
-
-  auto depthCountAttribute = groupReader.getAttribute(H5Constants::k_DepthCountTag);
-  m_DepthCount = depthCountAttribute.readAsValue<uint64_t>();
-
-  return BaseGroup::readHdf5(dataStructureReader, groupReader, preflight);
-}
-
-H5::ErrorType GridMontage::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  auto groupWriter = parentGroupWriter.createGroupWriter(getName());
-  auto errorCode = writeH5ObjectAttributes(dataStructureWriter, groupWriter, importable);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  auto rowCountAttribute = groupWriter.createAttribute(H5Constants::k_RowCountTag);
-  errorCode = rowCountAttribute.writeValue<uint64_t>(m_RowCount);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  auto colCountAttribute = groupWriter.createAttribute(H5Constants::k_ColCountTag);
-  errorCode = colCountAttribute.writeValue<uint64_t>(m_ColumnCount);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  auto depthCountAttribute = groupWriter.createAttribute(H5Constants::k_DepthCountTag);
-  errorCode = depthCountAttribute.writeValue<uint64_t>(m_DepthCount);
-  if(errorCode < 0)
-  {
-    return errorCode;
-  }
-
-  return getDataMap().writeH5Group(dataStructureWriter, groupWriter);
 }

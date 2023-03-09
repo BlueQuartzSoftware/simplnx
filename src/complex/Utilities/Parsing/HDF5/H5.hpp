@@ -1,16 +1,14 @@
 #pragma once
 
-#include "complex/Common/StringLiteral.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 
-namespace complex
-{
-namespace H5
+namespace complex::HDF5
 {
 using IdType = int64;
 using ErrorType = int32;
@@ -33,19 +31,26 @@ enum class Type
 };
 
 /**
+ * @brief converts an H5Support enum Type to  enum type.
+ * @param typeEnum
+ * @return DataType
+ */
+std::optional<DataType> COMPLEX_EXPORT toCommonType(Type typeEnum);
+
+/**
  * @brief Returns a Type enum representing the corresponding type matching the
  * specified HDF5 ID.
  * @param typeId
- * @return H5::Type
+ * @return Type
  */
 Type COMPLEX_EXPORT getTypeFromId(IdType typeId);
 
 /**
- * @brief Returns the HDF5 type for the specified H5::Type enum.
+ * @brief Returns the HDF5 type for the specified Type enum.
  * @param type
- * @return H5::IdType
+ * @return IdType
  */
-H5::IdType COMPLEX_EXPORT getIdForType(Type type);
+IdType COMPLEX_EXPORT getIdForType(Type type);
 
 /**
  * @brief Returns a std::string representation from the provided view
@@ -57,20 +62,20 @@ H5::IdType COMPLEX_EXPORT getIdForType(Type type);
 std::string COMPLEX_EXPORT GetNameFromBuffer(std::string_view buffer);
 
 /**
- * @brief Returns a std::string of a valid path to the object with the given identifier.
+ * @brief Returns a std::string of a valid path to the object with the given id.
  * Uses H5Iget_name internally.
- * @param identifier
+ * @param id
  * @return std::string
  */
-std::string COMPLEX_EXPORT GetPathFromId(IdType identifier);
+std::string COMPLEX_EXPORT GetPathFromId(IdType id);
 
 /**
  * @brief Returns a std::string of the name of the given object.
- * Equivalent to GetNameFromBuffer(GetPathFromId(identifier)).
- * @param identifier
+ * Equivalent to GetNameFromBuffer(GetPathFromId(id)).
+ * @param id
  * @return std::string
  */
-std::string COMPLEX_EXPORT GetNameFromId(IdType identifier);
+std::string COMPLEX_EXPORT GetNameFromId(IdType id);
 
 /**
  * @brief Returns the path to an object's parent
@@ -79,20 +84,4 @@ std::string COMPLEX_EXPORT GetNameFromId(IdType identifier);
  */
 std::string COMPLEX_EXPORT GetParentPath(const std::string& objectPath);
 
-inline constexpr StringLiteral k_DataTypeTag = "DataType";
-
-inline constexpr StringLiteral k_DataStoreTag = "DataStore";
-inline constexpr StringLiteral k_TupleShapeTag = "TupleDimensions";
-inline constexpr StringLiteral k_ComponentShapeTag = "ComponentDimensions";
-inline constexpr StringLiteral k_DataObjectIdTag = "DataObjectId";
-inline constexpr StringLiteral k_DataArrayTag = "DataArray";
-
-inline constexpr StringLiteral k_ObjectTypeTag = "ObjectType";
-inline constexpr StringLiteral k_DataStructureTag = "DataStructure";
-
-inline constexpr StringLiteral k_VertexListIdTag = "VertexListId";
-inline constexpr StringLiteral k_SharedVertexListTag = "SharedVertexList";
-inline constexpr StringLiteral k_VertexSizesIdTag = "VertexSizesId";
-
-} // namespace H5
-} // namespace complex
+} // namespace complex::HDF5

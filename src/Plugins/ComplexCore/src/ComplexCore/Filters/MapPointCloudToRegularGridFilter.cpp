@@ -315,7 +315,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
     }
   }
 
-  auto* voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
+  auto* voxelIndicesPtr = data.getDataAs<UInt64Array>(voxelIndicesPath);
   if(nullptr == voxelIndicesPtr)
   {
     std::string ss = fmt::format("Could not find Voxel Indices array at {}", voxelIndicesPath.toString());
@@ -384,7 +384,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   int64 counter = 0;
 
   auto maskPtr = data.getDataAs<BoolArray>(maskArrayPath);
-  auto* voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
+  auto* voxelIndicesPtr = data.getDataAs<UInt64Array>(voxelIndicesPath);
 
   for(int64 i = 0; i < numVerts; i++)
   {

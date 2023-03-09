@@ -3,11 +3,6 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5DataStructureWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5IDataFactory.hpp"
 
 #include <algorithm>
 
@@ -322,31 +317,6 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
   m_Map = std::move(rhs.m_Map);
   return *this;
 }
-
-H5::ErrorType DataMap::readH5Group(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& h5Group, const std::optional<DataObject::IdType>& dsParentId, bool preflight)
-{
-  auto childrenNames = h5Group.getChildNames();
-  for(const auto& childName : childrenNames)
-  {
-    auto errorCode = dataStructureReader.readObjectFromGroup(h5Group, childName, dsParentId, preflight);
-  }
-  return 0;
-}
-
-H5::ErrorType DataMap::writeH5Group(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& groupWriter) const
-{
-  for(const auto& [identifier, dataObject] : *this)
-  {
-    herr_t err = dataStructureWriter.writeDataObject(dataObject.get(), groupWriter);
-    if(err < 0)
-    {
-      std::cout << "Error writing object (" << dataObject->getName() << ") in DataMap to HDF5 " << std::endl;
-      return err;
-    }
-  }
-  return 0;
-}
-
 void DataMap::updateIds(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
   for(const auto& updatedId : updatedIds)

@@ -1,14 +1,15 @@
 #pragma once
 
-#include "DataPath.hpp"
-#include "DataStructure.hpp"
-
 #include "complex/Common/Bit.hpp"
+#include "complex/Common/TypeTraits.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStore.hpp"
+#include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/EmptyDataStore.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupWriter.hpp"
+
+#include <vector>
 
 namespace complex
 {
@@ -457,6 +458,15 @@ public:
   }
 
   /**
+   * @brief Returns the data format used for storing the array data.
+   * @return data format as string
+   */
+  std::string getDataFormat() const override
+  {
+    return m_DataStore->getDataFormat();
+  }
+
+  /**
    * @brief Returns the first item in the array.
    *
    * This method requires the DataArray to have at least one value in the
@@ -619,7 +629,10 @@ public:
     {
       return "DataArray<bool>";
     }
-    return "DataArray: UNKNOWN TYPE";
+    else
+    {
+      static_assert(dependent_false<T>, "Unsupported type T in DataArray");
+    }
   }
 
   /**
@@ -632,22 +645,12 @@ public:
   }
 
   /**
-   * @brief Writes the DataArray to HDF5 using the provided group ID.
-   *
-   * This method will fail if no DataStore has been set.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @return H5::ErrorType
+   * @brief Flushes the DataObject to its respective target.
+   * In-memory DataObjects are not affected.
    */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override
+  void flush() const override
   {
-    auto datasetWriter = parentGroupWriter.createDatasetWriter(getName());
-    auto err = m_DataStore->writeHdf5(datasetWriter);
-    if(err < 0)
-    {
-      return err;
-    }
-    return writeH5ObjectAttributes(dataStructureWriter, datasetWriter, importable);
+    m_DataStore->flush();
   }
 
 protected:
@@ -686,21 +689,6 @@ private:
   std::shared_ptr<store_type> m_DataStore = nullptr;
 };
 
-// Declare extern templates
-// extern template class DataArray<uint8>;
-// extern template class DataArray<uint16>;
-// extern template class DataArray<uint32>;
-// extern template class DataArray<uint64>;
-
-// extern template class DataArray<int8>;
-// extern template class DataArray<int16>;
-// extern template class DataArray<int32>;
-// extern template class DataArray<int64>;
-// extern template class DataArray<usize>;
-
-// extern template class DataArray<float32>;
-// extern template class DataArray<float64>;
-
 // Declare aliases
 using UInt8Array = DataArray<uint8>;
 using UInt16Array = DataArray<uint16>;
@@ -712,12 +700,8 @@ using Int16Array = DataArray<int16>;
 using Int32Array = DataArray<int32>;
 using Int64Array = DataArray<int64>;
 
-using USizeArray = DataArray<usize>;
-
 using Float32Array = DataArray<float32>;
 using Float64Array = DataArray<float64>;
 
 using BoolArray = DataArray<bool>;
-
-using VectorOfFloat32Array = std::vector<std::shared_ptr<Float32Array>>;
 } // namespace complex

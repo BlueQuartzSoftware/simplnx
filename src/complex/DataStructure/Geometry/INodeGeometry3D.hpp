@@ -21,6 +21,8 @@ public:
 
   ~INodeGeometry3D() noexcept override = default;
 
+  void setPolyhedronListId(const OptionalId& polyListId);
+
   /**
    * @brief
    * @return
@@ -57,6 +59,8 @@ public:
    */
   void resizePolyhedraList(usize size);
 
+  OptionalId getPolyhedraDataId() const;
+
   /**
    * @brief Returns the number of polyhedra in the geometry.
    * @return usize
@@ -79,6 +83,12 @@ public:
    * @return
    */
   const std::optional<IdType>& getUnsharedFacesId() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  void setUnsharedFacedId(const OptionalId& id);
 
   /**
    * @brief Creates and assigns the unshared face list array for the current values.
@@ -134,6 +144,8 @@ public:
    */
   const std::optional<IdType>& getPolyhedronListId() const;
 
+  void setPolyhedraDataId(const OptionalId& polyDataId);
+
   /**
    * @brief
    * @return
@@ -176,22 +188,6 @@ public:
    */
   void setPolyhedraAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
-  /**
-   * @brief Reads values from HDF5
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  H5::ErrorType readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight) override;
-
-  /**
-   * @brief Writes the geometry to HDF5 using the provided parent group ID.
-   * @param dataStructureWriter
-   * @param parentGroupWriter
-   * @param importable
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const override;
-
 protected:
   INodeGeometry3D(DataStructure& dataStructure, std::string name);
 
@@ -208,7 +204,7 @@ protected:
   void checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds) override;
 
   /* ***************************************************************************
-   * These variables are the Ids of the arrays from the complex::DataStructure object.
+   * These variables are the Ids of the arrays from the DataStructure object.
    */
   std::optional<IdType> m_PolyhedronListId;
   std::optional<IdType> m_PolyhedronAttributeMatrixId;

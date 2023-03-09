@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/IDataArray.hpp"

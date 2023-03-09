@@ -350,7 +350,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     }
   }
 
-  auto voxelIndicesPtr = data.getDataAs<USizeArray>(voxelIndicesPath);
+  auto voxelIndicesPtr = data.getDataAs<UInt64Array>(voxelIndicesPath);
   if(nullptr != voxelIndicesPtr)
   {
     // voxelIndices = voxelIndicesPtr->getDataStore();
@@ -421,7 +421,7 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   auto maskArray = data.getDataAs<BoolArray>(maskPath);
   auto mask = maskArray->getDataStore();
 
-  auto voxelIndicesArray = data.getDataAs<DataArray<usize>>(voxelIndicesPath);
+  auto voxelIndicesArray = data.getDataAs<DataArray<uint64>>(voxelIndicesPath);
   auto voxelIndices = voxelIndicesArray->getDataStore();
 
   usize maxImageIndex = ((dims[2] - 1) * dims[0] * dims[1]) + ((dims[1] - 1) * dims[0]) + (dims[0] - 1);

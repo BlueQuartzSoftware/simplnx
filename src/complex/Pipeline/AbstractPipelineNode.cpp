@@ -96,6 +96,7 @@ bool AbstractPipelineNode::isPreflighted() const
 
 void AbstractPipelineNode::endExecution(DataStructure& dataStructure)
 {
+  dataStructure.flush();
   setDataStructure(dataStructure);
 }
 

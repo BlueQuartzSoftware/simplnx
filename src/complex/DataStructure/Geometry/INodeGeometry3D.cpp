@@ -1,8 +1,5 @@
 #include "INodeGeometry3D.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 INodeGeometry3D::INodeGeometry3D(DataStructure& dataStructure, std::string name)
@@ -18,6 +15,11 @@ INodeGeometry3D::INodeGeometry3D(DataStructure& dataStructure, std::string name,
 const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedronListId() const
 {
   return m_PolyhedronListId;
+}
+
+void INodeGeometry3D::setPolyhedronListId(const OptionalId& polyListId)
+{
+  m_PolyhedronListId = polyListId;
 }
 
 INodeGeometry3D::SharedFaceList* INodeGeometry3D::getPolyhedra()
@@ -38,6 +40,11 @@ INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef()
 const INodeGeometry3D::SharedFaceList& INodeGeometry3D::getPolyhedraRef() const
 {
   return getDataStructureRef().getDataRefAs<SharedFaceList>(m_PolyhedronListId.value());
+}
+
+INodeGeometry3D::OptionalId INodeGeometry3D::getPolyhedraDataId() const
+{
+  return m_PolyhedronAttributeMatrixId;
 }
 
 void INodeGeometry3D::setPolyhedraList(const SharedFaceList& polyhedra)
@@ -108,6 +115,11 @@ const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getUnsharedFacesI
   return m_UnsharedFaceListId;
 }
 
+void INodeGeometry3D::setUnsharedFacedId(const OptionalId& id)
+{
+  m_UnsharedFaceListId = id;
+}
+
 const INodeGeometry3D::SharedFaceList* INodeGeometry3D::getUnsharedFaces() const
 {
   return getDataStructureRef().getDataAs<SharedFaceList>(m_UnsharedFaceListId);
@@ -122,6 +134,11 @@ void INodeGeometry3D::deleteUnsharedFaces()
 const std::optional<INodeGeometry3D::IdType>& INodeGeometry3D::getPolyhedraAttributeMatrixId() const
 {
   return m_PolyhedronAttributeMatrixId;
+}
+
+void INodeGeometry3D::setPolyhedraDataId(const OptionalId& polyDataId)
+{
+  m_PolyhedronAttributeMatrixId = polyDataId;
 }
 
 AttributeMatrix* INodeGeometry3D::getPolyhedraAttributeMatrix()
@@ -153,52 +170,6 @@ void INodeGeometry3D::setPolyhedraAttributeMatrix(const AttributeMatrix& attribu
 {
   m_PolyhedronAttributeMatrixId = attributeMatrix.getId();
 }
-
-H5::ErrorType INodeGeometry3D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
-{
-  H5::ErrorType error = INodeGeometry2D::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_PolyhedronListId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronListTag);
-  m_PolyhedronAttributeMatrixId = ReadH5DataId(groupReader, H5Constants::k_PolyhedronDataTag);
-  m_UnsharedFaceListId = ReadH5DataId(groupReader, H5Constants::k_UnsharedFaceListTag);
-
-  return error;
-}
-
-H5::ErrorType INodeGeometry3D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
-{
-  H5::ErrorType error = INodeGeometry2D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_PolyhedronListId, H5Constants::k_PolyhedronListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_PolyhedronAttributeMatrixId, H5Constants::k_PolyhedronDataTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  error = WriteH5DataId(groupWriter, m_UnsharedFaceListId, H5Constants::k_UnsharedFaceListTag);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  return error;
-}
-
 INodeGeometry3D::SharedQuadList* INodeGeometry3D::createSharedQuadList(usize numQuads)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numQuads}, std::vector<usize>{4}, 0);

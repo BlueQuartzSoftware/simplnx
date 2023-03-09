@@ -70,6 +70,14 @@
           "name": "itk"
         }
       ]
+    },
+    "compressors": {
+      "description": "Compressors for binary data",
+      "dependencies": [
+        {
+          "name": "blosc"
+        }
+      ]
     }
   }
 }

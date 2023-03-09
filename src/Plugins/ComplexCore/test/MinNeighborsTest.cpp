@@ -4,7 +4,9 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5FileWriter.hpp"
+#include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
+
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -133,10 +135,10 @@ TEST_CASE("ComplexCore::MinNeighbors", "[ComplexCore][MinNeighbors]")
 
   {
     // Write out the DataStructure for later viewing/debugging
-    Result<H5::FileWriter> result = H5::FileWriter::CreateFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
-    H5::FileWriter fileWriter = std::move(result.value());
-    herr_t err = dataStructure.writeHdf5(fileWriter);
-    REQUIRE(err >= 0);
+    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir));
+    complex::HDF5::FileWriter fileWriter = std::move(result.value());
+    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+    COMPLEX_RESULT_REQUIRE_VALID(resultH5);
   }
 }
 

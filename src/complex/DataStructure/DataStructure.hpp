@@ -32,13 +32,6 @@ inline const std::string k_NextIdTag = "NextObjectId";
 inline const std::string k_ImportableTag = "Importable";
 } // namespace Constants
 
-namespace H5
-{
-class DataStructureReader;
-class FileReader;
-class FileWriter;
-} // namespace H5
-
 /**
  * @class DataStructure
  * @brief The DataStructure class is both the control center and origin of the
@@ -68,7 +61,6 @@ public:
 
   friend class DataMap;
   friend class DataObject;
-  friend class H5::DataStructureReader;
 
   /**
    * @brief Default constructor
@@ -595,21 +587,6 @@ public:
   SignalType& getSignal();
 
   /**
-   * @brief Writes the DataStructure to the target HDF5 file or group.
-   * @param parentGroupWriter HDF5 group writer
-   * @return H5::ErrorType
-   */
-  H5::ErrorType writeHdf5(H5::GroupWriter& parentGroupWriter) const;
-
-  /**
-   * @brief Creates a DataStructure by reading the specified H5::GroupReader or
-   * H5::FileReader. Passes any potential errors back to the caller by reference.
-   * @param groupReader
-   * @return H5::ErrorType
-   */
-  static DataStructure readFromHdf5(const H5::GroupReader& groupReader, H5::ErrorType& err);
-
-  /**
    * @brief Checks if all IDataArrays at the target paths have the same tuple count.
    * Returns false if any of the paths are not derived from IDataArray.
    * @param dataPaths
@@ -652,22 +629,6 @@ public:
    */
   DataStructure& operator=(DataStructure&& rhs) noexcept;
 
-protected:
-  /**
-   * @brief Returns a reference to the root DataMap.
-   * @return DataMap&
-   */
-  DataMap& getRootGroup();
-
-  /**
-   * @brief Returns a new ID for use constructing a DataObject.
-   * IDs created are unique to the DataStructure, not the DataObject. Creating
-   * a copy of the DataStructure will result in the same ID being used for the
-   * next added DataObject to both structures.
-   * @return DataObject::IdType
-   */
-  DataObject::IdType generateId();
-
   /**
    * @brief Sets the next ID to use when constructing a DataObject.
    * Because IDs are created to be unique, this should only be called when
@@ -676,6 +637,28 @@ protected:
    * @param nextDataId
    */
   void setNextId(DataObject::IdType nextDataId);
+
+  /**
+   * @brief Returns a reference to the root DataMap.
+   * @return DataMap&
+   */
+  DataMap& getRootGroup();
+
+  /**
+   * @brief Flushes all DataObjects to their respective target by calling their respective flush() method.
+   * In-memory DataObjects are not affected.
+   */
+  void flush() const;
+
+protected:
+  /**
+   * @brief Returns a new ID for use constructing a DataObject.
+   * IDs created are unique to the DataStructure, not the DataObject. Creating
+   * a copy of the DataStructure will result in the same ID being used for the
+   * next added DataObject to both structures.
+   * @return DataObject::IdType
+   */
+  DataObject::IdType generateId();
 
   /**
    * @brief Adds the DataObject to the list of known DataObjects if it is missing.

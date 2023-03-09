@@ -1,8 +1,5 @@
 #include "INodeGeometry1D.hpp"
 
-#include "complex/Utilities/Parsing/HDF5/H5Constants.hpp"
-#include "complex/Utilities/Parsing/HDF5/H5GroupReader.hpp"
-
 namespace complex
 {
 INodeGeometry1D::INodeGeometry1D(DataStructure& dataStructure, std::string name)
@@ -43,6 +40,16 @@ const INodeGeometry1D::SharedEdgeList& INodeGeometry1D::getEdgesRef() const
 void INodeGeometry1D::setEdgeList(const SharedEdgeList& edges)
 {
   m_EdgeDataArrayId = edges.getId();
+}
+
+std::optional<DataObject::IdType> INodeGeometry1D::getEdgeListId() const
+{
+  return m_EdgeDataArrayId;
+}
+
+void INodeGeometry1D::setEdgeListId(const std::optional<IdType>& edgeList)
+{
+  m_EdgeDataArrayId = edgeList;
 }
 
 void INodeGeometry1D::resizeEdgeList(usize size)
@@ -166,63 +173,49 @@ void INodeGeometry1D::setEdgeAttributeMatrix(const AttributeMatrix& attributeMat
   m_EdgeAttributeMatrixId = attributeMatrix.getId();
 }
 
-H5::ErrorType INodeGeometry1D::readHdf5(H5::DataStructureReader& dataStructureReader, const H5::GroupReader& groupReader, bool preflight)
+void INodeGeometry1D::setEdgeDataId(const std::optional<IdType>& edgeDataId)
 {
-  H5::ErrorType error = INodeGeometry0D::readHdf5(dataStructureReader, groupReader, preflight);
-  if(error < 0)
-  {
-    return error;
-  }
-
-  m_EdgeDataArrayId = ReadH5DataId(groupReader, H5Constants::k_EdgeListTag);
-  m_EdgeAttributeMatrixId = ReadH5DataId(groupReader, H5Constants::k_EdgeDataTag);
-  m_CellContainingVertDataArrayId = ReadH5DataId(groupReader, H5Constants::k_ElementContainingVertTag);
-  m_CellNeighborsDataArrayId = ReadH5DataId(groupReader, H5Constants::k_ElementNeighborsTag);
-  m_CellCentroidsDataArrayId = ReadH5DataId(groupReader, H5Constants::k_ElementCentroidTag);
-
-  return error;
+  m_EdgeAttributeMatrixId = edgeDataId;
 }
 
-H5::ErrorType INodeGeometry1D::writeHdf5(H5::DataStructureWriter& dataStructureWriter, H5::GroupWriter& parentGroupWriter, bool importable) const
+std::optional<DataObject::IdType> INodeGeometry1D::getElementContainingVertId() const
 {
-  H5::ErrorType error = INodeGeometry0D::writeHdf5(dataStructureWriter, parentGroupWriter, importable);
-  if(error < 0)
-  {
-    return error;
-  }
+  return m_CellContainingVertDataArrayId;
+}
 
-  H5::GroupWriter groupWriter = parentGroupWriter.createGroupWriter(getName());
-  error = WriteH5DataId(groupWriter, m_EdgeDataArrayId, H5Constants::k_EdgeListTag);
-  if(error < 0)
-  {
-    return error;
-  }
+std::optional<DataObject::IdType> INodeGeometry1D::getElementNeighborsId() const
+{
+  return m_CellNeighborsDataArrayId;
+}
 
-  error = WriteH5DataId(groupWriter, m_EdgeAttributeMatrixId, H5Constants::k_EdgeDataTag);
-  if(error < 0)
-  {
-    return error;
-  }
+std::optional<DataObject::IdType> INodeGeometry1D::getElementCentroidsId() const
+{
+  return m_CellCentroidsDataArrayId;
+}
 
-  error = WriteH5DataId(groupWriter, m_CellContainingVertDataArrayId, H5Constants::k_ElementContainingVertTag);
-  if(error < 0)
-  {
-    return error;
-  }
+std::optional<DataObject::IdType> INodeGeometry1D::getElementSizesId() const
+{
+  return m_ElementSizesId;
+}
 
-  error = WriteH5DataId(groupWriter, m_CellNeighborsDataArrayId, H5Constants::k_ElementNeighborsTag);
-  if(error < 0)
-  {
-    return error;
-  }
+void INodeGeometry1D::setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId)
+{
+  m_CellContainingVertDataArrayId = elementsContainingVertId;
+}
 
-  error = WriteH5DataId(groupWriter, m_CellCentroidsDataArrayId, H5Constants::k_ElementCentroidTag);
-  if(error < 0)
-  {
-    return error;
-  }
+void INodeGeometry1D::setElementNeighborsId(const std::optional<IdType>& elementNeighborsId)
+{
+  m_CellNeighborsDataArrayId = elementNeighborsId;
+}
 
-  return error;
+void INodeGeometry1D::setElementCentroidsId(const std::optional<IdType>& centroidsId)
+{
+  m_CellCentroidsDataArrayId = centroidsId;
+}
+
+void INodeGeometry1D::setElementSizesId(const std::optional<IdType>& sizesId)
+{
+  m_ElementSizesId = sizesId;
 }
 
 void INodeGeometry1D::checkUpdatedIdsImpl(const std::vector<std::pair<IdType, IdType>>& updatedIds)

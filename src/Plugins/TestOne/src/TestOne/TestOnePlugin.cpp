@@ -20,11 +20,6 @@ TestOnePlugin::TestOnePlugin()
 
 TestOnePlugin::~TestOnePlugin() = default;
 
-std::vector<complex::H5::IDataFactory*> TestOnePlugin::getDataFactories() const
-{
-  return {};
-}
-
 std::map<complex::Uuid, complex::Uuid> TestOnePlugin::getSimplToComplexMap() const
 {
   return {};
