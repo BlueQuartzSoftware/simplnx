@@ -58,7 +58,7 @@ public:
       m_Normals[triangleIndex * 3] = static_cast<float64>(normal[0]);
       m_Normals[triangleIndex * 3 + 1] = static_cast<float64>(normal[1]);
       m_Normals[triangleIndex * 3 + 2] = static_cast<float64>(normal[2]);
-      
+
       progressCount++;
       if(progressCount > progressIncrement)
       {
