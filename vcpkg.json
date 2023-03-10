@@ -16,9 +16,6 @@
       "name": "eigen3"
     },
     {
-      "name": "ebsdlib"
-    },
-    {
       "name": "hdf5",
       "features": [
         "cpp"
@@ -68,6 +65,14 @@
       "dependencies": [
         {
           "name": "itk"
+        }
+      ]
+    },
+    "ebsd": {
+      "description": "Ebsd data processing",
+      "dependencies": [
+        {
+          "name": "ebsdlib"
         }
       ]
     },
