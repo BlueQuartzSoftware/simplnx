@@ -124,28 +124,9 @@ void FindNeighborhoods::updateNeighborHood(size_t sourceIndex, size_t destIndex)
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void FindNeighborhoods::updateProgress(size_t numCompleted, size_t totalFeatures)
-{
-  static std::mutex mutex;
-  std::lock_guard<std::mutex> lock(mutex);
-  m_IncCount += numCompleted;
-  m_NumCompleted = m_NumCompleted + numCompleted;
-  if(m_IncCount > m_ProgIncrement)
-  {
-    m_IncCount = 0;
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Feature {} of {}", m_NumCompleted, totalFeatures));
-  }
-}
-
-// -----------------------------------------------------------------------------
 Result<> FindNeighborhoods::operator()()
 {
-  m_IncCount = 0;
-
   float x = 0.0f, y = 0.0f, z = 0.0f;
-  m_NumCompleted = 0;
   std::vector<float> criticalDistance;
 
   auto multiplesOfAverage = m_InputValues->MultiplesOfAverage;
@@ -155,8 +136,6 @@ Result<> FindNeighborhoods::operator()()
   m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
 
   size_t totalFeatures = equivalentDiameters.getNumberOfTuples();
-
-  m_ProgIncrement = totalFeatures / 100;
 
   m_LocalNeighborhoodList.resize(totalFeatures);
   criticalDistance.resize(totalFeatures);
