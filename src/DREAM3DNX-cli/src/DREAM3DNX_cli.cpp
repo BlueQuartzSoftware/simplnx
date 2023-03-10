@@ -8,6 +8,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <ostream>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -20,14 +21,19 @@ inline constexpr int k_NoArgumentsProvided = -103;
 inline constexpr int k_FailedParsingArguments = -105;
 inline constexpr int k_ExecutePipelineError = -110;
 inline constexpr int k_PreflightPipelineError = -110;
+inline constexpr int k_InvalidArgumentError = -120;
+inline constexpr int k_LogFileError = -121;
+inline constexpr int k_NullLogFileError = -122;
 
 inline constexpr StringLiteral k_HelpParamLong = "--help";
 inline constexpr StringLiteral k_ExecuteParamLong = "--execute";
 inline constexpr StringLiteral k_PreflightParamLong = "--preflight";
+inline constexpr StringLiteral k_LogFileParamLong = "--logfile";
 
 inline constexpr StringLiteral k_HelpParamShort = "-h";
 inline constexpr StringLiteral k_ExecuteParamShort = "-e";
 inline constexpr StringLiteral k_PreflightParamShort = "-p";
+inline constexpr StringLiteral k_LogFileParamShort = "-l";
 
 void LoadApp(complex::Application& app)
 {
@@ -51,11 +57,64 @@ void LoadApp(complex::Application& app)
 #endif
 }
 
+class CliStream
+{
+public:
+  CliStream() = default;
+  ~CliStream() noexcept = default;
+
+  Result<> setLogFile(const std::filesystem::path& filepath)
+  {
+    if(filepath.empty() || filepath.string().length() == 0)
+    {
+      std::string errorMessage = "Log file cannot be created with an empty filepath.";
+      return complex::MakeErrorResult(k_NullLogFileError, errorMessage);
+    }
+
+    const std::ios_base::openmode openmode = std::ios_base::out | std::ios_base::trunc;
+    m_LogStream = std::fstream(filepath, openmode);
+    if(m_LogStream.is_open() == false)
+    {
+      std::string errorMessage = fmt::format("Failed to open log file: '{}'", filepath.string());
+      return complex::MakeErrorResult(k_LogFileError, errorMessage);
+    }
+
+    return {};
+  }
+
+  template <typename T>
+  CliStream& operator<<(T value)
+  {
+    std::cout << value;
+    if(m_LogStream.is_open())
+    {
+      m_LogStream << value;
+    }
+    return *this;
+  }
+  CliStream& endline()
+  {
+    std::cout << std::endl;
+    if(m_LogStream.is_open())
+    {
+      m_LogStream << std::endl;
+    }
+    return *this;
+  }
+
+private:
+  std::fstream m_LogStream;
+};
+
+CliStream cliOut;
+
 enum class ArgumentType
 {
+  Invalid,
   Execute,
   Preflight,
-  Help
+  Help,
+  Logfile
 };
 
 struct Argument
@@ -82,6 +141,23 @@ inline std::string toString(int argc, char* argv[], int index)
   return std::string(argv[index]);
 }
 
+std::string ParseArgument(int argc, char* argv[], int& index)
+{
+  std::string argStr;
+  if(++index < argc)
+  {
+    argStr = argv[index];
+
+    // Check if starting another operand
+    if(argStr[0] == '-')
+    {
+      index--;
+      argStr = "";
+    }
+  }
+  return argStr;
+}
+
 Result<CliArguments> ParseParameters(int argc, char* argv[])
 {
   if(argc < 2)
@@ -93,7 +169,7 @@ Result<CliArguments> ParseParameters(int argc, char* argv[])
   CliArguments args;
 
   int index = 1;
-  std::string arg = argv[index++];
+  std::string arg = argv[index];
   if(arg == k_HelpParamLong || arg == k_HelpParamShort)
   {
     args.emplace_back(ArgumentType::Help);
@@ -104,30 +180,36 @@ Result<CliArguments> ParseParameters(int argc, char* argv[])
     }
     else
     {
-      arg = argv[index++];
+      index++;
     }
   }
 
-  std::string argStr;
-  if(index < argc)
+  do
   {
-    argStr = argv[index];
-  }
+    arg = argv[index];
 
-  if(arg == k_ExecuteParamLong || arg == k_ExecuteParamShort)
-  {
-    args.emplace_back(ArgumentType::Execute, argStr);
-  }
-  else if(arg == k_PreflightParamLong || arg == k_PreflightParamShort)
-  {
-    args.emplace_back(ArgumentType::Preflight, argStr);
-  }
+    if(arg == k_ExecuteParamLong || arg == k_ExecuteParamShort)
+    {
+      std::string argStr = ParseArgument(argc, argv, index);
+      args.emplace_back(ArgumentType::Execute, argStr);
+    }
+    else if(arg == k_PreflightParamLong || arg == k_PreflightParamShort)
+    {
+      std::string argStr = ParseArgument(argc, argv, index);
+      args.emplace_back(ArgumentType::Preflight, argStr);
+    }
+    else if(arg == k_LogFileParamLong || arg == k_LogFileParamShort)
+    {
+      std::string argStr = ParseArgument(argc, argv, index);
+      args.emplace_back(ArgumentType::Logfile, argStr);
+    }
+    else
+    {
+      args.emplace_back(ArgumentType::Invalid, arg);
+    }
 
-  if(argc > index)
-  {
-    std::string ss = "Too many arguments to parse";
-    return complex::MakeErrorResult<CliArguments>(k_FailedParsingArguments, ss);
-  }
+    index++;
+  } while(index < argc);
 
   return {args};
 }
@@ -142,11 +224,13 @@ int PrintResult(const Result<T>& result)
 
   for(const auto& warning : result.warnings())
   {
-    std::cout << fmt::format("Warning {}: {}", warning.code, warning.message) << std::endl;
+    cliOut << fmt::format("Warning {}: {}", warning.code, warning.message);
+    cliOut.endline();
   }
   for(const auto& error : result.errors())
   {
-    std::cout << fmt::format("Error {}: {}", error.code, error.message) << std::endl;
+    cliOut << fmt::format("Error {}: {}", error.code, error.message);
+    cliOut.endline();
   }
   return result.errors()[0].code;
 }
@@ -154,7 +238,8 @@ int PrintResult(const Result<T>& result)
 Result<> PreflightPipeline(Pipeline& pipeline)
 {
   const CLI::PipelineObserver obs(&pipeline);
-  std::cout << "\n-------------------------" << std::endl;
+  cliOut << "\n-------------------------";
+  cliOut.endline();
 
   if(!pipeline.preflight())
   {
@@ -162,21 +247,24 @@ Result<> PreflightPipeline(Pipeline& pipeline)
     return complex::MakeErrorResult(-2, ss);
   }
 
-  std::cout << "Finished preflighting pipeline" << std::endl;
+  cliOut << "Finished preflighting pipeline";
+  cliOut.endline();
   return {};
 }
 
 Result<> ExecutePipeline(Pipeline& pipeline)
 {
   const CLI::PipelineObserver obs(&pipeline);
-  std::cout << "\n-------------------------" << std::endl;
+  cliOut << "\n-------------------------";
+  cliOut.endline();
 
   if(!pipeline.execute())
   {
     std::string ss = "Error executing pipeline";
     return complex::MakeErrorResult(k_ExecutePipelineError, ss);
   }
-  std::cout << "Finished executing pipeline" << std::endl;
+  cliOut << "Finished executing pipeline";
+  cliOut.endline();
   return {};
 }
 
@@ -186,12 +274,14 @@ Result<> ExecutePipeline(const Argument& arg)
   auto loadPipelineResult = Pipeline::FromFile(pipelinePath);
   if(loadPipelineResult.invalid())
   {
-    std::cout << fmt::format("Could not load pipeline at path: '{}'", pipelinePath) << std::endl;
+    cliOut << fmt::format("Could not load pipeline at path: '{}'", pipelinePath);
+    cliOut.endline();
     return complex::ConvertResult(std::move(loadPipelineResult));
   }
 
   Pipeline pipeline = loadPipelineResult.value();
-  std::cout << fmt::format("Executing pipeline at path: '{}'\n", pipelinePath) << std::endl;
+  cliOut << fmt::format("Executing pipeline at path: '{}'\n", pipelinePath);
+  cliOut.endline();
   return ExecutePipeline(pipeline);
 }
 
@@ -201,11 +291,13 @@ Result<> PreflightPipeline(const Argument& arg)
   auto loadPipelineResult = Pipeline::FromFile(pipelinePath);
   if(loadPipelineResult.invalid())
   {
-    std::cout << fmt::format("Could not load pipeline at path: '{}'", pipelinePath) << std::endl;
+    cliOut << fmt::format("Could not load pipeline at path: '{}'", pipelinePath);
+    cliOut.endline();
     return complex::ConvertResult(std::move(loadPipelineResult));
   }
 
-  std::cout << fmt::format("Preflighting pipeline at path: '{}'\n", pipelinePath) << std::endl;
+  cliOut << fmt::format("Preflighting pipeline at path: '{}'\n", pipelinePath);
+  cliOut.endline();
 
   Pipeline pipeline = loadPipelineResult.value();
   return PreflightPipeline(pipeline);
@@ -213,25 +305,36 @@ Result<> PreflightPipeline(const Argument& arg)
 
 void DisplayDefaultHelp()
 {
-  std::cout << "Options:\n";
-  std::cout << fmt::format("\t {} <filepath>\t", k_ExecuteParamLong) << "\t Execute the pipeline at the taget filepath\n";
-  std::cout << fmt::format("\t {} <filepath>\t", k_ExecuteParamShort) << "\t Execute the pipeline at the taget filepath\n";
-  std::cout << fmt::format("\t {} <filepath>\t", k_PreflightParamLong) << "\t Preflight the pipeline at the taget filepath" << std::endl;
-  std::cout << fmt::format("\t {} <filepath>\t", k_PreflightParamShort) << "\t Preflight the pipeline at the taget filepath" << std::endl;
+  cliOut << "Options:\n";
+  cliOut << fmt::format("\t {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "\t Execute the pipeline at the target filepath. Optionally, create a log file at the specified path.\n";
+  cliOut << fmt::format("\t {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "\t Preflight the pipeline at the target filepath. Optionally, create a log file at the specified path.\n";
+  cliOut << fmt::format("\t <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "\t Creates a log file at the specified path.";
+  cliOut.endline();
 }
 
 void DisplayExecuteHelp()
 {
-  std::cout << "To execute a target pipeline file:\n\t";
-  std::cout << k_ExecuteParamLong.str() << " <pipeline filepath>\n\t";
-  std::cout << k_ExecuteParamShort.str() << " <pipeline filepath>" << std::endl;
+  cliOut << "To execute a target pipeline file:\n\t";
+  cliOut << fmt::format("\t {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "\t Execute the pipeline at the target filepath. Optionally, create a log file at the specified path.";
+  cliOut.endline();
 }
 
 void DisplayPreflightHelp()
 {
-  std::cout << "To preflight a target pipeline file:\n\t";
-  std::cout << k_PreflightParamLong.str() << " <pipeline filepath>\n\t";
-  std::cout << k_PreflightParamShort.str() << " <pipeline filepath>" << std::endl;
+  cliOut << "To preflight a target pipeline file:\n\t";
+  cliOut << fmt::format("\t {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "\t Preflight the pipeline at the target filepath. Optionally, create a log file at the specified path.";
+  cliOut.endline();
+}
+
+void DisplayLogfileHelp()
+{
+  cliOut << "To export output a log file:\n\t";
+  cliOut << fmt::format("\t <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "\t Creates a log file at the specified path.";
+  cliOut.endline();
 }
 
 Result<> DisplayHelpMenu(const std::vector<Argument>& arguments)
@@ -249,15 +352,32 @@ Result<> DisplayHelpMenu(const std::vector<Argument>& arguments)
   case ArgumentType::Preflight:
     DisplayPreflightHelp();
     return {};
+  case ArgumentType::Logfile:
+    DisplayLogfileHelp();
+    return {};
   }
 
   std::string ss = "Incorrect Help Syntax";
   return complex::MakeErrorResult(k_FailedParsingArguments, ss);
 }
 
+Result<> CreateArgumentError(const Argument& argument)
+{
+  std::string errorMessage = fmt::format("Failed to parse argument: '{}'", argument.value);
+  return complex::MakeErrorResult(k_InvalidArgumentError, errorMessage);
+}
+
+Result<> SetLogFile(const Argument& argument)
+{
+  std::filesystem::path filepath(argument.value);
+  return cliOut.setLogFile(filepath);
+}
+
 int main(int argc, char* argv[])
 {
-  std::cout << "DREAM.3D NX CLI" << std::endl;
+  cliOut << "DREAM.3D NX CLI";
+  cliOut.endline();
+
   complex::Application app;
   LoadApp(app);
 
@@ -268,13 +388,46 @@ int main(int argc, char* argv[])
   }
 
   CliArguments arguments = parsingResult.value();
+  std::vector<Result<>> results;
+
+  // Set log file and check for parsing errors
+  for(const Argument& argument : arguments)
+  {
+    switch(argument.type)
+    {
+    case ArgumentType::Invalid:
+      results.push_back(CreateArgumentError(argument));
+      break;
+    case ArgumentType::Logfile:
+      results.push_back(SetLogFile(argument));
+      break;
+    }
+  }
+
+  // Run target operation
   switch(arguments[0].type)
   {
   case ArgumentType::Help:
-    return PrintResult(DisplayHelpMenu(arguments));
+    results.push_back(DisplayHelpMenu(arguments));
+    break;
   case ArgumentType::Execute:
-    return PrintResult(ExecutePipeline(arguments[0]));
+    results.push_back(ExecutePipeline(arguments[0]));
+    break;
   case ArgumentType::Preflight:
-    return PrintResult(PreflightPipeline(arguments[0]));
+    results.push_back(PreflightPipeline(arguments[0]));
+    break;
+  default:
+    break;
   }
+
+  // Print Results and set error code
+  int errorCode = 0;
+  for(const auto& result : results)
+  {
+    if(int code = PrintResult(result); code != 0)
+    {
+      errorCode = code;
+    }
+  }
+  return errorCode;
 }

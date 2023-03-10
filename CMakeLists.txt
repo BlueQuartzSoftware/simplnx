@@ -654,7 +654,8 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.cpp
-    ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/MessageUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
 
@@ -718,16 +719,16 @@ target_include_directories(complex
     $<INSTALL_INTERFACE:include>
 )
 
-
-#------------------------------------------------------------------------------
-# Pipeline Runner Executable
-#------------------------------------------------------------------------------
-add_subdirectory(${complex_SOURCE_DIR}/src/PipelineRunner)
+# ------------------------------------------------------------------------------
+# CLI Executable
+# ------------------------------------------------------------------------------
+add_subdirectory(${complex_SOURCE_DIR}/src/DREAM3DNX-cli)
 
 #------------------------------------------------------------------------------
 # Complex Plugins Section
 #------------------------------------------------------------------------------
 get_property(ComplexPluginTargets GLOBAL PROPERTY ComplexPluginTargets)
+
 if(NOT "${ComplexPluginTargets}" STREQUAL "")
   set_property(GLOBAL PROPERTY ComplexPluginTargets "")
 endif()
@@ -887,6 +888,7 @@ if(COMPLEX_BUILD_PYTHON)
 endif()
 
 option(COMPLEX_BUILD_DOCS "Enables building COMPLEX documentation" OFF)
+
 if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()

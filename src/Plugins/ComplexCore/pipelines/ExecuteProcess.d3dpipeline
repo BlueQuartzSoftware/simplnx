@@ -5,7 +5,7 @@
   "pipeline": [
     {
       "args": {
-        "arguments": "PipelineRunner",
+        "arguments": "DREAM3DNX-cli",
         "blocking": false,
         "output_log_file": "Data/Output/ComplexCore/ExecuteProcessOutput.txt",
         "timeout": 30000
