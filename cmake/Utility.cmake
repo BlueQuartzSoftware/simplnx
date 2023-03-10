@@ -191,6 +191,12 @@ function(create_pipeline_tests)
   set(TEST_PIPELINE_LIST_FILE ${${ARGS_PLUGIN_NAME}_BINARY_DIR}/test/Prebuilt_Pipeline_Tests.txt)
   FILE(WRITE ${TEST_PIPELINE_LIST_FILE} "# ${ARGS_PLUGIN_NAME} Example Pipelines Test List")
 
+  set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+  if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>")
+  endif()
+
+
   get_target_property(PIPELINE_RUNNER_NAME PipelineRunner NAME)
   get_target_property(PIPELINE_RUNNER_DEBUG PipelineRunner DEBUG_POSTFIX)
   
@@ -208,7 +214,7 @@ function(create_pipeline_tests)
     add_test(NAME "${ARGS_PLUGIN_NAME} ${padding}${test_index} ${test_file_name}"
             COMMAND "${PIPELINE_RUNNER_NAME}$<$<CONFIG:Debug>:${PIPELINE_RUNNER_DEBUG}>" "${pipeline_file_path}" 
             #CONFIGURATIONS Debug
-            WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+            WORKING_DIRECTORY ${TEST_WORKING_DIR})
   endforeach()
 
 endfunction()

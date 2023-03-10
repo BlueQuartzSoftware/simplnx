@@ -17,9 +17,8 @@ const DataPath k_FeatureGeometryPath({"Feature Geometry"});
 const DataPath k_FeatureIDsPath({"Feature IDs"});
 const DataPath k_SurfaceFeaturesExemplaryPath({"Surface Features Exemplary"});
 const DataPath k_SurfaceFeaturesArrayPath({"Surface Features"});
-const std::string k_FeatureIdsFileName = "FeatureIds.raw";
-const std::string k_FeatureIds2DFileName = "FeatureIds_2D.raw";
-const std::string k_SurfaceFeatures2DExemplaryFileName = "SurfaceFeatures2D.raw";
+const std::string k_FeatureIds2DFileName = "FindSurfaceFeaturesTest/FeatureIds_2D.raw";
+const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTest/SurfaceFeatures2D.raw";
 const std::string k_SurfaceFeatures("SurfaceFeatures");
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
@@ -38,7 +37,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
   RawBinaryReaderFilter rbrFilter;
   Arguments rbrArgs;
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir.str()).append(featureIdsFileName));
+  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestFilesDir.str()).append(featureIdsFileName));
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_NumberOfComponents_Key, std::make_any<uint64>(1));
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, NumericType::int32);
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{static_cast<double>(featureIdsSize)}}));
@@ -52,7 +51,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath);
   std::replace(featureIds.begin(), featureIds.end(), 470, 0);
 
-  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestDataSourceDir.str()).append(exemplaryFileName));
+  rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestFilesDir.str()).append(exemplaryFileName));
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, NumericType::int8);
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_TupleDims_Key, DynamicTableParameter::ValueType({{796}}));
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesExemplaryPath));

@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 using namespace complex::UnitTest;
-TEST_CASE("Core::FillBadData", "[Core][FillBadData]")
+TEST_CASE("ComplexCore::FillBadData", "[Core][FillBadData]")
 {
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);

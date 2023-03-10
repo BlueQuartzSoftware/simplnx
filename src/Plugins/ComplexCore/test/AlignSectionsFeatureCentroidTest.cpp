@@ -21,7 +21,7 @@ using namespace complex;
 using namespace complex::Constants;
 using namespace complex::UnitTest;
 
-TEST_CASE("Core::AlignSectionsFeatureCentroidFilter", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
+TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
 {
   // We are just going to generate a big number so that we can use that in the output
   // file path. This tests the creation of intermediate directories that the filter
