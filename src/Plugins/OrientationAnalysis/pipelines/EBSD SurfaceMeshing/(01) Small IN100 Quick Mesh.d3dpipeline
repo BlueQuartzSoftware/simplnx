@@ -1,0 +1,149 @@
+{
+  "isDisabled": false,
+  "name": "(01) Small IN100 Quick Mesh.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "Import_File_Data": {
+          "data_paths": [
+            "DataContainer/CellEnsembleData",
+            "DataContainer/CellEnsembleData/CrystalStructures",
+            "DataContainer/CellEnsembleData/LatticeConstants",
+            "DataContainer",
+            "DataContainer/CellData",
+            "DataContainer/CellData/Confidence Index",
+            "DataContainer/CellData/EulerAngles",
+            "DataContainer/CellData/Fit",
+            "DataContainer/CellData/Image Quality",
+            "DataContainer/CellData/Phases",
+            "DataContainer/CellData/SEM Signal",
+            "DataContainer/CellData/Mask",
+            "DataContainer/CellData/Quats",
+            "DataContainer/CellFeatureData",
+            "DataContainer/CellFeatureData/Active",
+            "DataContainer/CellData/FeatureIds",
+            "DataContainer/CellFeatureData/Phases",
+            "DataContainer/CellFeatureData/NumNeighbors2",
+            "DataContainer/NewGrain Data",
+            "DataContainer/CellData/ParentIds",
+            "DataContainer/CellFeatureData/ParentIds",
+            "DataContainer/NewGrain Data/Active",
+            "DataContainer/CellData/IPFColors",
+            "DataContainer/CellFeatureData/Centroids",
+            "DataContainer/CellFeatureData/EquivalentDiameters",
+            "DataContainer/CellFeatureData/NumElements",
+            "DataContainer/CellFeatureData/Omega3s",
+            "DataContainer/CellFeatureData/AxisLengths",
+            "DataContainer/CellFeatureData/AxisEulerAngles",
+            "DataContainer/CellFeatureData/AspectRatios",
+            "DataContainer/CellFeatureData/Shape Volumes",
+            "DataContainer/CellFeatureData/NumNeighbors",
+            "DataContainer/CellFeatureData/NeighborList",
+            "DataContainer/CellFeatureData/SharedSurfaceAreaList",
+            "DataContainer/CellFeatureData/Neighborhoods",
+            "DataContainer/CellFeatureData/NeighborhoodList",
+            "DataContainer/CellData/GBManhattanDistances",
+            "DataContainer/CellData/TJManhattanDistances",
+            "DataContainer/CellData/QPManhattanDistances",
+            "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio",
+            "DataContainer/CellFeatureData/AvgQuats",
+            "DataContainer/CellFeatureData/AvgEulerAngles",
+            "DataContainer/CellFeatureData/MisorientationList",
+            "DataContainer/CellFeatureData/Schmids",
+            "DataContainer/CellFeatureData/SlipSystems",
+            "DataContainer/CellFeatureData/Poles",
+            "DataContainer/CellData/FeatureReferenceMisorientations",
+            "DataContainer/CellFeatureData/FeatureAvgMisorientations",
+            "DataContainer/CellData/KernelAverageMisorientations"
+          ],
+          "file_path": "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+        },
+        "Imported Pipeline": {
+          "isDisabled": false,
+          "name": "Untitled Pipeline",
+          "pipeline": []
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ImportDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "created_image_geometry": "DataContainer",
+        "feature_ids": "DataContainer/CellData/FeatureIds",
+        "max_voxel": [
+          140,
+          140,
+          99
+        ],
+        "min_voxel": [
+          41,
+          41,
+          0
+        ],
+        "remove_original_geometry": true,
+        "renumber_features": true,
+        "selected_image_geometry": "DataContainer",
+        "update_origin": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CropImageGeometry",
+        "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "data": "DataContainer/CellEnsembleData",
+        "new_parent": "DataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MoveData",
+        "uuid": "651e5894-ab7c-4176-b7f0-ea466c521753"
+      },
+      "isDisabled": true
+    },
+    {
+      "args": {
+        "face_data_group_name": "FaceData",
+        "face_feature_attribute_matrix_name": "Face Feature Data",
+        "face_labels_array_name": "TriangleDataContainer/FaceData/FaceLabels",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "fix_problem_voxels": false,
+        "generate_triple_lines": false,
+        "grid_geometry_data_path": "DataContainer",
+        "node_types_array_name": "TriangleDataContainer/VertexData/NodeType",
+        "selected_data_array_paths": [],
+        "triangle_geometry_name": "TriangleDataContainer",
+        "vertex_data_group_name": "VertexData"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::QuickSurfaceMeshFilter",
+        "uuid": "13dd00bd-ad49-4e04-95eb-3267952fd6e5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

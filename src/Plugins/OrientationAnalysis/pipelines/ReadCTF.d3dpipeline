@@ -1,0 +1,43 @@
+{
+  "isDisabled": false,
+  "name": "ReadCTF.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "data_container_name": "DataContainer",
+        "degrees_to_radians": true,
+        "edax_hexagonal_alignment": false,
+        "input_file": "Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf"
+      },
+      "filter": {
+        "name": "complex::ReadCtfDataFilter",
+        "uuid": "7751923c-afb9-4032-8372-8078325c69a4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+        "cell_ip_fcolors_array_name": "IPFColors",
+        "cell_phases_array_path": "DataContainer/Cell Data/Phases",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "good_voxels_array_path": "",
+        "reference_dir": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "use_good_voxels": false
+      },
+      "filter": {
+        "name": "complex::GenerateIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

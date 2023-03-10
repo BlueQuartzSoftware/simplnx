@@ -1,0 +1,30 @@
+{
+  "isDisabled": false,
+  "name": "(01) Small IN100 Archive",
+  "pipeline": [
+    {
+      "args": {
+        "input_file_list_info": {
+          "end_index": 117,
+          "file_extension": ".ang",
+          "file_prefix": "Slice_",
+          "file_suffix": "",
+          "increment_index": 1,
+          "input_path": "Data/Small_IN100",
+          "ordering": 0,
+          "padding_digits": 0,
+          "start_index": 1
+        },
+        "output_file_path": "Data/Output/Reconstruction/Small_IN100.h5ebsd",
+        "reference_frame": 0,
+        "stacking_order": 1,
+        "z_spacing": 0.25
+      },
+      "filter": {
+        "name": "complex::EbsdToH5EbsdFilter",
+        "uuid": "2d05ca72-0a1b-4aec-b9b0-bc470845c448"
+      },
+      "isDisabled": false
+    }
+  ]
+}

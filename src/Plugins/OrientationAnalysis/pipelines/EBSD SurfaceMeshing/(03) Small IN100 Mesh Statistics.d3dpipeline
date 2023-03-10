@@ -1,0 +1,160 @@
+{
+  "isDisabled": false,
+  "name": "(03) Small IN100 Mesh Statistics.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "Import_File_Data": {
+          "data_paths": [
+            "DataContainer",
+            "DataContainer/CellData",
+            "DataContainer/CellData/Image Quality",
+            "DataContainer/CellData/Confidence Index",
+            "DataContainer/CellData/SEM Signal",
+            "DataContainer/CellData/Fit",
+            "DataContainer/CellData/EulerAngles",
+            "DataContainer/CellData/Phases",
+            "DataContainer/CellData/Mask",
+            "DataContainer/CellData/Quats",
+            "DataContainer/CellData/FeatureIds",
+            "DataContainer/CellData/ParentIds",
+            "DataContainer/CellData/IPFColors",
+            "DataContainer/CellData/GBManhattanDistances",
+            "DataContainer/CellData/TJManhattanDistances",
+            "DataContainer/CellData/QPManhattanDistances",
+            "DataContainer/CellData/FeatureReferenceMisorientations",
+            "DataContainer/CellData/KernelAverageMisorientations",
+            "DataContainer/CellFeatureData",
+            "DataContainer/CellEnsembleData",
+            "DataContainer/CellEnsembleData/CrystalStructures",
+            "DataContainer/CellEnsembleData/LatticeConstants",
+            "DataContainer/NewGrain Data",
+            "DataContainer/NewGrain Data/Active",
+            "DataContainer/CellFeatureData/Active",
+            "DataContainer/CellFeatureData/AspectRatios",
+            "DataContainer/CellFeatureData/AvgEulerAngles",
+            "DataContainer/CellFeatureData/AvgQuats",
+            "DataContainer/CellFeatureData/AxisEulerAngles",
+            "DataContainer/CellFeatureData/AxisLengths",
+            "DataContainer/CellFeatureData/Centroids",
+            "DataContainer/CellFeatureData/EquivalentDiameters",
+            "DataContainer/CellFeatureData/FeatureAvgMisorientations",
+            "DataContainer/CellFeatureData/Neighborhoods",
+            "DataContainer/CellFeatureData/NumElements",
+            "DataContainer/CellFeatureData/NumNeighbors",
+            "DataContainer/CellFeatureData/NumNeighbors2",
+            "DataContainer/CellFeatureData/Omega3s",
+            "DataContainer/CellFeatureData/ParentIds",
+            "DataContainer/CellFeatureData/Phases",
+            "DataContainer/CellFeatureData/Poles",
+            "DataContainer/CellFeatureData/Schmids",
+            "DataContainer/CellFeatureData/Shape Volumes",
+            "DataContainer/CellFeatureData/SlipSystems",
+            "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio",
+            "TriangleDataContainer",
+            "TriangleDataContainer/SharedTriList",
+            "TriangleDataContainer/SharedVertexList",
+            "TriangleDataContainer/FaceData",
+            "TriangleDataContainer/VertexData",
+            "TriangleDataContainer/FaceData/FaceLabels",
+            "TriangleDataContainer/VertexData/NodeType",
+            "TriangleDataContainer/Edge List"
+          ],
+          "file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
+        },
+        "Imported Pipeline": {
+          "isDisabled": false,
+          "name": "Untitled Pipeline",
+          "pipeline": []
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ImportDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "triangle_areas_array_path": "FaceAreas",
+        "triangle_geometry_data_path": "TriangleDataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CalculateTriangleAreasFilter",
+        "uuid": "b149addd-c0c8-4010-a264-596005eaf2a5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "surface_mesh_triangle_normals_array_path": "FaceNormals",
+        "tri_geometry_data_path": "TriangleDataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::TriangleNormalFilter",
+        "uuid": "8133d419-1919-4dbf-a5bf-1c97282ba63f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "surface_mesh_triangle_dihedral_angles_array_name": "FaceDihedralAngles",
+        "tri_geometry_data_path": "TriangleDataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::TriangleDihedralAngleFilter",
+        "uuid": "dd42c521-4ae5-485d-ad35-d1276547d2f1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_euler_angles_array_path": "DataContainer/CellFeatureData/AvgEulerAngles",
+        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "surface_mesh_face_ipf_colors_array_name": "FaceIPFColors",
+        "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
+        "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateFaceIPFColoringFilter",
+        "uuid": "30759600-7c02-4650-b5ca-e7036d6b568e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
+        "surface_mesh_face_misorientation_colors_array_name": "FaceMisorientationColors"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateFaceMisorientationColoringFilter",
+        "uuid": "f3473af9-db77-43db-bd25-60df7230ea73"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}
