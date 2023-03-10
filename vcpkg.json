@@ -73,12 +73,6 @@
       "dependencies": [
         {
           "name": "ebsdlib"
-        },
-        {
-          "name": "h5support"
-        },
-        {
-          "name": "tbb"
         }
       ]
     },
