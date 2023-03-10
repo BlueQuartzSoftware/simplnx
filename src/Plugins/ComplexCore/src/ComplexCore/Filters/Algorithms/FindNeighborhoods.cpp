@@ -13,8 +13,8 @@ using namespace complex;
 class FindNeighborhoodsImpl
 {
 public:
-  FindNeighborhoodsImpl(FindNeighborhoods* filter, size_t totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance,
-                        const std::atomic_bool& shouldCancel, ThreadSafeMessenger& messenger)
+  FindNeighborhoodsImpl(FindNeighborhoods* filter, size_t totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance, const std::atomic_bool& shouldCancel,
+                        ThreadSafeMessenger& messenger)
   : m_Filter(filter)
   , m_TotalFeatures(totalFeatures)
   , m_Bins(bins)
