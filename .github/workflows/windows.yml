@@ -58,7 +58,7 @@ jobs:
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         run: |
-          cmake --preset ci ${{github.workspace}} -G "Visual Studio 17 2022" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data
+          cmake --preset ci ${{github.workspace}} -G "Visual Studio 17 2022" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DVCPKG_MANIFEST_FEATURES="tests;parallel;itk;ebsd" -DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing;OrientationAnalysis"
       - name: Build
         run: |
           cd ${{github.workspace}}/complex && cmake --build --preset ci
