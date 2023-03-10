@@ -44,7 +44,6 @@ public:
   const std::atomic_bool& getCancel();
 
   void updateNeighborHood(size_t sourceIndex, size_t targetIndex);
-  void updateProgress(size_t numCompleted, size_t totalFeatures);
 
 private:
   DataStructure& m_DataStructure;
@@ -54,9 +53,6 @@ private:
 
   Int32Array* m_Neighborhoods = nullptr;
   std::vector<std::vector<int32_t>> m_LocalNeighborhoodList;
-  size_t m_NumCompleted = 0;
-  size_t m_ProgIncrement = 0;
-  size_t m_IncCount = 0;
 };
 
 } // namespace complex
