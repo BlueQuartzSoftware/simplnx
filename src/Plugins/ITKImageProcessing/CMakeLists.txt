@@ -297,7 +297,7 @@ get_filename_component(ITKImageProcessing_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR} D
 get_filename_component(COMPLEX_PLUGINS_SOURCE_DIR ${ITKImageProcessing_SOURCE_DIR} DIRECTORY CACHE)
 
 # message(STATUS "ITKImageProcessing_SOURCE_DIR: ${ITKImageProcessing_SOURCE_DIR}")
-include(${COMPLEX_PLUGINS_SOURCE_DIR}/cmake/ITKInstall.cmake)
+include(${complex_SOURCE_DIR}/cmake/ITKInstall.cmake)
 AddItkCopyInstallRules(LIBS ${ItkComponents})
 
 

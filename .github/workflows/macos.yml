@@ -48,7 +48,7 @@ jobs:
           -password "${{secrets.GITHUB_TOKEN}}"
       - name: Configure
         run: |
-          cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -D VCPKG_TARGET_TRIPLET:STRING=x64-osx-dynamic
+          cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DVCPKG_TARGET_TRIPLET:STRING=x64-osx-dynamic -DVCPKG_MANIFEST_FEATURES="tests;parallel;itk;ebsd" -DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing;OrientationAnalysis"
       - name: Build
         run: |
           cmake --build --preset ci
