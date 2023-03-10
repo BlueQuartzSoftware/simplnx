@@ -181,7 +181,6 @@ Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure,
   messenger.setTotalElements(totalElements);
   messenger.setProgressIncrement(totalElements / 100);
 
-
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0ULL, totalElements);

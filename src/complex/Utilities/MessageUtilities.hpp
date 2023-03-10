@@ -23,7 +23,6 @@ public:
   ThreadSafeMessenger& operator=(const ThreadSafeMessenger&) = delete;
   ThreadSafeMessenger& operator=(ThreadSafeMessenger&&) noexcept = delete;
 
-
   /**
    * @brief This function accepts a number to increment the counter by and handles all of the message assembly and send off
    * [!!Utilizes Mutex Locks!!] be wary calling this excessively in parallel as it can slow the program down
@@ -82,7 +81,6 @@ private:
   mutable std::mutex m_ProgressMessage_Mutex;
   std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
 };
-
 
 /**
  * @class ThreadSafeTaskMessenger

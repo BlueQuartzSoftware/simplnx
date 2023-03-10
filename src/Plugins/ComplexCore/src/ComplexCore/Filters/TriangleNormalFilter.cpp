@@ -7,8 +7,8 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/MessageUtilities.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
 
