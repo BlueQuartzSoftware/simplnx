@@ -68,7 +68,7 @@ std::map<std::string, nlohmann::json> ReadPresets()
 }
 } // namespace
 
-TEST_CASE("Plugins::GenerateColorTableFilter: Valid filter execution")
+TEST_CASE("ComplexCore::GenerateColorTableFilter: Valid filter execution")
 {
   DataStructure dataStructure;
 

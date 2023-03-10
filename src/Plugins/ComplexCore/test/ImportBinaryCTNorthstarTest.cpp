@@ -81,7 +81,7 @@ void WriteNsiBinaryDataFiles(const fs::path& binaryFilePath1, const fs::path& bi
 }
 } // namespace
 
-TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Valid filter execution")
+TEST_CASE("ComplexCore::ReadBinaryCTNorthStarFilter: Valid filter execution")
 {
   // Write binary test files
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
@@ -112,7 +112,7 @@ TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Valid filter execution")
   }
 }
 
-TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Valid filter execution with subvolume")
+TEST_CASE("ComplexCore::ReadBinaryCTNorthStarFilter: Valid filter execution with subvolume")
 {
   // Write binary test files
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);
@@ -159,7 +159,7 @@ TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Valid filter execution with sub
   }
 }
 
-TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file size too small")
+TEST_CASE("ComplexCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file size too small")
 {
   const usize file1WrongZCount = 2;
 
@@ -182,7 +182,7 @@ TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data
   REQUIRE(executeResult.result.errors()[0].code == -38705);
 }
 
-TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file does not exist")
+TEST_CASE("ComplexCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data file does not exist")
 {
   const std::string k_MissingFileName = "this_should_not_exist.nsidat";
 
@@ -205,7 +205,7 @@ TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Invalid filter execution - Data
   REQUIRE(executeResult.result.errors()[0].code == -38704);
 }
 
-TEST_CASE("Plugins::ReadBinaryCTNorthStarFilter: Invalid filter execution - Incorrect Start/End Coords")
+TEST_CASE("ComplexCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - Incorrect Start/End Coords")
 {
   // Write binary test files
   WriteNsiHeaderFile(k_NsiHeaderPath, k_NsiDataFileName1, k_NsiDataFileName2);

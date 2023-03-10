@@ -34,7 +34,7 @@ void writeVolTestFile()
   REQUIRE_NOTHROW(fs::copy(k_VgiSrcFile, k_VgiDestFile, copyOptions)); // copy vgi file
 }
 
-TEST_CASE("Plugins::ImportVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ImportVolumeGraphicsFileFilter]")
+TEST_CASE("ComplexCore::ImportVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ImportVolumeGraphicsFileFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const ImportVolumeGraphicsFileFilter filter;
