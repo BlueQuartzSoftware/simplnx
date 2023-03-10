@@ -24,6 +24,7 @@ struct COMPLEXCORE_EXPORT RemoveFlaggedFeaturesInputValues
   DataPath FeatureIdsArrayPath;
   DataPath FlaggedFeaturesArrayPath;
   DataPath ImageGeometryPath;
+  DataPath TempBoundsPath;
   std::string CreatedImageGeometryPrefix;
   MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
 };

@@ -95,31 +95,18 @@ Result<> ComputeFeatureRect::operator()()
                                                      corners.getName(), featureIds.getName()));
         }
 
-        usize numComps = 6;
-        usize featureIdStartIdx = featureId * numComps;
-        if(x < corners[featureIdStartIdx + 0])
+        uint32 indices[3] = {x, y, z}; // Sequence dependent DO NOT REORDER
+        int32 featureShift = featureId * 6;
+        for(uint8 l = 0; l < 6; l++) // unsigned is faster with modulo
         {
-          corners[featureIdStartIdx + 0] = x;
-        }
-        if(y < corners[featureIdStartIdx + 1])
-        {
-          corners[featureIdStartIdx + 1] = y;
-        }
-        if(z < corners[featureIdStartIdx + 2])
-        {
-          corners[featureIdStartIdx + 2] = z;
-        }
-        if(x > corners[featureIdStartIdx + 3])
-        {
-          corners[featureIdStartIdx + 3] = x;
-        }
-        if(y > corners[featureIdStartIdx + 4])
-        {
-          corners[featureIdStartIdx + 4] = y;
-        }
-        if(z > corners[featureIdStartIdx + 5])
-        {
-          corners[featureIdStartIdx + 5] = z;
+          if(l > 2)
+          {
+            corners[featureShift + l] = std::max(corners[featureShift + l], indices[l-3]);
+          }
+          else
+          {
+            corners[featureShift + l] = std::min(corners[featureShift + l], indices[l]);
+          }
         }
       }
     }
