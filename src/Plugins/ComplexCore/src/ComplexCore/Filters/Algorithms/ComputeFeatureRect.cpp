@@ -101,7 +101,7 @@ Result<> ComputeFeatureRect::operator()()
         {
           if(l > 2)
           {
-            corners[featureShift + l] = std::max(corners[featureShift + l], indices[l-3]);
+            corners[featureShift + l] = std::max(corners[featureShift + l], indices[l - 3]);
           }
           else
           {
