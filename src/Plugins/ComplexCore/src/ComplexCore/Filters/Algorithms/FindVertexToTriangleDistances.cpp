@@ -345,7 +345,7 @@ public:
       {
         for(const auto t : hitTriangleIds)
         {
-          if(m_Filter->getCancel())
+          if(m_ShouldCancel)
           {
             return;
           }
@@ -371,7 +371,7 @@ public:
       {
         for(size_t t = 0; t < numTuples; t++)
         {
-          if(m_Filter->getCancel())
+          if(m_ShouldCancel)
           {
             return;
           }
@@ -416,7 +416,6 @@ public:
   }
 
 private:
-  FindVertexToTriangleDistances* m_Filter;
   const IGeometry::SharedTriList& m_SharedTriangleList;
   const IGeometry::SharedVertexList& m_TriangleVertices;
   IGeometry::SharedVertexList& m_SourcePoints;
