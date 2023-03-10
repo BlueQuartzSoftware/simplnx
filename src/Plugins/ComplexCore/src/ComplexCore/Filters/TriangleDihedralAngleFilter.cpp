@@ -9,8 +9,8 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/MessageUtilities.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <algorithm>
 
@@ -216,7 +216,7 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
   messenger.setProgressIncrement(totalElements / 100);
 
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL,totalElements);
+  dataAlg.setRange(0ULL, totalElements);
   dataAlg.execute(CalculateDihedralAnglesImpl(triangleGeom, dihedralAngles, shouldCancel, messenger));
 
   return {};
