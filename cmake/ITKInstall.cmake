@@ -60,10 +60,6 @@ function(AddItkCopyInstallRules)
             set(INTER_DIR "${BTYPE}")
           endif()
 
-          if(NOT TARGET ${itk_LIBNAME})
-            message(STATUS "ITK Target '${itk_LIBNAME}' Does not exist.")
-            continue()
-          endif()
           # Find the current library's dependent Itk libraries
           get_target_property(ItkLibDeps ${itk_LIBNAME} IMPORTED_LINK_DEPENDENT_LIBRARIES_${UpperBType})
           #message(STATUS "    ItkLibDeps: ${ItkLibDeps}")
@@ -85,17 +81,20 @@ function(AddItkCopyInstallRules)
           # message(STATUS "    DllLibPath: ${DllLibPath}")
           if(NOT "${DllLibPath}" STREQUAL "LibPath-NOTFOUND")
             # message(STATUS "  Creating Install Rule for ${DllLibPath}")
-            if(NOT TARGET ZZ_${itk_LIBVAR}_DLL_${UpperBType}-Copy)
-              add_custom_target(ZZ_${itk_LIBVAR}_DLL_${UpperBType}-Copy ALL
-                                  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DllLibPath}
-                                  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${INTER_DIR}/
-                                  # COMMENT "  Copy: ${DllLibPath} To: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${INTER_DIR}/"
-                                  )
-              set_target_properties(ZZ_${itk_LIBVAR}_DLL_${UpperBType}-Copy PROPERTIES FOLDER ZZ_COPY_FILES/${BTYPE}/Itk)
-              install(FILES ${DllLibPath} DESTINATION "${itk_INSTALL_DIR}" CONFIGURATIONS ${BTYPE} COMPONENT Applications)
-              get_property(COPY_LIBRARY_TARGETS GLOBAL PROPERTY COPY_LIBRARY_TARGETS)
-              set_property(GLOBAL PROPERTY COPY_LIBRARY_TARGETS ${COPY_LIBRARY_TARGETS} ZZ_${itk_LIBVAR}_DLL_${UpperBType}-Copy)
-            endif()
+            get_filename_component(dll_directory "${DllLibPath}" DIRECTORY)
+            set_property(GLOBAL PROPERTY ${itk_LIBNAME}_DLL_PATH_${UpperBType} ${dll_directory})
+            # message(STATUS " itk_LIBNAME: ${itk_LIBNAME} dll_directory:${dll_directory}")
+            # if(NOT TARGET ZZ_${itk_LIBVAR}_DLL_${UpperBType}-Copy)
+            #   add_custom_target(ZZ_${itk_LIBVAR}_DLL_${UpperBType}-Copy ALL
+            #                       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DllLibPath}
+            #                       ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${INTER_DIR}/
+            #                       # COMMENT "  Copy: ${DllLibPath} To: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${INTER_DIR}/"
+            #                       )
+            #   set_target_properties(ZZ_${itk_LIBVAR}_DLL_${UpperBType}-Copy PROPERTIES FOLDER ZZ_COPY_FILES/${BTYPE}/Itk)
+            #   install(FILES ${DllLibPath} DESTINATION "${itk_INSTALL_DIR}" CONFIGURATIONS ${BTYPE} COMPONENT Applications)
+            #   get_property(COPY_LIBRARY_TARGETS GLOBAL PROPERTY COPY_LIBRARY_TARGETS)
+            #   set_property(GLOBAL PROPERTY COPY_LIBRARY_TARGETS ${COPY_LIBRARY_TARGETS} ZZ_${itk_LIBVAR}_DLL_${UpperBType}-Copy)
+            # endif()
           endif()
 
           # Now get the path that the library is in
