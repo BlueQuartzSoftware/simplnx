@@ -285,24 +285,17 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # decompressed and then copied to the build folder. Install rules are also
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME T12-MAI-2010.tar.gz SHA512 e33f224d19ad774604aa28a3263a00221a3a5909040685a3d14b6cba78e36d174b045223c28b462ab3eaea0fbc1c9f0657b1bd791a947799b9f088b13d777568)
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Textured_Copper.tar.gz SHA512 cb231a13abbc21fe2046fc0fc7be9753ea51440bce1827bd20ee225499cd38be07d67955ff8c09d15ad91c4c1934e2a0e34406a703e7e49fbe53068b29ef440e)
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100.tar.gz SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b)
-
-set(DREAM3D_DATA_ARCHIVES "Small_IN100;T12-MAI-2010;Textured_Copper")
-foreach(archive ${DREAM3D_DATA_ARCHIVES})
-  add_custom_target(Copy_${archive} ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${DREAM3D_DATA_DIR}/TestFiles/${archive} ${DATA_DEST_DIR}/${archive}
-    COMMENT "Copying ${archive} into Binary Directory"
-    DEPENDS Fetch_${archive})
-  set_target_properties(Copy_${archive} PROPERTIES FOLDER ZZ_COPY_FILES)
-
-  install(DIRECTORY 
-    ${DREAM3D_DATA_DIR_NORM}/TestFiles/${archive}
-    DESTINATION Data/
-    COMPONENT Applications
-  )
-endforeach()
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+                   ARCHIVE_NAME T12-MAI-2010.tar.gz
+                   SHA512 e33f224d19ad774604aa28a3263a00221a3a5909040685a3d14b6cba78e36d174b045223c28b462ab3eaea0fbc1c9f0657b1bd791a947799b9f088b13d777568
+                   INSTALL
+                   COPY_DATA)
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Textured_Copper.tar.gz SHA512 cb231a13abbc21fe2046fc0fc7be9753ea51440bce1827bd20ee225499cd38be07d67955ff8c09d15ad91c4c1934e2a0e34406a703e7e49fbe53068b29ef440e
+                   INSTALL
+                   COPY_DATA)
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100.tar.gz SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b
+                   INSTALL
+                   COPY_DATA)
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder

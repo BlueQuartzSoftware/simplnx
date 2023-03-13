@@ -306,34 +306,21 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # decompressed and then copied to the build folder. Install rules are also
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ASCII_Data.tar.gz SHA512 4696b919510aa400b9de6c72d0abe66e7c8be2a4effd350bfd07c4fc24d25ccb45c22e7aca5ad162d88db3e04d700b86f7d1d7e954db90ef00b31b5b46955ed4)
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME STL_Models.tar.gz SHA512 14d5bbb1dcc241a5ad9b17e7647144926f22fca9af5e426798c2ed423d8d3b5d89d8c66ce9e6854bfcdbaea7f72b69980477ab837498e3dca89b5cd2870e2cff)
-
-set(DREAM3D_DATA_ARCHIVES ASCII_Data STL_Models)
-foreach(archive ${DREAM3D_DATA_ARCHIVES})
-  add_custom_target(Copy_${archive} ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${DREAM3D_DATA_DIR}/TestFiles/${archive} ${DATA_DEST_DIR}/${archive}
-    COMMENT "Copying ${archive} into Binary Directory"
-    DEPENDS Fetch_${archive})
-  set_target_properties(Copy_${archive} PROPERTIES FOLDER ZZ_COPY_FILES)
-
-  install(DIRECTORY 
-    ${DREAM3D_DATA_DIR_NORM}/TestFiles/${archive}
-    DESTINATION Data/
-    COMPONENT Applications
-  )
-endforeach()
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+									 ARCHIVE_NAME ASCII_Data.tar.gz
+									 SHA512 4696b919510aa400b9de6c72d0abe66e7c8be2a4effd350bfd07c4fc24d25ccb45c22e7aca5ad162d88db3e04d700b86f7d1d7e954db90ef00b31b5b46955ed4
+									 INSTALL
+									 COPY_DATA)
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+									 ARCHIVE_NAME STL_Models.tar.gz
+									 SHA512 14d5bbb1dcc241a5ad9b17e7647144926f22fca9af5e426798c2ed423d8d3b5d89d8c66ce9e6854bfcdbaea7f72b69980477ab837498e3dca89b5cd2870e2cff
+									 INSTALL
+									 COPY_DATA)
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder
 # for this plugin
 # -----------------------------------------------------------------------
-# add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
-#   COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
-#   COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
-#   )
-# set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER ZZ_COPY_FILES)
-
 set(Installed_Data_Files
 )
 

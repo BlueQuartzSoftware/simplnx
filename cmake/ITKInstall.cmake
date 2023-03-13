@@ -111,10 +111,11 @@ function(AddItkCopyInstallRules)
           #----------------------------------------------------------------------
           # This section for Linux only
           # message(STATUS "  ${itk_LIBVAR}_${UpperBType}: ${${itk_LIBVAR}_${UpperBType}}")
-          if(NOT "${${itk_LIBVAR}_${UpperBType}}" STREQUAL "${itk_LIBVAR}_${UpperBType}-NOTFOUND" AND NOT WIN32)
+          if(NOT "${${itk_LIBVAR}_${UpperBType}}" STREQUAL "${itk_LIBVAR}_${UpperBType}-NOTFOUND" AND NOT WIN32 AND NOT UNIX)
             set(SYMLINK_PATH "${${itk_LIBVAR}_DIR}/${${itk_LIBVAR}_${UpperBType}}")
-            # message(STATUS "  Creating Install Rule for ${SYMLINK_PATH}")
+
             if(NOT TARGET ZZ_${itk_LIBVAR}_SYMLINK_${UpperBType}-Copy)
+              # message(STATUS "  Creating Install Rule for ${SYMLINK_PATH}")
               add_custom_target(ZZ_${itk_LIBVAR}_SYMLINK_${UpperBType}-Copy ALL
                                   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SYMLINK_PATH}
                                   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${INTER_DIR}/

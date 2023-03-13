@@ -333,22 +333,11 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # decompressed and then copied to the build folder. Install rules are also
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Porosity_Image.tar.gz SHA512 950c71b4f4721f14ea532ed5830b0786f49d2855b950bdf867c335b9fb0eb5dc28727b0899d665af0a2bc56816e1e66a08a008ef06a62b71efea4a6e46bff168)
-
-set(DREAM3D_DATA_ARCHIVES "Porosity_Image")
-foreach(archive ${DREAM3D_DATA_ARCHIVES})
-  add_custom_target(Copy_${archive} ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${DREAM3D_DATA_DIR}/TestFiles/${archive} ${DATA_DEST_DIR}/${archive}
-    COMMENT "Copying ${archive} into Binary Directory"
-    DEPENDS Fetch_${archive})
-  set_target_properties(Copy_${archive} PROPERTIES FOLDER ZZ_COPY_FILES)
-
-  install(DIRECTORY 
-    ${DREAM3D_DATA_DIR_NORM}/TestFiles/${archive}
-    DESTINATION Data/
-    COMPONENT Applications
-  )
-endforeach()
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+                   ARCHIVE_NAME Porosity_Image.tar.gz
+                   SHA512 950c71b4f4721f14ea532ed5830b0786f49d2855b950bdf867c335b9fb0eb5dc28727b0899d665af0a2bc56816e1e66a08a008ef06a62b71efea4a6e46bff168
+                   INSTALL
+                   COPY_DATA)
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder

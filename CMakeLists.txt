@@ -44,6 +44,20 @@ get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+set(FETCH_FILE_PATH "${complex_BINARY_DIR}/complex_fetch_remote_files.cmake")
+set_property(GLOBAL PROPERTY FETCH_FILE_PATH "${FETCH_FILE_PATH}")
+file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------------------------------
+# This file has the commands to download each of the test files
+# -----------------------------------------------------------------------\n
+cmake_policy(SET CMP0054 NEW)\n")
+if(NOT TARGET Fetch_Remote_Data_Files AND COMPLEX_BUILD_TESTS AND COMPLEX_DOWNLOAD_TEST_FILES)
+  add_custom_target(Fetch_Remote_Data_Files ALL
+    COMMAND "${CMAKE_COMMAND}" -P "${FETCH_FILE_PATH}"
+    COMMENT "Downloading Test Data Files"
+  )
+  set_target_properties(Fetch_Remote_Data_Files PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
+endif()
+
 # -----------------------------------------------------------------------
 # Find dependent libraries
 # -----------------------------------------------------------------------
