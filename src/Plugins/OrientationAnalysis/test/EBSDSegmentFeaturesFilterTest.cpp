@@ -1,15 +1,14 @@
+#include <catch2/catch.hpp>
+
 #include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "OrientationAnalysisTestUtils.hpp"
 
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex_plugins/Utilities/SmallIN100Utilities.hpp"
-
-#include <catch2/catch.hpp>
 
 #include <filesystem>
 
