@@ -49,14 +49,17 @@ jobs:
           sudo apt-get -y install ninja-build
       - name: Setup NuGet Credentials
         shell: bash
-        run: >
-          mono `vcpkg fetch nuget | tail -n 1`
-          sources add
-          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
-          -storepasswordincleartext
-          -name "GitHub"
-          -username "BlueQuartzSoftware"
+        run: |
+          mono `vcpkg fetch nuget | tail -n 1` \
+          sources add \
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json" \
+          -storepasswordincleartext \
+          -name "GitHub" \
+          -username "BlueQuartzSoftware" \
           -password "${{secrets.GITHUB_TOKEN}}"
+          mono `vcpkg fetch nuget | tail -n 1` \
+          setapikey "${{secrets.GITHUB_TOKEN}}" \
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
         env:
           CC: ${{matrix.cc}}
