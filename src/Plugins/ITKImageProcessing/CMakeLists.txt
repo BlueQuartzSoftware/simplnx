@@ -250,13 +250,19 @@ if(MSVC)
   )
 endif()
 
-target_sources(${PLUGIN_NAME}
-  PRIVATE
+set (${PLUGIN_NAME}_Common_Srcs
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKArrayHelper.hpp
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKArrayHelper.cpp
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKProgressObserver.hpp
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKDream3DFilterInterruption.hpp
 )
+
+target_sources(${PLUGIN_NAME}
+  PRIVATE
+  ${${PLUGIN_NAME}_Common_Srcs}
+)
+source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${${PLUGIN_NAME}_Common_Srcs})
+
 
 target_include_directories(${PLUGIN_NAME} PUBLIC ${ITK_INCLUDE_DIRS})
 
