@@ -4,18 +4,17 @@
 
 #include "complex/Common/Uuid.hpp"
 #include "complex/Filter/FilterHandle.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <fmt/format.h>
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-
 
 namespace EbsdLib
 {
@@ -37,7 +36,6 @@ inline const std::string LatticeConstants("LatticeConstants");
 inline const std::string MaterialName("MaterialName");
 } // namespace EnsembleData
 } // namespace EbsdLib
-
 
 namespace complex
 {
@@ -94,10 +92,7 @@ const Uuid k_FindNeighborsObjectsId = *Uuid::FromString("7177e88c-c3ab-4169-abe9
 const FilterHandle k_FindNeighborsFilterHandle(k_FindNeighborsObjectsId, k_ComplexCorePluginId);
 } // namespace complex
 
-
-
 using namespace complex;
-
 
 namespace SmallIn100
 {

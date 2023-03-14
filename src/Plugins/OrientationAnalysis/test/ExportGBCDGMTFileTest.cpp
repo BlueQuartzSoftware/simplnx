@@ -14,7 +14,6 @@
 #include "complex/Parameters/util/CSVWizardData.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
-
 #include <filesystem>
 
 namespace fs = std::filesystem;
