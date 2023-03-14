@@ -32,6 +32,10 @@
         "COMPLEX_BUILD_PYTHON": {
           "type": "BOOL",
           "value": "OFF"
+        },
+        "VCPKG_INSTALL_OPTIONS": {
+          "type": "STRING",
+          "value": "--debug"
         }
       }
     }
