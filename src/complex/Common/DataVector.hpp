@@ -74,12 +74,12 @@ public:
 
     inline Iterator operator+(usize offset) const
     {
-      return Iterator(*m_DataVector, m_Index + offset);
+      return Iterator(m_DataVector, m_Index + offset);
     }
 
     inline Iterator operator-(usize offset) const
     {
-      return Iterator(*m_DataVector, m_Index - offset);
+      return Iterator(m_DataVector, m_Index - offset);
     }
 
     inline Iterator& operator+=(usize offset)
@@ -131,7 +131,7 @@ public:
 
     inline reference operator*() const
     {
-      return (*m_DataVector)[m_Index];
+      return m_DataVector[m_Index];
     }
 
     inline bool operator==(const Iterator& rhs) const
@@ -165,7 +165,7 @@ public:
     }
 
   private:
-    DataVector* m_DataVector = nullptr;
+    DataVector& m_DataVector;
     uint64 m_Index = 0;
   };
 
@@ -183,11 +183,23 @@ public:
     , m_Index(0)
     {
     }
+    ConstIterator(ConstIterator&& other) noexcept
+    : m_DataVector(other.m_DataVector)
+    , m_Index(other.m_Index)
+    {
+    }
 
     ConstIterator(const DataVector& dataVector, uint64 index)
     : m_DataVector(dataVector)
     , m_Index(index)
     {
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+    ConstIterator& operator=(ConstIterator&& rhs) noexcept
+    {
+      m_Index = rhs.m_Index;
+      return *this;
     }
 
     ConstIterator(const ConstIterator& other)
@@ -223,12 +235,12 @@ public:
 
     inline ConstIterator operator+(usize offset) const
     {
-      return ConstIterator(*m_DataVector, m_Index + offset);
+      return ConstIterator(m_DataVector, m_Index + offset);
     }
 
     inline ConstIterator operator-(usize offset) const
     {
-      return ConstIterator(*m_DataVector, m_Index - offset);
+      return ConstIterator(m_DataVector, m_Index - offset);
     }
 
     inline ConstIterator& operator+=(usize offset)
@@ -280,7 +292,7 @@ public:
 
     inline reference operator*() const
     {
-      return (*m_DataVector)[m_Index];
+      return m_DataVector[m_Index];
     }
 
     inline bool operator==(const ConstIterator& rhs) const
@@ -314,7 +326,7 @@ public:
     }
 
   private:
-    const DataVector* m_DataVector = nullptr;
+    const DataVector& m_DataVector;
     uint64 m_Index = 0;
   };
 #else
