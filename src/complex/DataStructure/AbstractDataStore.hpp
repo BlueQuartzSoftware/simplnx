@@ -210,6 +210,7 @@ public:
     , m_Index(0)
     {
     }
+    
     ConstIterator(ConstIterator&& other) noexcept
     : m_DataStore(other.m_DataStore)
     , m_Index(other.m_Index)
@@ -218,11 +219,13 @@ public:
 
     ConstIterator& operator=(const ConstIterator& rhs)
     {
+      m_DataStore = rhs.m_DataStore;
       m_Index = rhs.m_Index;
       return *this;
     }
     ConstIterator& operator=(ConstIterator&& rhs) noexcept
     {
+      m_DataStore = std::move(rhs.m_DataStore);
       m_Index = rhs.m_Index;
       return *this;
     }
@@ -232,6 +235,7 @@ public:
     , m_Index(other.m_Index)
     {
     }
+    
     ConstIterator(ConstIterator&& other) noexcept
     : m_DataStore(other.m_DataStore)
     , m_Index(other.m_Index)
@@ -373,6 +377,13 @@ public:
     : m_DataStore(&dataStore)
     , m_Index(index)
     {
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+    Iterator& operator=(Iterator&& rhs) noexcept
+    {
+      m_Index = rhs.m_Index;
+      return *this;
     }
 
     Iterator(const Iterator& other)
@@ -408,12 +419,12 @@ public:
 
     inline Iterator operator+(usize offset) const
     {
-      return Iterator(*m_DataStore, m_Index + offset);
+      return Iterator(m_DataStore, m_Index + offset);
     }
 
     inline Iterator operator-(usize offset) const
     {
-      return Iterator(*m_DataStore, m_Index - offset);
+      return Iterator(m_DataStore, m_Index - offset);
     }
 
     inline Iterator& operator+=(usize offset)
@@ -465,7 +476,7 @@ public:
 
     inline reference operator*() const
     {
-      return (*m_DataStore)[m_Index];
+      return m_DataStore[m_Index];
     }
 
     inline bool operator==(const Iterator& rhs) const
@@ -517,11 +528,21 @@ public:
     , m_Index(0)
     {
     }
-
-    ConstIterator(const AbstractDataStore& dataStore, usize index)
-    : m_DataStore(&dataStore)
-    , m_Index(index)
+    ConstIterator(ConstIterator&& other) noexcept
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
     {
+    }
+
+    ConstIterator& operator=(const ConstIterator& rhs)
+    {
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+    ConstIterator& operator=(ConstIterator&& rhs) noexcept
+    {
+      m_Index = rhs.m_Index;
+      return *this;
     }
 
     ConstIterator(const ConstIterator& other)
@@ -557,12 +578,12 @@ public:
 
     ConstIterator operator+(usize offset) const
     {
-      return ConstIterator(*m_DataStore, m_Index + offset);
+      return ConstIterator(m_DataStore, m_Index + offset);
     }
 
     ConstIterator operator-(usize offset) const
     {
-      return ConstIterator(*m_DataStore, m_Index - offset);
+      return ConstIterator(m_DataStore, m_Index - offset);
     }
 
     ConstIterator& operator+=(usize offset)
@@ -618,7 +639,7 @@ public:
 
     inline reference operator*() const
     {
-      return (*m_DataStore)[m_Index];
+      return m_DataStore[m_Index];
     }
 
     bool operator==(const ConstIterator& rhs) const
