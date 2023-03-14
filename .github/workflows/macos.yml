@@ -38,15 +38,17 @@ jobs:
           brew install ninja
       - name: Setup NuGet Credentials
         shell: bash
-        run: >
-          mono `vcpkg fetch nuget | tail -n 1`
-          sources add
-          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
-          -storepasswordincleartext
-          -name "GitHub"
-          -username "BlueQuartzSoftware"
+        run: |
+          mono `vcpkg fetch nuget | tail -n 1` \
+          sources add \
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json" \
+          -storepasswordincleartext \
+          -name "GitHub" \
+          -username "BlueQuartzSoftware" \
           -password "${{secrets.GITHUB_TOKEN}}"
-      - name: Configure
+          mono `vcpkg fetch nuget | tail -n 1` \
+          setapikey "${{secrets.GITHUB_TOKEN}}" \
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
         run: |
           cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DVCPKG_TARGET_TRIPLET:STRING=x64-osx-dynamic -DVCPKG_MANIFEST_FEATURES="tests;parallel;itk;ebsd" -DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing;OrientationAnalysis"
       - name: Build
