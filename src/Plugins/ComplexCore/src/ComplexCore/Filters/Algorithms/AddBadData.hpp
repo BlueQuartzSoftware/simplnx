@@ -9,20 +9,6 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  AddBadDataInputValues inputValues;
-
-  inputValues.PoissonNoise = filterArgs.value<bool>(k_PoissonNoise_Key);
-  inputValues.PoissonVolFraction = filterArgs.value<float32>(k_PoissonVolFraction_Key);
-  inputValues.BoundaryNoise = filterArgs.value<bool>(k_BoundaryNoise_Key);
-  inputValues.BoundaryVolFraction = filterArgs.value<float32>(k_BoundaryVolFraction_Key);
-  inputValues.GBEuclideanDistancesArrayPath = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
-
-  return AddBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 

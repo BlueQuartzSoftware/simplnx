@@ -6,6 +6,7 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
   AlignSectionsListTest.cpp
