@@ -44,6 +44,11 @@ get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# -----------------------------------------------------------------------
+# This section creates a global file that holds the commands to copy data
+# files, test data files, pipelines into a single cmake file that gets
+# generated. This reduces the many copy targets to a single target.
+# -----------------------------------------------------------------------
 set(FETCH_FILE_PATH "${complex_BINARY_DIR}/complex_fetch_remote_files.cmake")
 set_property(GLOBAL PROPERTY FETCH_FILE_PATH "${FETCH_FILE_PATH}")
 file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------------------------------
@@ -53,11 +58,17 @@ file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------
 # ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>
 # -----------------------------------------------------------------------\n
 cmake_policy(SET CMP0054 NEW)\n")
+
+set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+  set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>")
+endif()
+
 if(COMPLEX_BUILD_TESTS AND COMPLEX_DOWNLOAD_TEST_FILES)
   add_custom_target(Fetch_Remote_Data_Files ALL
     COMMAND "${CMAKE_COMMAND}" -P "${FETCH_FILE_PATH}"
     COMMENT "Downloading Test Data Files"
-    WORKING_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>"
+    WORKING_DIRECTORY "${TEST_WORKING_DIR}"
   )
   set_target_properties(Fetch_Remote_Data_Files PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
 endif()
