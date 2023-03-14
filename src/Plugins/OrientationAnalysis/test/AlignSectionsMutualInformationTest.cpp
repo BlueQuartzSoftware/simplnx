@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/Filters/AlignSectionsMutualInformationFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "OrientationAnalysisTestUtils.hpp"
 
-#include "complex_plugins/Utilities/TestUtilities.hpp"
 
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
