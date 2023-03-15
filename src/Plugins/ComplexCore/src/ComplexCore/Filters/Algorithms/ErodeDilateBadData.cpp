@@ -60,6 +60,7 @@ public:
       if(progressCount > progressIncrement)
       {
         m_Messenger.updateProgress(progressCount, arrayID);
+        progressCount = 0;
       }
     }
     m_Messenger.updateProgress(progressCount, arrayID);
