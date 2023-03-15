@@ -14,6 +14,7 @@
 
 namespace fs = std::filesystem;
 using namespace complex;
+using namespace complex::UnitTest;
 
 TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[ComplexCore][RemoveMinimumSizeFeatures]")
 {
@@ -150,5 +151,7 @@ TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[Comp
     }
   }
 
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_min_size_output.dream3d", unit_test::k_BinaryTestOutputDir));
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_min_size_output.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 }

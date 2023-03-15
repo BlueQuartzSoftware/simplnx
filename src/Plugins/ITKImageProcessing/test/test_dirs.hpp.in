@@ -7,6 +7,8 @@
 
 #include "complex/Common/StringLiteral.hpp"
 
+#cmakedefine COMPLEX_WRITE_TEST_OUTPUT
+
 namespace complex
 {
 namespace unit_test

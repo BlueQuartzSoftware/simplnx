@@ -2,6 +2,9 @@
 
 #include "complex/Common/StringLiteral.hpp"
 
+#cmakedefine COMPLEX_WRITE_TEST_OUTPUT
+
+
 namespace complex::unit_test
 {
 inline constexpr StringLiteral k_ComplexSourceDir = "@COMPLEX_SOURCE_DIR_NORM@";

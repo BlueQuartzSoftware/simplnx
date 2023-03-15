@@ -78,7 +78,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Node", "
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_translation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_TranslationGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
@@ -115,7 +117,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Co
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_RotationGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
@@ -153,7 +157,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Compl
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_scale.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_ScaleGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
@@ -195,7 +201,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Comp
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_ManualGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
@@ -236,7 +244,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_PrecomputedGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
@@ -279,7 +289,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Image_Li
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_translation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_TranslationGeometryName66, k_CellData, "Data"});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
@@ -313,7 +325,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linea
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_RotationGeometryName66, k_CellData, "Data"});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
@@ -348,7 +362,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear",
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_scale.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_ScaleGeometryName66, k_CellData, "Data"});
@@ -386,7 +402,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear"
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_ManualGeometryName66, k_CellData, "Data"});
@@ -424,7 +442,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Li
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_PrecomputedGeometryName66, k_CellData, "Data"});
@@ -463,7 +483,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Image_NN
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_translation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_TranslationGeometryName66, k_CellData, "Data"});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
@@ -498,7 +520,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", 
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_RotationGeometryName66, k_CellData, "Data"});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputGeometryName, k_CellData, "Data"});
@@ -534,7 +558,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[C
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_scale.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_ScaleGeometryName66, k_CellData, "Data"});
@@ -573,7 +599,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Image_NN", "[
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_ManualGeometryName66, k_CellData, "Data"});
@@ -625,7 +653,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/apply_transformation_to_geometry_manual.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_PrecomputedGeometryName66, k_CellData, "Data"});

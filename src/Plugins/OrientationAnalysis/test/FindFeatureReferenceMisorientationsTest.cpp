@@ -12,6 +12,7 @@
 namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
+using namespace complex::UnitTest;
 
 namespace
 {
@@ -19,7 +20,7 @@ const std::string k_FeatureReferenceMisorientationsArrayName("FeatureReferenceMi
 const std::string k_GBEuclideanDistancesArrayPath("FeatureAvgMisorientations");
 } // namespace
 
-TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[OrientationAnalysis][FindFeatureReferenceMisorientationsFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[OrientationAnalysis][FindFeatureReferenceMisorientationsFilter]")
 {
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test.dream3d", unit_test::k_TestFilesDir));
@@ -75,5 +76,7 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[Or
     UnitTest::CompareArrays<float>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
 
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_reference_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_reference_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

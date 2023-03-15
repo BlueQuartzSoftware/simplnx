@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 
 using namespace complex;
+using namespace complex::UnitTest;
 
 namespace
 {
@@ -59,6 +60,8 @@ TEST_CASE("ComplexCore::FindVertexToTriangleDistancesFilter", "[ComplexCore][Fin
     UnitTest::CompareArrays<int64>(dataStructure, closestTrianglePath, closestTriangleNXPath);
   }
 
-  // Write the DataStructure out to the file system
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/vertex_to_triangle_distances.dream3d", unit_test::k_BinaryTestOutputDir)));
+// Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/vertex_to_triangle_distances.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

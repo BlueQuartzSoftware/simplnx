@@ -13,6 +13,7 @@
 namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
+using namespace complex::UnitTest;
 
 namespace
 {
@@ -63,5 +64,7 @@ TEST_CASE("OrientationAnalysis::FindKernelAvgMisorientationsFilter", "[Orientati
     UnitTest::CompareArrays<float>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
 
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_kernel_average_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_kernel_average_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

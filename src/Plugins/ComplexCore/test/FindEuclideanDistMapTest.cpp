@@ -9,6 +9,7 @@
 
 using namespace complex;
 using namespace complex::Constants;
+using namespace complex::UnitTest;
 
 TEST_CASE("ComplexCore::FindEuclideanDistMap", "[ComplexCore][FindEuclideanDistMap]")
 {
@@ -65,6 +66,8 @@ TEST_CASE("ComplexCore::FindEuclideanDistMap", "[ComplexCore][FindEuclideanDistM
     }
   }
 
-  // Write the DataStructure out to the file system
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_euclidean_dist_map.dream3d", unit_test::k_BinaryTestOutputDir)));
+// Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_euclidean_dist_map.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

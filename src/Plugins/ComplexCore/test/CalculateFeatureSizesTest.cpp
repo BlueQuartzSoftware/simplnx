@@ -7,6 +7,9 @@
 #include <catch2/catch.hpp>
 
 using namespace complex;
+using namespace complex::Constants;
+using namespace complex::UnitTest;
+
 namespace fs = std::filesystem;
 
 namespace
@@ -14,7 +17,6 @@ namespace
 
 const std::string k_Volumes("Volumes");
 const std::string k_EquivalentDiameters("EquivalentDiameters");
-const std::string k_NumElements("NumElements");
 
 } // namespace
 
@@ -32,7 +34,7 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
   std::string numElementsName = "computed_NumElements";
   std::string EquivalentDiametersName = "computed_EquivalentDiameters";
 
-  std::vector<std::string> featureNames = {k_Volumes, k_EquivalentDiameters, k_NumElements};
+  std::vector<std::string> featureNames = {k_Volumes, k_EquivalentDiameters, ::k_NumElements};
 
   {
     CalculateFeatureSizesFilter filter;
@@ -71,6 +73,8 @@ TEST_CASE("ComplexCore::CalculateFeatureSizes", "[ComplexCore][CalculateFeatureS
     UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(numElementsName));
   }
 
-  // Write the DataStructure out to the file system
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+// Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

@@ -12,6 +12,7 @@
 namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
+using namespace complex::UnitTest;
 
 namespace
 {
@@ -63,8 +64,10 @@ TEST_CASE("OrientationAnalysis::FindMisorientationsFilter", "[OrientationAnalysi
     UnitTest::CompareNeighborLists<float>(dataStructure, exemplarPath, calculatedPath);
   }
 
-  // Write the DataStructure out to the file system
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
+// Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_misorientations.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }
 
 // TODO: needs to be implemented. This will need the input .dream3d file to be regenerated with the missing data generated using DREAM3D 6.6
