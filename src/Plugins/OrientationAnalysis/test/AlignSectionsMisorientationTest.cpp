@@ -160,7 +160,9 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     auto executeResult = filter->execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_misorientation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   // Compare the shift values
   CompareArrays<int32>(dataStructure, k_CalculatedShiftsPath, k_ExemplarShiftsPath);

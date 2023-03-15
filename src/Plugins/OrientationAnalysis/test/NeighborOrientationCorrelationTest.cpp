@@ -16,6 +16,7 @@
 namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
+using namespace complex::UnitTest;
 
 /**
  * Read H5Ebsd File
@@ -182,5 +183,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
     }
   }
 
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_BinaryTestOutputDir));
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 }

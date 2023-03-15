@@ -16,6 +16,8 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_COMPRESSORS FEATURE "compr
 
 option(COMPLEX_DOWNLOAD_TEST_FILES "Download the test files" ON)
 
+option(COMPLEX_WRITE_TEST_OUTPUT "Write unit test output files" OFF)
+
 project(complex
   VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"

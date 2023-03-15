@@ -153,5 +153,7 @@ TEST_CASE("OrientationAnalysis::GenerateGBCDPoleFigureFilter", "[OrientationAnal
     UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/gbcd_pole_figure.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

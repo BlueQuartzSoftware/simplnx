@@ -8,6 +8,7 @@
 namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
+using namespace complex::UnitTest;
 
 TEST_CASE("ComplexCore::FindNeighbors", "[ComplexCore][FindNeighbors]")
 {
@@ -69,6 +70,8 @@ TEST_CASE("ComplexCore::FindNeighbors", "[ComplexCore][FindNeighbors]")
     UnitTest::CompareNeighborLists<float32>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(sharedSurfaceAreaListName));
   }
 
-  // Write the DataStructure out to the file system
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+// Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

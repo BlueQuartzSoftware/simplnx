@@ -59,5 +59,7 @@ TEST_CASE("ComplexCore::FindFeatureCentroidsFilter", "[ComplexCore][FindFeatureC
     CompareDataArrays<float>(k_CentroidsArray, k_CentroidsNXArray);
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_centroids.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

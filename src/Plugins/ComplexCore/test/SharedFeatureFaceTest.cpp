@@ -93,5 +93,7 @@ TEST_CASE("ComplexCore::SharedFeatureFaceFilter", "[ComplexCore][SharedFeatureFa
     UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/shared_feature_faces.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

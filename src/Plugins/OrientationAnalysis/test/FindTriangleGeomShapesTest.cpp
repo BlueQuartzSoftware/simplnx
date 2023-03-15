@@ -80,5 +80,7 @@ TEST_CASE("OrientationAnalysis::FindTriangleGeomShapes", "[OrientationAnalysis][
     UnitTest::CompareDataArrays<float32>(kExemplarsArray, kNxArray);
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_triangle_geom_shapes.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }
