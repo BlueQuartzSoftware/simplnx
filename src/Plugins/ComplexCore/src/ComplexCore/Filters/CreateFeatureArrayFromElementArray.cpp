@@ -74,6 +74,7 @@ struct CopyCellDataFunctor
       if(progressCount > progressIncrement)
       {
         messenger.updateProgress(progressCount);
+        progressCount = 0;
       }
     }
     messenger.updateProgress(progressCount);

@@ -214,6 +214,7 @@ public:
       if(progressCount > progressIncrement)
       {
         m_Messenger.updateProgress(progressCount);
+        progressCount = 0;
       }
     } // end of outermost for loop
     m_Messenger.updateProgress(progressCount);
@@ -301,6 +302,7 @@ public:
       if(progressCount > progressIncrement)
       {
         m_Messenger.updateProgress(progressCount);
+        progressCount = 0;
       }
     }
     m_Messenger.updateProgress(progressCount);
