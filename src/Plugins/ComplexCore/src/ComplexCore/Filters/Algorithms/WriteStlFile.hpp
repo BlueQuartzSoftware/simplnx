@@ -9,18 +9,6 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  WriteStlFileInputValues inputValues;
-
-  inputValues.OutputStlDirectory = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
-  inputValues.OutputStlPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputStlPrefix_Key);
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-
-  return WriteStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 

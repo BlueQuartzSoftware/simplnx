@@ -101,6 +101,7 @@ set(FilterList
   TriangleNormalFilter
   WriteASCIIDataFilter
   WriteBinaryDataFilter
+  WriteStlFileFilter
 )
 
 set(ActionList
@@ -153,6 +154,7 @@ set(AlgorithmList
   StlFileReader
   TriangleCentroid
   TupleTransfer
+  WriteStlFile
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
