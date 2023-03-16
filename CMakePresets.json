@@ -1,8 +1,8 @@
 {
-  "version": 2,
+  "version": 5,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 19,
+    "minor": 24,
     "patch": 0
   },
   "configurePresets": [
@@ -33,9 +33,73 @@
           "type": "BOOL",
           "value": "OFF"
         },
-        "VCPKG_INSTALL_OPTIONS": {
+        "COMPLEX_EXTRA_PLUGINS": {
           "type": "STRING",
-          "value": "--debug"
+          "value": "ITKImageProcessing;OrientationAnalysis"
+        },
+        "DREAM3D_DATA_DIR": {
+          "type": "PATH",
+          "value": "${sourceDir}/DREAM3D_Data"
+        },
+        "VCPKG_MANIFEST_FEATURES": {
+          "type": "STRING",
+          "value": "tests;parallel;itk;ebsd"
+        },
+        "VCPKG_OVERLAY_TRIPLETS": {
+          "type": "PATH",
+          "value": "${sourceDir}/cmake/triplets"
+        }
+      }
+    },
+    {
+      "name": "ci-windows-v142",
+      "displayName": "ci-windows-v142",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Visual Studio 17 2022",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v142"
+        }
+      }
+    },
+    {
+      "name": "ci-windows-v143",
+      "displayName": "ci-windows-v143",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Visual Studio 17 2022",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        }
+      }
+    },
+    {
+      "name": "ci_macos_x64",
+      "displayName": "ci_macos",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-osx-dynamic"
+        }
+      }
+    },
+    {
+      "name": "ci_linux_x64",
+      "displayName": "ci_linux_x64",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
         }
       }
     }

@@ -24,13 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: true
-      - name: Checkout DREAM3D_Data Repo
-        uses: actions/checkout@v2
-        with:
-          repository: DREAM3D/DREAM3D_Data
-          path: DREAM3D_Data
-          submodules: true   
+          submodules: true 
       - name: Add C++ Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
       - name: Install Dependencies
@@ -51,7 +45,7 @@ jobs:
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
         run: |
-          cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DVCPKG_TARGET_TRIPLET:STRING=x64-osx-dynamic -DVCPKG_MANIFEST_FEATURES="tests;parallel;itk;ebsd" -DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing;OrientationAnalysis"
+          cmake --preset ci_macos_x64 ${{github.workspace}}
       - name: Build
         run: |
           cmake --build --preset ci
