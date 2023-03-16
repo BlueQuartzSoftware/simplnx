@@ -3,6 +3,7 @@
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -13,11 +14,15 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 using namespace complex::UnitTest;
-
+// afasdf
 namespace
 {
 const std::string k_FeatureReferenceMisorientationsArrayName("FeatureReferenceMisorientations");
-const std::string k_GBEuclideanDistancesArrayPath("FeatureAvgMisorientations");
+const std::string k_GBEuclideanDistancesArrayName("FeatureAvgMisorientations");
+
+const std::string k_FeatureReferenceMisorientationsArrayName2("FeatureReferenceMisorientations2");
+const std::string k_GBEuclideanDistancesArrayName2("FeatureAvgMisorientations2");
+
 } // namespace
 
 TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[OrientationAnalysis][FindFeatureReferenceMisorientationsFilter]")
@@ -48,8 +53,9 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[Or
     args.insertOrAssign(FindFeatureReferenceMisorientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsDataPath));
     args.insertOrAssign(FindFeatureReferenceMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
 
-    args.insertOrAssign(FindFeatureReferenceMisorientationsFilter::k_FeatureReferenceMisorientationsArrayName_Key, std::make_any<DataPath>({k_FeatureReferenceMisorientationsArrayName}));
-    args.insertOrAssign(FindFeatureReferenceMisorientationsFilter::k_FeatureAvgMisorientationsArrayName_Key, std::make_any<DataPath>({k_GBEuclideanDistancesArrayPath}));
+    args.insertOrAssign(FindFeatureReferenceMisorientationsFilter::k_FeatureReferenceMisorientationsArrayName_Key,
+                        std::make_any<DataObjectNameParameter::ValueType>(k_FeatureReferenceMisorientationsArrayName2));
+    args.insertOrAssign(FindFeatureReferenceMisorientationsFilter::k_FeatureAvgMisorientationsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_GBEuclideanDistancesArrayName2));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -62,16 +68,16 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceMisorientationsFilter", "[Or
 
   // Compare the Output Cell Data
   {
-    const DataPath k_GeneratedDataPath({k_DataContainer, k_CellData, k_FeatureReferenceMisorientationsArrayName});
-    const DataPath k_ExemplarArrayPath({k_FeatureReferenceMisorientationsArrayName});
+    const DataPath k_GeneratedDataPath({k_DataContainer, k_CellData, k_FeatureReferenceMisorientationsArrayName2});
+    const DataPath k_ExemplarArrayPath({k_DataContainer, k_CellData, k_FeatureReferenceMisorientationsArrayName});
 
     UnitTest::CompareArrays<float>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
 
   // Compare the Output Feature Data
   {
-    const DataPath k_GeneratedDataPath({k_DataContainer, k_CellFeatureData, k_GBEuclideanDistancesArrayPath});
-    const DataPath k_ExemplarArrayPath({k_GBEuclideanDistancesArrayPath});
+    const DataPath k_GeneratedDataPath({k_DataContainer, k_CellFeatureData, k_GBEuclideanDistancesArrayName2});
+    const DataPath k_ExemplarArrayPath({k_DataContainer, k_CellFeatureData, k_GBEuclideanDistancesArrayName});
 
     UnitTest::CompareArrays<float>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
   }
