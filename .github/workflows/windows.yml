@@ -61,7 +61,7 @@ jobs:
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
         run: |
-          cmake --preset ci ${{github.workspace}} -G "Visual Studio 17 2022" -T ${{matrix.toolset}}  -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -DVCPKG_MANIFEST_FEATURES="tests;parallel;itk;ebsd" -DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing;OrientationAnalysis"
+          cmake --preset ci-windows-${{matrix.toolset}} ${{github.workspace}} -T ${{matrix.toolset}}
       - name: Build
         run: |
           cd ${{github.workspace}}/complex && cmake --build --preset ci
