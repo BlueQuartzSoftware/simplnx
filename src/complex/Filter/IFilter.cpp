@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
+#include <sstream>
 #include <vector>
 
 using namespace complex;
@@ -92,12 +93,16 @@ Result<> ValidateParameter(std::string_view name, const AnyParameter& parameter,
   const auto& arg = args.at(name);
 
   IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
-
   if(std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), arg.type()) == acceptedTypes.cend())
   {
+    std::stringstream acceptedTypesStr;
+    for(const auto& acceptedType : acceptedTypes)
+    {
+      acceptedTypesStr << "  " << acceptedType.name() << std::endl;
+    }
     throw std::invalid_argument(fmt::format("A mismatch between the argument types for a parameter was detected. This can happen if the improper type is specified when creating a parameter "
-                                            "argument.\n  Filter='{}'\n  Parameter Name:'{}'\n  Argument Name='{}'",
-                                            filter.humanName(), parameter->humanName(), name));
+                                            "argument.\n  Filter='{}'\n  Parameter Name:'{}'\n  Argument Name='{}'\n Argument Type: '{}'.\n The accepted types for this parameter are:\n",
+                                            filter.humanName(), parameter->humanName(), name, arg.type().name(), acceptedTypesStr.str()));
   }
 
   switch(parameter->type())
