@@ -8,6 +8,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Utilities/DataObjectUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/MessageUtilities.hpp"
 
 using namespace complex;
 
@@ -17,7 +18,7 @@ struct CopyCellDataFunctor
 {
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const DataPath& selectedCellArrayPathValue, const DataPath& featureIdsArrayPathValue, const DataPath& createdArrayNameValue,
-                      const std::atomic_bool& shouldCancel)
+                      const std::atomic_bool& shouldCancel, const complex::IFilter::MessageHandler& messageHandler)
   {
     const DataArray<T>& selectedCellArray = dataStructure.getDataRefAs<DataArray<T>>(selectedCellArrayPathValue);
     const DataStore<T> selectedCellArrayStore = selectedCellArray.template getIDataStoreRefAs<DataStore<T>>();
@@ -33,6 +34,10 @@ struct CopyCellDataFunctor
     Result<> result;
 
     usize totalCellArrayTuples = selectedCellArray.getNumberOfTuples();
+    ThreadSafeMessenger messenger(messageHandler, "Creating Feature Array...");
+    messenger.setTotalElements(totalCellArrayTuples);
+    const auto progressIncrement = totalCellArrayTuples / 100;
+    usize progressCount = 0;
     for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
     {
       if(shouldCancel)
@@ -64,7 +69,15 @@ struct CopyCellDataFunctor
 
         createdArray[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellArray[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
       }
+
+      progressCount++;
+      if(progressCount > progressIncrement)
+      {
+        messenger.updateProgress(progressCount);
+        progressCount = 0;
+      }
     }
+    messenger.updateProgress(progressCount);
 
     return result;
   }
@@ -179,6 +192,7 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
   auto& createdArrayStore = createdArray.getIDataStoreRefAs<IDataStore>();
   createdArrayStore.reshapeTuples(std::vector<usize>{maxValue + 1});
 
-  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel,
+                             messageHandler);
 }
 } // namespace complex

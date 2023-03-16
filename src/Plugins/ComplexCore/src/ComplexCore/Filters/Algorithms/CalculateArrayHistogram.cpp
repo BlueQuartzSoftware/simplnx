@@ -1,9 +1,8 @@
 #include "CalculateArrayHistogram.hpp"
 
-#include "ComplexCore/Filters/CalculateArrayHistogramFilter.hpp"
-
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -19,15 +18,15 @@ template <typename DataArrayType>
 class GenerateHistogramFromData
 {
 public:
-  GenerateHistogramFromData(CalculateArrayHistogram& filter, const int32 numBins, const IDataArray& inputArray, Float64Array& histogram, std::atomic<usize>& overflow,
-                            std::tuple<bool, float64, float64>& range, size_t progressIncrement)
-  : m_Filter(filter)
-  , m_NumBins(numBins)
+  GenerateHistogramFromData(const int32 numBins, const IDataArray& inputArray, Float64Array& histogram, std::atomic<usize>& overflow, std::tuple<bool, float64, float64>& range,
+                            const std::atomic_bool& shouldCancel, ThreadSafeTaskMessenger& messenger)
+  : m_NumBins(numBins)
   , m_InputArray(inputArray)
   , m_Histogram(histogram)
   , m_Overflow(overflow)
   , m_Range(range)
-  , m_ProgressIncrement(progressIncrement)
+  , m_ShouldCancel(shouldCancel)
+  , m_Messenger(messenger)
   {
   }
   ~GenerateHistogramFromData() = default;
@@ -36,6 +35,8 @@ public:
   {
     const auto& inputArray = dynamic_cast<const DataArray<DataArrayType>&>(m_InputArray);
     auto end = inputArray.getSize();
+    const uint64 arrayID = inputArray.getId();
+    const usize progressIncrement = m_Messenger.getProgressIncrement(arrayID);
 
     // tuple visualization: Histogram = {(bin maximum, count), (bin maximum, count), ... }
     float64 min = 0.0;
@@ -63,14 +64,14 @@ public:
       size_t progressCounter = 0;
       for(usize i = 0; i < end; i++)
       {
-        if(progressCounter > m_ProgressIncrement)
-        {
-          m_Filter.updateThreadSafeProgress(progressCounter);
-          progressCounter = 0;
-        }
-        if(m_Filter.getCancel())
+        if(m_ShouldCancel)
         {
           return;
+        }
+        if(progressCounter > progressIncrement)
+        {
+          m_Messenger.updateProgress(progressCounter, arrayID);
+          progressCounter = 0;
         }
         const auto bin = std::floor((inputArray[i] - min) / increment);
         if((bin >= 0) && (bin < m_NumBins))
@@ -92,13 +93,13 @@ public:
   }
 
 private:
-  CalculateArrayHistogram& m_Filter;
   const int32 m_NumBins = 1;
   std::tuple<bool, float64, float64>& m_Range;
   const IDataArray& m_InputArray;
   Float64Array& m_Histogram;
   std::atomic<usize>& m_Overflow;
-  size_t m_ProgressIncrement = 100;
+  const std::atomic_bool& m_ShouldCancel;
+  ThreadSafeTaskMessenger& m_Messenger;
 };
 } // namespace
 
@@ -116,28 +117,6 @@ CalculateArrayHistogram::CalculateArrayHistogram(DataStructure& dataStructure, c
 CalculateArrayHistogram::~CalculateArrayHistogram() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void CalculateArrayHistogram::updateProgress(const std::string& progressMessage)
-{
-  m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
-}
-// -----------------------------------------------------------------------------
-void CalculateArrayHistogram::updateThreadSafeProgress(size_t counter)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-
-  m_ProgressCounter += counter;
-
-  auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000) // every second update
-  {
-    auto progressInt = static_cast<size_t>((static_cast<double>(m_ProgressCounter) / static_cast<double>(m_TotalElements)) * 100.0);
-    std::string progressMessage = "Calculating... ";
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
-    m_InitialTime = std::chrono::steady_clock::now();
-  }
-}
-
-// -----------------------------------------------------------------------------
 const std::atomic_bool& CalculateArrayHistogram::getCancel()
 {
   return m_ShouldCancel;
@@ -149,31 +128,26 @@ Result<> CalculateArrayHistogram::operator()()
   const auto numBins = m_InputValues->NumberOfBins;
   const auto selectedArrayPaths = m_InputValues->SelectedArrayPaths;
 
-  for(const auto& arrayPath : selectedArrayPaths)
-  {
-    m_TotalElements += m_DataStructure.getDataAs<IDataArray>(arrayPath)->getSize();
-  }
-  auto progressIncrement = m_TotalElements / 100;
-
   std::tuple<bool, float64, float64> range = std::make_tuple(m_InputValues->UserDefinedRange, m_InputValues->MinRange, m_InputValues->MaxRange); // Custom bool, min, max
   ParallelTaskAlgorithm taskRunner;
-
+  ThreadSafeTaskMessenger messenger(m_MessageHandler, "Calculating...");
   for(int32 i = 0; i < selectedArrayPaths.size(); i++)
   {
-    if(m_ShouldCancel)
+    if(getCancel())
     {
       return {};
     }
     std::atomic<usize> overflow = 0;
     const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(selectedArrayPaths[i]);
     auto& histogram = m_DataStructure.getDataRefAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i));
+    messenger.addArray(inputData.getId(), inputData.getSize(), inputData.getName());
 
-    ExecuteParallelFunction<GenerateHistogramFromData>(inputData.getDataType(), taskRunner, *this, numBins, inputData, histogram, overflow, range, progressIncrement);
+    ExecuteParallelFunction<GenerateHistogramFromData>(inputData.getDataType(), taskRunner, numBins, inputData, histogram, overflow, range, getCancel(), messenger);
 
     if(overflow > 0)
     {
       const std::string arrayName = inputData.getName();
-      CalculateArrayHistogram::updateProgress(fmt::format("{} values not categorized into bin for array {}", overflow, arrayName));
+      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("{} values not categorized into bin for array {}", overflow, arrayName));
     }
   }
 
