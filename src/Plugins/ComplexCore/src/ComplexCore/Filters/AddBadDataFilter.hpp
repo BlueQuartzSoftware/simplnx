@@ -29,6 +29,9 @@ public:
   static inline constexpr StringLiteral k_BoundaryNoise_Key = "boundary_noise";
   static inline constexpr StringLiteral k_BoundaryVolFraction_Key = "boundary_vol_fraction";
   static inline constexpr StringLiteral k_GBEuclideanDistancesArrayPath_Key = "gb_euclidean_distances_array_path";
+  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
+  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
 
   /**
    * @brief Returns the name of the filter.
@@ -92,8 +95,7 @@ protected:
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure & data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-      const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

@@ -3,10 +3,14 @@
 #include "ComplexCore/Filters/Algorithms/AddBadData.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+
+#include <random>
 
 using namespace complex;
 
@@ -48,16 +52,22 @@ Parameters AddBadDataFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Optional Variables"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "", false));
+  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed", "", std::mt19937::default_seed));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PoissonNoise_Key, "Add Random Noise", "", false));
   params.insert(std::make_unique<Float32Parameter>(k_PoissonVolFraction_Key, "Volume Fraction of Random Noise", "", 0.0f));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BoundaryNoise_Key, "Add Boundary Noise", "", false));
   params.insert(std::make_unique<Float32Parameter>(k_BoundaryVolFraction_Key, "Volume Fraction of Boundary Noise", "", 0.0f));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "", DataPath{}, complex::GetAllDataTypes()));
+
+  params.insertSeparator(Parameters::Separator{"Required Objects"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "", DataPath{}, std::set<DataType>{DataType::int32}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_PoissonNoise_Key, k_PoissonVolFraction_Key, true);
   params.linkParameters(k_BoundaryNoise_Key, k_BoundaryVolFraction_Key, true);
+  params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
 
   return params;
 }
@@ -77,10 +87,28 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   auto pBoundaryNoiseValue = filterArgs.value<bool>(k_BoundaryNoise_Key);
   auto pBoundaryVolFractionValue = filterArgs.value<float32>(k_BoundaryVolFraction_Key);
   auto pGBEuclideanDistancesArrayPathValue = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
+  auto pImageGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  if(!pBoundaryNoiseValue && !pPoissonNoiseValue)
+  {
+    return {MakeErrorResult<OutputActions>(-76234, fmt::format("At least one type of noise must be selected"))};
+  }
+
+  auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);
+  if(imgGeomPtr == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(-76235, fmt::format("Image geometry must be valid"))};
+  }
+
+  auto* cellAM = imgGeomPtr->getCellData();
+  if(cellAM == nullptr)
+  {
+    return {MakeErrorResult<OutputActions>(-76236, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
+  }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -90,7 +118,6 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
 Result<> AddBadDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                        const std::atomic_bool& shouldCancel) const
 {
-
   AddBadDataInputValues inputValues;
 
   inputValues.PoissonNoise = filterArgs.value<bool>(k_PoissonNoise_Key);
@@ -98,6 +125,9 @@ Result<> AddBadDataFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.BoundaryNoise = filterArgs.value<bool>(k_BoundaryNoise_Key);
   inputValues.BoundaryVolFraction = filterArgs.value<float32>(k_BoundaryVolFraction_Key);
   inputValues.GBEuclideanDistancesArrayPath = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
+  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.UseSeed = filterArgs.value<bool>(k_UseSeed_Key);
+  inputValues.SeedValue = filterArgs.value<uint64>(k_SeedValue_Key);
 
   return AddBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

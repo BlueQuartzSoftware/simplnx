@@ -5,9 +5,8 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
 
 namespace complex
 {
@@ -19,7 +18,9 @@ struct COMPLEXCORE_EXPORT AddBadDataInputValues
   bool BoundaryNoise;
   float32 BoundaryVolFraction;
   DataPath GBEuclideanDistancesArrayPath;
-
+  DataPath ImageGeometryPath;
+  bool UseSeed;
+  uint64 SeedValue;
 };
 
 /**
