@@ -8,7 +8,6 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
-#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -28,7 +27,7 @@ public:
   using NeighborListType = NeighborList<T>;
 
   FindNeighborListStatisticsImpl(const IFilter* filter, INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
-                                 std::vector<IDataArray*>& arrays, ThreadSafeMessenger& messenger)
+                                 std::vector<IDataArray*>& arrays)
   : m_Filter(filter)
   , m_Source(source)
   , m_Length(length)
@@ -39,7 +38,6 @@ public:
   , m_StdDeviation(stdDeviation)
   , m_Summation(summation)
   , m_Arrays(arrays)
-  , m_Messenger(messenger)
   {
   }
 
@@ -90,10 +88,7 @@ public:
       throw std::invalid_argument("FindNeighborListStatistics::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
     }
 
-    auto& sourceList = dynamic_cast<NeighborListType&>(m_Source);
-
-    const auto progressIncrement = m_Messenger.getProgressIncrement();
-    usize progressCount = 0;
+    NeighborListType& sourceList = dynamic_cast<NeighborListType&>(m_Source);
 
     for(usize i = start; i < end; i++)
     {
@@ -101,7 +96,7 @@ public:
 
       if(m_Length)
       {
-        auto val = static_cast<int64_t>(tmpList.size());
+        int64_t val = static_cast<int64_t>(tmpList.size());
         array0->initializeTuple(i, val);
       }
       if(m_Min)
@@ -134,15 +129,7 @@ public:
         float val = StaticicsCalculations::findSummation(tmpList);
         array6->initializeTuple(i, val);
       }
-
-      progressCount++;
-      if(progressCount > progressIncrement)
-      {
-        m_Messenger.updateProgress(progressCount);
-        progressCount = 0;
-      }
     }
-    m_Messenger.updateProgress(progressCount);
   }
 
   void operator()(const Range& range) const
@@ -162,12 +149,11 @@ private:
   bool m_Summation = false;
 
   std::vector<IDataArray*>& m_Arrays;
-  ThreadSafeMessenger& m_Messenger;
 };
 } // namespace
 
 //------------------------------------------------------------------------------
-OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStructure& data, const Arguments& args)
+OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStructure& data, const Arguments& args) const
 {
   auto findLength = args.value<bool>(k_FindLength_Key);
   auto findMin = args.value<bool>(k_FindMinimum_Key);
@@ -402,15 +388,10 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_EmptyNeighborList, ss}})};
   }
 
-  ThreadSafeMessenger messenger(messageHandler, "Finding NeighborList Statistics...");
-  messenger.setTotalElements(numTuples);
-  messenger.setProgressIncrement(numTuples / 100);
-
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
-  ExecuteParallelFunction<FindNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation, arrays,
-                                                                         messenger);
+  ExecuteParallelFunction<FindNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputArray, findLength, findMin, findMax, findMean, findMedian, findStdDeviation, findSummation, arrays);
 
   return {};
 }

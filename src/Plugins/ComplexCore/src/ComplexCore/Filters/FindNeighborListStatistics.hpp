@@ -84,7 +84,7 @@ public:
   UniquePointer clone() const override;
 
 protected:
-  OutputActions static createCompatibleArrays(const DataStructure& data, const Arguments& args);
+  OutputActions createCompatibleArrays(const DataStructure& data, const Arguments& args) const;
 
   /**
    * @brief

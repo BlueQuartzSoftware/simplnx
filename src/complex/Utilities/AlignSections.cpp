@@ -1,10 +1,11 @@
 #include "AlignSections.hpp"
 
-#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+
+#include <chrono>
 
 using namespace complex;
 
@@ -19,14 +20,12 @@ public:
   AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default;     // Copy Constructor Default Implemented
   AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&) noexcept = default; // Move Constructor Default Implemented
 
-  AlignSectionsTransferDataImpl(const std::atomic_bool& shouldCancel, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray,
-                                ThreadSafeTaskMessenger& messenger)
-  : m_ShouldCancel(shouldCancel)
+  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
+  : m_Filter(filter)
   , m_Dims(std::move(dims))
   , m_Xshifts(std::move(xShifts))
   , m_Yshifts(std::move(yShifts))
   , m_DataArray(static_cast<DataArray<T>&>(dataArray))
-  , m_Messenger(messenger)
   {
   }
 
@@ -39,19 +38,19 @@ public:
   {
     T var = static_cast<T>(0);
 
-    const auto arrayID = m_DataArray.getId();
-    const auto progressIncrement = m_Messenger.getProgressIncrement(arrayID);
-    usize count = 0;
+    auto start = std::chrono::steady_clock::now();
+
     for(size_t i = 1; i < m_Dims[2]; i++)
     {
-      if(count > progressIncrement)
+      auto now = std::chrono::steady_clock::now();
+      // Only send updates every 1 second
+      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
       {
-        m_Messenger.updateProgress(count, arrayID);
-        count = 0;
+        std::string message = fmt::format("Processing {}: {}% completed", m_DataArray.getName(), static_cast<int32>(100 * (static_cast<float>(i) / static_cast<float>(m_Dims[2]))));
+        m_Filter->updateProgress(message);
+        start = std::chrono::steady_clock::now();
       }
-      count++;
-
-      if(m_ShouldCancel)
+      if(m_Filter->getCancel())
       {
         return;
       }
@@ -95,12 +94,11 @@ public:
   }
 
 private:
-  const std::atomic_bool& m_ShouldCancel;
+  AlignSections* m_Filter = nullptr;
   SizeVec3 m_Dims;
   std::vector<int64_t> m_Xshifts;
   std::vector<int64_t> m_Yshifts;
   complex::DataArray<T>& m_DataArray;
-  ThreadSafeTaskMessenger& m_Messenger;
 };
 } // namespace
 
@@ -119,6 +117,12 @@ AlignSections::~AlignSections() noexcept = default;
 const std::atomic_bool& AlignSections::getCancel()
 {
   return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+void AlignSections::updateProgress(const std::string& progMessage)
+{
+  m_MessageHandler({IFilter::Message::Type::Info, progMessage});
 }
 
 // -----------------------------------------------------------------------------
@@ -144,7 +148,7 @@ Result<> AlignSections::execute(const SizeVec3& udims)
   std::vector<DataPath> selectedCellArrays = getSelectedDataPaths();
 
   ParallelTaskAlgorithm taskRunner;
-  ThreadSafeTaskMessenger messenger(m_MessageHandler, "Aligning Sections...");
+
   for(const auto& cellArrayPath : selectedCellArrays)
   {
     if(m_ShouldCancel)
@@ -152,10 +156,10 @@ Result<> AlignSections::execute(const SizeVec3& udims)
       return {};
     }
 
+    m_MessageHandler(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-    messenger.addArray(cellArray.getId(), udims[2], cellArray.getName());
 
-    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, getCancel(), udims, xShifts, yShifts, cellArray, messenger);
+    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
   }
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   taskRunner.wait();

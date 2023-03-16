@@ -400,7 +400,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/ParallelAlgorithmUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/RTree.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.hpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/MessageUtilities.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
@@ -587,9 +586,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
-  ${COMPLEX_SOURCE_DIR}/Utilities/MessageUtilities.cpp
-
+    ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
 
