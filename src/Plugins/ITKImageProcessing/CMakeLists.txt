@@ -306,6 +306,15 @@ get_filename_component(COMPLEX_PLUGINS_SOURCE_DIR ${ITKImageProcessing_SOURCE_DI
 include(${complex_SOURCE_DIR}/cmake/ITKInstall.cmake)
 AddItkCopyInstallRules(LIBS ${ItkComponents})
 
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+  set_target_properties( ${PLUGIN_NAME}
+          PROPERTIES
+          INSTALL_RPATH \$ORIGIN/../lib)
+  target_link_options(${PLUGIN_NAME} PUBLIC "-Wl,--disable-new-dtags")
+  target_compile_options(${PLUGIN_NAME} PUBLIC "-no-pie")
+endif()
+
 
 # -----------------------------------------------------------------------
 # Install example pipelines
