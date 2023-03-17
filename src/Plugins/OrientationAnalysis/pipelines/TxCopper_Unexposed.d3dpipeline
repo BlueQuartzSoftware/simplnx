@@ -1,0 +1,151 @@
+{
+  "isDisabled": false,
+  "name": "TxCopper_Unexposed.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": "EBSD Scan Data",
+        "cell_ensemble_attribute_matrix_name": "Phase Data",
+        "data_container_name": "Cugrid_after 2nd_15kv_2kx_2",
+        "degrees_to_radians": true,
+        "edax_hexagonal_alignment": true,
+        "input_file": "Data/Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ReadCtfDataFilter",
+        "uuid": "7751923c-afb9-4032-8372-8078325c69a4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_image_geometry": "Cugrid_after 2nd_15kv_2kx_2 [ROTATED]",
+        "remove_original_geometry": true,
+        "rotate_slice_by_slice": false,
+        "rotation_axis": [
+          0.0,
+          1.0,
+          0.0,
+          180.0
+        ],
+        "rotation_matrix": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "rotation_representation": 0,
+        "selected_image_geometry": "Cugrid_after 2nd_15kv_2kx_2"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateSampleRefFrameFilter",
+        "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_feature_attribute_matrix": "CellFeatureData",
+        "created_image_geometry": "Cugrid_after 2nd_15kv_2kx_2",
+        "feature_ids": "",
+        "max_voxel": [
+          549,
+          399,
+          0
+        ],
+        "min_voxel": [
+          488,
+          0,
+          0
+        ],
+        "remove_original_geometry": true,
+        "renumber_features": false,
+        "selected_image_geometry": "Cugrid_after 2nd_15kv_2kx_2",
+        "update_origin": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CropImageGeometry",
+        "uuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Error",
+              "comparison": 2,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles",
+        "cell_ip_fcolors_array_name": "IPF_Unexposed_001",
+        "cell_phases_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases",
+        "crystal_structures_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures",
+        "good_voxels_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",
+        "reference_dir": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "use_good_voxels": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "file_name": "Data/Output/TexturedCopper/IPF_Unexposed.png",
+        "image_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/IPF_Unexposed_001",
+        "image_geom_path": "Cugrid_after 2nd_15kv_2kx_2",
+        "index_offset": 0,
+        "plane": 0
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ITKImageWriter",
+        "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

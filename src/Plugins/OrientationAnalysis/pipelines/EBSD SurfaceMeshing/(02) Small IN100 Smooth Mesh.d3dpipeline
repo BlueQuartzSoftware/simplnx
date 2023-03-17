@@ -1,0 +1,110 @@
+{
+  "isDisabled": false,
+  "name": "(02) SmallIN100 Smooth Mesh.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "Import_File_Data": {
+          "data_paths": [
+            "DataContainer",
+            "DataContainer/CellData",
+            "DataContainer/CellData/Confidence Index",
+            "DataContainer/CellData/EulerAngles",
+            "DataContainer/CellData/Fit",
+            "DataContainer/CellData/Image Quality",
+            "DataContainer/CellData/Phases",
+            "DataContainer/CellData/SEM Signal",
+            "DataContainer/CellData/Mask",
+            "DataContainer/CellData/Quats",
+            "DataContainer/CellData/FeatureIds",
+            "DataContainer/CellData/ParentIds",
+            "DataContainer/CellData/IPFColors",
+            "DataContainer/CellData/GBManhattanDistances",
+            "DataContainer/CellData/TJManhattanDistances",
+            "DataContainer/CellData/QPManhattanDistances",
+            "DataContainer/CellData/FeatureReferenceMisorientations",
+            "DataContainer/CellData/KernelAverageMisorientations",
+            "DataContainer/CellFeatureData",
+            "DataContainer/CellFeatureData/Active",
+            "DataContainer/CellFeatureData/Phases",
+            "DataContainer/CellFeatureData/NumNeighbors2",
+            "DataContainer/CellFeatureData/ParentIds",
+            "DataContainer/CellFeatureData/Centroids",
+            "DataContainer/CellFeatureData/EquivalentDiameters",
+            "DataContainer/CellFeatureData/NumElements",
+            "DataContainer/CellFeatureData/Omega3s",
+            "DataContainer/CellFeatureData/AxisLengths",
+            "DataContainer/CellFeatureData/AxisEulerAngles",
+            "DataContainer/CellFeatureData/AspectRatios",
+            "DataContainer/CellFeatureData/Shape Volumes",
+            "DataContainer/CellFeatureData/NumNeighbors",
+            "DataContainer/CellFeatureData/Neighborhoods",
+            "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio",
+            "DataContainer/CellFeatureData/AvgQuats",
+            "DataContainer/CellFeatureData/AvgEulerAngles",
+            "DataContainer/CellFeatureData/Schmids",
+            "DataContainer/CellFeatureData/SlipSystems",
+            "DataContainer/CellFeatureData/Poles",
+            "DataContainer/CellFeatureData/FeatureAvgMisorientations",
+            "DataContainer/CellEnsembleData",
+            "DataContainer/CellEnsembleData/CrystalStructures",
+            "DataContainer/CellEnsembleData/LatticeConstants",
+            "DataContainer/NewGrain Data",
+            "DataContainer/NewGrain Data/Active",
+            "TriangleDataContainer",
+            "TriangleDataContainer/SharedTriList",
+            "TriangleDataContainer/SharedVertexList",
+            "TriangleDataContainer/FaceData",
+            "TriangleDataContainer/VertexData",
+            "TriangleDataContainer/FaceData/FaceLabels",
+            "TriangleDataContainer/VertexData/NodeType"
+          ],
+          "file_path": "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
+        },
+        "Imported Pipeline": {
+          "isDisabled": false,
+          "name": "Untitled Pipeline",
+          "pipeline": []
+        }
+      },
+      "filter": {
+        "name": "complex::ImportDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "iteration_steps": 100,
+        "lambda": 0.25,
+        "mu_factor": 0.20000000298023224,
+        "quad_point_lambda": 0.15000000596046448,
+        "surface_mesh_node_type_array_path": "TriangleDataContainer/VertexData/NodeType",
+        "surface_point_lambda": 0.0,
+        "surface_quad_point_lambda": 0.0,
+        "surface_triple_line_lambda": 0.0,
+        "triangle_geometry_data_path": "TriangleDataContainer",
+        "triple_line_lambda": 0.20000000298023224,
+        "use_taubin_smoothing": true
+      },
+      "filter": {
+        "name": "complex::LaplacianSmoothingFilter",
+        "uuid": "0dd0916e-9305-4a7b-98cf-a6cfb97cb501"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d",
+        "write_xdmf_file": true
+      },
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

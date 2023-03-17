@@ -12,6 +12,7 @@
 
 using namespace complex;
 using namespace complex::Constants;
+using namespace complex::UnitTest;
 
 namespace
 {
@@ -185,7 +186,9 @@ TEST_CASE("ComplexCore::RemoveFlaggedFeatures: Test Extract Algorithm", "[Comple
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/extract_flagged_features.dream3d", unit_test::k_BinaryTestOutputDir));
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/extract_flagged_features.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   auto& featureIdsResult = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
   auto& cellFeatureAMResult = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({k_DataContainer, k_CellFeatureData}));

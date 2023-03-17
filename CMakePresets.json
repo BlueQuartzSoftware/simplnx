@@ -1,8 +1,8 @@
 {
-  "version": 2,
+  "version": 3,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 19,
+    "minor": 24,
     "patch": 0
   },
   "configurePresets": [
@@ -33,28 +33,159 @@
           "type": "BOOL",
           "value": "OFF"
         },
-        "VCPKG_OVERLAY_TRIPLETS": {
+        "COMPLEX_EXTRA_PLUGINS": {
           "type": "STRING",
+          "value": "ITKImageProcessing;OrientationAnalysis"
+        },
+        "DREAM3D_DATA_DIR": {
+          "type": "PATH",
+          "value": "${sourceDir}/DREAM3D_Data"
+        },
+        "VCPKG_MANIFEST_FEATURES": {
+          "type": "STRING",
+          "value": "tests;parallel;itk;ebsd"
+        },
+        "VCPKG_OVERLAY_TRIPLETS": {
+          "type": "PATH",
           "value": "${sourceDir}/cmake/triplets"
+        }
+      }
+    },
+    {
+      "name": "ci-windows-v142",
+      "displayName": "ci-windows-v142",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Visual Studio 17 2022",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v142"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v142"
+        }
+      }
+    },
+    {
+      "name": "ci-windows-v143",
+      "displayName": "ci-windows-v143",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Visual Studio 17 2022",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        }
+      }
+    },
+    {
+      "name": "ci-macos-x64",
+      "displayName": "ci-macos-x64",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-osx-dynamic"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-osx-dynamic"
+        }
+      }
+    },
+    {
+      "name": "ci-linux-x64",
+      "displayName": "ci-linux-x64",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
         }
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "ci",
-      "displayName": "CI build",
+      "name": "ci-windows-v142",
+      "displayName": "ci-windows-v142 Release build",
       "description": "Build configuration for GitHub actions CI",
-      "configurePreset": "ci",
+      "configurePreset": "ci-windows-v142",
+      "configuration": "Release"
+    },
+    {
+      "name": "ci-windows-v143",
+      "displayName": "ci-windows-v143 CI build",
+      "description": "Build configuration for GitHub actions CI",
+      "configurePreset": "ci-windows-v143",
+      "configuration": "Release"
+    },
+    {
+      "name": "ci-macos-x64",
+      "displayName": "ci-macos-x64 CI build",
+      "description": "Build configuration for GitHub actions CI",
+      "configurePreset": "ci-macos-x64",
+      "configuration": "Release"
+    },  
+    {
+      "name": "ci-linux-x64",
+      "displayName": "ci-linux-x64 CI build",
+      "description": "Build configuration for GitHub actions CI",
+      "configurePreset": "ci-linux-x64",
       "configuration": "Release"
     }
   ],
   "testPresets": [
     {
-      "name": "ci",
-      "displayName": "CI build",
+      "name": "ci-windows-v142",
+      "displayName": "ci-windows-v142 CI build",
       "description": "Build configuration for GitHub actions CI",
-      "configurePreset": "ci",
+      "configurePreset": "ci-windows-v142",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-windows-v143",
+      "displayName": "ci-windows-v143 CI build",
+      "description": "Build configuration for GitHub actions CI",
+      "configurePreset": "ci-windows-v143",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-macos-x64",
+      "displayName": "ci-macos-x64 CI build",
+      "description": "Build configuration for GitHub actions CI",
+      "configurePreset": "ci-macos-x64",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-linux-x64",
+      "displayName": "ci-linux-x64 CI build",
+      "description": "Build configuration for GitHub actions CI",
+      "configurePreset": "ci-linux-x64",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true

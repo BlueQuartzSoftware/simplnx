@@ -35,13 +35,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: true
-      - name: Checkout DREAM3D_Data Repo
-        uses: actions/checkout@v2
-        with:
-          repository: DREAM3D/DREAM3D_Data
-          path: DREAM3D_Data
-          submodules: true          
+          submodules: true        
       - name: Add C++ Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
       - name: Install Dependencies
@@ -49,23 +43,26 @@ jobs:
           sudo apt-get -y install ninja-build
       - name: Setup NuGet Credentials
         shell: bash
-        run: >
-          mono `vcpkg fetch nuget | tail -n 1`
-          sources add
-          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
-          -storepasswordincleartext
-          -name "GitHub"
-          -username "BlueQuartzSoftware"
+        run: |
+          mono `vcpkg fetch nuget | tail -n 1` \
+          sources add \
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json" \
+          -storepasswordincleartext \
+          -name "GitHub" \
+          -username "BlueQuartzSoftware" \
           -password "${{secrets.GITHUB_TOKEN}}"
+          mono `vcpkg fetch nuget | tail -n 1` \
+          setapikey "${{secrets.GITHUB_TOKEN}}" \
+          -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
         env:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
         run: |
-          cmake --preset ci ${{github.workspace}} -D DREAM3D_DATA_DIR=${{github.workspace}}/DREAM3D_Data -D VCPKG_TARGET_TRIPLET:STRING=x64-linux-dynamic
+          cmake --preset ci-linux-x64 ${{github.workspace}} 
       - name: Build
         run: |
-          cmake --build --preset ci
+          cmake --build --preset ci-linux-x64
       - name: Test
         run: |
-          ctest --preset ci
+          ctest --preset ci-linux-x64

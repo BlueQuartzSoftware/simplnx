@@ -92,10 +92,16 @@ include(FetchContent)
 include(ExternalProject)
 
 function(download_test_data)
-  set(optionsArgs)
+  set(optionsArgs INSTALL COPY_DATA)
   set(oneValueArgs DREAM3D_DATA_DIR ARCHIVE_NAME SHA512)
   set(multiValueArgs FILES)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  if(NOT COMPLEX_DOWNLOAD_TEST_FILES)
+    return()
+  endif()
+
+  get_property(FETCH_FILE_PATH GLOBAL PROPERTY FETCH_FILE_PATH)
 
   get_filename_component(archive_base_name ${ARGS_ARCHIVE_NAME} NAME_WE)
   file(TO_CMAKE_PATH "${complex_BINARY_DIR}/TestFiles" test_files_dir)
@@ -108,16 +114,42 @@ function(download_test_data)
                 ${fetch_data_file}
                 @ONLY
   )
-  #----------------------------------------------------------------------------
-  # Add the custom target to run mkdocs
-  #----------------------------------------------------------------------------
-  if(NOT TARGET Fetch_${archive_base_name})
-    add_custom_target(Fetch_${archive_base_name} ALL
-      COMMAND "${CMAKE_COMMAND}" -P "${fetch_data_file}"
-      COMMENT "Downloading Test Data File: ${ARGS_ARCHIVE_NAME}"
-    )
-    set_target_properties(Fetch_${archive_base_name} PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
+  # Read the file back into a string and append it to the master file
+  file(READ "${fetch_data_file}" FETCH_FILE_CONTENTS)
+#  file(APPEND "${FETCH_FILE_PATH}" "\n\n#----------------------------------------------------------------------------
+## Download and decompress for `${ARGS_ARCHIVE_NAME}`
+##----------------------------------------------------------------------------\n"
+#  )
+  file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
+
+  string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
+
+  if(ARGS_COPY_DATA)
+    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+
+    configure_file(${complex_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
+                   ${fetch_data_file}
+                   @ONLY
+                   )
+    file(READ "${fetch_data_file}" FETCH_FILE_CONTENTS)
+    file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
+
+
+#    add_custom_target(Copy_${ARGS_ARCHIVE_NAME} ALL
+#                      COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARGS_DREAM3D_DATA_DIR}/TestFiles/${ARCHIVE_BASE_NAME} ${DATA_DEST_DIR}/${ARCHIVE_BASE_NAME}
+#                      COMMENT "Copying ${ARCHIVE_BASE_NAME} into Binary Directory"
+#                      DEPENDS Fetch_Remote_Data_Files)
   endif()
+
+  if(ARGS_INSTALL)
+    install(DIRECTORY
+            ${DREAM3D_DATA_DIR_NORM}/TestFiles/${ARCHIVE_BASE_NAME}
+            DESTINATION Data/
+            COMPONENT Applications
+            )
+
+  endif()
+
 endfunction()
 
 #------------------------------------------------------------------------------

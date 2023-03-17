@@ -130,7 +130,11 @@ Result<> FindFeatureCentroids::operator()()
   // The first part can be expensive so parallelize the algorithm
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, totalFeatures);
-  dataAlg.setParallelizationEnabled(true);
+  // This is OFF because we spend more time spinning up threads than actually
+  // computing things. Maybe if we were to break teh total number of features
+  // by the total number of cores/threads and do a ParallelTask Algorithm instead
+  // we might see some speedup.
+  dataAlg.setParallelizationEnabled(false);
   dataAlg.execute(FindFeatureCentroidsImpl1(this, sum.data(), center.data(), count.data(), {xPoints, yPoints, zPoints}, imageGeom, featureIds));
 
   // Here we are only looping over the number of features so let this just go in serial mode.
