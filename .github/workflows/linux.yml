@@ -59,7 +59,7 @@ jobs:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
         run: |
-          cmake --preset ci_linux_x64 ${{github.workspace}} 
+          cmake --preset ci-linux-x64 ${{github.workspace}} 
       - name: Build
         run: |
           cmake --build ${{github.workspace}}/complex/build
