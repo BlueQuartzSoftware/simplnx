@@ -66,6 +66,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindVolFractionsTest.cpp
   GenerateColorTableTest.cpp
   IdentifySampleTest.cpp
+  ImageContouringTest.cpp
   ImageGeomTest.cpp
   ImportCSVDataTest.cpp
   ImportBinaryCTNorthstarTest.cpp
