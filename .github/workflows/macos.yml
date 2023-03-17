@@ -45,10 +45,10 @@ jobs:
           -source "https://nuget.pkg.github.com/BlueQuartzSoftware/index.json"
       - name: Configure
         run: |
-          cmake --preset ci_macos_x64 ${{github.workspace}}
+          cmake --preset ci-macos-x64 ${{github.workspace}}
       - name: Build
         run: |
-          cmake --build --preset ci
+          cmake --build --preset ci-macos-x64
       - name: Test
         run: |
-          ctest --preset ci
+          ctest --preset ci-macos-x64

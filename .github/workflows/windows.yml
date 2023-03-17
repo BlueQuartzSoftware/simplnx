@@ -52,7 +52,7 @@ jobs:
           cmake --preset ci-windows-${{matrix.toolset}} ${{github.workspace}} -T ${{matrix.toolset}}
       - name: Build
         run: |
-          cmake --build --preset ci
+          cmake --build --preset ci-windows-${{matrix.toolset}}
       - name: Test
         run: |
-          ctest --preset ci
+          ctest --preset ci-windows-${{matrix.toolset}}
