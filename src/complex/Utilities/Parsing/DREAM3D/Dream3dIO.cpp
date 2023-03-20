@@ -1081,34 +1081,34 @@ void readGenericGeomDims(IGeometry* geom, const complex::HDF5::GroupReader& geom
   geom->setUnitDimensionality(uDims);
 }
 
-IDataArray* readLegacyGeomArray(DataStructure& dataStructure, IGeometry* geometry, const complex::HDF5::GroupReader& geomGroup, const std::string& arrayName)
+IDataArray* readLegacyGeomArray(DataStructure& dataStructure, IGeometry* geometry, const complex::HDF5::GroupReader& geomGroup, const std::string& arrayName, bool preflight)
 {
   auto dataArraySet = geomGroup.openDataset(arrayName);
-  return readLegacyDataArray(dataStructure, dataArraySet, geometry->getId());
+  return readLegacyDataArray(dataStructure, dataArraySet, geometry->getId(), preflight);
 }
 
 template <typename T>
-T* readLegacyGeomArrayAs(DataStructure& dataStructure, IGeometry* geometry, const complex::HDF5::GroupReader& geomGroup, const std::string& arrayName)
+T* readLegacyGeomArrayAs(DataStructure& dataStructure, IGeometry* geometry, const complex::HDF5::GroupReader& geomGroup, const std::string& arrayName, bool preflight)
 {
-  return dynamic_cast<T*>(readLegacyGeomArray(dataStructure, geometry, geomGroup, arrayName));
+  return dynamic_cast<T*>(readLegacyGeomArray(dataStructure, geometry, geomGroup, arrayName, preflight));
 }
 
-DataObject* readLegacyVertexGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyVertexGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name, bool preflight)
 {
   auto* geom = VertexGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName, preflight);
 
   geom->setVertices(*sharedVertexList);
   return geom;
 }
 
-DataObject* readLegacyTriangleGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyTriangleGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name, bool preflight)
 {
   auto geom = TriangleGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  UInt64Array* sharedTriList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::TriListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName, preflight);
+  UInt64Array* sharedTriList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::TriListName, preflight);
 
   geom->setVertices(*sharedVertexList);
   geom->setFaceList(*sharedTriList);
@@ -1116,12 +1116,12 @@ DataObject* readLegacyTriangleGeom(DataStructure& dataStructure, const complex::
   return geom;
 }
 
-DataObject* readLegacyTetrahedralGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyTetrahedralGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name, bool preflight)
 {
   auto geom = TetrahedralGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  UInt64Array* sharedTetList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::TetraListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName, preflight);
+  UInt64Array* sharedTetList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::TetraListName, preflight);
 
   geom->setVertices(*sharedVertexList);
   geom->setPolyhedraList(*sharedTetList);
@@ -1129,7 +1129,7 @@ DataObject* readLegacyTetrahedralGeom(DataStructure& dataStructure, const comple
   return geom;
 }
 
-DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name, bool preflight)
 {
   auto geom = RectGridGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
@@ -1141,21 +1141,21 @@ DataObject* readLegacyRectGridGeom(DataStructure& dataStructure, const complex::
     geom->setDimensions(SizeVec3(dims[0], dims[1], dims[2]));
   }
 
-  auto* xBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::XBoundsName);
-  auto* yBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::YBoundsName);
-  auto* zBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::ZBoundsName);
+  auto* xBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::XBoundsName, preflight);
+  auto* yBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::YBoundsName, preflight);
+  auto* zBoundsArray = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::ZBoundsName, preflight);
 
   geom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
 
   return geom;
 }
 
-DataObject* readLegacyQuadGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyQuadGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name, bool preflight)
 {
   auto geom = QuadGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  UInt64Array* sharedQuadList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::QuadListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName, preflight);
+  UInt64Array* sharedQuadList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::QuadListName, preflight);
 
   geom->setVertices(*sharedVertexList);
   geom->setFaceList(*sharedQuadList);
@@ -1163,12 +1163,12 @@ DataObject* readLegacyQuadGeom(DataStructure& dataStructure, const complex::HDF5
   return geom;
 }
 
-DataObject* readLegacyHexGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyHexGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name, bool preflight)
 {
   auto geom = HexahedralGeom::Create(dataStructure, name);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  UInt64Array* sharedHexList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::HexListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName, preflight);
+  UInt64Array* sharedHexList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::HexListName, preflight);
 
   geom->setVertices(*sharedVertexList);
   geom->setPolyhedraList(*sharedHexList);
@@ -1176,13 +1176,13 @@ DataObject* readLegacyHexGeom(DataStructure& dataStructure, const complex::HDF5:
   return geom;
 }
 
-DataObject* readLegacyEdgeGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name)
+DataObject* readLegacyEdgeGeom(DataStructure& dataStructure, const complex::HDF5::GroupReader& geomGroup, const std::string& name, bool preflight)
 {
   auto geom = EdgeGeom::Create(dataStructure, name);
   auto edge = dynamic_cast<EdgeGeom*>(geom);
   readGenericGeomDims(geom, geomGroup);
-  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName);
-  UInt64Array* sharedEdgeList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::EdgeListName);
+  auto* sharedVertexList = readLegacyGeomArrayAs<Float32Array>(dataStructure, geom, geomGroup, Legacy::VertexListName, preflight);
+  UInt64Array* sharedEdgeList = readLegacyNodeConnectivityList(dataStructure, geom, geomGroup, Legacy::EdgeListName, preflight);
 
   geom->setVertices(*sharedVertexList);
   geom->setEdgeList(*sharedEdgeList);
@@ -1239,31 +1239,31 @@ void readLegacyDataContainer(DataStructure& dataStructure, const complex::HDF5::
     }
     else if(geomName == Legacy::Type::EdgeGeom)
     {
-      container = readLegacyEdgeGeom(dataStructure, geomGroup, dcName);
+      container = readLegacyEdgeGeom(dataStructure, geomGroup, dcName, preflight);
     }
     else if(geomName == Legacy::Type::HexGeom)
     {
-      container = readLegacyHexGeom(dataStructure, geomGroup, dcName);
+      container = readLegacyHexGeom(dataStructure, geomGroup, dcName, preflight);
     }
     else if(geomName == Legacy::Type::QuadGeom)
     {
-      container = readLegacyQuadGeom(dataStructure, geomGroup, dcName);
+      container = readLegacyQuadGeom(dataStructure, geomGroup, dcName, preflight);
     }
     else if(geomName == Legacy::Type::RectGridGeom)
     {
-      container = readLegacyRectGridGeom(dataStructure, geomGroup, dcName);
+      container = readLegacyRectGridGeom(dataStructure, geomGroup, dcName, preflight);
     }
     else if(geomName == Legacy::Type::TetrahedralGeom)
     {
-      container = readLegacyTetrahedralGeom(dataStructure, geomGroup, dcName);
+      container = readLegacyTetrahedralGeom(dataStructure, geomGroup, dcName, preflight);
     }
     else if(geomName == Legacy::Type::TriangleGeom)
     {
-      container = readLegacyTriangleGeom(dataStructure, geomGroup, dcName);
+      container = readLegacyTriangleGeom(dataStructure, geomGroup, dcName, preflight);
     }
     else if(geomName == Legacy::Type::VertexGeom)
     {
-      container = readLegacyVertexGeom(dataStructure, geomGroup, dcName);
+      container = readLegacyVertexGeom(dataStructure, geomGroup, dcName, preflight);
     }
   }
 
