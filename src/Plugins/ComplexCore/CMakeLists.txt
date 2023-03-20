@@ -51,6 +51,7 @@ set(FilterList
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
   FindFeaturePhasesFilter
+  FindLargestCrossSectionsFilter
   FindNeighborhoodsFilter
   FindNeighborListStatistics
   FindNeighbors
@@ -127,6 +128,7 @@ set(AlgorithmList
   FindBoundaryCells
   FindEuclideanDistMap
   FindFeatureCentroids
+  FindLargestCrossSections
   FindNeighborhoods
   FindSurfaceAreaToVolume
   FindTriangleGeomCentroids
