@@ -61,8 +61,10 @@ TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Erode)", "[ComplexCore][ErodeDi
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  // Write the DataStructure out to the file system
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_erode_dilate_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
+// Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_erode_dilate_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 
   const std::string k_ExemplarDataContainerName("Exemplar Bad Data Erode");
   const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});

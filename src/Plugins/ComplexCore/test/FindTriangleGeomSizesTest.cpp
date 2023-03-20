@@ -65,5 +65,7 @@ TEST_CASE("ComplexCore::FindTriangleGeomSizes", "[ComplexCore][FindTriangleGeomS
     CompareDataArrays<float32>(kExemplarsArray, kNxArray);
   }
 
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_triangle_geom_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

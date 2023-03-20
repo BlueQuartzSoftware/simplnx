@@ -14,8 +14,8 @@ namespace fs = std::filesystem;
 using namespace complex;
 
 const fs::path k_VgiSrcFile = fs::path(complex::unit_test::k_DREAM3DDataDir.str()) / "TestFiles" / "volume_graphics_test.vgi";
-const fs::path k_VolFile = fs::temp_directory_path() / "VolumeGraphicsTest.vol";
-const fs::path k_VgiDestFile = k_VolFile.parent_path() / "VolumeGraphicsTest.vgi";
+const fs::path k_VolFile = fs::path(complex::unit_test::k_BinaryTestOutputDir.str()) / "VolumeGraphicsTest.vol";
+const fs::path k_VgiDestFile = fs::path(complex::unit_test::k_BinaryTestOutputDir.str()) / "VolumeGraphicsTest.vgi";
 const SizeVec3 k_Dimensions = {50, 20, 80};
 
 // -----------------------------------------------------------------------------
@@ -23,6 +23,7 @@ void writeVolTestFile()
 {
   // Write out the data file
   FILE* outputFile = fopen(k_VolFile.string().c_str(), "wb");
+  REQUIRE(outputFile != nullptr);
   const size_t count = k_Dimensions[0] * k_Dimensions[1] * k_Dimensions[2];
   std::vector<float> data(count, 2.0F);
   const usize bytesWritten = fwrite(data.data(), sizeof(float), count, outputFile);

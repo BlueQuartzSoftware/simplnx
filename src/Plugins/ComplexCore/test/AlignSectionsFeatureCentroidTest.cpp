@@ -144,8 +144,10 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  // Write out the .dream3d file now
+// Write out the .dream3d file now
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
   // Compare the shift values
   CompareArrays<float32>(dataStructure, k_CalculatedShiftsPath, k_ExemplarShiftsPath);

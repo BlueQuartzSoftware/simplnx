@@ -1,0 +1,179 @@
+{
+  "isDisabled": false,
+  "name": "(01) Small IN100 Morphological Statistics.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "Import_File_Data": {
+          "data_paths": [
+            "DataContainer/CellEnsembleData",
+            "DataContainer/CellEnsembleData/CrystalStructures",
+            "DataContainer/CellEnsembleData/LatticeConstants",
+            "DataContainer",
+            "DataContainer/CellData",
+            "DataContainer/CellData/Confidence Index",
+            "DataContainer/CellData/EulerAngles",
+            "DataContainer/CellData/Fit",
+            "DataContainer/CellData/Image Quality",
+            "DataContainer/CellData/Phases",
+            "DataContainer/CellData/SEM Signal",
+            "DataContainer/CellData/Mask",
+            "DataContainer/CellData/Quats",
+            "DataContainer/CellFeatureData",
+            "DataContainer/CellFeatureData/Active",
+            "DataContainer/CellData/FeatureIds",
+            "DataContainer/CellFeatureData/Phases",
+            "DataContainer/CellFeatureData/AvgQuats",
+            "DataContainer/CellFeatureData/AvgEulerAngles",
+            "DataContainer/CellFeatureData/NumNeighbors2",
+            "DataContainer/NewGrain Data",
+            "DataContainer/CellData/ParentIds",
+            "DataContainer/CellFeatureData/ParentIds",
+            "DataContainer/NewGrain Data/Active",
+            "DataContainer/CellData/IPFColors"
+          ],
+          "file_path": "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+        },
+        "Imported Pipeline": {
+          "isDisabled": false,
+          "name": "Untitled Pipeline",
+          "pipeline": []
+        }
+      },
+      "filter": {
+        "name": "complex::ImportDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "centroids_array_path": "Centroids",
+        "feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "selected_image_geometry": "DataContainer"
+      },
+      "filter": {
+        "name": "complex::FindFeatureCentroidsFilter",
+        "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "equivalent_diameters_path": "EquivalentDiameters",
+        "feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "geometry_path": "DataContainer",
+        "num_elements_path": "NumElements",
+        "save_element_sizes": false,
+        "volumes_path": "Size Volumes"
+      },
+      "filter": {
+        "name": "complex::CalculateFeatureSizesFilter",
+        "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "aspect_ratios_array_name": "AspectRatios",
+        "axis_euler_angles_array_name": "AxisEulerAngles",
+        "axis_lengths_array_name": "AxisLengths",
+        "centroids_array_path": "DataContainer/CellFeatureData/Centroids",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "omega3s_array_name": "Omega3s",
+        "selected_image_geometry": "DataContainer",
+        "volumes_array_name": "Shape Volumes"
+      },
+      "filter": {
+        "name": "complex::FindShapesFilter",
+        "uuid": "036b17d5-23bb-4a24-9187-c4a8dd918792"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "boundary_cells": "BoundaryCells",
+        "cell_feature_arrays": "DataContainer/CellFeatureData",
+        "feature_ids": "DataContainer/CellData/FeatureIds",
+        "image_geometry": "DataContainer",
+        "neighbor_list": "NeighborList",
+        "number_of_neighbors": "NumNeighbors",
+        "shared_surface_area_list": "SharedSurfaceAreaList",
+        "store_boundary_cells": false,
+        "store_surface_features": false,
+        "surface_features": "SurfaceFeatures"
+      },
+      "filter": {
+        "name": "complex::FindNeighbors",
+        "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "centroids_array_path": "DataContainer/CellFeatureData/Centroids",
+        "equivalent_diameters_array_path": "DataContainer/CellFeatureData/EquivalentDiameters",
+        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "multiples_of_average": 1.0,
+        "neighborhood_list_array_name": "DataContainer/CellFeatureData/NeighborhoodList",
+        "neighborhoods_array_name": "DataContainer/CellFeatureData/Neighborhoods",
+        "selected_image_geometry_path": "DataContainer"
+      },
+      "filter": {
+        "name": "complex::FindNeighborhoodsFilter",
+        "uuid": "924c10e3-2f39-4c08-9d7a-7fe029f74f6d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "calc_manhattan_dist": true,
+        "do_boundaries": true,
+        "do_quad_points": true,
+        "do_triple_lines": true,
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "g_bdistances_array_name": "GBManhattanDistances",
+        "nearest_neighbors_array_name": "NearestNeighbors",
+        "q_pdistances_array_name": "QPManhattanDistances",
+        "save_nearest_neighbors": false,
+        "selected_image_geometry": "DataContainer",
+        "t_jdistances_array_name": "TJManhattanDistances"
+      },
+      "filter": {
+        "name": "complex::FindEuclideanDistMapFilter",
+        "uuid": "ba9ae8f6-443e-41d3-bb45-a08a139325c1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "calculate_sphericity": true,
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "num_cells_array_path": "DataContainer/CellFeatureData/NumElements",
+        "selected_image_geometry": "DataContainer",
+        "sphericity_array_name": "DataContainer/CellFeatureData/Sphericity",
+        "surface_area_volume_ratio_array_name": "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"
+      },
+      "filter": {
+        "name": "complex::FindSurfaceAreaToVolumeFilter",
+        "uuid": "94e83e4f-797d-4594-b130-3819b7676f01"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/Statistics/SmallIN100_Morph.dream3d",
+        "write_xdmf_file": true
+      },
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

@@ -1,0 +1,159 @@
+{
+  "isDisabled": false,
+  "name": "CI_Histogram.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "data_container_name": "DataContainer",
+        "input_file": "Data/Small_IN100/Slice_1.ang"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ReadAngDataFilter",
+        "uuid": "5b062816-79ac-47ce-93cb-e7966896bcbd"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "DataContainer/Cell Data/EulerAngles",
+        "rotation_axis": [
+          0.0,
+          0.0,
+          1.0,
+          90.0
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateEulerRefFrameFilter",
+        "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_image_geometry": "DataContainer",
+        "remove_original_geometry": true,
+        "rotate_slice_by_slice": false,
+        "rotation_axis": [
+          0.0,
+          1.0,
+          0.0,
+          180.0
+        ],
+        "rotation_matrix": [
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0
+          ]
+        ],
+        "rotation_representation": 0,
+        "selected_image_geometry": "DataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateSampleRefFrameFilter",
+        "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "DataContainer/Cell Data/Confidence Index",
+              "comparison": 1,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.1
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "DataContainer/Cell Data/Mask"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "conditional_array_path": "DataContainer/Cell Data/Mask",
+        "remove_value": "0",
+        "replace_value": "0",
+        "selected_array_path": "DataContainer/Cell Data/Confidence Index",
+        "use_conditional": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ConditionalSetValue",
+        "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "data_group_name": "",
+        "histogram_suffix": " Histogram",
+        "max_range": 1.0,
+        "min_range": 0.0,
+        "new_data_group": true,
+        "new_data_group_name": "DataContainer/Statistics",
+        "number_of_bins": 25,
+        "selected_array_paths": [
+          "DataContainer/Cell Data/Confidence Index"
+        ],
+        "user_defined_range": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CalculateArrayHistogramFilter",
+        "uuid": "c6b6d9e5-301d-4767-abf7-530f5ef5007d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "Output_path": "Data/Output/Statistics/",
+        "delimiter": 2,
+        "file_extension": ".csv",
+        "file_name": "CI_Histogram",
+        "includes": 1,
+        "max_val_per_line": 0,
+        "output_style": 1,
+        "selected_data_array_paths": [
+          "DataContainer/Statistics/Confidence Index Histogram"
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::WriteASCIIDataFilter",
+        "uuid": "06c8bfe8-2b42-4956-aca3-580bc0620716"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

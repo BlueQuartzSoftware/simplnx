@@ -10,13 +10,13 @@
 namespace fs = std::filesystem;
 
 using namespace complex;
+using namespace complex::Constants;
+using namespace complex::UnitTest;
 
 namespace
 {
-const DataPath k_DataContainerPath({Constants::k_DataContainer});
-const DataPath k_CellAttributeMatrix = k_DataContainerPath.createChildPath(Constants::k_CellData);
 const DataPath k_ConfidenceIndexPath = k_CellAttributeMatrix.createChildPath(Constants::k_Confidence_Index);
-const std::string k_ExemplarDataContainer("DataContainer");
+const std::string k_ExemplarDataContainer2("DataContainer");
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValuesFilter", "[OrientationAnalysis][ReplaceElementAttributesWithNeighborValuesFilter]")
@@ -51,7 +51,9 @@ TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValuesFilter
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer);
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer2);
 
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_replace_element_attributes_with_neighbor.dream3d", unit_test::k_BinaryTestOutputDir));
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_replace_element_attributes_with_neighbor.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 }

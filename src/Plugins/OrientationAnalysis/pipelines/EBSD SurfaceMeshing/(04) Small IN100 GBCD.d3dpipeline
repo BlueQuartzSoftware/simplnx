@@ -1,0 +1,220 @@
+{
+  "isDisabled": false,
+  "name": "(04) SmallIN100 GBCD.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "Import_File_Data": {
+          "data_paths": [
+            "DataContainer",
+            "DataContainer/CellData",
+            "DataContainer/CellData/Confidence Index",
+            "DataContainer/CellData/EulerAngles",
+            "DataContainer/CellData/Fit",
+            "DataContainer/CellData/Image Quality",
+            "DataContainer/CellData/Phases",
+            "DataContainer/CellData/SEM Signal",
+            "DataContainer/CellData/Mask",
+            "DataContainer/CellData/Quats",
+            "DataContainer/CellData/FeatureIds",
+            "DataContainer/CellData/ParentIds",
+            "DataContainer/CellData/IPFColors",
+            "DataContainer/CellData/GBManhattanDistances",
+            "DataContainer/CellData/TJManhattanDistances",
+            "DataContainer/CellData/QPManhattanDistances",
+            "DataContainer/CellData/FeatureReferenceMisorientations",
+            "DataContainer/CellData/KernelAverageMisorientations",
+            "DataContainer/CellFeatureData",
+            "DataContainer/CellEnsembleData",
+            "DataContainer/CellEnsembleData/CrystalStructures",
+            "DataContainer/CellEnsembleData/LatticeConstants",
+            "DataContainer/NewGrain Data",
+            "DataContainer/NewGrain Data/Active",
+            "DataContainer/CellFeatureData/Active",
+            "DataContainer/CellFeatureData/AspectRatios",
+            "DataContainer/CellFeatureData/AvgEulerAngles",
+            "DataContainer/CellFeatureData/AvgQuats",
+            "DataContainer/CellFeatureData/AxisEulerAngles",
+            "DataContainer/CellFeatureData/AxisLengths",
+            "DataContainer/CellFeatureData/Centroids",
+            "DataContainer/CellFeatureData/EquivalentDiameters",
+            "DataContainer/CellFeatureData/FeatureAvgMisorientations",
+            "DataContainer/CellFeatureData/Neighborhoods",
+            "DataContainer/CellFeatureData/NumElements",
+            "DataContainer/CellFeatureData/NumNeighbors",
+            "DataContainer/CellFeatureData/NumNeighbors2",
+            "DataContainer/CellFeatureData/Omega3s",
+            "DataContainer/CellFeatureData/ParentIds",
+            "DataContainer/CellFeatureData/Phases",
+            "DataContainer/CellFeatureData/Poles",
+            "DataContainer/CellFeatureData/Schmids",
+            "DataContainer/CellFeatureData/Shape Volumes",
+            "DataContainer/CellFeatureData/SlipSystems",
+            "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio",
+            "TriangleDataContainer",
+            "TriangleDataContainer/SharedTriList",
+            "TriangleDataContainer/SharedVertexList",
+            "TriangleDataContainer/FaceData",
+            "TriangleDataContainer/VertexData",
+            "TriangleDataContainer/FaceData/FaceLabels",
+            "TriangleDataContainer/VertexData/NodeType",
+            "TriangleDataContainer/Edge List",
+            "TriangleDataContainer/FaceData/FaceAreas",
+            "TriangleDataContainer/FaceData/FaceNormals",
+            "TriangleDataContainer/FaceData/FaceDihedralAngles"
+          ],
+          "file_path": "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
+        },
+        "Imported Pipeline": {
+          "isDisabled": false,
+          "name": "Untitled Pipeline",
+          "pipeline": []
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ImportDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "face_ensemble_attribute_matrix_name": "FaceEnsembleData",
+        "feature_euler_angles_array_path": "DataContainer/CellFeatureData/AvgEulerAngles",
+        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "gbcd_array_name": "GBCD",
+        "gbcd_resolution": 9.0,
+        "surface_mesh_face_areas_array_path": "TriangleDataContainer/FaceData/FaceAreas",
+        "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
+        "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals",
+        "triangle_geometry": "TriangleDataContainer"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindGBCDFilter",
+        "uuid": "0cc592b7-a3d3-4c6a-8894-1533670a31b9"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_intensity_array_name": "MRD",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "gbcd_array_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
+        "image_geometry_name": "GBCD Pole Figure [Sigma 3]",
+        "misorientation_rotation": [
+          60.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "output_image_dimension": 100,
+        "phase_of_interest": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateGBCDPoleFigureFilter",
+        "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_intensity_array_name": "MRD",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "gbcd_array_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
+        "image_geometry_name": "GBCD Pole Figure [Sigma 9]",
+        "misorientation_rotation": [
+          39.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "output_image_dimension": 100,
+        "phase_of_interest": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateGBCDPoleFigureFilter",
+        "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_intensity_array_name": "MRD",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "gbcd_array_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
+        "image_geometry_name": "GBCD Pole Figure [Sigma 11]",
+        "misorientation_rotation": [
+          50.5,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "output_image_dimension": 100,
+        "phase_of_interest": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateGBCDPoleFigureFilter",
+        "uuid": "eed5183e-5a9c-485b-9e64-579a81f0d301"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "g_bc_darray_path": "TriangleDataContainer/FaceEnsembleData/GBCD",
+        "misorientation_rotation": [
+          60.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "output_file": "Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat",
+        "phase_of_interest": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportGBCDGMTFileFilter",
+        "uuid": "31710abf-b8a6-423f-a03f-4b8885bd3633"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "feature_euler_angles_array_path": "DataContainer/CellFeatureData/AvgEulerAngles",
+        "output_file": "Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph",
+        "surface_mesh_face_areas_array_path": "TriangleDataContainer/FaceData/FaceAreas",
+        "surface_mesh_face_labels_array_path": "TriangleDataContainer/FaceData/FaceLabels",
+        "surface_mesh_face_normals_array_path": "TriangleDataContainer/FaceData/FaceNormals"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportGBCDTriangleDataFilter",
+        "uuid": "6e0da3a1-dc42-4b01-80aa-3af9e8209ee3"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/SurfaceMesh/SmallIN100_GBCD.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

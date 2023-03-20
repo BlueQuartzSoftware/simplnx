@@ -16,6 +16,8 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_COMPRESSORS FEATURE "compr
 
 option(COMPLEX_DOWNLOAD_TEST_FILES "Download the test files" ON)
 
+option(COMPLEX_WRITE_TEST_OUTPUT "Write unit test output files" OFF)
+
 project(complex
   VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"
@@ -43,6 +45,35 @@ set_property(GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX ${COMPLEX_DEBUG_POSTFIX})
 get_property(COMPLEX_DEBUG_POSTFIX GLOBAL PROPERTY COMPLEX_DEBUG_POSTFIX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# -----------------------------------------------------------------------
+# This section creates a global file that holds the commands to copy data
+# files, test data files, pipelines into a single cmake file that gets
+# generated. This reduces the many copy targets to a single target.
+# -----------------------------------------------------------------------
+set(FETCH_FILE_PATH "${complex_BINARY_DIR}/complex_fetch_remote_files.cmake")
+set_property(GLOBAL PROPERTY FETCH_FILE_PATH "${FETCH_FILE_PATH}")
+file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------------------------------
+# This file has the commands to download each of the test files.
+# The assumption is that the WORKING_DIRECTORY to what ever calls this command is set to the Binary
+# directory. The WORKING_DIRECTORY is set to the following CMake code:
+# ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>
+# -----------------------------------------------------------------------\n
+cmake_policy(SET CMP0054 NEW)\n")
+
+set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+  set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>")
+endif()
+
+if(COMPLEX_BUILD_TESTS AND COMPLEX_DOWNLOAD_TEST_FILES)
+  add_custom_target(Fetch_Remote_Data_Files ALL
+    COMMAND "${CMAKE_COMMAND}" -P "${FETCH_FILE_PATH}"
+    COMMENT "Downloading Test Data Files"
+    WORKING_DIRECTORY "${TEST_WORKING_DIR}"
+  )
+  set_target_properties(Fetch_Remote_Data_Files PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
+endif()
 
 # -----------------------------------------------------------------------
 # Find dependent libraries
