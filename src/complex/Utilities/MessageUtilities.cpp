@@ -73,6 +73,18 @@ usize ThreadSafeMessenger::getTotalElements() const
   return m_TotalElements;
 }
 
+void ThreadSafeMessenger::sendStatusMessage(const std::string& message)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  auto now = std::chrono::steady_clock::now();
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > m_MilliDelay)
+  {
+    m_MessageHandler(IFilter::Message{IFilter::Message::Type::Info, message});
+    m_InitialTime = std::chrono::steady_clock::now();
+  }
+}
+
 // -----------------------------------------------------------------------------
 ThreadSafeTaskMessenger::ThreadSafeTaskMessenger(const IFilter::MessageHandler& messageHandler, std::string&& progressMessage, const usize milliDelay)
 : m_MessageHandler(messageHandler)

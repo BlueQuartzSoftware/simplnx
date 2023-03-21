@@ -70,6 +70,12 @@ public:
    */
   usize getTotalElements() const;
 
+  /**
+   * @brief Sends a status message using the underlying Message class
+   * @param message The message to send
+   */
+  void sendStatusMessage(const std::string& message);
+
 private:
   const IFilter::MessageHandler& m_MessageHandler;
   std::string m_ProgressMessage = "Executing...";
