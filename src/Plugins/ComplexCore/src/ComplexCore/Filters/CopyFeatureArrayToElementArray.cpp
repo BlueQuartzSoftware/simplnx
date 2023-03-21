@@ -6,7 +6,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
@@ -66,21 +66,6 @@ private:
   const DataPath& m_FeatureIdsArrayPath;
   const DataPath& m_CreatedArrayPath;
   const std::atomic_bool& m_ShouldCancel;
-};
-
-// -----------------------------------------------------------------------------
-struct CopyFeatureArrayToElementArrayFunctor
-{
-  template <typename T>
-  void operator()(DataStructure& dataStructure, const DataPath& selectedFeatureArrayPath, const DataPath& featureIdsArrayPath, const DataPath& createdArrayPath, const std::atomic_bool& shouldCancel)
-  {
-    const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
-
-    // Allow data-based parallelization
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0, featureIds.getNumberOfTuples());
-    dataAlg.execute(CopyFeatureArrayToElementArrayImpl<T>(dataStructure, selectedFeatureArrayPath, featureIdsArrayPath, createdArrayPath, shouldCancel));
-  }
 };
 } // namespace
 
@@ -188,8 +173,10 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
   }
 
   messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, "Copying data into target array"});
-  ExecuteDataFunction(CopyFeatureArrayToElementArrayFunctor{}, selectedFeatureArray.getDataType(), dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath,
-                      shouldCancel);
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0, featureIds.getNumberOfTuples());
+  ExecuteParallelFunction<::CopyFeatureArrayToElementArrayImpl>(selectedFeatureArray.getDataType(), dataAlg, dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath,
+                                                                shouldCancel);
 
   return {};
 }
