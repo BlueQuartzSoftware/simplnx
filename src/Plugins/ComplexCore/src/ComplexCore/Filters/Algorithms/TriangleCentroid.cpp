@@ -5,6 +5,7 @@
 #include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
+#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
@@ -19,16 +20,20 @@ namespace
 class CalculateCentroidsImpl
 {
 public:
-  CalculateCentroidsImpl(const TriangleGeom* triangleGeom, Float32Array* centroids, const std::atomic_bool& shouldCancel)
+  CalculateCentroidsImpl(const TriangleGeom* triangleGeom, Float32Array* centroids, const std::atomic_bool& shouldCancel, ThreadSafeMessenger& messenger)
   : m_TriangleGeom(triangleGeom)
   , m_Centroids(centroids)
   , m_ShouldCancel(shouldCancel)
+  , m_Messenger(messenger)
   {
   }
   virtual ~CalculateCentroidsImpl() = default;
 
   void generate(size_t start, size_t end) const
   {
+    const auto progressIncrement = m_Messenger.getProgressIncrement();
+    usize progressCount = 0;
+
     for(usize triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
       if(m_ShouldCancel)
@@ -42,7 +47,15 @@ public:
       (*m_Centroids)[triangleIndex * 3] = (vertCoords[0].getX() + vertCoords[1].getX() + vertCoords[2].getX()) / 3.0F;
       (*m_Centroids)[triangleIndex * 3 + 1] = (vertCoords[0].getY() + vertCoords[1].getY() + vertCoords[2].getY()) / 3.0F;
       (*m_Centroids)[triangleIndex * 3 + 2] = (vertCoords[0].getZ() + vertCoords[1].getZ() + vertCoords[2].getZ()) / 3.0F;
+
+      progressCount++;
+      if(progressCount > progressIncrement)
+      {
+        m_Messenger.updateProgress(progressCount);
+        progressCount = 0;
+      }
     }
+    m_Messenger.updateProgress(progressCount);
   }
 
   void operator()(const Range& range) const
@@ -54,6 +67,7 @@ private:
   const TriangleGeom* m_TriangleGeom = nullptr;
   Float32Array* m_Centroids = nullptr;
   const std::atomic_bool& m_ShouldCancel;
+  ThreadSafeMessenger& m_Messenger;
 };
 } // namespace
 
@@ -85,10 +99,15 @@ Result<> TriangleCentroid::operator()()
   const DataPath pCentroidsPath = m_InputValues->TriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(m_InputValues->CentroidsArrayName);
   auto* centroidsArray = m_DataStructure.getDataAs<Float32Array>(pCentroidsPath);
 
+  usize totalElements = triangleGeom->getNumberOfFaces();
+  ThreadSafeMessenger messenger(m_MessageHandler, "Finding Centroids...");
+  messenger.setTotalElements(totalElements);
+  messenger.setProgressIncrement(totalElements / 100);
+
   // Parallel algorithm to calculate the centroids
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
-  dataAlg.execute(CalculateCentroidsImpl(triangleGeom, centroidsArray, m_ShouldCancel));
+  dataAlg.setRange(0ULL, totalElements);
+  dataAlg.execute(CalculateCentroidsImpl(triangleGeom, centroidsArray, m_ShouldCancel, messenger));
 
   return {};
 }

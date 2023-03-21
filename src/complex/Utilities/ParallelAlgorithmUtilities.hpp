@@ -1,7 +1,5 @@
 #pragma once
 
-#include "complex/Common/Types.hpp"
-
 #include <stdexcept>
 
 namespace complex
