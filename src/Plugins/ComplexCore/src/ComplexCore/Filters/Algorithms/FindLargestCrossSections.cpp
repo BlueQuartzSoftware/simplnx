@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
 
@@ -31,6 +32,13 @@ Result<> FindLargestCrossSections::operator()()
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto& largestCrossSections = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath);
   const usize numFeatures = largestCrossSections.getNumberOfTuples();
+
+  // Validate the largestCrossSections array is the proper size
+  auto validateResults = ValidateNumFeaturesInArray(m_DataStructure, m_InputValues->LargestCrossSectionsArrayPath, featureIds);
+  if(validateResults.invalid())
+  {
+    return validateResults;
+  }
 
   std::vector<float32> featureCounts(numFeatures, 0.0f);
 
