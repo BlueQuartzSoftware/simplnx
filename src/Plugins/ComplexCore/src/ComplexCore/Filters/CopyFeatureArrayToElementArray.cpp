@@ -7,26 +7,45 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
 
 namespace
 {
-// -----------------------------------------------------------------------------
-struct CopyDataFunctor
-{
-  template <typename T>
-  void operator()(DataStructure& dataStructure, const DataPath& selectedFeatureArrayPath, const DataPath& featureIdsArrayPath, const DataPath& createdArrayPath, const std::atomic_bool& shouldCancel)
-  {
-    const DataArray<T>& selectedFeatureArray = dataStructure.getDataRefAs<DataArray<T>>(selectedFeatureArrayPath);
-    const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
-    auto& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdArrayPath);
 
-    usize totalFeatureIdTuples = featureIds.getNumberOfTuples();
+template <typename T>
+class CopyFeatureArrayToElementArrayImpl
+{
+public:
+  CopyFeatureArrayToElementArrayImpl(DataStructure& dataStructure, const DataPath& selectedFeatureArrayPath, const DataPath& featureIdsArrayPath, const DataPath& createdArrayPath,
+                                     const std::atomic_bool& shouldCancel)
+  : m_DataStructure(dataStructure)
+  , m_SelectedFeatureArrayPath(selectedFeatureArrayPath)
+  , m_FeatureIdsArrayPath(featureIdsArrayPath)
+  , m_CreatedArrayPath(createdArrayPath)
+  , m_ShouldCancel(shouldCancel)
+  {
+  }
+
+  ~CopyFeatureArrayToElementArrayImpl() = default;
+  CopyFeatureArrayToElementArrayImpl(const CopyFeatureArrayToElementArrayImpl&) = default;           // Copy Constructor Not Implemented
+  CopyFeatureArrayToElementArrayImpl(CopyFeatureArrayToElementArrayImpl&&) = delete;                 // Move Constructor Not Implemented
+  CopyFeatureArrayToElementArrayImpl& operator=(const CopyFeatureArrayToElementArrayImpl&) = delete; // Copy Assignment Not Implemented
+  CopyFeatureArrayToElementArrayImpl& operator=(CopyFeatureArrayToElementArrayImpl&&) = delete;      // Move Assignment Not Implemented
+
+  void operator()(const Range& range) const
+  {
+    using DataArrayType = DataArray<T>;
+    const DataArrayType& selectedFeatureArray = m_DataStructure.getDataRefAs<DataArrayType>(m_SelectedFeatureArrayPath);
+    const Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_FeatureIdsArrayPath);
+    auto& createdArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_CreatedArrayPath);
+
     usize totalFeatureArrayComponents = selectedFeatureArray.getNumberOfComponents();
-    for(usize i = 0; i < totalFeatureIdTuples; ++i)
+
+    for(usize i = range.min(); i < range.max(); ++i)
     {
-      if(shouldCancel)
+      if(m_ShouldCancel)
       {
         return;
       }
@@ -39,6 +58,28 @@ struct CopyDataFunctor
         createdArray[totalFeatureArrayComponents * i + faComp] = selectedFeatureArray[totalFeatureArrayComponents * featureIdx + faComp];
       }
     }
+  }
+
+private:
+  DataStructure& m_DataStructure;
+  const DataPath& m_SelectedFeatureArrayPath;
+  const DataPath& m_FeatureIdsArrayPath;
+  const DataPath& m_CreatedArrayPath;
+  const std::atomic_bool& m_ShouldCancel;
+};
+
+// -----------------------------------------------------------------------------
+struct CopyFeatureArrayToElementArrayFunctor
+{
+  template <typename T>
+  void operator()(DataStructure& dataStructure, const DataPath& selectedFeatureArrayPath, const DataPath& featureIdsArrayPath, const DataPath& createdArrayPath, const std::atomic_bool& shouldCancel)
+  {
+    const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsArrayPath);
+
+    // Allow data-based parallelization
+    ParallelDataAlgorithm dataAlg;
+    dataAlg.setRange(0, featureIds.getNumberOfTuples());
+    dataAlg.execute(CopyFeatureArrayToElementArrayImpl<T>(dataStructure, selectedFeatureArrayPath, featureIdsArrayPath, createdArrayPath, shouldCancel));
   }
 };
 } // namespace
@@ -139,13 +180,16 @@ Result<> CopyFeatureArrayToElementArray::executeImpl(DataStructure& dataStructur
   const IDataArray& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(pSelectedFeatureArrayPathValue);
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
 
+  messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, "Validating number of featureIds in input array..."});
   auto results = ValidateNumFeaturesInArray(dataStructure, pSelectedFeatureArrayPathValue, featureIds);
   if(results.invalid())
   {
     return results;
   }
 
-  ExecuteDataFunction(CopyDataFunctor{}, selectedFeatureArray.getDataType(), dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
+  messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, "Copying data into target array"});
+  ExecuteDataFunction(CopyFeatureArrayToElementArrayFunctor{}, selectedFeatureArray.getDataType(), dataStructure, pSelectedFeatureArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath,
+                      shouldCancel);
 
   return {};
 }
