@@ -8,6 +8,7 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
+#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
@@ -23,16 +24,20 @@ constexpr complex::int32 k_MissingFeatureAttributeMatrix = -75769;
 class CalculateAreasImpl
 {
 public:
-  CalculateAreasImpl(const TriangleGeom* triangleGeom, Float64Array& areas, const std::atomic_bool& shouldCancel)
+  CalculateAreasImpl(const TriangleGeom* triangleGeom, Float64Array& areas, const std::atomic_bool& shouldCancel, ThreadSafeMessenger& messenger)
   : m_TriangleGeom(triangleGeom)
   , m_Areas(areas)
   , m_ShouldCancel(shouldCancel)
+  , m_Messenger(messenger)
   {
   }
   virtual ~CalculateAreasImpl() = default;
 
   void convert(size_t start, size_t end) const
   {
+    const auto progressIncrement = m_Messenger.getProgressIncrement();
+    usize progressCount = 0;
+
     std::array<float, 3> cross = {0.0f, 0.0f, 0.0f};
     for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
@@ -49,7 +54,15 @@ public:
       MatrixMath::CrossProduct(vecA.data(), vecB.data(), cross.data());
 
       m_Areas[triangleIndex] = 0.5F * MatrixMath::Magnitude3x1(cross.data());
+
+      progressCount++;
+      if(progressCount > progressIncrement)
+      {
+        m_Messenger.updateProgress(progressCount);
+        progressCount = 0;
+      }
     }
+    m_Messenger.updateProgress(progressCount);
   }
 
   void operator()(const Range& range) const
@@ -61,6 +74,7 @@ private:
   const TriangleGeom* m_TriangleGeom = nullptr;
   Float64Array& m_Areas;
   const std::atomic_bool& m_ShouldCancel;
+  ThreadSafeMessenger& m_Messenger;
 };
 } // namespace
 
@@ -129,7 +143,7 @@ IFilter::PreflightResult CalculateTriangleAreasFilter::preflightImpl(const DataS
   complex::Result<OutputActions> resultOutputActions;
 
   // The parameter will have validated that the Triangle Geometry exists and is the correct type
-  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
 
   // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
   const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
@@ -163,10 +177,15 @@ Result<> CalculateTriangleAreasFilter::executeImpl(DataStructure& dataStructure,
   DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
   auto& faceAreas = dataStructure.getDataRefAs<Float64Array>(pCalculatedAreasDataPath);
 
+  usize totalElements = triangleGeom->getNumberOfFaces();
+  ThreadSafeMessenger messenger(messageHandler, "Finding Areas...");
+  messenger.setTotalElements(totalElements);
+  messenger.setProgressIncrement(totalElements / 100);
+
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
-  dataAlg.execute(CalculateAreasImpl(triangleGeom, faceAreas, shouldCancel));
+  dataAlg.setRange(0ULL, totalElements);
+  dataAlg.execute(CalculateAreasImpl(triangleGeom, faceAreas, shouldCancel, messenger));
 
   return {};
 }
