@@ -102,7 +102,7 @@ void PluginLoader::loadPlugin()
   if(m_Handle == nullptr)
   {
     fmt::print(COMPLEX_TEXT("Could not load library '{}' with the following error:\n"), m_Path.c_str());
-    fmt::print(GetErrorMessage());
+    fmt::print("{}\n", GetErrorMessage());
     return;
   }
 
