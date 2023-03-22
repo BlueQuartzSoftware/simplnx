@@ -19,7 +19,8 @@ class FindArrayStatisticsByIndexImpl
 public:
   FindArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool stdDeviation, bool summation, bool hist, float64 histmin, float64 histmax, bool histfullrange, int32 numBins,
                                  const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, UInt64Array* lengthArray, DataArray<T>* minArray,
-                                 DataArray<T>* maxArray, Float32Array* meanArray, Float32Array* stdDevArray, Float32Array* summationArray, Float32Array* histArray)
+                                 DataArray<T>* maxArray, Float32Array* meanArray, Float32Array* stdDevArray, Float32Array* summationArray, Float32Array* histArray, 
+                                 const std::atomic_bool& shouldCancel)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -41,29 +42,49 @@ public:
   , m_StdDevArray(stdDevArray)
   , m_SummationArray(summationArray)
   , m_HistArray(histArray)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
   virtual ~FindArrayStatisticsByIndexImpl() = default;
 
+  FindArrayStatisticsByIndexImpl(const FindArrayStatisticsByIndexImpl&) = default;           // Copy Constructor Not Implemented
+  FindArrayStatisticsByIndexImpl(FindArrayStatisticsByIndexImpl&&) = delete;                 // Move Constructor Not Implemented
+  FindArrayStatisticsByIndexImpl& operator=(const FindArrayStatisticsByIndexImpl&) = delete; // Copy Assignment Not Implemented
+  FindArrayStatisticsByIndexImpl& operator=(FindArrayStatisticsByIndexImpl&&) = delete;      // Move Assignment Not Implemented
+
   void compute(usize start, usize end) const
   {
-    const usize numTuples = m_Source.getNumberOfTuples();
+    // std::cout << "FindArrayStatisticsByIndexImpl::compute() " << start << "   " << end << std::endl;
+
+    auto progressIncrement = m_Messenger.getProgressIncrement();
+    const usize numTuples = m_FeatureIds->getNumberOfTuples(); // m_Messenger.getTotalElements();
     const usize numCurrentFeatures = end - start;
 
     std::vector<uint64> length(numCurrentFeatures, 0);
     std::vector<T> min(numCurrentFeatures, std::numeric_limits<T>::max());
     std::vector<T> max(numCurrentFeatures, std::numeric_limits<T>::min());
     std::vector<T> summation(numCurrentFeatures, 0);
+    usize progressCount = 0;
+
+    //  std::cout << "    Starting Min/Max/Summation loop..." << std::endl;
+
+    progressIncrement = numTuples / 100;
+
     for(usize i = 0; i < numTuples; ++i)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       if(m_Mask != nullptr && !m_Mask->isTrue(i))
       {
         continue;
       }
       for(usize j = 0; j < numCurrentFeatures; j++)
       {
-        if((*m_FeatureIds)[i] != static_cast<int32>(start + j))
+        int32 featureId = (*m_FeatureIds)[i];
+        if(featureId != static_cast<int32>(start + j))
         {
           continue;
         }
@@ -82,6 +103,12 @@ public:
 
         summation[j] = summation[j] + m_Source[i];
       }
+      progressCount++;
+      if(progressCount > progressIncrement)
+      {
+        m_Messenger.sendStatusMessage(fmt::format("Min/Max/Summation/Length Feature/Ensemble [{}-{}]: {}/{}", start, end, i, numTuples));
+        progressCount = 0;
+      }
     }
 
     AbstractDataStore<float32>* histDataStore = nullptr;
@@ -89,8 +116,16 @@ public:
     {
       histDataStore = m_HistArray->getDataStore();
     }
+
+    m_Messenger.sendStatusMessage(fmt::format("Storing Results Feature/Ensemble [{}-{}]", start, end));
+    progressIncrement = numCurrentFeatures / 100;
+    progressCount = 0;
     for(usize j = start; j < end; j++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       const usize localFeatureIndex = j - start;
       if(m_Length)
       {
@@ -126,36 +161,7 @@ public:
       {
         m_MeanArray->initializeTuple(j, meanValue);
       }
-      if(m_StdDeviation)
-      {
-        float32 stdDevVal = 0.0f;
-        if(length[localFeatureIndex] > 0)
-        {
-          if constexpr(std::is_same_v<T, bool>)
-          {
-            stdDevVal = meanValue;
-          }
-          else
-          {
-            std::vector<float64> difference;
-            difference.reserve(numTuples);
-            for(usize i = 0; i < numTuples; ++i)
-            {
-              if(m_Mask != nullptr && !m_Mask->isTrue(i))
-              {
-                continue;
-              }
-              if((*m_FeatureIds)[i] == static_cast<int32>(j))
-              {
-                difference.push_back(static_cast<float64>(m_Source[i] - meanValue));
-              }
-            }
-            const float64 squaredSum = std::inner_product(std::cbegin(difference), std::cend(difference), std::cbegin(difference), 0.0);
-            stdDevVal = static_cast<float32>(std::sqrt(squaredSum / static_cast<float64>(difference.size())));
-          }
-        }
-        m_StdDevArray->initializeTuple(j, stdDevVal);
-      }
+
       if(m_Histogram && histDataStore != nullptr)
       {
         std::vector<float32> histogram(m_NumBins, 0);
@@ -182,6 +188,10 @@ public:
           {
             for(usize i = 0; i < numTuples; ++i)
             {
+              if(m_ShouldCancel)
+              {
+                return;
+              }
               if(m_Mask != nullptr && !m_Mask->isTrue(i))
               {
                 continue;
@@ -205,8 +215,59 @@ public:
         }     // end of length if
         histDataStore->setTuple(j, histogram);
       } // end of m_Histogram if
-    }   // end of outermost for loop
-  }     // end of compute
+
+      progressCount++;
+      if(progressCount > progressIncrement)
+      {
+        m_Messenger.sendStatusMessage(fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, start, end));
+        progressCount = 0;
+      }
+    }
+
+    if(m_StdDeviation)
+    {
+      // https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/variance-standard-deviation-population/a/calculating-standard-deviation-step-by-step
+      m_Messenger.sendStatusMessage(fmt::format("Computing StdDev Feature/Ensemble [{}-{}]", start, end));
+      // This should probably be done with Kahan Summation instead
+      std::vector<float64> sumOfDiffs(numCurrentFeatures, 0.0f);
+      progressCount = 0;
+
+      for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+      {
+        if(m_ShouldCancel)
+        {
+          return;
+        }
+        // Is the value in a mask and if so, is that mask TRUE
+        if(m_Mask != nullptr && !m_Mask->isTrue(tupleIndex))
+        {
+          continue;
+        }
+        // Is the featureId within our range that we care about
+        int32 featureId = (*m_FeatureIds)[tupleIndex];
+        if(featureId < start || featureId >= end)
+        {
+          continue;
+        }
+
+        sumOfDiffs[featureId - start] += static_cast<float64>((m_Source[tupleIndex] - m_MeanArray->operator[](featureId)) * (m_Source[tupleIndex] - m_MeanArray->operator[](featureId)));
+
+        progressCount++;
+        if(progressCount > progressIncrement)
+        {
+          m_Messenger.sendStatusMessage(fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {}/{}", start, end, tupleIndex, numTuples));
+          progressCount = 0;
+        }
+      }
+
+      for(usize j = 0; j < numCurrentFeatures; j++)
+      {
+        // Set the value into the output array
+        m_StdDevArray->operator[](j + start) = static_cast<float32>(std::sqrt(sumOfDiffs[j] / static_cast<float64>(m_LengthArray->operator[](j + start))));
+      }
+    }
+
+  } // end of compute
 
   void operator()(const Range& range) const
   {
@@ -235,17 +296,19 @@ private:
   Float32Array* m_StdDevArray = nullptr;
   Float32Array* m_SummationArray = nullptr;
   Float32Array* m_HistArray = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 template <typename T>
 class FindArrayMedianByIndexImpl
 {
 public:
-  FindArrayMedianByIndexImpl(const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, Float32Array* medianArray)
+  FindArrayMedianByIndexImpl(const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, Float32Array* medianArray, DataArray<uint64>* lengthArray)
   : m_MedianArray(medianArray)
   , m_Mask(mask)
   , m_FeatureIds(featureIds)
   , m_Source(source)
+  , m_LengthArray(lengthArray)
   {
   }
 
@@ -253,33 +316,41 @@ public:
 
   void compute(usize start, usize end) const
   {
-    const usize numTuples = m_Source.getNumberOfTuples();
-    for(usize j = start; j < end; j++)
+    m_Messenger.sendStatusMessage(fmt::format("Starting Median Array Calculation: Feature/Ensemble [{}-{}]", start, end));
+
+    const auto progressIncrement = m_Messenger.getProgressIncrement();
+    usize progressCount = 0;
+
+    usize numFeatureSources = end - start;
+    // Create the arrays that will collect the values from the arrays. allocate them to the correct size based on the length array
+    std::vector<std::vector<T>> featureSources(numFeatureSources);
+    for(usize featureSourceIndex = 0; featureSourceIndex < numFeatureSources; featureSourceIndex++)
     {
-      std::vector<T> featureSource;
-      usize reserveSize = 10; // not sure what to put here so making a guess
-      featureSource.reserve(reserveSize);
-      usize numPushBacks = 0;
-      for(usize i = 0; i < numTuples; ++i)
+      featureSources[featureSourceIndex].reserve(m_LengthArray->operator[](featureSourceIndex + start));
+    }
+
+    // std::cout << start << "    " << end << "  Starting Median Array Loop... " << std::endl;
+    const usize numTuples = m_Source.getNumberOfTuples();
+    for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+    {
+      // Is the value in a mask and if so, is that mask TRUE
+      if(m_Mask != nullptr && !m_Mask->isTrue(tupleIndex))
       {
-        if(m_Mask != nullptr && !m_Mask->isTrue(i))
-        {
-          continue;
-        }
-        if((*m_FeatureIds)[i] != static_cast<int32>(j))
-        {
-          continue;
-        }
-        if(numPushBacks >= reserveSize)
-        {
-          reserveSize *= 10;
-          featureSource.reserve(reserveSize);
-        }
-        featureSource.push_back(m_Source[i]);
-        ++numPushBacks;
+        continue;
       }
-      const float32 val = StaticicsCalculations::findMedian(featureSource);
-      m_MedianArray->initializeTuple(j, val);
+      // Is the featureId within our range that we care about
+      int32 featureId = (*m_FeatureIds)[tupleIndex];
+      if(featureId < start || featureId >= end)
+      {
+        continue;
+      }
+      featureSources[featureId - start].push_back(m_Source[tupleIndex]);
+    }
+
+    for(usize featureSourceIndex = 0; featureSourceIndex < numFeatureSources; featureSourceIndex++)
+    {
+      const float32 val = StaticicsCalculations::findMedian(featureSources[featureSourceIndex]);
+      m_MedianArray->operator[](featureSourceIndex + start) = val;
     }
   }
 
@@ -293,6 +364,7 @@ private:
   const std::unique_ptr<MaskCompare>& m_Mask = nullptr;
   const Int32Array* m_FeatureIds = nullptr;
   const DataArray<T>& m_Source;
+  const DataArray<uint64>* m_LengthArray = nullptr;
 };
 
 // -----------------------------------------------------------------------------
@@ -388,7 +460,7 @@ void FindStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
 // -----------------------------------------------------------------------------
 template <typename T>
 void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, const std::unique_ptr<MaskCompare>& mask, const FindArrayStatisticsInputValues* inputValues,
-                    std::vector<IDataArray*>& arrays, usize numFeatures)
+                    std::vector<IDataArray*>& arrays, usize numFeatures, const std::atomic_bool& shouldCancel)
 {
   if(inputValues->ComputeByIndex)
   {
@@ -400,22 +472,47 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* summationArray = dynamic_cast<Float32Array*>(arrays[6]);
     auto* histArray = dynamic_cast<Float32Array*>(arrays[7]);
 
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0, numFeatures);
-    dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindStdDeviation,
-                                                      inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
-                                                      inputValues->NumBins, mask, featureIds, source, lengthArray, minArray, maxArray, meanArray, stdDevArray, summationArray, histArray));
+    // ThreadSafeMessenger messenger(messageHandler, " Computing Statistics by Feature/Ensemble....");
+    // messenger.setTotalElements(numFeatures);
+    // messenger.setProgressIncrement(numFeatures / 100);
+
+    //    ParallelDataAlgorithm dataAlg;
+    //    dataAlg.setRange(0, numFeatures);
+    //    dataAlg.setParallelizationEnabled(true);
+    //    dataAlg.setGrainSize(500);
+    //    dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindStdDeviation,
+    //                                                      inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
+    //                                                      inputValues->NumBins, mask, featureIds, source, lengthArray, minArray, maxArray, meanArray, stdDevArray, summationArray, histArray,
+    //                                                      messenger, shouldCancel));
+#ifdef COMPLEX_ENABLE_MULTICORE
+    tbb::simple_partitioner simplePartitioner;
+    size_t grainSize = 500;
+    tbb::blocked_range<size_t> tbbRange(0, numFeatures, grainSize);
+    tbb::parallel_for(tbbRange,
+                      FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindStdDeviation,
+                                                        inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
+                                                        inputValues->NumBins, mask, featureIds, source, lengthArray, minArray, maxArray, meanArray, stdDevArray, summationArray, histArray,
+                                                        shouldCancel),
+                      simplePartitioner);
+#endif
     if(inputValues->FindMedian)
     {
-      auto* medianArray = dynamic_cast<Float32Array*>(arrays[4]);
-      if(medianArray == nullptr)
+      messageHandler(IFilter::Message{IFilter::Message::Type::Info, "Starting Median Calculation.."});
+
+      auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
+      if(medianArrayPtr == nullptr)
       {
-        throw std::invalid_argument("FindArrayMedianByIndexImpl could not dynamic_cast 'Median' array to needed type. Check input array selection.");
+        throw std::invalid_argument("FindArrayMedianByIndexImpl could not dynamic_cast 'Median' array to a Float32 array type. Check input array selection.");
       }
 
+      // ThreadSafeMessenger messenger2(messageHandler, " Finding Statistics...");
+      // messenger2.setTotalElements(numFeatures);
+      // messenger2.setProgressIncrement(numFeatures / 100);
+
       ParallelDataAlgorithm medianDataAlg;
+      medianDataAlg.setParallelizationEnabled(false);
       medianDataAlg.setRange(0, numFeatures);
-      medianDataAlg.execute(FindArrayMedianByIndexImpl<T>(mask, featureIds, source, medianArray));
+      medianDataAlg.execute(FindArrayMedianByIndexImpl<T>(mask, featureIds, source, medianArrayPtr, lengthArray));
     }
   }
   else
@@ -493,7 +590,8 @@ void StandardizeData(const DataArray<T>& data, bool useMask, const std::unique_p
 struct FindArrayStatisticsFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IDataArray*>& arrays, usize numFeatures, const FindArrayStatisticsInputValues* inputValues)
+  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IDataArray*>& arrays, usize numFeatures, const FindArrayStatisticsInputValues* inputValues,
+                      const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = static_cast<const DataArray<T>&>(inputIDataArray);
     Int32Array* featureIds = nullptr;
@@ -594,7 +692,7 @@ struct FindArrayStatisticsFunctor
     // End Initialization
 
     // this level checks whether computing by index or not and preps the calculations accordingly
-    FindStatistics<T>(inputArray, featureIds, maskCompare, inputValues, arrays, numFeatures);
+    FindStatistics<T>(inputArray, featureIds, maskCompare, inputValues, arrays, numFeatures, shouldCancel);
 
     // compute the standardized data based on whether computing by index or not
     if(inputValues->StandardizeData)
@@ -699,14 +797,15 @@ Result<> FindArrayStatistics::operator()()
 
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
-  ExecuteDataFunction(FindArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues);
+  ExecuteDataFunction(FindArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, m_ShouldCancel);
 
   return {};
 }
 
 // -----------------------------------------------------------------------------
-usize FindArrayStatistics::FindNumFeatures(const Int32Array& featureIds)
+usize FindArrayStatistics::FindNumFeatures(const Int32Array& featureIds) const
 {
+  m_MessageHandler(IFilter::Message{IFilter::Message::Type::Info, "Finding Max FeatureId..."});
   usize numFeatures = 0;
   const usize totalPoints = featureIds.getNumberOfTuples();
   for(usize i = 0; i < totalPoints; i++)

@@ -63,13 +63,13 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  static usize FindNumFeatures(const Int32Array& featureIds);
-
 private:
   DataStructure& m_DataStructure;
   const FindArrayStatisticsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  usize FindNumFeatures(const Int32Array& featureIds) const;
 };
 
 } // namespace complex
