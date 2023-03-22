@@ -608,10 +608,10 @@ class COMPLEX_EXPORT FlyingEdgesAlgorithm
   using TCube = std::array<T, 8>;
 
 public:
-  FlyingEdgesAlgorithm(const ImageGeom& image, const IDataArray& iDataArray, const T& isoval)
+  FlyingEdgesAlgorithm(const ImageGeom& image, const IDataArray& iDataArray, T isoVal)
   : m_Image(image)
   , m_DataArray(dynamic_cast<const DataArray<T>&>(iDataArray))
-  , m_IsoVal(isoval)
+  , m_IsoVal(isoVal)
   , m_NX(image.getDimensions()[0])
   , m_NY(image.getDimensions()[1])
   , m_NZ(image.getDimensions()[2])
@@ -1124,6 +1124,7 @@ public:
   ///////////////////////////////////////////////////////////////////////////////
 
 private:
+  ///////////////////// MEMBER VARIABLES /////////////////////
   struct gridEdge
   {
     gridEdge()
@@ -1147,11 +1148,9 @@ private:
     usize zstart;
   };
 
-  ///////////////////// MEMBER VARIABLES /////////////////////
-
   const ImageGeom& m_Image;
   const DataArray<T>& m_DataArray;
-  T const m_IsoVal;
+  T m_IsoVal;
 
   usize const m_NX; //
   usize const m_NY; // for indexing

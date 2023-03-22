@@ -9,6 +9,10 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT ImageContouringInputValues
 {
+  DataPath imageGeomPath;
+  DataPath triangleGeomPath;
+  DataPath contouringArrayPath;
+  float64 isoVal;
 };
 
 /**
