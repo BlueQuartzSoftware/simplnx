@@ -83,10 +83,8 @@ Result<> FindLargestCrossSections::operator()()
   }
   for(size_t i = 0; i < outPlane; i++)
   {
-    for(size_t g = 0; g < numFeatures; g++)
-    {
-      featureCounts[g] = 0.0f;
-    }
+    std::fill(featureCounts.begin(), featureCounts.end(), 0.0f);
+
     iStride = i * stride1;
     for(size_t j = 0; j < inPlane1; j++)
     {

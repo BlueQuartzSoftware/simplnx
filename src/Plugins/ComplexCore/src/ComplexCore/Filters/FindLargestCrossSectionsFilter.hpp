@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class FindLargestCrossSectionsFilter
- * @brief This filter will ....
+ * @brief This filter will find the largest cross sections of an image geometry.
  */
 class COMPLEXCORE_EXPORT FindLargestCrossSectionsFilter : public IFilter
 {
