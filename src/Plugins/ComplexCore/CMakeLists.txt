@@ -47,6 +47,7 @@ set(FilterList
   FeatureDataCSVWriterFilter
   FillBadDataFilter
   FindArrayStatisticsFilter
+  FindArrayUniqueValuesFilter
   FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindDifferencesMap
