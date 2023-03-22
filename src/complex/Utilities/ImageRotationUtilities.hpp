@@ -403,7 +403,6 @@ public:
     // Tri linearInterpolationData<T> interpolationValues;
     // SizeVec3 oldGeomIndices = {std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()};
 
-    Eigen::Vector4f coordsNew;
     std::vector<T> pValues(8 * numComps);
     Eigen::Vector3f uvw;
 
@@ -425,7 +424,9 @@ public:
         {
           int64_t newIndex = ktot + jtot + i;
 
-          coordsNew = Eigen::Vector4f(destImageGeomPtr->getCoordsf(newIndex).toArray().data());
+          Point3Df point = destImageGeomPtr->getCoordsf(newIndex);
+          // Last value is 1. See https://www.euclideanspace.com/maths/geometry/affine/matrix4x4/index.htm
+          Eigen::Vector4f coordsNew(point.getX(), point.getY(), point.getZ(), 1.0f);
           // Transform back to the old coordinate
           Eigen::Array4f coordsOld = inverseTransform * coordsNew;
 
@@ -506,9 +507,6 @@ public:
     auto& newDataStore = m_TargetArray->getIDataStoreRefAs<AbstractDataStore<T>>();
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
-    Eigen::Vector4f coordsNew;
-    coordsNew[3] = 0.0F;
-    Eigen::Array4f coordsOld;
     for(int64 k = 0; k < m_Params.zpNew; k++)
     {
       if(m_FilterCallback->getCancel())
@@ -524,9 +522,11 @@ public:
         for(int64 i = 0; i < m_Params.xpNew; i++)
         {
           int64 const newIndex = ktot + jtot + i;
-          coordsNew = Eigen::Vector4f(destImageGeomPtr->getCoordsf(newIndex).toArray().data());
+          Point3Df point = destImageGeomPtr->getCoordsf(newIndex);
+          // Last value is 1. See https://www.euclideanspace.com/maths/geometry/affine/matrix4x4/index.htm
+          Eigen::Vector4f coordsNew(point.getX(), point.getY(), point.getZ(), 1.0f);
           // Transform back to the old coordinate
-          coordsOld = inverseTransform * coordsNew;
+          Eigen::Array4f coordsOld = inverseTransform * coordsNew;
 
           // Now compute the old Cell Index from the old coordinate
           SizeVec3 oldGeomIndices;

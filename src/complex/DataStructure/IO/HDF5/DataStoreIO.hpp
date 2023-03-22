@@ -176,13 +176,13 @@ inline Result<> WriteDataStore(complex::HDF5::DatasetWriter& datasetWriter, cons
   if(dataStore.getChunkShape().has_value() == false)
   {
     usize count = dataStore.getSize();
-    T* dataPtr = new T[count];
+    auto dataPtr = std::make_unique<T[]>(count);
     for(usize i = 0; i < count; ++i)
     {
       dataPtr[i] = dataStore[i];
     }
 
-    herr_t err = datasetWriter.writeSpan(h5dims, nonstd::span<const T>{const_cast<T*>(dataPtr), count});
+    herr_t err = datasetWriter.writeSpan(h5dims, nonstd::span<const T>{dataPtr.get(), count});
     if(err < 0)
     {
       std::string ss = "Failed to write DataStore span to Dataset";
