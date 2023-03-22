@@ -644,7 +644,7 @@ public:
         isGE[0] = (curPointValue >= m_IsoVal);
         for(int i = 1; i != m_NX; ++i)
         {
-          isGE[i % 2] = (getData(i,j,k) >= m_IsoVal);
+          isGE[i % 2] = (getData(i, j, k) >= m_IsoVal);
 
           curEdgeCases[i - 1] = calcCaseEdge(isGE[(i + 1) % 2], isGE[i % 2]);
         }
