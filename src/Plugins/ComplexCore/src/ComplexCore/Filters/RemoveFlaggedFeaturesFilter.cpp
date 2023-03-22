@@ -6,6 +6,8 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -14,6 +16,11 @@
 #include "complex/Parameters/StringParameter.hpp"
 
 using namespace complex;
+
+namespace
+{
+const std::string k_boundsName = "tempBounds";
+}
 
 namespace complex
 {
@@ -106,7 +113,8 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue) == nullptr)
+  auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  if(featureIds == nullptr)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{-9890, fmt::format("Could not find selected Feature Ids Data Array at path '{}'", pFeatureIdsArrayPathValue.toString())}})};
   }
@@ -138,6 +146,16 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
                                                                           pFeatureIdsArrayPathValue.toString(), warningMsg)}));
   }
 
+  auto pFunctionality = filterArgs.value<ChoicesParameter::ValueType>(k_Functionality_Key);
+  if(pFunctionality != to_underlying(Functionality::Remove))
+  {
+    DataPath tempPath({k_boundsName});
+    auto action = std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{featureIds->getNumberOfTuples()}, std::vector<usize>{featureIds->getNumberOfComponents() * 6}, tempPath);
+
+    // After the execute function has been done, delete the temp array
+    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+  }
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -154,6 +172,7 @@ Result<> RemoveFlaggedFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometry_Key);
   inputValues.CreatedImageGeometryPrefix = filterArgs.value<std::string>(k_CreatedImageGeometryPrefix_Key);
+  inputValues.TempBoundsPath = DataPath({k_boundsName});
 
   return RemoveFlaggedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
