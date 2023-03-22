@@ -1,5 +1,7 @@
 #include "ImageContouring.hpp"
 
+#include "complex/Utilities/FlyingEdges.hpp"
+
 using namespace complex;
 
 // -----------------------------------------------------------------------------

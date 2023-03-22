@@ -27,7 +27,7 @@ Uuid ImageContouringFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ImageContouringFilter::humanName() const
 {
-  return "Image Contour";
+  return "Image Contouring";
 }
 
 //------------------------------------------------------------------------------
