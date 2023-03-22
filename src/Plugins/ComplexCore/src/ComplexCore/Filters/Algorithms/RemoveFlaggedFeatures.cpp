@@ -1,5 +1,6 @@
 #include "RemoveFlaggedFeatures.hpp"
 
+#include "ComplexCore/Filters/ComputeFeatureRectFilter.hpp"
 #include "ComplexCore/Filters/CropImageGeometry.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
@@ -13,18 +14,7 @@ using namespace complex;
 
 namespace
 {
-template <bool UseRemove, bool UseExtract>
-struct AlgorithmTypeOptions
-{
-  static inline constexpr bool UsingRemove = UseRemove;
-  static inline constexpr bool UsingExtract = UseExtract;
-};
-
-using Remove = AlgorithmTypeOptions<true, false>;
-using Extract = AlgorithmTypeOptions<false, true>;
-
-template <class AlgorithmTypeOptions = Remove>
-bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, RemoveFlaggedFeatures* filter)
+bool IdentifyNeighbors(ImageGeom& imageGeom, Int32Array& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, RemoveFlaggedFeatures* filter)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
   SizeVec3 uDims = imageGeom.getDimensions();
@@ -61,98 +51,68 @@ bool IdentifyNeighborsOrBounds(ImageGeom& imageGeom, Int32Array& featureIds, std
       {
         int64 count = kStride + jStride + i;
         featureName = featureIds[count];
-        if constexpr(AlgorithmTypeOptions::UsingRemove)
+        if(featureName > 0)
         {
-          if(featureName > 0)
+          continue;
+        }
+        shouldLoop = true;
+        int32 neighbor;
+        int32 current = 0;
+        int32 most = 0;
+        std::vector<int32> numHits(6, 0);
+        std::vector<int32> discoveredFeatures = {};
+        discoveredFeatures.reserve(6);
+        for(int8 l = 0; l < 6; l++)
+        {
+          if(l == 5 && k == (dims[2] - 1))
           {
             continue;
           }
-          shouldLoop = true;
-          int32 neighbor;
-          int32 current = 0;
-          int32 most = 0;
-          std::vector<int32> numHits(6, 0);
-          std::vector<int32> discoveredFeatures = {};
-          discoveredFeatures.reserve(6);
-          for(int8 l = 0; l < 6; l++)
+          if(l == 1 && j == 0)
           {
-            if(l == 5 && k == (dims[2] - 1))
-            {
-              continue;
-            }
-            if(l == 1 && j == 0)
-            {
-              continue;
-            }
-            if(l == 4 && j == (dims[1] - 1))
-            {
-              continue;
-            }
-            if(l == 2 && i == 0)
-            {
-              continue;
-            }
-            if(l == 3 && i == (dims[0] - 1))
-            {
-              continue;
-            }
-            if(l == 0 && k == 0)
-            {
-              continue;
-            }
-
-            int64 neighborPoint = count + neighborPoints[l];
-            int32 feature = featureIds[neighborPoint];
-            if(feature >= 0)
-            {
-              bool found = false;
-              for(usize featIndex = 0; featIndex < discoveredFeatures.size(); featIndex++)
-              {
-                if(discoveredFeatures[featIndex] == feature)
-                {
-                  found = true;
-                  numHits[featIndex]++;
-                  current = numHits[featIndex];
-                  if(current > most)
-                  {
-                    most = current;
-                    storageArray[count] = static_cast<int32>(neighborPoint);
-                  }
-                  break;
-                }
-              }
-              if(!found)
-              {
-                discoveredFeatures.push_back(feature);
-              }
-            }
+            continue;
           }
-        }
-        else if constexpr(AlgorithmTypeOptions::UsingExtract)
-        {
-          int64 indices[3] = {i, j, k}; // Sequence dependent DO NOT REORDER
-          int64 featureShift = featureName * 6;
-          for(uint8 l = 0; l < 6; l++) // unsigned is faster with modulo
+          if(l == 4 && j == (dims[1] - 1))
           {
-            int64 current = indices[l / 2];
-            if(storageArray[featureShift + l] != -1)
+            continue;
+          }
+          if(l == 2 && i == 0)
+          {
+            continue;
+          }
+          if(l == 3 && i == (dims[0] - 1))
+          {
+            continue;
+          }
+          if(l == 0 && k == 0)
+          {
+            continue;
+          }
+
+          int64 neighborPoint = count + neighborPoints[l];
+          int32 feature = featureIds[neighborPoint];
+          if(feature >= 0)
+          {
+            bool found = false;
+            for(usize featIndex = 0; featIndex < discoveredFeatures.size(); featIndex++)
             {
-              if((l + 1) & 1) // if l % 2 == 0
+              if(discoveredFeatures[featIndex] == feature)
               {
-                if(storageArray[featureShift + l] <= current)
+                found = true;
+                numHits[featIndex]++;
+                current = numHits[featIndex];
+                if(current > most)
                 {
-                  continue;
+                  most = current;
+                  storageArray[count] = static_cast<int32>(neighborPoint);
                 }
-              }
-              else
-              {
-                if(storageArray[featureShift + l] >= current)
-                {
-                  continue;
-                }
+                break;
               }
             }
-            storageArray[featureShift + l] = static_cast<int32>(current);
+            if(!found)
+            {
+              discoveredFeatures.push_back(feature);
+            }
           }
         }
       }
@@ -354,12 +314,32 @@ Result<> RemoveFlaggedFeatures::operator()()
   {
     m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Extraction")});
 
-    std::vector<int32> bounds((featureIds.getNumberOfTuples() * featureIds.getNumberOfComponents()) * 6, -1);
-    bool invalid = IdentifyNeighborsOrBounds<Extract>(imageGeom, featureIds, bounds, getCancel(), this);
-    if(invalid)
     {
-      return MakeErrorResult(-45430, "Extraction was instantiated wrong!");
+      ComputeFeatureRectFilter filter;
+      Arguments args;
+
+      args.insert(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(m_InputValues->FeatureIdsArrayPath));
+      args.insert(ComputeFeatureRectFilter::k_FeatureRectArrayPath_Key, std::make_any<DataPath>(m_InputValues->TempBoundsPath));
+
+      auto preflightResult = filter.preflight(m_DataStructure, args);
+      if(preflightResult.outputActions.invalid())
+      {
+        throw std::runtime_error("Preflight failed when cropping the geometry in extract flagged features!");
+      }
+
+      if(getCancel())
+      {
+        return {};
+      }
+
+      auto executeResult = filter.execute(m_DataStructure, args);
+      if(preflightResult.outputActions.invalid())
+      {
+        throw std::runtime_error("Execute failed when cropping the geometry in extract flagged features!");
+      }
     }
+
+    auto bounds = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->TempBoundsPath);
 
     if(getCancel())
     {
@@ -367,7 +347,6 @@ Result<> RemoveFlaggedFeatures::operator()()
     }
 
     ParallelTaskAlgorithm taskRunner;
-
     // This has to be run in serial for the time being because adding to the dataStructure is not thread-safe
     taskRunner.setParallelizationEnabled(false);
 
@@ -386,8 +365,8 @@ Result<> RemoveFlaggedFeatures::operator()()
       }
 
       usize index = 6 * i;
-      std::vector<uint64> minVoxels = {static_cast<uint64>(bounds[index]), static_cast<uint64>(bounds[index + 2]), static_cast<uint64>(bounds[index + 4])};
-      std::vector<uint64> maxVoxels = {static_cast<uint64>(bounds[index + 1]), static_cast<uint64>(bounds[index + 3]), static_cast<uint64>(bounds[index + 5])};
+      std::vector<uint64> minVoxels = {static_cast<uint64>(bounds[index]), static_cast<uint64>(bounds[index + 1]), static_cast<uint64>(bounds[index + 2])};
+      std::vector<uint64> maxVoxels = {static_cast<uint64>(bounds[index + 3]), static_cast<uint64>(bounds[index + 4]), static_cast<uint64>(bounds[index + 5])};
 
       DataPath createdImgGeomPath({fmt::format(("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
 
@@ -430,7 +409,7 @@ Result<> RemoveFlaggedFeatures::operator()()
         count++;
         m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
         std::fill(neighbors.begin(), neighbors.end(), -1);
-        shouldLoop = IdentifyNeighborsOrBounds(imageGeom, featureIds, neighbors, getCancel(), this);
+        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, getCancel(), this);
 
         if(getCancel())
         {

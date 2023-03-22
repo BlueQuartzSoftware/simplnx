@@ -19,6 +19,7 @@ set(FilterList
   ChangeAngleRepresentation
   CombineAttributeArraysFilter
   ComputeMomentInvariants2DFilter
+  ComputeFeatureRectFilter
   ConditionalSetValue
   ConvertColorToGrayScaleFilter
   ConvertDataFilter
@@ -111,6 +112,7 @@ set(AlgorithmList
   CalculateArrayHistogram
   CombineAttributeArrays
   ComputeMomentInvariants2D
+  ComputeFeatureRect
   ConvertColorToGrayScale
   ConvertData
   ErodeDilateBadData

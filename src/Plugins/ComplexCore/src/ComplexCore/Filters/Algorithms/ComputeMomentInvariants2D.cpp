@@ -37,8 +37,8 @@ public:
     for(int32 featureId = start; featureId < end; featureId++)
     {
       const auto featureIdRectIndex = featureId * numRectComponents;
-      std::vector<uint32> corner = {m_FeatureRect[featureIdRectIndex],     m_FeatureRect[featureIdRectIndex + 1], m_FeatureRect[featureIdRectIndex + 2], m_FeatureRect[featureIdRectIndex + 3],
-                                    m_FeatureRect[featureIdRectIndex + 4], m_FeatureRect[featureIdRectIndex + 5], m_FeatureRect[featureIdRectIndex + 6]};
+      std::vector<uint32> corner = {m_FeatureRect[featureIdRectIndex],     m_FeatureRect[featureIdRectIndex + 1], m_FeatureRect[featureIdRectIndex + 2],
+                                    m_FeatureRect[featureIdRectIndex + 3], m_FeatureRect[featureIdRectIndex + 4], m_FeatureRect[featureIdRectIndex + 5]};
       constexpr usize maxOrder = 2;
 
       // Figure the largest X || Y dimension so we can create a square matrix
