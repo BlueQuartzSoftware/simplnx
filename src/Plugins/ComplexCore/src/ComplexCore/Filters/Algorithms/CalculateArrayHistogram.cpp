@@ -131,13 +131,15 @@ Result<> CalculateArrayHistogram::operator()()
   std::tuple<bool, float64, float64> range = std::make_tuple(m_InputValues->UserDefinedRange, m_InputValues->MinRange, m_InputValues->MaxRange); // Custom bool, min, max
   ParallelTaskAlgorithm taskRunner;
   ThreadSafeTaskMessenger messenger(m_MessageHandler, "Calculating...");
+
+  std::atomic<usize> overflow = 0;
+
   for(int32 i = 0; i < selectedArrayPaths.size(); i++)
   {
     if(getCancel())
     {
       return {};
     }
-    std::atomic<usize> overflow = 0;
     const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(selectedArrayPaths[i]);
     auto& histogram = m_DataStructure.getDataRefAs<DataArray<float64>>(m_InputValues->CreatedHistogramDataPaths.at(i));
     messenger.addArray(inputData.getId(), inputData.getSize(), inputData.getName());
