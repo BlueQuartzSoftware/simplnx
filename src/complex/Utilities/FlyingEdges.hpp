@@ -605,7 +605,7 @@ namespace complex
 template <typename T>
 class COMPLEX_EXPORT FlyingEdgesAlgorithm
 {
-  using cube = std::array<std::array<T, 3>, 8>;
+  using cube = std::array<std::array<float32, 3>, 8>;
   using TCube = std::array<T, 8>;
 
 public:
@@ -643,13 +643,13 @@ public:
       for(usize j = 0; j != m_NY; ++j)
       {
         auto curEdgeCases = m_EdgeCases.begin() + (m_NX - 1) * (k * m_NY + j);
-        T curPointValue = getData(0, j, k);
+        T curPointValue = m_DataArray[m_NX*(k*m_NY + j)];
 
         std::array<bool, 2> isGE = {};
         isGE[0] = (curPointValue >= m_IsoVal);
         for(int i = 1; i != m_NX; ++i)
         {
-          isGE[i % 2] = (getData(i, j, k) >= m_IsoVal);
+          isGE[i % 2] = (m_DataArray[(m_NX*(k*m_NY + j)) + i] >= m_IsoVal);
 
           curEdgeCases[i - 1] = calcCaseEdge(isGE[(i + 1) % 2], isGE[i % 2]);
         }
@@ -883,8 +883,8 @@ public:
         }}
     */
 
-    pointAccum *= 3; //flatten arrays
-    triAccum *= 3;
+    pointAccum; //flatten arrays
+    triAccum;
 
     m_TriangleGeom.resizeFaceList(triAccum);
     m_TriangleGeom.resizeVertexList(pointAccum);
@@ -912,7 +912,7 @@ public:
         if(xl == xr)
           continue;
 
-        usize triIdx = m_TriCounter[k * (m_NY - 1) + j] * 3;
+        usize triIdx = m_TriCounter[k * (m_NY - 1) + j];
         auto curCubeCaseIds = m_CubeCases.begin() + (m_NX - 1) * (k * (m_NY - 1) + j);
 
         gridEdge const& ge0 = m_GridEdges[k * m_NY + j];
@@ -964,8 +964,7 @@ public:
           if(isCut[0])
           {
             usize idx = ge0.xstart + x0counter;
-            idx *= 3;
-            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 0, idx);
+            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 0, idx*3);
             globalIdxs[0] = idx;
             ++x0counter;
           }
@@ -973,8 +972,7 @@ public:
           if(isCut[3])
           {
             usize idx = ge0.ystart + y0counter;
-            idx *= 3;
-            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 3, idx);
+            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 3, idx*3);
             globalIdxs[3] = idx;
             ++y0counter;
           }
@@ -982,8 +980,7 @@ public:
           if(isCut[8])
           {
             usize idx = ge0.zstart + z0counter;
-            idx *= 3;
-            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 8, idx);
+            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 8, idx*3);
             globalIdxs[8] = idx;
             ++z0counter;
           }
@@ -1000,10 +997,9 @@ public:
           if(isCut[1])
           {
             usize idx = ge0.ystart + y0counter;
-            idx *= 3;
             if(isXEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 1, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 1, idx*3);
               // y0counter counter doesn't need to be incremented
               // because it won't be used again.
             }
@@ -1013,10 +1009,9 @@ public:
           if(isCut[9])
           {
             usize idx = ge0.zstart + z0counter;
-            idx *= 3;
             if(isXEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 9, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 9, idx*3);
               // z0counter doesn't need to in incremented.
             }
             globalIdxs[9] = idx;
@@ -1025,10 +1020,9 @@ public:
           if(isCut[2])
           {
             usize idx = ge1.xstart + x1counter;
-            idx *= 3;
             if(isYEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 2, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 2, idx*3);
             }
             globalIdxs[2] = idx;
             ++x1counter;
@@ -1037,10 +1031,9 @@ public:
           if(isCut[10])
           {
             usize idx = ge1.zstart + z1counter;
-            idx *= 3;
             if(isYEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 10, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 10, idx*3);
             }
             globalIdxs[10] = idx;
             ++z1counter;
@@ -1049,10 +1042,9 @@ public:
           if(isCut[4])
           {
             usize idx = ge2.xstart + x2counter;
-            idx *= 3;
             if(isZEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 4, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 4, idx*3);
             }
             globalIdxs[4] = idx;
             ++x2counter;
@@ -1061,10 +1053,9 @@ public:
           if(isCut[7])
           {
             usize idx = ge2.ystart + y2counter;
-            idx *= 3;
             if(isZEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 7, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 7, idx*3);
             }
             globalIdxs[7] = idx;
             ++y2counter;
@@ -1073,10 +1064,9 @@ public:
           if(isCut[11])
           {
             usize idx = ge1.zstart + z1counter;
-            idx *= 3;
             if(isXEnd and isYEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 11, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 11, idx*3);
               // z1counter does not need to be incremented.
             }
             globalIdxs[11] = idx;
@@ -1085,10 +1075,9 @@ public:
           if(isCut[5])
           {
             usize idx = ge2.ystart + y2counter;
-            idx *= 3;
             if(isXEnd and isZEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 5, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 5, idx * 3);
               // y2 counter does not need to be incremented.
             }
             globalIdxs[5] = idx;
@@ -1097,10 +1086,9 @@ public:
           if(isCut[6])
           {
             usize idx = ge3.xstart + x3counter;
-            idx *= 3;
             if(isYEnd and isZEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 6, idx);
+              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 6, idx * 3);
             }
             globalIdxs[6] = idx;
             ++x3counter;
@@ -1110,10 +1098,10 @@ public:
           const char* caseTri = util::caseTriangles[caseId]; // size 16
           for(int idx = 0; caseTri[idx] != -1; idx += 3)
           {
-            m_Tris[triIdx] = globalIdxs[caseTri[idx]];
-            m_Tris[triIdx + 1] = globalIdxs[caseTri[idx + 1]];
-            m_Tris[triIdx + 2] = globalIdxs[caseTri[idx + 2]];
-            triIdx += 3;
+            m_Tris[triIdx * 3] = globalIdxs[caseTri[idx]];
+            m_Tris[triIdx * 3 + 1] = globalIdxs[caseTri[idx + 1]];
+            m_Tris[triIdx * 3 + 2] = globalIdxs[caseTri[idx + 2]];
+            triIdx++;
           }
         }
       }
@@ -1284,18 +1272,24 @@ private:
       xl = xr;
   }
 
-  inline std::array<T, 3> interpolateOnCube(cube const& pts, TCube const& isoVals, uint8 const& edge) const
+  inline std::array<float32, 3> interpolateOnCube(cube const& pts, TCube const& isoVals, uint8 const& edge) const
   {
     uint8 i0 = util::edgeVertices[edge][0];
     uint8 i1 = util::edgeVertices[edge][1];
 
-    T weight = (m_IsoVal - isoVals[i0]) / (isoVals[i1] - isoVals[i0]);
+    T denominator = isoVals[i1] - isoVals[i0];
+    T weight = 0;
+    if(denominator != 0)
+    {
+      weight = (m_IsoVal - isoVals[i0]) / denominator;
+    }
+
     return interpolate(pts[i0], pts[i1], weight);
   }
 
-  inline std::array<T, 3> interpolate(std::array<T, 3> const& a, std::array<T, 3> const& b, T const& weight) const
+  inline std::array<float32, 3> interpolate(std::array<float32, 3> const& a, std::array<float32, 3> const& b, T const& weight) const
   {
-    std::array<T, 3> ret;
+    std::array<float32, 3> ret;
     ret[0] = a[0] + (weight * (b[0] - a[0]));
     ret[1] = a[1] + (weight * (b[1] - a[1]));
     ret[2] = a[2] + (weight * (b[2] - a[2]));
@@ -1324,9 +1318,9 @@ private:
     const FloatVec3 zeroPos = m_Image.getOrigin();
     const FloatVec3 spacing = m_Image.getSpacing();
 
-    T xPos = zeroPos[0] + i * spacing[0];
-    T yPos = zeroPos[1] + j * spacing[1];
-    T zPos = zeroPos[2] + k * spacing[2];
+    float32 xPos = zeroPos[0] + i * spacing[0];
+    float32 yPos = zeroPos[1] + j * spacing[1];
+    float32 zPos = zeroPos[2] + k * spacing[2];
 
     pos[0][0] = xPos;
     pos[0][1] = yPos;
@@ -1381,19 +1375,16 @@ private:
 
   inline T getData(usize i, usize j, usize k) const
   {
-    auto optional = m_Image.getIndex(static_cast<float64>(i), static_cast<float64>(j), static_cast<float64>(k));
-    usize index = optional.has_value() ? optional.value() : std::numeric_limits<usize>::max();
-    return m_DataArray[index];
+    return m_DataArray[k*m_NX*m_NY + j*m_NX + i];
   }
 
-  std::array<T, 3> computeGradient(usize i, usize j, usize k) const
+  std::array<float32, 3> computeGradient(usize i, usize j, usize k) const
   {
-    std::array<std::array<T, 2>, 3> x;
-    std::array<T, 3> run;
+    std::array<std::array<float32, 2>, 3> x;
+    std::array<float32, 3> run;
     FloatVec3 spacing = m_Image.getSpacing();
 
-    auto optional = m_Image.getIndex(static_cast<float64>(i), static_cast<float64>(j), static_cast<float64>(k));
-    usize dataIdx = optional.has_value() ? optional.value() : std::numeric_limits<usize>::max();
+    usize dataIdx = k*m_NX*m_NY + j*m_NX + i;
 
     if(i == 0)
     {
@@ -1452,7 +1443,7 @@ private:
       run[2] = 2 * spacing[2];
     }
 
-    std::array<T, 3> ret;
+    std::array<float32, 3> ret;
 
     ret[0] = (x[0][1] - x[0][0]) / run[0];
     ret[1] = (x[1][1] - x[1][0]) / run[1];
