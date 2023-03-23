@@ -27,6 +27,7 @@ public:
   static inline constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry";
   static inline constexpr StringLiteral k_SelectedDataArray_Key = "selected_data_array";
   static inline constexpr StringLiteral k_NewTriangleGeometryName_Key = "new_triangle_geometry_name";
+  static inline constexpr StringLiteral k_NewNormalsArrayName_Key = "new_normals_array_name";
   static inline constexpr StringLiteral k_IsoVal_Key = "iso_val_geometry";
 
   /**

@@ -4,6 +4,7 @@
 
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
@@ -11,6 +12,10 @@
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
+namespace
+{
+const std::string k_VertexNormals = "VertexNormals";
+}
 
 namespace complex
 {
@@ -90,11 +95,14 @@ IFilter::PreflightResult ImageContouringFilter::preflightImpl(const DataStructur
   }
 
   // Create the Triangle Geometry action and store it
-  {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(DataPath({pTriangleGeomName}), image->getNumberOfCells(), 1, INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName,
-                                                                                       CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
-    resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
-  }
+  auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(DataPath({pTriangleGeomName}), 1, 1, INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName,
+                                                                                     CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+  auto vertexNormalsPath = createTriangleGeometryAction->getVertexDataPath().createChildPath(k_VertexNormals);
+  resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
+
+  // Create the face Normals DataArray action and store it
+  auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, std::vector<usize>{static_cast<usize>(1)}, std::vector<usize>{3}, vertexNormalsPath);
+  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -109,6 +117,7 @@ Result<> ImageContouringFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArray_Key);
   inputValues.triangleGeomPath = DataPath({filterArgs.value<std::string>(k_NewTriangleGeometryName_Key)});
   inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);
+  inputValues.normalsArrayPath = inputValues.triangleGeomPath.createChildPath(INodeGeometry0D::k_VertexDataName).createChildPath(k_VertexNormals);
 
   return ImageContouring(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

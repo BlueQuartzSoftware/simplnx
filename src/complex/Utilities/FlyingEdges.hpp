@@ -609,7 +609,7 @@ class COMPLEX_EXPORT FlyingEdgesAlgorithm
   using TCube = std::array<T, 8>;
 
 public:
-  FlyingEdgesAlgorithm(const ImageGeom& image, const IDataArray& iDataArray, const T isoVal, TriangleGeom& triangleGeom)
+  FlyingEdgesAlgorithm(const ImageGeom& image, const IDataArray& iDataArray, const T isoVal, TriangleGeom& triangleGeom, Float32Array& normals)
   : m_Image(image)
   , m_DataArray(dynamic_cast<const DataArray<T>&>(iDataArray))
   , m_IsoVal(isoVal)
@@ -623,6 +623,7 @@ public:
   , m_CubeCases((m_NX - 1) * (m_NY - 1) * (m_NZ - 1))
   , m_Tris(m_TriangleGeom.getFacesRef())
   , m_Points(m_TriangleGeom.getVerticesRef())
+  , m_Normals(normals)
   {
   }
 
@@ -891,7 +892,7 @@ public:
     m_Points = m_TriangleGeom.getVerticesRef();
     m_Tris = m_TriangleGeom.getFacesRef();
 
-    m_Normals = std::vector<std::array<T, 3>>(pointAccum);
+    m_Normals.getIDataStoreRef().reshapeTuples({pointAccum});
   }
   ///////////////////////////////////////////////////////////////////////////////
 
@@ -1166,7 +1167,7 @@ private:
 
   IGeometry::SharedVertexList& m_Points;   //
   IGeometry::SharedTriList& m_Tris; //
-  std::vector<std::array<T, 3>> m_Normals;  // The output
+  Float32Array& m_Normals;  // The output
 
   /////////////////////////////////////////////////////////////
 
@@ -1182,12 +1183,11 @@ private:
     m_Points[idx + 1] = pointsArray[1];
     m_Points[idx + 2] = pointsArray[2];
 
-    m_Normals[idx/3] = interpolateOnCube(gradCube, isoValCube, edgeNum);
-//    auto normalsArray = interpolateOnCube(gradCube, isoValCube, edgeNum);
-//
-//    m_Normals[idx] = normalsArray[0];
-//    m_Normals[idx + 1] = normalsArray[1];
-//    m_Normals[idx + 2] = normalsArray[2];
+    auto normalsArray = interpolateOnCube(gradCube, isoValCube, edgeNum);
+
+    m_Normals[idx] = normalsArray[0];
+    m_Normals[idx + 1] = normalsArray[1];
+    m_Normals[idx + 2] = normalsArray[2];
   }
 
   bool isCutEdge(usize const& i, usize const& j, usize const& k) const

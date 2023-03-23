@@ -12,6 +12,7 @@ struct COMPLEXCORE_EXPORT ImageContouringInputValues
   DataPath imageGeomPath;
   DataPath triangleGeomPath;
   DataPath contouringArrayPath;
+  DataPath normalsArrayPath;
   float64 isoVal;
 };
 
