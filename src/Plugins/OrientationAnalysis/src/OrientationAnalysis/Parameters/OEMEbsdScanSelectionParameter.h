@@ -31,6 +31,11 @@ public:
   using ManufacturerType = EbsdLib::OEM;
   using AllowedManufacturers = std::unordered_set<ManufacturerType>;
   using ExtensionsType = std::unordered_set<std::string>;
+  enum EbsdReaderType : uint8
+  {
+    Oim = 0,
+    Esprit = 1
+  };
 
   OEMEbsdScanSelectionParameter() = delete;
 
@@ -42,7 +47,7 @@ public:
    * @param defaultValue The default value for the parameter
    */
   OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedManufacturers& allowedManufacturers,
-                                const ExtensionsType& extensionsType);
+                                const EbsdReaderType& readerType, const ExtensionsType& extensionsType);
 
   ~OEMEbsdScanSelectionParameter() override = default;
 
@@ -99,6 +104,13 @@ public:
    * @return
    */
   ExtensionsType getAvailableExtensions() const;
+
+  /**
+   * @brief Returns the type of ebsd reader to be used to read in the data.
+   * @return
+   */
+  EbsdReaderType getReaderType() const;
+
   /**
    * @brief
    * @param inputFile
@@ -110,6 +122,7 @@ private:
   ValueType m_DefaultValue = {};
   AllowedManufacturers m_AllowedManufacturers = {};
   ExtensionsType m_AvailableExtensions = {};
+  EbsdReaderType m_ReaderType = {};
 };
 } // namespace complex
 

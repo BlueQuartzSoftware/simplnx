@@ -8,6 +8,7 @@
 #include "H5Support/H5Utilities.h"
 
 #include "EbsdLib/IO/BrukerNano/EspritConstants.h"
+#include "EbsdLib/IO/BrukerNano/H5EspritReader.h"
 #include "EbsdLib/IO/HKL/CtfFields.h"
 #include "EbsdLib/IO/TSL/H5OIMReader.h"
 
@@ -27,11 +28,12 @@ constexpr StringLiteral k_ScanNames = "scan_names";
 
 //-----------------------------------------------------------------------------
 OEMEbsdScanSelectionParameter::OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                             const AllowedManufacturers& allowedManufacturers, const ExtensionsType& extensionsType)
+                                                             const AllowedManufacturers& allowedManufacturers, const EbsdReaderType& readerType, const ExtensionsType& extensionsType)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 , m_AllowedManufacturers(allowedManufacturers)
 , m_AvailableExtensions(extensionsType)
+, m_ReaderType(readerType)
 {
 }
 
@@ -159,7 +161,7 @@ Result<std::any> OEMEbsdScanSelectionParameter::fromJson(const nlohmann::json& j
 //-----------------------------------------------------------------------------
 IParameter::UniquePointer OEMEbsdScanSelectionParameter::clone() const
 {
-  return std::make_unique<OEMEbsdScanSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedManufacturers, m_AvailableExtensions);
+  return std::make_unique<OEMEbsdScanSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedManufacturers, m_ReaderType, m_AvailableExtensions);
 }
 
 //-----------------------------------------------------------------------------
@@ -199,10 +201,21 @@ Result<> OEMEbsdScanSelectionParameter::validate(const std::any& valueRef) const
     return {nonstd::make_unexpected(std::move(errors))};
   }
 
-  const H5OIMReader::Pointer reader = H5OIMReader::New();
-  reader->setFileName(value.inputFilePath.string());
   std::list<std::string> scanNames;
-  int32_t err = reader->readScanNames(scanNames);
+  int32 err = 0;
+  if(m_ReaderType == EbsdReaderType::Oim)
+  {
+    const H5OIMReader::Pointer reader = H5OIMReader::New();
+    reader->setFileName(value.inputFilePath.string());
+    err = reader->readScanNames(scanNames);
+  }
+  else
+  {
+    const H5EspritReader::Pointer reader = H5EspritReader::New();
+    reader->setFileName(value.inputFilePath.string());
+    err = reader->readScanNames(scanNames);
+  }
+
   if(err < 0)
   {
     errors.push_back({-20034, fmt::format("H5 file '{}' could not be opened. Reported error code from the H5OIMReader class is '{}'", value.inputFilePath.string(), err)});
@@ -277,4 +290,11 @@ OEMEbsdScanSelectionParameter::ExtensionsType OEMEbsdScanSelectionParameter::get
 {
   return m_AvailableExtensions;
 }
+
+//-----------------------------------------------------------------------------
+OEMEbsdScanSelectionParameter::EbsdReaderType OEMEbsdScanSelectionParameter::getReaderType() const
+{
+  return m_ReaderType;
+}
+
 } // namespace complex
