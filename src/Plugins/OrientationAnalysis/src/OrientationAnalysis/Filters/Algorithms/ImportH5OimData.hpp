@@ -3,8 +3,6 @@
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 #include "OrientationAnalysis/utilities/ImportH5Data.hpp"
 
-#include "complex/Parameters/VectorParameter.hpp"
-
 namespace complex
 {
 /**
@@ -27,8 +25,6 @@ public:
   Result<> operator()();
 
   Result<> copyRawEbsdData(int index) override;
-
-private:
 };
 
 } // namespace complex

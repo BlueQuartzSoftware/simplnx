@@ -62,6 +62,7 @@ Parameters ImportH5OimDataFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5 file. EDAX can store multiple scans in a single file",
                                                                 OEMEbsdScanSelectionParameter::ValueType{}, OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::EDAX},
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Oim, OEMEbsdScanSelectionParameter::ExtensionsType{".h5"}));
@@ -157,7 +158,6 @@ IFilter::PreflightResult ImportH5OimDataFilter::preflightImpl(const DataStructur
 
   AngFields angFeatures;
   const auto names = angFeatures.getFilterFeatures<std::vector<std::string>>();
-  std::vector<usize> cDims = {1};
   for(const auto& name : names)
   {
     if(reader->getPointerType(name) == EbsdLib::NumericTypes::Type::Int32)
