@@ -3,6 +3,8 @@
 #include "ComplexCore/Filters/Algorithms/ImageContouring.hpp"
 
 #include "complex/Common/Types.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
@@ -58,7 +60,8 @@ Parameters ImageContouringFilter::parameters() const
       std::make_unique<ArraySelectionParameter>(k_SelectedDataArray_Key, "Data Array to Contour", "This is the data that will be checked for the contouring iso value", DataPath{}, GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NewTriangleGeometry_Key, "Name of Output Triangle Geometry", "This is where the contouring line will be stored", "Contouring Geometry"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_NewTriangleGeometryName_Key, "Name of Output Triangle Geometry", "This is where the contouring line will be stored", "Contouring Geometry"));
 
   return params;
 }
@@ -73,11 +76,25 @@ IFilter::UniquePointer ImageContouringFilter::clone() const
 IFilter::PreflightResult ImageContouringFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel) const
 {
+  auto pImageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  auto pTriangleGeomName = filterArgs.value<std::string>(k_NewTriangleGeometryName_Key);
+
   PreflightResult preflightResult;
-
   complex::Result<OutputActions> resultOutputActions;
-
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  auto* image = dataStructure.getDataAs<ImageGeom>(pImageGeomPath);
+  if(image == nullptr)
+  {
+    return MakePreflightErrorResult(-23245, fmt::format("DataPath {} does not exist!", pImageGeomPath.toString()));
+  }
+
+  // Create the Triangle Geometry action and store it
+  {
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(DataPath({pTriangleGeomName}), image->getNumberOfCells(), 1, INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName,
+                                                                                       CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+    resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
+  }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -90,7 +107,7 @@ Result<> ImageContouringFilter::executeImpl(DataStructure& dataStructure, const 
 
   inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   inputValues.contouringArrayPath = filterArgs.value<DataPath>(k_SelectedDataArray_Key);
-  inputValues.triangleGeomPath = filterArgs.value<DataPath>(k_NewTriangleGeometry_Key);
+  inputValues.triangleGeomPath = DataPath({filterArgs.value<std::string>(k_NewTriangleGeometryName_Key)});
   inputValues.isoVal = filterArgs.value<float64>(k_IsoVal_Key);
 
   return ImageContouring(dataStructure, messageHandler, shouldCancel, &inputValues)();

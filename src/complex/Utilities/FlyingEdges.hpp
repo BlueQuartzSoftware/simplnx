@@ -42,6 +42,7 @@ Created: Feb 17, 2017
 
 #include "complex/Common/TypesUtility.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/complex_export.hpp"
 
 #include <algorithm>
@@ -608,10 +609,11 @@ class COMPLEX_EXPORT FlyingEdgesAlgorithm
   using TCube = std::array<T, 8>;
 
 public:
-  FlyingEdgesAlgorithm(const ImageGeom& image, const IDataArray& iDataArray, T isoVal)
+  FlyingEdgesAlgorithm(const ImageGeom& image, const IDataArray& iDataArray, const T isoVal, TriangleGeom& triangleGeom)
   : m_Image(image)
   , m_DataArray(dynamic_cast<const DataArray<T>&>(iDataArray))
   , m_IsoVal(isoVal)
+  , m_TriangleGeom(triangleGeom)
   , m_NX(image.getDimensions()[0])
   , m_NY(image.getDimensions()[1])
   , m_NZ(image.getDimensions()[2])
@@ -877,6 +879,10 @@ public:
             pointAccum += tmp;
         }}
     */
+
+    m_TriangleGeom.resizeFaceList(triAccum);
+    m_TriangleGeom.resizeVertexList(pointAccum);
+    m_DataArray.I
 
     m_Points = std::vector<std::array<T, 3>>(pointAccum);
     m_Normals = std::vector<std::array<T, 3>>(pointAccum);
@@ -1150,7 +1156,8 @@ private:
 
   const ImageGeom& m_Image;
   const DataArray<T>& m_DataArray;
-  T m_IsoVal;
+  const T m_IsoVal;
+  TriangleGeom& m_TriangleGeom;
 
   usize const m_NX; //
   usize const m_NY; // for indexing

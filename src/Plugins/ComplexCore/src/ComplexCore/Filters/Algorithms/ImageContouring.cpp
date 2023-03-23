@@ -10,9 +10,9 @@ namespace
 struct ExecuteFlyingEdgesFunctor
 {
   template <typename T>
-  void operator()(const ImageGeom& image, const IDataArray& iDataArray, float64 isoVal)
+  void operator()(const ImageGeom& image, const IDataArray& iDataArray, float64 isoVal, TriangleGeom& triangleGeom)
   {
-    FlyingEdgesAlgorithm flyingEdges = FlyingEdgesAlgorithm<T>(image, iDataArray, static_cast<T>(isoVal));
+    FlyingEdgesAlgorithm flyingEdges = FlyingEdgesAlgorithm<T>(image, iDataArray, static_cast<T>(isoVal), triangleGeom);
     flyingEdges.pass1();
     flyingEdges.pass2();
     flyingEdges.pass3();
@@ -42,11 +42,12 @@ const std::atomic_bool& ImageContouring::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ImageContouring::operator()()
 {
-  const ImageGeom& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
+  const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
   float64 isoVal = m_InputValues->isoVal;
-  const IDataArray& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->contouringArrayPath);
+  const auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->contouringArrayPath);
+  auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeomPath);
 
-  ExecuteDataFunction(ExecuteFlyingEdgesFunctor{}, iDataArray.getDataType(), image, iDataArray, isoVal);
+  ExecuteDataFunction(ExecuteFlyingEdgesFunctor{}, iDataArray.getDataType(), image, iDataArray, isoVal, triangleGeom);
 
   return {};
 }
