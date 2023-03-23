@@ -52,6 +52,7 @@ set(FilterList
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
   GenerateQuaternionConjugateFilter
+  ImportH5OimDataFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
@@ -119,6 +120,7 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 # ------------------------------------------------------------------------------
 set(complex_injected_parameters
   H5EbsdReaderParameter
+  OEMEbsdScanSelectionParameter
   #EbsdToH5EbsdParameter
 )
 
@@ -191,6 +193,7 @@ set(filter_algorithms
   GenerateIPFColors
   GenerateQuaternionConjugate
   GroupFeatures
+  ImportH5OimData
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
@@ -228,6 +231,8 @@ set(PLUGIN_EXTRA_SOURCES
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/inicpp.h"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.cpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ImportH5Data.hpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ImportH5Data.cpp"
 )
 target_sources(${PLUGIN_NAME} PRIVATE ${PLUGIN_EXTRA_SOURCES})
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities" PREFIX ${PLUGIN_NAME} FILES ${PLUGIN_EXTRA_SOURCES})
