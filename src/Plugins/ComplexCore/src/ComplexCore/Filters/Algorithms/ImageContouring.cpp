@@ -47,7 +47,7 @@ Result<> ImageContouring::operator()()
   const auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->contouringArrayPath);
   auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeomPath);
 
-  ExecuteDataFunction(ExecuteFlyingEdgesFunctor{}, iDataArray.getDataType(), image, iDataArray, isoVal, triangleGeom);
+  ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray.getDataType(), image, iDataArray, isoVal, triangleGeom);
 
   return {};
 }
