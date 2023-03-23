@@ -95,6 +95,11 @@ public:
   Result<> validate(const std::any& value) const override;
 
   /**
+   * @brief Returns all of the valid extension types that can be used.
+   * @return
+   */
+  ExtensionsType getAvailableExtensions() const;
+  /**
    * @brief
    * @param inputFile
    * @return

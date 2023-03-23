@@ -272,4 +272,9 @@ OEMEbsdScanSelectionParameter::ManufacturerType OEMEbsdScanSelectionParameter::R
   return manuf;
 }
 
+//-----------------------------------------------------------------------------
+OEMEbsdScanSelectionParameter::ExtensionsType OEMEbsdScanSelectionParameter::getAvailableExtensions() const
+{
+  return m_AvailableExtensions;
+}
 } // namespace complex
