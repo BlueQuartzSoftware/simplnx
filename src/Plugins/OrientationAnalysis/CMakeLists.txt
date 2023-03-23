@@ -52,6 +52,7 @@ set(FilterList
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
   GenerateQuaternionConjugateFilter
+  ImportH5EspritDataFilter
   ImportH5OimDataFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
@@ -65,7 +66,6 @@ set(FilterList
 set(STUB_FILTERS
 
   # ConvertHexGridToSquareGrid # MISSING 1 or more Parameter Implementations
-  # CreateEnsembleInfo # MISSING 1 or more Parameter Implementations
   CreateLambertSphere
   EMsoftSO3Sampler
 
@@ -89,14 +89,7 @@ set(STUB_FILTERS
   GenerateOrientationMatrixTranspose
 
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
-  # ImportH5EspritData # MISSING 1 or more Parameter Implementations
-  # ImportH5OimData # MISSING 1 or more Parameter Implementations
-  # OrientationUtility # MISSING 1 or more Parameter Implementations
-
-  #ImportEbsdMontage # MISSING 1 or more Parameter Implementations
-  #ImportH5EspritData # MISSING 1 or more Parameter Implementations
-  #ImportH5OimData # MISSING 1 or more Parameter Implementations
-  
+  # OrientationUtility # MISSING 1 or more Parameter Implementations  
   #OrientationUtility # MISSING 1 or more Parameter Implementations
 
   WritePoleFigure
@@ -193,6 +186,7 @@ set(filter_algorithms
   GenerateIPFColors
   GenerateQuaternionConjugate
   GroupFeatures
+  ImportH5EspritData
   ImportH5OimData
   MergeTwins
   NeighborOrientationCorrelation
