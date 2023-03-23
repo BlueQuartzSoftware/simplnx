@@ -6,10 +6,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-ImportH5OimData::ImportH5OimData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportH5OimDataInputValues* oimInputValues,
-                                 ImportH5DataInputValues* inputValues)
+ImportH5OimData::ImportH5OimData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportH5DataInputValues* inputValues)
 : ImportH5Data<H5OIMReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
-, m_OimInputValues(oimInputValues)
 {
 }
 

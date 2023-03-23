@@ -199,17 +199,14 @@ IFilter::PreflightResult ImportH5OimDataFilter::preflightImpl(const DataStructur
 Result<> ImportH5OimDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel) const
 {
-  ImportH5OimDataInputValues oimInputValues;
   ImportH5DataInputValues inputValues;
 
   inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
-  oimInputValues.ZSpacing = filterArgs.value<float64>(k_ZSpacing_Key);
-  oimInputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
   inputValues.CellEnsembleAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
   inputValues.CellAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
 
-  return ImportH5OimData(dataStructure, messageHandler, shouldCancel, &oimInputValues, &inputValues)();
+  return ImportH5OimData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace complex

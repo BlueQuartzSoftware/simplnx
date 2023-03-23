@@ -7,13 +7,6 @@
 
 namespace complex
 {
-
-struct ORIENTATIONANALYSIS_EXPORT ImportH5OimDataInputValues
-{
-  float64 ZSpacing;
-  VectorFloat32Parameter::ValueType Origin;
-};
-
 /**
  * @class ImportH5OimData
  * @brief This filter will read a single .h5 file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the
@@ -23,8 +16,7 @@ struct ORIENTATIONANALYSIS_EXPORT ImportH5OimDataInputValues
 class ORIENTATIONANALYSIS_EXPORT ImportH5OimData : public ImportH5Data<H5OIMReader>
 {
 public:
-  ImportH5OimData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportH5OimDataInputValues* oimInputValues,
-                  ImportH5DataInputValues* inputValues);
+  ImportH5OimData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ImportH5DataInputValues* inputValues);
   ~ImportH5OimData() noexcept override;
 
   ImportH5OimData(const ImportH5OimData&) = delete;
@@ -37,7 +29,6 @@ public:
   Result<> copyRawEbsdData(int index) override;
 
 private:
-  const ImportH5OimDataInputValues* m_OimInputValues = nullptr;
 };
 
 } // namespace complex
