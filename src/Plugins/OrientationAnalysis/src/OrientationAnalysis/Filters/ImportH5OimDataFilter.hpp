@@ -25,7 +25,6 @@ public:
   ImportH5OimDataFilter& operator=(ImportH5OimDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
   static inline constexpr StringLiteral k_SelectedScanNames_Key = "selected_scan_names";
   static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
