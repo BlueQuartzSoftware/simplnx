@@ -29,81 +29,55 @@ Result<> ImportH5EspritData::copyRawEbsdData(int index)
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const usize totalPoints = imageGeom.getNumXCells() * imageGeom.getNumYCells();
   const usize offset = index * totalPoints;
-  const float32 degToRad = m_EspritInputValues->DegreesToRadians ? Constants::k_PiOver180F : 1.0f;
 
-  // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
   {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi1));
-    const auto* f2 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::PHI));
-    const auto* f3 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi2));
+    const float32 degToRad = m_EspritInputValues->DegreesToRadians ? Constants::k_PiOver180F : 1.0f;
+    const auto* phi1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi1));
+    const auto* phi = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::PHI));
+    const auto* phi2 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi2));
     auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::Esprit::EulerAngles));
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      eulerAngles[offset + 3 * i] = f1[i] * degToRad;
-      eulerAngles[offset + 3 * i + 1] = f2[i] * degToRad;
-      eulerAngles[offset + 3 * i + 2] = f3[i] * degToRad;
-    }
-  }
-  {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::MAD));
+
+    const auto* m1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::MAD));
     auto& mad = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::MAD));
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      mad[offset + i] = f1[i];
-    }
-  }
 
-  {
-    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::NIndexedBands));
+    const auto* nIndBands = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::NIndexedBands));
     auto& nIndexBands = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::NIndexedBands));
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      nIndexBands[offset + i] = f1[i];
-    }
-  }
 
-  {
-    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::Phase));
+    const auto* p1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::Phase));
     auto& phase = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::Phase));
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      phase[offset + i] = f1[i];
-    }
-  }
 
-  {
-    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::RadonBandCount));
+    const auto* radBandCnt = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::RadonBandCount));
     auto& radonBandCount = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::RadonBandCount));
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      radonBandCount[offset + i] = f1[i];
-    }
-  }
 
-  {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::RadonQuality));
+    const auto* radQual = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::RadonQuality));
     auto& radonQuality = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::RadonQuality));
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      radonQuality[offset + i] = f1[i];
-    }
-  }
 
-  {
-    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::XBEAM));
+    const auto* xBm = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::XBEAM));
     auto& xBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::XBEAM));
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      xBeam[offset + i] = f1[i];
-    }
-  }
 
-  {
-    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::YBEAM));
+    const auto* yBm = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::YBEAM));
     auto& yBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::YBEAM));
+
     for(size_t i = 0; i < totalPoints; i++)
     {
-      yBeam[offset + i] = f1[i];
+      // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
+      eulerAngles[offset + 3 * i] = phi1[i] * degToRad;
+      eulerAngles[offset + 3 * i + 1] = phi[i] * degToRad;
+      eulerAngles[offset + 3 * i + 2] = phi2[i] * degToRad;
+
+      mad[offset + i] = m1[i];
+
+      nIndexBands[offset + i] = nIndBands[i];
+
+      phase[offset + i] = p1[i];
+
+      radonBandCount[offset + i] = radBandCnt[i];
+
+      radonQuality[offset + i] = radQual[i];
+
+      xBeam[offset + i] = xBm[i];
+
+      yBeam[offset + i] = yBm[i];
     }
   }
 
