@@ -70,7 +70,7 @@ Result<> ImportH5EspritData::copyRawEbsdData(int index)
   }
 
   {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::NIndexedBands));
+    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::NIndexedBands));
     auto& nIndexBands = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::NIndexedBands));
     for(size_t i = 0; i < totalPoints; i++)
     {
@@ -79,7 +79,7 @@ Result<> ImportH5EspritData::copyRawEbsdData(int index)
   }
 
   {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::Phase));
+    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::Phase));
     auto& phase = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::Phase));
     for(size_t i = 0; i < totalPoints; i++)
     {
@@ -88,7 +88,7 @@ Result<> ImportH5EspritData::copyRawEbsdData(int index)
   }
 
   {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::RadonBandCount));
+    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::RadonBandCount));
     auto& radonBandCount = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::RadonBandCount));
     for(size_t i = 0; i < totalPoints; i++)
     {
@@ -106,7 +106,7 @@ Result<> ImportH5EspritData::copyRawEbsdData(int index)
   }
 
   {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::XBEAM));
+    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::XBEAM));
     auto& xBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::XBEAM));
     for(size_t i = 0; i < totalPoints; i++)
     {
@@ -115,7 +115,7 @@ Result<> ImportH5EspritData::copyRawEbsdData(int index)
   }
 
   {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::YBEAM));
+    const auto* f1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::YBEAM));
     auto& yBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::YBEAM));
     for(size_t i = 0; i < totalPoints; i++)
     {
