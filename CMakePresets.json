@@ -35,7 +35,7 @@
         },
         "COMPLEX_EXTRA_PLUGINS": {
           "type": "STRING",
-          "value": "ITKImageProcessing;OrientationAnalysis"
+          "value": "OrientationAnalysis"
         },
         "DREAM3D_DATA_DIR": {
           "type": "PATH",
@@ -43,7 +43,7 @@
         },
         "VCPKG_MANIFEST_FEATURES": {
           "type": "STRING",
-          "value": "tests;parallel;itk;ebsd"
+          "value": "tests;parallel;ebsd"
         },
         "VCPKG_OVERLAY_TRIPLETS": {
           "type": "PATH",
@@ -141,7 +141,7 @@
       "description": "Build configuration for GitHub actions CI",
       "configurePreset": "ci-macos-x64",
       "configuration": "Release"
-    },  
+    },
     {
       "name": "ci-linux-x64",
       "displayName": "ci-linux-x64 CI build",
