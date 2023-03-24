@@ -71,8 +71,6 @@ Parameters ImportH5EspritDataFilter::parameters() const
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5"}));
   params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<BoolParameter>(k_CombineEulerAngles_Key, "Combine phi1, PHI, phi2 into Single Euler Angles Attribute Array",
-                                                "Whether or not to combine phi1, PHI, phi2 into a single euler angles data array", true));
   params.insert(std::make_unique<BoolParameter>(k_DegreesToRadians_Key, "Convert Euler Angles to Radians", "Whether or not to convert the euler angles to radians", true));
   params.insert(std::make_unique<BoolParameter>(k_ReadPatternData_Key, "Import Pattern Data", "Whether or not to import the pattern data", false));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryName_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
@@ -99,7 +97,6 @@ IFilter::PreflightResult ImportH5EspritDataFilter::preflightImpl(const DataStruc
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  auto pCombineEulerAnglesValue = filterArgs.value<bool>(k_CombineEulerAngles_Key);
   auto pDegreesToRadiansValue = filterArgs.value<bool>(k_DegreesToRadians_Key);
   auto pReadPatternDataValue = filterArgs.value<bool>(k_ReadPatternData_Key);
   auto pImageGeometryNameValue = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
@@ -167,7 +164,7 @@ IFilter::PreflightResult ImportH5EspritDataFilter::preflightImpl(const DataStruc
   const auto names = espritFeatures.getFilterFeatures<std::vector<std::string>>();
   for(const auto& name : names)
   {
-    if(pCombineEulerAnglesValue && (name == EbsdLib::H5Esprit::phi1 || name == EbsdLib::H5Esprit::PHI || name == EbsdLib::H5Esprit::phi2))
+    if(name == EbsdLib::H5Esprit::phi1 || name == EbsdLib::H5Esprit::PHI || name == EbsdLib::H5Esprit::phi2)
     {
       continue;
     }
@@ -183,7 +180,6 @@ IFilter::PreflightResult ImportH5EspritDataFilter::preflightImpl(const DataStruc
       resultOutputActions.value().actions.push_back(std::move(createArrayAction));
     }
   }
-  if(pCombineEulerAnglesValue)
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(EbsdLib::Esprit::EulerAngles));
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
@@ -216,7 +212,6 @@ Result<> ImportH5EspritDataFilter::executeImpl(DataStructure& dataStructure, con
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
   inputValues.CellEnsembleAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
   inputValues.CellAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
-  espritInputValues.CombineEulerAngles = filterArgs.value<bool>(k_CombineEulerAngles_Key);
   espritInputValues.DegreesToRadians = filterArgs.value<bool>(k_DegreesToRadians_Key);
 
   return ImportH5EspritData(dataStructure, messageHandler, shouldCancel, &inputValues, &espritInputValues)();

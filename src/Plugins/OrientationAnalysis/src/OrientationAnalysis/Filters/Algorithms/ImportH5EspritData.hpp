@@ -11,7 +11,6 @@ namespace complex
 
 struct ORIENTATIONANALYSIS_EXPORT ImportH5EspritDataInputValues
 {
-  bool CombineEulerAngles;
   bool DegreesToRadians;
 };
 

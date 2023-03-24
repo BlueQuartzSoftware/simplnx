@@ -32,7 +32,6 @@ Result<> ImportH5EspritData::copyRawEbsdData(int index)
   const float32 degToRad = m_EspritInputValues->DegreesToRadians ? Constants::k_PiOver180F : 1.0f;
 
   // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
-  if(m_EspritInputValues->CombineEulerAngles)
   {
     const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi1));
     const auto* f2 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::PHI));
@@ -43,21 +42,6 @@ Result<> ImportH5EspritData::copyRawEbsdData(int index)
       eulerAngles[offset + 3 * i] = f1[i] * degToRad;
       eulerAngles[offset + 3 * i + 1] = f2[i] * degToRad;
       eulerAngles[offset + 3 * i + 2] = f3[i] * degToRad;
-    }
-  }
-  else
-  {
-    const auto* f1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi1));
-    const auto* f2 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::PHI));
-    const auto* f3 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi2));
-    auto& phi1 = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::phi1));
-    auto& phi = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::PHI));
-    auto& phi2 = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::phi2));
-    for(size_t i = 0; i < totalPoints; i++)
-    {
-      phi1[offset + i] = f1[i] * degToRad;
-      phi[offset + i] = f2[i] * degToRad;
-      phi2[offset + i] = f3[i] * degToRad;
     }
   }
   {

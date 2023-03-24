@@ -27,7 +27,6 @@ public:
   static inline constexpr StringLiteral k_SelectedScanNames_Key = "selected_scan_names";
   static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
-  static inline constexpr StringLiteral k_CombineEulerAngles_Key = "combine_euler_angles";
   static inline constexpr StringLiteral k_DegreesToRadians_Key = "degrees_to_radians";
   static inline constexpr StringLiteral k_ReadPatternData_Key = "read_pattern_data";
   static inline constexpr StringLiteral k_ImageGeometryName_Key = "image_geometry_name";
