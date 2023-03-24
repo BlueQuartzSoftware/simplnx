@@ -51,7 +51,6 @@ Created: Feb 17, 2017
 
 namespace util
 {
-
 // clang-format off
 const complex::uint8 numTris[256] =
     {

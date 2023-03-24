@@ -35,8 +35,6 @@ const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::
 
 TEST_CASE("ComplexCore::Image Contouring Valid Execution", "[ComplexCore][ImageContouring]")
 {
-  // std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/flying_edges_exemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
