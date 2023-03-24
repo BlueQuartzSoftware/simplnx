@@ -56,6 +56,10 @@ Result<> HDF5::ReadBaseGroup(DataStructureReader& dataStructureReader, const com
 Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const complex::HDF5::GroupReader& groupReader, DataObject::IdType parentId, bool useEmptyDataStore)
 {
   auto childrenNames = groupReader.getChildNames();
+  if(childrenNames.empty())
+  {
+    return {};
+  }
   for(const auto& childName : childrenNames)
   {
     Result<> error = dataStructureReader.readObjectFromGroup(groupReader, childName, parentId, useEmptyDataStore);
