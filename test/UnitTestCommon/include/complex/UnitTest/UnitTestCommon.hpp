@@ -434,6 +434,25 @@ inline void CompareStringArrays(const DataStructure& dataStructure, const DataPa
 }
 
 /**
+ * @brief Compares the referenced StringArray objects for any differences
+ * @param exemplar
+ * @param computed
+ */
+inline void CompareStringArrays(const StringArray& exemplar, const StringArray& computed)
+{
+  REQUIRE(exemplar.getNumberOfTuples() == computed.getNumberOfTuples());
+
+  INFO(fmt::format("Input Data Array:'{}'  Output StringArray: '{}' bad comparison", exemplar.getDataPaths()[0].toString(), computed.getDataPaths()[0].toString()));
+
+  constexpr usize start = 0;
+  const usize end = exemplar.getSize();
+  for(usize i = start; i < end; i++)
+  {
+    REQUIRE(exemplar[i] == computed[i]);
+  }
+}
+
+/**
  * @brief Compares the referenced DynamicListArray objects in the dataStructure for any differences
  * @tparam T index type
  * @tparam K value type

@@ -31,6 +31,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   GenerateGBCDPoleFigureTest.cpp
   GenerateIPFColorsTest.cpp
   GenerateQuaternionConjugateTest.cpp
+  ImportH5EspritDataTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
