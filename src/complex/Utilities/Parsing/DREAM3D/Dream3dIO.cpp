@@ -1319,7 +1319,7 @@ Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const complex::HDF5::
                                         fmt::format("Could not parse DataStructure version {}. Expected versions: {} or {}", fileVersion, k_CurrentFileVersion, Legacy::FileVersion));
 }
 
-Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath)
+Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflight)
 {
   complex::HDF5::FileReader fileReader(filePath);
   if(!fileReader.isValid())
@@ -1327,8 +1327,7 @@ Result<DataStructure> DREAM3D::ImportDataStructureFromFile(const std::filesystem
     return MakeErrorResult<DataStructure>(-1, fmt::format("DREAM3D::ImportDataStructureFromFile: Unable to open '{}' for reading", filePath.string()));
   }
 
-  complex::HDF5::ErrorType error = 0;
-  return ImportDataStructureFromFile(fileReader, error);
+  return ImportDataStructureFromFile(fileReader, preflight);
 }
 
 Result<Pipeline> DREAM3D::ImportPipelineFromFile(const complex::HDF5::FileReader& fileReader)

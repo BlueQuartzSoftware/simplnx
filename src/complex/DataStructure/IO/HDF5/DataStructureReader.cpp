@@ -140,7 +140,7 @@ std::shared_ptr<DataIOManager> DataStructureReader::getDataReader() const
     return m_IOManager;
   }
 
-  return Application::Instance()->getIOManagerAs<DataIOManager>("HDF5");
+  return Application::GetOrCreateInstance()->getIOManagerAs<DataIOManager>("HDF5");
 }
 
 std::shared_ptr<IDataIO> DataStructureReader::getDataFactory(typename IDataIOManager::factory_id_type typeName) const

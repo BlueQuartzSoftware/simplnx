@@ -107,7 +107,7 @@ COMPLEX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const complex::
  * @param filePath
  * @return DataStructure
  */
-COMPLEX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const std::filesystem::path& filePath);
+COMPLEX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflight = false);
 
 /**
  * @brief Imports and returns a Pipeline from the target .dream3d file.
