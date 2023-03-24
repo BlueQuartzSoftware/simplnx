@@ -1,72 +1,124 @@
-/**
- * This file is auto generated from the original OrientationAnalysis/ImportH5OimDataFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ImportH5OimDataFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/OEMEbsdScanSelectionFilterParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include "OrientationAnalysis/Filters/ImportH5OimDataFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "OrientationAnalysis/Parameters/OEMEbsdScanSelectionParameter.h"
+
+#include "EbsdLib/IO/TSL/AngFields.h"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include "OrientationAnalysis/Filters/ImportH5OimDataFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
-
 using namespace complex;
+using namespace complex::Constants;
 
-TEST_CASE("OrientationAnalysis::ImportH5OimDataFilter: Valid Filter Execution","[OrientationAnalysis][ImportH5OimDataFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
+{
+const std::string k_ScanName = "Scan 1";
+}
+
+TEST_CASE("OrientationAnalysis::ImportH5OimDataFilter: Valid Filter Execution", "[OrientationAnalysis][ImportH5OimDataFilter]")
+{
+  // Read Exemplar DREAM3D File
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ImportH5Data/6_6_import_h5_oim_data.dream3d", unit_test::k_TestFilesDir));
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  ImportH5OimDataFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+
+  auto h5TestFile = fs::path(fmt::format("{}/6_6_ImportH5Data/EdaxOIMData.h5", unit_test::k_TestFilesDir));
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName}};
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ImportH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
+  args.insertOrAssign(ImportH5OimDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
+  args.insertOrAssign(ImportH5OimDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0f)));
+  args.insertOrAssign(ImportH5OimDataFilter::k_ReadPatternData_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ImportH5OimDataFilter::k_ImageGeometryName_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
+  args.insertOrAssign(ImportH5OimDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
+  args.insertOrAssign(ImportH5OimDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({ImageGeom::k_TypeName}));
+  const auto& exemplarImageGeom = exemplarDataStructure.getDataRefAs<ImageGeom>(DataPath({k_ExemplarDataContainer}));
+  REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
+  REQUIRE(imageGeom.getSpacing() == exemplarImageGeom.getSpacing());
+  REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
+  REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, DataPath({ImageGeom::k_TypeName, k_CellData}), k_ExemplarDataContainer);
+
+  const DataPath cellEnsemblePath({ImageGeom::k_TypeName, k_CellEnsembleData});
+  const DataPath exemplarCellEnsemblePath({k_ExemplarDataContainer, k_CellEnsembleData});
+  const auto& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(cellEnsemblePath.createChildPath(EbsdLib::AngFile::CrystalStructures));
+  const auto& crystalStructuresExemplar = exemplarDataStructure.getDataRefAs<UInt32Array>(exemplarCellEnsemblePath.createChildPath(EbsdLib::AngFile::CrystalStructures));
+  UnitTest::CompareDataArrays<uint32>(crystalStructures, crystalStructuresExemplar);
+  const auto& latticeConstants = dataStructure.getDataRefAs<Float32Array>(cellEnsemblePath.createChildPath(EbsdLib::AngFile::LatticeConstants));
+  const auto& latticeConstantsExemplar = exemplarDataStructure.getDataRefAs<Float32Array>(exemplarCellEnsemblePath.createChildPath(EbsdLib::AngFile::LatticeConstants));
+  UnitTest::CompareDataArrays<float32>(latticeConstants, latticeConstantsExemplar);
+  const auto& materialName = dataStructure.getDataRefAs<StringArray>(cellEnsemblePath.createChildPath(EbsdLib::AngFile::MaterialName));
+  const auto& materialNameExemplar = exemplarDataStructure.getDataRefAs<StringArray>(exemplarCellEnsemblePath.createChildPath(EbsdLib::AngFile::MaterialName));
+  UnitTest::CompareStringArrays(materialNameExemplar, materialName);
+}
+
+TEST_CASE("OrientationAnalysis::ImportH5OimDataFilter: InValid Filter Execution", "[OrientationAnalysis][ImportH5OimDataFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportH5OimDataFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
+  args.insertOrAssign(ImportH5OimDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3, 0.0f)));
+  args.insertOrAssign(ImportH5OimDataFilter::k_ImageGeometryName_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
+  args.insertOrAssign(ImportH5OimDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
+  args.insertOrAssign(ImportH5OimDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ImportH5OimDataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-/*[x]*/  args.insertOrAssign(ImportH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<<<<NOT_IMPLEMENTED>>>>({}));
-  args.insertOrAssign(ImportH5OimDataFilter::k_ZSpacing_Key, std::make_any<float64>(2.3456789));
-  args.insertOrAssign(ImportH5OimDataFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insertOrAssign(ImportH5OimDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ImportH5OimDataFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ImportH5OimDataFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ImportH5OimDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  auto h5TestFile = fs::path(fmt::format("{}/6_6_ImportH5Data/EdaxOIMData.h5", unit_test::k_TestFilesDir));
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName}};
 
+  SECTION("Invalid Z Spacing")
+  {
+    args.insertOrAssign(ImportH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
+    args.insertOrAssign(ImportH5OimDataFilter::k_ZSpacing_Key, std::make_any<float32>(0.0f));
+    args.insertOrAssign(ImportH5OimDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
+  }
+  SECTION("No Scan Names Selected")
+  {
+    scanSelections.scanNames.clear();
+    args.insertOrAssign(ImportH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
+    args.insertOrAssign(ImportH5OimDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
+    args.insertOrAssign(ImportH5OimDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
+  }
+  SECTION("Invalid h5 file type (incompatible manufacturer)")
+  {
+    h5TestFile = fs::path(fmt::format("{}/6_6_ImportH5Data/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
+    scanSelections.inputFilePath = h5TestFile;
+    args.insertOrAssign(ImportH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
+    args.insertOrAssign(ImportH5OimDataFilter::k_ZSpacing_Key, std::make_any<float32>(1.0f));
+    args.insertOrAssign(ImportH5OimDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
+  }
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
 }
-
-//TEST_CASE("OrientationAnalysis::ImportH5OimDataFilter: InValid Filter Execution")
-//{
-//
-//}

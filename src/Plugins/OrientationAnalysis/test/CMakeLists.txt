@@ -32,6 +32,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   GenerateIPFColorsTest.cpp
   GenerateQuaternionConjugateTest.cpp
   ImportH5EspritDataTest.cpp
+  ImportH5OimDataTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
