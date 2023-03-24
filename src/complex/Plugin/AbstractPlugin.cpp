@@ -61,6 +61,8 @@ IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType i
     return nullptr;
   }
 
+  std::cout << "Creating filter: " << identifier.str() << std::endl;
+
   return m_InitializerMap.at(identifier)();
 }
 

@@ -48,11 +48,17 @@ IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) cons
   {
     return nullptr;
   }
+
+  std::cout << "filter id = " << handle.getFilterId().str() << std::endl;
+  std::cout << "plugin id = " << handle.getPluginId().str() << std::endl;
+
   // Look to make sure the plugin is available. Unordered_Map.at() will throw exceptions if the key is not found.
   if(m_PluginMap.find(handle.getPluginId()) == m_PluginMap.end())
   {
     return nullptr;
   }
+
+  std::cout << "Plugin exists" << std::endl;
 
   // Plugin filter
   const auto& loader = m_PluginMap.at(handle.getPluginId());
@@ -60,6 +66,9 @@ IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) cons
   {
     return nullptr;
   }
+
+  std::cout << "Found plugin" << std::endl;
+
   return loader->getPlugin()->createFilter(handle.getFilterId());
 }
 
