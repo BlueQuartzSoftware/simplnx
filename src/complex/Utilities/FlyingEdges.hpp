@@ -1,3 +1,4 @@
+// clang-format off
 /**
 miniIsosurface miniapp License Version 1.0
 ========================================================================
@@ -51,7 +52,6 @@ Created: Feb 17, 2017
 
 namespace util
 {
-// clang-format off
 const complex::uint8 numTris[256] =
     {
         0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 2,
