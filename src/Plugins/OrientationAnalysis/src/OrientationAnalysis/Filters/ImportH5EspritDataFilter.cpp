@@ -145,7 +145,7 @@ IFilter::PreflightResult ImportH5EspritDataFilter::preflightImpl(const DataStruc
     resultOutputActions.value().actions.push_back(std::move(createAttributeMatrixAction));
   }
 
-  // create the cell ensemble arrays
+  // create the cell ensemble arrays : these arrays are purposely created using the AngFile constant names to match the corresponding Oim import filter!
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));

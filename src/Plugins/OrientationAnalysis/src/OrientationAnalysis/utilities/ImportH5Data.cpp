@@ -78,6 +78,7 @@ Result<> ImportH5Data<T>::readData(const std::string& scanName)
     return MakeErrorResult(-8971, "EbsdReader could not read the phase vector from the .h5 file.");
   }
 
+  // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
   auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::MaterialName));
   auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
