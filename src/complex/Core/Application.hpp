@@ -159,6 +159,8 @@ public:
 
   DataObject::Type getDataType(const std::string& name) const;
 
+  std::vector<std::string> getDataStoreFormats() const;
+
 private:
   /**
    * @brief Assigns Application as the current instance and sets the current

@@ -243,6 +243,7 @@ set(CoreParameters
   GenerateColorTableParameter
   GeneratedFileListParameter
   GeometrySelectionParameter
+  DataStoreFormatParameter
   Dream3dImportParameter
   MultiArraySelectionParameter
   MultiPathSelectionParameter
