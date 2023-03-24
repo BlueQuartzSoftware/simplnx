@@ -42,6 +42,8 @@ The user also may want to assign un-indexed pixels to be ignored by flagging the
 | Z Spacing | float | The spacing in microns between each layer. |
 | Origin | float (3x1) | The origin of the volume |
 | Read Pattern Data | bool | Default=OFF |
+| Combine phi1, PHI, phi2 into Single Euler Angles Attribute Array | bool | Default=ON |
+| Convert Euler Angles to Radians | bool | Default=ON |
 
 ## Required Geometry 
 
