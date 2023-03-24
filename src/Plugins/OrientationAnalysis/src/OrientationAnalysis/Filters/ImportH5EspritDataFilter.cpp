@@ -133,9 +133,9 @@ IFilter::PreflightResult ImportH5EspritDataFilter::preflightImpl(const DataStruc
   }
 
   // create the Image Geometry and it's attribute matrices
-  const std::vector<usize> tupleDims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scanNames.size()};
+  const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scanNames.size()};
+  const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
   {
-    CreateImageGeometryAction::DimensionType dims = {tupleDims[2], tupleDims[1], tupleDims[0]};
     CreateImageGeometryAction::SpacingType spacing = {static_cast<float32>(reader->getXStep()), static_cast<float32>(reader->getYStep()), pZSpacingValue};
 
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryNameValue, dims, pOriginValue, spacing, pCellAttributeMatrixNameValue);
