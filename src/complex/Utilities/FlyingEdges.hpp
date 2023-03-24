@@ -37,6 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Original Author: dbourge
 Created: Feb 17, 2017
+
+
+Supporting Paper: https://www.researchgate.net/publication/308703724_Flying_edges_A_high-performance_scalable_isocontouring_algorithm
 */
 
 #pragma once
@@ -882,9 +885,6 @@ public:
         }}
     */
 
-    pointAccum; // flatten arrays
-    triAccum;
-
     m_TriangleGeom.resizeFaceList(triAccum);
     m_TriangleGeom.resizeVertexList(pointAccum);
     m_Normals.getIDataStoreRef().reshapeTuples({pointAccum});
@@ -1283,6 +1283,7 @@ private:
       weight = (m_IsoVal - isoVals[i0]) / denominator;
     }
 
+    T weight = (m_IsoVal - isoVals[i0]) / (isoVals[i1] - isoVals[i0]);
     return interpolate(pts[i0], pts[i1], weight);
   }
 
