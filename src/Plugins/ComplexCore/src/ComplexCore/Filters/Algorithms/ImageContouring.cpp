@@ -10,12 +10,16 @@ namespace
 struct ExecuteFlyingEdgesFunctor
 {
   template <typename T>
-  void operator()(const ImageGeom& image, const IDataArray& iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32Array& normals)
+  void operator()(const ImageGeom& image, const IDataArray& iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32Array& normals, AttributeMatrix& normAM)
   {
     FlyingEdgesAlgorithm flyingEdges = FlyingEdgesAlgorithm<T>(image, iDataArray, static_cast<T>(isoVal), triangleGeom, normals);
     flyingEdges.pass1();
     flyingEdges.pass2();
     flyingEdges.pass3();
+
+    // pass 3 resized normals so be sure to resize parent AM
+    normAM.setShape(normals.getTupleShape());
+
     flyingEdges.pass4();
   }
 };
@@ -48,7 +52,12 @@ Result<> ImageContouring::operator()()
   auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeomPath);
   auto normals = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->normalsArrayPath);
 
-  ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray.getDataType(), image, iDataArray, isoVal, triangleGeom, normals);
+  // auto created so must have a parent
+  DataPath normAMPath = normals.getDataPaths()[0].getParent();
+
+  auto& normAM = m_DataStructure.getDataRefAs<AttributeMatrix>(normAMPath);
+
+  ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray.getDataType(), image, iDataArray, isoVal, triangleGeom, normals, normAM);
 
   return {};
 }
