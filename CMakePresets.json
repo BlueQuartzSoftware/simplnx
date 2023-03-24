@@ -35,7 +35,7 @@
         },
         "COMPLEX_EXTRA_PLUGINS": {
           "type": "STRING",
-          "value": "OrientationAnalysis"
+          "value": "ITKImageProcessing;OrientationAnalysis"
         },
         "DREAM3D_DATA_DIR": {
           "type": "PATH",
@@ -43,7 +43,7 @@
         },
         "VCPKG_MANIFEST_FEATURES": {
           "type": "STRING",
-          "value": "tests;parallel;ebsd"
+          "value": "tests;parallel;itk;ebsd"
         },
         "VCPKG_OVERLAY_TRIPLETS": {
           "type": "PATH",
