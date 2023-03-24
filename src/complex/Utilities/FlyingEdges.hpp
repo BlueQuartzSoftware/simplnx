@@ -603,7 +603,7 @@ const complex::uint8 edgeVertices[12][2] = { {0,1}, {1,2}, {3,2},
 namespace complex
 {
 template <typename T>
-class COMPLEX_EXPORT FlyingEdgesAlgorithm
+class FlyingEdgesAlgorithm
 {
   using cube = std::array<std::array<float32, 3>, 8>;
   using TCube = std::array<T, 8>;
