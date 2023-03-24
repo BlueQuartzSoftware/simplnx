@@ -829,7 +829,7 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
 {
   constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
   constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
-  INFO(fmt::format("Error creating Filter '{}'  ", k_MultiThresholdObjectsFilterHandle.getFilterName()));
+  INFO("Error creating Filter: 'MultiThresholdObjectsFilter'");
 
   auto filter = filterList.createFilter(k_MultiThresholdObjectsFilterHandle);
   REQUIRE(nullptr != filter);
@@ -868,7 +868,7 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
 //------------------------------------------------------------------------------
 inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_IdentifySampleFilterHandle.getFilterName()));
+  INFO("Error creating Filter: 'IdentifySampleFilter'");
   auto filter = filterList.createFilter(k_IdentifySampleFilterHandle);
   REQUIRE(nullptr != filter);
 

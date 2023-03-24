@@ -101,7 +101,7 @@ inline constexpr StringLiteral k_SmallIN100ScanData("EBSD Scan Data");
 //------------------------------------------------------------------------------
 inline void ExecuteConvertOrientations(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_ConvertOrientationsFilterHandle.getFilterName()));
+  INFO("Error creating Filter: 'ConvertOrientationsFilter'");
   auto filter = filterList.createFilter(k_ConvertOrientationsFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -129,7 +129,7 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
 //------------------------------------------------------------------------------
 inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_EbsdSegmentFeaturesFilterHandle.getFilterName()));
+  INFO("Error creating Filter: 'EbsdSegmentFeaturesFilter'");
   auto filter = filterList.createFilter(k_EbsdSegmentFeaturesFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -173,7 +173,7 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
 //------------------------------------------------------------------------------
 inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, const FilterList& filterList, const fs::path& shiftsFile)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionMisorientationFilterHandle.getFilterName()));
+  INFO("Error creating Filter: 'AlignSectionMisorientationFilter'");
   auto filter = filterList.createFilter(k_AlignSectionMisorientationFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -222,7 +222,7 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 //------------------------------------------------------------------------------
 inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, const FilterList& filterList, const fs::path& shiftsFile)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionsFeatureCentroidFilterHandle.getFilterName()));
+  INFO("Error creating Filter: 'AlignSectionsFeatureCentroidFilter'");
   auto filter = filterList.createFilter(k_AlignSectionsFeatureCentroidFilterHandle);
   REQUIRE(nullptr != filter);
 
@@ -257,8 +257,7 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
 //------------------------------------------------------------------------------
 inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure, const FilterList& filterList)
 {
-
-  INFO(fmt::format("Error creating Filter '{}'  ", k_BadDataNeighborOrientationCheckFilterHandle.getFilterName()));
+  INFO("Error creating Filter 'BadDataNeighborOrientationCheckFilter'");
   auto filter = filterList.createFilter(k_BadDataNeighborOrientationCheckFilterHandle);
   REQUIRE(nullptr != filter);
   // Parameter Keys
@@ -292,7 +291,7 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
 //------------------------------------------------------------------------------
 inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_NeighborOrientationCorrelationFilterHandle.getFilterName()));
+  INFO("Error creating Filter: 'NeighborOrientationCorrelationFilter'");
   auto filter = filterList.createFilter(k_NeighborOrientationCorrelationFilterHandle);
   REQUIRE(nullptr != filter);
 
