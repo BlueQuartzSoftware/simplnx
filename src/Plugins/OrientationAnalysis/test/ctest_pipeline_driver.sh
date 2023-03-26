@@ -15,10 +15,9 @@ fi
 cd "@CMAKE_RUNTIME_OUTPUT_DIRECTORY@"
 "./@PIPELINE_RUNNER_NAME@${DEBUG_EXT}" "@ARGS_PIPELINE_PATH@"
 
+#-----------------------------------------------------------------------------
 # These files need to be deleted after the test has completed
-# @DELETE_FILE_COMMANDS@
-
-
+@DELETE_FILE_COMMANDS@
 
 if [ $? -eq 0 ]
 then

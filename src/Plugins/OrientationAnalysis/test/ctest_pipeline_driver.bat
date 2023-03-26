@@ -13,24 +13,24 @@ IF "@MSVC_IDE@" == "1" (
 
 ::-----------------------------------------------------------------------------
 IF "%CMAKE_CONFIG_TYPE%" == "Debug" (
-    set EXE_SFX="@PIPELINE_RUNNER_DEBUG@"
+    set EXE_SFX=@PIPELINE_RUNNER_DEBUG@
 )
 
 ::-----------------------------------------------------------------------------
 IF "%CMAKE_CONFIG_TYPE%" == "Release" (
-    set EXE_SFX=""
+    set EXE_SFX=
 )
 
 ::-----------------------------------------------------------------------------
 IF "@CMAKE_BUILD_TYPE@" == "Debug" (
     set CONFIG_DIR=
-    set EXE_SFX="@PIPELINE_RUNNER_DEBUG@"
+    set EXE_SFX=@PIPELINE_RUNNER_DEBUG@
 )
 
 ::-----------------------------------------------------------------------------
 IF "@CMAKE_BUILD_TYPE@" == "Release" (
     set CONFIG_DIR=
-    set EXE_SFX=""
+    set EXE_SFX=
 )
 
 echo on
