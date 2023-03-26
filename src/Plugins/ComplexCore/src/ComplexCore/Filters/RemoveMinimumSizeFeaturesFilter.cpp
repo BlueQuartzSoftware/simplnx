@@ -381,7 +381,7 @@ IFilter::PreflightResult RemoveMinimumSizeFeaturesFilter::preflightImpl(const Da
   std::vector<DataPath> featureNeighborListArrays = result.value();
   for(const auto& featureNeighborList : featureNeighborListArrays)
   {
-    ss.append("\n" + featureNeighborList.toString());
+    ss.append("  " + featureNeighborList.toString() + "\n");
     auto action = std::make_unique<DeleteDataAction>(featureNeighborList);
     outputActions.actions.push_back(std::move(action));
   }

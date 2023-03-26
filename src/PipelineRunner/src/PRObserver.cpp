@@ -43,13 +43,17 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
 
     m_SignalConnections.push_back(cxFilter->getFilterFaultDetailSignal().connect(
         [currentFilterIndex](complex::AbstractPipelineNode*, int32_t filterIndex, const complex::WarningCollection& warnings, const complex::ErrorCollection& errors) {
-          if(!warnings.empty() || !errors.empty())
+          if(!warnings.empty())
           {
-            std::cout << "[" << currentFilterIndex << "] Warnings/Errors During Execution" << std::endl;
+            std::cout << "[" << currentFilterIndex << "] Warnings During Execution" << std::endl;
           }
           for(const auto& warn : warnings)
           {
             std::cout << "    Code: " << warn.code << "    Message: " << warn.message << std::endl;
+          }
+          if(!errors.empty())
+          {
+            std::cout << "[" << currentFilterIndex << "] Errors During Execution" << std::endl;
           }
           for(const auto& error : errors)
           {
