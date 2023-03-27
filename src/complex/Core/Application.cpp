@@ -288,6 +288,11 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
     return;
   }
 
+  for(const auto& handle : plugin->getFilterHandles())
+  {
+    fmt::print("Loaded filter: {}\n", handle.getFilterName());
+  }
+
   std::map<Uuid, Uuid> simplToComplexUuids = plugin->getSimplToComplexMap();
   for(auto const& [simplUuid, complexUuid] : simplToComplexUuids)
   {
