@@ -1,10 +1,6 @@
 
 resources:
   repositories:
-  - repository: DREAM3DNX
-    type: github
-    endpoint: BlueQuartzSoftware
-    name: BlueQuartzSoftware/DREAM3DNX
   - repository: complex
     type: github
     endpoint: BlueQuartzSoftware
@@ -36,7 +32,7 @@ jobs:
   timeoutInMinutes: 120
 
   variables:
-    dream3d_source_dir: $(Build.Repository.LocalPath)/DREAM3DNX
+    dream3d_source_dir: $(Build.Repository.LocalPath)/complex
     build_type: Release
     dream3d_data_dir: $(Agent.WorkFolder)/DREAM3D_Data
 
@@ -65,58 +61,23 @@ jobs:
     displayName: Appending to PATH
 
   - script: |
-      cmake -S $(dream3d_source_dir) -B $(Build.BinariesDirectory)-Commercial -G Ninja -DDREAM3D_ENABLE_DOCUMENTATION=OFF -DCMAKE_BUILD_TYPE:STRING=$(build_type) -DDREAM3D_DATA_DIR=$(dream3d_data_dir) -C $(Agent.WorkFolder)/NX.cmake -DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing;OrientationAnalysis" -DBUILDNAME:STRING="NX-Commercial-$(Agent.MachineName)-$(Agent.OS)-$(Build.SourceBranchName)_$(Build.BuildNumber)"
-    displayName: Configure Commercial DREAM3D
+      cmake -S $(dream3d_source_dir) -B $(Build.BinariesDirectory) -G Ninja -DCMAKE_BUILD_TYPE:STRING=$(build_type) -DDREAM3D_DATA_DIR=$(dream3d_data_dir) -C $(Agent.WorkFolder)/NX.cmake -DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing;OrientationAnalysis" -DBUILDNAME:STRING="complex-$(Agent.MachineName)-$(Agent.OS)-$(Build.SourceBranchName)_$(Build.BuildNumber)"
+    displayName: Configure complex
 
   - script: |
-      cmake --build $(Build.BinariesDirectory)-Commercial --config $(build_type) --target all
-    displayName: Build Commercial DREAM3D
+      cmake --build $(Build.BinariesDirectory) --config $(build_type) --target all
+    displayName: Build complex
 
   - script: |
-      cd $(Build.BinariesDirectory)-Commercial
-      cpack -C $(build_type) --verbose
-    continueOnError: true
-    displayName: Packing Commercial DREAM3D
-
-  - script: |
-      cd $(Build.BinariesDirectory)-Commercial
+      cd $(Build.BinariesDirectory)
       ctest -C $(build_type) -D Experimental --timeout 7200 -DCTEST_SITE:STRING=$(Agent.MachineName).bluequartz.net -Ddashboard_source_name:STRING=DREAM3D
     continueOnError: true
-    displayName: Testing Commercial DREAM3D
+    displayName: Test complex
 
   - task: PublishTestResults@2
     inputs:
       testResultsFormat: CTest
-      testResultsFiles: $(Build.BinariesDirectory)-Commercial/Testing/*/Test.xml
+      testResultsFiles: $(Build.BinariesDirectory)/Testing/*/Test.xml
       testRunTitle: CTest_$(Agent.Name)_$(Agent.OS)
       failTaskOnFailedTests: true
     displayName: Publish Commercial Test Results
-
-  - script: |
-      cmake -S $(dream3d_source_dir) -B $(Build.BinariesDirectory)-Free -G Ninja -DDREAM3D_ENABLE_DOCUMENTATION=OFF -DDREAM3D_ENABLE_COMMERCIAL_BUILD=OFF -DCMAKE_BUILD_TYPE:STRING=$(build_type) -DDREAM3D_DATA_DIR=$(dream3d_data_dir) -C $(Agent.WorkFolder)/NX.cmake -DCOMPLEX_EXTRA_PLUGINS="ITKImageProcessing;OrientationAnalysis" -DBUILDNAME:STRING="NX-Free-$(Agent.MachineName)-$(Agent.OS)-$(Build.SourceBranchName)_$(Build.BuildNumber)"
-    displayName: Configure Free DREAM3D
-
-  - script: |
-      cmake --build $(Build.BinariesDirectory)-Free --config $(build_type) --target all
-    displayName: Build Free DREAM3D
-
-  - script: |
-      cd $(Build.BinariesDirectory)-Free
-      cpack -C $(build_type) --verbose
-    continueOnError: false
-    displayName: Packing Free DREAM3D
-
-  - script: |
-      cd $(Build.BinariesDirectory)-Free
-      ctest -C $(build_type) -D Experimental --timeout 7200 -DCTEST_SITE:STRING=$(Agent.MachineName).bluequartz.net -Ddashboard_source_name:STRING=DREAM3D
-    continueOnError: true
-    displayName: Testing Free DREAM3D
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFormat: CTest
-      testResultsFiles: $(Build.BinariesDirectory)-Free/Testing/*/Test.xml
-      testRunTitle: CTest_$(Agent.Name)_$(Agent.OS)
-      failTaskOnFailedTests: true
-    displayName: Publish Free Test Results
-    
