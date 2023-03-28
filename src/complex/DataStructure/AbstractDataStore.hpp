@@ -370,6 +370,303 @@ public:
     using const_reference = const T&;
 
     Iterator(AbstractDataStore& dataStore, usize index)
+    : m_DataStore(&dataStore)
+    , m_Index(index)
+    {
+    }
+
+    Iterator(const Iterator& other)
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
+    {
+    }
+    Iterator(Iterator&& other) noexcept
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
+    {
+    }
+
+    Iterator& operator=(const Iterator& rhs)
+    {
+      m_DataStore = rhs.m_DataStore;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+    Iterator& operator=(Iterator&& rhs) noexcept
+    {
+      m_DataStore = rhs.m_DataStore;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+
+    ~Iterator() noexcept = default;
+
+    inline bool isValid() const
+    {
+      return m_Index < m_DataStore->getSize();
+    }
+
+    inline Iterator operator+(usize offset) const
+    {
+      return Iterator(*m_DataStore, m_Index + offset);
+    }
+
+    inline Iterator operator-(usize offset) const
+    {
+      return Iterator(*m_DataStore, m_Index - offset);
+    }
+
+    inline Iterator& operator+=(usize offset)
+    {
+      m_Index += offset;
+      return *this;
+    }
+
+    Iterator& operator-=(usize offset)
+    {
+      m_Index -= offset;
+      return *this;
+    }
+
+    // prefix
+    inline Iterator& operator++()
+    {
+      m_Index++;
+      return *this;
+    }
+
+    // postfix
+    inline Iterator operator++(int)
+    {
+      Iterator iter = *this;
+      m_Index++;
+      return iter;
+    }
+
+    // prefix
+    inline Iterator& operator--()
+    {
+      m_Index--;
+      return *this;
+    }
+
+    // postfix
+    inline Iterator operator--(int)
+    {
+      Iterator iter = *this;
+      m_Index--;
+      return iter;
+    }
+
+    inline difference_type operator-(const Iterator& rhs) const
+    {
+      return m_Index - rhs.m_Index;
+    }
+
+    inline reference operator*() const
+    {
+      return (*m_DataStore)[m_Index];
+    }
+
+    inline bool operator==(const Iterator& rhs) const
+    {
+      return m_Index == rhs.m_Index;
+    }
+
+    inline bool operator!=(const Iterator& rhs) const
+    {
+      return !(*this == rhs);
+    }
+
+    inline bool operator<(const Iterator& rhs) const
+    {
+      return m_Index < rhs.m_Index;
+    }
+
+    inline bool operator>(const Iterator& rhs) const
+    {
+      return m_Index > rhs.m_Index;
+    }
+
+    inline bool operator<=(const Iterator& rhs) const
+    {
+      return m_Index <= rhs.m_Index;
+    }
+
+    inline bool operator>=(const Iterator& rhs) const
+    {
+      return m_Index >= rhs.m_Index;
+    }
+
+  private:
+    AbstractDataStore* m_DataStore;
+    usize m_Index = 0;
+  };
+
+  class ConstIterator
+  {
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = int64;
+    using pointer = const T*;
+    using reference = const T&;
+
+    ConstIterator()
+    : m_DataStore(nullptr)
+    , m_Index(0)
+    {
+    }
+
+    ConstIterator(const AbstractDataStore& dataStore, usize index)
+    : m_DataStore(&dataStore)
+    , m_Index(index)
+    {
+    }
+
+    ConstIterator(const ConstIterator& other)
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
+    {
+    }
+    ConstIterator(ConstIterator&& other) noexcept
+    : m_DataStore(other.m_DataStore)
+    , m_Index(other.m_Index)
+    {
+    }
+
+    ConstIterator& operator=(const ConstIterator& rhs)
+    {
+      m_DataStore = rhs.m_DataStore;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+    ConstIterator& operator=(ConstIterator&& rhs) noexcept
+    {
+      m_DataStore = rhs.m_DataStore;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+
+    ~ConstIterator() noexcept = default;
+
+    bool isValid() const
+    {
+      return m_Index < m_DataStore->getSize();
+    }
+
+    ConstIterator operator+(usize offset) const
+    {
+      return ConstIterator(*m_DataStore, m_Index + offset);
+    }
+
+    ConstIterator operator-(usize offset) const
+    {
+      return ConstIterator(*m_DataStore, m_Index - offset);
+    }
+
+    ConstIterator& operator+=(usize offset)
+    {
+      m_Index += offset;
+      return *this;
+    }
+
+    ConstIterator& operator-=(usize offset)
+    {
+      m_Index -= offset;
+      return *this;
+    }
+
+    // prefix
+    ConstIterator& operator++()
+    {
+      m_Index++;
+      return *this;
+    }
+
+    // postfix
+    ConstIterator operator++(int)
+    {
+      Iterator iter = *this;
+      m_Index++;
+      return iter;
+    }
+
+    // prefix
+    ConstIterator& operator--()
+    {
+      m_Index--;
+      return *this;
+    }
+
+    // postfix
+    ConstIterator operator--(int)
+    {
+      ConstIterator iter = *this;
+      m_Index--;
+      return iter;
+    }
+
+    difference_type operator-(const ConstIterator& rhs) const
+    {
+      if(!isValid() && !rhs.isValid())
+      {
+        return 0;
+      }
+      return m_Index - rhs.m_Index;
+    }
+
+    inline reference operator*() const
+    {
+      return (*m_DataStore)[m_Index];
+    }
+
+    bool operator==(const ConstIterator& rhs) const
+    {
+      return m_Index == rhs.m_Index;
+    }
+
+    bool operator!=(const ConstIterator& rhs) const
+    {
+      return m_Index != rhs.m_Index;
+    }
+
+    bool operator<(const ConstIterator& rhs) const
+    {
+      return m_Index < rhs.m_Index;
+    }
+
+    bool operator>(const ConstIterator& rhs) const
+    {
+      return m_Index > rhs.m_Index;
+    }
+
+    bool operator<=(const ConstIterator& rhs) const
+    {
+      return m_Index <= rhs.m_Index;
+    }
+
+    bool operator>=(const ConstIterator& rhs) const
+    {
+      return m_Index >= rhs.m_Index;
+    }
+
+  private:
+    AbstractDataStore* m_DataStore = nullptr;
+    usize m_Index = 0;
+  };
+#else
+  class Iterator
+  {
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = int64;
+    using pointer = T*;
+    using reference = T&;
+    using const_reference = const T&;
+
+    Iterator(AbstractDataStore& dataStore, usize index)
     : m_DataStore(dataStore)
     , m_Index(index)
     {
