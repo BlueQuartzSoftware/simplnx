@@ -125,7 +125,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   if(auto* normals = dataStructure.getDataAs<Int32Array>(pFaceNormalsPathValue); normals == nullptr)
   {
-    return MakePreflightErrorResult(-27873, fmt::format("Face Normals Array doesn't exist at: {}", pFaceNormalsPathValue.toString()));
+    return MakePreflightErrorResult(-27874, fmt::format("Face Normals Array doesn't exist at: {}", pFaceNormalsPathValue.toString()));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
