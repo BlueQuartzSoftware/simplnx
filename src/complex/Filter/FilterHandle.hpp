@@ -47,6 +47,14 @@ public:
    * @param pluginId
    */
   FilterHandle(const FilterIdType& filterId, const PluginIdType& pluginId);
+  /**
+   * @brief
+   * @param filterId
+   * @param pluginId
+   * @param filterName The _intended_ filter that this handle represents
+   * @param className
+   */
+  FilterHandle(const FilterIdType& filterId, const PluginIdType& pluginId, const std::string& filterName, const std::string& className);
 
   /**
    * @brief Copy constructor

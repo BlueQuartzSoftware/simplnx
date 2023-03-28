@@ -11,6 +11,14 @@ FilterHandle::FilterHandle(const FilterIdType& filterId, const PluginIdType& plu
 {
 }
 
+FilterHandle::FilterHandle(const FilterIdType& filterId, const PluginIdType& pluginId, const std::string& filterName, const std::string& className)
+: m_FilterName(filterName)
+, m_ClassName(className)
+, m_FilterId(filterId)
+, m_PluginId(pluginId)
+{
+}
+
 FilterHandle::FilterHandle(const IFilter& filter, const PluginIdType& pluginId)
 : m_FilterName(filter.humanName())
 , m_ClassName(filter.className())

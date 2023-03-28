@@ -815,10 +815,10 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
 const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 // Make sure we can instantiate the MultiThreshold Objects Filter
 const Uuid k_MultiThresholdObjectsId = *Uuid::FromString("4246245e-1011-4add-8436-0af6bed19228");
-const FilterHandle k_MultiThresholdObjectsFilterHandle(k_MultiThresholdObjectsId, k_ComplexCorePluginId);
+const FilterHandle k_MultiThresholdObjectsFilterHandle(k_MultiThresholdObjectsId, k_ComplexCorePluginId, "MultiThresholdObjects", "MultiThresholdObjects");
 // Make sure we can instantiate the IdentifySample
 const Uuid k_IdentifySampleFilterId = *Uuid::FromString("94d47495-5a89-4c7f-a0ee-5ff20e6bd273");
-const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_ComplexCorePluginId);
+const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_ComplexCorePluginId, "IdentifySampleFilter", "IdentifySampleFilter");
 
 } // namespace complex
 
