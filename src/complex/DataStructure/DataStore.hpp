@@ -272,10 +272,6 @@ public:
    */
   reference operator[](usize index) override
   {
-    if(index >= m_NumTuples * m_NumComponents)
-    {
-      throw std::out_of_range(fmt::format("DataStore::operator[{}] out of range", index));
-    }
     return m_Data.get()[index];
   }
 
