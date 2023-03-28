@@ -17,6 +17,307 @@ public:
   /////////////////////////////////
   // Begin std::iterator support //
   /////////////////////////////////
+#if defined(__linux__)
+  class Iterator
+  {
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = int64;
+    using pointer = T*;
+    using reference = T&;
+
+    Iterator()
+    : m_DataVector(nullptr)
+    , m_Index(0)
+    {
+    }
+
+    Iterator(DataVector& DataVector, uint64 index)
+    : m_DataVector(DataVector)
+    , m_Index(index)
+    {
+    }
+
+    Iterator(const Iterator& other)
+    : m_DataVector(other.m_DataVector)
+    , m_Index(other.m_Index)
+    {
+    }
+
+    Iterator(Iterator&& other) noexcept
+    : m_DataVector(other.m_DataVector)
+    , m_Index(other.m_Index)
+    {
+    }
+
+    Iterator& operator=(const Iterator& rhs)
+    {
+      m_DataVector = rhs.m_DataVector;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+
+    Iterator& operator=(Iterator&& rhs) noexcept
+    {
+      m_DataVector = rhs.m_DataVector;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+
+    ~Iterator() noexcept = default;
+
+    inline bool isValid() const
+    {
+      return m_Index < m_DataVector->size();
+    }
+
+    inline Iterator operator+(usize offset) const
+    {
+      return Iterator(*m_DataVector, m_Index + offset);
+    }
+
+    inline Iterator operator-(usize offset) const
+    {
+      return Iterator(*m_DataVector, m_Index - offset);
+    }
+
+    inline Iterator& operator+=(usize offset)
+    {
+      m_Index += offset;
+      return *this;
+    }
+
+    inline Iterator& operator-=(usize offset)
+    {
+      m_Index -= offset;
+      return *this;
+    }
+
+    // prefix
+    inline Iterator& operator++()
+    {
+      m_Index++;
+      return *this;
+    }
+
+    // postfix
+    inline Iterator operator++(int)
+    {
+      Iterator iter = *this;
+      m_Index++;
+      return iter;
+    }
+
+    // prefix
+    inline Iterator& operator--()
+    {
+      m_Index--;
+      return *this;
+    }
+
+    // postfix
+    inline Iterator operator--(int)
+    {
+      Iterator iter = *this;
+      m_Index--;
+      return iter;
+    }
+
+    inline difference_type operator-(const Iterator& rhs) const
+    {
+      return m_Index - rhs.m_Index;
+    }
+
+    inline reference operator*() const
+    {
+      return (*m_DataVector)[m_Index];
+    }
+
+    inline bool operator==(const Iterator& rhs) const
+    {
+      return m_Index == rhs.m_Index;
+    }
+
+    inline bool operator!=(const Iterator& rhs) const
+    {
+      return m_Index != rhs.m_Index;
+    }
+
+    inline bool operator<(const Iterator& rhs) const
+    {
+      return m_Index < rhs.m_Index;
+    }
+
+    inline bool operator>(const Iterator& rhs) const
+    {
+      return m_Index > rhs.m_Index;
+    }
+
+    inline bool operator<=(const Iterator& rhs) const
+    {
+      return m_Index <= rhs.m_Index;
+    }
+
+    inline bool operator>=(const Iterator& rhs) const
+    {
+      return m_Index >= rhs.m_Index;
+    }
+
+  private:
+    DataVector* m_DataVector = nullptr;
+    uint64 m_Index = 0;
+  };
+
+  class ConstIterator
+  {
+  public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = int64;
+    using pointer = const T*;
+    using reference = const T&;
+
+    ConstIterator()
+    : m_DataVector(nullptr)
+    , m_Index(0)
+    {
+    }
+
+    ConstIterator(const DataVector& dataVector, uint64 index)
+    : m_DataVector(dataVector)
+    , m_Index(index)
+    {
+    }
+
+    ConstIterator(const ConstIterator& other)
+    : m_DataVector(other.m_DataVector)
+    , m_Index(other.m_Index)
+    {
+    }
+    ConstIterator(ConstIterator&& other) noexcept
+    : m_DataVector(other.m_DataVector)
+    , m_Index(other.m_Index)
+    {
+    }
+
+    ConstIterator& operator=(const ConstIterator& rhs)
+    {
+      m_DataVector = rhs.m_DataVector;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+    ConstIterator& operator=(ConstIterator&& rhs) noexcept
+    {
+      m_DataVector = rhs.m_DataVector;
+      m_Index = rhs.m_Index;
+      return *this;
+    }
+
+    ~ConstIterator() noexcept = default;
+
+    inline bool isValid() const
+    {
+      return m_Index < m_DataVector->size();
+    }
+
+    inline ConstIterator operator+(usize offset) const
+    {
+      return ConstIterator(*m_DataVector, m_Index + offset);
+    }
+
+    inline ConstIterator operator-(usize offset) const
+    {
+      return ConstIterator(*m_DataVector, m_Index - offset);
+    }
+
+    inline ConstIterator& operator+=(usize offset)
+    {
+      m_Index += offset;
+      return *this;
+    }
+
+    inline ConstIterator& operator-=(usize offset)
+    {
+      m_Index -= offset;
+      return *this;
+    }
+
+    // prefix
+    inline ConstIterator& operator++()
+    {
+      m_Index++;
+      return *this;
+    }
+
+    // postfix
+    inline ConstIterator operator++(int)
+    {
+      Iterator iter = *this;
+      m_Index++;
+      return iter;
+    }
+
+    // prefix
+    inline ConstIterator& operator--()
+    {
+      m_Index--;
+      return *this;
+    }
+
+    // postfix
+    inline ConstIterator operator--(int)
+    {
+      ConstIterator iter = *this;
+      m_Index--;
+      return iter;
+    }
+
+    inline difference_type operator-(const ConstIterator& rhs) const
+    {
+      return m_Index - rhs.m_Index;
+    }
+
+    inline reference operator*() const
+    {
+      return (*m_DataVector)[m_Index];
+    }
+
+    inline bool operator==(const ConstIterator& rhs) const
+    {
+      return m_Index == rhs.m_Index;
+    }
+
+    inline bool operator!=(const ConstIterator& rhs) const
+    {
+      return m_Index != rhs.m_Index;
+    }
+
+    inline bool operator<(const ConstIterator& rhs) const
+    {
+      return m_Index < rhs.m_Index;
+    }
+
+    inline bool operator>(const ConstIterator& rhs) const
+    {
+      return m_Index > rhs.m_Index;
+    }
+
+    inline bool operator<=(const ConstIterator& rhs) const
+    {
+      return m_Index <= rhs.m_Index;
+    }
+
+    inline bool operator>=(const ConstIterator& rhs) const
+    {
+      return m_Index >= rhs.m_Index;
+    }
+
+  private:
+    const DataVector* m_DataVector = nullptr;
+    uint64 m_Index = 0;
+  };
+#else
   class Iterator
   {
   public:
@@ -300,6 +601,7 @@ public:
     const DataVector& m_DataVector;
     uint64 m_Index = 0;
   };
+#endif
   ///////////////////////////////
   // End std::iterator support //
   ///////////////////////////////
