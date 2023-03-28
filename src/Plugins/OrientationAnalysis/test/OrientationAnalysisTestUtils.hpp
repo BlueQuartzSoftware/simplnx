@@ -105,8 +105,10 @@ inline constexpr StringLiteral k_SmallIN100ScanData("EBSD Scan Data");
 //------------------------------------------------------------------------------
 inline void ExecuteConvertOrientations(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_ConvertOrientationsFilterHandle.getFilterName()));
+  std::string filterName = k_ConvertOrientationsFilterHandle.getFilterName();
+
   auto filter = filterList.createFilter(k_ConvertOrientationsFilterHandle);
+  INFO(fmt::format("Error creating Filter '{}'  ", k_ConvertOrientationsFilterHandle.getFilterName()));
   REQUIRE(nullptr != filter);
 
   // Parameter Keys from AlignSectionsMisorientation. If those change these will need to be updated
@@ -115,16 +117,19 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
   constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
   constexpr StringLiteral k_OutputOrientationArrayName_Key = "output_orientation_array_name";
 
+  INFO(fmt::format("Setting up Arguments for {}", filterName))
   Arguments args;
   args.insertOrAssign(k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(0));
   args.insertOrAssign(k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(2));
   args.insertOrAssign(k_InputOrientationArrayPath_Key, std::make_any<DataPath>(Constants::k_EulersArrayPath));
   args.insertOrAssign(k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_Quats));
 
+  INFO(fmt::format("Preflight Filter {}", filterName));
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
+  INFO(fmt::format("Executing Filter {}", filterName));
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -133,8 +138,10 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
 //------------------------------------------------------------------------------
 inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_EbsdSegmentFeaturesFilterHandle.getFilterName()));
+  std::string filterName = k_EbsdSegmentFeaturesFilterHandle.getFilterName();
+
   auto filter = filterList.createFilter(k_EbsdSegmentFeaturesFilterHandle);
+  INFO(fmt::format("Error creating Filter '{}'  ", k_EbsdSegmentFeaturesFilterHandle.getFilterName()));
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
@@ -150,6 +157,7 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
   constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
   constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
 
+  INFO(fmt::format("Setting up Arguments for {}", filterName))
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -165,10 +173,12 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
   args.insertOrAssign(k_ActiveArrayName_Key, std::make_any<std::string>(Constants::k_ActiveName));
   args.insertOrAssign(k_RandomizeFeatures_Key, std::make_any<bool>(false));
 
+  INFO(fmt::format("Preflight Filter {}", filterName));
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
+  INFO(fmt::format("Executing Filter {}", filterName));
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -177,8 +187,9 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
 //------------------------------------------------------------------------------
 inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, const FilterList& filterList, const fs::path& shiftsFile)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionMisorientationFilterHandle.getFilterName()));
+  std::string filterName = k_AlignSectionMisorientationFilterHandle.getFilterName();
   auto filter = filterList.createFilter(k_AlignSectionMisorientationFilterHandle);
+  INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionMisorientationFilterHandle.getFilterName()));
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
@@ -196,6 +207,7 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 
   constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
 
+  INFO(fmt::format("Setting up Arguments for {}", filterName))
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -214,10 +226,12 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 
   args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
 
+  INFO(fmt::format("Preflight Filter {}", filterName));
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
+  INFO(fmt::format("Executing Filter {}", filterName));
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -226,8 +240,11 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 //------------------------------------------------------------------------------
 inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, const FilterList& filterList, const fs::path& shiftsFile)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_AlignSectionsFeatureCentroidFilterHandle.getFilterName()));
+
+  std::string filterName = k_AlignSectionsFeatureCentroidFilterHandle.getFilterName();
   auto filter = filterList.createFilter(k_AlignSectionsFeatureCentroidFilterHandle);
+
+  INFO(fmt::format("Error creating Filter '{}'  ", filterName));
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
@@ -239,6 +256,7 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   constexpr StringLiteral k_SelectedImageGeometry_Key = "selected_image_geometry_path";
   constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_path";
 
+  INFO(fmt::format("Setting up Arguments for {}", filterName))
   Arguments args;
   // Create default Parameters for the filter.
   args.insertOrAssign(k_WriteAlignmentShifts_Key, std::make_any<bool>(true));
@@ -249,10 +267,12 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
   args.insertOrAssign(k_SelectedImageGeometry_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
   args.insertOrAssign(k_SelectedCellDataGroup_Key, std::make_any<DataPath>(Constants::k_CellAttributeMatrix));
 
+  INFO(fmt::format("Preflight Filter {}", filterName));
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
+  INFO(fmt::format("Executing Filter {}", filterName));
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -261,9 +281,10 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
 //------------------------------------------------------------------------------
 inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure, const FilterList& filterList)
 {
+  std::string filterName = k_BadDataNeighborOrientationCheckFilterHandle.getFilterName();
 
-  INFO(fmt::format("Error creating Filter '{}'  ", k_BadDataNeighborOrientationCheckFilterHandle.getFilterName()));
   auto filter = filterList.createFilter(k_BadDataNeighborOrientationCheckFilterHandle);
+  INFO(fmt::format("Error creating Filter '{}'  ", k_BadDataNeighborOrientationCheckFilterHandle.getFilterName()));
   REQUIRE(nullptr != filter);
   // Parameter Keys
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
@@ -274,6 +295,7 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
   constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
+  INFO(fmt::format("Setting up Arguments for {}", filterName))
   Arguments args;
   // Create default Parameters for the filter.
   args.insertOrAssign(k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
@@ -284,10 +306,12 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
   args.insertOrAssign(k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
   args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
 
+  INFO(fmt::format("Preflight Filter {}", filterName));
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
+  INFO(fmt::format("Executing Filter {}", filterName));
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -296,8 +320,9 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
 //------------------------------------------------------------------------------
 inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO(fmt::format("Error creating Filter '{}'  ", k_NeighborOrientationCorrelationFilterHandle.getFilterName()));
+  std::string filterName = k_NeighborOrientationCorrelationFilterHandle.getFilterName();
   auto filter = filterList.createFilter(k_NeighborOrientationCorrelationFilterHandle);
+  INFO(fmt::format("Error creating Filter '{}'  ", k_NeighborOrientationCorrelationFilterHandle.getFilterName()));
   REQUIRE(nullptr != filter);
 
   // Parameter Keys
@@ -311,6 +336,7 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
   constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
+  INFO(fmt::format("Setting up Arguments for {}", filterName))
   Arguments args;
   // Create default Parameters for the filter.
   args.insertOrAssign(k_ImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
@@ -323,12 +349,15 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
   args.insertOrAssign(k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(Constants::k_CrystalStructuresArrayPath));
   args.insertOrAssign(k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>());
 
+  INFO(fmt::format("Preflight Filter {}", filterName));
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
+  INFO(fmt::format("Executing Filter {}", filterName));
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 }
+
 } // namespace SmallIn100
