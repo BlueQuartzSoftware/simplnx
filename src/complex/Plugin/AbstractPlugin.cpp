@@ -58,6 +58,7 @@ IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType i
 {
   if(!containsFilterId(identifier))
   {
+    std::cout << "[AbstractPlugin::createFilter] Error creating filter '" << identifier.str() << "'. The Abstract Plugin object does not contain the filter id." << std::endl;
     return nullptr;
   }
 
