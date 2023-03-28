@@ -11,12 +11,12 @@ This **Filter** will read a single .h5 file into a new **Image Geometry**, allow
 
 | User interface before entering a proper "Z Spacing" value and selecting which scans to include. |
 |-------|
-|![](Images/ReadEDAXH5_1.png)|
+|![](Images/ReadEspritH5_1.png)|
 
 
 | User interface AFTER setting the "Z Spacing" and selecting files.  |
 |-------|
-|![](Images/ReadEDAXH5_2.png)|
+|![](Images/ReadEspritH5_2.png)|
 
 
 ## Notes About Reference Frames 
