@@ -65,4 +65,4 @@ jobs:
           cmake --build --preset ci-linux-x64
       - name: Test
         run: |
-          ctest --preset ci-linux-x64
+          ctest --preset ci-linux-x64 --verbose

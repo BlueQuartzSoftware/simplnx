@@ -55,4 +55,4 @@ jobs:
           cmake --build --preset ci-windows-${{matrix.toolset}}
       - name: Test
         run: |
-          ctest --preset ci-windows-${{matrix.toolset}}
+          ctest --preset ci-windows-${{matrix.toolset}}  --verbose
