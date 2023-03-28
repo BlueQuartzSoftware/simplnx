@@ -652,7 +652,7 @@ public:
     }
 
   private:
-    AbstractDataStore* m_DataStore = nullptr;
+    const AbstractDataStore* m_DataStore = nullptr;
     usize m_Index = 0;
   };
 #else
