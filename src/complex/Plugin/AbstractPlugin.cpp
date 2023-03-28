@@ -1,5 +1,7 @@
 #include "AbstractPlugin.hpp"
 
+#include "complex/Core/Application.hpp"
+#include "complex/Core/Preferences.hpp"
 #include "complex/Filter/IFilter.hpp"
 
 #include <fmt/core.h>
@@ -93,4 +95,10 @@ AbstractPlugin::IOManagersContainerType AbstractPlugin::getDataIOManagers() cons
 void AbstractPlugin::addDataIOManager(const IOManagerPointer& ioManager)
 {
   m_IOManagers.push_back(ioManager);
+}
+
+void AbstractPlugin::addDefaultValue(std::string keyName, const nlohmann::json& value)
+{
+  Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
+  preferences->addDefaultValues(*this, keyName, value);
 }

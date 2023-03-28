@@ -1014,11 +1014,6 @@ public:
 
     ~Iterator() noexcept = default;
 
-    inline bool isValid() const
-    {
-      return m_Index < m_DataStore.getSize();
-    }
-
     inline Iterator operator+(usize offset) const
     {
       return Iterator(m_DataStore, m_Index + offset);
@@ -1155,11 +1150,6 @@ public:
 
     ~ConstIterator() noexcept = default;
 
-    bool isValid() const
-    {
-      return m_Index < m_DataStore.getSize();
-    }
-
     ConstIterator operator+(usize offset) const
     {
       return ConstIterator(m_DataStore, m_Index + offset);
@@ -1214,10 +1204,6 @@ public:
 
     difference_type operator-(const ConstIterator& rhs) const
     {
-      if(!isValid() && !rhs.isValid())
-      {
-        return 0;
-      }
       return m_Index - rhs.m_Index;
     }
 

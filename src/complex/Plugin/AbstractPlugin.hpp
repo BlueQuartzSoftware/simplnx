@@ -129,6 +129,13 @@ protected:
    */
   void addDataIOManager(const IOManagerPointer& ioManager);
 
+  /**
+   * @brief Adds a default value to the Preferences for the current plugin.
+   * @param keyName
+   * @param value
+   */
+  void addDefaultValue(std::string keyName, const nlohmann::json& value);
+
 private:
   IdType m_Id;
   std::string m_Name;

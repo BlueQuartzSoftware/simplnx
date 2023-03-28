@@ -6,6 +6,11 @@
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
 
+namespace
+{
+constexpr complex::int64 k_BadFormatCode = -780;
+}
+
 namespace complex
 {
 DataStoreFormatParameter::DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
@@ -65,6 +70,12 @@ typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter:
 Result<> DataStoreFormatParameter::validate(const std::any& value) const
 {
   [[maybe_unused]] const auto& stringValue = GetAnyRef<ValueType>(value);
+  const auto formats = Application::GetOrCreateInstance()->getDataStoreFormats();
+  if(std::find(formats.begin(), formats.end(), stringValue) == formats.end())
+  {
+    std::string ss = fmt::format("DataStore format not known: '{}'", stringValue);
+    return MakeErrorResult(k_BadFormatCode, ss);
+  }
   return {};
 }
 } // namespace complex
