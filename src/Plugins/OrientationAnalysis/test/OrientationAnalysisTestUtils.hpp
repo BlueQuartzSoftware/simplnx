@@ -101,9 +101,11 @@ inline constexpr StringLiteral k_SmallIN100ScanData("EBSD Scan Data");
 //------------------------------------------------------------------------------
 inline void ExecuteConvertOrientations(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO("Error creating Filter: 'ConvertOrientationsFilter'");
   auto filter = filterList.createFilter(k_ConvertOrientationsFilterHandle);
-  REQUIRE(nullptr != filter);
+  {
+    INFO("Error creating Filter: 'ConvertOrientationsFilter'");
+    REQUIRE(filter != nullptr);
+  }
 
   // Parameter Keys from AlignSectionsMisorientation. If those change these will need to be updated
   constexpr StringLiteral k_InputType_Key = "input_type";
@@ -129,9 +131,11 @@ inline void ExecuteConvertOrientations(DataStructure& dataStructure, const Filte
 //------------------------------------------------------------------------------
 inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO("Error creating Filter: 'EbsdSegmentFeaturesFilter'");
   auto filter = filterList.createFilter(k_EbsdSegmentFeaturesFilterHandle);
-  REQUIRE(nullptr != filter);
+  {
+    INFO("Error creating Filter: 'EbsdSegmentFeaturesFilter'");
+    REQUIRE(filter != nullptr);
+  }
 
   // Parameter Keys
   constexpr StringLiteral k_GridGeomPath_Key = "grid_geometry_path";
@@ -173,9 +177,11 @@ inline void ExecuteEbsdSegmentFeatures(DataStructure& dataStructure, const Filte
 //------------------------------------------------------------------------------
 inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, const FilterList& filterList, const fs::path& shiftsFile)
 {
-  INFO("Error creating Filter: 'AlignSectionMisorientationFilter'");
   auto filter = filterList.createFilter(k_AlignSectionMisorientationFilterHandle);
-  REQUIRE(nullptr != filter);
+  {
+    INFO("Error creating Filter: 'AlignSectionMisorientationFilter'");
+    REQUIRE(filter != nullptr);
+  }
 
   // Parameter Keys
   constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
@@ -222,9 +228,11 @@ inline void ExecuteAlignSectionsMisorientation(DataStructure& dataStructure, con
 //------------------------------------------------------------------------------
 inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, const FilterList& filterList, const fs::path& shiftsFile)
 {
-  INFO("Error creating Filter: 'AlignSectionsFeatureCentroidFilter'");
   auto filter = filterList.createFilter(k_AlignSectionsFeatureCentroidFilterHandle);
-  REQUIRE(nullptr != filter);
+  {
+    INFO("Error creating Filter: 'AlignSectionsFeatureCentroidFilter'");
+    REQUIRE(filter != nullptr);
+  }
 
   // Parameter Keys
   constexpr StringLiteral k_WriteAlignmentShifts_Key = "write_alignment_shifts";
@@ -257,9 +265,12 @@ inline void ExecuteAlignSectionsFeatureCentroid(DataStructure& dataStructure, co
 //------------------------------------------------------------------------------
 inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO("Error creating Filter 'BadDataNeighborOrientationCheckFilter'");
   auto filter = filterList.createFilter(k_BadDataNeighborOrientationCheckFilterHandle);
-  REQUIRE(nullptr != filter);
+  {
+    INFO("Error creating Filter 'BadDataNeighborOrientationCheckFilter'");
+    REQUIRE(filter != nullptr);
+  }
+
   // Parameter Keys
   constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
   constexpr StringLiteral k_NumberOfNeighbors_Key = "number_of_neighbors";
@@ -291,9 +302,11 @@ inline void ExecuteBadDataNeighborOrientationCheck(DataStructure& dataStructure,
 //------------------------------------------------------------------------------
 inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO("Error creating Filter: 'NeighborOrientationCorrelationFilter'");
   auto filter = filterList.createFilter(k_NeighborOrientationCorrelationFilterHandle);
-  REQUIRE(nullptr != filter);
+  {
+    INFO("Error creating Filter: 'NeighborOrientationCorrelationFilter'");
+    REQUIRE(filter != nullptr);
+  }
 
   // Parameter Keys
   constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";

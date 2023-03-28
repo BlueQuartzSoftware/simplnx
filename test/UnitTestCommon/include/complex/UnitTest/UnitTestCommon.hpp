@@ -829,10 +829,12 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
 {
   constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
   constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
-  INFO("Error creating Filter: 'MultiThresholdObjectsFilter'");
 
   auto filter = filterList.createFilter(k_MultiThresholdObjectsFilterHandle);
-  REQUIRE(nullptr != filter);
+  {
+    INFO("Error creating Filter: 'MultiThresholdObjectsFilter'");
+    REQUIRE(filter != nullptr);
+  }
 
   Arguments args;
 
@@ -868,9 +870,11 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
 //------------------------------------------------------------------------------
 inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filterList)
 {
-  INFO("Error creating Filter: 'IdentifySampleFilter'");
   auto filter = filterList.createFilter(k_IdentifySampleFilterHandle);
-  REQUIRE(nullptr != filter);
+  {
+    INFO("Error creating Filter: 'IdentifySampleFilter'");
+    REQUIRE(filter != nullptr);
+  }
 
   // Parameter Keys
   constexpr StringLiteral k_FillHoles_Key = "fill_holes";
