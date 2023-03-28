@@ -24,9 +24,13 @@ public:
   WriteStlFileFilter& operator=(WriteStlFileFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_GroupByFeature = "group_by_feature";
   static inline constexpr StringLiteral k_OutputStlDirectory_Key = "output_stl_directory";
   static inline constexpr StringLiteral k_OutputStlPrefix_Key = "output_stl_prefix";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
+  static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
+  static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
+  static inline constexpr StringLiteral k_FaceNormalsPath_Key = "face_normals_path";
 
   /**
    * @brief Returns the name of the filter.

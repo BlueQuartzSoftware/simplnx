@@ -3,9 +3,12 @@
 #include "ComplexCore/Filters/Algorithms/WriteStlFile.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 
 #include <filesystem>
@@ -51,14 +54,25 @@ Parameters WriteStlFileFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{""});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
-                                                          FileSystemPathParameter::PathType::OutputDir));
-  params.insert(std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "STL File Prefix", "", "SomeString"));
-  
-  params.insertSeparator(Parameters::Separator{"Required Face Data Array"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{},
-                                                          complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_GroupByFeature, "Group by Feature Phases", "Further partition the stl files by feature phases", false));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
+                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir));
+  params.insert(std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "STL File Prefix", "The prefix name of created files (other values will be appended later - including the .stl extension)",
+                                                  "SomeString"));
+
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Selected Triangle Geometry", "The geometry to print", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "The feature ids array to order/index files by", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The triangle normals array to be printed in the stl file", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "The feature phases array to further order/index files by", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  // link params
+  params.linkParameters(k_GroupByFeature, k_FeaturePhasesPath_Key, true);
 
   return params;
 }
@@ -73,13 +87,46 @@ IFilter::UniquePointer WriteStlFileFilter::clone() const
 IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                            const std::atomic_bool& shouldCancel) const
 {
+  auto pGroupByPhasesValue = filterArgs.value<bool>(k_GroupByFeature);
   auto pOutputStlDirectoryValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
-  auto pOutputStlPrefixValue = filterArgs.value<StringParameter::ValueType>(k_OutputStlPrefix_Key);
-  auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  auto pTriangleGeomPathValue = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
+  auto pFeatureIdsPathValue = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  auto pFeaturePhasesPathValue = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  auto pFaceNormalsPathValue = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
+  if(triangleGeom == nullptr)
+  {
+    return MakePreflightErrorResult(-27870, fmt::format("Triangle Geometry doesn't exist at: {}", pTriangleGeomPathValue.toString()));
+  }
+
+  if(triangleGeom->getNumberOfFaces() > std::numeric_limits<int32>::max())
+  {
+    return MakePreflightErrorResult(
+        -27871, fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}", triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max()));
+  }
+
+  if(pGroupByPhasesValue)
+  {
+    if(auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue); featurePhases == nullptr)
+    {
+      return MakePreflightErrorResult(-27872, fmt::format("Feature Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
+    }
+  }
+
+  if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue); featureIds == nullptr)
+  {
+    return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
+  }
+
+  if(auto* normals = dataStructure.getDataAs<Int32Array>(pFaceNormalsPathValue); normals == nullptr)
+  {
+    return MakePreflightErrorResult(-27873, fmt::format("Face Normals Array doesn't exist at: {}", pFaceNormalsPathValue.toString()));
+  }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -91,9 +138,13 @@ Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arg
 {
   WriteStlFileInputValues inputValues;
 
+  inputValues.GroupByFeature = filterArgs.value<bool>(k_GroupByFeature);
   inputValues.OutputStlDirectory = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
   inputValues.OutputStlPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputStlPrefix_Key);
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  inputValues.TriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
+  inputValues.FaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
 
   return WriteStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

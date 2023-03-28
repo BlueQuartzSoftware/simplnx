@@ -45,7 +45,7 @@ TEST_CASE("ComplexCore::WriteStlFileFilter: Valid Filter Execution","[ComplexCor
   // Create default Parameters for the filter.
   args.insertOrAssign(WriteStlFileFilter::k_OutputStlDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/Directory/To/Read")));
   args.insertOrAssign(WriteStlFileFilter::k_OutputStlPrefix_Key, std::make_any<StringParameter::ValueType>("SomeString"));
-  args.insertOrAssign(WriteStlFileFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WriteStlFileFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath{}));
 
 
   // Preflight the filter and check result

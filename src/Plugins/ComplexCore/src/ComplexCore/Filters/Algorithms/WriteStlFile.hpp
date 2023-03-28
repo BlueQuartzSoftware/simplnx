@@ -14,10 +14,13 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT WriteStlFileInputValues
 {
+  bool GroupByFeature;
   FileSystemPathParameter::ValueType OutputStlDirectory;
   StringParameter::ValueType OutputStlPrefix;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-
+  DataPath FeatureIdsPath;
+  DataPath FeaturePhasesPath;
+  DataPath TriangleGeomPath;
+  DataPath FaceNormalsPath;
 };
 
 /**
