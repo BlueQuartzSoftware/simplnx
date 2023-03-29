@@ -40,14 +40,14 @@ std::vector<char> readIn(fs::path filePath)
 
 void CompareResults() // compare hash of both file strings
 {
-  fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/TriangleFeature0.stl");
+  fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/TriangleFeature_0.stl");
   REQUIRE(fs::exists(writtenFilePath));
-  fs::path exemplarFilePath = fs::path(k_ExemplarDir + "/ExemplarFeature0.stl");
+  fs::path exemplarFilePath = fs::path(k_ExemplarDir + "/ExemplarFeature_0.stl");
   REQUIRE(fs::exists(exemplarFilePath));
   REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
-  fs::path writtenFilePath2 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/TriangleFeature1.stl");
+  fs::path writtenFilePath2 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/TriangleFeature_1.stl");
   REQUIRE(fs::exists(writtenFilePath2));
-  fs::path exemplarFilePath2 = fs::path(k_ExemplarDir + "/ExemplarFeature1.stl");
+  fs::path exemplarFilePath2 = fs::path(k_ExemplarDir + "/ExemplarFeature_1.stl");
   REQUIRE(fs::exists(exemplarFilePath2));
   REQUIRE(readIn(writtenFilePath2) == readIn(exemplarFilePath2));
 }
@@ -66,8 +66,8 @@ TEST_CASE("ComplexCore::WriteStlFileFilter: Valid Filter Execution", "[ComplexCo
   args.insertOrAssign(WriteStlFileFilter::k_OutputStlDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(unit_test::k_BinaryTestOutputDir)));
   args.insertOrAssign(WriteStlFileFilter::k_OutputStlPrefix_Key, std::make_any<StringParameter::ValueType>("Triangle"));
   args.insertOrAssign(WriteStlFileFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName})));
-  args.insertOrAssign(WriteStlFileFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName, Constants::k_FaceData, Constants::k_FaceLabels})));
-  args.insertOrAssign(WriteStlFileFilter::k_FaceNormalsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName, Constants::k_FaceData, Constants::k_NormalsLabels})));
+  args.insertOrAssign(WriteStlFileFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName, Constants::k_Face_Data, Constants::k_FaceLabels})));
+  args.insertOrAssign(WriteStlFileFilter::k_FaceNormalsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName, Constants::k_Face_Data, Constants::k_NormalsLabels})));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
