@@ -5,10 +5,12 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/GeometryHelpers.hpp"
 
 using namespace complex;
@@ -57,12 +59,11 @@ Parameters AppendImageGeometryZSliceFilter::parameters() const
                                                              "The destination image geometry (cell data) that is the final location for the appended data.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<BoolParameter>(k_CheckResolution_Key, "Check Spacing", "Checks to make sure the spacing for the input geometry and destination geometry match", false));
-  // params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewGeometry_Key, "Save as new geometry",
-  //                                                                "Save the combined data as a new geometry instead of appending the input data to the destination geometry", false));
-  // params.insert(std::make_unique<DataGroupCreationParameter>(k_NewGeometry_Key, "New Image Geometry Name", "The path to the new geometry with the combined data from the input & destination
-  // geometry",
-  //                                                            DataPath({"AppendedImageGeom"})));
-  // params.linkParameters(k_SaveAsNewGeometry_Key, k_NewGeometry_Key, true);
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewGeometry_Key, "Save as new geometry",
+                                                                 "Save the combined data as a new geometry instead of appending the input data to the destination geometry", false));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewGeometry_Key, "New Image Geometry Name", "The path to the new geometry with the combined data from the input & destination geometry",
+                                                             DataPath({"AppendedImageGeom"})));
+  params.linkParameters(k_SaveAsNewGeometry_Key, k_NewGeometry_Key, true);
 
   return params;
 }
@@ -80,7 +81,7 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
   auto pInputGeometryPathValue = filterArgs.value<DataPath>(k_InputGeometry_Key);
   auto pDestinationGeometryPathValue = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
   auto pCheckResolutionValue = filterArgs.value<bool>(k_CheckResolution_Key);
-  // auto pSaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
+  auto pSaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
 
   PreflightResult preflightResult;
   Result<OutputActions> resultOutputActions;
@@ -120,20 +121,69 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
   std::vector<usize> newDims = {destGeomDims[0], destGeomDims[1], inputGeomDims[2] + destGeomDims[2]};
   FloatVec3 origin = destGeometry.getOrigin();
   FloatVec3 spacing = destGeometry.getSpacing();
-  // if(pSaveAsNewGeometry)
-  //{
-  //   auto pNewImageGeomPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
-  //   auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeomPath, newDims, std::vector<float>{origin[0], origin[1], origin[2]},
-  //                                                                       std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellDataName);
-  //
-  //   std::vector<usize> newCellDataDims(newDims.rbegin(), newDims.rend());
-  //
-  //   resultOutputActions.value().actions.push_back(std::move(createGeomAction));
-  // }
+  if(pSaveAsNewGeometry)
+  {
+    auto pNewImageGeomPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
+    auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeomPath, newDims, std::vector<float>{origin[0], origin[1], origin[2]},
+                                                                        std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellDataName);
+    resultOutputActions.value().actions.push_back(std::move(createGeomAction));
 
-  resultOutputActions.warnings().push_back(
-      {-8405, "You are appending cell data together which may change the number of features. As a result, any feature level attribute matrix data will likely be invalidated!"});
-  preflightUpdatedValues.push_back({"Appended Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(newDims, spacing, origin)});
+    std::vector<usize> newCellDataDims(newDims.rbegin(), newDims.rend());
+    const AttributeMatrix* inputCellData = inputGeometry.getCellData();
+    const AttributeMatrix* destCellData = destGeometry.getCellData();
+    const DataPath destCellDataPath = pDestinationGeometryPathValue.createChildPath(destCellData->getName());
+    const DataPath inputCellDataPath = pInputGeometryPathValue.createChildPath(inputGeometry.getCellData()->getName());
+    const DataPath newCellDataPath = pNewImageGeomPath.createChildPath(ImageGeom::k_CellDataName);
+    std::vector<std::string> childNames1 = inputCellData->getDataMap().getNames();
+    std::vector<std::string> childNames2 = destCellData->getDataMap().getNames();
+    std::vector<std::string> combinedArrayNames;
+    std::sort(childNames1.begin(), childNames1.end());
+    std::sort(childNames2.begin(), childNames2.end());
+    std::set_intersection(childNames1.begin(), childNames1.end(), childNames2.begin(), childNames2.end(), back_inserter(combinedArrayNames));
+    for(const auto& name : combinedArrayNames)
+    {
+      auto* dataArray1 = dataStructure.getDataAs<IDataArray>(inputCellDataPath.createChildPath(name));
+      if(dataArray1 == nullptr)
+      {
+        resultOutputActions.warnings().push_back(
+            {-8206, fmt::format("Cannot append data array {} in cell data attribute matrix at path '{}' because it is not of type IDataArray.", name, inputCellDataPath.toString())});
+        continue;
+      }
+      auto* dataArray2 = dataStructure.getDataAs<IDataArray>(destCellDataPath.createChildPath(name));
+      if(dataArray2 == nullptr)
+      {
+        resultOutputActions.warnings().push_back(
+            {-8207, fmt::format("Cannot append data array {} in cell data attribute matrix at path '{}' because it is not of type IDataArray.", name, destCellDataPath.toString())});
+        continue;
+      }
+      const DataType dataType1 = dataArray1->getDataType();
+      const DataType dataType2 = dataArray2->getDataType();
+      if(dataType1 != dataType2)
+      {
+        resultOutputActions.warnings().push_back(
+            {-8208, fmt::format("Cannot append data from input data array with type {} to destination data array with type {} because the data array types do not match.",
+                                DataTypeToString(dataType1).str(), DataTypeToString(dataType2).str())});
+        continue;
+      }
+      const usize srcNumComps = dataArray1->getNumberOfComponents();
+      const usize numComps = dataArray2->getNumberOfComponents();
+      if(srcNumComps != numComps)
+      {
+        resultOutputActions.warnings().push_back(
+            {-8209, fmt::format("Cannot append data from input data array with {} components to destination data array with {} components.", srcNumComps, numComps)});
+        continue;
+      }
+
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataType1, newCellDataDims, dataArray1->getComponentShape(), newCellDataPath.createChildPath(name));
+      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    }
+  }
+  else
+  {
+    resultOutputActions.warnings().push_back(
+        {-8405, "You are appending cell data together which may change the number of features. As a result, any feature level attribute matrix data will likely be invalidated!"});
+    preflightUpdatedValues.push_back({"Appended Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(newDims, spacing, origin)});
+  }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -147,7 +197,8 @@ Result<> AppendImageGeometryZSliceFilter::executeImpl(DataStructure& dataStructu
   inputValues.InputGeometryPath = filterArgs.value<DataPath>(k_InputGeometry_Key);
   inputValues.DestinationGeometryPath = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
   inputValues.CheckResolution = filterArgs.value<bool>(k_CheckResolution_Key);
-  // inputValues.SaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
+  inputValues.SaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
+  inputValues.NewGeometryPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
 
   return AppendImageGeometryZSlice(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

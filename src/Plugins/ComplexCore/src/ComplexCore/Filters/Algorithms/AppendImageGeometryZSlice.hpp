@@ -14,6 +14,7 @@ struct COMPLEXCORE_EXPORT AppendImageGeometryZSliceInputValues
 {
   DataPath InputGeometryPath;
   DataPath DestinationGeometryPath;
+  DataPath NewGeometryPath;
   bool CheckResolution;
   bool SaveAsNewGeometry;
 };
