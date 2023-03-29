@@ -389,6 +389,12 @@ Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tup
 
   auto store = CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
   auto dataArray = DataArray<T>::Create(dataStructure, name, std::move(store), dataObjectId);
+  auto* dataObject = dataStructure.getData(path);
+  if(dataObject == nullptr)
+  {
+    throw std::runtime_error(fmt::format("Create DataArray FAILED to create at path: {}", path.toString()));
+  }
+
   if(dataArray == nullptr)
   {
     if(dataStructure.getId(path).has_value())

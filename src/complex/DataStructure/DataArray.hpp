@@ -67,10 +67,25 @@ public:
    */
   static DataArray* Create(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
   {
-    auto data = std::shared_ptr<DataArray>(new DataArray(dataStructure, std::move(name), std::move(store)));
+    auto data = std::shared_ptr<DataArray>(new DataArray(dataStructure, name, std::move(store)));
     if(!AttemptToAddObject(dataStructure, data, parentId))
     {
       return nullptr;
+    }
+
+    std::vector<DataPath> allDataPaths;
+    if(parentId.has_value())
+    {
+      allDataPaths = dataStructure.getDataPathsForId(parentId.value());
+    }
+    else
+    {
+      allDataPaths.push_back(DataPath({"ROOT LEVEL"}));
+    }
+    std::cout << "Created Data Array at DataPath :" << std::endl;
+    for(const auto& dataPath : allDataPaths)
+    {
+      std::cout << "    " << dataPath.toString() << "/" << name << std::endl;
     }
     return data.get();
   }
