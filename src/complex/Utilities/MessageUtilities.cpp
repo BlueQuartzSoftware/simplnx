@@ -188,6 +188,7 @@ bool ThreadSafeTaskMessenger::setTotalElements(usize totalElements, uint64 id)
 // -----------------------------------------------------------------------------
 usize ThreadSafeTaskMessenger::getProgressIncrement(uint64 id) const
 {
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
   if(!m_Data.count(id))
   {
     // should be treated as a fail: just throw an if not around the returned
@@ -201,6 +202,7 @@ usize ThreadSafeTaskMessenger::getProgressIncrement(uint64 id) const
 // -----------------------------------------------------------------------------
 usize ThreadSafeTaskMessenger::getTotalElements(uint64 id) const
 {
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
   if(!m_Data.count(id))
   {
     // should be treated as a fail: just throw an if not around the returned
