@@ -59,7 +59,7 @@ Parameters WriteStlFileFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir));
   params.insert(std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "STL File Prefix", "The prefix name of created files (other values will be appended later - including the .stl extension)",
-                                                  "SomeString"));
+                                                  "Triangle"));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Selected Triangle Geometry", "The geometry to print", DataPath{},
@@ -126,6 +126,11 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
   if(auto* normals = dataStructure.getDataAs<Int32Array>(pFaceNormalsPathValue); normals == nullptr)
   {
     return MakePreflightErrorResult(-27874, fmt::format("Face Normals Array doesn't exist at: {}", pFaceNormalsPathValue.toString()));
+  }
+
+  if(!exists(pOutputStlDirectoryValue))
+  {
+    return MakePreflightErrorResult(-27875, fmt::format("Directory {} doesn't exist.", pOutputStlDirectoryValue.string()));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
