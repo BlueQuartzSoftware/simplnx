@@ -95,7 +95,7 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
   {
     return MakePreflightErrorResult(-8200, fmt::format("Input X Dim ({}) not equal to Destination X Dim ({})", inputGeomDims[0], destGeomDims[0]));
   }
-  if(destGeomDims[0] != inputGeomDims[0])
+  if(destGeomDims[1] != inputGeomDims[1])
   {
     return MakePreflightErrorResult(-8201, fmt::format("Input Y Dim ({}) not equal to Destination Y Dim ({})", inputGeomDims[1], destGeomDims[1]));
   }
