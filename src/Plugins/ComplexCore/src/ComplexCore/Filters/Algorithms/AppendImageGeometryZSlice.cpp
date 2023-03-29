@@ -84,7 +84,7 @@ protected:
     const usize offset = m_InputCellArray1->getSize();
     auto src2Begin = m_InputCellArray2->cbegin();
     auto src2End = m_InputCellArray2->cend();
-    auto dstOffsetBegin = m_DestCellArray->begin() + (offset * m_DestCellArray->getNumberOfComponents());
+    auto dstOffsetBegin = m_DestCellArray->begin() + offset;
     std::copy(src2Begin, src2End, dstOffsetBegin);
   }
 
