@@ -13,6 +13,10 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "-fsanitize=address -O1 -fno-omit-frame-pointer"
+        },
         "CMAKE_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
           "value": "$env{VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
@@ -189,6 +193,17 @@
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "name": "OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filter execution"
+        }
+      },
+      "execution": {
+        "repeat": {
+          "mode": "until-fail",
+          "count": 10
+        }
       }
     }
   ]
