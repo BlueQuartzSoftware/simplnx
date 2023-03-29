@@ -5,9 +5,9 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 
 namespace complex
 {

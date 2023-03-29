@@ -60,19 +60,18 @@ const std::atomic_bool& WriteStlFile::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteStlFile::operator()()
 {
-
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
   const Float32Array& vertices = triangleGeom.getVerticesRef();
   const IGeometry::MeshIndexArrayType& triangles = triangleGeom.getFacesRef();
   const IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
-  const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
   const auto& normals = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FaceNormalsPath);
 
   // Store all the unique Spins
   std::map<int32, int32> uniqueGrainIdToPhase;
   if(m_InputValues->GroupByFeature)
   {
+    const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
     for(IGeometry::MeshIndexType i = 0; i < nTriangles; i++)
     {
       uniqueGrainIdToPhase.emplace(featureIds[i * 2], featurePhases[i * 2]);

@@ -57,15 +57,15 @@ Parameters WriteStlFileFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_GroupByFeature, "Group by Feature Phases", "Further partition the stl files by feature phases", false));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
-                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir));
-  params.insert(std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "STL File Prefix", "The prefix name of created files (other values will be appended later - including the .stl extension)",
-                                                  "Triangle"));
+                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
+  params.insert(
+      std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "STL File Prefix", "The prefix name of created files (other values will be appended later - including the .stl extension)", "Triangle"));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Selected Triangle Geometry", "The geometry to print", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature Ids", "The feature ids array to order/index files by", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The triangle normals array to be printed in the stl file", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "The feature phases array to further order/index files by", DataPath{},
@@ -123,7 +123,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
     return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
   }
 
-  if(auto* normals = dataStructure.getDataAs<Int32Array>(pFaceNormalsPathValue); normals == nullptr)
+  if(auto* normals = dataStructure.getDataAs<Float32Array>(pFaceNormalsPathValue); normals == nullptr)
   {
     return MakePreflightErrorResult(-27874, fmt::format("Face Normals Array doesn't exist at: {}", pFaceNormalsPathValue.toString()));
   }

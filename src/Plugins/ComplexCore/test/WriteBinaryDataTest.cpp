@@ -141,7 +141,6 @@ private:
 
   void CompareResults(IDataArray& selectedArray) // compare hash of both file strings
   {
-    std::hash<std::string> str_hash;
     fs::path writtenFilePath = fs::path(k_TestOutput.string() + "/" + selectedArray.getName() + ".bin");
     REQUIRE(fs::exists(writtenFilePath));
     std::string exemplarStr = selectedArray.getName();
