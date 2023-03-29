@@ -47,10 +47,12 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
           {
             std::cout << "[" << currentFilterIndex << "] Warnings/Errors During Execution" << std::endl;
           }
+          std::cout << "Warnings:" << std::endl;
           for(const auto& warn : warnings)
           {
             std::cout << "    Code: " << warn.code << "    Message: " << warn.message << std::endl;
           }
+          std::cout << "Errors:" << std::endl;
           for(const auto& error : errors)
           {
             std::cout << "    Code: " << error.code << "    Message: " << error.message << std::endl;
