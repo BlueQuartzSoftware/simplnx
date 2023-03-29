@@ -221,47 +221,73 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
 IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
                                         const std::atomic_bool& shouldCancel) const
 {
-  PreflightResult preflightResult = preflight(data, args, messageHandler, shouldCancel);
-  if(preflightResult.outputActions.invalid())
+  std::stringstream trace;
+  try
   {
-    return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
-  }
+    trace << "  [IFilter::execute (" << __LINE__ << ")] COMPLETE on filter: " << humanName() << std::endl;
 
-  OutputActions outputActions = std::move(preflightResult.outputActions.value());
+    PreflightResult preflightResult = preflight(data, args, messageHandler, shouldCancel);
+    if(preflightResult.outputActions.invalid())
+    {
+      return ExecuteResult{ConvertResult(std::move(preflightResult.outputActions)), std::move(preflightResult.outputValues)};
+    }
 
-  Result<> outputActionsResult = ConvertResult(std::move(preflightResult.outputActions));
+    OutputActions outputActions = std::move(preflightResult.outputActions.value());
+    trace << "  [IFilter::execute (" << __LINE__ << ")] ConvertResult: " << humanName() << std::endl;
 
-  Result<> actionsResult = outputActions.applyRegular(data, IDataAction::Mode::Execute);
+    Result<> outputActionsResult = ConvertResult(std::move(preflightResult.outputActions));
+    trace << "  [IFilter::execute (" << __LINE__ << ")] applyRegular: " << humanName() << std::endl;
 
-  Result<> preflightActionsResult = MergeResults(std::move(outputActionsResult), std::move(actionsResult));
+    Result<> actionsResult = outputActions.applyRegular(data, IDataAction::Mode::Execute);
 
-  if(preflightActionsResult.invalid())
+    trace << "  [IFilter::execute (" << __LINE__ << ")] MergeResults: " << humanName() << std::endl;
+    Result<> preflightActionsResult = MergeResults(std::move(outputActionsResult), std::move(actionsResult));
+
+    if(preflightActionsResult.invalid())
+    {
+      return ExecuteResult{std::move(preflightActionsResult), std::move(preflightResult.outputValues)};
+    }
+
+    Parameters params = parameters();
+    // We can discard the warnings since they're already reported in preflight
+
+    trace << "  [IFilter::execute (" << __LINE__ << ")] GetResolvedArgs: " << humanName() << std::endl;
+
+    auto [resolvedArgs, warnings] = GetResolvedArgs(args, params, *this);
+
+    trace << "  [IFilter::execute (" << __LINE__ << ")] executeImpl: " << humanName() << std::endl;
+    Result<> executeImplResult = executeImpl(data, resolvedArgs, pipelineFilter, messageHandler, shouldCancel);
+    if(shouldCancel)
+    {
+      return {MakeErrorResult(-1, "Filter cancelled")};
+    }
+    trace << "  [IFilter::execute (" << __LINE__ << ")] MergeResults: " << humanName() << std::endl;
+
+    Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
+
+    if(preflightActionsExecuteResult.invalid())
+    {
+      return ExecuteResult{std::move(preflightActionsExecuteResult), std::move(preflightResult.outputValues)};
+    }
+
+    trace << "  [IFilter::execute (" << __LINE__ << ")] applyDeferred: " << humanName() << std::endl;
+
+    Result<> deferredActionsResult = outputActions.applyDeferred(data, IDataAction::Mode::Execute);
+    trace << "  [IFilter::execute (" << __LINE__ << ")] MergeResults: " << humanName() << std::endl;
+
+    Result<> finalResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
+    trace << "  [IFilter::execute (" << __LINE__ << ")] COMPLETE and Returning: " << humanName() << std::endl;
+
+    return ExecuteResult{std::move(finalResult), std::move(preflightResult.outputValues)};
+  } catch(const std::exception& ex)
   {
-    return ExecuteResult{std::move(preflightActionsResult), std::move(preflightResult.outputValues)};
+    std::cout << "Exception During Preflight:" << std::endl;
+    std::cout << "Exception Message: " << ex.what() << std::endl;
+    std::cout << "/************* PREFLIGHT_TRACE *****************/" << std::endl;
+    std::cout << trace.str();
+    std::cout << "/*************************************************************/" << std::endl;
   }
-
-  Parameters params = parameters();
-  // We can discard the warnings since they're already reported in preflight
-  auto [resolvedArgs, warnings] = GetResolvedArgs(args, params, *this);
-
-  Result<> executeImplResult = executeImpl(data, resolvedArgs, pipelineFilter, messageHandler, shouldCancel);
-  if(shouldCancel)
-  {
-    return {MakeErrorResult(-1, "Filter cancelled")};
-  }
-
-  Result<> preflightActionsExecuteResult = MergeResults(std::move(preflightActionsResult), std::move(executeImplResult));
-
-  if(preflightActionsExecuteResult.invalid())
-  {
-    return ExecuteResult{std::move(preflightActionsExecuteResult), std::move(preflightResult.outputValues)};
-  }
-
-  Result<> deferredActionsResult = outputActions.applyDeferred(data, IDataAction::Mode::Execute);
-
-  Result<> finalResult = MergeResults(std::move(preflightActionsExecuteResult), std::move(deferredActionsResult));
-
-  return ExecuteResult{std::move(finalResult), std::move(preflightResult.outputValues)};
+  return {};
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const
