@@ -61,7 +61,7 @@ Parameters AppendImageGeometryZSliceFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_CheckResolution_Key, "Check Spacing", "Checks to make sure the spacing for the input geometry and destination geometry match", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveAsNewGeometry_Key, "Save as new geometry",
                                                                  "Save the combined data as a new geometry instead of appending the input data to the destination geometry", false));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewGeometry_Key, "New Image Geometry Name", "The path to the new geometry with the combined data from the input & destination geometry",
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_NewGeometry_Key, "New Image Geometry", "The path to the new geometry with the combined data from the input & destination geometry",
                                                              DataPath({"AppendedImageGeom"})));
   params.linkParameters(k_SaveAsNewGeometry_Key, k_NewGeometry_Key, true);
 

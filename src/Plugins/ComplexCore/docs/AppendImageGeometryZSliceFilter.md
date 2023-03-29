@@ -22,6 +22,8 @@ For example, if the user has an already existing **Image Geometry** that is 100 
 | Name             | Type | Description |
 |------------------|------| ------------|
 | Check Resolution | Boolean | Checks to make sure the spacing for the input geometry and destination geometry match |
+| Save as new geometry | Boolean | Instead of overwritting the existing destination geometry when appending the input data, save the results to a new geometry |
+| New Image Geometry | DataPath | The full path to the new image geometry where the appended results are stored when the save as new geometry is on |
 
 ## Required Geometry
 
