@@ -23,9 +23,10 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
   Arguments args;
 
   fs::path processOutput(fmt::format("{}/ExecuteProcessUnitTestOutput.txt", unit_test::k_BuildDir));
-  std::string testCommand = fmt::format("{}/DREAM3DNX-cli --help", unit_test::k_BuildDir);
 #if NDEBUG // release build
-  testCommand = fmt::format("{}/DREAM3DNX-cli_d --help", unit_test::k_BuildDir);
+  std::string testCommand = fmt::format("{}/DREAM3DNX-cli --help", unit_test::k_BuildDir);
+#else
+  std::string testCommand = fmt::format("{}/DREAM3DNX-cli_d --help", unit_test::k_BuildDir);
 #endif
 
   // Create default Parameters for the filter.
