@@ -214,8 +214,8 @@ IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arg
     std::cout << "/************* PREFLIGHT_TRACE *****************/" << std::endl;
     std::cout << trace.str();
     std::cout << "/*************************************************************/" << std::endl;
+    return {MakeErrorResult<OutputActions>(-6666, trace.str())};
   }
-  return {};
 }
 
 IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
@@ -224,7 +224,7 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
   std::stringstream trace;
   try
   {
-    trace << "  [IFilter::execute (" << __LINE__ << ")] COMPLETE on filter: " << humanName() << std::endl;
+    trace << "  [IFilter::execute (" << __LINE__ << ")] STARTING on filter: " << humanName() << std::endl;
 
     PreflightResult preflightResult = preflight(data, args, messageHandler, shouldCancel);
     if(preflightResult.outputActions.invalid())
@@ -281,13 +281,14 @@ IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& ar
     return ExecuteResult{std::move(finalResult), std::move(preflightResult.outputValues)};
   } catch(const std::exception& ex)
   {
-    std::cout << "Exception During Preflight:" << std::endl;
+    std::cout << "Exception During Execute: " << humanName() << std::endl;
     std::cout << "Exception Message: " << ex.what() << std::endl;
-    std::cout << "/************* PREFLIGHT_TRACE *****************/" << std::endl;
+    std::cout << "/************* EXECUTE TRACE *****************/" << std::endl;
     std::cout << trace.str();
     std::cout << "/*************************************************************/" << std::endl;
+    return {MakeErrorResult(-666, trace.str())};
   }
-  return {};
+  return {MakeErrorResult(-66666666, "There is NO way you should ever see this error message.")};
 }
 
 nlohmann::json IFilter::toJson(const Arguments& args) const
