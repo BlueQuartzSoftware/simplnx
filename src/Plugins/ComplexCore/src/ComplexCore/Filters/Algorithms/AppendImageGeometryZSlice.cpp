@@ -12,12 +12,22 @@ using namespace complex;
 
 namespace
 {
+template <class K>
+void AppendData(K* inputArray, K* destArray, usize offset)
+{
+  for(usize i = 0; i < inputArray->getNumberOfTuples(); ++i)
+  {
+    auto value = (*inputArray)[i]; // make sure we are getting a copy not a ref
+    (*destArray)[offset + i] = value;
+  }
+}
+
 template <typename T>
 class AppendImageGeomDataArray
 {
 public:
-  AppendImageGeomDataArray(const IDataArray* inputCellArray, IDataArray* destCellArray, usize tupleOffset)
-  : m_InputCellArray(dynamic_cast<const DataArray<T>*>(inputCellArray))
+  AppendImageGeomDataArray(IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
+  : m_InputCellArray(dynamic_cast<DataArray<T>*>(inputCellArray))
   , m_DestCellArray(dynamic_cast<DataArray<T>*>(destCellArray))
   , m_TupleOffset(tupleOffset)
   {
@@ -38,15 +48,84 @@ public:
 protected:
   void convert() const
   {
-    auto srcBegin = m_InputCellArray->cbegin();
-    auto srcEnd = m_InputCellArray->cend();
-    auto dstBegin = m_DestCellArray->begin() + (m_TupleOffset * m_DestCellArray->getNumberOfComponents());
-    std::copy(srcBegin, srcEnd, dstBegin);
+    const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
+    AppendData<DataArray<T>>(m_InputCellArray, m_DestCellArray, offset);
   }
 
 private:
-  const DataArray<T>* m_InputCellArray = nullptr;
+  DataArray<T>* m_InputCellArray = nullptr;
   DataArray<T>* m_DestCellArray = nullptr;
+  usize m_TupleOffset;
+};
+
+template <typename T>
+class AppendImageGeomNeighborListArray
+{
+public:
+  AppendImageGeomNeighborListArray(IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
+  : m_InputCellArray(dynamic_cast<NeighborList<T>*>(inputCellArray))
+  , m_DestCellArray(dynamic_cast<NeighborList<T>*>(destCellArray))
+  , m_TupleOffset(tupleOffset)
+  {
+  }
+
+  ~AppendImageGeomNeighborListArray() = default;
+
+  AppendImageGeomNeighborListArray(const AppendImageGeomNeighborListArray&) = default;
+  AppendImageGeomNeighborListArray(AppendImageGeomNeighborListArray&&) noexcept = default;
+  AppendImageGeomNeighborListArray& operator=(const AppendImageGeomNeighborListArray&) = delete;
+  AppendImageGeomNeighborListArray& operator=(AppendImageGeomNeighborListArray&&) noexcept = delete;
+
+  void operator()() const
+  {
+    convert();
+  }
+
+protected:
+  void convert() const
+  {
+    const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
+    AppendData<NeighborList<T>>(m_InputCellArray, m_DestCellArray, offset);
+  }
+
+private:
+  NeighborList<T>* m_InputCellArray = nullptr;
+  NeighborList<T>* m_DestCellArray = nullptr;
+  usize m_TupleOffset;
+};
+
+class AppendImageGeomStringArray
+{
+public:
+  AppendImageGeomStringArray(IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
+  : m_InputCellArray(dynamic_cast<StringArray*>(inputCellArray))
+  , m_DestCellArray(dynamic_cast<StringArray*>(destCellArray))
+  , m_TupleOffset(tupleOffset)
+  {
+  }
+
+  ~AppendImageGeomStringArray() = default;
+
+  AppendImageGeomStringArray(const AppendImageGeomStringArray&) = default;
+  AppendImageGeomStringArray(AppendImageGeomStringArray&&) noexcept = default;
+  AppendImageGeomStringArray& operator=(const AppendImageGeomStringArray&) = delete;
+  AppendImageGeomStringArray& operator=(AppendImageGeomStringArray&&) noexcept = delete;
+
+  void operator()() const
+  {
+    convert();
+  }
+
+protected:
+  void convert() const
+  {
+    const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
+    AppendData<StringArray>(m_InputCellArray, m_DestCellArray, offset);
+  }
+
+private:
+  StringArray* m_InputCellArray = nullptr;
+  StringArray* m_DestCellArray = nullptr;
   usize m_TupleOffset;
 };
 
@@ -54,9 +133,9 @@ template <typename T>
 class CombineImageGeomDataArray
 {
 public:
-  CombineImageGeomDataArray(const IDataArray* inputCellArray1, const IDataArray* inputCellArray2, IDataArray* destCellArray)
-  : m_InputCellArray1(dynamic_cast<const DataArray<T>*>(inputCellArray1))
-  , m_InputCellArray2(dynamic_cast<const DataArray<T>*>(inputCellArray2))
+  CombineImageGeomDataArray(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
+  : m_InputCellArray1(dynamic_cast<DataArray<T>*>(inputCellArray1))
+  , m_InputCellArray2(dynamic_cast<DataArray<T>*>(inputCellArray2))
   , m_DestCellArray(dynamic_cast<DataArray<T>*>(destCellArray))
   {
   }
@@ -76,22 +155,85 @@ public:
 protected:
   void convert() const
   {
-    auto src1Begin = m_InputCellArray1->cbegin();
-    auto src1End = m_InputCellArray1->cend();
-    auto dstBegin = m_DestCellArray->begin();
-    std::copy(src1Begin, src1End, dstBegin);
-
-    const usize offset = m_InputCellArray1->getSize();
-    auto src2Begin = m_InputCellArray2->cbegin();
-    auto src2End = m_InputCellArray2->cend();
-    auto dstOffsetBegin = m_DestCellArray->begin() + offset;
-    std::copy(src2Begin, src2End, dstOffsetBegin);
+    AppendData<DataArray<T>>(m_InputCellArray1, m_DestCellArray, 0);
+    AppendData<DataArray<T>>(m_InputCellArray2, m_DestCellArray, m_InputCellArray1->getSize());
   }
 
 private:
-  const DataArray<T>* m_InputCellArray1 = nullptr;
-  const DataArray<T>* m_InputCellArray2 = nullptr;
+  DataArray<T>* m_InputCellArray1 = nullptr;
+  DataArray<T>* m_InputCellArray2 = nullptr;
   DataArray<T>* m_DestCellArray = nullptr;
+};
+
+template <typename T>
+class CombineImageGeomNeighborListArray
+{
+public:
+  CombineImageGeomNeighborListArray(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
+  : m_InputCellArray1(dynamic_cast<NeighborList<T>*>(inputCellArray1))
+  , m_InputCellArray2(dynamic_cast<NeighborList<T>*>(inputCellArray2))
+  , m_DestCellArray(dynamic_cast<NeighborList<T>*>(destCellArray))
+  {
+  }
+
+  ~CombineImageGeomNeighborListArray() = default;
+
+  CombineImageGeomNeighborListArray(const CombineImageGeomNeighborListArray&) = default;
+  CombineImageGeomNeighborListArray(CombineImageGeomNeighborListArray&&) noexcept = default;
+  CombineImageGeomNeighborListArray& operator=(const CombineImageGeomNeighborListArray&) = delete;
+  CombineImageGeomNeighborListArray& operator=(CombineImageGeomNeighborListArray&&) noexcept = delete;
+
+  void operator()() const
+  {
+    convert();
+  }
+
+protected:
+  void convert() const
+  {
+    AppendData<NeighborList<T>>(m_InputCellArray1, m_DestCellArray, 0);
+    AppendData<NeighborList<T>>(m_InputCellArray2, m_DestCellArray, m_InputCellArray1->getSize());
+  }
+
+private:
+  NeighborList<T>* m_InputCellArray1 = nullptr;
+  NeighborList<T>* m_InputCellArray2 = nullptr;
+  NeighborList<T>* m_DestCellArray = nullptr;
+};
+
+class CombineImageGeomStringArray
+{
+public:
+  CombineImageGeomStringArray(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
+  : m_InputCellArray1(dynamic_cast<StringArray*>(inputCellArray1))
+  , m_InputCellArray2(dynamic_cast<StringArray*>(inputCellArray2))
+  , m_DestCellArray(dynamic_cast<StringArray*>(destCellArray))
+  {
+  }
+
+  ~CombineImageGeomStringArray() = default;
+
+  CombineImageGeomStringArray(const CombineImageGeomStringArray&) = default;
+  CombineImageGeomStringArray(CombineImageGeomStringArray&&) noexcept = default;
+  CombineImageGeomStringArray& operator=(const CombineImageGeomStringArray&) = delete;
+  CombineImageGeomStringArray& operator=(CombineImageGeomStringArray&&) noexcept = delete;
+
+  void operator()() const
+  {
+    convert();
+  }
+
+protected:
+  void convert() const
+  {
+    AppendData<StringArray>(m_InputCellArray1, m_DestCellArray, 0);
+    AppendData<StringArray>(m_InputCellArray2, m_DestCellArray, m_InputCellArray1->getSize());
+  }
+
+private:
+  StringArray* m_InputCellArray1 = nullptr;
+  StringArray* m_InputCellArray2 = nullptr;
+  StringArray* m_DestCellArray = nullptr;
 };
 } // namespace
 
@@ -122,124 +264,91 @@ Result<> AppendImageGeometryZSlice::operator()()
   const auto& inputGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputGeometryPath);
   auto& destGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DestinationGeometryPath);
   AttributeMatrix* destCellData = destGeometry.getCellData();
-
   const DataPath destCellDataPath = m_InputValues->DestinationGeometryPath.createChildPath(destCellData->getName());
   const DataPath inputCellDataPath = m_InputValues->InputGeometryPath.createChildPath(inputGeometry.getCellData()->getName());
+  DataPath newCellDataPath = destCellDataPath;
+  AttributeMatrix* newCellData = destCellData;
+  SizeVec3 inputGeomDims = inputGeometry.getDimensions();
+  SizeVec3 destGeomDims = destGeometry.getDimensions();
 
   if(m_InputValues->SaveAsNewGeometry)
   {
-    // copy over the user defined "destination" arrays to the new geometry first and then the "input" arrays
-    auto* newCellData = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->NewGeometryPath).getCellData();
-    const DataPath newCellDataPath = m_InputValues->NewGeometryPath.createChildPath(newCellData->getName());
-    ParallelTaskAlgorithm taskRunner;
-    for(const auto& [dataId, dataObject] : *newCellData)
-    {
-      if(getCancel())
-      {
-        return {};
-      }
-      const std::string name = dataObject->getName();
-      const auto* inputDataArray = m_DataStructure.getDataAs<IDataArray>(inputCellDataPath.createChildPath(name));
-      const auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataPath.createChildPath(name));
-      auto* newDataArray = m_DataStructure.getDataAs<IDataArray>(newCellDataPath.createChildPath(name));
-      if(destDataArray == nullptr || newDataArray == nullptr || inputDataArray == nullptr)
-      {
-        continue;
-      }
-      m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
-      ExecuteParallelFunction<CombineImageGeomDataArray>(newDataArray->getDataType(), taskRunner, destDataArray, inputDataArray, newDataArray);
-    }
-    taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+    newCellData = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->NewGeometryPath).getCellData();
+    newCellDataPath = m_InputValues->NewGeometryPath.createChildPath(newCellData->getName());
   }
   else
   {
     // We are only appending in the Z direction
-    SizeVec3 inputGeomDims = inputGeometry.getDimensions();
-    SizeVec3 destGeomDims = destGeometry.getDimensions();
     destGeomDims[2] = destGeomDims[2] + inputGeomDims[2];
     destGeometry.setDimensions(destGeomDims);
     const std::vector<size_t> newDims = {destGeomDims[2], destGeomDims[1], destGeomDims[0]};
     ResizeAttributeMatrix(*destCellData, newDims);
-    usize tupleOffset = destGeometry.getNumberOfCells();
-    if(tupleOffset > destCellData->getNumTuples())
-    {
-      return MakeErrorResult(-8206,
-                             fmt::format("Calculated tuple offset ({}) for appending the input data is larger than the total number of tuples ({}).", tupleOffset, destCellData->getNumTuples()));
-    }
-
-    ParallelTaskAlgorithm taskRunner;
-    for(const auto& [dataId, dataObject] : *destCellData)
-    {
-      if(getCancel())
-      {
-        return {};
-      }
-
-      // Types/bounds checking
-      const std::string name = dataObject->getName();
-      auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataPath.createChildPath(name));
-      if(destDataArray == nullptr)
-      {
-        results =
-            MergeResults(results, MakeWarningVoidResult(-8207, fmt::format("Cannot append data to destination data object {} in cell data attribute matrix at path '{}' because it is not of type "
-                                                                           "IDataArray. The resulting data object will likely contain invalid data!",
-                                                                           name, destCellDataPath.toString())));
-        continue;
-      }
-      if(m_DataStructure.getData(inputCellDataPath.createChildPath(name)) == nullptr)
-      {
-        results = MergeResults(
-            results,
-            MakeWarningVoidResult(
-                -8208, fmt::format("Data object {} does not exist in the input geometry cell data attribute matrix. Cannot append data so the resulting data object will likely contain invalid data!",
-                                   name)));
-        continue;
-      }
-      const auto* inputDataArray = m_DataStructure.getDataAs<IDataArray>(inputCellDataPath.createChildPath(name));
-      if(inputDataArray == nullptr)
-      {
-        results = MergeResults(
-            results, MakeWarningVoidResult(
-                         -8209, fmt::format("Cannot append data from input data object {} because it is not of type IDataArray. The resulting data object will likely contain invalid data!", name)));
-        continue;
-      }
-      const DataType inputDataType = inputDataArray->getDataType();
-      const DataType destDataType = destDataArray->getDataType();
-      if(inputDataType != destDataType)
-      {
-        results = MergeResults(results, MakeWarningVoidResult(-8210, fmt::format("Cannot append data from input data array with type {} to destination data array with type {} because the data array "
-                                                                                 "types do not match. The resulting data object will likely contain invalid data!",
-                                                                                 DataTypeToString(inputDataType).str(), DataTypeToString(destDataType).str())));
-        continue;
-      }
-      const usize srcNumComps = inputDataArray->getNumberOfComponents();
-      const usize numComps = destDataArray->getNumberOfComponents();
-      if(srcNumComps != numComps)
-      {
-        results = MergeResults(
-            results,
-            MakeWarningVoidResult(
-                -8211,
-                fmt::format("Cannot append data from input data array with {} components to destination data array with {} components. The resulting data object will likely contain invalid data!",
-                            srcNumComps, numComps)));
-        continue;
-      }
-      const usize srcNumElements = inputDataArray->getSize();
-      const usize numElements = destDataArray->getSize();
-      if(srcNumElements + tupleOffset * numComps > numElements)
-      {
-        results = MergeResults(
-            results, MakeWarningVoidResult(-8212, fmt::format("Cannot append data from input data array with {} total elements to destination data array with {} total elements starting at tuple {} "
-                                                              "because there are not enough elements in the destination array. The resulting data object will likely contain invalid data!",
-                                                              srcNumElements, numElements, tupleOffset)));
-        continue;
-      }
-
-      m_MessageHandler(fmt::format("Appending Data Array {}", inputCellDataPath.createChildPath(name).toString()));
-      ExecuteParallelFunction<AppendImageGeomDataArray>(destDataType, taskRunner, inputDataArray, destDataArray, tupleOffset);
-    }
-    taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
   }
+  const usize tupleOffset = destGeometry.getNumberOfCells();
+
+  ParallelTaskAlgorithm taskRunner;
+  for(const auto& [dataId, dataObject] : *newCellData)
+  {
+    if(getCancel())
+    {
+      return {};
+    }
+
+    const std::string name = dataObject->getName();
+    if(m_DataStructure.getData(inputCellDataPath.createChildPath(name)) == nullptr)
+    {
+      results = MergeResults(
+          results,
+          MakeWarningVoidResult(
+              -8213,
+              fmt::format("Data object {} does not exist in the input geometry cell data attribute matrix. Cannot append data so the resulting data object will likely contain invalid data!", name)));
+      continue;
+    }
+
+    auto* inputDataArray = m_DataStructure.getDataAs<IArray>(inputCellDataPath.createChildPath(name));
+    auto* destDataArray = m_DataStructure.getDataAs<IArray>(destCellDataPath.createChildPath(name));
+    auto* newDataArray = m_DataStructure.getDataAs<IArray>(newCellDataPath.createChildPath(name));
+    if(destDataArray == nullptr || newDataArray == nullptr || inputDataArray == nullptr)
+    {
+      continue;
+    }
+    const IArray::ArrayType arrayType = destDataArray->getArrayType();
+
+    if(m_InputValues->SaveAsNewGeometry)
+    {
+      m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
+      if(arrayType == IArray::ArrayType::NeighborListArray)
+      {
+        ExecuteParallelFunction<CombineImageGeomDataArray, NoBooleanType>(dynamic_cast<INeighborList*>(destDataArray)->getDataType(), taskRunner, destDataArray, inputDataArray, newDataArray);
+      }
+      if(arrayType == IArray::ArrayType::DataArray)
+      {
+        ExecuteParallelFunction<CombineImageGeomDataArray>(dynamic_cast<IDataArray*>(destDataArray)->getDataType(), taskRunner, destDataArray, inputDataArray, newDataArray);
+      }
+      if(arrayType == IArray::ArrayType::StringArray)
+      {
+        taskRunner.execute(CombineImageGeomStringArray(destDataArray, inputDataArray, newDataArray));
+      }
+    }
+    else
+    {
+      m_MessageHandler(fmt::format("Appending Data Array {}", inputCellDataPath.createChildPath(name).toString()));
+
+      if(arrayType == IArray::ArrayType::NeighborListArray)
+      {
+        ExecuteParallelFunction<AppendImageGeomNeighborListArray, NoBooleanType>(dynamic_cast<INeighborList*>(destDataArray)->getDataType(), taskRunner, inputDataArray, destDataArray, tupleOffset);
+      }
+      if(arrayType == IArray::ArrayType::DataArray)
+      {
+        ExecuteParallelFunction<AppendImageGeomDataArray>(dynamic_cast<IDataArray*>(destDataArray)->getDataType(), taskRunner, inputDataArray, destDataArray, tupleOffset);
+      }
+      if(arrayType == IArray::ArrayType::StringArray)
+      {
+        taskRunner.execute(AppendImageGeomStringArray(inputDataArray, destDataArray, tupleOffset));
+      }
+    }
+  }
+  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
   return results;
 }
