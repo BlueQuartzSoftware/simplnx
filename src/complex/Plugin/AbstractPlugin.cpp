@@ -56,16 +56,12 @@ AbstractPlugin::FilterContainerType::size_type AbstractPlugin::getFilterCount() 
 
 IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType identifier) const
 {
-  std::cout << "[AbstractPlugin::createFilter(" << __LINE__ << ")] Starting." << identifier.str() << std::endl;
   if(!containsFilterId(identifier))
   {
-    std::cout << "[AbstractPlugin::createFilter(" << __LINE__ << ")] Error creating filter '" << identifier.str() << "'. The Abstract Plugin object does not contain the filter id." << std::endl;
     return nullptr;
   }
-  std::cout << "[AbstractPlugin::createFilter(" << __LINE__ << ")] Getting FilterFunction from m_InitializerMap: " << identifier.str() << std::endl;
-  auto filterFunc = m_InitializerMap.at(identifier);
-  std::cout << "[AbstractPlugin::createFilter(" << __LINE__ << ")] Returning the Filter Pointer: " << identifier.str() << std::endl;
-  return filterFunc();
+
+  return m_InitializerMap.at(identifier)();
 }
 
 void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)

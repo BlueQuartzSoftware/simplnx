@@ -43,29 +43,21 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& iden
 
 IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) const
 {
-  std::cout << "[FilterList::createFilter(" << __LINE__ << ")] Starting '" << handle.getFilterName() << std::endl;
   // Core filter
   if(handle.getPluginId() == Uuid{})
   {
-    std::cout << "[FilterList::createFilter] Error creating filter '" << handle.getFilterName() << "'. The filter handle pluginID was empty" << std::endl;
     return nullptr;
   }
-
-  std::cout << "[FilterList::createFilter(" << __LINE__ << ")] Checking for existence of pluginID in m_PluginMap. PluginID:'" << handle.getPluginId().str() << std::endl;
-
   // Look to make sure the plugin is available. Unordered_Map.at() will throw exceptions if the key is not found.
   if(m_PluginMap.find(handle.getPluginId()) == m_PluginMap.end())
   {
-    std::cout << "[FilterList::createFilter] Error creating filter '" << handle.getFilterName() << "'. The filter handle pluginID was not found in the m_PluginMap" << std::endl;
     return nullptr;
   }
 
-  std::cout << "[FilterList::createFilter(" << __LINE__ << ")] Get PluginLoader from m_PluginMap." << std::endl;
   // Plugin filter
   const auto& loader = m_PluginMap.at(handle.getPluginId());
   if(!loader->isLoaded())
   {
-    std::cout << "[FilterList::createFilter] Error creating filter '" << handle.getFilterName() << "'. The 'loader' object indicates that it was not loaded successfully." << std::endl;
     return nullptr;
   }
   return loader->getPlugin()->createFilter(handle.getFilterId());

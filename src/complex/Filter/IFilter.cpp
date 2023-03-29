@@ -129,67 +129,93 @@ IFilter::~IFilter() noexcept = default;
 
 IFilter::PreflightResult IFilter::preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  Parameters params = parameters();
-
-  std::vector<Error> errors;
-
-  auto [resolvedArgs, warnings] = GetResolvedArgs(args, params, *this);
-
-  auto [groupedParameters, ungroupedParameters] = GetGroupedParameters(params, resolvedArgs);
-
-  for(const auto& [groupKey, dependentKeys] : groupedParameters)
+  std::stringstream trace;
+  try
   {
-    const auto& parameter = params.at(groupKey);
-    Result<> result = ValidateParameter(groupKey, parameter, resolvedArgs, data, *this);
-    if(!ExtractResult(std::move(result), errors, warnings))
+    trace << "  [IFilter::preflight] Starting Preflight for filter: " << humanName() << std::endl;
+    Parameters params = parameters();
+
+    std::vector<Error> errors;
+
+    trace << "  [IFilter::preflight(" << __LINE__ << ")] GetResolvedArgs " << std::endl;
+    auto [resolvedArgs, warnings] = GetResolvedArgs(args, params, *this);
+
+    trace << "  [IFilter::preflight(" << __LINE__ << ")] GetGroupedParameters " << std::endl;
+    auto [groupedParameters, ungroupedParameters] = GetGroupedParameters(params, resolvedArgs);
+
+    trace << "  [IFilter::preflight (" << __LINE__ << ")] Validating Grouped Parameters " << std::endl;
+
+    for(const auto& [groupKey, dependentKeys] : groupedParameters)
     {
-      continue;
-    }
-    // Only validate dependent parameters if their parent is valid
-    for(const auto& key : dependentKeys)
-    {
-      const auto& dependentParameter = params.at(key);
-      if(!params.isParameterActive(key, resolvedArgs))
+      trace << "      [IFilter::preflight(" << __LINE__ << ")] Validating Group key: " << groupKey << std::endl;
+      const auto& parameter = params.at(groupKey);
+      Result<> result = ValidateParameter(groupKey, parameter, resolvedArgs, data, *this);
+      trace << "      [IFilter::preflight(" << __LINE__ << ")] ExtractResult " << std::endl;
+      if(!ExtractResult(std::move(result), errors, warnings))
       {
         continue;
       }
-      Result<> dependentResult = ValidateParameter(key, dependentParameter, resolvedArgs, data, *this);
-      if(!ExtractResult(std::move(dependentResult), errors, warnings))
+      // Only validate dependent parameters if their parent is valid
+      trace << "      [IFilter::preflight(" << __LINE__ << ")] Only validate dependent parameters if their parent is valid " << std::endl;
+
+      for(const auto& key : dependentKeys)
+      {
+        trace << "        [IFilter::preflight(" << __LINE__ << ")] Validating Key: " << key << std::endl;
+        const auto& dependentParameter = params.at(key);
+        if(!params.isParameterActive(key, resolvedArgs))
+        {
+          continue;
+        }
+        Result<> dependentResult = ValidateParameter(key, dependentParameter, resolvedArgs, data, *this);
+        if(!ExtractResult(std::move(dependentResult), errors, warnings))
+        {
+          continue;
+        }
+      }
+    }
+
+    // Validate ungrouped parameters
+    trace << "  [IFilter::preflight (" << __LINE__ << ")] Validating Ungrouped Parameters " << std::endl;
+
+    for(const auto& name : ungroupedParameters)
+    {
+      trace << "      [IFilter::preflight(" << __LINE__ << ")] Validating parameter name: " << name << std::endl;
+      const auto& parameter = params.at(name);
+      Result<> result = ValidateParameter(name, parameter, resolvedArgs, data, *this);
+
+      if(!ExtractResult(std::move(result), errors, warnings))
       {
         continue;
       }
     }
-  }
 
-  // Validate ungrouped parameters
-  for(const auto& name : ungroupedParameters)
-  {
-    const auto& parameter = params.at(name);
-    Result<> result = ValidateParameter(name, parameter, resolvedArgs, data, *this);
-
-    if(!ExtractResult(std::move(result), errors, warnings))
+    if(!errors.empty())
     {
-      continue;
+      return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
     }
-  }
 
-  if(!errors.empty())
+    trace << "  [IFilter::preflight (" << __LINE__ << ")] Running Preflight on filter: " << humanName() << std::endl;
+    PreflightResult implResult = preflightImpl(data, resolvedArgs, messageHandler, shouldCancel);
+    if(shouldCancel)
+    {
+      return {MakeErrorResult<OutputActions>(-1, "Filter cancelled")};
+    }
+
+    for(auto&& warning : warnings)
+    {
+      implResult.outputActions.warnings().push_back(std::move(warning));
+    }
+    trace << "  [IFilter::preflight (" << __LINE__ << ")] COMPLETE on filter: " << humanName() << std::endl;
+    return implResult;
+  } catch(const std::exception& ex)
   {
-    return {nonstd::make_unexpected(std::move(errors)), std::move(warnings)};
+    std::cout << "Exception During Preflight:" << std::endl;
+    std::cout << "Exception Message: " << ex.what() << std::endl;
+    std::cout << "/************* PREFLIGHT_TRACE *****************/" << std::endl;
+    std::cout << trace.str();
+    std::cout << "/*************************************************************/" << std::endl;
   }
-
-  PreflightResult implResult = preflightImpl(data, resolvedArgs, messageHandler, shouldCancel);
-  if(shouldCancel)
-  {
-    return {MakeErrorResult<OutputActions>(-1, "Filter cancelled")};
-  }
-
-  for(auto&& warning : warnings)
-  {
-    implResult.outputActions.warnings().push_back(std::move(warning));
-  }
-
-  return implResult;
+  return {};
 }
 
 IFilter::ExecuteResult IFilter::execute(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,

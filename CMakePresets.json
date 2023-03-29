@@ -35,7 +35,7 @@
         },
         "COMPLEX_EXTRA_PLUGINS": {
           "type": "STRING",
-          "value": "ITKImageProcessing;OrientationAnalysis"
+          "value": "OrientationAnalysis"
         },
         "DREAM3D_DATA_DIR": {
           "type": "PATH",
