@@ -41,6 +41,8 @@ public:
 
   Result<> operator()();
 
+  void updateProgress(const std::string& progMessage);
+  void updateThreadSafeProgress(size_t counter);
   const std::atomic_bool& getCancel();
 
 private:
@@ -48,6 +50,12 @@ private:
   const CalculateArrayHistogramInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  // Threadsafe Progress Message
+  mutable std::mutex m_ProgressMessage_Mutex;
+  size_t m_TotalElements = 0;
+  size_t m_ProgressCounter = 0;
+  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
 };
 
 } // namespace complex

@@ -33,6 +33,8 @@ public:
 
   const std::atomic_bool& getCancel();
 
+  void updateProgress(const std::string& progMessage);
+
 protected:
   /**
    * @brief This should be overridden in the subclass.

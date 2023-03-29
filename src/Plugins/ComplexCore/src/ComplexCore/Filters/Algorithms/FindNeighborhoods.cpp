@@ -3,7 +3,6 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <cmath>
@@ -13,14 +12,12 @@ using namespace complex;
 class FindNeighborhoodsImpl
 {
 public:
-  FindNeighborhoodsImpl(FindNeighborhoods* filter, size_t totalFeatures, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance, const std::atomic_bool& shouldCancel,
-                        ThreadSafeMessenger& messenger)
+  FindNeighborhoodsImpl(FindNeighborhoods* filter, size_t totalFeatures, const Float32Array& centroids, const std::vector<int64_t>& bins, const std::vector<float>& criticalDistance)
   : m_Filter(filter)
   , m_TotalFeatures(totalFeatures)
+  , m_Centroids(centroids)
   , m_Bins(bins)
   , m_CriticalDistance(criticalDistance)
-  , m_ShouldCancel(shouldCancel)
-  , m_Messenger(messenger)
   {
   }
 
@@ -30,21 +27,25 @@ public:
     float dBinX = 0, dBinY = 0, dBinZ = 0;
     float criticalDistance1 = 0, criticalDistance2 = 0;
 
-    size_t increment = m_Messenger.getProgressIncrement();
+    size_t increment = (end - start) / 100;
     size_t incCount = 0;
     // NEVER start at 0.
     if(start == 0)
     {
       start = 1;
-      incCount++;
     }
     for(size_t i = start; i < end; i++)
     {
-      if(m_ShouldCancel)
+      incCount++;
+      if(incCount == increment || i == end - 1)
+      {
+        incCount = 0;
+        m_Filter->updateProgress(increment, m_TotalFeatures);
+      }
+      if(m_Filter->getCancel())
       {
         break;
       }
-
       bin1x = m_Bins[3 * i];
       bin1y = m_Bins[3 * i + 1];
       bin1z = m_Bins[3 * i + 2];
@@ -71,15 +72,7 @@ public:
           m_Filter->updateNeighborHood(j, i);
         }
       }
-
-      incCount++;
-      if(incCount > increment)
-      {
-        m_Messenger.updateProgress(incCount);
-        incCount = 0;
-      }
     }
-    m_Messenger.updateProgress(incCount);
   }
 
   void operator()(const Range& range) const
@@ -90,10 +83,9 @@ public:
 private:
   FindNeighborhoods* m_Filter = nullptr;
   size_t m_TotalFeatures = 0;
+  const Float32Array& m_Centroids;
   const std::vector<int64_t>& m_Bins;
   const std::vector<float>& m_CriticalDistance;
-  const std::atomic_bool& m_ShouldCancel;
-  ThreadSafeMessenger& m_Messenger;
 };
 
 // -----------------------------------------------------------------------------
@@ -124,9 +116,28 @@ void FindNeighborhoods::updateNeighborHood(size_t sourceIndex, size_t destIndex)
 }
 
 // -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void FindNeighborhoods::updateProgress(size_t numCompleted, size_t totalFeatures)
+{
+  static std::mutex mutex;
+  std::lock_guard<std::mutex> lock(mutex);
+  m_IncCount += numCompleted;
+  m_NumCompleted = m_NumCompleted + numCompleted;
+  if(m_IncCount > m_ProgIncrement)
+  {
+    m_IncCount = 0;
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Feature {} of {}", m_NumCompleted, totalFeatures));
+  }
+}
+
+// -----------------------------------------------------------------------------
 Result<> FindNeighborhoods::operator()()
 {
+  m_IncCount = 0;
+
   float x = 0.0f, y = 0.0f, z = 0.0f;
+  m_NumCompleted = 0;
   std::vector<float> criticalDistance;
 
   auto multiplesOfAverage = m_InputValues->MultiplesOfAverage;
@@ -136,6 +147,8 @@ Result<> FindNeighborhoods::operator()()
   m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
 
   size_t totalFeatures = equivalentDiameters.getNumberOfTuples();
+
+  m_ProgIncrement = totalFeatures / 100;
 
   m_LocalNeighborhoodList.resize(totalFeatures);
   criticalDistance.resize(totalFeatures);
@@ -172,13 +185,10 @@ Result<> FindNeighborhoods::operator()()
     bins[3 * i + 2] = static_cast<int64_t>(zbin);
   }
 
-  ThreadSafeMessenger messenger(m_MessageHandler, "Finding Neighborhoods...");
-  messenger.setProgressIncrement(totalFeatures / 100);
-  messenger.setTotalElements(totalFeatures);
-
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
-  parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, bins, criticalDistance, getCancel(), messenger));
+  parallelAlgorithm.setParallelizationEnabled(true);
+  parallelAlgorithm.execute(FindNeighborhoodsImpl(this, totalFeatures, centroids, bins, criticalDistance));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32_t>>(m_InputValues->NeighborhoodListArrayName);

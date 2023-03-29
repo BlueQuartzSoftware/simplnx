@@ -4,7 +4,6 @@
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
-#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/RTree.hpp"
 
@@ -304,17 +303,16 @@ float32 PointTriangleDistance(const Vec3fa& point, const Vec3fa& vert0, const Ve
 class FindVertexToTriangleDistancesImpl
 {
 public:
-  FindVertexToTriangleDistancesImpl(const IGeometry::SharedTriList& triangles, const IGeometry::SharedVertexList& vertices, IGeometry::SharedVertexList& sourcePoints, Float32Array& distances,
-                                    Int64Array& closestTri, const Float64Array& normals, const RTreeType rtree, const std::atomic_bool& shouldCancel, ThreadSafeMessenger& messenger)
-  : m_SharedTriangleList(triangles)
+  FindVertexToTriangleDistancesImpl(FindVertexToTriangleDistances* filter, const IGeometry::SharedTriList& triangles, const IGeometry::SharedVertexList& vertices,
+                                    IGeometry::SharedVertexList& sourcePoints, Float32Array& distances, Int64Array& closestTri, const Float64Array& normals, const RTreeType rtree)
+  : m_Filter(filter)
+  , m_SharedTriangleList(triangles)
   , m_TriangleVertices(vertices)
   , m_SourcePoints(sourcePoints)
   , m_Distances(distances)
   , m_ClosestTri(closestTri)
   , m_Normals(normals)
   , m_RTree(rtree)
-  , m_ShouldCancel(shouldCancel)
-  , m_Messenger(messenger)
   {
   }
   virtual ~FindVertexToTriangleDistancesImpl() = default;
@@ -327,7 +325,7 @@ public:
   void compute(usize start, usize end) const
   {
     int64 counter = 0;
-    auto progIncrement = m_Messenger.getProgressIncrement();
+    auto progIncrement = static_cast<int64>((end - start) / 100);
 
     size_t numTuples = m_SharedTriangleList.getNumberOfTuples(); // allocate vector of all possible indexes
     for(usize v = start; v < end; v++)
@@ -345,7 +343,7 @@ public:
       {
         for(const auto t : hitTriangleIds)
         {
-          if(m_ShouldCancel)
+          if(m_Filter->getCancel())
           {
             return;
           }
@@ -371,7 +369,7 @@ public:
       {
         for(size_t t = 0; t < numTuples; t++)
         {
-          if(m_ShouldCancel)
+          if(m_Filter->getCancel())
           {
             return;
           }
@@ -405,17 +403,18 @@ public:
         m_Distances[v] *= -1.0f;
       }
 
-      counter++;
       if(counter > progIncrement)
       {
-        m_Messenger.updateProgress(counter);
+        m_Filter->sendThreadSafeProgressMessage(counter);
         counter = 0;
       }
+      counter++;
     }
-    m_Messenger.updateProgress(counter);
+    m_Filter->sendThreadSafeProgressMessage(counter);
   }
 
 private:
+  FindVertexToTriangleDistances* m_Filter;
   const IGeometry::SharedTriList& m_SharedTriangleList;
   const IGeometry::SharedVertexList& m_TriangleVertices;
   IGeometry::SharedVertexList& m_SourcePoints;
@@ -423,8 +422,6 @@ private:
   Int64Array& m_ClosestTri;
   const Float64Array& m_Normals;
   const RTreeType m_RTree;
-  const std::atomic_bool& m_ShouldCancel;
-  ThreadSafeMessenger& m_Messenger;
 };
 } // namespace
 
@@ -445,6 +442,25 @@ FindVertexToTriangleDistances::~FindVertexToTriangleDistances() noexcept = defau
 const std::atomic_bool& FindVertexToTriangleDistances::getCancel()
 {
   return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+void FindVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  m_ProgressCounter += counter;
+  auto progressInt = static_cast<size_t>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
+
+  size_t progIncrement = m_TotalElements / 100;
+
+  if(m_ProgressCounter > 1 && m_LastProgressInt != progressInt)
+  {
+    std::string ss = fmt::format("Finding Distances || {}% Completed", progressInt);
+    m_MessageHandler(IFilter::Message::Type::Info, ss);
+  }
+
+  m_LastProgressInt = progressInt;
 }
 
 void GetBoundingBoxAtTri(const IGeometry::SharedTriList& triList, const IGeometry::SharedVertexList& vertList, size_t triId, nonstd::span<float> bounds)
@@ -469,7 +485,7 @@ Result<> FindVertexToTriangleDistances::operator()()
 {
   auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexDataContainer);
   IGeometry::SharedVertexList& sourceVertices = vertexGeom.getVerticesRef();
-  auto totalElements = vertexGeom.getNumberOfVertices();
+  m_TotalElements = vertexGeom.getNumberOfVertices();
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainer);
   auto numTris = static_cast<usize>(triangleGeom.getNumberOfFaces());
@@ -491,14 +507,11 @@ Result<> FindVertexToTriangleDistances::operator()()
   auto& closestTriangleIdsArray = m_DataStructure.getDataRefAs<Int64Array>(m_InputValues->ClosestTriangleIdArrayPath);
   closestTriangleIdsArray.fill(-1); // -1 means it never found the closest triangle?
 
-  ThreadSafeMessenger messenger(m_MessageHandler, "Finding distances...");
-  messenger.setTotalElements(totalElements);
-  messenger.setProgressIncrement(totalElements / 100);
-
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, totalElements);
-  dataAlg.execute(FindVertexToTriangleDistancesImpl(triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, getCancel(), messenger));
+  dataAlg.setParallelizationEnabled(true);
+  dataAlg.setRange(0, m_TotalElements);
+  dataAlg.execute(FindVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree));
 
   return {};
 }

@@ -5,7 +5,6 @@
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
-#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <unordered_map>
@@ -20,7 +19,7 @@ class FindArrayStatisticsByIndexImpl
 public:
   FindArrayStatisticsByIndexImpl(bool length, bool min, bool max, bool mean, bool stdDeviation, bool summation, bool hist, float64 histmin, float64 histmax, bool histfullrange, int32 numBins,
                                  const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, UInt64Array* lengthArray, DataArray<T>* minArray,
-                                 DataArray<T>* maxArray, Float32Array* meanArray, Float32Array* stdDevArray, Float32Array* summationArray, Float32Array* histArray, ThreadSafeMessenger& messenger)
+                                 DataArray<T>* maxArray, Float32Array* meanArray, Float32Array* stdDevArray, Float32Array* summationArray, Float32Array* histArray)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -42,7 +41,6 @@ public:
   , m_StdDevArray(stdDevArray)
   , m_SummationArray(summationArray)
   , m_HistArray(histArray)
-  , m_Messenger(messenger)
   {
   }
 
@@ -50,15 +48,13 @@ public:
 
   void compute(usize start, usize end) const
   {
-    const auto progressIncrement = m_Messenger.getProgressIncrement();
-    const usize numTuples = m_Messenger.getTotalElements();
+    const usize numTuples = m_Source.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
     std::vector<uint64> length(numCurrentFeatures, 0);
     std::vector<T> min(numCurrentFeatures, std::numeric_limits<T>::max());
     std::vector<T> max(numCurrentFeatures, std::numeric_limits<T>::min());
     std::vector<T> summation(numCurrentFeatures, 0);
-    usize progressCount = 0;
     for(usize i = 0; i < numTuples; ++i)
     {
       if(m_Mask != nullptr && !m_Mask->isTrue(i))
@@ -209,16 +205,8 @@ public:
         }     // end of length if
         histDataStore->setTuple(j, histogram);
       } // end of m_Histogram if
-
-      progressCount++;
-      if(progressCount > progressIncrement)
-      {
-        m_Messenger.updateProgress(progressCount);
-        progressCount = 0;
-      }
-    } // end of outermost for loop
-    m_Messenger.updateProgress(progressCount);
-  } // end of compute
+    }   // end of outermost for loop
+  }     // end of compute
 
   void operator()(const Range& range) const
   {
@@ -247,19 +235,17 @@ private:
   Float32Array* m_StdDevArray = nullptr;
   Float32Array* m_SummationArray = nullptr;
   Float32Array* m_HistArray = nullptr;
-  ThreadSafeMessenger& m_Messenger;
 };
 
 template <typename T>
 class FindArrayMedianByIndexImpl
 {
 public:
-  FindArrayMedianByIndexImpl(const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, Float32Array* medianArray, ThreadSafeMessenger& messenger)
+  FindArrayMedianByIndexImpl(const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, Float32Array* medianArray)
   : m_MedianArray(medianArray)
   , m_Mask(mask)
   , m_FeatureIds(featureIds)
   , m_Source(source)
-  , m_Messenger(messenger)
   {
   }
 
@@ -267,9 +253,6 @@ public:
 
   void compute(usize start, usize end) const
   {
-    const auto progressIncrement = m_Messenger.getProgressIncrement();
-    usize progressCount = 0;
-
     const usize numTuples = m_Source.getNumberOfTuples();
     for(usize j = start; j < end; j++)
     {
@@ -297,15 +280,7 @@ public:
       }
       const float32 val = StaticicsCalculations::findMedian(featureSource);
       m_MedianArray->initializeTuple(j, val);
-
-      progressCount++;
-      if(progressCount > progressIncrement)
-      {
-        m_Messenger.updateProgress(progressCount);
-        progressCount = 0;
-      }
     }
-    m_Messenger.updateProgress(progressCount);
   }
 
   void operator()(const Range& range) const
@@ -318,7 +293,6 @@ private:
   const std::unique_ptr<MaskCompare>& m_Mask = nullptr;
   const Int32Array* m_FeatureIds = nullptr;
   const DataArray<T>& m_Source;
-  ThreadSafeMessenger& m_Messenger;
 };
 
 // -----------------------------------------------------------------------------
@@ -414,7 +388,7 @@ void FindStatisticsImpl(std::vector<T>& data, std::vector<IDataArray*>& arrays, 
 // -----------------------------------------------------------------------------
 template <typename T>
 void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, const std::unique_ptr<MaskCompare>& mask, const FindArrayStatisticsInputValues* inputValues,
-                    std::vector<IDataArray*>& arrays, usize numFeatures, const IFilter::MessageHandler& messageHandler)
+                    std::vector<IDataArray*>& arrays, usize numFeatures)
 {
   if(inputValues->ComputeByIndex)
   {
@@ -426,15 +400,11 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* summationArray = dynamic_cast<Float32Array*>(arrays[6]);
     auto* histArray = dynamic_cast<Float32Array*>(arrays[7]);
 
-    ThreadSafeMessenger messenger(messageHandler, "Finding Statistics...");
-    messenger.setTotalElements(source.getNumberOfTuples());
-    messenger.setProgressIncrement(source.getNumberOfTuples() / 100);
-
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numFeatures);
     dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindStdDeviation,
                                                       inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
-                                                      inputValues->NumBins, mask, featureIds, source, lengthArray, minArray, maxArray, meanArray, stdDevArray, summationArray, histArray, messenger));
+                                                      inputValues->NumBins, mask, featureIds, source, lengthArray, minArray, maxArray, meanArray, stdDevArray, summationArray, histArray));
     if(inputValues->FindMedian)
     {
       auto* medianArray = dynamic_cast<Float32Array*>(arrays[4]);
@@ -443,13 +413,9 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
         throw std::invalid_argument("FindArrayMedianByIndexImpl could not dynamic_cast 'Median' array to needed type. Check input array selection.");
       }
 
-      ThreadSafeMessenger messenger2(messageHandler, "Finding Statistics...");
-      messenger2.setTotalElements(numFeatures);
-      messenger2.setProgressIncrement(numFeatures / 100);
-
       ParallelDataAlgorithm medianDataAlg;
       medianDataAlg.setRange(0, numFeatures);
-      medianDataAlg.execute(FindArrayMedianByIndexImpl<T>(mask, featureIds, source, medianArray, messenger2));
+      medianDataAlg.execute(FindArrayMedianByIndexImpl<T>(mask, featureIds, source, medianArray));
     }
   }
   else
@@ -527,8 +493,7 @@ void StandardizeData(const DataArray<T>& data, bool useMask, const std::unique_p
 struct FindArrayStatisticsFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IDataArray*>& arrays, usize numFeatures, const FindArrayStatisticsInputValues* inputValues,
-                      const IFilter::MessageHandler& messageHandler)
+  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IDataArray*>& arrays, usize numFeatures, const FindArrayStatisticsInputValues* inputValues)
   {
     const auto& inputArray = static_cast<const DataArray<T>&>(inputIDataArray);
     Int32Array* featureIds = nullptr;
@@ -629,7 +594,7 @@ struct FindArrayStatisticsFunctor
     // End Initialization
 
     // this level checks whether computing by index or not and preps the calculations accordingly
-    FindStatistics<T>(inputArray, featureIds, maskCompare, inputValues, arrays, numFeatures, messageHandler);
+    FindStatistics<T>(inputArray, featureIds, maskCompare, inputValues, arrays, numFeatures);
 
     // compute the standardized data based on whether computing by index or not
     if(inputValues->StandardizeData)
@@ -734,7 +699,7 @@ Result<> FindArrayStatistics::operator()()
 
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
 
-  ExecuteDataFunction(FindArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, m_MessageHandler);
+  ExecuteDataFunction(FindArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues);
 
   return {};
 }
