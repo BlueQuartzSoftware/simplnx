@@ -95,6 +95,7 @@
 #include "ComplexCore/Filters/WriteStlFileFilter.hpp"
 #include "ComplexCore/Filters/AddBadDataFilter.hpp"
 #include "ComplexCore/Filters/AppendImageGeometryZSliceFilter.hpp"
+#include "ComplexCore/Filters/FindFeatureClusteringFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -199,6 +200,7 @@ namespace complex
     {complex::Uuid::FromString("b9134758-d5e5-59dd-9907-28d23e0e0143").value(), complex::FilterTraits<WriteStlFileFilter>::uuid}, // WriteStlFile
     {complex::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), complex::FilterTraits<AddBadDataFilter>::uuid}, // AddBadData
     {complex::Uuid::FromString("52b2918a-4fb5-57aa-97d4-ccc084b89572").value(), complex::FilterTraits<AppendImageGeometryZSliceFilter>::uuid}, // AppendImageGeometryZSlice
+    {complex::Uuid::FromString("a1e9cf6d-2d1b-573e-98b8-0314c993d2b6").value(), complex::FilterTraits<FindFeatureClusteringFilter>::uuid}, // FindFeatureClustering
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
