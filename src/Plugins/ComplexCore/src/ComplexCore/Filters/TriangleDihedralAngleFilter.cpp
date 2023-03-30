@@ -9,7 +9,6 @@
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
-#include "complex/Utilities/MessageUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <algorithm>
@@ -28,19 +27,16 @@ constexpr complex::int32 k_MissingFeatureAttributeMatrix = -76970;
 class CalculateDihedralAnglesImpl
 {
 public:
-  CalculateDihedralAnglesImpl(const TriangleGeom* triangleGeom, Float64Array& dihedralAngles, const std::atomic_bool& shouldCancel, ThreadSafeMessenger& messenger)
+  CalculateDihedralAnglesImpl(const TriangleGeom* triangleGeom, Float64Array& dihedralAngles, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_DihedralAngles(dihedralAngles)
   , m_ShouldCancel(shouldCancel)
-  , m_Messenger(messenger)
   {
   }
   virtual ~CalculateDihedralAnglesImpl() = default;
 
   void generate(size_t start, size_t end) const
   {
-    const auto progressIncrement = m_Messenger.getProgressIncrement();
-    usize progressCount = 0;
 
     const IGeometry::SharedVertexList* mNodes = m_TriangleGeom->getVertices();
     const IGeometry::SharedTriList* mTriangles = m_TriangleGeom->getFaces();
@@ -87,14 +83,11 @@ public:
         m_DihedralAngles[triangleIndex] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
       }
 
-      progressCount++;
-      if(progressCount > progressIncrement)
+      if(m_ShouldCancel)
       {
-        m_Messenger.updateProgress(progressCount);
-        progressCount = 0;
+        return;
       }
     }
-    m_Messenger.updateProgress(progressCount);
   }
 
   void operator()(const Range& range) const
@@ -106,7 +99,6 @@ private:
   const TriangleGeom* m_TriangleGeom = nullptr;
   Float64Array& m_DihedralAngles;
   const std::atomic_bool& m_ShouldCancel;
-  ThreadSafeMessenger& m_Messenger;
 };
 } // namespace
 
@@ -211,14 +203,9 @@ Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, 
   const DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pMinDihedralAnglesName);
   auto& dihedralAngles = dataStructure.getDataRefAs<Float64Array>(dihedralAnglesArrayPath);
 
-  usize totalElements = triangleGeom->getNumberOfFaces();
-  ThreadSafeMessenger messenger(messageHandler, "Finding Dihedral Angles...");
-  messenger.setTotalElements(totalElements);
-  messenger.setProgressIncrement(totalElements / 100);
-
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, totalElements);
-  dataAlg.execute(CalculateDihedralAnglesImpl(triangleGeom, dihedralAngles, shouldCancel, messenger));
+  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
+  dataAlg.execute(CalculateDihedralAnglesImpl(triangleGeom, dihedralAngles, shouldCancel));
 
   return {};
 }
