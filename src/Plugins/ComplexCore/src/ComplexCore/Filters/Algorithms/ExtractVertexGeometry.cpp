@@ -121,7 +121,7 @@ Result<> ExtractVertexGeometry::operator()()
         DataPath destDataArrayPath = vertexAttrMatrixPath.createChildPath(srcDataArrayPath.getTargetName());
         IDataArray& destDataArray = m_DataStructure.getDataRefAs<IDataArray>(destDataArrayPath);
         auto& destDataArrayStore = destDataArray.getIDataStoreRef();
-        destDataArrayStore.reshapeTuples({cellCount});
+        destDataArrayStore.resizeTuples({cellCount});
       }
 
       maskArray = maskArrayPtr;

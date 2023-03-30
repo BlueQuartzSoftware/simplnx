@@ -84,11 +84,11 @@ complex::Result<> LoadInfo(const complex::ReadH5EbsdInputValues* mInputValues, c
 
   complex::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
   complex::UInt32Array& xtalData = mDataStructure.getDataRefAs<complex::UInt32Array>(xtalDataPath);
-  xtalData.getIDataStore()->reshapeTuples(tDims);
+  xtalData.getIDataStore()->resizeTuples(tDims);
 
   complex::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
   complex::Float32Array& latticData = mDataStructure.getDataRefAs<complex::Float32Array>(latticeDataPath);
-  latticData.getIDataStore()->reshapeTuples(tDims);
+  latticData.getIDataStore()->resizeTuples(tDims);
 
   // Reshape the Material Names here also.
 

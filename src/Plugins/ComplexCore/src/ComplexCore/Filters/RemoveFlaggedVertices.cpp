@@ -33,7 +33,7 @@ struct RemoveFlaggedVerticesFunctor
   {
     auto& inputData = dynamic_cast<DataArray<T>&>(inputDataPtr);
     auto& maskedData = dynamic_cast<DataArray<T>&>(maskedDataPtr);
-    maskedData.getDataStore()->reshapeTuples({maskPoints.size()});
+    maskedData.getDataStore()->resizeTuples({maskPoints.size()});
     usize nComps = inputData.getNumberOfComponents();
 
     for(usize i = 0; i < maskPoints.size(); i++)
@@ -196,7 +196,7 @@ Result<> RemoveFlaggedVertices::executeImpl(DataStructure& data, const Arguments
 
   VertexGeom& reducedVertex = data.getDataRefAs<VertexGeom>(reducedVertexPath);
   reducedVertex.resizeVertexList(trueCount);
-  ResizeAttributeMatrix(*reducedVertex.getVertexAttributeMatrix(), tDims);
+  reducedVertex.getVertexAttributeMatrix()->resizeTuples(tDims);
 
   for(size_t i = 0; i < trueCount; i++)
   {

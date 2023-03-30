@@ -316,7 +316,7 @@ DataObject::Type NeighborList<T>::getDataObjectType() const
 }
 
 template <typename T>
-void NeighborList<T>::reshapeTuples(const std::vector<usize>& tupleShape)
+void NeighborList<T>::resizeTuples(const std::vector<usize>& tupleShape)
 {
   auto numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   resizeTotalElements(numTuples);

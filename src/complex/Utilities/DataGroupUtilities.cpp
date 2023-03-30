@@ -87,7 +87,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
           destIdx++;
         }
         // Now chop off the end of the copy and modified array
-        dataArray->getIDataStore()->reshapeTuples(newShape);
+        dataArray->getIDataStore()->resizeTuples(newShape);
       }
 
       // Loop over all the points and correct all the feature names

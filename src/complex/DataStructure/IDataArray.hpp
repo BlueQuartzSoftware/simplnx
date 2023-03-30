@@ -137,9 +137,9 @@ public:
   /**
    * @brief Resizes the internal array to accomondate
    */
-  void reshapeTuples(const std::vector<usize>& tupleShape) override
+  void resizeTuples(const std::vector<usize>& tupleShape) override
   {
-    getIDataStoreRef().reshapeTuples(tupleShape);
+    getIDataStoreRef().resizeTuples(tupleShape);
   }
 
   /**

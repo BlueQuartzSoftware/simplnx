@@ -785,7 +785,7 @@ Result<> FindArrayStatistics::operator()()
     {
       if(array != nullptr)
       {
-        array->reshapeTuples({numFeatures});
+        array->resizeTuples({numFeatures});
       }
     }
   }

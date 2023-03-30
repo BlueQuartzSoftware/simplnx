@@ -252,7 +252,7 @@ void FindTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
     }
   }
 
-  edgeList->getDataStore()->reshapeTuples({edgeSet.size()});
+  edgeList->getDataStore()->resizeTuples({edgeSet.size()});
   auto& uEdges = *edgeList;
   T index = 0;
 
@@ -310,7 +310,7 @@ void FindHexEdges(const DataArray<T>* hexList, DataArray<T>* edge_List)
   }
 
   typename std::set<std::pair<T, T>>::iterator setIter;
-  edge_List->getDataStore()->reshapeTuples({edgeSet.size()});
+  edge_List->getDataStore()->resizeTuples({edgeSet.size()});
   auto& uEdges = *edge_List;
   T index = 0;
 
@@ -355,7 +355,7 @@ void FindTetFaces(const DataArray<T>* tetList, DataArray<T>* faceList)
     }
   }
 
-  faceList->getDataStore()->reshapeTuples({faceSet.size()});
+  faceList->getDataStore()->resizeTuples({faceSet.size()});
   auto& uFaces = *faceList;
   T index = 0;
 
@@ -404,7 +404,7 @@ void FindHexFaces(const DataArray<T>* hexList, DataArray<T>* faceList)
     }
   }
 
-  faceList->getDataStore()->reshapeTuples({faceSet.size()});
+  faceList->getDataStore()->resizeTuples({faceSet.size()});
   auto& uFaces = *faceList;
   T index = 0;
 
@@ -467,7 +467,7 @@ void FindUnsharedTetEdges(const DataArray<T>* tetList, DataArray<T>* edgeList)
     }
   }
 
-  edgeList->getDataStore()->reshapeTuples({edgeMap.size()});
+  edgeList->getDataStore()->resizeTuples({edgeMap.size()});
   auto& bEdges = *edgeList;
   T index = 0;
 
@@ -538,7 +538,7 @@ void FindUnsharedHexEdges(const DataArray<T>* hexList, DataArray<T>* edge_List)
     }
   }
 
-  edge_List->getDataStore()->reshapeTuples({edgeMap.size()});
+  edge_List->getDataStore()->resizeTuples({edgeMap.size()});
   auto& bEdges = *edge_List;
   T index = 0;
 
@@ -598,7 +598,7 @@ void FindUnsharedTetFaces(const DataArray<T>* tetList, DataArray<T>* faceList)
     }
   }
 
-  faceList->getDataStore()->reshapeTuples({faceMap.size()});
+  faceList->getDataStore()->resizeTuples({faceMap.size()});
   auto& uFaces = *faceList;
   T index = 0;
 
@@ -662,7 +662,7 @@ void FindUnsharedHexFaces(const DataArray<T>* hexList, DataArray<T>* faceList)
     }
   }
 
-  faceList->getDataStore()->reshapeTuples({faceMap.size()});
+  faceList->getDataStore()->resizeTuples({faceMap.size()});
   auto& uFaces = *faceList;
   T index = 0;
 
@@ -731,7 +731,7 @@ void Find2DElementEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
   }
 
   typename std::set<std::pair<T, T>>::iterator setIter;
-  edgeList->getDataStore()->reshapeTuples({edgeSet.size()});
+  edgeList->getDataStore()->resizeTuples({edgeSet.size()});
   auto& uEdges = *edgeList;
   T index = 0;
 
@@ -811,7 +811,7 @@ void Find2DUnsharedEdges(const DataArray<T>* elemList, DataArray<T>* edgeList)
     }
   }
 
-  edgeList->getDataStore()->reshapeTuples({edgeMap.size()});
+  edgeList->getDataStore()->resizeTuples({edgeMap.size()});
   auto& bEdges = *edgeList;
   T index = 0;
 

@@ -124,6 +124,13 @@ public:
    */
   usize getNumTuples() const;
 
+  /**
+   * @brief Changes sets tuple Shape and resizes all child arrays.
+   * @param tupShape this si the new tuple shape
+   * @return
+   */
+  void resizeTuples(ShapeType tupShape);
+
 protected:
   /**
    * @brief Creates the AttributeMatrix for the target DataStructure and with the

@@ -61,7 +61,7 @@ public:
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
   {
-    reshapeTuples(m_TupleShape);
+    resizeTuples(m_TupleShape);
     if(initValue.has_value())
     {
       std::fill_n(data(), this->getSize(), *initValue);
@@ -198,7 +198,7 @@ public:
    * @brief
    * @param tupleShape
    */
-  void reshapeTuples(const std::vector<usize>& tupleShape) override
+  void resizeTuples(const std::vector<usize>& tupleShape) override
   {
     auto oldSize = this->getSize();
     // Calculate the total number of values in the new array

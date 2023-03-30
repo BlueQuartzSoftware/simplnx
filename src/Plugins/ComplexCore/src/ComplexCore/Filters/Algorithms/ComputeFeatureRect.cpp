@@ -40,7 +40,7 @@ Result<> ComputeFeatureRect::operator()()
   if(corners.getNumberOfTuples() == 0)
   {
     usize maxElement = static_cast<usize>(*std::max_element(featureIds.begin(), featureIds.end()));
-    corners.reshapeTuples(std::vector<usize>{maxElement + 1});
+    corners.resizeTuples(std::vector<usize>{maxElement + 1});
   }
 
   auto& cornersDataStore = corners.getIDataStoreRefAs<UInt32DataStore>();

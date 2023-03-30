@@ -72,7 +72,7 @@ public:
   /**
    * @brief Resizes the internal array to accomondate
    */
-  virtual void reshapeTuples(const std::vector<usize>& tupleShape) = 0;
+  virtual void resizeTuples(const std::vector<usize>& tupleShape) = 0;
 
   static std::set<std::string> StringListFromArrayType(const std::set<ArrayType>& arrayTypes)
   {

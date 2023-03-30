@@ -114,3 +114,13 @@ usize AttributeMatrix::getNumTuples() const
 {
   return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
 }
+
+void AttributeMatrix::resizeTuples(ShapeType tupShape)
+{
+  setShape(tupShape);
+  auto childArrays = findAllChildrenOfType<IArray>();
+  for(const auto& array : childArrays)
+  {
+    array->resizeTuples(tupShape);
+  }
+}

@@ -94,7 +94,7 @@ public:
   /**
    * @brief Resizes the internal array to accomondate
    */
-  void reshapeTuples(const std::vector<usize>& tupleShape) override;
+  void resizeTuples(const std::vector<usize>& tupleShape) override;
 
 protected:
   StringArray(DataStructure& dataStructure, std::string name);

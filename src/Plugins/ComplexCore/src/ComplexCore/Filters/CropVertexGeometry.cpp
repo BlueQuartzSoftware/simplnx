@@ -211,7 +211,7 @@ Result<> CropVertexGeometry::executeImpl(DataStructure& dataStructure, const Arg
 
   DataPath croppedVertexDataPath = croppedGeomPath.createChildPath(vertexDataName);
   auto& vertedDataAttMatrix = dataStructure.getDataRefAs<AttributeMatrix>(croppedVertexDataPath);
-  ResizeAttributeMatrix(vertedDataAttMatrix, tDims);
+  vertedDataAttMatrix.resizeTuples(tDims);
 
   for(usize i = 0; i < numTuples; i++)
   {

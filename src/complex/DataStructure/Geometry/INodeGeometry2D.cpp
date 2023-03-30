@@ -54,7 +54,7 @@ void INodeGeometry2D::setFaceList(const SharedFaceList& faces)
 
 void INodeGeometry2D::resizeFaceList(usize size)
 {
-  getFacesRef().getIDataStoreRef().reshapeTuples({size});
+  getFacesRef().getIDataStoreRef().resizeTuples({size});
 }
 
 usize INodeGeometry2D::getNumberOfFaces() const
