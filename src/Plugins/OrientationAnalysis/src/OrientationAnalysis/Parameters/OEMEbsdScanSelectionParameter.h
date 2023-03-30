@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <string>
 #include <unordered_set>
+#include <list>
 
 namespace fs = std::filesystem;
 
