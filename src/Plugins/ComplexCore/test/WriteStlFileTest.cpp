@@ -63,7 +63,7 @@ TEST_CASE("ComplexCore::WriteStlFileFilter: Valid Filter Execution", "[ComplexCo
 
   // Create default Parameters for the filter.
   args.insertOrAssign(WriteStlFileFilter::k_GroupByFeature, std::make_any<bool>(false));
-  args.insertOrAssign(WriteStlFileFilter::k_OutputStlDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(unit_test::k_BinaryTestOutputDir)));
+  args.insertOrAssign(WriteStlFileFilter::k_OutputStlDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
   args.insertOrAssign(WriteStlFileFilter::k_OutputStlPrefix_Key, std::make_any<StringParameter::ValueType>("Triangle"));
   args.insertOrAssign(WriteStlFileFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName})));
   args.insertOrAssign(WriteStlFileFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName, Constants::k_Face_Data, Constants::k_FaceLabels})));
