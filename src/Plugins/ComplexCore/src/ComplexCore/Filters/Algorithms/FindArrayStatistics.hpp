@@ -7,6 +7,9 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include <chrono>
+#include <mutex>
+
 namespace complex
 {
 
@@ -63,13 +66,28 @@ public:
 
   const std::atomic_bool& getCancel();
 
+  void sendThreadSafeProgressMessage(usize counter);
+  void sendThreadSafeInfoMessage(const std::string& message);
+
 private:
   DataStructure& m_DataStructure;
   const FindArrayStatisticsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  usize FindNumFeatures(const Int32Array& featureIds) const;
+  // Thread safe Progress Message
+  mutable std::mutex m_ProgressMessage_Mutex;
+  usize m_MilliDelay = 1000;
+  size_t m_TotalElements = 0;
+  size_t m_ProgressCounter = 0;
+  size_t m_LastProgressInt = 0;
+  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
+  /**
+   * @brief
+   * @param featureIds
+   * @return
+   */
+  usize findNumFeatures(const Int32Array& featureIds) const;
 };
 
 } // namespace complex
