@@ -22,15 +22,15 @@ void AppendData(K* inputArray, K* destArray, usize offset)
   }
 }
 
-template<typename T>
+template <typename T>
 class AppendImageGeom
 {
 public:
 public:
-  AppendImageGeom(IArray::ArrayType arrayType, IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
+  AppendImageGeom(IArray::ArrayType arrayType, IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
   : m_ArrayType(arrayType)
-  ,m_InputCellArray(dynamic_cast<DataArray<T>*>(inputCellArray))
-  , m_DestCellArray(dynamic_cast<DataArray<T>*>(destCellArray))
+  , m_InputCellArray(inputCellArray)
+  , m_DestCellArray(destCellArray)
   , m_TupleOffset(tupleOffset)
   {
   }
@@ -68,7 +68,7 @@ private:
   usize m_TupleOffset;
 };
 
-template<typename T>
+template <typename T>
 class CombineImageGeom
 {
 public:
@@ -122,10 +122,10 @@ struct TemplateTypeOptions
   static inline constexpr bool UsingAppend = UseAppend;
 };
 
-using Combine = TemplateTypeOptions<true,false>;
-using Append = TemplateTypeOptions<false,true>;
+using Combine = TemplateTypeOptions<true, false>;
+using Append = TemplateTypeOptions<false, true>;
 
-void RunAppendBoolAppend(IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
+void RunAppendBoolAppend(IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
 {
   using dArrayT = DataArray<bool>;
   const usize offset = tupleOffset * destCellArray->getNumberOfComponents();
@@ -139,7 +139,7 @@ void RunCombineBoolAppend(IArray* inputCellArray1, IArray* inputCellArray2, IArr
   AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray2), dynamic_cast<dArrayT*>(destCellArray), inputCellArray1->getSize());
 }
 
-template<class TemplateTypeOptions = Combine, class ParallelRunnerT, class... ArgsT>
+template <class TemplateTypeOptions = Combine, class ParallelRunnerT, class... ArgsT>
 void RunParallelFunction(IArray::ArrayType arrayType, IArray* destArray, ParallelRunnerT&& runner, ArgsT&&... args)
 {
   static_assert(!(TemplateTypeOptions::UsingCombine && TemplateTypeOptions::UsingAppend), "Cannot use both Append and Combine");
@@ -169,11 +169,11 @@ void RunParallelFunction(IArray::ArrayType arrayType, IArray* destArray, Paralle
 
   if constexpr(TemplateTypeOptions::UsingCombine)
   {
-    ExecuteParallelFunction<CombineImageGeom, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner),arrayType, destArray, std::forward<ArgsT>(args)...);
+    ExecuteParallelFunction<CombineImageGeom, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), arrayType, destArray, std::forward<ArgsT>(args)...);
   }
   if constexpr(TemplateTypeOptions::UsingAppend)
   {
-    ExecuteParallelFunction<AppendImageGeom, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner),arrayType, destArray, std::forward<ArgsT>(args)...);
+    ExecuteParallelFunction<AppendImageGeom, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), arrayType, destArray, std::forward<ArgsT>(args)...);
   }
 }
 } // namespace
@@ -263,7 +263,7 @@ Result<> AppendImageGeometryZSlice::operator()()
     else
     {
       m_MessageHandler(fmt::format("Appending Data Array {}", inputCellDataPath.createChildPath(name).toString()));
-      RunParallelFunction<Append>(arrayType, destDataArray, taskRunner, inputDataArray, newDataArray);
+      RunParallelFunction<Append>(arrayType, destDataArray, taskRunner, inputDataArray, tupleOffset);
     }
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
