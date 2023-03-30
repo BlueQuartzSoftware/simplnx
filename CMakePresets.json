@@ -33,17 +33,13 @@
           "type": "BOOL",
           "value": "OFF"
         },
-        "COMPLEX_EXTRA_PLUGINS": {
-          "type": "STRING",
-          "value": "ITKImageProcessing;OrientationAnalysis"
-        },
         "DREAM3D_DATA_DIR": {
           "type": "PATH",
           "value": "${sourceDir}/DREAM3D_Data"
         },
         "VCPKG_MANIFEST_FEATURES": {
           "type": "STRING",
-          "value": "tests;parallel;itk;ebsd"
+          "value": "tests;parallel"
         },
         "VCPKG_OVERLAY_TRIPLETS": {
           "type": "PATH",
@@ -103,6 +99,23 @@
       }
     },
     {
+      "name": "ci-macos-arm64",
+      "displayName": "ci-macos-arm64",
+      "description": "Build configuration for GitHub Actions CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "arm64-osx-dynamic"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "arm64-osx-dynamic"
+        }
+      }
+    },
+    {
       "name": "ci-linux-x64",
       "displayName": "ci-linux-x64",
       "description": "Build configuration for GitHub Actions CI",
@@ -141,7 +154,14 @@
       "description": "Build configuration for GitHub actions CI",
       "configurePreset": "ci-macos-x64",
       "configuration": "Release"
-    },  
+    },
+    {
+      "name": "ci-macos-arm64",
+      "displayName": "ci-macos-arm64 CI build",
+      "description": "Build configuration for GitHub actions CI",
+      "configurePreset": "ci-macos-arm64",
+      "configuration": "Release"
+    },
     {
       "name": "ci-linux-x64",
       "displayName": "ci-linux-x64 CI build",
@@ -176,6 +196,16 @@
       "displayName": "ci-macos-x64 CI build",
       "description": "Build configuration for GitHub actions CI",
       "configurePreset": "ci-macos-x64",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ci-macos-arm64",
+      "displayName": "ci-macos-arm64 CI build",
+      "description": "Build configuration for GitHub actions CI",
+      "configurePreset": "ci-macos-arm64",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true

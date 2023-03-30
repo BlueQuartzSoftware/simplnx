@@ -18,6 +18,14 @@ option(COMPLEX_DOWNLOAD_TEST_FILES "Download the test files" ON)
 
 option(COMPLEX_WRITE_TEST_OUTPUT "Write unit test output files" OFF)
 
+option(COMPLEX_ENABLE_ComplexCore "Enable the ComplexCore Plugin" ON)
+
+option(COMPLEX_ENABLE_ITKImageProcessing "Enable the ITKImageProcessing Plugin" ON)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_ITKImageProcessing FEATURE "itk")
+
+option(COMPLEX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
+enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATURE "ebsd")
+
 project(complex
   VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"
@@ -707,10 +715,25 @@ set_property(GLOBAL PROPERTY COMPLEX_PLUGIN_COUNT 0)
 # Add user defined Plugin Dirs based on the COMPLEX_PLUGIN_SEARCH_DIRS variable
 # and falling back to complex_SOURCE_DIR/../complex_plugins if not defined
 # Use 'COMPLEX_PLUGIN_SEARCH_DIRS' hints to look for plugins in specific directories
-set(COMPLEX_PLUGIN_LIST ComplexCore;${COMPLEX_EXTRA_PLUGINS})
+set(COMPLEX_PLUGIN_LIST "")
+if(COMPLEX_ENABLE_ComplexCore)
+  set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} ComplexCore)
+endif()
+if(COMPLEX_ENABLE_ITKImageProcessing)
+  set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} ITKImageProcessing)
+endif()
+# Ensure ITKImageProcessing comes before OrientationAnalysis as there is currently
+# a dependency of ITKImageWriter inside some of the example OrientationAnalysis pipelines
+if(COMPLEX_ENABLE_OrientationAnalysis)
+  set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} OrientationAnalysis)
+endif()
+# Add any plugins to the list
+set(COMPLEX_PLUGIN_LIST ${COMPLEX_PLUGIN_LIST} ${COMPLEX_EXTRA_PLUGINS})
+
+
 foreach(plugin ${COMPLEX_PLUGIN_LIST})
-  if(NOT DEFINED COMPLEX_PLUGIN_ENABLE_${plugin})
-    set(COMPLEX_PLUGIN_ENABLE_${plugin} ON)
+  if(NOT DEFINED COMPLEX_ENABLE_${plugin})
+    set(COMPLEX_ENABLE_${plugin} ON)
   endif()
   complex_add_plugin(PLUGIN_NAME ${plugin})
 endforeach()
