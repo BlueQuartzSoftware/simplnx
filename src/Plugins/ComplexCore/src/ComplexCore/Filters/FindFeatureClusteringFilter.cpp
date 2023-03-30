@@ -2,8 +2,10 @@
 
 #include "ComplexCore/Filters/Algorithms/FindFeatureClustering.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -94,19 +96,46 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
   auto pEquivalentDiametersArrayPathValue = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pCentroidsArrayPathValue = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  auto pBiasedFeaturesArrayPathValue = filterArgs.value<DataPath>(k_BiasedFeaturesArrayPath_Key);
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixName_Key);
   auto pClusteringListArrayNameValue = filterArgs.value<std::string>(k_ClusteringListArrayName_Key);
   auto pRDFArrayNameValue = filterArgs.value<std::string>(k_RDFArrayName_Key);
   auto pMaxMinArrayNameValue = filterArgs.value<std::string>(k_MaxMinArrayName_Key);
 
   const DataPath clusteringListPath = pFeaturePhasesArrayPathValue.getParent().createChildPath(pClusteringListArrayNameValue);
-  const DataPath rdfPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(pRDFArrayNameValue);
-  const DataPath minMaxPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(pMaxMinArrayNameValue);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  std::vector<DataPath> featureDataArrays = {pEquivalentDiametersArrayPathValue, pFeaturePhasesArrayPathValue, pCentroidsArrayPathValue};
+  if(pRemoveBiasedFeaturesValue)
+  {
+    featureDataArrays.push_back(filterArgs.value<DataPath>(k_BiasedFeaturesArrayPath_Key));
+  }
+
+  if(!dataStructure.validateNumberOfTuples(featureDataArrays))
+  {
+    return MakePreflightErrorResult(-8474632, "Mismatching number of tuples in one or more of the feature level arrays (equivalent diameters, phases, centroids, and biased features). Make sure these "
+                                              "arrays all come from the same feature attribute matrix.");
+  }
+
+  const auto& cellEnsembleAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixNameValue);
+  const std::vector<usize> tupleShape = cellEnsembleAM.getShape();
+  {
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)},
+                                                                 pCellEnsembleAttributeMatrixNameValue.createChildPath(pRDFArrayNameValue));
+    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  }
+  {
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{2}, pCellEnsembleAttributeMatrixNameValue.createChildPath(pMaxMinArrayNameValue));
+    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  }
+  {
+    const DataPath featureAttributeMatrixPath = pFeaturePhasesArrayPathValue.getParent();
+    const auto& cellFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(featureAttributeMatrixPath);
+    auto createArrayAction = std::make_unique<CreateNeighborListAction>(DataType::float32, cellFeatureAM.getNumTuples(), featureAttributeMatrixPath.createChildPath(pClusteringListArrayNameValue));
+    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
