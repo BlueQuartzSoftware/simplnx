@@ -109,7 +109,5 @@ auto ExecuteParallelFunction(DataType dataType, ParallelRunnerT&& runner, ArgsT&
       return runner.template execute<>(ClassT<float64>(std::forward<ArgsT>(args)...));
     }
   }
-
-  throw std::runtime_error("complex::ExecuteParallelFunction has all supported DataTypes disabled. Error: Invalid DataType");
 }
 } // namespace complex

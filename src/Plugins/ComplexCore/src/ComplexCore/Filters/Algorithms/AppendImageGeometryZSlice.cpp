@@ -22,219 +22,160 @@ void AppendData(K* inputArray, K* destArray, usize offset)
   }
 }
 
-template <typename T>
-class AppendImageGeomDataArray
+template<typename T>
+class AppendImageGeom
 {
 public:
-  AppendImageGeomDataArray(IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
-  : m_InputCellArray(dynamic_cast<DataArray<T>*>(inputCellArray))
+public:
+  AppendImageGeom(IArray::ArrayType arrayType, IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
+  : m_ArrayType(arrayType)
+  ,m_InputCellArray(dynamic_cast<DataArray<T>*>(inputCellArray))
   , m_DestCellArray(dynamic_cast<DataArray<T>*>(destCellArray))
   , m_TupleOffset(tupleOffset)
   {
   }
 
-  ~AppendImageGeomDataArray() = default;
+  ~AppendImageGeom() = default;
 
-  AppendImageGeomDataArray(const AppendImageGeomDataArray&) = default;
-  AppendImageGeomDataArray(AppendImageGeomDataArray&&) noexcept = default;
-  AppendImageGeomDataArray& operator=(const AppendImageGeomDataArray&) = delete;
-  AppendImageGeomDataArray& operator=(AppendImageGeomDataArray&&) noexcept = delete;
+  AppendImageGeom(const AppendImageGeom&) = default;
+  AppendImageGeom(AppendImageGeom&&) noexcept = default;
+  AppendImageGeom& operator=(const AppendImageGeom&) = delete;
+  AppendImageGeom& operator=(AppendImageGeom&&) noexcept = delete;
 
   void operator()() const
   {
-    convert();
-  }
-
-protected:
-  void convert() const
-  {
     const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
-    AppendData<DataArray<T>>(m_InputCellArray, m_DestCellArray, offset);
+    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+    {
+      using nListT = NeighborList<T>;
+      AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray), dynamic_cast<nListT*>(m_DestCellArray), offset);
+    }
+    if(m_ArrayType == IArray::ArrayType::DataArray)
+    {
+      using dArrayT = DataArray<T>;
+      AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray), dynamic_cast<dArrayT*>(m_DestCellArray), offset);
+    }
+    if(m_ArrayType == IArray::ArrayType::StringArray)
+    {
+      AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray), dynamic_cast<StringArray*>(m_DestCellArray), offset);
+    }
   }
 
 private:
-  DataArray<T>* m_InputCellArray = nullptr;
-  DataArray<T>* m_DestCellArray = nullptr;
+  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+  IArray* m_InputCellArray = nullptr;
+  IArray* m_DestCellArray = nullptr;
   usize m_TupleOffset;
 };
 
-template <typename T>
-class AppendImageGeomNeighborListArray
+template<typename T>
+class CombineImageGeom
 {
 public:
-  AppendImageGeomNeighborListArray(IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
-  : m_InputCellArray(dynamic_cast<NeighborList<T>*>(inputCellArray))
-  , m_DestCellArray(dynamic_cast<NeighborList<T>*>(destCellArray))
-  , m_TupleOffset(tupleOffset)
+  CombineImageGeom(IArray::ArrayType arrayType, IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
+  : m_ArrayType(arrayType)
+  , m_InputCellArray1(inputCellArray1)
+  , m_InputCellArray2(inputCellArray2)
+  , m_DestCellArray(destCellArray)
   {
   }
 
-  ~AppendImageGeomNeighborListArray() = default;
+  ~CombineImageGeom() = default;
 
-  AppendImageGeomNeighborListArray(const AppendImageGeomNeighborListArray&) = default;
-  AppendImageGeomNeighborListArray(AppendImageGeomNeighborListArray&&) noexcept = default;
-  AppendImageGeomNeighborListArray& operator=(const AppendImageGeomNeighborListArray&) = delete;
-  AppendImageGeomNeighborListArray& operator=(AppendImageGeomNeighborListArray&&) noexcept = delete;
+  CombineImageGeom(const CombineImageGeom&) = default;
+  CombineImageGeom(CombineImageGeom&&) noexcept = default;
+  CombineImageGeom& operator=(const CombineImageGeom&) = delete;
+  CombineImageGeom& operator=(CombineImageGeom&&) noexcept = delete;
 
   void operator()() const
   {
-    convert();
-  }
-
-protected:
-  void convert() const
-  {
-    const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
-    AppendData<NeighborList<T>>(m_InputCellArray, m_DestCellArray, offset);
+    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+    {
+      using nListT = NeighborList<T>;
+      AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray1), dynamic_cast<nListT*>(m_DestCellArray), 0);
+      AppendData<NeighborList<T>>(dynamic_cast<nListT*>(m_InputCellArray2), dynamic_cast<nListT*>(m_DestCellArray), m_InputCellArray1->getSize());
+    }
+    if(m_ArrayType == IArray::ArrayType::DataArray)
+    {
+      using dArrayT = DataArray<T>;
+      AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray1), dynamic_cast<dArrayT*>(m_DestCellArray), 0);
+      AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray2), dynamic_cast<dArrayT*>(m_DestCellArray), m_InputCellArray1->getSize());
+    }
+    if(m_ArrayType == IArray::ArrayType::StringArray)
+    {
+      AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray1), dynamic_cast<StringArray*>(m_DestCellArray), 0);
+      AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray2), dynamic_cast<StringArray*>(m_DestCellArray), m_InputCellArray1->getSize());
+    }
   }
 
 private:
-  NeighborList<T>* m_InputCellArray = nullptr;
-  NeighborList<T>* m_DestCellArray = nullptr;
-  usize m_TupleOffset;
+  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+  IArray* m_InputCellArray1 = nullptr;
+  IArray* m_InputCellArray2 = nullptr;
+  IArray* m_DestCellArray = nullptr;
 };
 
-class AppendImageGeomStringArray
+template <bool UseCombine, bool UseAppend>
+struct TemplateTypeOptions
 {
-public:
-  AppendImageGeomStringArray(IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
-  : m_InputCellArray(dynamic_cast<StringArray*>(inputCellArray))
-  , m_DestCellArray(dynamic_cast<StringArray*>(destCellArray))
-  , m_TupleOffset(tupleOffset)
-  {
-  }
-
-  ~AppendImageGeomStringArray() = default;
-
-  AppendImageGeomStringArray(const AppendImageGeomStringArray&) = default;
-  AppendImageGeomStringArray(AppendImageGeomStringArray&&) noexcept = default;
-  AppendImageGeomStringArray& operator=(const AppendImageGeomStringArray&) = delete;
-  AppendImageGeomStringArray& operator=(AppendImageGeomStringArray&&) noexcept = delete;
-
-  void operator()() const
-  {
-    convert();
-  }
-
-protected:
-  void convert() const
-  {
-    const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
-    AppendData<StringArray>(m_InputCellArray, m_DestCellArray, offset);
-  }
-
-private:
-  StringArray* m_InputCellArray = nullptr;
-  StringArray* m_DestCellArray = nullptr;
-  usize m_TupleOffset;
+  static inline constexpr bool UsingCombine = UseCombine;
+  static inline constexpr bool UsingAppend = UseAppend;
 };
 
-template <typename T>
-class CombineImageGeomDataArray
+using Combine = TemplateTypeOptions<true,false>;
+using Append = TemplateTypeOptions<false,true>;
+
+void RunAppendBoolAppend(IArray* inputCellArray, IArray* destCellArray, usize tupleOffset)
 {
-public:
-  CombineImageGeomDataArray(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
-  : m_InputCellArray1(dynamic_cast<DataArray<T>*>(inputCellArray1))
-  , m_InputCellArray2(dynamic_cast<DataArray<T>*>(inputCellArray2))
-  , m_DestCellArray(dynamic_cast<DataArray<T>*>(destCellArray))
-  {
-  }
+  using dArrayT = DataArray<bool>;
+  const usize offset = tupleOffset * destCellArray->getNumberOfComponents();
+  AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray), dynamic_cast<dArrayT*>(destCellArray), offset);
+}
 
-  ~CombineImageGeomDataArray() = default;
-
-  CombineImageGeomDataArray(const CombineImageGeomDataArray&) = default;
-  CombineImageGeomDataArray(CombineImageGeomDataArray&&) noexcept = default;
-  CombineImageGeomDataArray& operator=(const CombineImageGeomDataArray&) = delete;
-  CombineImageGeomDataArray& operator=(CombineImageGeomDataArray&&) noexcept = delete;
-
-  void operator()() const
-  {
-    convert();
-  }
-
-protected:
-  void convert() const
-  {
-    AppendData<DataArray<T>>(m_InputCellArray1, m_DestCellArray, 0);
-    AppendData<DataArray<T>>(m_InputCellArray2, m_DestCellArray, m_InputCellArray1->getSize());
-  }
-
-private:
-  DataArray<T>* m_InputCellArray1 = nullptr;
-  DataArray<T>* m_InputCellArray2 = nullptr;
-  DataArray<T>* m_DestCellArray = nullptr;
-};
-
-template <typename T>
-class CombineImageGeomNeighborListArray
+void RunCombineBoolAppend(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
 {
-public:
-  CombineImageGeomNeighborListArray(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
-  : m_InputCellArray1(dynamic_cast<NeighborList<T>*>(inputCellArray1))
-  , m_InputCellArray2(dynamic_cast<NeighborList<T>*>(inputCellArray2))
-  , m_DestCellArray(dynamic_cast<NeighborList<T>*>(destCellArray))
-  {
-  }
+  using dArrayT = DataArray<bool>;
+  AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray1), dynamic_cast<dArrayT*>(destCellArray), 0);
+  AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray2), dynamic_cast<dArrayT*>(destCellArray), inputCellArray1->getSize());
+}
 
-  ~CombineImageGeomNeighborListArray() = default;
-
-  CombineImageGeomNeighborListArray(const CombineImageGeomNeighborListArray&) = default;
-  CombineImageGeomNeighborListArray(CombineImageGeomNeighborListArray&&) noexcept = default;
-  CombineImageGeomNeighborListArray& operator=(const CombineImageGeomNeighborListArray&) = delete;
-  CombineImageGeomNeighborListArray& operator=(CombineImageGeomNeighborListArray&&) noexcept = delete;
-
-  void operator()() const
-  {
-    convert();
-  }
-
-protected:
-  void convert() const
-  {
-    AppendData<NeighborList<T>>(m_InputCellArray1, m_DestCellArray, 0);
-    AppendData<NeighborList<T>>(m_InputCellArray2, m_DestCellArray, m_InputCellArray1->getSize());
-  }
-
-private:
-  NeighborList<T>* m_InputCellArray1 = nullptr;
-  NeighborList<T>* m_InputCellArray2 = nullptr;
-  NeighborList<T>* m_DestCellArray = nullptr;
-};
-
-class CombineImageGeomStringArray
+template<class TemplateTypeOptions = Combine, class ParallelRunnerT, class... ArgsT>
+void RunParallelFunction(IArray::ArrayType arrayType, IArray* destArray, ParallelRunnerT&& runner, ArgsT&&... args)
 {
-public:
-  CombineImageGeomStringArray(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
-  : m_InputCellArray1(dynamic_cast<StringArray*>(inputCellArray1))
-  , m_InputCellArray2(dynamic_cast<StringArray*>(inputCellArray2))
-  , m_DestCellArray(dynamic_cast<StringArray*>(destCellArray))
+  static_assert(!(TemplateTypeOptions::UsingCombine && TemplateTypeOptions::UsingAppend), "Cannot use both Append and Combine");
+  static_assert(!(!TemplateTypeOptions::UsingCombine && !TemplateTypeOptions::UsingAppend), "Cannot have Append and Combine false");
+
+  DataType dataType = DataType::int32;
+  if(arrayType == IArray::ArrayType::NeighborListArray)
   {
+    dataType = dynamic_cast<INeighborList*>(destArray)->getDataType();
+  }
+  if(arrayType == IArray::ArrayType::DataArray)
+  {
+    dataType = dynamic_cast<IDataArray*>(destArray)->getDataType();
+    if(dataType == DataType::boolean)
+    {
+      if constexpr(TemplateTypeOptions::UsingCombine)
+      {
+        RunCombineBoolAppend(destArray, std::forward<ArgsT>(args)...);
+      }
+      if constexpr(TemplateTypeOptions::UsingAppend)
+      {
+        RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
+      }
+      return;
+    }
   }
 
-  ~CombineImageGeomStringArray() = default;
-
-  CombineImageGeomStringArray(const CombineImageGeomStringArray&) = default;
-  CombineImageGeomStringArray(CombineImageGeomStringArray&&) noexcept = default;
-  CombineImageGeomStringArray& operator=(const CombineImageGeomStringArray&) = delete;
-  CombineImageGeomStringArray& operator=(CombineImageGeomStringArray&&) noexcept = delete;
-
-  void operator()() const
+  if constexpr(TemplateTypeOptions::UsingCombine)
   {
-    convert();
+    ExecuteParallelFunction<CombineImageGeom, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner),arrayType, destArray, std::forward<ArgsT>(args)...);
   }
-
-protected:
-  void convert() const
+  if constexpr(TemplateTypeOptions::UsingAppend)
   {
-    AppendData<StringArray>(m_InputCellArray1, m_DestCellArray, 0);
-    AppendData<StringArray>(m_InputCellArray2, m_DestCellArray, m_InputCellArray1->getSize());
+    ExecuteParallelFunction<AppendImageGeom, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner),arrayType, destArray, std::forward<ArgsT>(args)...);
   }
-
-private:
-  StringArray* m_InputCellArray1 = nullptr;
-  StringArray* m_InputCellArray2 = nullptr;
-  StringArray* m_DestCellArray = nullptr;
-};
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -317,35 +258,12 @@ Result<> AppendImageGeometryZSlice::operator()()
     if(m_InputValues->SaveAsNewGeometry)
     {
       m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
-      if(arrayType == IArray::ArrayType::NeighborListArray)
-      {
-        ExecuteParallelFunction<CombineImageGeomDataArray, NoBooleanType>(dynamic_cast<INeighborList*>(destDataArray)->getDataType(), taskRunner, destDataArray, inputDataArray, newDataArray);
-      }
-      if(arrayType == IArray::ArrayType::DataArray)
-      {
-        ExecuteParallelFunction<CombineImageGeomDataArray>(dynamic_cast<IDataArray*>(destDataArray)->getDataType(), taskRunner, destDataArray, inputDataArray, newDataArray);
-      }
-      if(arrayType == IArray::ArrayType::StringArray)
-      {
-        taskRunner.execute(CombineImageGeomStringArray(destDataArray, inputDataArray, newDataArray));
-      }
+      RunParallelFunction<Combine>(arrayType, destDataArray, taskRunner, inputDataArray, newDataArray);
     }
     else
     {
       m_MessageHandler(fmt::format("Appending Data Array {}", inputCellDataPath.createChildPath(name).toString()));
-
-      if(arrayType == IArray::ArrayType::NeighborListArray)
-      {
-        ExecuteParallelFunction<AppendImageGeomNeighborListArray, NoBooleanType>(dynamic_cast<INeighborList*>(destDataArray)->getDataType(), taskRunner, inputDataArray, destDataArray, tupleOffset);
-      }
-      if(arrayType == IArray::ArrayType::DataArray)
-      {
-        ExecuteParallelFunction<AppendImageGeomDataArray>(dynamic_cast<IDataArray*>(destDataArray)->getDataType(), taskRunner, inputDataArray, destDataArray, tupleOffset);
-      }
-      if(arrayType == IArray::ArrayType::StringArray)
-      {
-        taskRunner.execute(AppendImageGeomStringArray(inputDataArray, destDataArray, tupleOffset));
-      }
+      RunParallelFunction<Append>(arrayType, destDataArray, taskRunner, inputDataArray, newDataArray);
     }
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
