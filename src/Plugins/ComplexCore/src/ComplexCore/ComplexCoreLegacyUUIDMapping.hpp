@@ -91,6 +91,7 @@
 #include "ComplexCore/Filters/FindVertexToTriangleDistancesFilter.hpp"
 #include "ComplexCore/Filters/ApplyTransformationToGeometryFilter.hpp"
 #include "ComplexCore/Filters/ComputeFeatureRectFilter.hpp"
+#include "ComplexCore/Filters/FindLargestCrossSectionsFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -191,6 +192,7 @@ namespace complex
 	  {complex::Uuid::FromString("fcdde553-36b4-5731-bc88-fc499806cb4e").value(), complex::FilterTraits<FindVertexToTriangleDistancesFilter>::uuid}, // FindVertexToTriangleDistances
     {complex::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), complex::FilterTraits<ApplyTransformationToGeometryFilter>::uuid}, // ApplyTransformationToGeometry
     {complex::Uuid::FromString("6eda8dbf-dbd8-562a-ae1a-f2904157c189").value(), complex::FilterTraits<ComputeFeatureRectFilter>::uuid}, // ComputeFeatureRect
+    {complex::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), complex::FilterTraits<FindLargestCrossSectionsFilter>::uuid}, // FindLargestCrossSections
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

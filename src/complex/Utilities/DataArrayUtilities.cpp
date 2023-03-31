@@ -268,20 +268,21 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
   Result<> results = {};
   if(mismatchedFeatures)
   {
-    results.errors().push_back(Error{-5551, fmt::format("The largest Feature Id {} in the FeatureIds array is larger than the number of Features ({}) in the Feature Data array at path '{}'",
-                                                        largestFeature, numFeatures, arrayPath.toString())});
+    results = MakeErrorResult(-5551, fmt::format("The largest Feature Id {} in the FeatureIds array is larger than the number of Features ({}) in the Feature Data array at path '{}'", largestFeature,
+                                                 numFeatures, arrayPath.toString()));
   }
 
   if(largestFeature != (numFeatures - 1))
   {
-    results.errors().push_back(Error{-5552, fmt::format("The number of Features ({}) in the Feature Data array at path '{}' does not match the largest Feature Id in the FeatureIds array {}",
-                                                        numFeatures, arrayPath.toString(), largestFeature)});
+    results =
+        MergeResults(results, MakeErrorResult(-5552, fmt::format("The number of Features ({}) in the Feature Data array at path '{}' does not match the largest Feature Id in the FeatureIds array {}",
+                                                                 numFeatures, arrayPath.toString(), largestFeature)));
 
     const auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
     if(parentAM != nullptr)
     {
-      results.errors().push_back(Error{-5553, fmt::format("The input Attribute matrix at path '{}' has {} tuples which does not match the number of total features {}",
-                                                          arrayPath.getParent().toString(), parentAM->getNumTuples(), largestFeature + 1)});
+      results = MergeResults(results, MakeErrorResult(-5553, fmt::format("The input Attribute matrix at path '{}' has {} tuples which does not match the number of total features {}",
+                                                                         arrayPath.getParent().toString(), parentAM->getNumTuples(), largestFeature + 1)));
     }
   }
 
