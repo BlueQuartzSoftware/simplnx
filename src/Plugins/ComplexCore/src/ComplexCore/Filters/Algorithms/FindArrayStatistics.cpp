@@ -69,8 +69,6 @@ public:
     std::vector<T> summation(numCurrentFeatures, 0);
     usize progressCount = 0;
 
-    //  std::cout << "    Starting Min/Max/Summation loop..." << std::endl;
-
     usize progressIncrement = numTuples / 100;
 
     for(usize i = 0; i < numTuples; ++i)
