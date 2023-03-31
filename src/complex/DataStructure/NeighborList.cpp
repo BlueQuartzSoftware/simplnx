@@ -155,8 +155,26 @@ usize NeighborList<T>::getSize() const
 }
 
 template <typename T>
+usize NeighborList<T>::size() const
+{
+  usize total = 0;
+  for(usize dIdx = 0; dIdx < m_Array.size(); ++dIdx)
+  {
+    total += m_Array[dIdx]->size();
+  }
+  return total;
+}
+
+template <typename T>
+bool NeighborList<T>::empty() const
+{
+  return getNumberOfTuples() == 0;
+}
+
+template <typename T>
 void NeighborList<T>::setNumberOfComponents(int32 nc)
 {
+  throw std::runtime_error(fmt::format("{}:({}): NeighborLists do NOT have components", __FILE__, __LINE__));
 }
 
 template <typename T>
@@ -175,7 +193,6 @@ void NeighborList<T>::initializeWithZeros()
 template <typename T>
 int32 NeighborList<T>::resizeTotalElements(usize size)
 {
-  usize old = m_Array.size();
   m_Array.resize(size);
   setNumberOfTuples(size);
   if(size == 0)

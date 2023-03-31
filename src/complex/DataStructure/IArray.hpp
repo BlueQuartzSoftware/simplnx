@@ -34,6 +34,18 @@ public:
   virtual usize getSize() const = 0;
 
   /**
+   * @brief Returns the number of elements.
+   * @return usize
+   */
+  virtual usize size() const = 0;
+
+  /**
+   * @brief Returns if there are any elements in the array object
+   * @return bool, true if the DataArray has a size() == 0
+   */
+  virtual bool empty() const = 0;
+
+  /**
    * @brief Returns the tuple shape.
    * @return
    */
