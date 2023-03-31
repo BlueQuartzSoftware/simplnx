@@ -478,18 +478,6 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
     auto* summationArray = dynamic_cast<Float32Array*>(arrays[6]);
     auto* histArray = dynamic_cast<Float32Array*>(arrays[7]);
 
-    // ThreadSafeMessenger messenger(messageHandler, " Computing Statistics by Feature/Ensemble....");
-    // messenger.setTotalElements(numFeatures);
-    // messenger.setProgressIncrement(numFeatures / 100);
-
-    //    ParallelDataAlgorithm dataAlg;
-    //    dataAlg.setRange(0, numFeatures);
-    //    dataAlg.setParallelizationEnabled(true);
-    //    dataAlg.setGrainSize(500);
-    //    dataAlg.execute(FindArrayStatisticsByIndexImpl<T>(inputValues->FindLength, inputValues->FindMin, inputValues->FindMax, inputValues->FindMean, inputValues->FindStdDeviation,
-    //                                                      inputValues->FindSummation, inputValues->FindHistogram, inputValues->MinRange, inputValues->MaxRange, inputValues->UseFullRange,
-    //                                                      inputValues->NumBins, mask, featureIds, source, lengthArray, minArray, maxArray, meanArray, stdDevArray, summationArray, histArray,
-    //                                                      filter));
 #ifdef COMPLEX_ENABLE_MULTICORE
     tbb::simple_partitioner simplePartitioner;
     size_t grainSize = 500;
