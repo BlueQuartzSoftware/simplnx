@@ -60,7 +60,7 @@ public:
     usize m_MilliDelay = 1000;
 
     const std::atomic_bool& shouldCancel = m_Filter->getCancel();
-    const usize numTuples = m_FeatureIds->getNumberOfTuples(); // m_Messenger.getTotalElements();
+    const usize numTuples = m_FeatureIds->getNumberOfTuples(); 
     const usize numCurrentFeatures = end - start;
 
     std::vector<uint64> length(numCurrentFeatures, 0);
