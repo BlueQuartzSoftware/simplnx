@@ -15,7 +15,8 @@ namespace
 template <class K>
 void AppendData(K* inputArray, K* destArray, usize offset)
 {
-  for(usize i = 0; i < inputArray->getNumberOfTuples(); ++i)
+  const usize numElements = inputArray->getNumberOfTuples() * inputArray->getNumberOfComponents();
+  for(usize i = 0; i < numElements; ++i)
   {
     auto value = (*inputArray)[i]; // make sure we are getting a copy not a ref
     (*destArray)[offset + i] = value;
@@ -25,7 +26,6 @@ void AppendData(K* inputArray, K* destArray, usize offset)
 template <typename T>
 class AppendImageGeom
 {
-public:
 public:
   AppendImageGeom(IArray::ArrayType arrayType, IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
   : m_ArrayType(arrayType)
@@ -92,8 +92,10 @@ public:
     if(m_ArrayType == IArray::ArrayType::NeighborListArray)
     {
       using nListT = NeighborList<T>;
-      AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray1), dynamic_cast<nListT*>(m_DestCellArray), 0);
-      AppendData<NeighborList<T>>(dynamic_cast<nListT*>(m_InputCellArray2), dynamic_cast<nListT*>(m_DestCellArray), m_InputCellArray1->getSize());
+      auto* destArray = dynamic_cast<nListT*>(m_DestCellArray);
+      destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
+      AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray1), destArray, 0);
+      AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray2), destArray, m_InputCellArray1->getNumberOfTuples());
     }
     if(m_ArrayType == IArray::ArrayType::DataArray)
     {
