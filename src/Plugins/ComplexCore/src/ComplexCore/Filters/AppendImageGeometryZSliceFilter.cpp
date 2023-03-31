@@ -191,13 +191,14 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
           {-8209, fmt::format("Cannot append data from input data array with {} components to destination data array with {} components.", srcNumComps, numComps)});
       continue;
     }
-    const usize srcNumElements = dataArray1->getSize();
-    const usize numElements = dataArray2->getSize();
+    const usize srcNumElements = dataArray1->getNumberOfTuples() * srcNumComps;
+    const usize numElements = numNewCellDataTuples * numComps;
     if(srcNumElements + tupleOffset * numComps > numElements)
     {
-      resultOutputActions.warnings().push_back({-8210, fmt::format("Cannot append data from input data array with {} total elements to destination data array with {} total elements starting at tuple "
-                                                                   "{} because there are not enough elements in the destination array.",
-                                                                   srcNumElements, numElements, tupleOffset)});
+      resultOutputActions.warnings().push_back(
+          {-8210, fmt::format("Cannot append data from input data array {} with {} total elements to destination data array with {} total elements starting at tuple "
+                              "{} because there are not enough elements in the destination array.",
+                              name, srcNumElements, numElements, tupleOffset)});
       continue;
     }
 
