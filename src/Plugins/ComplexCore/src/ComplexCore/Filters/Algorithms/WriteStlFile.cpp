@@ -117,7 +117,7 @@ Result<> WriteStlFile::operator()()
     if(f == nullptr)
     {
       fclose(f);
-      return {MakeWarningVoidResult(-27874, fmt::format("Error Writing STL File. Unable to create file at path {}.", filename))};
+      return {MakeWarningVoidResult(-27875, fmt::format("Error Writing STL File. Unable to create file at path {}.", filename))};
     }
 
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", spin));
