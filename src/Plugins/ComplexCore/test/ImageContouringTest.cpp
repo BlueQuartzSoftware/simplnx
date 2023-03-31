@@ -69,12 +69,12 @@ TEST_CASE("ComplexCore::Image Contouring Valid Execution", "[ComplexCore][ImageC
     const auto& kNxVertArray = newContourTriGeom.getVerticesRef();
     const auto& kExemplarsVertArray = exemplarContourTriGeom.getVerticesRef();
 
-    CompareDataArrays<float32>(kExemplarsVertArray, kNxVertArray);
+    CompareDataArrays<IGeometry::SharedVertexList::value_type>(kExemplarsVertArray, kNxVertArray);
 
     const auto& kNxTriArray = newContourTriGeom.getFacesRef();
     const auto& kExemplarsTriArray = exemplarContourTriGeom.getFacesRef();
 
-    CompareDataArrays<usize>(kExemplarsTriArray, kNxTriArray);
+    CompareDataArrays<IGeometry::MeshIndexType>(kExemplarsTriArray, kNxTriArray);
 
     const auto& kNxNormalsArray = dataStructure.getDataRefAs<Float32Array>(ContourTest::k_NewNormals);
     const auto& kExemplarsNormalsArray = dataStructure.getDataRefAs<Float32Array>(ContourTest::k_ExemplarNormals);
