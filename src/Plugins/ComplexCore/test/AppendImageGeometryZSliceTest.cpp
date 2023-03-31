@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/AppendImageGeometryZSliceFilter.hpp"
@@ -23,12 +24,13 @@ const DataPath k_InvalidTestGeometryPath1({"Image2dDataContainer"});
 const DataPath k_InvalidTestGeometryPath2({"Resampled_2D_ImageGeom"});
 const DataPath k_InvalidTestGeometryPath3({"Resampled_3D_ImageGeom"});
 const DataPath k_SmallIN100Path({k_SmallIN100});
+
 } // namespace
 
 TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution", "[ComplexCore][AppendImageGeometryZSliceFilter]")
 {
   // Read in starting/exemplar image geometry
-  auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
+  const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
   // crop input geometry down to bottom half & save as new geometry
@@ -65,6 +67,54 @@ TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
+  // Create a neighborlist and string array for the original input geometry and manually divide them up to the two cropped halves since CropImageGeometry only supports IDataArrays
+  {
+    const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(k_DataContainerPath.createChildPath(k_CellData));
+    const usize numTuples = cellDataAM.getNumTuples();
+
+    std::vector<std::string> stringArrayValues(numTuples);
+    auto* neighborList = NeighborList<float32>::Create(dataStructure, "NeighborList", numTuples, cellDataAM.getId());
+    neighborList->resizeTotalElements(numTuples);
+    for(usize i = 0; i < numTuples; ++i)
+    {
+      const float32 factor = static_cast<float32>(i) * 0.001;
+      std::vector<float32> list = {factor * 117, factor * 875, factor * 1035, factor * 3905, factor * 4214};
+      neighborList->setList(i, std::make_shared<std::vector<float32>>(list));
+      stringArrayValues[i] = "String_" + StringUtilities::number(factor);
+    }
+
+    const auto* stringArray = StringArray::CreateWithValues(dataStructure, "StringArray", stringArrayValues, cellDataAM.getId());
+
+    const auto& croppedTopHalfAM = dataStructure.getDataRefAs<AttributeMatrix>(k_CroppedTopHalfPath.createChildPath(k_CellData));
+    const auto& croppedBottomHalfAM = dataStructure.getDataRefAs<AttributeMatrix>(k_CroppedBottomHalfPath.createChildPath(k_CellData));
+    const auto numTuplesTop = croppedTopHalfAM.getNumTuples();
+    const auto numTuplesBottom = croppedBottomHalfAM.getNumTuples();
+    REQUIRE(numTuplesTop + numTuplesBottom == numTuples);
+
+    auto* neighborListBottom = NeighborList<float32>::Create(dataStructure, "NeighborList", numTuplesBottom, croppedBottomHalfAM.getId());
+    neighborListBottom->resizeTotalElements(numTuplesBottom);
+    std::vector<std::string> stringValuesBottom(numTuplesBottom);
+    for(usize i = 0; i < numTuplesBottom; ++i)
+    {
+      std::vector<float32> list = neighborList->copyOfList(i);
+      neighborListBottom->setList(i, std::make_shared<std::vector<float32>>(list));
+      std::string strVal = stringArray->at(i);
+      stringValuesBottom[i] = strVal;
+    }
+    const auto* stringArrayBottom = StringArray::CreateWithValues(dataStructure, "StringArray", stringValuesBottom, croppedBottomHalfAM.getId());
+    auto* neighborListTop = NeighborList<float32>::Create(dataStructure, "NeighborList", numTuplesTop, croppedTopHalfAM.getId());
+    neighborListTop->resizeTotalElements(numTuplesTop);
+    std::vector<std::string> stringValueTop(numTuplesTop);
+    for(usize i = 0; i < numTuplesTop; ++i)
+    {
+      usize adjustedIndex = numTuplesBottom + i;
+      std::vector<float32> list = neighborList->copyOfList(adjustedIndex);
+      neighborListTop->setList(i, std::make_shared<std::vector<float32>>(list));
+      std::string strVal = stringArray->at(adjustedIndex);
+      stringValueTop[i] = strVal;
+    }
+    const auto* stringArrayTop = StringArray::CreateWithValues(dataStructure, "StringArray", stringValueTop, croppedTopHalfAM.getId());
+  }
   // Append the 2 cropped geometries together and compare with the original input geometry
   {
     AppendImageGeometryZSliceFilter filter;
@@ -90,7 +140,11 @@ TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
     auto renameResult = renameFilter.execute(dataStructure, renameArgs);
     COMPLEX_RESULT_REQUIRE_VALID(renameResult.result)
 
-    CompareExemplarToGeneratedData(dataStructure, dataStructure, k_AppendedGeometryPath.createChildPath(k_CellData), k_DataContainer);
+    const DataPath appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
+    const usize numAppendedArrays = dataStructure.getDataRefAs<AttributeMatrix>(appendedCellDataPath).getSize();
+    REQUIRE(numAppendedArrays == 8);
+
+    CompareExemplarToGeneratedData(dataStructure, dataStructure, appendedCellDataPath, k_DataContainer);
   }
 }
 
