@@ -184,9 +184,9 @@ public:
    * Any one of the write* methods must be called before adding attributes to
    * the HDF5 dataset.
    * @param text
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType writeString(const std::string& text);
+  Result<> writeString(const std::string& text);
 
   /**
    * @brief Writes a vector of strings to the dataset. Returns the HDF5 error,
@@ -195,9 +195,9 @@ public:
    * Any one of the write* methods must be called before adding attributes to
    * the HDF5 dataset.
    * @param text
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType writeVectorOfStrings(std::vector<std::string>& text);
+  Result<> writeVectorOfStrings(std::vector<std::string>& text);
 
   /**
    * @brief Writes a span of values to the dataset. Returns the HDF5 error,
@@ -208,10 +208,10 @@ public:
    * @tparam T
    * @param dims
    * @param values
-   * @return ErrorType
+   * @return Result<>
    */
   template <typename T>
-  ErrorType writeSpan(const DimsType& dims, nonstd::span<const T> values);
+  Result<> writeSpan(const DimsType& dims, nonstd::span<const T> values);
 
   /**
    * @brief Writes a span of values to the dataset. Returns the HDF5 error,
@@ -222,10 +222,10 @@ public:
    * @tparam T
    * @param dims
    * @param values
-   * @return ErrorType
+   * @return Result<>
    */
   template <typename T>
-  ErrorType writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkDims, nonstd::span<const hsize_t> offset);
+  Result<> writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkDims, nonstd::span<const hsize_t> offset);
 
   template <typename T>
   void createOrOpenDataset(const DimsType& dimensions, IdType propertiesId = 0)
@@ -270,9 +270,9 @@ protected:
   /**
    * @brief Finds and deletes any existing attribute with the current name.
    * Returns any error that might occur when deleting the attribute.
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType findAndDeleteAttribute();
+  Result<> findAndDeleteAttribute();
 
   /**
    * @brief Opens the target HDF5 dataset or creates a new one using the given
@@ -321,27 +321,27 @@ extern template bool DatasetIO::readChunkIntoSpan<uint64_t>(nonstd::span<uint64_
 extern template bool DatasetIO::readChunkIntoSpan<float>(nonstd::span<float>, nonstd::span<const hsize_t>) const;
 extern template bool DatasetIO::readChunkIntoSpan<double>(nonstd::span<double>, nonstd::span<const hsize_t>) const;
 
-extern template ErrorType DatasetIO::writeSpan<int8_t>(const DimsType& dims, nonstd::span<const int8_t>);
-extern template ErrorType DatasetIO::writeSpan<int16_t>(const DimsType& dims, nonstd::span<const int16_t>);
-extern template ErrorType DatasetIO::writeSpan<int32_t>(const DimsType& dims, nonstd::span<const int32_t>);
-extern template ErrorType DatasetIO::writeSpan<int64_t>(const DimsType& dims, nonstd::span<const int64_t>);
-extern template ErrorType DatasetIO::writeSpan<uint8_t>(const DimsType& dims, nonstd::span<const uint8_t>);
-extern template ErrorType DatasetIO::writeSpan<uint16_t>(const DimsType& dims, nonstd::span<const uint16_t>);
-extern template ErrorType DatasetIO::writeSpan<uint32_t>(const DimsType& dims, nonstd::span<const uint32_t>);
-extern template ErrorType DatasetIO::writeSpan<uint64_t>(const DimsType& dims, nonstd::span<const uint64_t>);
-extern template ErrorType DatasetIO::writeSpan<float>(const DimsType& dims, nonstd::span<const float>);
-extern template ErrorType DatasetIO::writeSpan<double>(const DimsType& dims, nonstd::span<const double>);
+extern template Result<> DatasetIO::writeSpan<int8_t>(const DimsType& dims, nonstd::span<const int8_t>);
+extern template Result<> DatasetIO::writeSpan<int16_t>(const DimsType& dims, nonstd::span<const int16_t>);
+extern template Result<> DatasetIO::writeSpan<int32_t>(const DimsType& dims, nonstd::span<const int32_t>);
+extern template Result<> DatasetIO::writeSpan<int64_t>(const DimsType& dims, nonstd::span<const int64_t>);
+extern template Result<> DatasetIO::writeSpan<uint8_t>(const DimsType& dims, nonstd::span<const uint8_t>);
+extern template Result<> DatasetIO::writeSpan<uint16_t>(const DimsType& dims, nonstd::span<const uint16_t>);
+extern template Result<> DatasetIO::writeSpan<uint32_t>(const DimsType& dims, nonstd::span<const uint32_t>);
+extern template Result<> DatasetIO::writeSpan<uint64_t>(const DimsType& dims, nonstd::span<const uint64_t>);
+extern template Result<> DatasetIO::writeSpan<float>(const DimsType& dims, nonstd::span<const float>);
+extern template Result<> DatasetIO::writeSpan<double>(const DimsType& dims, nonstd::span<const double>);
 
-extern template ErrorType DatasetIO::writeChunk<int8_t>(const DimsType& dims, nonstd::span<const int8_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<int16_t>(const DimsType& dims, nonstd::span<const int16_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<int32_t>(const DimsType& dims, nonstd::span<const int32_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<int64_t>(const DimsType& dims, nonstd::span<const int64_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<uint8_t>(const DimsType& dims, nonstd::span<const uint8_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<uint16_t>(const DimsType& dims, nonstd::span<const uint16_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<uint32_t>(const DimsType& dims, nonstd::span<const uint32_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<uint64_t>(const DimsType& dims, nonstd::span<const uint64_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<float>(const DimsType& dims, nonstd::span<const float> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<double>(const DimsType& dims, nonstd::span<const double> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<bool>(const DimsType& dims, nonstd::span<const bool> values, const DimsType&, nonstd::span<const hsize_t> offset);
-extern template ErrorType DatasetIO::writeChunk<char>(const DimsType& dims, nonstd::span<const char> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<int8_t>(const DimsType& dims, nonstd::span<const int8_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<int16_t>(const DimsType& dims, nonstd::span<const int16_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<int32_t>(const DimsType& dims, nonstd::span<const int32_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<int64_t>(const DimsType& dims, nonstd::span<const int64_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<uint8_t>(const DimsType& dims, nonstd::span<const uint8_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<uint16_t>(const DimsType& dims, nonstd::span<const uint16_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<uint32_t>(const DimsType& dims, nonstd::span<const uint32_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<uint64_t>(const DimsType& dims, nonstd::span<const uint64_t> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<float>(const DimsType& dims, nonstd::span<const float> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<double>(const DimsType& dims, nonstd::span<const double> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<bool>(const DimsType& dims, nonstd::span<const bool> values, const DimsType&, nonstd::span<const hsize_t> offset);
+extern template Result<> DatasetIO::writeChunk<char>(const DimsType& dims, nonstd::span<const char> values, const DimsType&, nonstd::span<const hsize_t> offset);
 } // namespace complex::HDF5

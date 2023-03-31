@@ -84,11 +84,11 @@ Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, complex::HDF5
 Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStructure, complex::HDF5::GroupWriter& groupWriter)
 {
   auto idAttribute = groupWriter.createAttribute(Constants::k_NextIdTag);
-  complex::HDF5::ErrorType err = idAttribute.writeValue(dataStructure.getNextId());
-  if(err < 0)
+  auto result = idAttribute.writeValue(dataStructure.getNextId());
+  if(result.invalid())
   {
     std::string ss = "Failed to write DataStructure to HDF5 group";
-    return MakeErrorResult(err, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   return writeDataMap(dataStructure.getDataMap(), groupWriter);
@@ -97,11 +97,10 @@ Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStruct
 Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, complex::HDF5::GroupWriter& parentGroup)
 {
   auto objectPath = getPathForObjectId(dataObject->getId());
-  auto error = parentGroup.createLink(objectPath);
-  if(error < 0)
+  auto result = parentGroup.createLink(objectPath);
+  if(result.invalid())
   {
-    const std::string ss = fmt::format("Failed to create data link at path {}", objectPath);
-    return MakeErrorResult(error, ss);
+    return result;
   }
 
   // NeighborList extra data link
@@ -109,11 +108,10 @@ Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, 
   {
     auto numNeighborsName = neighborList->getNumNeighborsArrayName();
     auto dataPath = getPathForObjectSibling(dataObject->getId(), numNeighborsName);
-    error = parentGroup.createLink(dataPath);
-    if(error < 0)
+    result = parentGroup.createLink(dataPath);
+    if(result.invalid())
     {
-      const std::string ss = fmt::format("Failed to create data link at path {}", dataPath);
-      return MakeErrorResult(error, ss);
+      return result;
     }
   }
   return {};

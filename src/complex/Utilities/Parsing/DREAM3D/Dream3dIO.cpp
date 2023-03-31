@@ -1395,26 +1395,26 @@ Result<DREAM3D::FileData> DREAM3D::ReadFile(const std::filesystem::path& path)
   return {std::move(fileData)};
 }
 
-complex::HDF5::ErrorType WritePipeline(complex::HDF5::FileWriter& fileWriter, const Pipeline& pipeline)
+Result<> WritePipeline(complex::HDF5::FileWriter& fileWriter, const Pipeline& pipeline)
 {
   if(!fileWriter.isValid())
   {
-    return -1;
+    return MakeErrorResult(-100, "Cannot Write to Invalid FileWriter");
   }
 
   auto pipelineGroupWriter = fileWriter.createGroupWriter(k_PipelineJsonTag);
   auto versionAttribute = pipelineGroupWriter.createAttribute(k_PipelineVersionTag);
-  auto errorCode = versionAttribute.writeValue<DREAM3D::PipelineVersionType>(k_CurrentPipelineVersion);
-  if(errorCode < 0)
+  auto result = versionAttribute.writeValue<DREAM3D::PipelineVersionType>(k_CurrentPipelineVersion);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
   auto nameAttribute = pipelineGroupWriter.createAttribute(k_PipelineNameTag);
-  errorCode = nameAttribute.writeString(pipeline.getName());
-  if(errorCode < 0)
+  result = nameAttribute.writeString(pipeline.getName());
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
   auto pipelineDatasetWriter = pipelineGroupWriter.createDatasetWriter(k_PipelineJsonTag);
@@ -1422,42 +1422,36 @@ complex::HDF5::ErrorType WritePipeline(complex::HDF5::FileWriter& fileWriter, co
   return pipelineDatasetWriter.writeString(pipelineString);
 }
 
-complex::HDF5::ErrorType WriteDataStructure(complex::HDF5::FileWriter& fileWriter, const DataStructure& dataStructure)
+Result<> WriteDataStructure(complex::HDF5::FileWriter& fileWriter, const DataStructure& dataStructure)
 {
-  Result<> result = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-  if(result.invalid())
-  {
-    return result.errors()[0].code;
-  }
-  return 0;
+  return HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
 }
 
-complex::HDF5::ErrorType WriteFileVersion(complex::HDF5::FileWriter& fileWriter)
+Result<> WriteFileVersion(complex::HDF5::FileWriter& fileWriter)
 {
   auto fileVersionAttribute = fileWriter.createAttribute(k_FileVersionTag);
   return fileVersionAttribute.writeString(k_CurrentFileVersion);
 }
 
-complex::HDF5::ErrorType DREAM3D::WriteFile(complex::HDF5::FileWriter& fileWriter, const FileData& fileData)
+Result<> DREAM3D::WriteFile(complex::HDF5::FileWriter& fileWriter, const FileData& fileData)
 {
   return WriteFile(fileWriter, fileData.first, fileData.second);
 }
 
-complex::HDF5::ErrorType DREAM3D::WriteFile(complex::HDF5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure)
+Result<> DREAM3D::WriteFile(complex::HDF5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure)
 {
-  auto errorCode = WriteFileVersion(fileWriter);
-  if(errorCode < 0)
+  auto result = WriteFileVersion(fileWriter);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
 
-  errorCode = WritePipeline(fileWriter, pipeline);
-  if(errorCode < 0)
+  result = WritePipeline(fileWriter, pipeline);
+  if(result.invalid())
   {
-    return errorCode;
+    return result;
   }
-  errorCode = WriteDataStructure(fileWriter, dataStructure);
-  return errorCode;
+  return WriteDataStructure(fileWriter, dataStructure);
 }
 
 Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf)
@@ -1470,10 +1464,10 @@ Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructu
 
   complex::HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
 
-  complex::HDF5::ErrorType error = WriteFile(fileWriter, pipeline, dataStructure);
-  if(error < 0)
+  auto result = WriteFile(fileWriter, pipeline, dataStructure);
+  if(result.invalid())
   {
-    return MakeErrorResult(error, fmt::format("DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error"));
+    return MakeErrorResult(result.errors()[0].code, fmt::format("DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error"));
   }
 
   if(writeXdmf)

@@ -280,8 +280,8 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
     Result<HDF5::FileWriter> result = HDF5::FileWriter::CreateFile(GetIODataPath());
     REQUIRE(result.valid());
 
-    auto errorCode = DREAM3D::WriteFile(result.value(), fileData);
-    REQUIRE(errorCode >= 0);
+    auto writeResult = DREAM3D::WriteFile(result.value(), fileData);
+    COMPLEX_RESULT_REQUIRE_VALID(writeResult);
   }
 
   // Read .dream3d file

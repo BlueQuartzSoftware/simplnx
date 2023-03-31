@@ -3,6 +3,8 @@
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include "fmt/format.h"
+
 #include <H5Apublic.h>
 
 #include <iostream>
@@ -87,7 +89,7 @@ bool DatasetIO::open()
   return getId() > 0;
 }
 
-ErrorType DatasetIO::findAndDeleteAttribute()
+Result<> DatasetIO::findAndDeleteAttribute()
 {
   hsize_t attributeNum = 0;
   int32_t hasAttribute = H5Aiterate(getParentId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getName().c_str()));
@@ -98,11 +100,11 @@ ErrorType DatasetIO::findAndDeleteAttribute()
     herr_t error = H5Adelete(getParentId(), getName().c_str());
     if(error < 0)
     {
-      std::cout << "Error Deleting Attribute '" << getName() << "' from Object '" << getParentName() << "'" << std::endl;
-      return error;
+      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getName(), getParentName());
+      return MakeErrorResult(error, ss);
     }
   }
-  return 0;
+  return {};
 }
 
 void DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType propertiesId)
@@ -492,25 +494,24 @@ std::vector<hsize_t> DatasetIO::getChunkDimensions() const
 }
 
 template <typename T>
-ErrorType DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values)
+Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values)
 {
-  herr_t returnError = 0;
+  Result<> returnError = {};
+  herr_t error = 0;
   int32_t rank = static_cast<int32_t>(dims.size());
   hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
-    std::cout << "dataType was unknown" << std::endl;
-    return -1;
+    return MakeErrorResult(-105, "DataType was unknown");
   }
 
   hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
   if(dataspaceId >= 0)
   {
-    herr_t error = findAndDeleteAttribute();
-    if(error < 0)
+    Result<> result = findAndDeleteAttribute();
+    if(result.invalid())
     {
-      std::cout << "Error Removing Existing Attribute" << std::endl;
-      returnError = error;
+      returnError = MakeErrorResult(result.errors()[0].code, "Error Removing Existing Attribute");
     }
     else
     {
@@ -523,51 +524,48 @@ ErrorType DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> value
         error = H5Dwrite(getId(), dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
         if(error < 0)
         {
-          std::cout << "Error Writing data" << std::endl;
-          returnError = error;
+          returnError = MakeErrorResult(error, "Error Writing Data");
         }
       }
       else
       {
-        std::cout << "Error Creating Dataset" << std::endl;
-        returnError = static_cast<herr_t>(getId());
+        returnError = MakeErrorResult(getId(), "Error Creating Dataset");
       }
     }
     /* Close the dataspace. */
     error = H5Sclose(dataspaceId);
     if(error < 0)
     {
-      std::cout << "Error Closing Dataspace" << std::endl;
-      returnError = error;
+      returnError = MakeErrorResult(error, "Error Closing Dataspace");
     }
   }
   else
   {
-    returnError = static_cast<herr_t>(dataspaceId);
+    returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
   }
   return returnError;
 }
 
 template <typename T>
-ErrorType DatasetIO::writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkShape, nonstd::span<const hsize_t> offset)
+Result<> DatasetIO::writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkShape, nonstd::span<const hsize_t> offset)
 {
-  herr_t returnError = 0;
+  Result<> returnError = {};
+  herr_t error = 0;
   int32_t rank = static_cast<int32_t>(dims.size());
   hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
-    std::cout << "dataType was unknown" << std::endl;
-    return -1;
+    return MakeErrorResult(-100, "DataType was unknown");
   }
 
   hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
   if(dataspaceId >= 0)
   {
-    herr_t error = findAndDeleteAttribute();
-    if(error < 0)
+    Result<> result = findAndDeleteAttribute();
+    if(result.invalid())
     {
       std::cout << "Error Removing Existing Attribute" << std::endl;
-      returnError = error;
+      returnError = MakeErrorResult(result.errors()[0].code, "Error Removing Existing Attribute");
     }
     else
     {
@@ -587,42 +585,39 @@ ErrorType DatasetIO::writeChunk(const DimsType& dims, nonstd::span<const T> valu
         error = H5Dwrite_chunk(getId(), H5P_DEFAULT, H5P_DEFAULT, offset.data(), size, data);
         if(error < 0)
         {
-          std::cout << "Error Writing Attribute" << std::endl;
-          returnError = error;
+          returnError = MakeErrorResult(error, "Error Writing Attribute");
         }
       }
       else
       {
-        std::cout << "Error Creating Dataset Chunk" << std::endl;
-        returnError = static_cast<herr_t>(getId());
+        returnError = MakeErrorResult(getId(), "Error Creating Dataset Chunk");
       }
     }
     /* Close the dataspace. */
     error = H5Sclose(dataspaceId);
     if(error < 0)
     {
-      std::cout << "Error Closing Dataspace" << std::endl;
-      returnError = error;
+      returnError = MakeErrorResult(error, "Error Closing Dataspace");
     }
   }
   else
   {
-    returnError = static_cast<herr_t>(dataspaceId);
+    returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
   }
   return returnError;
 }
 
-ErrorType DatasetIO::writeString(const std::string& text)
+Result<> DatasetIO::writeString(const std::string& text)
 {
   if(!isValid())
   {
-    return -1;
+    return MakeErrorResult(-100, "Cannot Write to Invalid DatasetIO");
   }
 
   closeHdf5();
 
   herr_t error = 0;
-  herr_t returnError = 0;
+  Result<> returnError = {};
 
   /* create a string data type */
   hid_t typeId;
@@ -646,14 +641,13 @@ ErrorType DatasetIO::writeString(const std::string& text)
               error = H5Dwrite(getId(), typeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, text.c_str());
               if(error < 0)
               {
-                std::cout << "Error Writing String Data" << std::endl;
-                returnError = error;
+                returnError = MakeErrorResult(error, "Error Writing String Data");
               }
             }
           }
           else
           {
-            returnError = 0;
+            returnError = {};
           }
         }
         H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)
@@ -664,18 +658,18 @@ ErrorType DatasetIO::writeString(const std::string& text)
   return returnError;
 }
 
-ErrorType DatasetIO::writeVectorOfStrings(std::vector<std::string>& text)
+Result<> DatasetIO::writeVectorOfStrings(std::vector<std::string>& text)
 {
   if(!isValid())
   {
-    return -1;
+    return MakeErrorResult(-100, "Cannot Write to Invalid DatasetIO");
   }
 
   hid_t dataspaceID = -1;
   hid_t memSpace = -1;
   hid_t datatype = -1;
   herr_t error = -1;
-  herr_t returnError = 0;
+  Result<> returnError = {};
 
   std::array<hsize_t, 1> dims = {text.size()};
   if((dataspaceID = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr)) >= 0)
@@ -707,7 +701,7 @@ ErrorType DatasetIO::writeVectorOfStrings(std::vector<std::string>& text)
           if(error < 0)
           {
             std::cout << "Error Writing String Data: " __FILE__ << "(" << __LINE__ << ")" << std::endl;
-            returnError = error;
+            returnError = MakeErrorResult(error, "Error Writing String Data");
           }
         }
       }
@@ -764,27 +758,27 @@ template COMPLEX_EXPORT bool DatasetIO::readChunkIntoSpan<size_t>(nonstd::span<s
 template COMPLEX_EXPORT bool DatasetIO::readChunkIntoSpan<float>(nonstd::span<float>, nonstd::span<const hsize_t>) const;
 template COMPLEX_EXPORT bool DatasetIO::readChunkIntoSpan<double>(nonstd::span<double>, nonstd::span<const hsize_t>) const;
 
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<int8_t>(const DimsType&, nonstd::span<const int8_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<int16_t>(const DimsType&, nonstd::span<const int16_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<int32_t>(const DimsType&, nonstd::span<const int32_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<int64_t>(const DimsType&, nonstd::span<const int64_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<uint8_t>(const DimsType&, nonstd::span<const uint8_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<uint16_t>(const DimsType&, nonstd::span<const uint16_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<uint32_t>(const DimsType&, nonstd::span<const uint32_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<uint64_t>(const DimsType&, nonstd::span<const uint64_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<float>(const DimsType&, nonstd::span<const float>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeSpan<double>(const DimsType&, nonstd::span<const double>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<int8_t>(const DimsType&, nonstd::span<const int8_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<int16_t>(const DimsType&, nonstd::span<const int16_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<int32_t>(const DimsType&, nonstd::span<const int32_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<int64_t>(const DimsType&, nonstd::span<const int64_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<uint8_t>(const DimsType&, nonstd::span<const uint8_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<uint16_t>(const DimsType&, nonstd::span<const uint16_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<uint32_t>(const DimsType&, nonstd::span<const uint32_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<uint64_t>(const DimsType&, nonstd::span<const uint64_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<float>(const DimsType&, nonstd::span<const float>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeSpan<double>(const DimsType&, nonstd::span<const double>);
 
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<int8_t>(const DimsType&, nonstd::span<const int8_t>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<int16_t>(const DimsType&, nonstd::span<const int16_t>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<int32_t>(const DimsType&, nonstd::span<const int32_t>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<int64_t>(const DimsType&, nonstd::span<const int64_t>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<uint8_t>(const DimsType&, nonstd::span<const uint8_t>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<uint16_t>(const DimsType&, nonstd::span<const uint16_t>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<uint32_t>(const DimsType&, nonstd::span<const uint32_t>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<uint64_t>(const DimsType&, nonstd::span<const uint64_t>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<float>(const DimsType&, nonstd::span<const float>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<double>(const DimsType&, nonstd::span<const double>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<bool>(const DimsType&, nonstd::span<const bool>, const DimsType&, nonstd::span<const hsize_t>);
-template COMPLEX_EXPORT ErrorType DatasetIO::writeChunk<char>(const DimsType&, nonstd::span<const char>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<int8_t>(const DimsType&, nonstd::span<const int8_t>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<int16_t>(const DimsType&, nonstd::span<const int16_t>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<int32_t>(const DimsType&, nonstd::span<const int32_t>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<int64_t>(const DimsType&, nonstd::span<const int64_t>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<uint8_t>(const DimsType&, nonstd::span<const uint8_t>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<uint16_t>(const DimsType&, nonstd::span<const uint16_t>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<uint32_t>(const DimsType&, nonstd::span<const uint32_t>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<uint64_t>(const DimsType&, nonstd::span<const uint64_t>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<float>(const DimsType&, nonstd::span<const float>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<double>(const DimsType&, nonstd::span<const double>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<bool>(const DimsType&, nonstd::span<const bool>, const DimsType&, nonstd::span<const hsize_t>);
+template COMPLEX_EXPORT Result<> DatasetIO::writeChunk<char>(const DimsType&, nonstd::span<const char>, const DimsType&, nonstd::span<const hsize_t>);
 } // namespace complex::HDF5

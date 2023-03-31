@@ -150,11 +150,11 @@ public:
       return flattenedResult;
     }
     auto linkedDatasetAttribute = datasetWriter.createAttribute("Linked NumNeighbors Dataset");
-    auto err = linkedDatasetAttribute.writeString(neighborList.getNumNeighborsArrayName());
-    if(err < 0)
+    result = linkedDatasetAttribute.writeString(neighborList.getNumNeighborsArrayName());
+    if(result.invalid())
     {
       std::string ss = "Failed to write NeighborList dataset data name";
-      return MakeErrorResult(err, ss);
+      return MakeErrorResult(result.errors()[0].code, ss);
     }
     return WriteObjectAttributes(dataStructureWriter, neighborList, datasetWriter, importable);
   }

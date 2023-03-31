@@ -2,6 +2,8 @@
 
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include "fmt/format.h"
+
 #include <iostream>
 
 #include <H5Apublic.h>
@@ -96,7 +98,7 @@ void DatasetWriter::closeHdf5()
   }
 }
 
-ErrorType DatasetWriter::findAndDeleteAttribute()
+Result<> DatasetWriter::findAndDeleteAttribute()
 {
   hsize_t attributeNum = 0;
   int32_t hasAttribute = H5Aiterate(getParentId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getName().c_str()));
@@ -107,11 +109,11 @@ ErrorType DatasetWriter::findAndDeleteAttribute()
     herr_t error = H5Adelete(getParentId(), getName().c_str());
     if(error < 0)
     {
-      std::cout << "Error Deleting Attribute '" << getName() << "' from Object '" << getParentName() << "'" << std::endl;
-      return error;
+      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getName(), getParentName());
+      return MakeErrorResult(error, ss);
     }
   }
-  return 0;
+  return {};
 }
 
 void DatasetWriter::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType propertiesId)
@@ -168,17 +170,17 @@ std::string DatasetWriter::getName() const
   return m_DatasetName;
 }
 
-ErrorType DatasetWriter::writeString(const std::string& text)
+Result<> DatasetWriter::writeString(const std::string& text)
 {
   if(!isValid())
   {
-    return -1;
+    return MakeErrorResult(-100, "Cannot Write to Invalid DatasetWriter");
   }
 
   closeHdf5();
 
   herr_t error = 0;
-  herr_t returnError = 0;
+  Result<> returnError = {};
 
   /* create a string data type */
   hid_t typeId;
@@ -202,14 +204,13 @@ ErrorType DatasetWriter::writeString(const std::string& text)
               error = H5Dwrite(getId(), typeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, text.c_str());
               if(error < 0)
               {
-                std::cout << "Error Writing String Data" << std::endl;
-                returnError = error;
+                returnError = MakeErrorResult(error, "Error Writing String Data");
               }
             }
           }
           else
           {
-            returnError = 0;
+            returnError = {};
           }
           // H5_CLOSE_H5_DATASET(getId(), error, returnError, getName())
         }
@@ -221,18 +222,18 @@ ErrorType DatasetWriter::writeString(const std::string& text)
   return returnError;
 }
 
-ErrorType DatasetWriter::writeVectorOfStrings(std::vector<std::string>& text)
+Result<> DatasetWriter::writeVectorOfStrings(std::vector<std::string>& text)
 {
   if(!isValid())
   {
-    return -1;
+    return MakeErrorResult(-100, "Cannot Write to Invalid DatasetWriter");
   }
 
   hid_t dataspaceID = -1;
   hid_t memSpace = -1;
   hid_t datatype = -1;
   herr_t error = -1;
-  herr_t returnError = 0;
+  Result<> returnError = {};
 
   std::array<hsize_t, 1> dims = {text.size()};
   if((dataspaceID = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr)) >= 0)
@@ -264,7 +265,7 @@ ErrorType DatasetWriter::writeVectorOfStrings(std::vector<std::string>& text)
           if(error < 0)
           {
             std::cout << "Error Writing String Data: " __FILE__ << "(" << __LINE__ << ")" << std::endl;
-            returnError = error;
+            returnError = MakeErrorResult(error, "Error Writing String Data");
           }
         }
       }
