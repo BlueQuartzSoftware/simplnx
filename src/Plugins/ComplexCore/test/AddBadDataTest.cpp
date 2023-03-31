@@ -10,10 +10,10 @@ using namespace complex;
 
 namespace
 {
- const DataPath k_ImageGeom = DataPath({"DataContainer"});
- const DataPath k_CellDataAM = k_ImageGeom.createChildPath("CellData");
- const DataPath k_EuclideanDistances = k_CellDataAM.createChildPath("GBManhattanDistances");
-}
+const DataPath k_ImageGeom = DataPath({Constants::k_SmallIN100});
+const DataPath k_CellDataAM = k_ImageGeom.createChildPath(Constants::k_EbsdScanData);
+const DataPath k_EuclideanDistances = k_CellDataAM.createChildPath("GBManhattanDistances");
+} // namespace
 
 TEST_CASE("ComplexCore::AddBadDataFilter: Valid Filter Execution", "[ComplexCore][AddBadDataFilter]")
 {
@@ -21,7 +21,7 @@ TEST_CASE("ComplexCore::AddBadDataFilter: Valid Filter Execution", "[ComplexCore
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AddBadDataFilter filter;
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/add_bad_data_test/7_0_add_bad_data_test.dream3d",unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/add_bad_data_test/6_6_add_bad_data_baseline.dream3d", unit_test::k_TestFilesDir)));
   std::ofstream file("/home/nyoung/test.txt");
   std::ofstream file2("/home/nyoung/test2.txt");
   dataStructure.exportHeirarchyAsText(file);
@@ -48,10 +48,5 @@ TEST_CASE("ComplexCore::AddBadDataFilter: Valid Filter Execution", "[ComplexCore
 
   UnitTest::WriteTestDataStructure(dataStructure, fs::path("/home/nyoung/bad_data.dream3d"));
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellDataAM, "DataContainer1");
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellDataAM, Constants::k_SmallIN100);
 }
-
-// TEST_CASE("ComplexCore::AddBadDataFilter: InValid Filter Execution")
-//{
-//
-// }
