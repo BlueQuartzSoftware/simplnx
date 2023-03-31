@@ -44,30 +44,31 @@ const std::atomic_bool& AddBadData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> AddBadData::operator()()
 {
-  std::mt19937 randomGenerator;
-  if(m_InputValues->UseSeed)
+  std::random_device randomDevice;        // Will be used to obtain a seed for the random number engine
+  std::mt19937 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
+  std::mt19937::result_type seed = m_InputValues->SeedValue;
+
+  if(!m_InputValues->UseSeed)
   {
-    randomGenerator.seed(m_InputValues->SeedValue);
-  }
-  else
-  {
-    // time since epoch in milliseconds
-    randomGenerator.seed(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    seed = static_cast<std::mt19937::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   }
 
-  float32 random = 0.0f;
+  generator.seed(seed);
+  std::uniform_real_distribution<float32> distribution(0.0F, 1.0F);
+
   auto& imgGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto& GBEuclideanDistances = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
 
   auto childArrayPaths = GetAllChildArrayDataPaths(m_DataStructure, imgGeom.getCellDataPath());
   auto voxelArrayPaths = childArrayPaths.has_value() ? childArrayPaths.value() : std::vector<DataPath>{};
 
+  float32 random = 0.0f;
   size_t totalPoints = GBEuclideanDistances.getSize();
   for(size_t i = 0; i < totalPoints; ++i)
   {
     if(m_InputValues->BoundaryNoise && GBEuclideanDistances[i] < 1)
     {
-      random = static_cast<float>(randomGenerator());
+      random = distribution(generator);
       if(random < m_InputValues->BoundaryVolFraction)
       {
         for(const auto& voxelArrayPath : voxelArrayPaths)
@@ -78,7 +79,7 @@ Result<> AddBadData::operator()()
     }
     if(m_InputValues->PoissonNoise)
     {
-      random = static_cast<float>(randomGenerator());
+      random = distribution(generator);
       if(random < m_InputValues->PoissonVolFraction)
       {
         for(const auto& voxelArrayPath : voxelArrayPaths)
