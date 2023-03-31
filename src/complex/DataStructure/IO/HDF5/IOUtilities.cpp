@@ -60,6 +60,7 @@ Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& da
   {
     return {};
   }
+
   for(const auto& childName : childrenNames)
   {
     Result<> error = dataStructureReader.readObjectFromGroup(groupReader, childName, parentId, useEmptyDataStore);

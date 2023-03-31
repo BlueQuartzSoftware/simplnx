@@ -101,6 +101,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   TriangleNormalFilterTest.cpp
   WriteASCIIDataTest.cpp
   WriteBinaryDataTest.cpp
+  WriteStlFileTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -178,6 +179,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME volume_graphics_test.tar.gz SHA512 94d996fbf2b8b42cd715fb3adf33548f097970211e7a26eb9ccc5b073a78014eecbd10d40fc0451ff9cc7c92e23ed21582fc082d64e1f62b3714e4d9640c975f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_vertex_to_triangle_distances.tar.gz SHA512 d679cde985c326a249c2b52c6e5732dcead263127a8e7f5578c4bf450730a691c840af75a0162d2bbb38eb97f9572cf72a3e1b01d3fd6c670db59619f46aeec9)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME flying_edges_exemplar.tar.gz SHA512 c83117f79b381814b349600e5c0c33874c5665e5e3ae09ddb60d0b619ea6459ae5a70c003f21d7229efbd1ce066246e379f8ff2fbc00290021a90b0cbfeea361)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stl_test.tar.gz SHA512 560fe3f7d07bbda26c1d8097e1f3f7a7cf7287416eeac1f7c5ad3e32cb1b09ce05ee3a2741dde60e7a3d148d2685172e565f81d571e2ad0fc1adbd2753cfb3de)
 
 endif()
 
