@@ -936,19 +936,20 @@ public:
   using Append = TemplateTypeOptions<false, true>;
 
   template <class TemplateTypeOptions = Combine, class ParallelRunnerT, class... ArgsT>
-  static void RunParallel(IArray::ArrayType arrayType, IArray* destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+  void runParallel(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
   {
     static_assert(!(TemplateTypeOptions::UsingCombine && TemplateTypeOptions::UsingAppend), "Cannot use both Append and Combine");
     static_assert(!(!TemplateTypeOptions::UsingCombine && !TemplateTypeOptions::UsingAppend), "Cannot have Append and Combine false");
 
+    const IArray::ArrayType arrayType = destArray.getArrayType();
     DataType dataType = DataType::int32;
     if(arrayType == IArray::ArrayType::NeighborListArray)
     {
-      dataType = dynamic_cast<INeighborList*>(destArray)->getDataType();
+      dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
     }
     if(arrayType == IArray::ArrayType::DataArray)
     {
-      dataType = dynamic_cast<IDataArray*>(destArray)->getDataType();
+      dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
       if(dataType == DataType::boolean)
       {
         if constexpr(TemplateTypeOptions::UsingCombine)
@@ -965,11 +966,11 @@ public:
 
     if constexpr(TemplateTypeOptions::UsingCombine)
     {
-      ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), arrayType, destArray, std::forward<ArgsT>(args)...);
+      ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
     }
     if constexpr(TemplateTypeOptions::UsingAppend)
     {
-      ExecuteParallelFunction<AppendArray, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), arrayType, destArray, std::forward<ArgsT>(args)...);
+      ExecuteParallelFunction<AppendArray, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
     }
   }
 
@@ -980,8 +981,7 @@ private:
     const usize numElements = inputArray->getNumberOfTuples() * inputArray->getNumberOfComponents();
     for(usize i = 0; i < numElements; ++i)
     {
-      auto value = (*inputArray)[i]; // make sure we are getting a copy not a ref
-      (*destArray)[offset + i] = value;
+      (*destArray)[offset + i] = (*inputArray)[i];
     }
   }
 
@@ -989,10 +989,10 @@ private:
   class AppendArray
   {
   public:
-    AppendArray(IArray::ArrayType arrayType, IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
-    : m_ArrayType(arrayType)
-    , m_InputCellArray(inputCellArray)
-    , m_DestCellArray(destCellArray)
+    AppendArray(IArray& destCellArray, IArray& inputCellArray, usize tupleOffset)
+    : m_ArrayType(destCellArray.getArrayType())
+    , m_InputCellArray(&inputCellArray)
+    , m_DestCellArray(&destCellArray)
     , m_TupleOffset(tupleOffset)
     {
     }
@@ -1009,19 +1009,19 @@ private:
       const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
       if(m_ArrayType == IArray::ArrayType::NeighborListArray)
       {
-        using nListT = NeighborList<T>;
-        auto* destArray = dynamic_cast<nListT*>(m_DestCellArray);
+        using NeighborListT = NeighborList<T>;
+        auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
         // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
         if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
         {
           destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
         }
-        AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray), destArray, offset);
+        AppendData<NeighborListT>(dynamic_cast<NeighborListT*>(m_InputCellArray), destArray, offset);
       }
       if(m_ArrayType == IArray::ArrayType::DataArray)
       {
-        using dArrayT = DataArray<T>;
-        AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray), dynamic_cast<dArrayT*>(m_DestCellArray), offset);
+        using DataArrayT = DataArray<T>;
+        AppendData<DataArrayT>(dynamic_cast<DataArrayT*>(m_InputCellArray), dynamic_cast<DataArrayT*>(m_DestCellArray), offset);
       }
       if(m_ArrayType == IArray::ArrayType::StringArray)
       {
@@ -1040,11 +1040,11 @@ private:
   class CombineArrays
   {
   public:
-    CombineArrays(IArray::ArrayType arrayType, IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
-    : m_ArrayType(arrayType)
-    , m_InputCellArray1(inputCellArray1)
-    , m_InputCellArray2(inputCellArray2)
-    , m_DestCellArray(destCellArray)
+    CombineArrays(IArray& inputCellArray1, IArray& inputCellArray2, IArray& destCellArray)
+    : m_ArrayType(destCellArray.getArrayType())
+    , m_InputCellArray1(&inputCellArray1)
+    , m_InputCellArray2(&inputCellArray2)
+    , m_DestCellArray(&destCellArray)
     {
     }
 
@@ -1059,21 +1059,21 @@ private:
     {
       if(m_ArrayType == IArray::ArrayType::NeighborListArray)
       {
-        using nListT = NeighborList<T>;
-        auto* destArray = dynamic_cast<nListT*>(m_DestCellArray);
+        using NeighborListT = NeighborList<T>;
+        auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
         // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
         if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
         {
           destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
         }
-        AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray1), destArray, 0);
-        AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray2), destArray, m_InputCellArray1->getNumberOfTuples());
+        AppendData<NeighborListT>(dynamic_cast<NeighborListT*>(m_InputCellArray1), destArray, 0);
+        AppendData<NeighborListT>(dynamic_cast<NeighborListT*>(m_InputCellArray2), destArray, m_InputCellArray1->getNumberOfTuples());
       }
       if(m_ArrayType == IArray::ArrayType::DataArray)
       {
-        using dArrayT = DataArray<T>;
-        AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray1), dynamic_cast<dArrayT*>(m_DestCellArray), 0);
-        AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray2), dynamic_cast<dArrayT*>(m_DestCellArray), m_InputCellArray1->getSize());
+        using DataArrayT = DataArray<T>;
+        AppendData<DataArrayT>(dynamic_cast<DataArrayT*>(m_InputCellArray1), dynamic_cast<DataArrayT*>(m_DestCellArray), 0);
+        AppendData<DataArrayT>(dynamic_cast<DataArrayT*>(m_InputCellArray2), dynamic_cast<DataArrayT*>(m_DestCellArray), m_InputCellArray1->getSize());
       }
       if(m_ArrayType == IArray::ArrayType::StringArray)
       {
@@ -1089,18 +1089,18 @@ private:
     IArray* m_DestCellArray = nullptr;
   };
 
-  inline void RunAppendBoolAppend(IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
+  inline void RunAppendBoolAppend(IArray& destCellArray, IArray& inputCellArray, usize tupleOffset)
   {
-    using dArrayT = DataArray<bool>;
-    const usize offset = tupleOffset * destCellArray->getNumberOfComponents();
-    AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray), dynamic_cast<dArrayT*>(destCellArray), offset);
+    using DataArrayT = DataArray<bool>;
+    const usize offset = tupleOffset * destCellArray.getNumberOfComponents();
+    AppendData<DataArrayT>(dynamic_cast<DataArrayT*>(&inputCellArray), dynamic_cast<DataArrayT*>(&destCellArray), offset);
   }
 
-  inline void RunCombineBoolAppend(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
+  inline void RunCombineBoolAppend(IArray& inputCellArray1, IArray& inputCellArray2, IArray& destCellArray)
   {
-    using dArrayT = DataArray<bool>;
-    AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray1), dynamic_cast<dArrayT*>(destCellArray), 0);
-    AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray2), dynamic_cast<dArrayT*>(destCellArray), inputCellArray1->getSize());
+    using DataArrayT = DataArray<bool>;
+    AppendData<DataArrayT>(dynamic_cast<DataArrayT*>(&inputCellArray1), dynamic_cast<DataArrayT*>(&destCellArray), 0);
+    AppendData<DataArrayT>(dynamic_cast<DataArrayT*>(&inputCellArray2), dynamic_cast<DataArrayT*>(&destCellArray), inputCellArray1.getSize());
   }
 };
 
