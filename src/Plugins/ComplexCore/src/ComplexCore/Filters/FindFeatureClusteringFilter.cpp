@@ -4,12 +4,14 @@
 
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateNeighborListAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
@@ -52,6 +54,8 @@ Parameters FindFeatureClusteringFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Image Geometry", "The target geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfBins_Key, "Number of Bins for RDF", "Number of bins to split the RDF", 1));
   params.insert(std::make_unique<Int32Parameter>(k_PhaseNumber_Key, "Phase Index", "Ensemble number for which to calculate the RDF and clustering list", 1));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveBiasedFeatures_Key, "Remove Biased Features", "Remove the biased features", false));
@@ -91,7 +95,6 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pNumberOfBinsValue = filterArgs.value<int32>(k_NumberOfBins_Key);
-  auto pPhaseNumberValue = filterArgs.value<int32>(k_PhaseNumber_Key);
   auto pRemoveBiasedFeaturesValue = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);
   auto pEquivalentDiametersArrayPathValue = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
@@ -115,8 +118,8 @@ IFilter::PreflightResult FindFeatureClusteringFilter::preflightImpl(const DataSt
 
   if(!dataStructure.validateNumberOfTuples(featureDataArrays))
   {
-    return MakePreflightErrorResult(-8474632, "Mismatching number of tuples in one or more of the feature level arrays (equivalent diameters, phases, centroids, and biased features). Make sure these "
-                                              "arrays all come from the same feature attribute matrix.");
+    return MakePreflightErrorResult(-9750, "Mismatching number of tuples in one or more of the feature level arrays (equivalent diameters, phases, centroids, and biased features). Make sure these "
+                                           "arrays all come from the same feature attribute matrix.");
   }
 
   const auto& cellEnsembleAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixNameValue);
@@ -146,6 +149,7 @@ Result<> FindFeatureClusteringFilter::executeImpl(DataStructure& dataStructure, 
 {
   FindFeatureClusteringInputValues inputValues;
 
+  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   inputValues.NumberOfBins = filterArgs.value<int32>(k_NumberOfBins_Key);
   inputValues.PhaseNumber = filterArgs.value<int32>(k_PhaseNumber_Key);
   inputValues.RemoveBiasedFeatures = filterArgs.value<bool>(k_RemoveBiasedFeatures_Key);

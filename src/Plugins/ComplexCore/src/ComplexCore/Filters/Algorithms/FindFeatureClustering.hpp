@@ -15,6 +15,7 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT FindFeatureClusteringInputValues
 {
+  DataPath ImageGeometryPath;
   int32 NumberOfBins;
   int32 PhaseNumber;
   bool RemoveBiasedFeatures;
