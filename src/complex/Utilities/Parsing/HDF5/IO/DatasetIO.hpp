@@ -234,10 +234,11 @@ public:
     hid_t dataspaceId = H5Screate_simple(dimensions.size(), dimensions.data(), nullptr);
     if(dataspaceId >= 0)
     {
-      herr_t error = findAndDeleteAttribute();
-      if(error < 0)
+      auto result = findAndDeleteAttribute();
+      if(result.invalid())
       {
         std::cout << "Error Removing Existing Attribute" << std::endl;
+        return;
       }
       else
       {
@@ -246,6 +247,7 @@ public:
         if(getId() < 0)
         {
           std::cout << "Error Creating or Opening Dataset" << std::endl;
+          return;
         }
       }
     }
