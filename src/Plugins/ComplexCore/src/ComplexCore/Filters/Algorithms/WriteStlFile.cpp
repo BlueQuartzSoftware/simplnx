@@ -114,6 +114,12 @@ Result<> WriteStlFile::operator()()
     filename += "Feature_" + StringUtilities::number(spin) + ".stl";
     FILE* f = fopen(filename.c_str(), "wb");
 
+    if(f == nullptr)
+    {
+      fclose(f);
+      return {MakeWarningVoidResult(-27874, fmt::format("Error Writing STL File. Unable to create file at path {}.", filename))};
+    }
+
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing STL for Feature Id {}", spin));
 
     std::string header = "DREAM3D Generated For Feature ID " + StringUtilities::number(spin);
@@ -121,6 +127,13 @@ Result<> WriteStlFile::operator()()
     {
       header += " Phase " + StringUtilities::number(value);
     }
+
+    if(header.size() >= 80)
+    {
+      fclose(f);
+      return {MakeWarningVoidResult(-27874, fmt::format("Error Writing STL File. Header was over the 80 characters supported by STL. Length of header: {}.", header.length()))};
+    }
+
     writeHeader(f, header, 0);
     triCount = 0; // Reset this to Zero. Increment for every triangle written
 
@@ -168,6 +181,7 @@ Result<> WriteStlFile::operator()()
       totalWritten = fwrite(data, 1, 50, f);
       if(totalWritten != 50)
       {
+        fclose(f);
         return {MakeWarningVoidResult(-27873, fmt::format("Error Writing STL File. Not enough elements written for Feature Id {}. Wrote {} of 50.", spin, totalWritten))};
       }
       triCount++;
