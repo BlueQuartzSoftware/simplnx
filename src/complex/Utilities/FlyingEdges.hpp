@@ -635,7 +635,7 @@ public:
   void pass1()
   {
     // For each (j, k):
-    //  - for each edge i along fixed (j, k) gridEdge, fill m_EdgeCases with
+    //  - for each edge i along fixed (j, k) GridEdge, fill m_EdgeCases with
     //    cut information.
     //  - find the locations for computational trimming, xl and xr
     //  To properly find xl and xr, have to check along the x-axis,
@@ -662,7 +662,7 @@ public:
     {
       for(usize j = 0; j != m_NY; ++j)
       {
-        gridEdge& curGridEdge = m_GridEdges[k * m_NY + j];
+        GridEdge& curGridEdge = m_GridEdges[k * m_NY + j];
         curGridEdge.xl = m_NX;
         for(int i = 1; i != m_NX; ++i)
         {
@@ -688,7 +688,7 @@ public:
   void pass2()
   {
     // For each (j, k):
-    //  - for each cube (i, j, k) calculate caseId and number of gridEdge cuts
+    //  - for each cube (i, j, k) calculate caseId and number of GridEdge cuts
     //    in the x, y and z direction.
     for(usize k = 0; k != m_NZ - 1; ++k)
     {
@@ -700,10 +700,10 @@ public:
 
         // ge0 is owned by this (i, j, k). ge1, ge2 and ge3 are only used for
         // boundary cells.
-        gridEdge& ge0 = m_GridEdges[k * m_NY + j];
-        gridEdge& ge1 = m_GridEdges[k * m_NY + j + 1];
-        gridEdge& ge2 = m_GridEdges[(k + 1) * m_NY + j];
-        gridEdge& ge3 = m_GridEdges[(k + 1) * m_NY + j + 1];
+        GridEdge& ge0 = m_GridEdges[k * m_NY + j];
+        GridEdge& ge1 = m_GridEdges[k * m_NY + j + 1];
+        GridEdge& ge2 = m_GridEdges[(k + 1) * m_NY + j];
+        GridEdge& ge3 = m_GridEdges[(k + 1) * m_NY + j + 1];
 
         // ec0, ec1, ec2 and ec3 were set in pass 1. They are used
         // to calculate the cell caseId.
@@ -828,14 +828,14 @@ public:
       }
     }
 
-    // accumulate points, filling out starting locations of each gridEdge
+    // accumulate points, filling out starting locations of each GridEdge
     // in the process.
     usize pointAccum = 0;
     for(usize k = 0; k != m_NZ; ++k)
     {
       for(usize j = 0; j != m_NY; ++j)
       {
-        gridEdge& curGridEdge = m_GridEdges[k * m_NY + j];
+        GridEdge& curGridEdge = m_GridEdges[k * m_NY + j];
 
         tmp = curGridEdge.xstart;
         curGridEdge.xstart = pointAccum;
@@ -857,7 +857,7 @@ public:
         for(usize k = 0; k != m_NZ; ++k) {
         for(usize j = 0; j != m_NY; ++j)
         {
-            gridEdge& curGridEdge = m_GridEdges[k*m_NY + j];
+            GridEdge& curGridEdge = m_GridEdges[k*m_NY + j];
 
             tmp = curGridEdge.xstart;
             curGridEdge.xstart = pointAccum;
@@ -867,7 +867,7 @@ public:
         for(usize k = 0; k != m_NZ; ++k) {
         for(usize j = 0; j != m_NY; ++j)
         {
-            gridEdge& curGridEdge = m_GridEdges[k*m_NY + j];
+            GridEdge& curGridEdge = m_GridEdges[k*m_NY + j];
 
             tmp = curGridEdge.ystart;
             curGridEdge.ystart = pointAccum;
@@ -877,7 +877,7 @@ public:
         for(usize k = 0; k != m_NZ; ++k) {
         for(usize j = 0; j != m_NY; ++j)
         {
-            gridEdge& curGridEdge = m_GridEdges[k*m_NY + j];
+            GridEdge& curGridEdge = m_GridEdges[k*m_NY + j];
 
             tmp = curGridEdge.zstart;
             curGridEdge.zstart = pointAccum;
@@ -914,10 +914,10 @@ public:
         usize triIdx = m_TriCounter[k * (m_NY - 1) + j];
         auto curCubeCaseIds = m_CubeCases.begin() + (m_NX - 1) * (k * (m_NY - 1) + j);
 
-        gridEdge const& ge0 = m_GridEdges[k * m_NY + j];
-        gridEdge const& ge1 = m_GridEdges[k * m_NY + j + 1];
-        gridEdge const& ge2 = m_GridEdges[(k + 1) * m_NY + j];
-        gridEdge const& ge3 = m_GridEdges[(k + 1) * m_NY + j + 1];
+        GridEdge const& ge0 = m_GridEdges[k * m_NY + j];
+        GridEdge const& ge1 = m_GridEdges[k * m_NY + j + 1];
+        GridEdge const& ge2 = m_GridEdges[(k + 1) * m_NY + j];
+        GridEdge const& ge3 = m_GridEdges[(k + 1) * m_NY + j + 1];
 
         usize x0counter = 0;
         usize y0counter = 0;
@@ -1110,9 +1110,9 @@ public:
 
 private:
   ///////////////////// MEMBER VARIABLES /////////////////////
-  struct gridEdge
+  struct GridEdge
   {
-    gridEdge()
+    GridEdge()
     : xl(0)
     , xr(0)
     , xstart(0)
@@ -1142,7 +1142,7 @@ private:
   usize const m_NY; // for indexing
   usize const m_NZ; //
 
-  std::vector<gridEdge> m_GridEdges; // size of m_NY*m_NZ
+  std::vector<GridEdge> m_GridEdges; // size of m_NY*m_NZ
   std::vector<usize> m_TriCounter;   // size of (m_NY-1)*(m_NZ-1)
 
   std::vector<uint8> m_EdgeCases; // size (m_NX-1)*m_NY*m_NZ
@@ -1259,10 +1259,10 @@ private:
 
   inline void calcTrimValues(usize& xl, usize& xr, usize const& j, usize const& k) const
   {
-    gridEdge const& ge0 = m_GridEdges[k * m_NY + j];
-    gridEdge const& ge1 = m_GridEdges[k * m_NY + j + 1];
-    gridEdge const& ge2 = m_GridEdges[(k + 1) * m_NY + j];
-    gridEdge const& ge3 = m_GridEdges[(k + 1) * m_NY + j + 1];
+    GridEdge const& ge0 = m_GridEdges[k * m_NY + j];
+    GridEdge const& ge1 = m_GridEdges[k * m_NY + j + 1];
+    GridEdge const& ge2 = m_GridEdges[(k + 1) * m_NY + j];
+    GridEdge const& ge3 = m_GridEdges[(k + 1) * m_NY + j + 1];
 
     xl = usize(std::min({ge0.xl, ge1.xl, ge2.xl, ge3.xl}));
     xr = usize(std::max({ge0.xr, ge1.xr, ge2.xr, ge3.xr}));
