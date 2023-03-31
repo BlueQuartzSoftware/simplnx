@@ -8,9 +8,9 @@
 #include "EbsdLib/Core/EbsdLibConstants.h"
 
 #include <filesystem>
+#include <list>
 #include <string>
 #include <unordered_set>
-#include <list>
 
 namespace fs = std::filesystem;
 
