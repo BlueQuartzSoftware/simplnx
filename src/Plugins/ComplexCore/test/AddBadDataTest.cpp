@@ -22,10 +22,6 @@ TEST_CASE("ComplexCore::AddBadDataFilter: Valid Filter Execution", "[ComplexCore
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AddBadDataFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/add_bad_data_test/6_6_add_bad_data_baseline.dream3d", unit_test::k_TestFilesDir)));
-  std::ofstream file("/home/nyoung/test.txt");
-  std::ofstream file2("/home/nyoung/test2.txt");
-  dataStructure.exportHeirarchyAsText(file);
-  exemplarDataStructure.exportHeirarchyAsText(file2);
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -45,8 +41,6 @@ TEST_CASE("ComplexCore::AddBadDataFilter: Valid Filter Execution", "[ComplexCore
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
-
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path("/home/nyoung/bad_data.dream3d"));
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellDataAM, Constants::k_SmallIN100);
 }
