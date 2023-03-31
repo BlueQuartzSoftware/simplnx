@@ -88,7 +88,6 @@ IFilter::PreflightResult ImageContouringFilter::preflightImpl(const DataStructur
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-
   // Create the Triangle Geometry action and store it
   auto createTriangleGeometryAction =
       std::make_unique<CreateTriangleGeometryAction>(DataPath({pTriangleGeomName}), static_cast<usize>(1), static_cast<usize>(1), INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName,
