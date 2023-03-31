@@ -88,11 +88,6 @@ IFilter::PreflightResult ImageContouringFilter::preflightImpl(const DataStructur
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto* image = dataStructure.getDataAs<ImageGeom>(pImageGeomPath);
-  if(image == nullptr)
-  {
-    return MakePreflightErrorResult(-23245, fmt::format("DataPath {} does not exist!", pImageGeomPath.toString()));
-  }
 
   // Create the Triangle Geometry action and store it
   auto createTriangleGeometryAction =

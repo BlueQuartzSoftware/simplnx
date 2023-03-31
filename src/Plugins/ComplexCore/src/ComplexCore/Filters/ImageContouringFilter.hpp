@@ -9,7 +9,7 @@ namespace complex
 {
 /**
  * @class ImageContouringFilter
- * @brief This filter will...
+ * @brief This filter will draw a 3 dimensional contouring line through an Image Geometry based on an input value.
  */
 class COMPLEXCORE_EXPORT ImageContouringFilter : public IFilter
 {

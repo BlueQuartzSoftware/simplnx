@@ -18,7 +18,7 @@ struct COMPLEXCORE_EXPORT ImageContouringInputValues
 
 /**
  * @class ImageContouring
- * @brief This filter...
+ * @brief This filter draw a 3 dimensional contouring line through an Image Geometry based on an input value.
  */
 class COMPLEXCORE_EXPORT ImageContouring
 {

@@ -53,7 +53,7 @@ Result<> ImageContouring::operator()()
   auto normals = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->normalsArrayPath);
 
   // auto created so must have a parent
-  DataPath normAMPath = normals.getDataPaths()[0].getParent();
+  DataPath normAMPath = m_InputValues->normalsArrayPath.getParent();
 
   auto& normAM = m_DataStructure.getDataRefAs<AttributeMatrix>(normAMPath);
 
