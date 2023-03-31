@@ -917,9 +917,7 @@ private:
 class CopyFromArray
 {
 public:
-  CopyFromArray()
-  {
-  }
+  CopyFromArray() = default;
   ~CopyFromArray() = default;
 
   CopyFromArray(const CopyFromArray&) = default;
@@ -1091,14 +1089,14 @@ private:
     IArray* m_DestCellArray = nullptr;
   };
 
-  static void RunAppendBoolAppend(IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
+  inline void RunAppendBoolAppend(IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
   {
     using dArrayT = DataArray<bool>;
     const usize offset = tupleOffset * destCellArray->getNumberOfComponents();
     AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray), dynamic_cast<dArrayT*>(destCellArray), offset);
   }
 
-  static void RunCombineBoolAppend(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
+  inline void RunCombineBoolAppend(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
   {
     using dArrayT = DataArray<bool>;
     AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray1), dynamic_cast<dArrayT*>(destCellArray), 0);
