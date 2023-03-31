@@ -2,183 +2,10 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
-#include "complex/Utilities/DataGroupUtilities.hpp"
-#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace complex;
-
-namespace
-{
-template <class K>
-void AppendData(K* inputArray, K* destArray, usize offset)
-{
-  const usize numElements = inputArray->getNumberOfTuples() * inputArray->getNumberOfComponents();
-  for(usize i = 0; i < numElements; ++i)
-  {
-    auto value = (*inputArray)[i]; // make sure we are getting a copy not a ref
-    (*destArray)[offset + i] = value;
-  }
-}
-
-template <typename T>
-class AppendImageGeom
-{
-public:
-  AppendImageGeom(IArray::ArrayType arrayType, IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
-  : m_ArrayType(arrayType)
-  , m_InputCellArray(inputCellArray)
-  , m_DestCellArray(destCellArray)
-  , m_TupleOffset(tupleOffset)
-  {
-  }
-
-  ~AppendImageGeom() = default;
-
-  AppendImageGeom(const AppendImageGeom&) = default;
-  AppendImageGeom(AppendImageGeom&&) noexcept = default;
-  AppendImageGeom& operator=(const AppendImageGeom&) = delete;
-  AppendImageGeom& operator=(AppendImageGeom&&) noexcept = delete;
-
-  void operator()() const
-  {
-    const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
-    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
-    {
-      using nListT = NeighborList<T>;
-      AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray), dynamic_cast<nListT*>(m_DestCellArray), offset);
-    }
-    if(m_ArrayType == IArray::ArrayType::DataArray)
-    {
-      using dArrayT = DataArray<T>;
-      AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray), dynamic_cast<dArrayT*>(m_DestCellArray), offset);
-    }
-    if(m_ArrayType == IArray::ArrayType::StringArray)
-    {
-      AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray), dynamic_cast<StringArray*>(m_DestCellArray), offset);
-    }
-  }
-
-private:
-  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
-  IArray* m_InputCellArray = nullptr;
-  IArray* m_DestCellArray = nullptr;
-  usize m_TupleOffset;
-};
-
-template <typename T>
-class CombineImageGeom
-{
-public:
-  CombineImageGeom(IArray::ArrayType arrayType, IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
-  : m_ArrayType(arrayType)
-  , m_InputCellArray1(inputCellArray1)
-  , m_InputCellArray2(inputCellArray2)
-  , m_DestCellArray(destCellArray)
-  {
-  }
-
-  ~CombineImageGeom() = default;
-
-  CombineImageGeom(const CombineImageGeom&) = default;
-  CombineImageGeom(CombineImageGeom&&) noexcept = default;
-  CombineImageGeom& operator=(const CombineImageGeom&) = delete;
-  CombineImageGeom& operator=(CombineImageGeom&&) noexcept = delete;
-
-  void operator()() const
-  {
-    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
-    {
-      using nListT = NeighborList<T>;
-      auto* destArray = dynamic_cast<nListT*>(m_DestCellArray);
-      destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
-      AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray1), destArray, 0);
-      AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray2), destArray, m_InputCellArray1->getNumberOfTuples());
-    }
-    if(m_ArrayType == IArray::ArrayType::DataArray)
-    {
-      using dArrayT = DataArray<T>;
-      AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray1), dynamic_cast<dArrayT*>(m_DestCellArray), 0);
-      AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray2), dynamic_cast<dArrayT*>(m_DestCellArray), m_InputCellArray1->getSize());
-    }
-    if(m_ArrayType == IArray::ArrayType::StringArray)
-    {
-      AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray1), dynamic_cast<StringArray*>(m_DestCellArray), 0);
-      AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray2), dynamic_cast<StringArray*>(m_DestCellArray), m_InputCellArray1->getSize());
-    }
-  }
-
-private:
-  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
-  IArray* m_InputCellArray1 = nullptr;
-  IArray* m_InputCellArray2 = nullptr;
-  IArray* m_DestCellArray = nullptr;
-};
-
-template <bool UseCombine, bool UseAppend>
-struct TemplateTypeOptions
-{
-  static inline constexpr bool UsingCombine = UseCombine;
-  static inline constexpr bool UsingAppend = UseAppend;
-};
-
-using Combine = TemplateTypeOptions<true, false>;
-using Append = TemplateTypeOptions<false, true>;
-
-void RunAppendBoolAppend(IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
-{
-  using dArrayT = DataArray<bool>;
-  const usize offset = tupleOffset * destCellArray->getNumberOfComponents();
-  AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray), dynamic_cast<dArrayT*>(destCellArray), offset);
-}
-
-void RunCombineBoolAppend(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
-{
-  using dArrayT = DataArray<bool>;
-  AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray1), dynamic_cast<dArrayT*>(destCellArray), 0);
-  AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray2), dynamic_cast<dArrayT*>(destCellArray), inputCellArray1->getSize());
-}
-
-template <class TemplateTypeOptions = Combine, class ParallelRunnerT, class... ArgsT>
-void RunParallelFunction(IArray::ArrayType arrayType, IArray* destArray, ParallelRunnerT&& runner, ArgsT&&... args)
-{
-  static_assert(!(TemplateTypeOptions::UsingCombine && TemplateTypeOptions::UsingAppend), "Cannot use both Append and Combine");
-  static_assert(!(!TemplateTypeOptions::UsingCombine && !TemplateTypeOptions::UsingAppend), "Cannot have Append and Combine false");
-
-  DataType dataType = DataType::int32;
-  if(arrayType == IArray::ArrayType::NeighborListArray)
-  {
-    dataType = dynamic_cast<INeighborList*>(destArray)->getDataType();
-  }
-  if(arrayType == IArray::ArrayType::DataArray)
-  {
-    dataType = dynamic_cast<IDataArray*>(destArray)->getDataType();
-    if(dataType == DataType::boolean)
-    {
-      if constexpr(TemplateTypeOptions::UsingCombine)
-      {
-        RunCombineBoolAppend(destArray, std::forward<ArgsT>(args)...);
-      }
-      if constexpr(TemplateTypeOptions::UsingAppend)
-      {
-        RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
-      }
-      return;
-    }
-  }
-
-  if constexpr(TemplateTypeOptions::UsingCombine)
-  {
-    ExecuteParallelFunction<CombineImageGeom, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), arrayType, destArray, std::forward<ArgsT>(args)...);
-  }
-  if constexpr(TemplateTypeOptions::UsingAppend)
-  {
-    ExecuteParallelFunction<AppendImageGeom, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), arrayType, destArray, std::forward<ArgsT>(args)...);
-  }
-}
-} // namespace
 
 // -----------------------------------------------------------------------------
 AppendImageGeometryZSlice::AppendImageGeometryZSlice(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -260,12 +87,12 @@ Result<> AppendImageGeometryZSlice::operator()()
     if(m_InputValues->SaveAsNewGeometry)
     {
       m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
-      RunParallelFunction<Combine>(arrayType, destDataArray, taskRunner, inputDataArray, newDataArray);
+      CopyFromArray::RunParallel<CopyFromArray::Combine>(arrayType, destDataArray, taskRunner, inputDataArray, newDataArray);
     }
     else
     {
       m_MessageHandler(fmt::format("Appending Data Array {}", inputCellDataPath.createChildPath(name).toString()));
-      RunParallelFunction<Append>(arrayType, destDataArray, taskRunner, inputDataArray, tupleOffset);
+      CopyFromArray::RunParallel<CopyFromArray::Append>(arrayType, destDataArray, taskRunner, inputDataArray, tupleOffset);
     }
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

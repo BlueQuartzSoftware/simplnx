@@ -9,7 +9,9 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Filter/Output.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
 #include "complex/complex_export.hpp"
 
@@ -893,4 +895,215 @@ private:
   IDataArray& m_NewCellArray;
   nonstd::span<const int64> m_NewIndices;
 };
+
+/**
+ * @brief This class is meant to make copying data from one IArray into another easier for the developer.
+ *
+ * An example use of these functions would be the following (where newCellData is an AttributeMatrix in dataStructure ):
+ *   ParallelTaskAlgorithm taskRunner;
+ *   for (const auto& [dataId, dataObject] : *newCellData)
+ *   {
+ *     auto* inputDataArray = dataStructure.getDataAs<IArray>(inputCellDataPath.createChildPath(name));
+ *     auto* destDataArray = dataStructure.getDataAs<IArray>(destCellDataPath.createChildPath(name));
+ *     auto* newDataArray = dataStructure.getDataAs<IArray>(newCellDataPath.createChildPath(name));
+ *     const IArray::ArrayType arrayType = destDataArray->getArrayType();
+ *     CopyFromArray::RunParallel<CopyFromArray::Combine>(arrayType, destDataArray, taskRunner, inputDataArray, newDataArray);
+ *   }
+ *   taskRunner.wait();
+ * @code
+ *
+ * @endcode
+ */
+class CopyFromArray
+{
+public:
+  CopyFromArray()
+  {
+  }
+  ~CopyFromArray() = default;
+
+  CopyFromArray(const CopyFromArray&) = default;
+  CopyFromArray(CopyFromArray&&) noexcept = default;
+  CopyFromArray& operator=(const CopyFromArray&) = delete;
+  CopyFromArray& operator=(CopyFromArray&&) noexcept = delete;
+
+  template <bool UseCombine, bool UseAppend>
+  struct TemplateTypeOptions
+  {
+    static inline constexpr bool UsingCombine = UseCombine;
+    static inline constexpr bool UsingAppend = UseAppend;
+  };
+
+  using Combine = TemplateTypeOptions<true, false>;
+  using Append = TemplateTypeOptions<false, true>;
+
+  template <class TemplateTypeOptions = Combine, class ParallelRunnerT, class... ArgsT>
+  static void RunParallel(IArray::ArrayType arrayType, IArray* destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+  {
+    static_assert(!(TemplateTypeOptions::UsingCombine && TemplateTypeOptions::UsingAppend), "Cannot use both Append and Combine");
+    static_assert(!(!TemplateTypeOptions::UsingCombine && !TemplateTypeOptions::UsingAppend), "Cannot have Append and Combine false");
+
+    DataType dataType = DataType::int32;
+    if(arrayType == IArray::ArrayType::NeighborListArray)
+    {
+      dataType = dynamic_cast<INeighborList*>(destArray)->getDataType();
+    }
+    if(arrayType == IArray::ArrayType::DataArray)
+    {
+      dataType = dynamic_cast<IDataArray*>(destArray)->getDataType();
+      if(dataType == DataType::boolean)
+      {
+        if constexpr(TemplateTypeOptions::UsingCombine)
+        {
+          RunCombineBoolAppend(destArray, std::forward<ArgsT>(args)...);
+        }
+        if constexpr(TemplateTypeOptions::UsingAppend)
+        {
+          RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
+        }
+        return;
+      }
+    }
+
+    if constexpr(TemplateTypeOptions::UsingCombine)
+    {
+      ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), arrayType, destArray, std::forward<ArgsT>(args)...);
+    }
+    if constexpr(TemplateTypeOptions::UsingAppend)
+    {
+      ExecuteParallelFunction<AppendArray, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), arrayType, destArray, std::forward<ArgsT>(args)...);
+    }
+  }
+
+private:
+  template <class K>
+  static void AppendData(K* inputArray, K* destArray, usize offset)
+  {
+    const usize numElements = inputArray->getNumberOfTuples() * inputArray->getNumberOfComponents();
+    for(usize i = 0; i < numElements; ++i)
+    {
+      auto value = (*inputArray)[i]; // make sure we are getting a copy not a ref
+      (*destArray)[offset + i] = value;
+    }
+  }
+
+  template <typename T>
+  class AppendArray
+  {
+  public:
+    AppendArray(IArray::ArrayType arrayType, IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
+    : m_ArrayType(arrayType)
+    , m_InputCellArray(inputCellArray)
+    , m_DestCellArray(destCellArray)
+    , m_TupleOffset(tupleOffset)
+    {
+    }
+
+    ~AppendArray() = default;
+
+    AppendArray(const AppendArray&) = default;
+    AppendArray(AppendArray&&) noexcept = default;
+    AppendArray& operator=(const AppendArray&) = delete;
+    AppendArray& operator=(AppendArray&&) noexcept = delete;
+
+    void operator()() const
+    {
+      const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
+      if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+      {
+        using nListT = NeighborList<T>;
+        auto* destArray = dynamic_cast<nListT*>(m_DestCellArray);
+        // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+        if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
+        {
+          destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
+        }
+        AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray), destArray, offset);
+      }
+      if(m_ArrayType == IArray::ArrayType::DataArray)
+      {
+        using dArrayT = DataArray<T>;
+        AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray), dynamic_cast<dArrayT*>(m_DestCellArray), offset);
+      }
+      if(m_ArrayType == IArray::ArrayType::StringArray)
+      {
+        AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray), dynamic_cast<StringArray*>(m_DestCellArray), offset);
+      }
+    }
+
+  private:
+    IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+    IArray* m_InputCellArray = nullptr;
+    IArray* m_DestCellArray = nullptr;
+    usize m_TupleOffset;
+  };
+
+  template <typename T>
+  class CombineArrays
+  {
+  public:
+    CombineArrays(IArray::ArrayType arrayType, IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
+    : m_ArrayType(arrayType)
+    , m_InputCellArray1(inputCellArray1)
+    , m_InputCellArray2(inputCellArray2)
+    , m_DestCellArray(destCellArray)
+    {
+    }
+
+    ~CombineArrays() = default;
+
+    CombineArrays(const CombineArrays&) = default;
+    CombineArrays(CombineArrays&&) noexcept = default;
+    CombineArrays& operator=(const CombineArrays&) = delete;
+    CombineArrays& operator=(CombineArrays&&) noexcept = delete;
+
+    void operator()() const
+    {
+      if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+      {
+        using nListT = NeighborList<T>;
+        auto* destArray = dynamic_cast<nListT*>(m_DestCellArray);
+        // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+        if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
+        {
+          destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
+        }
+        AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray1), destArray, 0);
+        AppendData<nListT>(dynamic_cast<nListT*>(m_InputCellArray2), destArray, m_InputCellArray1->getNumberOfTuples());
+      }
+      if(m_ArrayType == IArray::ArrayType::DataArray)
+      {
+        using dArrayT = DataArray<T>;
+        AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray1), dynamic_cast<dArrayT*>(m_DestCellArray), 0);
+        AppendData<dArrayT>(dynamic_cast<dArrayT*>(m_InputCellArray2), dynamic_cast<dArrayT*>(m_DestCellArray), m_InputCellArray1->getSize());
+      }
+      if(m_ArrayType == IArray::ArrayType::StringArray)
+      {
+        AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray1), dynamic_cast<StringArray*>(m_DestCellArray), 0);
+        AppendData<StringArray>(dynamic_cast<StringArray*>(m_InputCellArray2), dynamic_cast<StringArray*>(m_DestCellArray), m_InputCellArray1->getSize());
+      }
+    }
+
+  private:
+    IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+    IArray* m_InputCellArray1 = nullptr;
+    IArray* m_InputCellArray2 = nullptr;
+    IArray* m_DestCellArray = nullptr;
+  };
+
+  static void RunAppendBoolAppend(IArray* destCellArray, IArray* inputCellArray, usize tupleOffset)
+  {
+    using dArrayT = DataArray<bool>;
+    const usize offset = tupleOffset * destCellArray->getNumberOfComponents();
+    AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray), dynamic_cast<dArrayT*>(destCellArray), offset);
+  }
+
+  static void RunCombineBoolAppend(IArray* inputCellArray1, IArray* inputCellArray2, IArray* destCellArray)
+  {
+    using dArrayT = DataArray<bool>;
+    AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray1), dynamic_cast<dArrayT*>(destCellArray), 0);
+    AppendData<dArrayT>(dynamic_cast<dArrayT*>(inputCellArray2), dynamic_cast<dArrayT*>(destCellArray), inputCellArray1->getSize());
+  }
+};
+
 } // namespace complex
