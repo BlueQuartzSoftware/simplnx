@@ -333,8 +333,6 @@ public:
     {
       featureSources[featureSourceIndex].reserve(m_LengthArray->operator[](featureSourceIndex + start));
     }
-
-    // std::cout << start << "    " << end << "  Starting Median Array Loop... " << std::endl;
     const usize numTuples = m_Source.getNumberOfTuples();
     const auto progressIncrement = numTuples / 100;
     usize progressCount = 0;
