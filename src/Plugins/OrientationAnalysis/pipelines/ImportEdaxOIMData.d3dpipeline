@@ -1,0 +1,47 @@
+{
+  "isDisabled": false,
+  "name": "ImportEdaxOIMData.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "Cell Ensemble Data",
+        "image_geometry_name": "ImageGeom",
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "read_pattern_data": true,
+        "selected_scan_names": {
+          "input_file_path": "Data/OrientationAnalysis/EdaxOIMData.h5",
+          "scan_names": [
+            "Scan 1"
+          ],
+          "stacking_order": 0
+        },
+        "z_spacing": 1.0
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ImportH5OimDataFilter",
+        "uuid": "4ad3d47c-b1e1-4429-bc65-5e021be62ba0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/Examples/EdaxOIMData.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}
