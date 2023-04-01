@@ -373,7 +373,7 @@ public:
   {
     if(m_DataStore == nullptr)
     {
-      throw std::runtime_error("");
+      throw std::runtime_error("DataArray::operator[] requires a valid DataStore");
     }
 
     return (*m_DataStore.get())[index];

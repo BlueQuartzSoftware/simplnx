@@ -831,10 +831,10 @@ void RTREE_QUAL::Reset()
 #ifdef RTREE_DONT_USE_MEMPOOLS
   // Delete all existing nodes
   RemoveAllRec(m_root);
-#else  // RTREE_DONT_USE_MEMPOOLS
+#else
   // Just reset memory pools.  We are not using complex types
   // EXAMPLE
-#endif // RTREE_DONT_USE_MEMPOOLS
+#endif
 }
 
 RTREE_TEMPLATE
@@ -859,9 +859,9 @@ typename RTREE_QUAL::Node* RTREE_QUAL::AllocNode()
   Node* newNode;
 #ifdef RTREE_DONT_USE_MEMPOOLS
   newNode = new Node;
-#else  // RTREE_DONT_USE_MEMPOOLS
+#else
   // EXAMPLE
-#endif // RTREE_DONT_USE_MEMPOOLS
+#endif
   InitNode(newNode);
   return newNode;
 }
@@ -873,9 +873,9 @@ void RTREE_QUAL::FreeNode(Node* a_node)
 
 #ifdef RTREE_DONT_USE_MEMPOOLS
   delete a_node;
-#else  // RTREE_DONT_USE_MEMPOOLS
+#else
   // EXAMPLE
-#endif // RTREE_DONT_USE_MEMPOOLS
+#endif
 }
 
 // Allocate space for a node in the list used in DeletRect to
@@ -885,9 +885,9 @@ typename RTREE_QUAL::ListNode* RTREE_QUAL::AllocListNode()
 {
 #ifdef RTREE_DONT_USE_MEMPOOLS
   return new ListNode;
-#else  // RTREE_DONT_USE_MEMPOOLS
+#else
   // EXAMPLE
-#endif // RTREE_DONT_USE_MEMPOOLS
+#endif
 }
 
 RTREE_TEMPLATE
@@ -895,9 +895,9 @@ void RTREE_QUAL::FreeListNode(ListNode* a_listNode)
 {
 #ifdef RTREE_DONT_USE_MEMPOOLS
   delete a_listNode;
-#else  // RTREE_DONT_USE_MEMPOOLS
+#else
   // EXAMPLE
-#endif // RTREE_DONT_USE_MEMPOOLS
+#endif
 }
 
 RTREE_TEMPLATE
@@ -1225,9 +1225,9 @@ ELEMTYPEREAL RTREE_QUAL::CalcRectVolume(Rect* a_rect)
 {
 #ifdef RTREE_USE_SPHERICAL_VOLUME
   return RectSphericalVolume(a_rect); // Slower but helps certain merge cases
-#else                                 // RTREE_USE_SPHERICAL_VOLUME
+#else
   return RectVolume(a_rect); // Faster but can cause poor merges
-#endif                                // RTREE_USE_SPHERICAL_VOLUME
+#endif
 }
 
 // Load branch buffer with branches from full node plus the extra branch.
