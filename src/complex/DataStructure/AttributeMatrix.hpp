@@ -21,7 +21,7 @@ public:
   /**
    * @brief Attempts to construct and insert a AttributeMatrix into the DataStructure.
    * If a parentId is provided, then the AttributeMatrix is created with the
-   * corresponding BaseGroup as its parent. Otherwise, the DataStucture will be
+   * corresponding BaseGroup as its parent. Otherwise, the DataStructure will be
    * used as the parent object. In either case, the DataStructure will take
    * ownership of the AttributeMatrix.
    *
@@ -37,7 +37,7 @@ public:
   /**
    * @brief Attempts to construct and insert a AttributeMatrix into the DataStructure.
    * If a parentId is provided, then the AttributeMatrix is created with the
-   * corresponding BaseGroup as its parent. Otherwise, the DataStucture will be
+   * corresponding BaseGroup as its parent. Otherwise, the DataStructure will be
    * used as the parent object. In either case, the DataStructure will take
    * ownership of the AttributeMatrix.
    *
@@ -125,8 +125,18 @@ public:
   usize getNumTuples() const;
 
   /**
-   * @brief Changes sets tuple Shape and resizes all child arrays.
-   * @param tupShape this si the new tuple shape
+   * @brief Sets the tuple Shape and resizes all child arrays.
+   *
+   * <b>This may result in loss of data if the over all number of tuples is less
+   * than the original number</b>. This action will <b>OVERWRITE</b> any existing
+   * tuple shape that DataArrays contained in this AttributeMatrix currently have.
+   *
+   * For example: If an underlying array has a Tuple Shape of [4][5] and this
+   * method is called with a Tuple Shape of [2][10], the underlying array will have
+   * its Tuple Shape changed to be [4][5]. Since the total number of tuples remain
+   * the same no data loss or memory allocation will take place.
+   *
+   * @param tupShape the new tuple shape
    * @return
    */
   void resizeTuples(ShapeType tupShape);

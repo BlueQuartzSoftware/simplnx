@@ -4,7 +4,6 @@
 #include "complex/DataStructure/IArray.hpp"
 
 #include <exception>
-#include <stdexcept>
 
 using namespace complex;
 
@@ -85,17 +84,17 @@ bool AttributeMatrix::canInsert(const DataObject* obj) const
     return false;
   }
 
-  const auto* arrayObject = dynamic_cast<const IArray*>(obj);
+  const auto* arrayObjectPtr = dynamic_cast<const IArray*>(obj);
 
-  if(arrayObject == nullptr)
+  if(arrayObjectPtr == nullptr)
   {
     return false;
   }
 
-  IArray::ShapeType arrayTupleShape = arrayObject->getTupleShape();
+  const IArray::ShapeType arrayTupleShape = arrayObjectPtr->getTupleShape();
 
-  usize totalTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
-  usize incomingTupleCount = std::accumulate(arrayTupleShape.cbegin(), arrayTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+  const usize totalTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
+  const usize incomingTupleCount = std::accumulate(arrayTupleShape.cbegin(), arrayTupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
 
   return (totalTuples == incomingTupleCount);
 }
