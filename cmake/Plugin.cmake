@@ -343,6 +343,7 @@ function(create_complex_plugin_unit_test)
   set(${ARGS_PLUGIN_NAME}_GENERATED_DIR ${complex_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated)
   set(COMPLEX_TEST_DIRS_HEADER ${${ARGS_PLUGIN_NAME}_GENERATED_DIR}/${ARGS_PLUGIN_NAME}/${ARGS_PLUGIN_NAME}_test_dirs.hpp)
   configure_file(${${ARGS_PLUGIN_NAME}_SOURCE_DIR}/test/test_dirs.hpp.in ${COMPLEX_TEST_DIRS_HEADER} @ONLY)
+  file(MAKE_DIRECTORY "${${ARGS_PLUGIN_NAME}_BINARY_DIR}/test_output/")
 
   #------------------------------------------------------------------------------
   # Create the unit test executable
