@@ -22,27 +22,27 @@ Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, c
   dataStructureWriter.addWriter(objectWriter, dataObject->getId());
 
   auto typeAttributeWriter = objectWriter.createAttribute(Constants::k_ObjectTypeTag);
-  complex::HDF5::ErrorType error = typeAttributeWriter.writeString(dataObject->getTypeName());
-  if(error < 0)
+  Result<> result = typeAttributeWriter.writeString(dataObject->getTypeName());
+  if(result.invalid())
   {
     std::string ss = fmt::format("Could not write to attribute {}", Constants::k_ObjectTypeTag);
-    return MakeErrorResult(error, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   auto idAttributeWriter = objectWriter.createAttribute(Constants::k_ObjectIdTag);
-  error = idAttributeWriter.writeValue(dataObject->getId());
-  if(error < 0)
+  result = idAttributeWriter.writeValue(dataObject->getId());
+  if(result.invalid())
   {
     std::string ss = fmt::format("Could not write to attribute {}", Constants::k_ObjectIdTag);
-    return MakeErrorResult(error, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   auto importableAttributeWriter = objectWriter.createAttribute(Constants::k_ImportableTag);
-  error = importableAttributeWriter.writeValue<int32>(importable ? 1 : 0);
-  if(error < 0)
+  result = importableAttributeWriter.writeValue<int32>(importable ? 1 : 0);
+  if(result.invalid())
   {
     std::string ss = fmt::format("Could not write to attribute {}", Constants::k_ImportableTag);
-    return MakeErrorResult(error, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   return {};

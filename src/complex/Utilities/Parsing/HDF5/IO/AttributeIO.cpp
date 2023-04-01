@@ -2,6 +2,8 @@
 
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include "fmt/format.h"
+
 #include <H5Apublic.h>
 
 #include <iostream>
@@ -38,7 +40,7 @@ void AttributeIO::closeHdf5()
   }
 }
 
-ErrorType AttributeIO::findAndDeleteAttribute()
+Result<> AttributeIO::findAndDeleteAttribute()
 {
   hsize_t attributeNum = 0;
   int32_t hasAttribute = H5Aiterate(getObjectId(), H5_INDEX_NAME, H5_ITER_INC, &attributeNum, Support::FindAttr, const_cast<char*>(getName().c_str()));
@@ -49,11 +51,11 @@ ErrorType AttributeIO::findAndDeleteAttribute()
     herr_t error = H5Adelete(getObjectId(), getName().c_str());
     if(error < 0)
     {
-      std::cout << "Error Deleting Attribute '" << getName() << "' from Object '" << getObjectName() << "'" << std::endl;
-      return error;
+      std::string ss = fmt::format("Error Deleting Attribute '{}' from Object '{}'", getName(), getObjectName());
+      return MakeErrorResult(error, ss);
     }
   }
-  return 0;
+  return {};
 }
 
 bool AttributeIO::isValid() const
@@ -227,21 +229,21 @@ std::string AttributeIO::readAsString() const
   return data;
 }
 
-herr_t AttributeIO::writeString(const std::string& text)
+Result<> AttributeIO::writeString(const std::string& text)
 {
   if(!isValid())
   {
-    return -1;
+    return MakeErrorResult(-100, "Cannot Write to Invalid AttributeIO");
   }
 
-  herr_t returnError = 0;
+  Result<> returnError = {};
   size_t size = text.size();
 
   /* Get the type of object */
   // H5O_info_t objectInfo{};
   // returnError = H5Oget_info_by_name(getObjectId(),
   // getAttributeName().c_str(), &objectInfo, H5P_DEFAULT);
-  if(returnError >= 0)
+  if(returnError.valid())
   {
     /* Create the attribute */
     hid_t attributeType = H5Tcopy(H5T_C_S1);
@@ -251,16 +253,14 @@ herr_t AttributeIO::writeString(const std::string& text)
       herr_t error = H5Tset_size(attributeType, attributeSize);
       if(error < 0)
       {
-        std::cout << "Error Setting H5T Size" << std::endl;
-        returnError = error;
+        returnError = MakeErrorResult(error, "Error Setting H5T Size");
       }
       if(error >= 0)
       {
         error = H5Tset_strpad(attributeType, H5T_STR_NULLTERM);
         if(error < 0)
         {
-          std::cout << "Error adding a null terminator." << std::endl;
-          returnError = error;
+          returnError = MakeErrorResult(error, "Error adding a null terminator");
         }
         if(error >= 0)
         {
@@ -278,8 +278,7 @@ herr_t AttributeIO::writeString(const std::string& text)
                 error = H5Awrite(attributeId, attributeType, text.c_str());
                 if(error < 0)
                 {
-                  std::cout << "Error Writing String attribute." << std::endl;
-                  returnError = error;
+                  returnError = MakeErrorResult(error, "Error Writing String Attribute");
                 }
               }
               H5S_CLOSE_H5_ATTRIBUTE(attributeId, error, returnError)
@@ -296,20 +295,20 @@ herr_t AttributeIO::writeString(const std::string& text)
 }
 
 template <typename T>
-herr_t AttributeIO::writeValue(T value)
+Result<> AttributeIO::writeValue(T value)
 {
   if(!isValid())
   {
-    return -1;
+    return MakeErrorResult(-100, "Cannot Write to Invalid AttributeIO");
   }
 
   herr_t error = 0;
-  herr_t returnError = 0;
+  Result<> returnError = {};
 
   hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
-    return -1;
+    return MakeErrorResult(-105, "DataType was unknown");
   }
   /* Get the type of object */
   // H5O_info_t objectInfo;
@@ -328,8 +327,8 @@ herr_t AttributeIO::writeValue(T value)
   if(dataspaceId >= 0)
   {
     // Delete existing attribute
-    error = findAndDeleteAttribute();
-    if(error >= 0)
+    auto result = findAndDeleteAttribute();
+    if(result.valid())
     {
       /* Create the attribute. */
       hid_t attributeId = H5Acreate(getObjectId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
@@ -339,16 +338,14 @@ herr_t AttributeIO::writeValue(T value)
         error = H5Awrite(attributeId, dataType, &value);
         if(error < 0)
         {
-          std::cout << "Error Writing Attribute" << std::endl;
-          returnError = error;
+          returnError = MakeErrorResult(error, "Error Writing Attribute");
         }
       }
       /* Close the attribute. */
       error = H5Aclose(attributeId);
       if(error < 0)
       {
-        std::cout << "Error Closing Attribute" << std::endl;
-        returnError = error;
+        returnError = MakeErrorResult(error, "Error Closing Attribute");
       }
     }
     /* Close the dataspace. */
@@ -356,12 +353,12 @@ herr_t AttributeIO::writeValue(T value)
     if(error < 0)
     {
       std::cout << "Error Closing Dataspace" << std::endl;
-      returnError = error;
+      returnError = MakeErrorResult(error, "Error Closing Dataspace");
     }
   }
   else
   {
-    returnError = static_cast<herr_t>(dataspaceId);
+    returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
   }
 
   return returnError;
@@ -396,30 +393,29 @@ std::vector<T> AttributeIO::readAsVector() const
 }
 
 template <typename T>
-ErrorType AttributeIO::writeVector(const DimsVector& dims, const std::vector<T>& vector)
+Result<> AttributeIO::writeVector(const DimsVector& dims, const std::vector<T>& vector)
 {
   if(!isValid())
   {
-    return -1;
+    return MakeErrorResult(-100, "Cannot Write to Invalid AttributeIO");
   }
 
-  herr_t returnError = 0;
+  Result<> returnError = {};
+  herr_t error = 0;
   int32_t rank = static_cast<int32_t>(dims.size());
 
   hid_t dataType = Support::HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
-    std::cout << "dataType was unknown" << std::endl;
-    return -1;
+    return MakeErrorResult(-102, "DataType was unkown");
   }
 
   hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
   if(dataspaceId >= 0)
   {
     // Delete any existing attribute
-    herr_t error = findAndDeleteAttribute();
-
-    if(error >= 0)
+    auto result = findAndDeleteAttribute();
+    if(result.valid())
     {
       /* Create the attribute. */
       hid_t attributeId = H5Acreate(getObjectId(), getName().c_str(), dataType, dataspaceId, H5P_DEFAULT, H5P_DEFAULT);
@@ -429,29 +425,26 @@ ErrorType AttributeIO::writeVector(const DimsVector& dims, const std::vector<T>&
         error = H5Awrite(attributeId, dataType, static_cast<const void*>(vector.data()));
         if(error < 0)
         {
-          std::cout << "Error Writing Attribute" << std::endl;
-          returnError = error;
+          returnError = MakeErrorResult(error, "Error Writing Attribute");
         }
       }
       /* Close the attribute. */
       error = H5Aclose(attributeId);
       if(error < 0)
       {
-        std::cout << "Error Closing Attribute" << std::endl;
-        returnError = error;
+        returnError = MakeErrorResult(error, "Error Closing Attribute");
       }
     }
     /* Close the dataspace. */
     error = H5Sclose(dataspaceId);
     if(error < 0)
     {
-      std::cout << "Error Closing Dataspace" << std::endl;
-      returnError = error;
+      returnError = MakeErrorResult(error, "Error Closing Dataspace");
     }
   }
   else
   {
-    returnError = static_cast<herr_t>(dataspaceId);
+    returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
   }
 
   return returnError;
@@ -471,29 +464,29 @@ template double AttributeIO::readAsValue<double>() const;
 template bool AttributeIO::readAsValue<bool>() const;
 
 // declare writeValue
-template ErrorType AttributeIO::writeValue<int8_t>(int8_t value);
-template ErrorType AttributeIO::writeValue<int16_t>(int16_t value);
-template ErrorType AttributeIO::writeValue<int32_t>(int32_t value);
-template ErrorType AttributeIO::writeValue<int64_t>(int64_t value);
-template ErrorType AttributeIO::writeValue<uint8_t>(uint8_t value);
-template ErrorType AttributeIO::writeValue<uint16_t>(uint16_t value);
-template ErrorType AttributeIO::writeValue<uint32_t>(uint32_t value);
-template ErrorType AttributeIO::writeValue<uint64_t>(uint64_t value);
-template ErrorType AttributeIO::writeValue<float>(float value);
-template ErrorType AttributeIO::writeValue<double>(double value);
-template ErrorType AttributeIO::writeValue<bool>(bool value);
+template Result<> AttributeIO::writeValue<int8_t>(int8_t value);
+template Result<> AttributeIO::writeValue<int16_t>(int16_t value);
+template Result<> AttributeIO::writeValue<int32_t>(int32_t value);
+template Result<> AttributeIO::writeValue<int64_t>(int64_t value);
+template Result<> AttributeIO::writeValue<uint8_t>(uint8_t value);
+template Result<> AttributeIO::writeValue<uint16_t>(uint16_t value);
+template Result<> AttributeIO::writeValue<uint32_t>(uint32_t value);
+template Result<> AttributeIO::writeValue<uint64_t>(uint64_t value);
+template Result<> AttributeIO::writeValue<float>(float value);
+template Result<> AttributeIO::writeValue<double>(double value);
+template Result<> AttributeIO::writeValue<bool>(bool value);
 
 // declare writeVector
-template ErrorType AttributeIO::writeVector<int8_t>(const DimsVector& dims, const std::vector<int8_t>& vector);
-template ErrorType AttributeIO::writeVector<int16_t>(const DimsVector& dims, const std::vector<int16_t>& vector);
-template ErrorType AttributeIO::writeVector<int32_t>(const DimsVector& dims, const std::vector<int32_t>& vector);
-template ErrorType AttributeIO::writeVector<int64_t>(const DimsVector& dims, const std::vector<int64_t>& vector);
-template ErrorType AttributeIO::writeVector<uint8_t>(const DimsVector& dims, const std::vector<uint8_t>& vector);
-template ErrorType AttributeIO::writeVector<uint16_t>(const DimsVector& dims, const std::vector<uint16_t>& vector);
-template ErrorType AttributeIO::writeVector<uint32_t>(const DimsVector& dims, const std::vector<uint32_t>& vector);
-template ErrorType AttributeIO::writeVector<uint64_t>(const DimsVector& dims, const std::vector<uint64_t>& vector);
-template ErrorType AttributeIO::writeVector<float>(const DimsVector& dims, const std::vector<float>& vector);
-template ErrorType AttributeIO::writeVector<double>(const DimsVector& dims, const std::vector<double>& vector);
+template Result<> AttributeIO::writeVector<int8_t>(const DimsVector& dims, const std::vector<int8_t>& vector);
+template Result<> AttributeIO::writeVector<int16_t>(const DimsVector& dims, const std::vector<int16_t>& vector);
+template Result<> AttributeIO::writeVector<int32_t>(const DimsVector& dims, const std::vector<int32_t>& vector);
+template Result<> AttributeIO::writeVector<int64_t>(const DimsVector& dims, const std::vector<int64_t>& vector);
+template Result<> AttributeIO::writeVector<uint8_t>(const DimsVector& dims, const std::vector<uint8_t>& vector);
+template Result<> AttributeIO::writeVector<uint16_t>(const DimsVector& dims, const std::vector<uint16_t>& vector);
+template Result<> AttributeIO::writeVector<uint32_t>(const DimsVector& dims, const std::vector<uint32_t>& vector);
+template Result<> AttributeIO::writeVector<uint64_t>(const DimsVector& dims, const std::vector<uint64_t>& vector);
+template Result<> AttributeIO::writeVector<float>(const DimsVector& dims, const std::vector<float>& vector);
+template Result<> AttributeIO::writeVector<double>(const DimsVector& dims, const std::vector<double>& vector);
 
 template std::vector<int8_t> AttributeIO::readAsVector<int8_t>() const;
 template std::vector<int16_t> AttributeIO::readAsVector<int16_t>() const;

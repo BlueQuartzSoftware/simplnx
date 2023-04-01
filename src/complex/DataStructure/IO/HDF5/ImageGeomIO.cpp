@@ -2,6 +2,7 @@
 
 #include "DataStructureReader.hpp"
 #include "complex/Common/Array.hpp"
+#include "complex/Common/Result.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/IO/Generic/IOConstants.hpp"
 #include "complex/DataStructure/IO/HDF5/DataArrayIO.hpp"
@@ -116,24 +117,24 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
   }
 
   auto dimensionAttr = groupWriter.createAttribute(IOConstants::k_H5_DIMENSIONS);
-  auto errorCode = dimensionAttr.writeVector(dims, volDimsVector);
-  if(errorCode < 0)
+  auto writeResult = dimensionAttr.writeVector(dims, volDimsVector);
+  if(writeResult.invalid())
   {
-    return MakeErrorResult(errorCode, "Failed to write volume dimensions");
+    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume dimensions");
   }
 
   auto originAttr = groupWriter.createAttribute(IOConstants::k_H5_ORIGIN);
-  errorCode = originAttr.writeVector(dims, originVector);
-  if(errorCode < 0)
+  writeResult = originAttr.writeVector(dims, originVector);
+  if(writeResult.invalid())
   {
-    return MakeErrorResult(errorCode, "Failed to write volume origin");
+    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume origin");
   }
 
   auto spacingAttr = groupWriter.createAttribute(IOConstants::k_H5_SPACING);
-  errorCode = spacingAttr.writeVector(dims, spacingVector);
-  if(errorCode < 0)
+  writeResult = spacingAttr.writeVector(dims, spacingVector);
+  if(writeResult.invalid())
   {
-    return MakeErrorResult(errorCode, "Failed to write volume spacing");
+    return MakeErrorResult(writeResult.errors()[0].code, "Failed to write volume spacing");
   }
 
   return {};

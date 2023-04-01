@@ -2,6 +2,8 @@
 
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include "fmt/format.h"
+
 #include <H5Gpublic.h>
 #include <H5Opublic.h>
 
@@ -267,11 +269,11 @@ std::shared_ptr<DatasetIO> GroupIO::createDatasetPtr(const std::string& childNam
   return std::make_shared<DatasetIO>(getId(), childName);
 }
 
-ErrorType GroupIO::createLink(const std::string& objectPath)
+Result<> GroupIO::createLink(const std::string& objectPath)
 {
   if(objectPath.empty())
   {
-    return -1;
+    return MakeErrorResult(-105, "Cannot create link with empty path");
   }
   size_t index = objectPath.find_last_of('/');
   if(index > 0)
@@ -281,7 +283,11 @@ ErrorType GroupIO::createLink(const std::string& objectPath)
   std::string objectName = objectPath.substr(index);
 
   herr_t errorCode = H5Lcreate_hard(getFileId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
-  return errorCode;
+  if(errorCode < 0)
+  {
+    return MakeErrorResult(errorCode, fmt::format("Failed to create link to path '{}'", objectPath));
+  }
+  return {};
 }
 
 // -----------------------------------------------------------------------------

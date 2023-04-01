@@ -52,12 +52,11 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     {
       indices[i] = i;
     }
-    auto errorCode = datasetWriter.writeSpan(complex::HDF5::DatasetWriter::DimsType{numVerts, 1}, nonstd::span<const int64>{indices});
+    result = datasetWriter.writeSpan(complex::HDF5::DatasetWriter::DimsType{numVerts, 1}, nonstd::span<const int64>{indices});
     if(result.invalid())
     {
       std::string ss = "Failed to write indices to dataset";
-      return MakeErrorResult(errorCode, ss);
-      return result;
+      return MakeErrorResult(result.errors()[0].code, ss);
     }
   }
 

@@ -70,17 +70,17 @@ COMPLEX_EXPORT Result<FileData> ReadFile(const std::filesystem::path& path);
  * @brief Writes a .dream3d file with the specified data.
  * @param fileWriter
  * @param fileData
- * @return complex::HDF5::ErrorType
+ * @return Result<>
  */
-COMPLEX_EXPORT complex::HDF5::ErrorType WriteFile(complex::HDF5::FileWriter& fileWriter, const FileData& fileData);
+COMPLEX_EXPORT Result<> WriteFile(complex::HDF5::FileWriter& fileWriter, const FileData& fileData);
 
 /**
  * @brief Writes a .dream3d file with the specified data.
  * @param fileWriter
  * @param fileData
- * @return complex::HDF5::ErrorType
+ * @return Result<>
  */
-COMPLEX_EXPORT complex::HDF5::ErrorType WriteFile(complex::HDF5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
+COMPLEX_EXPORT Result<> WriteFile(complex::HDF5::FileWriter& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
 
 /**
  * @brief Writes a .dream3d file with the specified data.

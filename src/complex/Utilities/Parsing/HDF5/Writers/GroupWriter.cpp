@@ -2,6 +2,8 @@
 
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 
+#include "fmt/format.h"
+
 #include <H5Gpublic.h>
 
 namespace complex::HDF5
@@ -73,11 +75,11 @@ DatasetWriter GroupWriter::createDatasetWriter(const std::string& childName)
   return DatasetWriter(getId(), childName);
 }
 
-ErrorType GroupWriter::createLink(const std::string& objectPath)
+Result<> GroupWriter::createLink(const std::string& objectPath)
 {
   if(objectPath.empty())
   {
-    return -1;
+    return MakeErrorResult(-102, "Cannot link to an empty path");
   }
   size_t index = objectPath.find_last_of('/');
   if(index > 0)
@@ -87,6 +89,10 @@ ErrorType GroupWriter::createLink(const std::string& objectPath)
   std::string objectName = objectPath.substr(index);
 
   herr_t errorCode = H5Lcreate_hard(getFileId(), objectPath.c_str(), getId(), objectName.c_str(), H5P_DEFAULT, H5P_DEFAULT);
-  return errorCode;
+  if(errorCode < 0)
+  {
+    return MakeErrorResult(errorCode, fmt::format("Error Creating Link to path {}", objectPath));
+  }
+  return {};
 }
 } // namespace complex::HDF5

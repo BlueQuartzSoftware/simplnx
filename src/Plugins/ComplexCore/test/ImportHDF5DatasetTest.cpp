@@ -23,10 +23,8 @@ std::string m_FilePath = unit_test::k_BinaryDir.str() + "/ImportHDF5DatasetTest.
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-complex::HDF5::ErrorType writePointer1DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
+Result<> writePointer1DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  complex::HDF5::ErrorType err = 1;
-
   // Create the Dimensions
   std::vector<hsize_t> dims(1);
   dims[0] = COMPDIMPROD * TUPLEDIMPROD;
@@ -42,20 +40,18 @@ complex::HDF5::ErrorType writePointer1DArrayDataset(complex::HDF5::GroupWriter& 
   std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer1DArrayDataset<" + dsetName + ">";
   complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
-  err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
-  REQUIRE(err >= 0);
+  auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
+  COMPLEX_RESULT_REQUIRE_VALID(result);
 
-  return err;
+  return result;
 }
 
 // -----------------------------------------------------------------------------
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-complex::HDF5::ErrorType writePointer2DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
+Result<> writePointer2DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  complex::HDF5::ErrorType err = 1;
-
   // Create the Dimensions
   std::vector<hsize_t> dims(2);
   dims[0] = 10;
@@ -72,20 +68,18 @@ complex::HDF5::ErrorType writePointer2DArrayDataset(complex::HDF5::GroupWriter& 
   std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer2DArrayDataset<" + dsetName + ">";
   complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
-  err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
-  REQUIRE(err >= 0);
+  auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
+  COMPLEX_RESULT_REQUIRE_VALID(result);
 
-  return err;
+  return result;
 }
 
 // -----------------------------------------------------------------------------
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-complex::HDF5::ErrorType writePointer3DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
+Result<> writePointer3DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  complex::HDF5::ErrorType err = 1;
-
   // Create the Dimensions
   std::vector<hsize_t> dims(3);
   dims[0] = 10;
@@ -103,20 +97,18 @@ complex::HDF5::ErrorType writePointer3DArrayDataset(complex::HDF5::GroupWriter& 
   std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer3DArrayDataset<" + dsetName + ">";
   complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
-  err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
-  REQUIRE(err >= 0);
+  auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
+  COMPLEX_RESULT_REQUIRE_VALID(result);
 
-  return err;
+  return result;
 }
 
 // -----------------------------------------------------------------------------
 //  Uses Raw Pointers to save data to the data file
 // -----------------------------------------------------------------------------
 template <typename T>
-complex::HDF5::ErrorType writePointer4DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
+Result<> writePointer4DArrayDataset(complex::HDF5::GroupWriter& ptrGroupWriter)
 {
-  complex::HDF5::ErrorType err = 1;
-
   // Create the Dimensions
   std::vector<hsize_t> dims(4);
   dims[0] = 10;
@@ -135,10 +127,10 @@ complex::HDF5::ErrorType writePointer4DArrayDataset(complex::HDF5::GroupWriter& 
   std::string dsetName = complex::HDF5::Support::HdfTypeForPrimitiveAsStr<T>();
   dsetName = "Pointer4DArrayDataset<" + dsetName + ">";
   complex::HDF5::DatasetWriter dsetWriter = ptrGroupWriter.createDatasetWriter(dsetName);
-  err = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
-  REQUIRE(err >= 0);
+  auto result = dsetWriter.writeSpan(dims, nonstd::span<const T>{data});
+  COMPLEX_RESULT_REQUIRE_VALID(result);
 
-  return err;
+  return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -161,49 +153,49 @@ void writeHDF5File()
   complex::HDF5::GroupWriter ptrGroupWriter = fileWriter.createGroupWriter("Pointer");
   REQUIRE(ptrGroupWriter.isValid());
 
-  REQUIRE(writePointer1DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<int16_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<uint16_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<int32_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<uint32_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<int64_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<uint64_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<float32>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer1DArrayDataset<float64>(ptrGroupWriter) >= 0);
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<int8_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<uint8_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<int16_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<uint16_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<int32_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<uint32_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<int64_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<uint64_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<float32>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer1DArrayDataset<float64>(ptrGroupWriter));
 
-  REQUIRE(writePointer2DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<int16_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<uint16_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<int32_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<uint32_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<int64_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<uint64_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<float32>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer2DArrayDataset<float64>(ptrGroupWriter) >= 0);
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<int8_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<uint8_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<int16_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<uint16_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<int32_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<uint32_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<int64_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<uint64_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<float32>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer2DArrayDataset<float64>(ptrGroupWriter));
 
-  REQUIRE(writePointer3DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<int16_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<uint16_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<int32_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<uint32_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<int64_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<uint64_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<float32>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer3DArrayDataset<float64>(ptrGroupWriter) >= 0);
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<int8_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<uint8_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<int16_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<uint16_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<int32_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<uint32_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<int64_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<uint64_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<float32>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer3DArrayDataset<float64>(ptrGroupWriter));
 
-  REQUIRE(writePointer4DArrayDataset<int8_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<uint8_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<int16_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<uint16_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<int32_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<uint32_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<int64_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<uint64_t>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<float32>(ptrGroupWriter) >= 0);
-  REQUIRE(writePointer4DArrayDataset<float64>(ptrGroupWriter) >= 0);
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<int8_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<uint8_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<int16_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<uint16_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<int32_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<uint32_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<int64_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<uint64_t>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<float32>(ptrGroupWriter));
+  COMPLEX_RESULT_REQUIRE_VALID(writePointer4DArrayDataset<float64>(ptrGroupWriter));
 }
 
 // -----------------------------------------------------------------------------
