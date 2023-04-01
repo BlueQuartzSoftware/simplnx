@@ -52,6 +52,8 @@ set(FilterList
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
   GenerateQuaternionConjugateFilter
+  ImportH5EspritDataFilter
+  ImportH5OimDataFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
@@ -64,7 +66,6 @@ set(FilterList
 set(STUB_FILTERS
 
   # ConvertHexGridToSquareGrid # MISSING 1 or more Parameter Implementations
-  # CreateEnsembleInfo # MISSING 1 or more Parameter Implementations
   CreateLambertSphere
   EMsoftSO3Sampler
 
@@ -88,14 +89,7 @@ set(STUB_FILTERS
   GenerateOrientationMatrixTranspose
 
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
-  # ImportH5EspritData # MISSING 1 or more Parameter Implementations
-  # ImportH5OimData # MISSING 1 or more Parameter Implementations
-  # OrientationUtility # MISSING 1 or more Parameter Implementations
-
-  #ImportEbsdMontage # MISSING 1 or more Parameter Implementations
-  #ImportH5EspritData # MISSING 1 or more Parameter Implementations
-  #ImportH5OimData # MISSING 1 or more Parameter Implementations
-  
+  # OrientationUtility # MISSING 1 or more Parameter Implementations  
   #OrientationUtility # MISSING 1 or more Parameter Implementations
 
   WritePoleFigure
@@ -119,6 +113,7 @@ create_complex_plugin(NAME ${PLUGIN_NAME}
 # ------------------------------------------------------------------------------
 set(complex_injected_parameters
   H5EbsdReaderParameter
+  OEMEbsdScanSelectionParameter
   #EbsdToH5EbsdParameter
 )
 
@@ -191,6 +186,8 @@ set(filter_algorithms
   GenerateIPFColors
   GenerateQuaternionConjugate
   GroupFeatures
+  ImportH5EspritData
+  ImportH5OimData
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
@@ -228,6 +225,7 @@ set(PLUGIN_EXTRA_SOURCES
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/inicpp.h"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.cpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ImportH5Data.hpp"
 )
 target_sources(${PLUGIN_NAME} PRIVATE ${PLUGIN_EXTRA_SOURCES})
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities" PREFIX ${PLUGIN_NAME} FILES ${PLUGIN_EXTRA_SOURCES})
@@ -300,6 +298,11 @@ download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
                     SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b
                    INSTALL
                    COPY_DATA)
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
+                    ARCHIVE_NAME 6_6_ImportH5Data.tar.gz 
+                    SHA512 68cf620d28a515d04040d66c4f8fa9d8d46707c65138b366b47f40d1d56a36c40e2e2cd0c9d35168b68c2cb5b2ce95650fa2a0d4e6ffce980d0dd0654908f40d
+                    INSTALL
+                    COPY_DATA)
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder
@@ -322,3 +325,10 @@ install(FILES
   DESTINATION Data/${PLUGIN_NAME}
   COMPONENT Applications
 )
+
+add_custom_target(Copy_${PLUGIN_NAME}_H5Data ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/EdaxOIMData.h5 ${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/H5EspritReaderTest.h5 ${DATA_DEST_DIR}/${PLUGIN_NAME}/
+  COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
+  DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+  )
+set_target_properties(Copy_${PLUGIN_NAME}_H5Data PROPERTIES FOLDER ZZ_COPY_FILES)
