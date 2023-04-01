@@ -54,9 +54,9 @@ public:
    * Any one of the write* methods must be called before adding attributes to
    * the HDF5 dataset.
    * @param text
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType writeString(const std::string& text);
+  Result<> writeString(const std::string& text);
 
   /**
    * @brief Writes a vector of strings to the dataset. Returns the HDF5 error,
@@ -65,9 +65,9 @@ public:
    * Any one of the write* methods must be called before adding attributes to
    * the HDF5 dataset.
    * @param text
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType writeVectorOfStrings(std::vector<std::string>& text);
+  Result<> writeVectorOfStrings(std::vector<std::string>& text);
 
   /**
    * @brief Writes a span of values to the dataset. Returns the HDF5 error,
@@ -78,28 +78,27 @@ public:
    * @tparam T
    * @param dims
    * @param values
-   * @return ErrorType
+   * @return Result<>
    */
   template <typename T>
-  ErrorType writeSpan(const DimsType& dims, nonstd::span<const T> values)
+  Result<> writeSpan(const DimsType& dims, nonstd::span<const T> values)
   {
-    herr_t returnError = 0;
+    Result<> returnError = {};
+    ErrorType error = 0;
     int32_t rank = static_cast<int32_t>(dims.size());
     hid_t dataType = Support::HdfTypeForPrimitive<T>();
     if(dataType == -1)
     {
-      std::cout << "dataType was unknown" << std::endl;
-      return -1;
+      return MakeErrorResult(-1, "DataType was unknown");
     }
 
     hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
     if(dataspaceId >= 0)
     {
-      herr_t error = findAndDeleteAttribute();
-      if(error < 0)
+      auto result = findAndDeleteAttribute();
+      if(result.invalid())
       {
-        std::cout << "Error Removing Existing Attribute" << std::endl;
-        returnError = error;
+        returnError = MakeErrorResult(result.errors()[0].code, "Error Removing existing Attribute");
       }
       else
       {
@@ -112,51 +111,47 @@ public:
           error = H5Dwrite(getId(), dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
           if(error < 0)
           {
-            std::cout << "Error Writing Attribute" << std::endl;
-            returnError = error;
+            returnError = MakeErrorResult(error, "Error Writing Attribute");
           }
         }
         else
         {
-          std::cout << "Error Creating Dataset" << std::endl;
-          returnError = static_cast<herr_t>(getId());
+          returnError = MakeErrorResult(getId(), "Error Creating Dataset");
         }
       }
       /* Close the dataspace. */
       error = H5Sclose(dataspaceId);
       if(error < 0)
       {
-        std::cout << "Error Closing Dataspace" << std::endl;
-        returnError = error;
+        returnError = MakeErrorResult(error, "Error Closing Dataspace");
       }
     }
     else
     {
-      returnError = static_cast<herr_t>(dataspaceId);
+      returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
     }
     return returnError;
   }
 
   template <typename T>
-  ErrorType writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkShape, nonstd::span<const hsize_t> offset)
+  Result<> writeChunk(const DimsType& dims, nonstd::span<const T> values, const DimsType& chunkShape, nonstd::span<const hsize_t> offset)
   {
-    herr_t returnError = 0;
+    Result<> returnError = {};
+    herr_t error = 0;
     int32_t rank = static_cast<int32_t>(dims.size());
     hid_t dataType = Support::HdfTypeForPrimitive<T>();
     if(dataType == -1)
     {
-      std::cout << "dataType was unknown" << std::endl;
-      return -1;
+      return MakeErrorResult(-100, "DataType was unkown");
     }
 
     hid_t dataspaceId = H5Screate_simple(rank, dims.data(), nullptr);
     if(dataspaceId >= 0)
     {
-      herr_t error = findAndDeleteAttribute();
-      if(error < 0)
+      auto result = findAndDeleteAttribute();
+      if(result.invalid())
       {
-        std::cout << "Error Removing Existing Attribute" << std::endl;
-        returnError = error;
+        returnError = MakeErrorResult(result.errors()[0].code, "Error Removing Existing Attribute");
       }
       else
       {
@@ -176,27 +171,24 @@ public:
           error = H5Dwrite_chunk(getId(), H5P_DEFAULT, H5P_DEFAULT, offset.data(), values.size() * sizeof(T), data);
           if(error < 0)
           {
-            std::cout << "Error Writing Dataset Chunk" << std::endl;
-            returnError = error;
+            returnError = MakeErrorResult(error, "Error Writing Dataset Chunk");
           }
         }
         else
         {
-          std::cout << "Error Creating Dataset Chunk" << std::endl;
-          returnError = static_cast<herr_t>(getId());
+          returnError = MakeErrorResult(getId(), "Error Creating Dataset Chunk");
         }
       }
       /* Close the dataspace. */
       error = H5Sclose(dataspaceId);
       if(error < 0)
       {
-        std::cout << "Error Closing Dataspace" << std::endl;
-        returnError = error;
+        returnError = MakeErrorResult(error, "Error Closing Dataspace");
       }
     }
     else
     {
-      returnError = static_cast<herr_t>(dataspaceId);
+      returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
     }
     return returnError;
   }
@@ -212,9 +204,9 @@ protected:
   /**
    * @brief Finds and deletes any existing attribute with the current name.
    * Returns any error that might occur when deleting the attribute.
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType findAndDeleteAttribute();
+  Result<> findAndDeleteAttribute();
 
   /**
    * @brief Opens the target HDF5 dataset or creates a new one using the given

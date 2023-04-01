@@ -61,13 +61,12 @@ public:
 
     complex::HDF5::DatasetWriter::DimsType dims = {1};
     std::array<T, 1> dataVector = {scalarData.getValue()};
-    auto h5Error = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
-    if(h5Error < 0)
+    Result<> h5Result = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
+    if(h5Result.invalid())
     {
       return MakeErrorResult(-460, "Failed to write ScalarData");
     }
-    Result<> result = WriteObjectAttributes(dataStructureWriter, scalarData, datasetWriter, importable);
-    return result;
+    return WriteObjectAttributes(dataStructureWriter, scalarData, datasetWriter, importable);
   }
 
   /**

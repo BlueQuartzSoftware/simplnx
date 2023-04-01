@@ -95,9 +95,9 @@ public:
    * by an HDF5 object path.
    * Returns an error code if one occurs. Otherwise, this method returns 0.
    * @param objectPath
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType createLink(const std::string& objectPath);
+  Result<> createLink(const std::string& objectPath);
 
   /**
    * @brief Returns the number of children objects within the group.

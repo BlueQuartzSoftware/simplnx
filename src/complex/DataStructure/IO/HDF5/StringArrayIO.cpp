@@ -51,11 +51,10 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
 
   // writeVectorOfStrings may resize the collection
   data_type::collection_type strings = dataArray.values();
-  const auto err = datasetWriter.writeVectorOfStrings(strings);
-  if(err < 0)
+  const auto result = datasetWriter.writeVectorOfStrings(strings);
+  if(result.invalid())
   {
-    std::string ss = "Failed to write StringArray text";
-    return MakeErrorResult(err, ss);
+    return result;
   }
   return WriteObjectAttributes(dataStructureWriter, dataArray, datasetWriter, importable);
 }

@@ -37,8 +37,8 @@ Result<> IDataIO::WriteDataId(object_writer_type& objectWriter, const std::optio
     return MakeErrorResult(-404, ss);
   }
   DataObject::IdType id = objectId.value();
-  auto error = attribute.writeValue<DataObject::IdType>(id);
-  if(error < 0)
+  auto result = attribute.writeValue<DataObject::IdType>(id);
+  if(result.invalid())
   {
     std::string ss = fmt::format("Failed to write DataObject ID, '{}' for tag '{}'", id, tag);
     return MakeErrorResult(405, ss);
@@ -52,27 +52,27 @@ Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter
   dataStructureWriter.addWriter(objectWriter, dataObject.getId());
 
   auto typeAttributeWriter = objectWriter.createAttribute(Constants::k_ObjectTypeTag);
-  auto error = typeAttributeWriter.writeString(dataObject.getTypeName());
-  if(error < 0)
+  auto result = typeAttributeWriter.writeString(dataObject.getTypeName());
+  if(result.invalid())
   {
     std::string ss = fmt::format("Error writing DataObject attribute: {}", Constants::k_ObjectTypeTag);
-    return MakeErrorResult(error, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   auto idAttributeWriter = objectWriter.createAttribute(Constants::k_ObjectIdTag);
-  error = idAttributeWriter.writeValue(dataObject.getId());
-  if(error < 0)
+  result = idAttributeWriter.writeValue(dataObject.getId());
+  if(result.invalid())
   {
     std::string ss = fmt::format("Error writing DataObject attribute: {}", Constants::k_ObjectIdTag);
-    return MakeErrorResult(error, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   auto importableAttributeWriter = objectWriter.createAttribute(Constants::k_ImportableTag);
-  error = importableAttributeWriter.writeValue<int32>(importable ? 1 : 0);
-  if(error < 0)
+  result = importableAttributeWriter.writeValue<int32>(importable ? 1 : 0);
+  if(result.invalid())
   {
     std::string ss = fmt::format("Error writing DataObject attribute: {}", Constants::k_ImportableTag);
-    return MakeErrorResult(error, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   return {};

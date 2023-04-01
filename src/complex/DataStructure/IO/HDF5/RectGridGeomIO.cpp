@@ -75,11 +75,11 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
   }
 
   auto dimensionAttr = groupWriter.createAttribute(IOConstants::k_DimensionsTag);
-  auto errorCode = dimensionAttr.writeVector(dims, dimsVector);
-  if(errorCode < 0)
+  auto writeResult = dimensionAttr.writeVector(dims, dimsVector);
+  if(writeResult.invalid())
   {
     std::string ss = "Failed to write dimensions attribute";
-    return MakeErrorResult(errorCode, ss);
+    return MakeErrorResult(writeResult.errors()[0].code, ss);
   }
 
   // Write DataObject IDs

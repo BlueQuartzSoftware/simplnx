@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Result.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5.hpp"
 #include "complex/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "complex/complex_export.hpp"
@@ -139,28 +140,29 @@ public:
    * @brief Writes the specified string to the HDF5 attribute.
    * Returns the resulting HDF5 error code if any occurred.
    * @param text
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType writeString(const std::string& text);
+  Result<> writeString(const std::string& text);
 
   /**
    * @brief Writes the specified value to the HDF5 attribute.
    * Returns the resulting HDF5 error code, should an error occur.
    * @tparam T
    * @param value
-   * @return ErrorType
+   * @return Result<>
    */
   template <typename T>
-  ErrorType writeValue(T value);
+  Result<> writeValue(T value);
 
   /**
    * @brief Writes a vector of values to the HDF5 attribute.
    * @tparam T
    * @param dims HDF5 data dimensions
    * @param vector std::vector of data
+   * @return Result<>
    */
   template <typename T>
-  ErrorType writeVector(const DimsVector& dims, const std::vector<T>& vector);
+  Result<> writeVector(const DimsVector& dims, const std::vector<T>& vector);
 
 protected:
   /**
@@ -171,9 +173,9 @@ protected:
   /**
    * @brief Finds and deletes any existing attribute with the current name.
    * Returns any error that might occur when deleting the attribute.
-   * @return ErrorType
+   * @return Result<>
    */
-  ErrorType findAndDeleteAttribute();
+  Result<> findAndDeleteAttribute();
 
 private:
   IdType m_ObjectId = 0;
@@ -193,17 +195,17 @@ extern template COMPLEX_EXPORT float AttributeIO::readAsValue<float>() const;
 extern template COMPLEX_EXPORT double AttributeIO::readAsValue<double>() const;
 extern template COMPLEX_EXPORT bool AttributeIO::readAsValue<bool>() const;
 
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<int8_t>(int8_t value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<int16_t>(int16_t value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<int32_t>(int32_t value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<int64_t>(int64_t value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<uint8_t>(uint8_t value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<uint16_t>(uint16_t value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<uint32_t>(uint32_t value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<uint64_t>(uint64_t value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<float>(float value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<double>(double value);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeValue<bool>(bool value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<int8_t>(int8_t value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<int16_t>(int16_t value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<int32_t>(int32_t value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<int64_t>(int64_t value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<uint8_t>(uint8_t value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<uint16_t>(uint16_t value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<uint32_t>(uint32_t value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<uint64_t>(uint64_t value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<float>(float value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<double>(double value);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeValue<bool>(bool value);
 
 extern template COMPLEX_EXPORT std::vector<int8_t> AttributeIO::readAsVector<int8_t>() const;
 extern template COMPLEX_EXPORT std::vector<int16_t> AttributeIO::readAsVector<int16_t>() const;
@@ -217,15 +219,15 @@ extern template COMPLEX_EXPORT std::vector<float> AttributeIO::readAsVector<floa
 extern template COMPLEX_EXPORT std::vector<double> AttributeIO::readAsVector<double>() const;
 extern template COMPLEX_EXPORT std::vector<bool> AttributeIO::readAsVector<bool>() const;
 
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<int8_t>(const AttributeIO::DimsVector& dims, const std::vector<int8_t>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<int16_t>(const AttributeIO::DimsVector& dims, const std::vector<int16_t>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<int32_t>(const AttributeIO::DimsVector& dims, const std::vector<int32_t>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<int64_t>(const AttributeIO::DimsVector& dims, const std::vector<int64_t>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<uint8_t>(const AttributeIO::DimsVector& dims, const std::vector<uint8_t>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<uint16_t>(const AttributeIO::DimsVector& dims, const std::vector<uint16_t>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<uint32_t>(const AttributeIO::DimsVector& dims, const std::vector<uint32_t>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<uint64_t>(const AttributeIO::DimsVector& dims, const std::vector<uint64_t>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<float>(const AttributeIO::DimsVector& dims, const std::vector<float>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<double>(const AttributeIO::DimsVector& dims, const std::vector<double>& vector);
-extern template COMPLEX_EXPORT ErrorType AttributeIO::writeVector<bool>(const AttributeIO::DimsVector& dims, const std::vector<bool>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<int8_t>(const AttributeIO::DimsVector& dims, const std::vector<int8_t>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<int16_t>(const AttributeIO::DimsVector& dims, const std::vector<int16_t>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<int32_t>(const AttributeIO::DimsVector& dims, const std::vector<int32_t>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<int64_t>(const AttributeIO::DimsVector& dims, const std::vector<int64_t>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<uint8_t>(const AttributeIO::DimsVector& dims, const std::vector<uint8_t>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<uint16_t>(const AttributeIO::DimsVector& dims, const std::vector<uint16_t>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<uint32_t>(const AttributeIO::DimsVector& dims, const std::vector<uint32_t>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<uint64_t>(const AttributeIO::DimsVector& dims, const std::vector<uint64_t>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<float>(const AttributeIO::DimsVector& dims, const std::vector<float>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<double>(const AttributeIO::DimsVector& dims, const std::vector<double>& vector);
+extern template COMPLEX_EXPORT Result<> AttributeIO::writeVector<bool>(const AttributeIO::DimsVector& dims, const std::vector<bool>& vector);
 } // namespace complex::HDF5

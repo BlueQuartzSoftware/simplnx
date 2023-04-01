@@ -41,12 +41,12 @@ inline Result<> WriteDataStoreChunk(complex::HDF5::DatasetWriter& datasetWriter,
     std::string ss = fmt::format("Dimension mismatch when writing DataStore chunk. Num Shape Dimensions: {} Num Chunk Dimensions: {}", h5dims.size(), chunkDims.size());
     return MakeErrorResult(k_DimensionMismatchError, ss);
   }
-  herr_t err = datasetWriter.writeChunk(h5dims, nonstd::span<const T>(chunkPtr, cCount), chunkDims, nonstd::span<const hsize_t>{offset.data(), offset.size()});
+  auto result = datasetWriter.writeChunk(h5dims, nonstd::span<const T>(chunkPtr, cCount), chunkDims, nonstd::span<const hsize_t>{offset.data(), offset.size()});
   delete[] chunkPtr;
-  if(err < 0)
+  if(result.invalid())
   {
     std::string ss = "Failed to write DataStore chunk to Dataset";
-    return MakeErrorResult(err, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   return {};
@@ -71,12 +71,12 @@ inline Result<> WriteDataStoreChunk<bool>(complex::HDF5::DatasetWriter& datasetW
   {
     chunkPtr[i] = chunkVector[i];
   }
-  herr_t err = datasetWriter.writeChunk(h5dims, nonstd::span<const uint8>(chunkPtr, cCount), chunkDims, nonstd::span<const hsize_t>{offset.data(), offset.size()});
+  auto result = datasetWriter.writeChunk(h5dims, nonstd::span<const uint8>(chunkPtr, cCount), chunkDims, nonstd::span<const hsize_t>{offset.data(), offset.size()});
   delete[] chunkPtr;
-  if(err < 0)
+  if(result.invalid())
   {
     std::string ss = "Failed to write DataStore chunk to Dataset";
-    return MakeErrorResult(err, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   return {};
@@ -182,11 +182,11 @@ inline Result<> WriteDataStore(complex::HDF5::DatasetWriter& datasetWriter, cons
       dataPtr[i] = dataStore[i];
     }
 
-    herr_t err = datasetWriter.writeSpan(h5dims, nonstd::span<const T>{dataPtr.get(), count});
-    if(err < 0)
+    Result<> result = datasetWriter.writeSpan(h5dims, nonstd::span<const T>{dataPtr.get(), count});
+    if(result.invalid())
     {
       std::string ss = "Failed to write DataStore span to Dataset";
-      return MakeErrorResult(err, ss);
+      return MakeErrorResult(result.errors()[0].code, ss);
     }
   }
   else
@@ -200,19 +200,19 @@ inline Result<> WriteDataStore(complex::HDF5::DatasetWriter& datasetWriter, cons
 
   // Write shape attributes to the dataset
   auto tupleAttribute = datasetWriter.createAttribute(IOConstants::k_TupleShapeTag);
-  herr_t err = tupleAttribute.writeVector({dataStore.getTupleShape().size()}, dataStore.getTupleShape());
-  if(err < 0)
+  Result<> result = tupleAttribute.writeVector({dataStore.getTupleShape().size()}, dataStore.getTupleShape());
+  if(result.invalid())
   {
     std::string ss = "Failed to write DataStore tuple shape property";
-    return MakeErrorResult(err, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   auto componentAttribute = datasetWriter.createAttribute(IOConstants::k_ComponentShapeTag);
-  err = componentAttribute.writeVector({dataStore.getComponentShape().size()}, dataStore.getComponentShape());
-  if(err < 0)
+  result = componentAttribute.writeVector({dataStore.getComponentShape().size()}, dataStore.getComponentShape());
+  if(result.invalid())
   {
     std::string ss = "Failed to write DataStore component shape property";
-    return MakeErrorResult(err, ss);
+    return MakeErrorResult(result.errors()[0].code, ss);
   }
 
   return {};
