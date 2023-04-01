@@ -177,6 +177,11 @@ usize StringArray::getSize() const
   return size();
 }
 
+bool StringArray::empty() const
+{
+  return m_Strings.empty();
+}
+
 IArray::ShapeType StringArray::getTupleShape() const
 {
   return {size()};

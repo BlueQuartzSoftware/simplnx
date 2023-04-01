@@ -92,7 +92,7 @@ public:
 
     for(usize i = start; i < end; i++)
     {
-      std::vector<T>& tmpList = sourceList[i];
+      const std::vector<T>& tmpList = sourceList[i];
 
       if(m_Length)
       {

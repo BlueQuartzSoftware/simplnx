@@ -234,6 +234,24 @@ public:
   }
 
   /**
+   * @brief Returns the number of elements in the DataArray.
+   * @return usize
+   */
+  usize size() const override
+  {
+    return getNumberOfTuples() * getNumberOfComponents();
+  }
+
+  /**
+   * @brief Returns if there are any elements in the array object
+   * @return bool, true if the DataArray has a size() == 0
+   */
+  bool empty() const override
+  {
+    return m_DataStore->getNumberOfTuples() == 0;
+  }
+
+  /**
    * @brief Returns the number of tuples in the DataArray.
    * @return usize
    */

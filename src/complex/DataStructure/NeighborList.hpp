@@ -95,6 +95,19 @@ public:
   usize getSize() const override;
 
   /**
+   * @brief getSize Returns the total number of data items that are being stored. This is the sum of all the sizes
+   * of the internal storage arrays for this class.
+   * @return usize
+   */
+  usize size() const override;
+
+  /**
+   * @brief Returns if there are any elements in the array object
+   * @return bool, true if the DataArray has a size() == 0
+   */
+  bool empty() const override;
+
+  /**
    * @brief Set number of components.
    * @param nc
    */
@@ -107,7 +120,9 @@ public:
   usize getTypeSize() const;
 
   /**
-   * @brief initializeWithZeros
+   * @brief This will remove all neighbor lists and set the isAllocated flag to false.
+   *
+   * This is the same as calling ```clearAllLists()```
    */
   void initializeWithZeros();
 
