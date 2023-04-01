@@ -38,7 +38,7 @@ public:
   DataObject* shallowCopy() override;
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
-  size_t size() const;
+  size_t size() const override;
   const collection_type& values() const;
 
   reference operator[](usize index);
@@ -60,6 +60,12 @@ public:
    * @return usize
    */
   usize getSize() const override;
+
+  /**
+   * @brief Returns if there are any elements in the array object
+   * @return bool, true if the DataArray has a size() == 0
+   */
+  bool empty() const override;
 
   /**
    * @brief Returns the tuple shape.

@@ -31,6 +31,19 @@ T findMax(const C<T, Ts...>& source)
 }
 
 // -----------------------------------------------------------------------------
+template <template <typename, typename...> class C, typename T, typename... Ts>
+std::pair<T, T> FindMinMax(const C<T, Ts...>& source)
+{
+  if(source.empty())
+  {
+    return {static_cast<T>(0), static_cast<T>(0)};
+  }
+  // We use minmax_element due to std::vector<bool> specialization with bits...
+  const auto [min, max] = std::minmax_element(std::cbegin(source), std::cend(source));
+  return {*min, *max};
+}
+
+// -----------------------------------------------------------------------------
 template <class Container>
 auto computeSum(const Container& source)
 {
@@ -74,7 +87,19 @@ bool findMean(const C<bool, Ts...>& source)
     return false;
   }
   size_t count = std::count(std::cbegin(source), std::cend(source), true);
-  return true ? count >= (source.size() - count) : false;
+  return count >= (source.size() - count);
+}
+
+// -----------------------------------------------------------------------------
+template <template <typename, typename...> class C, typename T, typename... Ts>
+std::pair<float, float> FindSumMean(const C<T, Ts...>& source)
+{
+  if(source.empty())
+  {
+    return {0.0f, 0.0f};
+  }
+  float sum = static_cast<float>(computeSum(source));
+  return {sum, sum / static_cast<float>(source.size())};
 }
 
 // -----------------------------------------------------------------------------
@@ -112,10 +137,11 @@ float findStdDeviation(const C<T, Ts...>& source)
     return 0.0f;
   }
   std::vector<double> difference(source.size());
-  float sum = static_cast<float>(computeSum(source));
-  float mean = static_cast<float>(sum / source.size());
-  std::transform(std::cbegin(source), std::cend(source), std::begin(difference), [mean](T a) { return static_cast<double>(a - mean); });
-  double squaredSum = std::inner_product(std::cbegin(difference), std::cend(difference), std::cbegin(difference), 0.0);
+
+  const std::pair<float, float> sumMeanValues = FindSumMean(source);
+
+  std::transform(std::cbegin(source), std::cend(source), std::begin(difference), [sumMeanValues](T a) { return static_cast<double>(a - sumMeanValues.second); });
+  const double squaredSum = std::inner_product(std::cbegin(difference), std::cend(difference), std::cbegin(difference), 0.0);
   return static_cast<float>(std::sqrt(squaredSum / static_cast<double>(source.size())));
 }
 
@@ -128,7 +154,21 @@ bool findStdDeviation(const C<bool, Ts...>& source)
     return false;
   }
   size_t count = std::count(std::cbegin(source), std::cend(source), true);
-  return true ? count >= (source.size() - count) : false;
+  return count >= (source.size() - count);
+}
+
+// -----------------------------------------------------------------------------
+template <template <typename, typename...> class C, typename T, typename... Ts>
+float FindStdDeviation(const C<T, Ts...>& source, const std::pair<float, float> sumMeanValues)
+{
+  if(source.empty())
+  {
+    return 0.0f;
+  }
+  std::vector<double> difference(source.size());
+  std::transform(std::cbegin(source), std::cend(source), std::begin(difference), [sumMeanValues](T a) { return static_cast<double>(a - sumMeanValues.second); });
+  const double squaredSum = std::inner_product(std::cbegin(difference), std::cend(difference), std::cbegin(difference), 0.0);
+  return static_cast<float>(std::sqrt(squaredSum / static_cast<double>(source.size())));
 }
 
 // -----------------------------------------------------------------------------
@@ -145,7 +185,7 @@ double findSummation(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-std::vector<float> findHistogram(C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
+std::vector<float> findHistogram(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
 {
   if(source.empty())
   {
@@ -166,35 +206,35 @@ std::vector<float> findHistogram(C<T, Ts...>& source, float histmin, float histm
     max = histmax;
   }
 
-  float increment = (max - min) / (numBins);
+  const float increment = (max - min) / (numBins);
   if(std::abs(increment) < 1E-10)
   {
     numBins = 1;
   }
 
-  std::vector<float> Histogram(numBins, 0);
+  std::vector<float> histogram(numBins, 0);
 
   if(numBins == 1) // if one bin, just set the first element to total number of points
   {
-    Histogram[0] = static_cast<float>(source.size());
+    histogram[0] = static_cast<float>(source.size());
   }
   else
   {
     for(const auto s : source)
     {
       float value = static_cast<float>(s);
-      size_t bin = static_cast<size_t>((value - min) / increment); // find bin for this input array value
-      if((bin >= 0) && (bin < numBins))                            // make certain bin is in range
+      const size_t bin = static_cast<size_t>((value - min) / increment); // find bin for this input array value
+      if((bin >= 0) && (bin < numBins))                                  // make certain bin is in range
       {
-        Histogram[bin]++; // increment histogram element corresponding to this input array value
+        histogram[bin]++; // increment histogram element corresponding to this input array value
       }
       else if(value == max)
       {
-        Histogram[numBins - 1]++;
+        histogram[numBins - 1]++;
       }
     }
   }
 
-  return Histogram;
+  return histogram;
 }
 } // namespace StaticicsCalculations
