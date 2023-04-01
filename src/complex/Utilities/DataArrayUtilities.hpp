@@ -350,7 +350,6 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
 template <class T>
 Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode, std::string dataFormat = "")
 {
-
   auto parentPath = path.getParent();
 
   std::optional<DataObject::IdType> dataObjectId;

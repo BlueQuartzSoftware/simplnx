@@ -114,7 +114,7 @@ Result<> ExtractVertexGeometry::operator()()
     {
       const BoolArray* maskArrayPtr = m_DataStructure.getDataAs<BoolArray>(m_InputValues->MaskArrayPath);
       cellCount = std::count(maskArrayPtr->begin(), maskArrayPtr->end(), true);
-      vertexAttrMatrix.setShape({cellCount});
+      vertexAttrMatrix.resizeTuples({cellCount});
 
       for(const auto& srcDataArrayPath : m_InputValues->IncludedDataArrayPaths)
       {

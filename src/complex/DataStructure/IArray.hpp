@@ -21,6 +21,13 @@ public:
 
   ~IArray() override = default;
 
+  IArray() = delete;
+  IArray(const IArray&) = default;
+  IArray(IArray&&) = default;
+
+  IArray& operator=(const IArray&) = delete;
+  IArray& operator=(IArray&&) noexcept = delete;
+
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
@@ -70,7 +77,23 @@ public:
   virtual usize getNumberOfComponents() const = 0;
 
   /**
-   * @brief Resizes the internal array to accomondate
+   * @brief This method sets the shape of the dimensions to `tupleShape`.
+   *
+   * There are 3 possibilities when using this function:
+   * [1] The number of tuples of the new shape is *LESS* than the original. In this
+   * case a memory allocation will take place and the first 'N' elements of data
+   * will be copied into the new array. The remaining data is *LOST*
+   *
+   * [2] The number of tuples of the new shape is *EQUAL* to the original. In this
+   * case the shape is set and the function returns.
+   *
+   * [3] The number of tuples of the new shape is *GREATER* than the original. In
+   * this case a new array is allocated and all the data from the original array
+   * is copied into the new array and the remaining elements are initialized to
+   * the default initialization value.
+   *
+   * @param tupleShape The new shape of the data where the dimensions are "C" ordered
+   * from *slowest* to *fastest*.
    */
   virtual void resizeTuples(const std::vector<usize>& tupleShape) = 0;
 
@@ -88,8 +111,6 @@ public:
   }
 
 protected:
-  IArray() = delete;
-
   IArray(DataStructure& dataStructure, std::string name)
   : DataObject(dataStructure, std::move(name))
   {
@@ -99,11 +120,5 @@ protected:
   : DataObject(dataStructure, std::move(name), importId)
   {
   }
-
-  IArray(const IArray&) = default;
-  IArray(IArray&&) = default;
-
-  IArray& operator=(const IArray&) = delete;
-  IArray& operator=(IArray&&) noexcept = delete;
 };
 } // namespace complex

@@ -56,8 +56,7 @@ void fillDataArray(DataArray<T>* inputArray)
 DataStructure createDataStructure()
 {
   DataStructure dataStructure;
-  AttributeMatrix* am1 = AttributeMatrix::Create(dataStructure, "AttributeMatrix");
-  am1->setShape(std::vector<size_t>(1, 10));
+  AttributeMatrix* am1 = AttributeMatrix::Create(dataStructure, "AttributeMatrix", {10});
 
   UInt32Array* mcArray1 = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "MultiComponent Array uint32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
   fillDataArray<uint32>(mcArray1);

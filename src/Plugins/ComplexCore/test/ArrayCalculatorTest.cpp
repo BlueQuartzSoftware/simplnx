@@ -46,11 +46,9 @@ const std::string k_Pi_Str = StringUtilities::number(numbers::pi);
 DataStructure createDataStructure()
 {
   DataStructure dataStructure;
-  AttributeMatrix* am1 = AttributeMatrix::Create(dataStructure, k_AttributeMatrix);
-  am1->setShape(std::vector<size_t>(1, 10));
+  AttributeMatrix* am1 = AttributeMatrix::Create(dataStructure, k_AttributeMatrix, {10ULL});
   const auto am1Id = am1->getId();
-  AttributeMatrix* am2 = AttributeMatrix::Create(dataStructure, k_NumericMatrix);
-  am2->setShape(std::vector<size_t>(1, 1));
+  AttributeMatrix* am2 = AttributeMatrix::Create(dataStructure, k_NumericMatrix, {1ULL});
   Float32Array* array1 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_InputArray1, {10}, {1}, am1Id);
   array1->fill(-12);
   UInt32Array* array2 = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_InputArray2, {10}, {1}, am1Id);

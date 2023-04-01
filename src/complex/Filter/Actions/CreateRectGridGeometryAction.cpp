@@ -96,12 +96,11 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   }
   rectGridGeom->setDimensions(dims);
 
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, rectGridGeom->getId());
+  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, dims, rectGridGeom->getId());
   if(attributeMatrix == nullptr)
   {
     return MakeErrorResult(-5909, fmt::format("{}CreateRectGridGeometryAction: Failed to create RectGridGeometry: '{}'", prefix, getCreatedPath().createChildPath(m_CellDataName).toString()));
   }
-  attributeMatrix->setShape(std::move(dims));
 
   rectGridGeom->setCellData(*attributeMatrix);
 

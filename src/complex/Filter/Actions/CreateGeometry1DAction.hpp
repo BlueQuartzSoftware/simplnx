@@ -221,20 +221,18 @@ public:
     }
 
     // Create the vertex and edge AttributeMatrix
-    auto* edgeAttributeMatrix = AttributeMatrix::Create(dataStructure, m_EdgeDataName, geometry1d->getId());
+    auto* edgeAttributeMatrix = AttributeMatrix::Create(dataStructure, m_EdgeDataName, edgeTupleShape, geometry1d->getId());
     if(edgeAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-5411, fmt::format("{}CreateGeometry1DAction: Failed to create attribute matrix: '{}'", prefix, edgeDataPath.toString()));
     }
-    edgeAttributeMatrix->setShape(edgeTupleShape);
     geometry1d->setEdgeAttributeMatrix(*edgeAttributeMatrix);
 
-    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry1d->getId());
+    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, vertexTupleShape, geometry1d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-5412, fmt::format("{}CreateGeometry1DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
     }
-    vertexAttributeMatrix->setShape(vertexTupleShape);
     geometry1d->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
     return {};

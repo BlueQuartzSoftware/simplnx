@@ -7,17 +7,10 @@ namespace complex
 {
 bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32Array& cellFeatureIds, size_t currentFeatureCount)
 {
-  bool acceptableMatrix = false;
-  // Only valid for feature or ensemble type matrices
-  //  if(m_Type == AttributeMatrix::Type::VertexFeature || m_Type == AttributeMatrix::Type::VertexEnsemble || m_Type == AttributeMatrix::Type::EdgeFeature ||
-  //     m_Type == AttributeMatrix::Type::EdgeEnsemble || m_Type == AttributeMatrix::Type::FaceFeature || m_Type == AttributeMatrix::Type::FaceEnsemble || m_Type == AttributeMatrix::Type::CellFeature
-  //     || m_Type == AttributeMatrix::Type::CellEnsemble)
-  {
-    acceptableMatrix = true;
-  }
+  bool acceptableMatrix = true;
 
   // Get the DataGroup that holds all the feature Data
-  const BaseGroup* featureLevelBaseGroup = dataStructure.getDataAs<const BaseGroup>(featureDataGroupPath);
+  const auto* featureLevelBaseGroup = dataStructure.getDataAs<const BaseGroup>(featureDataGroupPath);
 
   if(nullptr == featureLevelBaseGroup)
   {
@@ -31,7 +24,6 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
 
   for(const auto& entry : featureDataMap)
   {
-    DataObject::IdType entryId = entry.first;
     std::shared_ptr<DataObject> dataObject = entry.second;
     std::shared_ptr<IDataArray> dataArray = std::dynamic_pointer_cast<IDataArray>(dataObject);
     if(nullptr != dataArray)
@@ -45,7 +37,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
   size_t totalTuples = currentFeatureCount;
   if(activeObjects.size() == totalTuples && acceptableMatrix)
   {
-    size_t goodcount = 1;
+    size_t goodCount = 1;
     std::vector<size_t> newNames(totalTuples, 0);
     std::vector<size_t> removeList;
     std::vector<size_t> keepList;
@@ -55,8 +47,8 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
     {
       if(activeObjects[i])
       {
-        newNames[i] = goodcount;
-        goodcount++;
+        newNames[i] = goodCount;
+        goodCount++;
         keepList.push_back(i);
       }
       else
@@ -67,19 +59,13 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
     }
 
     std::vector<usize> newShape = {keepList.size() + 1};
-    auto* featureAttMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureDataGroupPath);
-    if(featureAttMatrixPtr != nullptr)
-    {
-      featureAttMatrixPtr->setShape(newShape);
-    }
-
     if(!removeList.empty())
     {
       for(const auto& dataArray : matchingDataArrayPtrs)
       {
         // Do the update "in place". This works because the keepList _should_ be sorted lowest to
         // highest. So we are constantly grabbing values from further in the array and copying
-        // them to an closer to the front location in the array.
+        // them to location to the front of the array.
         size_t destIdx = 1;
         for(const auto& keepIdx : keepList)
         {
@@ -87,7 +73,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
           destIdx++;
         }
         // Now chop off the end of the copy and modified array
-        dataArray->getIDataStore()->resizeTuples(newShape);
+        // dataArray->getIDataStore()->resizeTuples(newShape);
       }
 
       // Loop over all the points and correct all the feature names
@@ -115,6 +101,14 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
           }
         }
       }
+    }
+
+    // Now resize the attribute matrix, which will resize the DataArrays contained
+    // in the attribute matrix
+    auto* featureAttMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(featureDataGroupPath);
+    if(featureAttMatrixPtr != nullptr)
+    {
+      featureAttMatrixPtr->resizeTuples(newShape);
     }
   }
   else
@@ -238,7 +232,6 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
     for(const auto& childName : childrenNames)
     {
       DataPath childPath = parent.createChildPath(childName);
-      const DataObject* dataObject = dataStructure.getData(childPath);
       childDataObjects.push_back(childPath);
     }
   } catch(std::exception& e)

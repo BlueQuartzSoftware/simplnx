@@ -60,7 +60,7 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
 
   if(!RemoveInactiveObjects(dataStructure, destCellFeatAttributeMatrixPath, activeObjects, destFeatureIdsRef, totalFeatures))
   {
-    std::string ss = fmt::format("An error occured while trying to remove the inactive objects from Attribute Matrix '{}'", destCellFeatAttributeMatrixPath.toString());
+    std::string ss = fmt::format("An error occurred while trying to remove the inactive objects from Attribute Matrix '{}'", destCellFeatAttributeMatrixPath.toString());
     return MakeErrorResult(-606, ss);
   }
   return {};

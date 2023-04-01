@@ -205,8 +205,7 @@ void testFilterPreflight(ImportHDF5Dataset& filter)
   DataStructure dataStructure;
   DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
   std::string levelZeroAMName = Constants::k_LevelZero.str() + "AM";
-  AttributeMatrix* levelZeroAttributeMatrix = AttributeMatrix::Create(dataStructure, levelZeroAMName);
-  levelZeroAttributeMatrix->setShape({COMPDIMPROD * TUPLEDIMPROD});
+  AttributeMatrix* levelZeroAttributeMatrix = AttributeMatrix::Create(dataStructure, levelZeroAMName, {COMPDIMPROD * TUPLEDIMPROD});
   std::optional<DataPath> levelZeroPath = {DataPath::FromString(Constants::k_LevelZero.view()).value()};
 
   ImportHDF5DatasetParameter::ValueType val = {levelZeroPath, "", {}};

@@ -73,9 +73,8 @@ DataStructure createTestDataStructure()
     (*testIntArray)[3] = 15;
     (*testIntArray)[4] = 20;
 
-    AttributeMatrix* levelOneAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_CellData, imageGeom->getId());
     const std::vector<usize> reversedDims(imageGeomDims.rbegin(), imageGeomDims.rend());
-    levelOneAttMatrix->setShape(reversedDims);
+    AttributeMatrix* levelOneAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_CellData, reversedDims, imageGeom->getId());
     imageGeom->setCellData(*levelOneAttMatrix);
 
     BoolArray* testBoolArray = UnitTest::CreateTestDataArray<bool>(dataStruct, Constants::k_ConditionalArray, reversedDims, {1}, levelOneAttMatrix->getId());
@@ -147,9 +146,8 @@ DataStructure createTestDataStructure()
   {
     VertexGeom* vertexGeom = VertexGeom::Create(dataStruct, Constants::k_VertexGeometry);
 
-    AttributeMatrix* vertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertexGeom->getId());
     std::vector<usize> vertTupleShape = {4};
-    vertAttMatrix->setShape(vertTupleShape);
+    AttributeMatrix* vertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, vertexGeom->getId());
     vertexGeom->setVertexAttributeMatrix(*vertAttMatrix);
     StringArray* testStringArray = StringArray::CreateWithValues(dataStruct, k_StringArray, {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrix->getId());
     Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, vertexGeom->getId());
@@ -175,13 +173,12 @@ DataStructure createTestDataStructure()
     EdgeGeom* edgeGeom = EdgeGeom::Create(dataStruct, k_EdgeGeo);
 
     auto scalar = ScalarData<int64>::Create(dataStruct, k_ScalarData, 60, edgeGeom->getId());
-    AttributeMatrix* edgeAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry1D::k_EdgeDataName, edgeGeom->getId());
     std::vector<usize> edgeTupleShape = {4};
-    edgeAttMatrix->setShape(edgeTupleShape);
+    AttributeMatrix* edgeAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry1D::k_EdgeDataName, edgeTupleShape, edgeGeom->getId());
     edgeGeom->setEdgeAttributeMatrix(*edgeAttMatrix);
-    AttributeMatrix* edgeVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, edgeGeom->getId());
+
     std::vector<usize> edgeVertTupleShape = {5};
-    edgeVertAttMatrix->setShape(edgeVertTupleShape);
+    AttributeMatrix* edgeVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, edgeVertTupleShape, edgeGeom->getId());
     edgeGeom->setVertexAttributeMatrix(*edgeVertAttMatrix);
     Float32Array* edgeVertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, edgeVertTupleShape, {3}, edgeGeom->getId());
     (*edgeVertListArray)[0] = 0;
@@ -221,13 +218,12 @@ DataStructure createTestDataStructure()
   {
     TriangleGeom* triangleGeom = TriangleGeom::Create(dataStruct, Constants::k_TriangleGeometryName);
 
-    AttributeMatrix* faceAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry2D::k_FaceDataName, triangleGeom->getId());
     std::vector<usize> faceTupleShape = {5};
-    faceAttMatrix->setShape(faceTupleShape);
+    AttributeMatrix* faceAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry2D::k_FaceDataName, faceTupleShape, triangleGeom->getId());
     triangleGeom->setFaceAttributeMatrix(*faceAttMatrix);
-    AttributeMatrix* faceVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, triangleGeom->getId());
+
     std::vector<usize> faceVertTupleShape = {6};
-    faceVertAttMatrix->setShape(faceVertTupleShape);
+    AttributeMatrix* faceVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, faceVertTupleShape, triangleGeom->getId());
     triangleGeom->setVertexAttributeMatrix(*faceVertAttMatrix);
     Float32Array* faceVertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, faceVertTupleShape, {3}, triangleGeom->getId());
     (*faceVertListArray)[0] = 0;
@@ -279,13 +275,11 @@ DataStructure createTestDataStructure()
   {
     QuadGeom* quadGeom = QuadGeom::Create(dataStruct, k_QuadGeo);
 
-    AttributeMatrix* faceAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry2D::k_FaceDataName, quadGeom->getId());
     std::vector<usize> faceTupleShape = {2};
-    faceAttMatrix->setShape(faceTupleShape);
+    AttributeMatrix* faceAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry2D::k_FaceDataName, faceTupleShape, quadGeom->getId());
     quadGeom->setFaceAttributeMatrix(*faceAttMatrix);
-    AttributeMatrix* faceVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, quadGeom->getId());
     std::vector<usize> faceVertTupleShape = {6};
-    faceVertAttMatrix->setShape(faceVertTupleShape);
+    AttributeMatrix* faceVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, faceVertTupleShape, quadGeom->getId());
     quadGeom->setVertexAttributeMatrix(*faceVertAttMatrix);
     Float32Array* faceVertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, faceVertTupleShape, {3}, quadGeom->getId());
     (*faceVertListArray)[0] = -1;
@@ -330,13 +324,11 @@ DataStructure createTestDataStructure()
   {
     TetrahedralGeom* tetGeom = TetrahedralGeom::Create(dataStruct, k_TetGeo);
 
-    AttributeMatrix* polyAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, tetGeom->getId());
     std::vector<usize> cellTupleShape = {2};
-    polyAttMatrix->setShape(cellTupleShape);
+    AttributeMatrix* polyAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, cellTupleShape, tetGeom->getId());
     tetGeom->setPolyhedraAttributeMatrix(*polyAttMatrix);
-    AttributeMatrix* cellVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, tetGeom->getId());
     std::vector<usize> vertTupleShape = {5};
-    cellVertAttMatrix->setShape(vertTupleShape);
+    AttributeMatrix* cellVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, tetGeom->getId());
     tetGeom->setVertexAttributeMatrix(*cellVertAttMatrix);
     Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, tetGeom->getId());
     (*vertListArray)[0] = -1;
@@ -380,13 +372,11 @@ DataStructure createTestDataStructure()
   {
     HexahedralGeom* hexGeom = HexahedralGeom::Create(dataStruct, k_HexGeo);
 
-    AttributeMatrix* polyAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, hexGeom->getId());
     std::vector<usize> cellTupleShape = {2};
-    polyAttMatrix->setShape(cellTupleShape);
+    AttributeMatrix* polyAttMatrix = AttributeMatrix::Create(dataStruct, INodeGeometry3D::k_PolyhedronDataName, cellTupleShape, hexGeom->getId());
     hexGeom->setPolyhedraAttributeMatrix(*polyAttMatrix);
-    AttributeMatrix* cellVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, hexGeom->getId());
     std::vector<usize> vertTupleShape = {12};
-    cellVertAttMatrix->setShape(vertTupleShape);
+    AttributeMatrix* cellVertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, hexGeom->getId());
     hexGeom->setVertexAttributeMatrix(*cellVertAttMatrix);
     Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, hexGeom->getId());
     (*vertListArray)[0] = -1;

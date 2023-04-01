@@ -28,11 +28,12 @@ public:
    * Returns a pointer to the AttributeMatrix if the process succeeds. Returns
    * nullptr otherwise.
    * @param dataStructure
-   * @param name
+   * @param name The name of the AttributeMatrix
+   * @param tupleShape The Tuple Shape (Dimensions) of the AttributeMatrix
    * @param parentId = {}
    * @return AttributeMatrix*
    */
-  static AttributeMatrix* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
+  static AttributeMatrix* Create(DataStructure& dataStructure, std::string name, ShapeType tupleShape, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Attempts to construct and insert a AttributeMatrix into the DataStructure.
@@ -47,12 +48,13 @@ public:
    * Returns a pointer to the AttributeMatrix if the process succeeds. Returns
    * nullptr otherwise.
    * @param dataStructure
-   * @param name
+   * @param name The name of the AttributeMatrix
+   * @param tupleShape The Tuple Shape (Dimensions) of the AttributeMatrix
    * @param importId
    * @param parentId = {}
    * @return AttributeMatrix*
    */
-  static AttributeMatrix* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
+  static AttributeMatrix* Import(DataStructure& dataStructure, std::string name, ShapeType tupleShape, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Constructs a shallow copy of the AttributeMatrix. This copy is not added
@@ -113,12 +115,6 @@ public:
   const ShapeType& getShape() const;
 
   /**
-   * @brief Sets the tuple shape.
-   * @param shape
-   */
-  void setShape(ShapeType shape);
-
-  /**
    * @brief Returns the total number of tuples.
    * @return
    */
@@ -136,10 +132,10 @@ public:
    * its Tuple Shape changed to be [4][5]. Since the total number of tuples remain
    * the same no data loss or memory allocation will take place.
    *
-   * @param tupShape the new tuple shape
+   * @param tupleShape the new tuple shape
    * @return
    */
-  void resizeTuples(ShapeType tupShape);
+  void resizeTuples(ShapeType tupleShape);
 
 protected:
   /**
@@ -147,17 +143,19 @@ protected:
    * specified name.
    * @param dataStructure
    * @param name
+   * @param tupleShape
    */
-  AttributeMatrix(DataStructure& dataStructure, std::string name);
+  AttributeMatrix(DataStructure& dataStructure, std::string name, ShapeType tupleShape);
 
   /**
    * @brief Creates the AttributeMatrix for the target DataStructure and with the
    * specified name.
    * @param dataStructure
    * @param name
+   * @param tupleShape
    * @param importId
    */
-  AttributeMatrix(DataStructure& dataStructure, std::string name, IdType importId);
+  AttributeMatrix(DataStructure& dataStructure, std::string name, ShapeType tupleShape, IdType importId);
 
   /**
    * @brief Checks if the provided DataObject can be added to the container.

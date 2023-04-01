@@ -161,12 +161,11 @@ public:
     }
 
     // Create the Vertex AttributeMatrix
-    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, vertexGeom->getId());
+    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, tupleShape, vertexGeom->getId());
     if(vertexAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-6107, fmt::format("{}Failed to create attribute matrix: '{}'", prefix, getVertexDataPath().toString()));
     }
-    vertexAttributeMatrix->setShape(tupleShape);
     vertexGeom->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
     return {};

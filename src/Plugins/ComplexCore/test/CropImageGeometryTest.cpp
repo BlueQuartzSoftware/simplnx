@@ -36,13 +36,13 @@ DataStructure CreateDataStructure()
   imageGeom->setOrigin({0.0f, 20.0f, 66.0f});
   SizeVec3 imageGeomDims = {40, 60, 80};
   imageGeom->setDimensions(imageGeomDims); // Listed from slowest to fastest (Z, Y, X)
-  auto* cellData = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellDataName, imageGeom->getId());
+
   auto imageDimsArray = imageGeomDims.toArray();
   AttributeMatrix::ShapeType cellDataDims{imageDimsArray.crbegin(), imageDimsArray.crend()};
-  cellData->setShape(cellDataDims);
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, ImageGeom::k_CellDataName, cellDataDims, imageGeom->getId());
+  imageGeom->setCellData(*cellDataPtr);
 
-  Int32Array* phases_data = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", cellDataDims, {1}, cellData->getId());
+  Int32Array* phases_data = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", cellDataDims, {1}, cellDataPtr->getId());
 
   return dataStructure;
 }

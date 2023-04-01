@@ -12,7 +12,7 @@ class COMPLEX_EXPORT INeighborList : public IArray
 public:
   static inline constexpr StringLiteral k_TypeName = "INeighborList";
 
-  virtual ~INeighborList();
+  ~INeighborList() noexcept override;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.

@@ -220,20 +220,18 @@ public:
     }
 
     // Create the vertex and cell AttributeMatrix
-    auto* cellAttributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, geometry3d->getId());
+    auto* cellAttributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, cellTupleShape, geometry3d->getId());
     if(cellAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-5611, fmt::format("{}CreateGeometry3DAction: Failed to create attribute matrix: '{}'", prefix, cellDataPath.toString()));
     }
-    cellAttributeMatrix->setShape(cellTupleShape);
     geometry3d->setPolyhedraAttributeMatrix(*cellAttributeMatrix);
 
-    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry3d->getId());
+    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, vertexTupleShape, geometry3d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-5612, fmt::format("{}CreateGeometry3DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
     }
-    vertexAttributeMatrix->setShape(vertexTupleShape);
     geometry3d->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
     return {};

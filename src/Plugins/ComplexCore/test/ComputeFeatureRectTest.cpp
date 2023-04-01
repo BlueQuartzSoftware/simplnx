@@ -24,8 +24,7 @@ DataStructure CreateTestData()
   ImageGeom* iGeom = ImageGeom::Create(dataStructure, k_ImageGeometryName);
   std::vector<usize> dims = {5, 5, 5};
   iGeom->setDimensions(dims);
-  AttributeMatrix* cellAM = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, iGeom->getId());
-  cellAM->setShape({dims[2], dims[1], dims[0]});
+  AttributeMatrix* cellAM = AttributeMatrix::Create(dataStructure, k_CellAttrMatrixName, {dims[2], dims[1], dims[0]}, iGeom->getId());
 
   Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsArrayName, {dims[2], dims[1], dims[0]}, {1}, cellAM->getId());
   featureIds->fill(0);
@@ -67,8 +66,7 @@ DataStructure CreateTestData()
   featureIdsStore[67] = 3;
   featureIdsStore[68] = 3;
 
-  AttributeMatrix* featureAM = AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, iGeom->getId());
-  featureAM->setShape({4});
+  AttributeMatrix* featureAM = AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, {4}, iGeom->getId());
 
   std::vector<usize> compDims = {6};
   UInt32Array* rect = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_RectCoordsExemplaryArrayName, {4}, {6}, featureAM->getId());

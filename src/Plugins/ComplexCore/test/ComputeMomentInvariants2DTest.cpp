@@ -100,8 +100,7 @@ DataStructure CreateInvalidTestData()
   dims[0] = 5;
   dims[1] = 5;
   dims[2] = 5;
-  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellData, imageGeom->getId());
-  cellAm->setShape(dims);
+  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeom->getId());
 
   Int32Array* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAm->getId());
   featureIds->fill(0);
@@ -117,8 +116,7 @@ DataStructure CreateInvalidTestData()
 
   dims.resize(1);
   dims[0] = 2;
-  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureData, imageGeom->getId());
-  featureAm->setShape(dims);
+  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureData, dims, imageGeom->getId());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -154,8 +152,7 @@ DataStructure CreateTestData()
   dims[0] = 1;
   dims[1] = 5;
   dims[2] = 5;
-  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellData, imageGeom->getId());
-  cellAm->setShape(dims);
+  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeom->getId());
 
   Int32Array* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIds, dims, std::vector<usize>{1}, cellAm->getId());
   featureIds->fill(0);
@@ -171,8 +168,7 @@ DataStructure CreateTestData()
 
   dims.resize(1);
   dims[0] = 2;
-  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureData, imageGeom->getId());
-  featureAm->setShape(dims);
+  AttributeMatrix* featureAm = AttributeMatrix::Create(dataStructure, k_FeatureData, dims, imageGeom->getId());
 
 #if 0
       0, 0, 0, 0, 0,
