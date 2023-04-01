@@ -12,9 +12,11 @@
 #include "complex/Plugin/AbstractPlugin.hpp"
 
 #include <catch2/catch.hpp>
+
 #include <nlohmann/json.hpp>
 
 #include <filesystem>
+#include <fstream>
 #include <typeinfo>
 
 namespace fs = std::filesystem;
@@ -133,6 +135,18 @@ TEST_CASE("PipelineTest:Execute Pipeline")
   GeneratedFileListParameter::ValueType defaultValue;
   defaultValue.startIndex = 0;
   defaultValue.endIndex = 1;
+  defaultValue.filePrefix = "test_";
+  defaultValue.fileExtension = ".txt";
+  defaultValue.inputPath = complex::unit_test::k_BinaryTestOutputDir;
+
+  const std::vector<std::string> fileList = defaultValue.generate();
+  // We need to actually have files available for the test to pass so generate some files
+  for(const auto& filepath : fileList)
+  {
+    std::fstream file(filepath, std::ios_base::out);
+    file << "TEST" << std::endl;
+  }
+
   args.insert("param3", std::move(defaultValue));
   filterNode->setArguments(args);
 

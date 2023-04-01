@@ -23,6 +23,7 @@ class CreateVertexGeometryAction : public IDataCreationAction
 {
 public:
   static constexpr StringLiteral k_SharedVertexListName = "SharedVertexList";
+  static constexpr StringLiteral k_VertexAttributeMatrixName = "VertexData";
 
   CreateVertexGeometryAction() = delete;
 

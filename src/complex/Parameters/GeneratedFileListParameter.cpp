@@ -143,10 +143,18 @@ std::any GeneratedFileListParameter::defaultValue() const
 //-----------------------------------------------------------------------------
 Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 {
+  const std::string prefix = fmt::format("FilterParameter '{}' Validation Error: ", humanName());
+
   const auto& value = GetAnyRef<ValueType>(valueRef);
+
+  if(value.inputPath.empty())
+  {
+    return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}Input Path cannot be empty.", prefix));
+  }
+
   if(value.startIndex > value.endIndex)
   {
-    return MakeErrorResult(-1, "startIndex must be less than or equal to endIndex");
+    return complex::MakeErrorResult(-4002, fmt::format("{}startIndex must be less than or equal to endIndex.", prefix));
   }
   // Generate the file list
   auto fileList = value.generate();
@@ -156,7 +164,7 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
   {
     if(!fs::exists(currentFilePath))
     {
-      errors.push_back({-2, fmt::format("FILE DOES NOT EXIST: '{}'", currentFilePath)});
+      errors.push_back({-4003, fmt::format("FILE DOES NOT EXIST: '{}'", currentFilePath)});
     }
   }
 
