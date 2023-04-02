@@ -143,8 +143,8 @@ set(TEST_PIPELINE_LIST_FILE ${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/P
 FILE(WRITE ${TEST_PIPELINE_LIST_FILE} "Prebuilt Pipeline Tests\n")
 get_target_property(PIPELINE_RUNNER_NAME PipelineRunner NAME)
 get_target_property(PIPELINE_RUNNER_DEBUG PipelineRunner DEBUG_POSTFIX)
-message(STATUS "PIPELINE_RUNNER_NAME: ${PIPELINE_RUNNER_NAME}")
-message(STATUS "PIPELINE_RUNNER_DEBUG: ${PIPELINE_RUNNER_DEBUG}")
+# message(STATUS "PIPELINE_RUNNER_NAME: ${PIPELINE_RUNNER_NAME}")
+# message(STATUS "PIPELINE_RUNNER_DEBUG: ${PIPELINE_RUNNER_DEBUG}")
 
 #------------------------------------------------------------------------------
 # This function creates a CTest for a given pipeiline file.
@@ -176,8 +176,11 @@ function(add_pipeline_test)
   set(SIMPL_CTEST_TEST_DRIVER "${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/${test}.${TEST_SCRIPT_FILE_EXT}")
   # message(STATUS "==> ${SIMPL_CTEST_TEST_DRIVER}")
   set(DELETE_FILE_COMMANDS "")
-
-  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/")
+  if(WIN32)
+    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/%CONFIG_DIR%/")
+  else()
+    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/")
+  endif()
 
   foreach ( f ${ARGS_DELETE_FILE_LIST})
     set(DELETE_FILE_COMMANDS "${DELETE_FILE_COMMANDS}\necho \"Deleting Input file '${f}'\"\n${RM_COMMAND} \"${DATA_DEST_DIR}${f}\"")
