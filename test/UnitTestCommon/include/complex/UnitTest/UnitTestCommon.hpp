@@ -463,28 +463,6 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
  * @param exemplaryDataPath
  * @param computedPath
  */
-inline void CompareStringArrays(const StringArray& exemplaryDataArray, const StringArray& generatedDataArray)
-{
-  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
-
-  INFO(fmt::format("Input Data Array:'{}'  Output StringArray: '{}' bad comparison", exemplaryDataArray.getDataPaths()[0].toString(), generatedDataArray.getDataPaths()[0].toString()));
-
-  usize start = 0;
-  usize end = exemplaryDataArray.getSize();
-  for(usize i = start; i < end; i++)
-  {
-    auto oldVal = exemplaryDataArray[i];
-    auto newVal = generatedDataArray[i];
-    REQUIRE(oldVal == newVal);
-  }
-}
-
-/**
- * @brief Compares the referenced StringArray objects in the dataStructure for any differences
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
- */
 inline void CompareStringArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(exemplaryDataPath));
