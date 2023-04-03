@@ -24,6 +24,8 @@ This Filter determines the radial distribution function (RDF), as a histogram, o
 | Number of Bins for RDF | int32_t | Number of bins to split the RDF |
 | Phase Index | int32_t | **Ensemble** number for which to calculate the RDF and clustering list |
 | Remove Biased Features | bool | Default=OFF |
+| Set Random Seed | bool | When checked, allows the user to set the seed value used to randomly generate the points in the RDF (Default=ON) |
+| Seed Value | uint64_t | The seed value used to generate the points in the RDF when the Set Random Seed option is ON |
 
 ## Required Geometry
 
