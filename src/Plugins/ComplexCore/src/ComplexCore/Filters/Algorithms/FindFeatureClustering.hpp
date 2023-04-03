@@ -5,10 +5,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 
 namespace complex
 {
@@ -19,6 +16,8 @@ struct COMPLEXCORE_EXPORT FindFeatureClusteringInputValues
   int32 NumberOfBins;
   int32 PhaseNumber;
   bool RemoveBiasedFeatures;
+  bool UseSeed;
+  uint64 SeedValue;
   DataPath EquivalentDiametersArrayPath;
   DataPath FeaturePhasesArrayPath;
   DataPath CentroidsArrayPath;

@@ -28,6 +28,8 @@ public:
   static inline constexpr StringLiteral k_NumberOfBins_Key = "number_of_bins";
   static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
   static inline constexpr StringLiteral k_RemoveBiasedFeatures_Key = "remove_biased_features";
+  static inline constexpr StringLiteral k_SetRandomSeed_Key = "set_random_seed";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
   static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
   static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
