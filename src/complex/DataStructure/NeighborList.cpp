@@ -310,6 +310,18 @@ typename NeighborList<T>::VectorType& NeighborList<T>::operator[](usize grainId)
 }
 
 template <typename T>
+const typename NeighborList<T>::VectorType& NeighborList<T>::at(int32 grainId) const
+{
+  return *(m_Array[grainId]);
+}
+
+template <typename T>
+const typename NeighborList<T>::VectorType& NeighborList<T>::at(usize grainId) const
+{
+  return *(m_Array[grainId]);
+}
+
+template <typename T>
 DataObject::Type NeighborList<T>::getDataObjectType() const
 {
   return Type::NeighborList;
