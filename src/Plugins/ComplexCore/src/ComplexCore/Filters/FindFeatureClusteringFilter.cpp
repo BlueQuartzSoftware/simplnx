@@ -85,6 +85,7 @@ Parameters FindFeatureClusteringFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_MaxMinArrayName_Key, "Max and Min Separation Distances", "The max and min distance found between Features", "RDFMaxMinDistances"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_RemoveBiasedFeatures_Key, k_BiasedFeaturesArrayPath_Key, true);
+  params.linkParameters(k_SetRandomSeed_Key, k_SeedValue_Key, true);
 
   return params;
 }
