@@ -1,70 +1,95 @@
-/**
- * This file is auto generated from the original ComplexCore/FindFeatureClusteringFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[FindFeatureClusteringFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
-#include "ComplexCore/Filters/FindFeatureClusteringFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/FindFeatureClusteringFilter.hpp"
 
 using namespace complex;
+using namespace complex::Constants;
+using namespace complex::UnitTest;
 
-TEST_CASE("ComplexCore::FindFeatureClusteringFilter: Valid Filter Execution","[ComplexCore][FindFeatureClusteringFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
 {
+const std::string k_EquivalentDiameters = "EquivalentDiameters";
+const std::string k_ExemplarClusteringList = "ClusteringList";
+const std::string k_ExemplarRDF = "RDF";
+const std::string k_ExemplarMinMaxDistances = "RDFMaxMinDistances";
+const std::string k_GeneratedClusteringList = "NX_ClusteringList";
+const std::string k_GeneratedRDF = "NX_RDF";
+const std::string k_GeneratedMinMaxDistances = "NX_RDFMaxMinDistances";
+} // namespace
+
+TEST_CASE("ComplexCore::FindFeatureClusteringFilter: Valid Filter Execution", "[ComplexCore][FindFeatureClusteringFilter]")
+{
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_feature_clustering.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeatureClusteringFilter filter;
-  DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindFeatureClusteringFilter::k_NumberOfBins_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_PhaseNumber_Key, std::make_any<int32>(1234356));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_NumberOfBins_Key, std::make_any<int32>(10));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_PhaseNumber_Key, std::make_any<int32>(2));
   args.insertOrAssign(FindFeatureClusteringFilter::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_SetRandomSeed_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_EquivalentDiameters)));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_Phases)));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_Centroids)));
   args.insertOrAssign(FindFeatureClusteringFilter::k_BiasedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_ClusteringListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_NewEnsembleArrayArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeatureClusteringFilter::k_MaxMinArrayName_Key, std::make_any<DataPath>(DataPath{}));
-
+  args.insertOrAssign(FindFeatureClusteringFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_ClusteringListArrayName_Key, std::make_any<std::string>(k_GeneratedClusteringList));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_RDFArrayName_Key, std::make_any<std::string>(k_GeneratedRDF));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_MaxMinArrayName_Key, std::make_any<std::string>(k_GeneratedMinMaxDistances));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  CompareNeighborLists<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_ExemplarClusteringList), k_CellFeatureDataPath.createChildPath(k_GeneratedClusteringList));
+  CompareArrays<float32>(dataStructure, k_CellEnsembleAttributeMatrixPath.createChildPath(k_ExemplarRDF), k_CellEnsembleAttributeMatrixPath.createChildPath(k_GeneratedRDF));
+  CompareArrays<float32>(dataStructure, k_CellEnsembleAttributeMatrixPath.createChildPath(k_ExemplarMinMaxDistances), k_CellEnsembleAttributeMatrixPath.createChildPath(k_GeneratedMinMaxDistances));
 }
 
-//TEST_CASE("ComplexCore::FindFeatureClusteringFilter: InValid Filter Execution")
-//{
-//
-//}
+TEST_CASE("ComplexCore::FindFeatureClusteringFilter: InValid Filter Execution", "[ComplexCore][FindFeatureClusteringFilter]")
+{
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_feature_clustering.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  FindFeatureClusteringFilter filter;
+  Arguments args;
+
+  // Mismatching cell feature data tuples case :
+  args.insertOrAssign(FindFeatureClusteringFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_NumberOfBins_Key, std::make_any<int32>(10));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_PhaseNumber_Key, std::make_any<int32>(2));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_RemoveBiasedFeatures_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_SetRandomSeed_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_SeedValue_Key, std::make_any<uint64>(5489));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_EquivalentDiameters)));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_DataContainerPath.createChildPath(k_Cell_Data).createChildPath(k_Phases)));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_Centroids)));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_BiasedFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_ClusteringListArrayName_Key, std::make_any<std::string>(k_GeneratedClusteringList));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_RDFArrayName_Key, std::make_any<std::string>(k_GeneratedRDF));
+  args.insertOrAssign(FindFeatureClusteringFilter::k_MaxMinArrayName_Key, std::make_any<std::string>(k_GeneratedMinMaxDistances));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
+}
