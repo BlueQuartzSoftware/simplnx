@@ -52,7 +52,7 @@ Result<> AppendImageGeometryZSlice::operator()()
     destGeomDims[2] = destGeomDims[2] + inputGeomDims[2];
     destGeometry.setDimensions(destGeomDims);
     const std::vector<size_t> newDims = {destGeomDims[2], destGeomDims[1], destGeomDims[0]};
-    ResizeAttributeMatrix(*destCellData, newDims);
+    destCellData->resizeTuples(newDims);
   }
   const usize tupleOffset = destGeometry.getNumberOfCells();
 
