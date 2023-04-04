@@ -1063,22 +1063,9 @@ inline void RunCombineBoolAppend(const IArray& inputCellArray1, const IArray& in
   AppendData<DataArrayT>(dynamic_cast<const DataArrayT*>(&inputCellArray2), dynamic_cast<DataArrayT*>(&destCellArray), inputCellArray1.getSize());
 }
 
-template <bool UseCombine, bool UseAppend>
-struct TemplateTypeOptions
+template <class ParallelRunnerT, class... ArgsT>
+void RunParallelAppend(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
 {
-  static inline constexpr bool UsingCombine = UseCombine;
-  static inline constexpr bool UsingAppend = UseAppend;
-};
-
-using Combine = TemplateTypeOptions<true, false>;
-using Append = TemplateTypeOptions<false, true>;
-
-template <class TemplateTypeOptions = Combine, class ParallelRunnerT, class... ArgsT>
-void RunParallel(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
-{
-  static_assert(!(TemplateTypeOptions::UsingCombine && TemplateTypeOptions::UsingAppend), "Cannot use both Append and Combine");
-  static_assert(!(!TemplateTypeOptions::UsingCombine && !TemplateTypeOptions::UsingAppend), "Cannot have Append and Combine false");
-
   const IArray::ArrayType arrayType = destArray.getArrayType();
   DataType dataType = DataType::int32;
   if(arrayType == IArray::ArrayType::NeighborListArray)
@@ -1090,26 +1077,32 @@ void RunParallel(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
     dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
     if(dataType == DataType::boolean)
     {
-      if constexpr(TemplateTypeOptions::UsingCombine)
-      {
-        RunCombineBoolAppend(destArray, std::forward<ArgsT>(args)...);
-      }
-      if constexpr(TemplateTypeOptions::UsingAppend)
-      {
-        RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
-      }
-      return;
+      RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
     }
   }
 
-  if constexpr(TemplateTypeOptions::UsingCombine)
+  ExecuteParallelFunction<AppendArray, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
+}
+
+template <class ParallelRunnerT, class... ArgsT>
+void RunParallelCombine(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+{
+  const IArray::ArrayType arrayType = destArray.getArrayType();
+  DataType dataType = DataType::int32;
+  if(arrayType == IArray::ArrayType::NeighborListArray)
   {
-    ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
+    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
   }
-  if constexpr(TemplateTypeOptions::UsingAppend)
+  if(arrayType == IArray::ArrayType::DataArray)
   {
-    ExecuteParallelFunction<AppendArray, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
+    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    if(dataType == DataType::boolean)
+    {
+      RunCombineBoolAppend(destArray, std::forward<ArgsT>(args)...);
+    }
   }
+
+  ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
 }
 }; // namespace CopyFromArray
 

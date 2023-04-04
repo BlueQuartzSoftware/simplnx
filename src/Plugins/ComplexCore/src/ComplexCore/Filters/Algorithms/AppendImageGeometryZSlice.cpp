@@ -87,12 +87,12 @@ Result<> AppendImageGeometryZSlice::operator()()
     if(m_InputValues->SaveAsNewGeometry)
     {
       m_MessageHandler(fmt::format("Combining data into array {}", newCellDataPath.createChildPath(name).toString()));
-      CopyFromArray::RunParallel<CopyFromArray::Combine>(*destDataArray, taskRunner, *inputDataArray, *newDataArray);
+      CopyFromArray::RunParallelCombine(*destDataArray, taskRunner, *inputDataArray, *newDataArray);
     }
     else
     {
       m_MessageHandler(fmt::format("Appending Data Array {}", inputCellDataPath.createChildPath(name).toString()));
-      CopyFromArray::RunParallel<CopyFromArray::Append>(*destDataArray, taskRunner, *inputDataArray, tupleOffset);
+      CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, *inputDataArray, tupleOffset);
     }
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
