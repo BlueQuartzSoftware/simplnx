@@ -58,7 +58,8 @@ Parameters AddBadDataFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PoissonNoise_Key, "Add Random Noise", "If true the user may set the poisson volume fraction", false));
   params.insert(std::make_unique<Float32Parameter>(k_PoissonVolFraction_Key, "Volume Fraction of Random Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BoundaryNoise_Key, "Add Boundary Noise", "If true the user may set the boundary volume fraction", false));
-  params.insert(std::make_unique<Float32Parameter>(k_BoundaryVolFraction_Key, "Volume Fraction of Boundary Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
+  params.insert(
+      std::make_unique<Float32Parameter>(k_BoundaryVolFraction_Key, "Volume Fraction of Boundary Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
 
   params.insertSeparator(Parameters::Separator{"Required Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The selected image geometry", DataPath{},
