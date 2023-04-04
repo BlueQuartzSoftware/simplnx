@@ -1,7 +1,7 @@
 #include "AppendImageGeometryZSlice.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/IArray.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -82,7 +82,6 @@ Result<> AppendImageGeometryZSlice::operator()()
     {
       continue;
     }
-    // const IArray::ArrayType arrayType = destDataArray->getArrayType();
 
     if(m_InputValues->SaveAsNewGeometry)
     {
