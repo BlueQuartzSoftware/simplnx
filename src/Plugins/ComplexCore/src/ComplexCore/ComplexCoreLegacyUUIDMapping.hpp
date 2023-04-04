@@ -103,6 +103,7 @@
 #include "ComplexCore/Filters/AvizoUniformCoordinateWriterFilter.hpp"
 #include "ComplexCore/Filters/AvizoRectilinearCoordinateWriterFilter.hpp"
 #include "ComplexCore/Filters/VtkRectilinearGridWriterFilter.hpp"
+#include "ComplexCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -215,6 +216,7 @@ namespace complex
     {complex::Uuid::FromString("339f1349-9236-5023-9a56-c82fb8eafd12").value(), complex::FilterTraits<AvizoUniformCoordinateWriterFilter>::uuid}, // AvizoUniformCoordinateWriter
     {complex::Uuid::FromString("2861f4b4-8d50-5e69-9575-68c9d35f1256").value(), complex::FilterTraits<AvizoRectilinearCoordinateWriterFilter>::uuid}, // AvizoRectilinearCoordinateWriter
     {complex::Uuid::FromString("a043bd66-2681-5126-82e1-5fdc46694bf4").value(), complex::FilterTraits<VtkRectilinearGridWriterFilter>::uuid}, // VtkRectilinearGridWriter
+    {complex::Uuid::FromString("0df3da89-9106-538e-b1a9-6bbf1cf0aa92").value(), complex::FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid}, // RegularGridSampleSurfaceMesh
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
