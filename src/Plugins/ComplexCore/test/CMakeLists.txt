@@ -6,6 +6,7 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
   AlignSectionsListTest.cpp
@@ -172,6 +173,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_h5ebsd.tar.gz SHA512 31e606285ea9e8235dcb5f608fd2b252a5ab1492abd975e5ec33a21d083aa9720fe16fb8f752742c140f40e963d692f1a46256b9d36e96b1b09796c1e4ea3db9)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME volume_graphics_test.tar.gz SHA512 94d996fbf2b8b42cd715fb3adf33548f097970211e7a26eb9ccc5b073a78014eecbd10d40fc0451ff9cc7c92e23ed21582fc082d64e1f62b3714e4d9640c975f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stl_test.tar.gz SHA512 560fe3f7d07bbda26c1d8097e1f3f7a7cf7287416eeac1f7c5ad3e32cb1b09ce05ee3a2741dde60e7a3d148d2685172e565f81d571e2ad0fc1adbd2753cfb3de)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME add_bad_data_test.tar.gz SHA512 cfb04a56e4d4c4098d30636922f35e5dc0a292b7e9a475fca745a7eeb820dcdde719fe62e371197bbca461047a4631e63d6f21cfd814b8755e09176951d5538c)
 
 endif()
 
