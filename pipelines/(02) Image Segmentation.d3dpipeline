@@ -1,0 +1,244 @@
+{
+  "isDisabled": false,
+  "name": "(02) Image Segmentation.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_data_name": "Optical Data",
+        "image_data_array_path": "ImageData",
+        "image_geometry_path": "RoboMet.3D Image Stack",
+        "image_transform_choice": 0,
+        "input_file_list_info": {
+          "end_index": 174,
+          "file_extension": ".tif",
+          "file_prefix": "slice_",
+          "file_suffix": "",
+          "increment_index": 1,
+          "input_path": "Data/Image",
+          "ordering": 0,
+          "padding_digits": 2,
+          "start_index": 11
+        },
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "spacing": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "comments": "This example pipeline shows how to read in a 3D stack of images, segment them and perform some basic size statistics on the segmented features. Since this data set is from an image there is no phase data which is created in a filter and phase data is also generated during the pipeline. Note the technique for accomplishing this as it is handy to do for other pipelines.",
+      "filter": {
+        "name": "complex::ITKImportImageStack",
+        "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
+              "comparison": 2,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "RoboMet.3D Image Stack/Optical Data/Mask"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "active_array_path": "Active",
+        "cell_feature_group_path": "Pore Data",
+        "feature_ids_path": "FeatureIds",
+        "grid_geometry_path": "RoboMet.3D Image Stack",
+        "input_array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
+        "mask_path": "RoboMet.3D Image Stack/Optical Data/Mask",
+        "randomize_features": true,
+        "scalar_tolerance": 10,
+        "use_mask": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ScalarSegmentFeaturesFilter",
+        "uuid": "e067cd97-9bbf-4c92-89a6-3cb4fdb76c93"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "equivalent_diameters_path": "EquivalentDiameters",
+        "feature_attribute_matrix": "RoboMet.3D Image Stack/Pore Data",
+        "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+        "geometry_path": "RoboMet.3D Image Stack",
+        "num_elements_path": "NumElements",
+        "save_element_sizes": false,
+        "volumes_path": "Volumes"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CalculateFeatureSizesFilter",
+        "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_array_name": "EquivalentDiameters",
+        "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+        "selected_feature_array_path": "RoboMet.3D Image Stack/Pore Data/EquivalentDiameters"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CopyFeatureArrayToElementArray",
+        "uuid": "4c8c976a-993d-438b-bd8e-99f71114b9a1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "advanced_options": false,
+        "component_count": 1,
+        "data_format": "",
+        "initialization_value": "1",
+        "numeric_type": 4,
+        "output_data_array": "RoboMet.3D Image Stack/Optical Data/Phases",
+        "tuple_dimensions": [
+          [
+            0.0
+          ]
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CreateDataArray",
+        "uuid": "67041f9b-bdc6-4122-acc6-c9fe9280e90d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "conditional_array_path": "RoboMet.3D Image Stack/Optical Data/Mask",
+        "remove_value": "0",
+        "replace_value": "2",
+        "selected_array_path": "RoboMet.3D Image Stack/Optical Data/Phases",
+        "use_conditional": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ConditionalSetValue",
+        "uuid": "bad9b7bd-1dc9-4f21-a889-6520e7a41881"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_features_attribute_matrix_path": "RoboMet.3D Image Stack/Pore Data",
+        "cell_phases_array_path": "RoboMet.3D Image Stack/Optical Data/Phases",
+        "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+        "feature_phases_array_path": "Phases"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindFeaturePhasesFilter",
+        "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "centroids_array_path": "Centroids",
+        "feature_attribute_matrix": "RoboMet.3D Image Stack/Pore Data",
+        "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
+        "selected_image_geometry": "RoboMet.3D Image Stack"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindFeatureCentroidsFilter",
+        "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_ensemble_attribute_matrix_name": "RoboMet.3D Image Stack/EnsembleAttributeMatrix",
+        "crystal_structures_array_name": "CrystalStructures",
+        "ensemble": [
+          [
+            "Cubic-High m-3m",
+            "Matrix",
+            "Matrix"
+          ],
+          [
+            "Cubic-High m-3m",
+            "Precipitate",
+            "Pores"
+          ]
+        ],
+        "phase_names_array_name": "PhaseNames",
+        "phase_types_array_name": "PhaseTypes"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CreateEnsembleInfoFilter",
+        "uuid": "8ce3d70c-49fe-4812-a1eb-7ce4c962a59d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "biased_features_array_path": "",
+        "cell_ensemble_attribute_matrix_name": "RoboMet.3D Image Stack/EnsembleAttributeMatrix",
+        "centroids_array_path": "RoboMet.3D Image Stack/Pore Data/Centroids",
+        "clustering_list_array_name": "ClusteringList",
+        "equivalent_diameters_array_path": "RoboMet.3D Image Stack/Pore Data/EquivalentDiameters",
+        "feature_phases_array_path": "RoboMet.3D Image Stack/Pore Data/Phases",
+        "max_min_array_name": "RDFMaxMinDistances",
+        "number_of_bins": 10,
+        "phase_number": 2,
+        "rdf_array_name": "RDF",
+        "remove_biased_features": false,
+        "seed_value": 5489,
+        "selected_image_geometry": "RoboMet.3D Image Stack",
+        "set_random_seed": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindFeatureClusteringFilter",
+        "uuid": "d6e01678-3a03-433f-89ad-4e9adf1f9a45"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/ImagesStack/Images.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

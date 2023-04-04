@@ -50,7 +50,7 @@ Image
 
 ## Example Pipelines
 
-+ (09) Image Segmentation.json
++ (02) Image Segmentation
 
 ## License & Copyright
 
