@@ -363,6 +363,57 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
 /**
  * @brief
  * @tparam T
+ * @param exemplaryNeighborList
+ * @param computedNeighborList
+ */
+template <typename T>
+void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborList* computedData)
+{
+  if constexpr(std::is_same_v<T, bool>)
+  {
+    INFO("Invalid data type (bool) for NeighborList array. Cannot compare values.")
+  }
+  else
+  {
+    const auto* generatedListArray = dynamic_cast<const NeighborList<T>*>(computedData);
+    const auto* exemplarListArray = dynamic_cast<const NeighborList<T>*>(exemplaryData);
+    const auto& computedList = *generatedListArray;
+    const auto& exemplaryList = *exemplarListArray;
+
+    REQUIRE(computedList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
+
+    for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
+    {
+      const auto exemplary = exemplaryList.getList(i);
+      const auto computed = computedList.getList(i);
+      if(exemplary.get() != nullptr && computed.get() != nullptr)
+      {
+        REQUIRE(exemplary->size() == computed->size());
+        std::sort(exemplary->begin(), exemplary->end());
+        std::sort(computed->begin(), computed->end());
+        for(usize j = 0; j < exemplary->size(); ++j)
+        {
+          auto exemplaryVal = exemplary->at(j);
+          auto computedVal = computed->at(j);
+          if(exemplaryVal != computedVal)
+          {
+            float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+            INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryList.getDataPaths()[0].toString(),
+                             exemplary->size(), computedList.getDataPaths()[0].toString(), computed->size()));
+            INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
+
+            REQUIRE(diff < EPSILON);
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * @brief
+ * @tparam T
  * @param dataStructure
  * @param exemplaryDataPath
  * @param computedPath
@@ -495,6 +546,58 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
         REQUIRE(diff < EPSILON);
       }
     }
+  }
+}
+
+template <typename T>
+void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
+{
+  const IArray::ArrayType arrayType = generatedArray->getArrayType();
+  const IArray::ArrayType exemplarArrayType = exemplarArray->getArrayType();
+  if(arrayType != exemplarArrayType)
+  {
+    std::cout << fmt::format("Generated array {} and exemplar array {} do not have the same array type: {} vs {}. Data Will not be compared.", generatedArray->getName(), exemplarArray->getName(),
+                             arrayType, exemplarArrayType)
+              << std::endl;
+    return;
+  }
+
+  DataType type;
+  if(arrayType == IArray::ArrayType::DataArray)
+  {
+    const auto* generatedDataArray = dynamic_cast<const IDataArray*>(generatedArray);
+    const auto* exemplarDataArray = dynamic_cast<const IDataArray*>(exemplarArray);
+    type = generatedDataArray->getDataType();
+    DataType exemplarType = exemplarDataArray->getDataType();
+
+    if(type != exemplarType)
+    {
+      std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(), type, exemplarType)
+                << std::endl;
+      return;
+    }
+    CompareDataArrays<T>(*exemplarDataArray, *generatedDataArray);
+  }
+  if(arrayType == IArray::ArrayType::NeighborListArray)
+  {
+    const auto* generatedDataArray = dynamic_cast<const INeighborList*>(generatedArray);
+    const auto* exemplarDataArray = dynamic_cast<const INeighborList*>(exemplarArray);
+    type = generatedDataArray->getDataType();
+    DataType exemplarType = exemplarDataArray->getDataType();
+    if(type != exemplarType)
+    {
+      std::cout << fmt::format("NeighborList {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(), type,
+                               exemplarType)
+                << std::endl;
+      return;
+    }
+    CompareNeighborLists<T>(exemplarDataArray, generatedDataArray);
+  }
+  if(arrayType == IArray::ArrayType::StringArray)
+  {
+    const auto* generatedDataArray = dynamic_cast<const StringArray*>(generatedArray);
+    const auto* exemplarDataArray = dynamic_cast<const StringArray*>(exemplarArray);
+    CompareStringArrays(*exemplarDataArray, *generatedDataArray);
   }
 }
 
@@ -669,73 +772,74 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
 
   for(const auto& cellArrayPath : selectedCellArrays)
   {
-    const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-    DataType type = generatedDataArray.getDataType();
+    const auto* generatedArray = dataStructure.getDataAs<IArray>(cellArrayPath);
     // Now generate the path to the exemplar data set in the exemplar data structure.
     std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
     generatedPathVector[0] = exemplarDataContainerName;
     DataPath exemplarDataArrayPath(generatedPathVector);
+    const auto* exemplarArray = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
 
     // Check to see if there is something to compare against in the exemplar file.
-    if(nullptr == exemplarDataStructure.getDataAs<IDataArray>(exemplarDataArrayPath))
+    if(nullptr == exemplarArray)
     {
       continue;
     }
 
-    auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath);
-    DataType exemplarType = exemplarDataArray.getDataType();
-
-    if(type != exemplarType)
+    DataType type = DataType::int8;
+    const IArray::ArrayType arrayType = generatedArray->getArrayType();
+    if(arrayType == IArray::ArrayType::DataArray)
     {
-      std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray.getName(), exemplarDataArray.getName(), type, exemplarType)
-                << std::endl;
-      continue;
+      type = dataStructure.getDataRefAs<IDataArray>(cellArrayPath).getDataType();
+    }
+    if(arrayType == IArray::ArrayType::NeighborListArray)
+    {
+      type = dataStructure.getDataRefAs<INeighborList>(cellArrayPath).getDataType();
     }
 
     switch(type)
     {
     case DataType::boolean: {
-      complex::UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<bool>(generatedArray, exemplarArray);
       break;
     }
     case DataType::int8: {
-      complex::UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<int8>(generatedArray, exemplarArray);
       break;
     }
     case DataType::int16: {
-      complex::UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<int16>(generatedArray, exemplarArray);
       break;
     }
     case DataType::int32: {
-      complex::UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<int32>(generatedArray, exemplarArray);
       break;
     }
     case DataType::int64: {
-      complex::UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<int64>(generatedArray, exemplarArray);
       break;
     }
     case DataType::uint8: {
-      complex::UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<uint8>(generatedArray, exemplarArray);
       break;
     }
     case DataType::uint16: {
-      complex::UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<uint16>(generatedArray, exemplarArray);
       break;
     }
     case DataType::uint32: {
-      complex::UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<uint32>(generatedArray, exemplarArray);
       break;
     }
     case DataType::uint64: {
-      complex::UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<uint64>(generatedArray, exemplarArray);
       break;
     }
     case DataType::float32: {
-      complex::UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<float32>(generatedArray, exemplarArray);
       break;
     }
     case DataType::float64: {
-      complex::UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
+      complex::UnitTest::CompareArrays<float64>(generatedArray, exemplarArray);
       break;
     }
     default: {
