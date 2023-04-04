@@ -1104,6 +1104,6 @@ void RunParallelCombine(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... 
 
   ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
 }
-}; // namespace CopyFromArray
+} // namespace CopyFromArray
 
 } // namespace complex
