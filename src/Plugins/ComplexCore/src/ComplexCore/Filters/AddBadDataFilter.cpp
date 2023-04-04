@@ -53,16 +53,18 @@ Parameters AddBadDataFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Optional Variables"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "", false));
-  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed", "", std::mt19937::default_seed));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PoissonNoise_Key, "Add Random Noise", "", false));
-  params.insert(std::make_unique<Float32Parameter>(k_PoissonVolFraction_Key, "Volume Fraction of Random Noise", "", 0.0f));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BoundaryNoise_Key, "Add Boundary Noise", "", false));
-  params.insert(std::make_unique<Float32Parameter>(k_BoundaryVolFraction_Key, "Volume Fraction of Boundary Noise", "", 0.0f));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
+  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed", "The seed fed into the random generator", std::mt19937::default_seed));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PoissonNoise_Key, "Add Random Noise", "If true the user may set the poisson volume fraction", false));
+  params.insert(std::make_unique<Float32Parameter>(k_PoissonVolFraction_Key, "Volume Fraction of Random Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BoundaryNoise_Key, "Add Boundary Noise", "If true the user may set the boundary volume fraction", false));
+  params.insert(std::make_unique<Float32Parameter>(k_BoundaryVolFraction_Key, "Volume Fraction of Boundary Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
 
   params.insertSeparator(Parameters::Separator{"Required Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "", DataPath{}, std::set<DataType>{DataType::int32}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The selected image geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances", "This is the GB Manhattan Distances array", DataPath{},
+                                                          std::set<DataType>{DataType::int32}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_PoissonNoise_Key, k_PoissonVolFraction_Key, true);
@@ -98,16 +100,21 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
     return {MakeErrorResult<OutputActions>(-76234, fmt::format("At least one type of noise must be selected"))};
   }
 
-  auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);
-  if(imgGeomPtr == nullptr)
+  if(pPoissonVolFractionValue > 1.0 && pPoissonVolFractionValue < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(-76235, fmt::format("Image geometry must be valid"))};
+    return {MakeErrorResult<OutputActions>(-76235, fmt::format("Value must be between 0-1 inclusive. You selected: {}", pPoissonVolFractionValue))};
   }
 
+  if(pBoundaryVolFractionValue > 1.0 && pBoundaryVolFractionValue < 0.0)
+  {
+    return {MakeErrorResult<OutputActions>(-76236, fmt::format("Value must be between 0-1 inclusive. You selected: {}", pBoundaryVolFractionValue))};
+  }
+
+  auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);
   auto* cellAM = imgGeomPtr->getCellData();
   if(cellAM == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-76236, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
+    return {MakeErrorResult<OutputActions>(-76237, fmt::format("Image geometry must have a valid cell Attribute Matrix"))};
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
