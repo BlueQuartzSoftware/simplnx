@@ -246,8 +246,7 @@ Parameters ITKImportImageStack::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array",
-                                                         DataPath({"ImageDataContainer", ImageGeom::k_CellDataName, "ImageData"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array", "ImageData"));
 
   return params;
 }
@@ -266,9 +265,11 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
+  auto imageDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
+
+  const DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataName);
 
   if(imageTransformValue != k_NoImageTransform)
   {
