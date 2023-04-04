@@ -92,14 +92,13 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
   {
     for(const auto distance : distanceList[i])
     {
-      const auto bin = static_cast<usize>((distance - minDistance) / stepSize);
-
       if(distance < minDistance)
       {
         freq[0]++;
       }
       else
       {
+        const auto bin = static_cast<usize>((distance - minDistance) / stepSize);
         freq[bin + 1]++;
       }
     }
@@ -108,7 +107,7 @@ std::vector<float32> GenerateRandomDistribution(float32 minDistance, float32 max
   // Normalize the frequencies
   for(size_t i = 0; i < currentNumBins + 1; i++)
   {
-    freq[i] = freq[i] / (numDistances);
+    freq[i] /= numDistances;
   }
 
   return freq;
@@ -221,9 +220,9 @@ Result<> FindFeatureClustering::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    for(usize j = 0; j < clusters[i].size(); j++)
+    if(featurePhases[i] == m_InputValues->PhaseNumber)
     {
-      if(featurePhases[i] == m_InputValues->PhaseNumber)
+      for(usize j = 0; j < clusters[i].size(); j++)
       {
         value = clusters[i][j];
         if(value > max)
@@ -245,15 +244,15 @@ Result<> FindFeatureClustering::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
-    for(usize j = 0; j < clusters[i].size(); j++)
+    if(featurePhases[i] == m_InputValues->PhaseNumber)
     {
-      if(featurePhases[i] == m_InputValues->PhaseNumber)
+      if(m_InputValues->RemoveBiasedFeatures && (*biasedFeatures)[i])
       {
-        if(m_InputValues->RemoveBiasedFeatures && (*biasedFeatures)[i])
-        {
-          continue;
-        }
+        continue;
+      }
 
+      for(usize j = 0; j < clusters[i].size(); j++)
+      {
         ensemble = featurePhases[i];
         bin = (clusters[i][j] - min) / stepSize;
         if(bin >= m_InputValues->NumberOfBins)
