@@ -93,6 +93,7 @@
 #include "ComplexCore/Filters/ComputeFeatureRectFilter.hpp"
 #include "ComplexCore/Filters/FindLargestCrossSectionsFilter.hpp"
 #include "ComplexCore/Filters/WriteStlFileFilter.hpp"
+#include "ComplexCore/Filters/AddBadDataFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -195,6 +196,7 @@ namespace complex
     {complex::Uuid::FromString("6eda8dbf-dbd8-562a-ae1a-f2904157c189").value(), complex::FilterTraits<ComputeFeatureRectFilter>::uuid}, // ComputeFeatureRect
     {complex::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), complex::FilterTraits<FindLargestCrossSectionsFilter>::uuid}, // FindLargestCrossSections
     {complex::Uuid::FromString("b9134758-d5e5-59dd-9907-28d23e0e0143").value(), complex::FilterTraits<WriteStlFileFilter>::uuid}, // WriteStlFile
+    {complex::Uuid::FromString("ac99b706-d1e0-5f78-9246-fbbe1efd93d2").value(), complex::FilterTraits<AddBadDataFilter>::uuid}, // AddBadData
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
