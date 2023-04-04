@@ -301,6 +301,20 @@ public:
   VectorType& operator[](usize grainId);
 
   /**
+   * @brief Returns a const reference to the VectorType value found at the specified index. This cannot be used to edit the VectorType value found at the specified index.
+   * @param grainId
+   * @return const VectorType&
+   */
+  const VectorType& at(int32 grainId) const;
+
+  /**
+   * @brief Returns a const reference to the VectorType value found at the specified index. This cannot be used to edit the VectorType value found at the specified index.
+   * @param grainId
+   * @return const VectorType&
+   */
+  const VectorType& at(usize grainId) const;
+
+  /**
    * @brief Returns the DataArray's value type as an enum
    * @return DataType
    */

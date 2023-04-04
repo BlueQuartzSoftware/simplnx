@@ -11,6 +11,7 @@ set(FilterList
   AlignGeometries
   AlignSectionsFeatureCentroidFilter
   AlignSectionsListFilter
+  AppendImageGeometryZSliceFilter
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHull
   ArrayCalculatorFilter
@@ -112,6 +113,7 @@ set(AlgorithmList
   AddBadData
   AlignSectionsFeatureCentroid
   AlignSectionsList
+  AppendImageGeometryZSlice
   ApplyTransformationToGeometry
   ArrayCalculator
   CalculateArrayHistogram

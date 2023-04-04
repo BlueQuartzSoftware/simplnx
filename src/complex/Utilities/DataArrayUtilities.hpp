@@ -9,7 +9,9 @@
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Filter/Output.hpp"
+#include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/TemplateHelpers.hpp"
 #include "complex/complex_export.hpp"
 
@@ -893,4 +895,215 @@ private:
   IDataArray& m_NewCellArray;
   nonstd::span<const int64> m_NewIndices;
 };
+
+/**
+ * @brief The following functions and classes are meant to make copying data from one IArray into another easier for the developer.
+ *
+ * An example use of these functions would be the following (where newCellData is an AttributeMatrix in dataStructure ):
+ *   ParallelTaskAlgorithm taskRunner;
+ *   for (const auto& [dataId, dataObject] : *newCellData)
+ *   {
+ *     auto* inputDataArray = dataStructure.getDataAs<IArray>(inputCellDataPath.createChildPath(name));
+ *     auto* destDataArray = dataStructure.getDataAs<IArray>(destCellDataPath.createChildPath(name));
+ *     auto* newDataArray = dataStructure.getDataAs<IArray>(newCellDataPath.createChildPath(name));
+ *     const IArray::ArrayType arrayType = destDataArray->getArrayType();
+ *     CopyFromArray::RunParallel<CopyFromArray::Combine>(arrayType, destDataArray, taskRunner, inputDataArray, newDataArray);
+ *   }
+ *   taskRunner.wait();
+ * @code
+ *
+ * @endcode
+ */
+namespace CopyFromArray
+{
+/**
+ * @brief Appends all of the data from the inputArray into the destination array starting at the given offset. This function DOES NOT do any bounds checking!
+ */
+template <class K>
+void AppendData(const K& inputArray, K& destArray, usize offset)
+{
+  const usize numElements = inputArray.getNumberOfTuples() * inputArray.getNumberOfComponents();
+  for(usize i = 0; i < numElements; ++i)
+  {
+    destArray[offset + i] = inputArray.at(i);
+  }
+}
+
+/**
+ * @brief This class will append all of the data from the input array of any IArray type to the given destination array of the same IArray type starting at the given tupleOffset. This class DOES NOT
+ * do any bounds checking and assumes that the destination array has already been properly resized to fit all of the data
+ */
+template <typename T>
+class AppendArray
+{
+public:
+  AppendArray(IArray& destCellArray, const IArray& inputCellArray, usize tupleOffset)
+  : m_ArrayType(destCellArray.getArrayType())
+  , m_InputCellArray(&inputCellArray)
+  , m_DestCellArray(&destCellArray)
+  , m_TupleOffset(tupleOffset)
+  {
+  }
+
+  ~AppendArray() = default;
+
+  AppendArray(const AppendArray&) = default;
+  AppendArray(AppendArray&&) noexcept = default;
+  AppendArray& operator=(const AppendArray&) = delete;
+  AppendArray& operator=(AppendArray&&) noexcept = delete;
+
+  void operator()() const
+  {
+    const usize offset = m_TupleOffset * m_DestCellArray->getNumberOfComponents();
+    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+    {
+      using NeighborListT = NeighborList<T>;
+      auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+      // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+      if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
+      {
+        destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
+      }
+      AppendData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, offset);
+    }
+    if(m_ArrayType == IArray::ArrayType::DataArray)
+    {
+      using DataArrayT = DataArray<T>;
+      AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray), *dynamic_cast<DataArrayT*>(m_DestCellArray), offset);
+    }
+    if(m_ArrayType == IArray::ArrayType::StringArray)
+    {
+      AppendData<StringArray>(*dynamic_cast<const StringArray*>(m_InputCellArray), *dynamic_cast<StringArray*>(m_DestCellArray), offset);
+    }
+  }
+
+private:
+  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+  const IArray* m_InputCellArray = nullptr;
+  IArray* m_DestCellArray = nullptr;
+  usize m_TupleOffset;
+};
+
+/**
+ * @brief This class will copy over all of the data from the first input array of any IArray type, then the second input array of the same IArray type to the given destination array (of the same
+ * IArray type). This class DOES NOT do any bounds checking and assumes that the destination array has already been properly sized to fit all of the data.
+ */
+template <typename T>
+class CombineArrays
+{
+public:
+  CombineArrays(const IArray& inputCellArray1, const IArray& inputCellArray2, IArray& destCellArray)
+  : m_ArrayType(destCellArray.getArrayType())
+  , m_InputCellArray1(&inputCellArray1)
+  , m_InputCellArray2(&inputCellArray2)
+  , m_DestCellArray(&destCellArray)
+  {
+  }
+
+  ~CombineArrays() = default;
+
+  CombineArrays(const CombineArrays&) = default;
+  CombineArrays(CombineArrays&&) noexcept = default;
+  CombineArrays& operator=(const CombineArrays&) = delete;
+  CombineArrays& operator=(CombineArrays&&) noexcept = delete;
+
+  void operator()() const
+  {
+    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+    {
+      using NeighborListT = NeighborList<T>;
+      auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+      // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+      if(destArray->getValues().empty() || destArray->getList(0) == nullptr)
+      {
+        destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
+      }
+      AppendData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray1), *destArray, 0);
+      AppendData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray2), *destArray, m_InputCellArray1->getNumberOfTuples());
+    }
+    if(m_ArrayType == IArray::ArrayType::DataArray)
+    {
+      using DataArrayT = DataArray<T>;
+      AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray1), *dynamic_cast<DataArrayT*>(m_DestCellArray), 0);
+      AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray2), *dynamic_cast<DataArrayT*>(m_DestCellArray), m_InputCellArray1->getSize());
+    }
+    if(m_ArrayType == IArray::ArrayType::StringArray)
+    {
+      AppendData<StringArray>(*dynamic_cast<const StringArray*>(m_InputCellArray1), *dynamic_cast<StringArray*>(m_DestCellArray), 0);
+      AppendData<StringArray>(*dynamic_cast<const StringArray*>(m_InputCellArray2), *dynamic_cast<StringArray*>(m_DestCellArray), m_InputCellArray1->getSize());
+    }
+  }
+
+private:
+  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+  const IArray* m_InputCellArray1 = nullptr;
+  const IArray* m_InputCellArray2 = nullptr;
+  IArray* m_DestCellArray = nullptr;
+};
+
+/**
+ * @brief This function will make use of the AppendData class with the bool data type only to append data from the input IArray to the destination IArray at the given tupleOffset. This function DOES
+ * NOT do any bounds checking!
+ */
+inline void RunAppendBoolAppend(IArray& destCellArray, const IArray& inputCellArray, usize tupleOffset)
+{
+  using DataArrayT = DataArray<bool>;
+  const usize offset = tupleOffset * destCellArray.getNumberOfComponents();
+  AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(&inputCellArray), *dynamic_cast<DataArrayT*>(&destCellArray), offset);
+}
+
+/**
+ * @brief This function will make use of the AppendData class with the bool data type only to combine data from the input IArrays to the destination IArray. This function DOES
+ * NOT do any bounds checking!
+ */
+inline void RunCombineBoolAppend(const IArray& inputCellArray1, const IArray& inputCellArray2, IArray& destCellArray)
+{
+  using DataArrayT = DataArray<bool>;
+  AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(&inputCellArray1), *dynamic_cast<DataArrayT*>(&destCellArray), 0);
+  AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(&inputCellArray2), *dynamic_cast<DataArrayT*>(&destCellArray), inputCellArray1.getSize());
+}
+
+template <class ParallelRunnerT, class... ArgsT>
+void RunParallelAppend(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+{
+  const IArray::ArrayType arrayType = destArray.getArrayType();
+  DataType dataType = DataType::int32;
+  if(arrayType == IArray::ArrayType::NeighborListArray)
+  {
+    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
+  }
+  if(arrayType == IArray::ArrayType::DataArray)
+  {
+    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    if(dataType == DataType::boolean)
+    {
+      RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
+    }
+  }
+
+  ExecuteParallelFunction<AppendArray, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
+}
+
+template <class ParallelRunnerT, class... ArgsT>
+void RunParallelCombine(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+{
+  const IArray::ArrayType arrayType = destArray.getArrayType();
+  DataType dataType = DataType::int32;
+  if(arrayType == IArray::ArrayType::NeighborListArray)
+  {
+    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
+  }
+  if(arrayType == IArray::ArrayType::DataArray)
+  {
+    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    if(dataType == DataType::boolean)
+    {
+      RunCombineBoolAppend(destArray, std::forward<ArgsT>(args)...);
+    }
+  }
+
+  ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
+}
+} // namespace CopyFromArray
+
 } // namespace complex
