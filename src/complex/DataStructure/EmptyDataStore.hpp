@@ -133,7 +133,7 @@ public:
    * EmptyDataStore class contains no data other than its target size.
    * @param tupleShape
    */
-  void reshapeTuples(const ShapeType& tupleShape) override
+  void resizeTuples(const ShapeType& tupleShape) override
   {
     throw std::runtime_error("");
   }

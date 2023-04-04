@@ -1001,13 +1001,12 @@ void readLegacyAttributeMatrix(DataStructure& dataStructure, const complex::HDF5
 {
   DataObject::IdType parentId = parent.getId();
   const std::string amName = amGroupReader.getName();
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, amName, parentId);
 
   auto tDimsReader = amGroupReader.getAttribute("TupleDimensions");
   auto tDims = tDimsReader.readAsVector<uint64>();
   auto reversedTDims = AttributeMatrix::ShapeType(tDims.crbegin(), tDims.crend());
 
-  attributeMatrix->setShape(reversedTDims);
+  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, amName, reversedTDims, parentId);
 
   auto dataArrayNames = amGroupReader.getChildNames();
   for(const auto& daName : dataArrayNames)

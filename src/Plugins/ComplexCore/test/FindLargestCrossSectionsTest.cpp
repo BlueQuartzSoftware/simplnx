@@ -23,10 +23,8 @@ DataStructure CreateValidTestDataStructure()
   std::vector<usize> dims = {6, 6, 6};
   imageGeom->setDimensions(dims);
 
-  auto* cellAM = AttributeMatrix::Create(ds, k_CellData, imageGeom->getId());
-  cellAM->setShape(dims);
-  auto* cellFeatureAM = AttributeMatrix::Create(ds, k_CellFeatureData, imageGeom->getId());
-  cellFeatureAM->setShape({6});
+  auto* cellAM = AttributeMatrix::Create(ds, k_CellData, dims, imageGeom->getId());
+  auto* cellFeatureAM = AttributeMatrix::Create(ds, k_CellFeatureData, {6}, imageGeom->getId());
 
   auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(ds, k_FeatureIds, dims, {1}, cellAM->getId());
   auto& featureIdsDataStore = featureIds->getDataStoreRef();
@@ -263,12 +261,9 @@ DataStructure CreateInvalidTestDataStructure(bool geomIs3d)
   }
   imageGeom->setDimensions(dims);
 
-  auto* cellAM = AttributeMatrix::Create(ds, k_CellData, imageGeom->getId());
-  cellAM->setShape(dims);
-  auto* cellFeatureAM = AttributeMatrix::Create(ds, k_CellFeatureData, imageGeom->getId());
-  cellFeatureAM->setShape({6});
-  auto* testAM = AttributeMatrix::Create(ds, k_CellEnsembleData, imageGeom->getId());
-  testAM->setShape({2});
+  auto* cellAM = AttributeMatrix::Create(ds, k_CellData, dims, imageGeom->getId());
+  auto* cellFeatureAM = AttributeMatrix::Create(ds, k_CellFeatureData, {6}, imageGeom->getId());
+  auto* testAM = AttributeMatrix::Create(ds, k_CellEnsembleData, {2}, imageGeom->getId());
 
   auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(ds, k_FeatureIds, dims, {1}, cellAM->getId());
   auto& featureIdsDataStore = featureIds->getDataStoreRef();

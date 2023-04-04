@@ -74,7 +74,7 @@ int MergeTwins::getSeed(int32 newFid)
   {
     featureParentIds[seed] = newFid;
     std::vector<size_t> tDims(1, newFid + 1);
-    ResizeAttributeMatrix(cellFeaturesAttMatrix, tDims); // this will resize the active array as well
+    cellFeaturesAttMatrix.resizeTuples(tDims); // this will resize the active array as well
   }
   return seed;
 }

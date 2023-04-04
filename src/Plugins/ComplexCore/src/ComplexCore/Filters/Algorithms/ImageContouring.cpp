@@ -18,7 +18,7 @@ struct ExecuteFlyingEdgesFunctor
     flyingEdges.pass3();
 
     // pass 3 resized normals so be sure to resize parent AM
-    normAM.setShape(normals.getTupleShape());
+    normAM.resizeTuples(normals.getTupleShape());
 
     flyingEdges.pass4();
   }

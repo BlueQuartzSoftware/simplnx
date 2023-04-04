@@ -221,20 +221,18 @@ public:
     }
 
     // Create the vertex and face AttributeMatrix
-    auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, m_FaceDataName, geometry2d->getId());
+    auto* faceAttributeMatrix = AttributeMatrix::Create(dataStructure, m_FaceDataName, faceTupleShape, geometry2d->getId());
     if(faceAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-5511, fmt::format("{}CreateGeometry2DAction: Failed to create attribute matrix: '{}'", prefix, faceDataPath.toString()));
     }
-    faceAttributeMatrix->setShape(faceTupleShape);
     geometry2d->setFaceAttributeMatrix(*faceAttributeMatrix);
 
-    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, geometry2d->getId());
+    auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, vertexTupleShape, geometry2d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
       return MakeErrorResult(-5512, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
     }
-    vertexAttributeMatrix->setShape(vertexTupleShape);
     geometry2d->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
     return {};

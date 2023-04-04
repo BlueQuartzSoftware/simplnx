@@ -138,13 +138,12 @@ Result<> SharedFeatureFace::operator()()
   // Grain Boundary Attribute Matrix
   auto& faceFeatureAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->GrainBoundaryAttributeMatrixPath);
   std::vector<usize> tDims = {static_cast<usize>(index)};
-  faceFeatureAttrMat.setShape(tDims);
-  ResizeAttributeMatrix(faceFeatureAttrMat, tDims);
+  faceFeatureAttrMat.resizeTuples(tDims);
 
   auto& surfaceMeshFeatureFaceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureFaceLabelsArrayPath);
   auto& surfaceMeshFeatureFaceNumTriangles = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureFaceNumTrianglesArrayPath);
-  surfaceMeshFeatureFaceLabels.getDataStore()->reshapeTuples(tDims);
-  surfaceMeshFeatureFaceNumTriangles.getDataStore()->reshapeTuples(tDims);
+  surfaceMeshFeatureFaceLabels.getDataStore()->resizeTuples(tDims);
+  surfaceMeshFeatureFaceNumTriangles.getDataStore()->resizeTuples(tDims);
 
   // For smaller data sets having data parallelization ON actually runs slower due to
   // all the overhead of the threads. We are just going to turn this off for

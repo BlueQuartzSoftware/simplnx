@@ -230,17 +230,6 @@ Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath&
 }
 
 //-----------------------------------------------------------------------------
-void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape)
-{
-  attributeMatrix.setShape(newShape);
-  auto childArrays = attributeMatrix.findAllChildrenOfType<IArray>();
-  for(const auto& array : childArrays)
-  {
-    array->reshapeTuples(newShape);
-  }
-}
-
-//-----------------------------------------------------------------------------
 Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const DataPath& arrayPath, const Int32Array& featureIds)
 {
   const auto* featureArray = dataStructure.getDataAs<IDataArray>(arrayPath);

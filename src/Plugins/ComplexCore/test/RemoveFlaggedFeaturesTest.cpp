@@ -31,9 +31,9 @@ void FillDataStructure(DataStructure& dataStructure)
   imageGeom->setOrigin(std::vector<float>{0, 0, 0});
   imageGeom->setSpacing(std::vector<float>{1, 1, 1});
 
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, k_CellData, imageGeom->getId());
   std::vector<size_t> tupleDims(dims.rbegin(), dims.rend());
-  attributeMatrix->setShape(tupleDims);
+  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, k_CellData, tupleDims, imageGeom->getId());
+
   imageGeom->setCellData(*attributeMatrix);
 
   Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, k_FeatureIds, tupleDims, {1}, attributeMatrix->getId());
@@ -55,8 +55,7 @@ void FillDataStructure(DataStructure& dataStructure)
   testFeatIdsDataStore[14] = 3;
   testFeatIdsDataStore[15] = 0;
 
-  auto* featureAttributeMatrix = AttributeMatrix::Create(dataStructure, k_CellFeatureData, imageGeom->getId());
-  featureAttributeMatrix->setShape({4});
+  auto* featureAttributeMatrix = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {4ULL}, imageGeom->getId());
   BoolArray* maskArray = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, k_ActiveName, {4}, {1}, featureAttributeMatrix->getId());
   auto& maskDataStore = maskArray->getDataStoreRef();
   maskDataStore[0] = false;

@@ -25,7 +25,6 @@ std::string AttributeMatrixIO::getTypeName() const
 Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                      const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* dataObject = data_type::Import(structureReader.getDataStructure(), objectName, importId, parentId);
 
   auto groupReader = parentGroup.openGroup(objectName);
   auto attribute = groupReader.getAttribute(IOConstants::k_TupleDims);
@@ -33,11 +32,10 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
 
   if(tupleShape.empty())
   {
-    std::string ss = "Failed to read AttributeMatrix tuple shape";
-    return MakeErrorResult(-1, ss);
+    return MakeErrorResult(-1550, fmt::format("Failed to read AttributeMatrix tuple shape"));
   }
+  auto* dataObject = data_type::Import(structureReader.getDataStructure(), objectName, tupleShape, importId, parentId);
 
-  dataObject->setShape(tupleShape);
   Result<> result = BaseGroupIO::ReadBaseGroupData(structureReader, *dataObject, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {

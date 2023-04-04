@@ -54,7 +54,7 @@ void INodeGeometry0D::setVertexListId(const std::optional<IdType>& vertices)
 
 void INodeGeometry0D::resizeVertexList(usize size)
 {
-  getVerticesRef().getIDataStoreRef().reshapeTuples({size});
+  getVerticesRef().getIDataStoreRef().resizeTuples({size});
 }
 
 usize INodeGeometry0D::getNumberOfVertices() const

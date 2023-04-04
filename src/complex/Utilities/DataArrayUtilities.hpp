@@ -350,7 +350,6 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const typename IDataStore:
 template <class T>
 Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode, std::string dataFormat = "")
 {
-
   auto parentPath = path.getParent();
 
   std::optional<DataObject::IdType> dataObjectId;
@@ -660,16 +659,6 @@ COMPLEX_EXPORT bool CheckArraysAreSameType(const DataStructure& dataStructure, c
 COMPLEX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std::vector<DataPath>& dataArrayPaths);
 
 /**
- * @brief This function will ensure that a user entered numeric value can correctly be parsed into the selected DataArray
- *
- * @param value The string value that is to be parsed
- * @param inputDataArray The DataArray that the value would be inserted into.
- * @return
- */
-
-COMPLEX_EXPORT void ResizeAttributeMatrix(AttributeMatrix& attributeMatrix, const std::vector<usize>& newShape);
-
-/**
  * @brief Validates that the number of features in the array are equivalent
  * @param dataStructure the DataStructure containing the array
  * @param arrayPath the DataPath to the array in the dataStructure
@@ -706,7 +695,7 @@ Result<> ResizeDataArray(DataStructure& dataStructure, const DataPath& arrayPath
   }
 
   // the array's parent is not in an Attribute Matrix so we can safely reshape to the new tuple shape
-  dataArray->template getIDataStoreRefAs<DataStore<T>>().reshapeTuples(newShape);
+  dataArray->template getIDataStoreRefAs<DataStore<T>>().resizeTuples(newShape);
   return {};
 }
 

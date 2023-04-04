@@ -10,8 +10,6 @@
 
 #include <catch2/catch.hpp>
 
-#include <cassert>
-#include <memory>
 #include <vector>
 
 using namespace complex;
@@ -27,9 +25,8 @@ const size_t COMPONENT_DIM = 2;
 template <typename T>
 void createDataStructure(DataStructure& dataStructure)
 {
-  std::vector<size_t> tdims = {TUPLE_DIM};
-  AttributeMatrix* am = AttributeMatrix::Create(dataStructure, AttributeMatrixName);
-  am->setShape(tdims);
+  const std::vector<size_t> tdims = {TUPLE_DIM};
+  AttributeMatrix* am = AttributeMatrix::Create(dataStructure, AttributeMatrixName, tdims);
   std::vector<size_t> cdims = {COMPONENT_DIM};
   DataArray<T>* da = DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, DataArrayName, tdims, cdims, am->getId());
   da->fill(static_cast<T>(0.0));
