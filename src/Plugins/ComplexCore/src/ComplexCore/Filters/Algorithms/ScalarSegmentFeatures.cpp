@@ -281,7 +281,7 @@ int64_t ScalarSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
     featureIds->setValue(static_cast<usize>(seed), gnum);
     std::vector<usize> tDims = {static_cast<usize>(gnum) + 1};
     auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->pCellFeaturesPath);
-    ResizeAttributeMatrix(cellFeaturesAM, tDims); // This will resize the active array
+    cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
   }
   return seed;
 }

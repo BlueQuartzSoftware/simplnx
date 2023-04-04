@@ -54,7 +54,7 @@ void INodeGeometry3D::setPolyhedraList(const SharedFaceList& polyhedra)
 
 void INodeGeometry3D::resizePolyhedraList(usize size)
 {
-  getPolyhedraRef().getIDataStoreRef().reshapeTuples({size});
+  getPolyhedraRef().getIDataStoreRef().resizeTuples({size});
 }
 
 usize INodeGeometry3D::getNumberOfPolyhedra() const

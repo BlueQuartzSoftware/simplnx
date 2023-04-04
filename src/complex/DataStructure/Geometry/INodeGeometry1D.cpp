@@ -54,7 +54,7 @@ void INodeGeometry1D::setEdgeListId(const std::optional<IdType>& edgeList)
 
 void INodeGeometry1D::resizeEdgeList(usize size)
 {
-  getEdgesRef().getIDataStoreRef().reshapeTuples({size});
+  getEdgesRef().getIDataStoreRef().resizeTuples({size});
 }
 
 usize INodeGeometry1D::getNumberOfCells() const

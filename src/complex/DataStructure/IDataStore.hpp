@@ -76,7 +76,7 @@ public:
    * @brief Resizes the DataStore to handle the specified number of tuples.
    * @param numTuples
    */
-  virtual void reshapeTuples(const ShapeType& tupleShape) = 0;
+  virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
   /**
    * @brief Returns the DataStore's DataType as an enum

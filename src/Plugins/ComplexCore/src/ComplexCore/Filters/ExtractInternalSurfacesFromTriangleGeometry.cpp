@@ -325,8 +325,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
   // Resize the vertex and triangle arrays
   internalTriangleGeom.resizeVertexList(currentNewVertIndex);
   internalTriangleGeom.resizeFaceList(currentNewTriIndex);
-  ResizeAttributeMatrix(*internalTriangleGeom.getVertexAttributeMatrix(), {currentNewVertIndex});
-  ResizeAttributeMatrix(*internalTriangleGeom.getFaceAttributeMatrix(), {currentNewTriIndex});
+  internalTriangleGeom.getVertexAttributeMatrix()->resizeTuples({currentNewVertIndex});
+  internalTriangleGeom.getFaceAttributeMatrix()->resizeTuples({currentNewTriIndex});
 
   IGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
   IGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
@@ -384,7 +384,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::executeImpl(DataStructure&
     DataPath destinationPath = internalTrianglesPath.createChildPath(faceDataName).createChildPath(targetArrayPath.getTargetName());
     auto& src = data.getDataRefAs<IDataArray>(targetArrayPath);
     auto& dest = data.getDataRefAs<IDataArray>(destinationPath);
-    dest.getIDataStore()->reshapeTuples({currentNewTriIndex});
+    dest.getIDataStore()->resizeTuples({currentNewTriIndex});
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, triNewIndex);
   }

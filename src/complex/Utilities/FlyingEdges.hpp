@@ -887,7 +887,7 @@ public:
 
     m_TriangleGeom.resizeFaceList(triAccum);
     m_TriangleGeom.resizeVertexList(pointAccum);
-    m_Normals.getIDataStoreRef().reshapeTuples({pointAccum});
+    m_Normals.getIDataStoreRef().resizeTuples({pointAccum});
   }
   ///////////////////////////////////////////////////////////////////////////////
 

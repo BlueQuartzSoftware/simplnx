@@ -23,8 +23,7 @@ DataStructure createTestData()
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
   vertexGeom->setVertices(*vertexArray);
 
-  auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, k_VertexDataName, vertexGeom->getId());
-  vertexAttributeMatrix->setShape({k_TupleCount});
+  auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, k_VertexDataName, {k_TupleCount}, vertexGeom->getId());
   vertexGeom->setVertexAttributeMatrix(*vertexAttributeMatrix);
 
   auto* dataArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "DataArray", {k_TupleCount}, {1}, vertexAttributeMatrix->getId());

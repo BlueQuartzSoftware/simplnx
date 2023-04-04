@@ -85,8 +85,7 @@ TEST_CASE("ComplexCore::CopyDataObjectFilter(Invalid Parameters)", "[ComplexCore
   }
   SECTION("Copy data new parent tuple mimatch")
   {
-    auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "TestAttributeMatrix");
-    attributeMatrix->setShape({10, 5, 1});
+    auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "TestAttributeMatrix", {10, 5, 1});
 
     const DataPath dataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "Phases"});
     const DataPath copyPath({"TestAttributeMatrix"});

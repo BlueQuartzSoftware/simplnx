@@ -45,7 +45,7 @@ TEST_CASE("ComplexCore::CreateAttributeMatrixFilter(Invalid Parameters)", "[Comp
 
   SECTION("Section 2")
   {
-    AttributeMatrix* attMat1 = AttributeMatrix::Create(dataStructure, "AttributeMatrix1");
+    AttributeMatrix* attMat1 = AttributeMatrix::Create(dataStructure, "AttributeMatrix1", {1ULL});
     args.insert(CreateAttributeMatrixFilter::k_DataObjectPath, std::make_any<DataPath>(DataPath({"AttributeMatrix1", "AttributeMatrix2"})));
     args.insert(CreateAttributeMatrixFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
   }

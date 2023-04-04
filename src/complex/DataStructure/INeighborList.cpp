@@ -16,7 +16,7 @@ INeighborList::INeighborList(DataStructure& dataStructure, const std::string& na
 {
 }
 
-INeighborList::~INeighborList() = default;
+INeighborList::~INeighborList() noexcept = default;
 
 std::string INeighborList::getTypeName() const
 {

@@ -386,8 +386,8 @@ Result<> StlFileReader::eliminate_duplicate_nodes()
     triangles[i * 3 + 2] = uniqueIds[node3];
   }
 
-  ResizeAttributeMatrix(*triangleGeom.getFaceAttributeMatrix(), {triangleGeom.getNumberOfFaces()});
-  ResizeAttributeMatrix(*triangleGeom.getVertexAttributeMatrix(), {triangleGeom.getNumberOfVertices()});
+  triangleGeom.getFaceAttributeMatrix()->resizeTuples({triangleGeom.getNumberOfFaces()});
+  triangleGeom.getVertexAttributeMatrix()->resizeTuples({triangleGeom.getNumberOfVertices()});
 
   return {};
 }

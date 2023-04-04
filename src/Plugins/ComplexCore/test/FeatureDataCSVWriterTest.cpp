@@ -52,8 +52,7 @@ TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Test Algorithm", "[FeatureDa
 {
   FeatureDataCSVWriterFilter filter;
   DataStructure dataStructure;
-  AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataStructure, "TestData");
-  topLevelGroup.setShape(k_VertexTupleDims);
+  AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataStructure, "TestData", k_VertexTupleDims);
   auto path = dataStructure.getAllDataPaths()[0];
 
   auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", k_NumTuples, topLevelGroup.getId());

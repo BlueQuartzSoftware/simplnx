@@ -779,13 +779,13 @@ Result<> FindArrayStatistics::operator()()
     numFeatures = findNumFeatures(featureIds);
 
     auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
-    destAttrMatPtr->setShape({numFeatures});
+    destAttrMatPtr->resizeTuples({numFeatures});
 
     for(const auto& array : arrays)
     {
       if(array != nullptr)
       {
-        array->reshapeTuples({numFeatures});
+        array->resizeTuples({numFeatures});
       }
     }
   }

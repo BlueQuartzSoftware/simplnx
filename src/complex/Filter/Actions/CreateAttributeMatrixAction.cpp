@@ -46,12 +46,11 @@ Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode m
     return MakeErrorResult(-5205, fmt::format("{}CreateAttributeMatrixAction: Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
   }
 
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, createdAttributeMatrixPath.getTargetName(), dataStructure.getId(parentPath).value());
+  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, createdAttributeMatrixPath.getTargetName(), m_TupleShape, dataStructure.getId(parentPath).value());
   if(attributeMatrix == nullptr)
   {
     return MakeErrorResult(-5206, fmt::format("{}CreateAttributeMatrixAction: Failed to create AttributeMatrix: '{}'", prefix, createdAttributeMatrixPath.toString()));
   }
-  attributeMatrix->setShape(m_TupleShape);
 
   return {};
 }

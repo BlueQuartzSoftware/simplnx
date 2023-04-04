@@ -139,8 +139,7 @@ TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][Fin
       largestFeature = featureId;
     }
   }
-  AttributeMatrix* cellFeatureData = AttributeMatrix::Create(dataStructure, k_Grain_Data);
-  cellFeatureData->setShape({largestFeature + 1});
+  AttributeMatrix* cellFeatureData = AttributeMatrix::Create(dataStructure, k_Grain_Data, {largestFeature + 1});
 
   // Run the FindAvgOrientationsFilter
   {

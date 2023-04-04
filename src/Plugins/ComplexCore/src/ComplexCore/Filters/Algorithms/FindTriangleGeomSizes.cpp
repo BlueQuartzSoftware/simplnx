@@ -84,8 +84,7 @@ Result<> FindTriangleGeomSizes::operator()()
 
   AttributeMatrix::ShapeType tDims = {featureSet.size() + 1};
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
-  featAttrMat.setShape(tDims);
-  ResizeAttributeMatrix(featAttrMat, tDims);
+  featAttrMat.resizeTuples(tDims);
   auto& volumes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesArrayPath);
 
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};

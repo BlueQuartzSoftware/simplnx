@@ -177,7 +177,7 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
   usize maxValue = featureIds[featureIdsMaxIdx];
 
   auto& createdArrayStore = createdArray.getIDataStoreRefAs<IDataStore>();
-  createdArrayStore.reshapeTuples(std::vector<usize>{maxValue + 1});
+  createdArrayStore.resizeTuples(std::vector<usize>{maxValue + 1});
 
   return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
 }

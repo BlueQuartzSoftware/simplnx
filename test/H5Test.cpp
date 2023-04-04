@@ -740,7 +740,7 @@ TEST_CASE("DataArray<bool> IO")
   }
 }
 
-TEST_CASE("xmdf")
+TEST_CASE("xdmf")
 {
   DataStructure dataStructure;
   auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
@@ -756,8 +756,7 @@ TEST_CASE("xmdf")
     item = realDistribution(generator);
   }
   auto* verts = DataArray<float32>::Create(dataStructure, "Verts", std::move(vertsDataStore), geomId);
-  auto* vertexData = AttributeMatrix::Create(dataStructure, "VertexData", geomId);
-  vertexData->setShape({numVerts});
+  auto* vertexData = AttributeMatrix::Create(dataStructure, "VertexData", {numVerts}, geomId);
   vertexGeom->setVertexAttributeMatrix(*vertexData);
   vertexGeom->setVertices(*verts);
   auto vertexAssociatedData = std::make_unique<DataStore<int32>>(numVerts, 0);

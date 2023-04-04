@@ -44,8 +44,7 @@ DataStructure CreateDataStructure()
   TriangleGeom::Create(dataStructure, k_WrongGeometryName);
 
   // Create the Cell AttributeMatrix
-  AttributeMatrix* cellAttrMat = AttributeMatrix::Create(dataStructure, k_CellAttrMatName, imageGeom->getId());
-  cellAttrMat->setShape(dims);
+  AttributeMatrix* cellAttrMat = AttributeMatrix::Create(dataStructure, k_CellAttrMatName, dims, imageGeom->getId());
 
   // Generate a "mask"
   BoolArray* maskData = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_MaskArrayName, {cellCount}, {1}, cellAttrMat->getId());
@@ -56,8 +55,7 @@ DataStructure CreateDataStructure()
   (*maskData)[13] = false;
   (*maskData)[14] = false;
 
-  AttributeMatrix* cellAttrMat2 = AttributeMatrix::Create(dataStructure, k_CellAttrMat2Name, imageGeom->getId());
-  cellAttrMat2->setShape(dims);
+  AttributeMatrix* cellAttrMat2 = AttributeMatrix::Create(dataStructure, k_CellAttrMat2Name, dims, imageGeom->getId());
 
   // Create a cell attribute array
   Float32Array* f32Data = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1}, cellAttrMat->getId());
@@ -66,8 +64,7 @@ DataStructure CreateDataStructure()
   Float32Array* f32Data2 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1}, cellAttrMat2->getId());
   f32Data2->fill(45.243f);
 
-  AttributeMatrix* wrongTuplesAttrMatrix = AttributeMatrix::Create(dataStructure, k_WrongAttrMatName, imageGeom->getId());
-  wrongTuplesAttrMatrix->setShape({3});
+  AttributeMatrix* wrongTuplesAttrMatrix = AttributeMatrix::Create(dataStructure, k_WrongAttrMatName, {3}, imageGeom->getId());
 
   Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {3}, {1}, wrongTuplesAttrMatrix->getId());
 

@@ -202,7 +202,7 @@ usize StringArray::getNumberOfComponents() const
   return 1;
 }
 
-void StringArray::reshapeTuples(const std::vector<usize>& tupleShape)
+void StringArray::resizeTuples(const std::vector<usize>& tupleShape)
 {
   auto numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   if(numTuples != size())
