@@ -781,7 +781,7 @@ download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 								 COPY_DATA)
 								 
 add_custom_target(Copy_Example_Pipelines ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline" "${PIPELINE_DEST_DIR}/(02) Image Segmentation.d3dpipeline"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${complex_SOURCE_DIR}/pipelines/\(02\)\ Image\ Segmentation.d3dpipeline ${PIPELINE_DEST_DIR}/\(02\)\ Image\ Segmentation.d3dpipeline
   COMMENT "Copying Example Pipelines into Binary Directory"
 )
 set_target_properties(Copy_Example_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
