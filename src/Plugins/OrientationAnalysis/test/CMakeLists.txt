@@ -139,20 +139,134 @@ endif()
 # -----------------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
 
+set(TEST_PIPELINE_LIST_FILE ${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/PipelineRunnerTest.txt)
+FILE(WRITE ${TEST_PIPELINE_LIST_FILE} "Prebuilt Pipeline Tests\n")
+get_target_property(PIPELINE_RUNNER_NAME PipelineRunner NAME)
+get_target_property(PIPELINE_RUNNER_DEBUG PipelineRunner DEBUG_POSTFIX)
+# message(STATUS "PIPELINE_RUNNER_NAME: ${PIPELINE_RUNNER_NAME}")
+# message(STATUS "PIPELINE_RUNNER_DEBUG: ${PIPELINE_RUNNER_DEBUG}")
+
+#------------------------------------------------------------------------------
+# This function creates a CTest for a given pipeiline file.
+#  PLUGIN_NAME: Name of the plugin: Typically you can use ${PLUGIN_NAME}
+#  PIPELINE_PATH: The absolute path to the pipeline file
+#  TEST_INDEX: The numerical test index. This can be reset for each plugin
+#  DELETE_FILE_LIST: The list of files that should be deleted from the system
+#                    after the test is run
+#------------------------------------------------------------------------------
+function(add_pipeline_test)
+  set(optionsArgs)
+  set(oneValueArgs PLUGIN_NAME PIPELINE_PATH TEST_INDEX)
+  set(multiValueArgs DELETE_FILE_LIST)
+  cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  set(TEST_SCRIPT_FILE_EXT "sh")
+  set(EXE_EXT "")
+  set(RM_COMMAND "rm")
+  if(WIN32)
+    set(TEST_SCRIPT_FILE_EXT "bat")
+    set(EXE_EXT ".exe")
+    set(RM_COMMAND "del")
+  endif()
+  set(PREBUILT_SUPPORT_DIR "${${PLUGIN_NAME}_SOURCE_DIR}")
+
+  FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "[${ARGS_TEST_INDEX}]:${ARGS_PIPELINE_PATH}\n")
+
+  get_filename_component(test "${ARGS_PIPELINE_PATH}" NAME)
+  set(SIMPL_CTEST_TEST_DRIVER "${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/${test}.${TEST_SCRIPT_FILE_EXT}")
+  # message(STATUS "==> ${SIMPL_CTEST_TEST_DRIVER}")
+  set(DELETE_FILE_COMMANDS "")
+  if(WIN32)
+    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/%CONFIG_DIR%/")
+  else()
+    set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/")
+  endif()
+
+  foreach ( f ${ARGS_DELETE_FILE_LIST})
+    set(abs_file_path ${DATA_DEST_DIR}${f})
+    if(WIN32)
+      file(TO_NATIVE_PATH ${abs_file_path} abs_file_path)
+    endif()
+    set(DELETE_FILE_COMMANDS "${DELETE_FILE_COMMANDS}\necho Deleting Input file '${abs_file_path}'\n${RM_COMMAND} \"${abs_file_path}\"\n")
+    FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "    [DELETES FILE]:${abs_file_path}\n")
+  endforeach()
+
+  configure_file(${${PLUGIN_NAME}_SOURCE_DIR}/test/ctest_pipeline_driver.${TEST_SCRIPT_FILE_EXT} 
+                "${SIMPL_CTEST_TEST_DRIVER}" @ONLY)
+
+  string(REPLACE "/" "_" test "${test}")
+  add_test(NAME ${PLUGIN_NAME}_${ARGS_TEST_INDEX} COMMAND "${SIMPL_CTEST_TEST_DRIVER}" )    
+endfunction()
+
+#------------------------------------------------------------------------------
+# Setup our Prebuilt reconstruction pipelines for the Small IN100 Test Data
+#------------------------------------------------------------------------------
+set(test_index 0)
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline" 
+                  TEST_INDEX "${test_index}")
+
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(08) Small IN100 Full Reconstruction.d3dpipeline" 
+                  TEST_INDEX "${test_index}"
+                  #DELETE_FILE_LIST "Data/Output/Reconstruction/Small_IN100.h5ebsd"
+                  )
+
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(01) Small IN100 Morphological Statistics.d3dpipeline" 
+                  TEST_INDEX "${test_index}"
+                  DELETE_FILE_LIST "Data/Output/Reconstruction/SmallIN100_Final.dream3d" "Data/Output/Reconstruction/SmallIN100_Final.xdmf")
+
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(05) Small IN100 Crystallographic Statistics.d3dpipeline" 
+                  TEST_INDEX "${test_index}"
+                  DELETE_FILE_LIST "Data/Output/Statistics/SmallIN100_Morph.dream3d" "Data/Output/Statistics/SmallIN100_Morph.xdmf")
+
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(01) Small IN100 Quick Mesh.d3dpipeline" 
+                  TEST_INDEX "${test_index}"
+                  DELETE_FILE_LIST "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d" "Data/Output/Statistics/SmallIN100_CrystalStats.xdmf")     
+ 
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(02) Small IN100 Smooth Mesh.d3dpipeline" 
+                  TEST_INDEX "${test_index}"
+                  DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Mesh.xdmf")                   
+  
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(03) Small IN100 Mesh Statistics.d3dpipeline" 
+                  TEST_INDEX "${test_index}"
+                  DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Smoothed.xdmf")                 
+
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(04) Small IN100 GBCD.d3dpipeline" 
+                  TEST_INDEX "${test_index}"
+                  DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d" 
+                                    "Data/Output/SurfaceMesh/SmallIN100_MeshStats.xdmf" 
+                                    "Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph"
+                                    "Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat"
+                  )     
+
 # These should be relative to the 
 set(PREBUILT_PIPELINE_NAMES
   # THIS GROUP MUST GO FIRST because the .h5ebsd file is needed for some of the examples below
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(08) Small IN100 Full Reconstruction.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(01) Small IN100 Morphological Statistics.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(05) Small IN100 Crystallographic Statistics.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(01) Small IN100 Quick Mesh.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(02) Small IN100 Smooth Mesh.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(03) Small IN100 Mesh Statistics.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(04) Small IN100 GBCD.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(08) Small IN100 Full Reconstruction.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(01) Small IN100 Morphological Statistics.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(05) Small IN100 Crystallographic Statistics.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(01) Small IN100 Quick Mesh.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(02) Small IN100 Smooth Mesh.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(03) Small IN100 Mesh Statistics.d3dpipeline"
+  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(04) Small IN100 GBCD.d3dpipeline"
 
   # Example or other test pipelines
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/AlignSectionsMutualInformation.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/AlignSectionsMutualInformation.d3dpipeline"  # This example depends on the SmallIN100.h5ebsd file
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/CI_Histogram.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EnembleInfoReader.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadAng.d3dpipeline"
