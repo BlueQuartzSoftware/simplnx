@@ -11,20 +11,6 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  AbaqusHexahedronWriterInputValues inputValues;
-
-  inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
-  inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-
-  return AbaqusHexahedronWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 
@@ -35,7 +21,7 @@ struct COMPLEXCORE_EXPORT AbaqusHexahedronWriterInputValues
   FileSystemPathParameter::ValueType OutputPath;
   StringParameter::ValueType FilePrefix;
   DataPath FeatureIdsArrayPath;
-
+  DataPath ImageGeometryPath;
 };
 
 /**
@@ -58,6 +44,8 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+
+  void sendMessage(const std::string& message);
 
 private:
   DataStructure& m_DataStructure;
