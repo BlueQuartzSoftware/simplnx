@@ -30,6 +30,7 @@ set(FilterList
   AlignSectionsMisorientationFilter
   AlignSectionsMutualInformationFilter
   BadDataNeighborOrientationCheckFilter
+  CAxisSegmentFeaturesFilter
   ConvertOrientations
   ConvertQuaternionFilter
   CreateEnsembleInfoFilter
@@ -165,6 +166,7 @@ set(filter_algorithms
   AlignSectionsMisorientation
   AlignSectionsMutualInformation
   BadDataNeighborOrientationCheck
+  CAxisSegmentFeatures
   ConvertQuaternion
   CreateEnsembleInfo
   EBSDSegmentFeatures

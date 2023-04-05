@@ -18,7 +18,6 @@ SegmentFeatures::~SegmentFeatures() = default;
 // -----------------------------------------------------------------------------
 Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
-
   SizeVec3 udims = gridGeom->getDimensions();
 
   int64 dims[3] = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
@@ -150,7 +149,7 @@ SegmentFeatures::SeedGenerator SegmentFeatures::initializeVoxelSeedGenerator(Int
 // -----------------------------------------------------------------------------
 void SegmentFeatures::randomizeFeatureIds(complex::Int32Array* featureIds, uint64 totalPoints, uint64 totalFeatures, Int64Distribution& distribution) const
 {
-  // notifyStatusMessage("Randomizing Feature Ids");
+  m_MessageHandler(IFilter::Message::Type::Info, "Randomizing Feature Ids");
   // Generate an even distribution of numbers between the min and max range
   const int64 rangeMin = 1;
   const int64 rangeMax = totalFeatures - 1;
