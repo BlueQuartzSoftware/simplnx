@@ -47,8 +47,8 @@ Result<> CAxisSegmentFeatures::operator()()
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayName);
   m_FeatureIdsArray->fill(0);
-  auto* active = m_DataStructure.getDataAs<BoolArray>(m_InputValues->ActiveArrayName);
-  active->fill(true);
+  auto* active = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayName);
+  active->fill(1);
 
   // Generate the random voxel indices that will be used for the seed points to start a new grain growth/agglomeration
   constexpr int64 rangeMin = 0;
@@ -78,7 +78,7 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 {
   DataArray<int32>::store_type& featureIds = m_FeatureIdsArray->getDataStoreRef();
   const usize totalPoints = featureIds.getNumberOfTuples();
-  complex::AbstractDataStore<int32>& cellPhases = m_CellPhases->getDataStoreRef();
+  AbstractDataStore<int32>& cellPhases = m_CellPhases->getDataStoreRef();
 
   // start with the next voxel after the last seed
   auto randPoint = static_cast<usize>(nextSeed);

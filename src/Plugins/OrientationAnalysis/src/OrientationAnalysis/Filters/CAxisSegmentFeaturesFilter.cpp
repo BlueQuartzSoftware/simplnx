@@ -137,7 +137,7 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
     resultOutputActions.value().actions.push_back(std::move(createAttributeMatrixAction));
   }
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::boolean, std::vector<usize>{1}, std::vector<usize>{1}, activePath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activePath);
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
