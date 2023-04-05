@@ -87,12 +87,16 @@ IFilter::PreflightResult AbaqusHexahedronWriterFilter::preflightImpl(const DataS
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Check Output Path
-  QDir dir;
-  if(!dir.mkpath(m_OutputPath))
+  if(!fs::exists(pOutputPathValue))
   {
-    QString ss = QObject::tr("Error creating parent path '%1'").arg(m_OutputPath);
-    setErrorCondition(-1, ss);
-    return {};
+    return MakePreflightErrorResult(-1111, "The supplied directory path doesn't exist");
+  }
+  else
+  {
+    if(!fs::is_directory(pOutputPathValue))
+    {
+      return MakePreflightErrorResult(-1112, "The supplied directory path isn't a directory");
+    }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
