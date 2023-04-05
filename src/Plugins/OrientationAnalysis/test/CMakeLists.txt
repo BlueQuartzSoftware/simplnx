@@ -174,7 +174,7 @@ function(add_pipeline_test)
 
   get_filename_component(test "${ARGS_PIPELINE_PATH}" NAME)
   set(SIMPL_CTEST_TEST_DRIVER "${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/${test}.${TEST_SCRIPT_FILE_EXT}")
-  message(STATUS "==> ${SIMPL_CTEST_TEST_DRIVER}")
+  # message(STATUS "==> ${SIMPL_CTEST_TEST_DRIVER}")
   set(DELETE_FILE_COMMANDS "")
   if(WIN32)
     set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/%CONFIG_DIR%/")
