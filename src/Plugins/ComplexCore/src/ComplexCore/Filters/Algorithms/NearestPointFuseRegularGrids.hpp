@@ -6,27 +6,16 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  NearestPointFuseRegularGridsInputValues inputValues;
-
-  inputValues.ReferenceCellAttributeMatrixPath = filterArgs.value<DataPath>(k_ReferenceCellAttributeMatrixPath_Key);
-  inputValues.SamplingCellAttributeMatrixPath = filterArgs.value<DataPath>(k_SamplingCellAttributeMatrixPath_Key);
-
-  return NearestPointFuseRegularGrids(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
 
 namespace complex
 {
 
 struct COMPLEXCORE_EXPORT NearestPointFuseRegularGridsInputValues
 {
+  DataPath ReferenceGeometryPath;
+  DataPath SamplingGeometryPath;
   DataPath ReferenceCellAttributeMatrixPath;
   DataPath SamplingCellAttributeMatrixPath;
-
 };
 
 /**

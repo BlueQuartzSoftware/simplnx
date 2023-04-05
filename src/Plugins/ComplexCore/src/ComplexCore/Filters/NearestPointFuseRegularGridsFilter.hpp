@@ -24,6 +24,8 @@ public:
   NearestPointFuseRegularGridsFilter& operator=(NearestPointFuseRegularGridsFilter&&) noexcept = delete;
 
   // Parameter Keys
+  static inline constexpr StringLiteral k_ReferenceGeometryPath_Key = "reference_geometry_path";
+  static inline constexpr StringLiteral k_SamplingGeometryPath_Key = "sampling_geometry_path";
   static inline constexpr StringLiteral k_ReferenceCellAttributeMatrixPath_Key = "reference_cell_attribute_matrix_path";
   static inline constexpr StringLiteral k_SamplingCellAttributeMatrixPath_Key = "sampling_cell_attribute_matrix_path";
 
@@ -89,8 +91,7 @@ protected:
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure & data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-      const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 

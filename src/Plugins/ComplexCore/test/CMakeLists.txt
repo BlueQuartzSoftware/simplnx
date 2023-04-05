@@ -83,6 +83,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
   MoveDataTest.cpp
+  NearestPointFuseRegularGridsTest.cpp
   PartitionGeometryTest.cpp
   PipelineTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp

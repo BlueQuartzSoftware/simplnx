@@ -83,6 +83,7 @@ set(FilterList
   MinNeighbors
   MoveData
   MultiThresholdObjects
+  NearestPointFuseRegularGridsFilter
   PartitionGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
@@ -149,6 +150,7 @@ set(AlgorithmList
   ImportVolumeGraphicsFile
   ImportBinaryCTNorthstar
   LaplacianSmoothing
+  NearestPointFuseRegularGrids
   PartitionGeometry
   PointSampleTriangleGeometry
   QuickSurfaceMesh
