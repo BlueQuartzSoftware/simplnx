@@ -174,7 +174,7 @@ function(add_pipeline_test)
 
   get_filename_component(test "${ARGS_PIPELINE_PATH}" NAME)
   set(SIMPL_CTEST_TEST_DRIVER "${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/${test}.${TEST_SCRIPT_FILE_EXT}")
-  # message(STATUS "==> ${SIMPL_CTEST_TEST_DRIVER}")
+  message(STATUS "==> ${SIMPL_CTEST_TEST_DRIVER}")
   set(DELETE_FILE_COMMANDS "")
   if(WIN32)
     set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/%CONFIG_DIR%/")
@@ -183,8 +183,12 @@ function(add_pipeline_test)
   endif()
 
   foreach ( f ${ARGS_DELETE_FILE_LIST})
-    set(DELETE_FILE_COMMANDS "${DELETE_FILE_COMMANDS}\necho \"Deleting Input file '${f}'\"\n${RM_COMMAND} \"${DATA_DEST_DIR}${f}\"")
-    FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "    [DELETES FILE]:${f}\n")
+    set(abs_file_path ${DATA_DEST_DIR}${f})
+    if(WIN32)
+      file(TO_NATIVE_PATH ${abs_file_path} abs_file_path)
+    endif()
+    set(DELETE_FILE_COMMANDS "${DELETE_FILE_COMMANDS}\necho Deleting Input file '${abs_file_path}'\n${RM_COMMAND} \"${abs_file_path}\"\n")
+    FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "    [DELETES FILE]:${abs_file_path}\n")
   endforeach()
 
   configure_file(${${PLUGIN_NAME}_SOURCE_DIR}/test/ctest_pipeline_driver.${TEST_SCRIPT_FILE_EXT} 
