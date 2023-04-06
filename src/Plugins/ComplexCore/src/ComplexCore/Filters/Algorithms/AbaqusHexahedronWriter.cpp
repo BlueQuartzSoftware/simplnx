@@ -25,7 +25,7 @@ std::string format_duration(std::chrono::milliseconds ms)
   return ss.str();
 }
 
-std::vector<int64> getNodeIds(usize x, usize y, usize z, usize* pDims)
+std::vector<int64> getNodeIds(usize x, usize y, usize z, const usize* pDims)
 {
   std::vector<int64> nodeId(8, 0);
 
@@ -55,7 +55,7 @@ std::vector<int64> getNodeIds(usize x, usize y, usize z, usize* pDims)
   return nodeId;
 }
 
-int32 writeNodes(AbaqusHexahedronWriter* filter, const std::string& fileName, usize* cDims, float32* origin, float32* spacing, const std::atomic_bool& shouldCancel)
+int32 writeNodes(AbaqusHexahedronWriter* filter, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel)
 {
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   usize nodeIndex = 1;
@@ -119,7 +119,7 @@ int32 writeNodes(AbaqusHexahedronWriter* filter, const std::string& fileName, us
   return err;
 }
 
-int32 writeElems(AbaqusHexahedronWriter* filter, const std::string& fileName, usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
+int32 writeElems(AbaqusHexahedronWriter* filter, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel)
 {
   usize totalPoints = cDims[0] * cDims[1] * cDims[2];
   auto increment = static_cast<usize>(totalPoints * 0.01f);
