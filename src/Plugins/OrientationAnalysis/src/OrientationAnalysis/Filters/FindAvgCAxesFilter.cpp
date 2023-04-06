@@ -85,8 +85,10 @@ IFilter::PreflightResult FindAvgCAxesFilter::preflightImpl(const DataStructure& 
   std::vector<DataPath> dataPaths = {pQuatsArrayPathValue, pFeatureIdsArrayPathValue};
   if(!dataStructure.validateNumberOfTuples(dataPaths))
   {
-    return MakePreflightErrorResult(-6400, fmt::format("The quaternions cell data array and feature ids cell data array have mismatching number of tuples. Make sure these arrays are located in the "
-                                                       "cell data attribute matrix for the selected geometry."));
+    return MakePreflightErrorResult(
+        -6400, fmt::format("The quaternions cell data array '{}' and feature ids cell data array '{}' have mismatching number of tuples. Make sure these arrays are both located in the "
+                           "cell data attribute matrix for the selected geometry.",
+                           pQuatsArrayPathValue.toString(), pFeatureIdsArrayPathValue.toString()));
   }
 
   {
