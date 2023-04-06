@@ -60,6 +60,7 @@
 // #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFile.hpp"
 #include "OrientationAnalysis/Filters/ImportH5OimDataFilter.hpp"
 #include "OrientationAnalysis/Filters/ImportH5EspritDataFilter.hpp"
+#include "OrientationAnalysis/Filters/FindAvgCAxesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -128,6 +129,7 @@ namespace complex
     // {complex::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), complex::FilterTraits<WriteStatsGenOdfAngleFile>::uuid}, // WriteStatsGenOdfAngleFile
     {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), complex::FilterTraits<ImportH5OimDataFilter>::uuid}, // ImportH5OimData
     {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), complex::FilterTraits<ImportH5EspritDataFilter>::uuid}, // ImportH5EspritData
+    {complex::Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value(), complex::FilterTraits<FindAvgCAxesFilter>::uuid}, // FindAvgCAxes
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

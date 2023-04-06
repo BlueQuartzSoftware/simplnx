@@ -39,6 +39,7 @@ set(FilterList
   EnsembleInfoReaderFilter
   ExportGBCDGMTFileFilter
   ExportGBCDTriangleDataFilter
+  FindAvgCAxesFilter
   FindAvgOrientationsFilter
   FindFeatureReferenceMisorientationsFilter
   FindGBCDFilter
@@ -70,7 +71,6 @@ set(STUB_FILTERS
   CreateLambertSphere
   EMsoftSO3Sampler
 
-  FindAvgCAxes
   FindBoundaryStrengths
   FindCAxisLocations
   FindDistsToCharactGBs
@@ -174,6 +174,7 @@ set(filter_algorithms
   EnsembleInfoReader
   ExportGBCDGMTFile
   ExportGBCDTriangleData
+  FindAvgCAxes
   FindAvgOrientations
   FindFeatureReferenceMisorientations
   FindGBCD
