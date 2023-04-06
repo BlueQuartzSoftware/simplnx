@@ -28,6 +28,8 @@ public:
   static inline constexpr StringLiteral k_SamplingGeometryPath_Key = "sampling_geometry_path";
   static inline constexpr StringLiteral k_ReferenceCellAttributeMatrixPath_Key = "reference_cell_attribute_matrix_path";
   static inline constexpr StringLiteral k_SamplingCellAttributeMatrixPath_Key = "sampling_cell_attribute_matrix_path";
+  static inline constexpr StringLiteral k_UseFill_Key = "use_fill";
+  static inline constexpr StringLiteral k_FillValue_Key = "fill_value";
 
   /**
    * @brief Returns the name of the filter.

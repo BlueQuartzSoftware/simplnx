@@ -16,6 +16,7 @@ struct COMPLEXCORE_EXPORT NearestPointFuseRegularGridsInputValues
   DataPath SamplingGeometryPath;
   DataPath ReferenceCellAttributeMatrixPath;
   DataPath SamplingCellAttributeMatrixPath;
+  float64 fillValue;
 };
 
 /**

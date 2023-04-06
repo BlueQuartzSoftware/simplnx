@@ -4,9 +4,15 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/INeighborList.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateNeighborListAction.hpp"
+#include "complex/Filter/Actions/CreateStringArrayAction.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
 
@@ -48,16 +54,25 @@ Parameters NearestPointFuseRegularGridsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Required Geometry"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SamplingGeometryPath_Key, "Sampling Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_ReferenceGeometryPath_Key, "Reference Image Geometry", "", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insertSeparator(Parameters::Separator{"Required Parameters"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseFill_Key, "Use Custom Fill Value", "If false all copied arrays will be filled with 0 by default", false));
+  params.insert(std::make_unique<NumberParameter<float64>>(k_FillValue_Key, "Fill Value", "This is the value that will appear in the arrays outside the overlap", 0.0));
 
-  params.insertSeparator(Parameters::Separator{"Required Cell Data"});
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SamplingCellAttributeMatrixPath_Key, "Sampling Cell Attribute Matrix", "", DataPath{},
+  params.insertSeparator(Parameters::Separator{"Required Sampling Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SamplingGeometryPath_Key, "Sampling Image Geometry",
+                                                             "This is the geometry that will be copied into the reference geometry at the overlap", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_SamplingCellAttributeMatrixPath_Key, "Sampling Cell Attribute Matrix", "The attribute matrix for the sampling geometry", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
-  params.insert(std::make_unique<DataGroupSelectionParameter>(k_ReferenceCellAttributeMatrixPath_Key, "Reference Cell Attribute Matrix", "", DataPath{},
+
+  params.insertSeparator(Parameters::Separator{"Required Reference Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ReferenceGeometryPath_Key, "Reference Image Geometry", "This is the geometry that will store the values from the overlap", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_ReferenceCellAttributeMatrixPath_Key, "Reference Cell Attribute Matrix", "The attribute matrix for the reference geometry", DataPath{},
                                                               DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
+
+  // link parameters
+  params.linkParameters(k_UseFill_Key, k_FillValue_Key, true);
 
   return params;
 }
@@ -85,13 +100,36 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   auto* refAM = dataStructure.getDataAs<AttributeMatrix>(pReferenceCellAttributeMatrixPathValue);
 
   // Create arrays on the reference grid to hold data present on the sampling grid
-  auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<IDataArray>();
-  for(const auto& array : sampleVoxelArrays)
   {
-    DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
-    auto createArrayAction = std::make_unique<CreateArrayAction>(array->getDataType(), refAM->getShape(), array->getComponentShape(), createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<IDataArray>();
+    for(const auto& array : sampleVoxelArrays)
+    {
+      DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
+      auto createArrayAction = std::make_unique<CreateArrayAction>(array->getDataType(), refAM->getShape(), array->getComponentShape(), createdArrayPath);
+      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    }
   }
+
+  {
+    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<StringArray>();
+    for(const auto& array : sampleVoxelArrays)
+    {
+      DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(refAM->getShape(), createdArrayPath);
+      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    }
+  }
+
+  // !!!! Not implemented for v1 !!!!
+  //  {
+  //    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<INeighborList>();
+  //    for(const auto& array : sampleVoxelArrays)
+  //    {
+  //      DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
+  //      auto createArrayAction = std::make_unique<CreateNeighborListAction>(array->getDataType(), array->getNumberOfTuples(), createdArrayPath);
+  //      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  //    }
+  //  }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -107,6 +145,7 @@ Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStru
   inputValues.ReferenceGeometryPath = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
   inputValues.SamplingCellAttributeMatrixPath = filterArgs.value<DataPath>(k_SamplingCellAttributeMatrixPath_Key);
   inputValues.ReferenceCellAttributeMatrixPath = filterArgs.value<DataPath>(k_ReferenceCellAttributeMatrixPath_Key);
+  filterArgs.value<bool>(k_UseFill_Key) ? inputValues.fillValue = filterArgs.value<float64>(k_FillValue_Key) : inputValues.fillValue = 0.0;
 
   return NearestPointFuseRegularGrids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
