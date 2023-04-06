@@ -772,7 +772,14 @@ set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 #------------------------------------------------------------------------------
 set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
 file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
-set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/Examples")
+set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines")
+if(NOT EXISTS "${PIPELINE_DEST_DIR}")
+  file(MAKE_DIRECTORY ${PIPELINE_DEST_DIR})
+endif()
+set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
+if(NOT EXISTS "${PIPELINE_EXAMPLES_DEST_DIR}")
+  file(MAKE_DIRECTORY ${PIPELINE_EXAMPLES_DEST_DIR})
+endif()
 if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 								 ARCHIVE_NAME Image.tar.gz
@@ -781,7 +788,7 @@ download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 								 COPY_DATA)
 								 
 add_custom_target(Copy_Example_Pipelines ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "\"${complex_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline\"" "\"${PIPELINE_DEST_DIR}/(02) Image Segmentation.d3dpipeline\""
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "\"${complex_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline\"" "\"${PIPELINE_EXAMPLES_DEST_DIR}/(02) Image Segmentation.d3dpipeline\""
   COMMENT "Copying Example Pipelines into Binary Directory"
 )
 set_target_properties(Copy_Example_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
