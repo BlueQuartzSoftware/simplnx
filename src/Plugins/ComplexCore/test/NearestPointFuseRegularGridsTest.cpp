@@ -7,7 +7,7 @@
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::NearestPointFuseRegularGridsFilter: Valid Filter Execution", "[ComplexCore][NearestPointFuseRegularGridsFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::NearestPointFuseRegularGridsFilter: Valid Filter Execution", "[ComplexCore][NearestPointFuseRegularGridsFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   NearestPointFuseRegularGridsFilter filter;
@@ -15,8 +15,12 @@ TEST_CASE("ComplexCore::NearestPointFuseRegularGridsFilter: Valid Filter Executi
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_UseFill_Key, std::make_any<bool>(true));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_FillValue_Key, std::make_any<float64>(9.8));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
