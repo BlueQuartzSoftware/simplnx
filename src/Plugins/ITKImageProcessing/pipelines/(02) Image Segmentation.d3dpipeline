@@ -6,7 +6,7 @@
     {
       "args": {
         "cell_data_name": "Cell Data",
-        "image_data_array_path": "ImageDataContainer/Cell Data/ImageData",
+        "image_data_array_path": "ImageData",
         "image_geometry_path": "ImageDataContainer",
         "image_transform_choice": 0,
         "input_file_list_info": {
