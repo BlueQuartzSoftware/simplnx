@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "CAxisSegmentFeatures.d3dpipeline",
+  "name": "SmallIN100_CAxis.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -189,7 +189,21 @@
     },
     {
       "args": {
-        "export_file_path": "Data/Output/Examples/Small_IN100_CAxisSegmentFeatures.dream3d",
+        "avg_c_axes_array_path": "AvgCAxes",
+        "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
+        "quats_array_path": "DataContainer/CellData/Quats"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindAvgCAxesFilter",
+        "uuid": "453cdb58-7bbb-4576-ad5e-f75a1c54d348"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/Examples/Small_IN100_CAxis.dream3d",
         "write_xdmf_file": true
       },
       "comments": "",
