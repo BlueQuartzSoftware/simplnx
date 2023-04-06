@@ -135,6 +135,7 @@ set(AlgorithmList
   ExtractVertexGeometry
   FillBadData
   FindArrayStatistics
+  FindArrayUniqueValues
   FindBiasedFeatures
   FindBoundaryCells
   FindEuclideanDistMap

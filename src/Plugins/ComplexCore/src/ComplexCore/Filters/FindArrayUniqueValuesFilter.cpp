@@ -1,5 +1,7 @@
 #include "FindArrayUniqueValuesFilter.hpp"
 
+#include "ComplexCore/Filters/Algorithms/FindArrayUniqueValues.hpp"
+
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -10,7 +12,6 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
-#include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace complex;
 
@@ -65,18 +66,20 @@ std::vector<std::string> FindArrayUniqueValuesFilter::defaultTags() const
 Parameters FindArrayUniqueValuesFilter::parameters() const
 {
   Parameters params;
-
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
                                                           complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(
-      std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed unique values", DataPath{}));
+
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Whether to use a boolean mask array to ignore certain points flagged as false from the statistics", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "The path to the data array that specifies if the point is to be counted in the statistics", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  params.insertSeparator(Parameters::Separator{"Output Attribute Matrix"});
+  params.insert(
+      std::make_unique<DataGroupCreationParameter>(k_DestinationAttributeMatrix_Key, "Destination Attribute Matrix", "Attribute Matrix in which to store the computed unique values", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
@@ -87,185 +90,6 @@ Parameters FindArrayUniqueValuesFilter::parameters() const
 IFilter::UniquePointer FindArrayUniqueValuesFilter::clone() const
 {
   return std::make_unique<FindArrayUniqueValuesFilter>();
-}
-
-template <typename T, typename V>
-class FindUniqueValuesImpl
-{
-public:
-  FindUniqueValuesImpl(DataStructure data, DataPath selectedArrayPath, DataPath maskArrayPath, bool useMask, std::map<V, int>& uniqueValuesMap)
-  : m_Data(data)
-  , m_SelectedArrayPath(selectedArrayPath)
-  , m_MaskArrayPath(maskArrayPath)
-  , m_UseMask(useMask)
-  , m_UniqueValuesMap(uniqueValuesMap)
-  {
-  }
-
-  virtual ~FindUniqueValuesImpl() = default;
-
-  void compute(usize start, usize end) const
-  {
-    const T& selectedArray = m_Data.getDataRefAs<T>(m_SelectedArrayPath);
-
-    for(int i = start; i < end; i++)
-    {
-      if(!m_UseMask)
-      {
-        if(m_UniqueValuesMap.find(selectedArray[i]) != m_UniqueValuesMap.end())
-        {
-          m_UniqueValuesMap[selectedArray[i]] = m_UniqueValuesMap[selectedArray[i]]++;
-        }
-        else
-        {
-          m_UniqueValuesMap[selectedArray[i]] = 1;
-        }
-      }
-      else if(m_UseMask)
-      {
-        const BoolArray& maskArray = m_Data.getDataRefAs<BoolArray>(m_MaskArrayPath);
-
-        if(maskArray[i])
-        {
-          if(m_UniqueValuesMap.find(selectedArray[i]) != m_UniqueValuesMap.end())
-          {
-            m_UniqueValuesMap[selectedArray[i]] = m_UniqueValuesMap[selectedArray[i]]++;
-          }
-          else
-          {
-            m_UniqueValuesMap[selectedArray[i]] = 1;
-          }
-        }
-      }
-    }
-  }
-
-  void operator()(const complex::Range& range) const
-  {
-    compute(range.min(), range.max());
-  }
-
-private:
-  DataStructure m_Data;
-  DataPath m_SelectedArrayPath;
-  DataPath m_MaskArrayPath;
-  bool m_UseMask;
-  std::map<V, int>& m_UniqueValuesMap;
-};
-
-//------------------------------------------------------------------------------
-template <typename T, typename V>
-void findUniqueValues(DataStructure data, DataPath selectedArrayPath, DataPath maskArrayPath, DataPath destinationAttributeMatrixPath, bool useMask, std::string arrayName)
-{
-  auto& destinationAttributeMatrix = data.getDataRefAs<AttributeMatrix>(destinationAttributeMatrixPath);
-  T& selectedArray = data.getDataRefAs<T>(selectedArrayPath);
-  T& destinationArray = data.getDataRefAs<T>(destinationAttributeMatrixPath.createChildPath(arrayName));
-  std::map<V, int> uniqueValuesMap;
-
-  //#define TEST
-
-#ifndef TEST
-
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, selectedArray.getSize());
-
-  dataAlg.execute(FindUniqueValuesImpl<T, V>(data, selectedArrayPath, maskArrayPath, useMask, uniqueValuesMap));
-
-#endif // TEST
-
-#ifdef TEST
-  for(int i = 0; i < selectedArray.getSize(); i++)
-  {
-    if(!useMask)
-    {
-      if(uniqueValuesMap.find(selectedArray[i]) != uniqueValuesMap.end())
-      {
-        uniqueValuesMap[selectedArray[i]] = uniqueValuesMap[selectedArray[i]]++;
-      }
-      else
-      {
-        uniqueValuesMap[selectedArray[i]] = 1;
-      }
-    }
-    else if(useMask)
-    {
-      const BoolArray& maskArray = data.getDataRefAs<BoolArray>(maskArrayPath);
-
-      if(maskArray[i])
-      {
-        if(uniqueValuesMap.find(selectedArray[i]) != uniqueValuesMap.end())
-        {
-          uniqueValuesMap[selectedArray[i]] = uniqueValuesMap[selectedArray[i]]++;
-        }
-        else
-        {
-          uniqueValuesMap[selectedArray[i]] = 1;
-        }
-      }
-    }
-  }
-#endif // TEST
-
-  for(int j = 0; j < destinationArray.getSize(); j++)
-  {
-    destinationArray[j] = uniqueValuesMap.size();
-  }
-}
-
-void findArrayType(DataStructure data, DataPath selectedArrayPath, DataPath maskArrayPath, DataPath destinationAttributeMatrixPath, bool useMask, std::string arrayName,
-                   IFilter::MessageHandler messageHandler)
-{
-  const auto* selectedArray = data.getDataAs<IDataArray>(selectedArrayPath);
-
-  if(selectedArray->getTypeName() == "DataArray<int8>")
-  {
-    findUniqueValues<Int8Array, int8>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<uint8>")
-  {
-    findUniqueValues<UInt8Array, uint8>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<int16>")
-  {
-    findUniqueValues<Int16Array, int16>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<uint16>")
-  {
-    findUniqueValues<UInt16Array, uint16>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<int32>")
-  {
-    findUniqueValues<Int32Array, int32>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<uint32>")
-  {
-    findUniqueValues<UInt32Array, uint32>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<int64>")
-  {
-    findUniqueValues<Int64Array, int64>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<uint64>")
-  {
-    findUniqueValues<UInt64Array, uint64>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<float32>")
-  {
-    findUniqueValues<Float32Array, float32>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<float64>")
-  {
-    findUniqueValues<Float64Array, float64>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else if(selectedArray->getTypeName() == "DataArray<bool>")
-  {
-    findUniqueValues<BoolArray, bool>(data, selectedArrayPath, maskArrayPath, destinationAttributeMatrixPath, useMask, arrayName);
-  }
-  else
-  {
-    std::string err = "Invalid Data Array";
-    messageHandler({IFilter::Message::Type::Error, err});
-  }
 }
 
 //------------------------------------------------------------------------------
@@ -324,12 +148,15 @@ Result<> FindArrayUniqueValuesFilter::executeImpl(DataStructure& dataStructure, 
                                                   const std::atomic_bool& shouldCancel) const
 {
 
-  bool useMask = filterArgs.value<bool>(k_UseMask_Key);
-  DataPath selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  DataPath maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  DataPath destinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrix_Key);
+  FindArrayUniqueValuesInputValues inputValues;
 
-  findArrayType(dataStructure, selectedArrayPath, maskArrayPath, destinationAttributeMatrix, useMask, "Unique Values", messageHandler);
-  return {};
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.SelectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.DestinationAttributeMatrix = filterArgs.value<DataPath>(k_DestinationAttributeMatrix_Key);
+
+  return FindArrayUniqueValues(dataStructure, messageHandler, shouldCancel, &inputValues)();
+
+  // findArrayType(dataStructure, selectedArrayPath, maskArrayPath, destinationAttributeMatrix, useMask, "Unique Values", messageHandler);
 }
 } // namespace complex
