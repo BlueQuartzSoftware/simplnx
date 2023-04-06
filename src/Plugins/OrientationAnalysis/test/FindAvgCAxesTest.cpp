@@ -1,59 +1,44 @@
-/**
- * This file is auto generated from the original OrientationAnalysis/FindAvgCAxesFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[FindAvgCAxesFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/FindAvgCAxesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace complex;
+using namespace complex::Constants;
 
-TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution","[OrientationAnalysis][FindAvgCAxesFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
 {
+const DataPath k_CellDataPath({k_SmallIN100, k_EbsdScanData});
+const DataPath k_CellFeatureDataPath({k_SmallIN100, k_CellFeatureData});
+const std::string k_AvgCAxesExemplar = "AvgCAxes";
+const std::string k_AvgCAxesComputed = "NX_AvgCAxes";
+} // namespace
+
+TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[OrientationAnalysis][FindAvgCAxesFilter]")
+{
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_avg_caxes.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindAvgCAxesFilter filter;
-  DataStructure ds;
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindAvgCAxesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindAvgCAxesFilter::k_AvgCAxesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-
+  args.insertOrAssign(FindAvgCAxesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_Quats)));
+  args.insertOrAssign(FindAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_FeatureIds)));
+  args.insertOrAssign(FindAvgCAxesFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureDataPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_AvgCAxesArrayPath_Key, std::make_any<std::string>(k_AvgCAxesComputed));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
-}
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-//TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: InValid Filter Execution")
-//{
-//
-//}
+  UnitTest::CompareArrays<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_AvgCAxesExemplar), k_CellFeatureDataPath.createChildPath(k_AvgCAxesComputed));
+}

@@ -18,6 +18,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   EnsembleInfoReaderTest.cpp
   ExportGBCDGMTFileTest.cpp
   ExportGBCDTriangleDataTest.cpp
+  FindAvgCAxesTest.cpp
   FindAvgOrientationsTest.cpp
   FindFeatureReferenceMisorientationsTest.cpp
   FindGBCDTest.cpp
@@ -46,8 +47,6 @@ set(DISABLED_TESTS
   # ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
   CreateLambertSphereTest.cpp
   EMsoftSO3SamplerTest.cpp
-
-  FindAvgCAxesTest.cpp
   FindBoundaryStrengthsTest.cpp
   FindCAxisLocationsTest.cpp
   FindDistsToCharactGBsTest.cpp
@@ -133,6 +132,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_h5ebsd.tar.gz SHA512 31e606285ea9e8235dcb5f608fd2b252a5ab1492abd975e5ec33a21d083aa9720fe16fb8f752742c140f40e963d692f1a46256b9d36e96b1b09796c1e4ea3db9)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME so3_cubic_high_ipf_001.tar.gz SHA512 dfe4598cd4406e8b83f244302dc4fe0d4367527835c5ddd6567fe8d8ab3484d5b10ba24a8bb31db269256ec0b5272daa4340eedb5a8b397755541b32dd616b85)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_segment_features.tar.gz SHA512 1ca1db6e7d19967a09de805c474ca752d9b4ee85c7713f562ccddcfc05b3ff3cde32683f5e681f73e0e8d8933cb7d66bd8e875fe32d3cf7316f62a98fa5f20c4)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_avg_caxes.tar.gz SHA512 5cdad64cdec9f92e4552572302f0bb902b510ee94bc7592ca6db61fa7f057677d165ac6bcf48803aaa57dedb334d71c01156aa51cbee7cde932899ebe92f5711)
 
 endif()
 
