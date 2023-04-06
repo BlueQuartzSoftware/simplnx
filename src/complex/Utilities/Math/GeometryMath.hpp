@@ -8,7 +8,6 @@
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
-#include <cmath>
 #include <stdexcept>
 #include <vector>
 
@@ -29,13 +28,7 @@ namespace GeometryMath
 template <typename T>
 T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  T norm1 = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-  T norm2 = sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
-  if(norm1 == 0 || norm2 == 0)
-  {
-    return 1.0;
-  }
-  return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (norm1 * norm2);
+  throw std::runtime_error("");
 }
 
 /**

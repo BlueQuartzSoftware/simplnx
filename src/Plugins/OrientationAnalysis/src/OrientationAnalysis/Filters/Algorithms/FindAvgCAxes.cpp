@@ -1,13 +1,12 @@
 #include "FindAvgCAxes.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/Utilities/Math/GeometryMath.hpp"
+#include "complex/Utilities/ImageRotationUtilities.hpp"
 #include "complex/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
-#include "EbsdLib/LaueOps/LaueOps.h"
 
 using namespace complex;
 
@@ -35,8 +34,6 @@ Result<> FindAvgCAxes::operator()()
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   auto& avgCAxes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath);
-
-  // std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
 
   const usize totalPoints = featureIds.getNumberOfTuples();
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
@@ -70,7 +67,7 @@ Result<> FindAvgCAxes::operator()()
       curCAxis[1] = avgCAxes[index + 1] / counter[featureIds[i]];
       curCAxis[2] = avgCAxes[index + 2] / counter[featureIds[i]];
       MatrixMath::Normalize3x1(curCAxis);
-      w = GeometryMath::CosThetaBetweenVectors<float32>(Point3D<float32>{c1}, Point3D<float32>{curCAxis});
+      w = ImageRotationUtilities::CosBetweenVectors(Eigen::Vector3f{c1[0], c1[1], c1[2]}, Eigen::Vector3f{curCAxis[0], curCAxis[1], curCAxis[2]});
       if(w < 0)
       {
         MatrixMath::Multiply3x1withConstant(c1, -1.0f);
