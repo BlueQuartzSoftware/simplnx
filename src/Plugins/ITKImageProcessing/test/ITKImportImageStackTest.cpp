@@ -22,7 +22,7 @@ namespace
 {
 const std::string k_ImageStackDir = unit_test::k_DataDir.str() + "/ImageStack";
 const DataPath k_ImageGeomPath = {{"ImageGeometry"}};
-const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath("ImageData");
+const DataPath k_ImageDataPath = k_ImageGeomPath.createChildPath(ImageGeom::k_CellDataName).createChildPath("ImageData");
 } // namespace
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoInput", "[ITKImageProcessing][ITKImportImageStack]")
@@ -70,7 +70,6 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: NoFiles", "[ITKImageProcessi
   args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(3));
   args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
@@ -95,7 +94,6 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: FileDoesNotExist", "[ITKImag
   args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(3));
   args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
@@ -125,13 +123,12 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImagePro
   args.insertOrAssign(ITKImportImageStack::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
   args.insertOrAssign(ITKImportImageStack::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
   args.insertOrAssign(ITKImportImageStack::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStack::k_ImageDataArrayPath_Key, std::make_any<DataPath>(k_ImageDataPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
   REQUIRE(imageGeom != nullptr);
