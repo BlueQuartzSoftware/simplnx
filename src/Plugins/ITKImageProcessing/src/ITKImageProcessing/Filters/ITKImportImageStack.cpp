@@ -340,8 +340,11 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
   auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
+  auto imageDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
+  auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
+
+  const DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataName);
 
   std::vector<std::string> files = inputFileListInfo.generate();
 
