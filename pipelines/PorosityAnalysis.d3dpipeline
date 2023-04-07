@@ -15,7 +15,7 @@
           "file_prefix": "slice_",
           "file_suffix": "",
           "increment_index": 1,
-          "input_path": "Data/Image",
+          "input_path": "Data/Porosity_Image",
           "ordering": 0,
           "padding_digits": 2,
           "start_index": 11
@@ -73,7 +73,7 @@
         "input_array_path": "RoboMet.3D Image Stack/Optical Data/ImageData",
         "mask_path": "RoboMet.3D Image Stack/Optical Data/Mask",
         "randomize_features": true,
-        "scalar_tolerance": 10,
+        "scalar_tolerance": 0,
         "use_mask": true
       },
       "comments": "",
@@ -196,10 +196,32 @@
         "phase_names_array_name": "PhaseNames",
         "phase_types_array_name": "PhaseTypes"
       },
-      "comments": "",
+      "comments": "We only need the phase names array for this ensemble data so we will be immediately deleting the crystal structures and phase types arrays after this filter.",
       "filter": {
         "name": "complex::CreateEnsembleInfoFilter",
         "uuid": "8ce3d70c-49fe-4812-a1eb-7ce4c962a59d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "removed_data_path": "RoboMet.3D Image Stack/EnsembleAttributeMatrix/CrystalStructures"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::DeleteData",
+        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "removed_data_path": "RoboMet.3D Image Stack/EnsembleAttributeMatrix/PhaseTypes"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::DeleteData",
+        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
       },
       "isDisabled": false
     },

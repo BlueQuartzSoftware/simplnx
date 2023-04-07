@@ -50,7 +50,7 @@ Image
 
 ## Example Pipelines
 
-+ (02) Image Segmentation
++ PorosityAnalysis
 
 ## License & Copyright
 

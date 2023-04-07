@@ -780,16 +780,11 @@ set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
 if(NOT EXISTS "${PIPELINE_EXAMPLES_DEST_DIR}")
   file(MAKE_DIRECTORY ${PIPELINE_EXAMPLES_DEST_DIR})
 endif()
-if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
-								 ARCHIVE_NAME Image.tar.gz
-								 SHA512 6940f8b420998c6501e68a03e3bf5d66fcf8f086157b47210727bb960060a311f4a505ae5f47c94205f32768caa5bd37b4a7c566ed227e1d416020d6238b69f2
-								 INSTALL
-								 COPY_DATA)
-								 
+if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)					 
 add_custom_target(Copy_Example_Pipelines ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "\"${complex_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline\"" "\"${PIPELINE_EXAMPLES_DEST_DIR}/(02) Image Segmentation.d3dpipeline\""
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/PorosityAnalysis.d3dpipeline"
   COMMENT "Copying Example Pipelines into Binary Directory"
+  VERBATEM
 )
 set_target_properties(Copy_Example_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
 endif()
