@@ -767,6 +767,28 @@ endforeach()
 
 set(COMPLEX_PACKAGE_NAMESPACE "complex::")
 
+#------------------------------------------------------------------------------
+# Install the appropriate example pipelines based on which plugins are loaded
+#------------------------------------------------------------------------------
+set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
+set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines")
+if(NOT EXISTS "${PIPELINE_DEST_DIR}")
+  file(MAKE_DIRECTORY ${PIPELINE_DEST_DIR})
+endif()
+set(PIPELINE_EXAMPLES_DEST_DIR "${PIPELINE_DEST_DIR}/Examples")
+if(NOT EXISTS "${PIPELINE_EXAMPLES_DEST_DIR}")
+  file(MAKE_DIRECTORY ${PIPELINE_EXAMPLES_DEST_DIR})
+endif()
+if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)					 
+add_custom_target(Copy_Example_Pipelines ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/PorosityAnalysis.d3dpipeline"
+  COMMENT "Copying Example Pipelines into Binary Directory"
+  VERBATEM
+)
+set_target_properties(Copy_Example_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
+endif()
+
 option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 if(COMPLEX_ENABLE_INSTALL)
   install(TARGETS complex
@@ -825,6 +847,8 @@ if(COMPLEX_ENABLE_INSTALL)
     COMPONENT develop
     BASE_DIR ${COMPLEX_GENERATED_HEADER_DIR}
   )
+  
+  include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
 endif()
 
 option(COMPLEX_ENABLE_PACKAGING "Enables COMPLEX packaging" ON)

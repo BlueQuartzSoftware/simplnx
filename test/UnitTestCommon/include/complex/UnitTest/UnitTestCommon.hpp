@@ -185,6 +185,8 @@ const DataPath k_ActiveArrayPath = k_CellFeatureAttributeMatrix.createChildPath(
 const DataPath k_NumCellsPath = k_CellFeatureAttributeMatrix.createChildPath(k_NumElements);
 const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPath(k_Phases);
 
+const DataPath k_CellFeatureDataPath = k_DataContainerPath.createChildPath(k_CellFeatureData);
+
 // Exemplar DataStructure
 const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
 
