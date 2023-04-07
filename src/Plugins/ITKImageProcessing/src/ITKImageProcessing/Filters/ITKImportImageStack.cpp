@@ -73,8 +73,8 @@ std::unique_ptr<IFilter> CreateRotateSampleRefFrameFilter()
 namespace cxITKImportImageStack
 {
 template <class T>
-Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& imageDataPath, const std::vector<std::string>& files, ChoicesParameter::ValueType transformType,
-                        const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const DataPath& imageDataPath, const std::vector<std::string>& files,
+                        ChoicesParameter::ValueType transformType, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
@@ -103,6 +103,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
 
       Arguments args;
       args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
+      args.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(cellDataName));
       args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataPath));
       args.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(filePath));
 
@@ -246,8 +247,7 @@ Parameters ITKImportImageStack::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "The name of the created cell attribute matrix", ImageGeom::k_CellDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array",
-                                                         DataPath({"ImageDataContainer", ImageGeom::k_CellDataName, "ImageData"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ImageDataArrayPath_Key, "Created Image Data", "The path to the created image data array", "ImageData"));
 
   return params;
 }
@@ -266,9 +266,11 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
+  auto imageDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
+
+  const DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataName);
 
   if(imageTransformValue != k_NoImageTransform)
   {
@@ -290,6 +292,7 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   // list and hope the rest are correct.
   Arguments imageReaderArgs;
   imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
+  imageReaderArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(cellDataName));
   imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataPath));
   imageReaderArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(files.at(0)));
 
@@ -339,8 +342,11 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
   auto origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto imageDataPath = filterArgs.value<DataPath>(k_ImageDataArrayPath_Key);
+  auto imageDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
+  auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
+
+  const DataPath imageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageDataName);
 
   std::vector<std::string> files = inputFileListInfo.generate();
 
@@ -361,43 +367,43 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
   switch(*numericType)
   {
   case NumericType::uint8: {
-    readResult = cxITKImportImageStack::ReadImageStack<uint8>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::int8: {
-    readResult = cxITKImportImageStack::ReadImageStack<int8>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint16: {
-    readResult = cxITKImportImageStack::ReadImageStack<uint16>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::int16: {
-    readResult = cxITKImportImageStack::ReadImageStack<int16>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint32: {
-    readResult = cxITKImportImageStack::ReadImageStack<uint32>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::int32: {
-    readResult = cxITKImportImageStack::ReadImageStack<int32>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::uint64: {
-    readResult = cxITKImportImageStack::ReadImageStack<uint64>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<uint64>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::int64: {
-    readResult = cxITKImportImageStack::ReadImageStack<int64>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::float32: {
-    readResult = cxITKImportImageStack::ReadImageStack<float32>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<float32>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   case NumericType::float64: {
-    readResult = cxITKImportImageStack::ReadImageStack<float64>(dataStructure, imageGeomPath, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
+    readResult = cxITKImportImageStack::ReadImageStack<float64>(dataStructure, imageGeomPath, cellDataName, imageDataPath, files, imageTransformValue, messageHandler, shouldCancel);
     break;
   }
   default: {
