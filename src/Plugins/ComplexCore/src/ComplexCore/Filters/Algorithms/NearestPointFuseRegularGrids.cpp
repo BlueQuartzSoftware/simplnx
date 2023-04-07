@@ -11,8 +11,8 @@ using namespace complex;
 
 namespace
 {
-template <class K>
-void CopyData(const K& inputArray, K& destArray, const ImageGeom& sampleImageGeom, const ImageGeom& refImageGeom, const std::atomic_bool& shouldCancel)
+template <class K, typename T>
+void CopyData(const K& inputArray, K& destArray, const ImageGeom& sampleImageGeom, const ImageGeom& refImageGeom, const std::atomic_bool& shouldCancel, T fillValue)
 {
   // Get dimensions and resolutions of two grids
   Vec3<float32> sampleRes = sampleImageGeom.getSpacing();
@@ -27,6 +27,7 @@ void CopyData(const K& inputArray, K& destArray, const ImageGeom& sampleImageGeo
   usize refIndex = 0;
   usize sampleIndex = 0;
   usize planeComp = 0, rowComp = 0;
+  usize numComps = destArray.getNumberOfComponents();
   for(usize i = 0; i < refDims[2]; i++)
   {
     if(shouldCancel)
@@ -40,19 +41,25 @@ void CopyData(const K& inputArray, K& destArray, const ImageGeom& sampleImageGeo
       rowComp = j * refDims[0];
       for(usize k = 0; k < refDims[0]; k++)
       {
+        refIndex = planeComp + rowComp + k;
+        usize destIndex = refIndex * numComps;
+
         x = (k * refRes[0] + refOrigin[0]);
         y = (j * refRes[1] + refOrigin[1]);
         z = (i * refRes[2] + refOrigin[2]);
         if((x - sampleOrigin[0]) < 0)
         {
+          std::fill(destArray.begin() + destIndex, destArray.begin() + destIndex + numComps, fillValue);
           continue;
         }
         if((y - sampleOrigin[1]) < 0)
         {
+          std::fill(destArray.begin() + destIndex, destArray.begin() + destIndex + numComps, fillValue);
           continue;
         }
         if((z - sampleOrigin[2]) < 0)
         {
+          std::fill(destArray.begin() + destIndex, destArray.begin() + destIndex + numComps, fillValue);
           continue;
         }
 
@@ -61,15 +68,13 @@ void CopyData(const K& inputArray, K& destArray, const ImageGeom& sampleImageGeo
         plane = usize((z - sampleOrigin[2]) / sampleRes[2]);
         if(col >= sampleDims[0] || row >= sampleDims[1] || plane >= sampleDims[2])
         {
+          std::fill(destArray.begin() + destIndex, destArray.begin() + destIndex + numComps, fillValue);
           continue;
         }
 
         sampleIndex = (plane * sampleDims[0] * sampleDims[1]) + (row * sampleDims[0]) + col;
-        refIndex = planeComp + rowComp + k;
 
-        usize numComps = destArray.getNumberOfComponents();
         usize sourceIndex = sampleIndex * inputArray.getNumberOfComponents();
-        usize destIndex = refIndex * numComps;
         for(usize offset = 0; offset < numComps; ++offset)
         {
           destArray[destIndex + offset] = inputArray.at(sourceIndex + offset);
@@ -105,25 +110,16 @@ public:
     if(m_ArrayType == IArray::ArrayType::NeighborListArray)
     {
       return;
-      //      using NeighborListT = NeighborList<T>;
-      //      auto& destArray = dynamic_cast<NeighborListT&>(m_DestArray);
-      //      // Make sure the destination array is allocated AND each tuple list is initialized, so we can use the [] operator to copy over the data
-      //      if(destArray.getValues().empty() || destArray.getList(0) == nullptr)
-      //      {
-      //        destArray.addEntry(destArray.getNumberOfTuples() - 1, 0);
-      //      }
-      //      CopyData<NeighborListT>(dynamic_cast<const NeighborListT&>(m_SourceArray1), destArray);
     }
     else if(m_ArrayType == IArray::ArrayType::DataArray)
     {
       using DataArrayT = DataArray<T>;
       auto destArray = dynamic_cast<DataArrayT&>(m_DestArray);
-      destArray.fill(static_cast<T>(m_FillValue));
-      CopyData<DataArrayT>(dynamic_cast<const DataArrayT&>(m_SourceArray), destArray, m_SampleGeom, m_RefGeom, m_ShouldCancel);
+      CopyData<DataArrayT>(dynamic_cast<const DataArrayT&>(m_SourceArray), destArray, m_SampleGeom, m_RefGeom, m_ShouldCancel, static_cast<T>(m_FillValue));
     }
     else if(m_ArrayType == IArray::ArrayType::StringArray)
     {
-      CopyData<StringArray>(dynamic_cast<const StringArray&>(m_SourceArray), dynamic_cast<StringArray&>(m_DestArray), m_SampleGeom, m_RefGeom, m_ShouldCancel);
+      CopyData<StringArray>(dynamic_cast<const StringArray&>(m_SourceArray), dynamic_cast<StringArray&>(m_DestArray), m_SampleGeom, m_RefGeom, m_ShouldCancel, "");
     }
   }
 
