@@ -1,14 +1,16 @@
 #include "FindAvgCAxes.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Utilities/ImageRotationUtilities.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
 
 using namespace complex;
+using namespace complex::OrientationUtilities;
 
 // -----------------------------------------------------------------------------
 FindAvgCAxes::FindAvgCAxes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindAvgCAxesInputValues* inputValues)
@@ -38,44 +40,47 @@ Result<> FindAvgCAxes::operator()()
   const usize totalPoints = featureIds.getNumberOfTuples();
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
 
-  float32 g1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-  float32 g1t[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-  float32 caxis[3] = {0.0f, 0.0f, 1.0f};
-  float32 c1[3] = {0.0f, 0.0f, 0.0f};
+  Matrix3fR g1T;
+  g1T.fill(0.0f);
+  const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
+  Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
 
   std::vector<int32> counter(totalFeatures, 0);
 
-  float32 curCAxis[3] = {0.0f, 0.0f, 0.0f};
-  usize index = 0;
+  Eigen::Vector3f curCAxis{0.0f, 0.0f, 0.0f};
+  usize cAxesIndex = 0;
   float32 w = 0.0f;
 
   for(usize i = 0; i < totalPoints; i++)
   {
     if(featureIds[i] > 0)
     {
-      index = 3 * featureIds[i];
-      const usize offsetIndex = i * 4;
-      OrientationTransformation::qu2om<QuatF, OrientationF>({quats[offsetIndex], quats[offsetIndex + 1], quats[offsetIndex + 2], quats[offsetIndex + 3]}).toGMatrix(g1);
+      cAxesIndex = 3 * featureIds[i];
+      const usize quatIndex = i * 4;
+      OrientationF oMatrix = OrientationTransformation::qu2om<QuatF, OrientationF>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
 
-      // transpose the g matrices so when caxis is multiplied by it
-      // it will give the sample direction that the caxis is along
-      MatrixMath::Transpose3x3(g1, g1t);
-      MatrixMath::Multiply3x3with3x1(g1t, caxis, c1);
+      // Convert the quaternion matrix to a transposed g matrix so when caxis is multiplied by it, it will give the sample direction that the caxis is along
+      g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
+
+      c1 = g1T * cAxis;
+
       // normalize so that the magnitude is 1
-      MatrixMath::Normalize3x1(c1);
-      curCAxis[0] = avgCAxes[index] / counter[featureIds[i]];
-      curCAxis[1] = avgCAxes[index + 1] / counter[featureIds[i]];
-      curCAxis[2] = avgCAxes[index + 2] / counter[featureIds[i]];
-      MatrixMath::Normalize3x1(curCAxis);
-      w = ImageRotationUtilities::CosBetweenVectors(Eigen::Vector3f{c1[0], c1[1], c1[2]}, Eigen::Vector3f{curCAxis[0], curCAxis[1], curCAxis[2]});
+      c1.normalize();
+
+      curCAxis[0] = avgCAxes[cAxesIndex] / counter[featureIds[i]];
+      curCAxis[1] = avgCAxes[cAxesIndex + 1] / counter[featureIds[i]];
+      curCAxis[2] = avgCAxes[cAxesIndex + 2] / counter[featureIds[i]];
+
+      curCAxis.normalize();
+      w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
       if(w < 0)
       {
-        MatrixMath::Multiply3x1withConstant(c1, -1.0f);
+        c1 *= -1.0f;
       }
       counter[featureIds[i]]++;
-      avgCAxes[index] += c1[0];
-      avgCAxes[index + 1] += c1[1];
-      avgCAxes[index + 2] += c1[2];
+      avgCAxes[cAxesIndex] += c1[0];
+      avgCAxes[cAxesIndex + 1] += c1[1];
+      avgCAxes[cAxesIndex + 2] += c1[2];
     }
   }
 

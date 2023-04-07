@@ -1,5 +1,7 @@
 #include "CAxisSegmentFeatures.hpp"
 
+#include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
+
 #include "complex/Common/Constants.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -8,6 +10,7 @@
 #include "EbsdLib/LaueOps/LaueOps.h"
 
 using namespace complex;
+using namespace complex::OrientationUtilities;
 
 // -----------------------------------------------------------------------------
 CAxisSegmentFeatures::CAxisSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CAxisSegmentFeaturesInputValues* inputValues)
@@ -117,13 +120,13 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
   bool group = false;
   float32 w = std::numeric_limits<float32>::max();
 
-  float g1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-  float g2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-  float g1t[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-  float g2t[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-  float caxis[3] = {0.0f, 0.0f, 1.0f};
-  float c1[3] = {0.0f, 0.0f, 0.0f};
-  float c2[3] = {0.0f, 0.0f, 0.0f};
+  Matrix3fR g1T;
+  g1T.fill(0.0f);
+  Matrix3fR g2T;
+  g2T.fill(0.0f);
+  const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
+  Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
+  Eigen::Vector3f c2{0.0f, 0.0f, 0.0f};
   Float32Array& currentQuat = *m_QuatsArray;
   Int32Array& featureIds = *m_FeatureIdsArray;
   Int32Array& cellPhases = *m_CellPhases;
@@ -134,25 +137,25 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
   }
   if(featureIds[neighborpoint] == 0 && (!m_InputValues->UseGoodVoxels || neighborPointIsGood))
   {
-    QuatF q1(currentQuat[referencepoint * 4], currentQuat[referencepoint * 4 + 1], currentQuat[referencepoint * 4 + 2], currentQuat[referencepoint * 4 + 3]);
-    QuatF q2(currentQuat[neighborpoint * 4 + 0], currentQuat[neighborpoint * 4 + 1], currentQuat[neighborpoint * 4 + 2], currentQuat[neighborpoint * 4 + 3]);
+    const QuatF q1(currentQuat[referencepoint * 4], currentQuat[referencepoint * 4 + 1], currentQuat[referencepoint * 4 + 2], currentQuat[referencepoint * 4 + 3]);
+    const QuatF q2(currentQuat[neighborpoint * 4 + 0], currentQuat[neighborpoint * 4 + 1], currentQuat[neighborpoint * 4 + 2], currentQuat[neighborpoint * 4 + 3]);
 
     if(cellPhases[referencepoint] == cellPhases[neighborpoint])
     {
-      OrientationTransformation::qu2om<QuatF, Orientation<float32>>(q1).toGMatrix(g1);
-      OrientationTransformation::qu2om<QuatF, Orientation<float32>>(q2).toGMatrix(g2);
+      const OrientationF oMatrix1 = OrientationTransformation::qu2om<QuatF, Orientation<float32>>(q1);
+      const OrientationF oMatrix2 = OrientationTransformation::qu2om<QuatF, Orientation<float32>>(q2);
 
-      // transpose the g matricies so when caxis is multiplied by it
-      // it will give the sample direction that the caxis is along
-      MatrixMath::Transpose3x3(g1, g1t);
-      MatrixMath::Transpose3x3(g2, g2t);
-      MatrixMath::Multiply3x3with3x1(g1t, caxis, c1);
-      MatrixMath::Multiply3x3with3x1(g2t, caxis, c2);
+      // Convert the quaternion matrices to transposed g matrices so when caxis is multiplied by it, it will give the sample direction that the caxis is along
+      g1T = OrientationMatrixToGMatrixTranspose(oMatrix1);
+      g2T = OrientationMatrixToGMatrixTranspose(oMatrix2);
+
+      c1 = g1T * cAxis;
+      c2 = g2T * cAxis;
 
       // normalize so that the dot product can be taken below without
       // dividing by the magnitudes (they would be 1)
-      MatrixMath::Normalize3x1(c1);
-      MatrixMath::Normalize3x1(c2);
+      c1.normalize();
+      c2.normalize();
 
       // Validate value of w falls between [-1, 1] to ensure that acos returns a valid value
       w = std::clamp(((c1[0] * c2[0]) + (c1[1] * c2[1]) + (c1[2] * c2[2])), -1.0F, 1.0F);
