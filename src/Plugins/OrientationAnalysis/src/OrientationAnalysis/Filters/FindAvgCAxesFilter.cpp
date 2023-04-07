@@ -55,6 +55,9 @@ Parameters FindAvgCAxesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Required Cell Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "The path to the cell feature attribute matrix", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Required Cell Ensemble Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_AvgCAxesArrayPath_Key, "Average C-Axes", "", "AvgCAxes"));
 
@@ -97,6 +100,9 @@ IFilter::PreflightResult FindAvgCAxesFilter::preflightImpl(const DataStructure& 
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
+  resultOutputActions.warnings().push_back(
+      {-6401, "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure your data is of one of these two types."});
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -110,6 +116,7 @@ Result<> FindAvgCAxesFilter::executeImpl(DataStructure& dataStructure, const Arg
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.CellFeatureDataPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
   inputValues.AvgCAxesArrayPath = inputValues.CellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_AvgCAxesArrayPath_Key));
+  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   return FindAvgCAxes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

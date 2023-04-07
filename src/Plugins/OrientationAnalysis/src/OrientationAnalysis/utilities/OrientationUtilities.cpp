@@ -1,5 +1,7 @@
 #include "OrientationUtilities.hpp"
 
+#include "EbsdLib/LaueOps/LaueOps.h"
+
 namespace complex
 {
 namespace OrientationUtilities
@@ -41,5 +43,16 @@ Matrix3fR OrientationMatrixToGMatrixTranspose(const Orientation<float>& oMatrix)
   g1t(2, 2) = oMatrix[8];
   return g1t;
 }
+
+std::string CrystalStructureEnumToString(uint32_t crystalStructureType)
+{
+  if(crystalStructureType < 0 || crystalStructureType > 10)
+  {
+    return "UnknownCrystalStructure";
+  }
+  const std::vector<std::string> allLaueNames = LaueOps::GetLaueNames();
+  return allLaueNames[crystalStructureType];
+}
+
 } // namespace OrientationUtilities
 } // namespace complex

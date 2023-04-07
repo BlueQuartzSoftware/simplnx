@@ -29,6 +29,7 @@ Not Applicable
 |------|--------------|------|----------------------|-------------|
 | **Element Attribute Array**  | Quats | float | (4) | Specifies the orientation of the **Element** in quaternion representation |
 | **Element Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs. |
+| **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
 
 ## Created Objects 
 

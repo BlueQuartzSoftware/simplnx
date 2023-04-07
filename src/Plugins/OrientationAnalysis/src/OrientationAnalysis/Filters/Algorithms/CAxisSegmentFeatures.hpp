@@ -56,7 +56,6 @@ private:
   Float32Array* m_QuatsArray = nullptr;
   Int32Array* m_CellPhases = nullptr;
   std::unique_ptr<MaskCompare> m_GoodVoxelsArray = nullptr;
-  DataArray<uint32>* m_CrystalStructures = nullptr;
   Int32Array* m_FeatureIdsArray = nullptr;
 };
 

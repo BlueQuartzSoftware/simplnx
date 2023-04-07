@@ -5,8 +5,6 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 
 namespace complex
 {
@@ -17,6 +15,7 @@ struct ORIENTATIONANALYSIS_EXPORT FindAvgCAxesInputValues
   DataPath FeatureIdsArrayPath;
   DataPath CellFeatureDataPath;
   DataPath AvgCAxesArrayPath;
+  DataPath CrystalStructuresArrayPath;
 };
 
 /**

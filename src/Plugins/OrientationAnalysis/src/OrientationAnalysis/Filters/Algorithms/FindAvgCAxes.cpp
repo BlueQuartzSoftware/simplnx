@@ -33,6 +33,16 @@ const std::atomic_bool& FindAvgCAxes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> FindAvgCAxes::operator()()
 {
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto crystalStructureType = crystalStructures[1];
+  if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
+  {
+    return MakeErrorResult(
+        -6402,
+        fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures.",
+                    CrystalStructureEnumToString(crystalStructureType)));
+  }
+
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   auto& avgCAxes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath);
