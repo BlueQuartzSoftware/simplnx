@@ -5,8 +5,8 @@
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
 
-#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 using namespace complex;
@@ -267,7 +267,7 @@ TEST_CASE("ComplexCore::NearestPointFuseRegularGridsFilter: Invalid Execution", 
   NearestPointFuseRegularGridsFilter filter;
   DataStructure dataStructure(std::move(CreateDualImageGeomDataStructure(refDims, refOrigin, refSpacing)));
 
-  dataStructure.getDataAs<ImageGeom>(sampleImageGeomPath)->setSpacing(0,0,0);
+  dataStructure.getDataAs<ImageGeom>(sampleImageGeomPath)->setSpacing(0, 0, 0);
 
   Arguments args;
 
