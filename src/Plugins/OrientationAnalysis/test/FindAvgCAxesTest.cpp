@@ -10,8 +10,6 @@ using namespace complex::Constants;
 
 namespace
 {
-const DataPath k_CellDataPath({k_SmallIN100, k_EbsdScanData});
-const DataPath k_CellFeatureDataPath({k_SmallIN100, k_CellFeatureData});
 const std::string k_AvgCAxesExemplar = "AvgCAxes";
 const std::string k_AvgCAxesComputed = "NX_AvgCAxes";
 } // namespace
@@ -19,7 +17,7 @@ const std::string k_AvgCAxesComputed = "NX_AvgCAxes";
 TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[OrientationAnalysis][FindAvgCAxesFilter]")
 {
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_avg_caxes.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -27,8 +25,9 @@ TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[O
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindAvgCAxesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_Quats)));
-  args.insertOrAssign(FindAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_FeatureIds)));
+  args.insertOrAssign(FindAvgCAxesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
   args.insertOrAssign(FindAvgCAxesFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureDataPath));
   args.insertOrAssign(FindAvgCAxesFilter::k_AvgCAxesArrayPath_Key, std::make_any<std::string>(k_AvgCAxesComputed));
 
@@ -41,4 +40,33 @@ TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[O
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   UnitTest::CompareArrays<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_AvgCAxesExemplar), k_CellFeatureDataPath.createChildPath(k_AvgCAxesComputed));
+}
+
+TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Invalid Filter Execution", "[OrientationAnalysis][FindAvgCAxesFilter]")
+{
+  // Read Exemplar DREAM3D File Filter
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
+  auto& crystalStructs = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresArrayPath);
+  crystalStructs[1] = 1;
+
+  // Instantiate the filter, a DataStructure object and an Arguments Object
+  FindAvgCAxesFilter filter;
+  Arguments args;
+
+  // Invalid crystal structure type : should fail in execute
+  args.insertOrAssign(FindAvgCAxesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_CellFeatureAttributeMatrix_Key, std::make_any<DataPath>(k_CellFeatureDataPath));
+  args.insertOrAssign(FindAvgCAxesFilter::k_AvgCAxesArrayPath_Key, std::make_any<std::string>(k_AvgCAxesComputed));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
 }
