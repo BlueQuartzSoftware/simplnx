@@ -16,10 +16,10 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Instantiate", "[ComplexCore][Remo
   Arguments args;
 
   args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeomPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
+  //  args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
   args.insertOrAssign(RemoveFlaggedVertices::k_MaskPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_VertexDataName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexGeometryPath_Key, std::make_any<DataPath>());
+  // args.insertOrAssign(RemoveFlaggedVertices::k_VertexDataName_Key, std::make_any<std::string>("Vertex Data"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -71,10 +71,10 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
   DataPath reducedVertexAMPath = reducedVertexPath.createChildPath(Constants::k_VertexDataGroupName);
 
   args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeomPath_Key, std::make_any<DataPath>(vertexGeomPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(arraySelection));
+  //  args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(arraySelection));
   args.insertOrAssign(RemoveFlaggedVertices::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexPath_Key, std::make_any<DataPath>(reducedVertexPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_VertexDataName_Key, std::make_any<std::string>(Constants::k_VertexDataGroupName));
+  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexGeometryPath_Key, std::make_any<DataPath>(reducedVertexPath));
+  // args.insertOrAssign(RemoveFlaggedVertices::k_VertexDataName_Key, std::make_any<std::string>(Constants::k_VertexDataGroupName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
