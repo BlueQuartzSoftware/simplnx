@@ -147,6 +147,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
   // Reset the final Transformation Matrix to all Zeros before we fill it with what the user has entered.
   ImageRotationUtilities::Matrix4fR transformationMatrix;
+  transformationMatrix.setIdentity();
 
   switch(pTransformationMatrixTypeValue)
   {
@@ -161,7 +162,8 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       return {MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
     }
-    transformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(*precomputedMatrixPtr);
+    // transformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(*precomputedMatrixPtr);
+    preflightUpdatedValues.push_back({"Precomputed transformation matrix will be used.", ""});
     break;
   }
   case k_ManualTransformationMatrixIdx: // Manual transformation matrix
@@ -202,8 +204,10 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
   }
   }
-
-  preflightUpdatedValues.push_back({"Generated Transformation Matrix", ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix)});
+  if(pTransformationMatrixTypeValue != k_PrecomputedTransformationMatrixIdx)
+  {
+    preflightUpdatedValues.push_back({"Generated Transformation Matrix", ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix)});
+  }
 
   // if ImageGeom was selected to be transformed: This should work because if we didn't pass
   // the earlier test, we should not have gotten to here.
