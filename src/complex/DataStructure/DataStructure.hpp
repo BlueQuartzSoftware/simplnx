@@ -606,14 +606,18 @@ public:
    * @param outputStream the child class of ostream to output dot syntax to
    * @return
    */
-  void exportHeirarchyAsGraphViz(std::ostream& outputStream);
+  void exportHeirarchyAsGraphViz(std::ostream& outputStream) const;
 
   /**
    * @brief Outputs data graph in console readable format
    * @param outputStream the child class of ostream to output to
    * @return
    */
-  void exportHeirarchyAsText(std::ostream& outputStream);
+  void exportHeirarchyAsText(std::ostream& outputStream) const;
+
+  std::vector<DataPath> gatherAllPaths() const;
+
+  void recurseHeirarchy(std::vector<DataPath>& dataPaths, const std::vector<DataPath>& paths) const;
 
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
@@ -733,7 +737,7 @@ private:
    * @param parent name of the calling parent to output
    * @return
    */
-  void recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent);
+  void recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const;
 
   /**
    * @brief The recursive function to parse graph and dump names to and output stream in
@@ -743,7 +747,7 @@ private:
    * @param indent the indent for the heirarchy
    * @return
    */
-  void recurseHeirarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent);
+  void recurseHeirarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const;
 
   /**
    * @brief Notifies observers to the provided message.

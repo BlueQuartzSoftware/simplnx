@@ -830,7 +830,7 @@ void DataStructure::resetIds(DataObject::IdType startingId)
   m_RootGroup.updateIds(updatedIds);
 }
 
-void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
+void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream) const
 {
   // initialize dot file
   outputStream << "digraph DataGraph {\n"
@@ -856,7 +856,7 @@ void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
   outputStream << "}" << std::endl; // for readability
 }
 
-void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent)
+void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const
 {
   for(const auto& path : paths)
   {
@@ -876,7 +876,45 @@ void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const
   outputStream << "\n"; // for readability
 }
 
-void DataStructure::exportHeirarchyAsText(std::ostream& outputStream)
+std::vector<DataPath> DataStructure::gatherAllPaths() const
+{
+  std::vector<DataPath> dataPaths;
+  for(const auto* object : getTopLevelData())
+  {
+    auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
+    auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
+
+    dataPaths.push_back(topLevelPath);
+
+    if(optionalDataPaths.has_value() || optionalDataPaths.value().size() != 0)
+    {
+      // Begin recursion
+      recurseHeirarchy(dataPaths, optionalDataPaths.value());
+    }
+  }
+  return dataPaths;
+}
+
+void DataStructure::recurseHeirarchy(std::vector<DataPath>& dataPaths, const std::vector<DataPath>& paths) const
+{
+  for(const auto& path : paths)
+  {
+    // Output parent node, child node, and edge connecting them in .dot format
+    dataPaths.push_back(path);
+
+    // pull child paths or skip to next iteration
+    auto optionalChildPaths = GetAllChildDataPaths(*this, path);
+    if(!optionalChildPaths.has_value() || optionalChildPaths.value().size() == 0)
+    {
+      continue;
+    }
+
+    // recurse
+    recurseHeirarchy(dataPaths, optionalChildPaths.value());
+  }
+}
+
+void DataStructure::exportHeirarchyAsText(std::ostream& outputStream) const
 {
   // set base case
   for(const auto* object : getTopLevelData())
@@ -895,7 +933,7 @@ void DataStructure::exportHeirarchyAsText(std::ostream& outputStream)
   outputStream << std::endl; // for readability
 }
 
-void DataStructure::recurseHeirarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent)
+void DataStructure::recurseHeirarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const
 {
   indent += "  ";
 
