@@ -205,18 +205,10 @@
     },
     {
       "args": {
-        "removed_data_path": "RoboMet.3D Image Stack/EnsembleAttributeMatrix/CrystalStructures"
-      },
-      "comments": "",
-      "filter": {
-        "name": "complex::DeleteData",
-        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
-        "removed_data_path": "RoboMet.3D Image Stack/EnsembleAttributeMatrix/PhaseTypes"
+        "removed_data_path": [
+		  "RoboMet.3D Image Stack/EnsembleAttributeMatrix/CrystalStructures",
+		  "RoboMet.3D Image Stack/EnsembleAttributeMatrix/PhaseTypes"
+		]
       },
       "comments": "",
       "filter": {

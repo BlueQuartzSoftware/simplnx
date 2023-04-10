@@ -1,7 +1,7 @@
 #include "ComplexCore/Filters/DeleteData.hpp"
 
 #include "complex/Common/TypeTraits.hpp"
-#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/MultiPathSelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/unit_test/complex_test_dirs.hpp"
@@ -30,12 +30,13 @@ TEST_CASE("ComplexCore::Delete Singular Data Array", "[ComplexCore][DeleteData]"
 
   DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
 
-  DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne, k_Int8DataSet});
+  DataPath selectedDataPath1({k_LevelZero, k_LevelOne, k_Int8DataSet});
+  DataPath selectedDataPath2({k_LevelZero, k_LevelOne, k_Int16DataSet});
   Arguments args;
 
   // Create default Parameters for the filter.
   // args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteDataObject)));
-  args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath));
+  args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({selectedDataPath1, selectedDataPath2}));
 
   DeleteData filter;
 
@@ -47,8 +48,9 @@ TEST_CASE("ComplexCore::Delete Singular Data Array", "[ComplexCore][DeleteData]"
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  DataObject* removedDataArray = dataStructure.getData(selectedDataGroupPath);
+  DataObject* removedDataArray = dataStructure.getData(selectedDataPath1);
   REQUIRE(removedDataArray == nullptr);
+  REQUIRE(dataStructure.getData(selectedDataPath2) == nullptr);
 }
 
 TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][DeleteData]")
@@ -70,7 +72,7 @@ TEST_CASE("ComplexCore::Delete Data Object (Node removal)", "[ComplexCore][Delet
 
   // Create default Parameters for the filter.
   // args.insertOrAssign(DeleteData::k_DeletionType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DeleteData::DeletionType::DeleteDataObject)));
-  args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<DataPath>(selectedDataGroupPath));
+  args.insertOrAssign(DeleteData::k_DataPath_Key, std::make_any<MultiPathSelectionParameter::ValueType>({selectedDataGroupPath}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
