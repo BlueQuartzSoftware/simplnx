@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "CreateEnsembleInfoTest2.d3dpipeline",
+  "name": "Import_ASCII.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -36,9 +36,9 @@
         "selected_data_group": "[Image Geometry]/CellData",
         "tuple_dimensions": [
           [
-            1,
-			201,
-			189
+            1.0,
+            201.0,
+            189.0
           ]
         ],
         "use_existing_group": true,
@@ -109,29 +109,11 @@
     },
     {
       "args": {
-        "removed_data_path": "[Image Geometry]/CellData/phi1"
-      },
-      "comments": "",
-      "filter": {
-        "name": "complex::DeleteData",
-        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
-        "removed_data_path": "[Image Geometry]/CellData/Phi"
-      },
-      "comments": "",
-      "filter": {
-        "name": "complex::DeleteData",
-        "uuid": "bf286740-e987-49fe-a7c8-6e566e3a0606"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
-        "removed_data_path": "[Image Geometry]/CellData/phi2"
+        "removed_data_path": [
+          "[Image Geometry]/CellData/phi1",
+          "[Image Geometry]/CellData/Phi",
+          "[Image Geometry]/CellData/phi2"
+        ]
       },
       "comments": "",
       "filter": {
