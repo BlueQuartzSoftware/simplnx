@@ -721,7 +721,7 @@ target_include_directories(complex
 # ------------------------------------------------------------------------------
 # CLI Executable
 # ------------------------------------------------------------------------------
-add_subdirectory(${complex_SOURCE_DIR}/src/DREAM3DNX-cli)
+add_subdirectory(${complex_SOURCE_DIR}/src/nxrun)
 
 #------------------------------------------------------------------------------
 # Complex Plugins Section
@@ -892,10 +892,6 @@ if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-#------------------------------------------------------------------------------
-# CLI
-#------------------------------------------------------------------------------
-add_subdirectory(${complex_SOURCE_DIR}/src/NX-cli)
 
 #------------------------------------------------------------------------------
 # Print Summary Information

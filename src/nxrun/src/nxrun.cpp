@@ -363,7 +363,7 @@ Result<> DisplayHelpMenu(const std::vector<Argument>& arguments)
 
 Result<> CreateArgumentError(const Argument& argument)
 {
-  std::string errorMessage = fmt::format("Failed to parse argument: '{}'", argument.value);
+  std::string errorMessage = fmt::format("Failed to parse argument: {}", argument.value);
   return complex::MakeErrorResult(k_InvalidArgumentError, errorMessage);
 }
 
@@ -375,9 +375,15 @@ Result<> SetLogFile(const Argument& argument)
 
 int main(int argc, char* argv[])
 {
-  cliOut << "DREAM.3D NX CLI";
-  cliOut.endline();
-
+  
+  // cliOut << "nxrun";
+  // cliOut.endline();
+  // cliOut << "ARGUMENT LISTING START\n";
+  // for(int argIndex = 0; argIndex < argc; argIndex++)
+  // {
+  //   cliOut << "Argument[" << argIndex << "]: " << argv[argIndex] << "\n"; 
+  // }
+  // cliOut << "ARGUMENT LISTING END\n";
   complex::Application app;
   LoadApp(app);
 

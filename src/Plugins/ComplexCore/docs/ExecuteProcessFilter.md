@@ -17,11 +17,11 @@ Simple directory listing (for Mac/Linux users)
 
 Simple command with arguments (for Windows users)
 
-> C:/Applications/DREAM3D-6.6.332/PipelineRunner.exe C:/Applications/DREAM3D/DREAM3D-6.6.332/Data/MyPipeline.json
+> C:/Applications/DREAM3D-6.6.332/nxrun.exe C:/Applications/DREAM3D/DREAM3D-6.6.332/Data/MyPipeline.json
 
 For a command with spaces in the path 
 
-> "C:/Program Files/DREAM3D-6.6.332/PipelineRunner.exe" "C:/Program Files/DREAM3D-6.6.332/PrebuiltPipelines/Workshop/EBSD Reconstruction/(01) SmallIN100 Archive.json"
+> "C:/Program Files/DREAM3D-6.6.332/nxrun.exe" "C:/Program Files/DREAM3D-6.6.332/PrebuiltPipelines/Workshop/EBSD Reconstruction/(01) SmallIN100 Archive.json"
 
 ## Parameters ##
 

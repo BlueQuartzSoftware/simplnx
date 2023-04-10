@@ -229,8 +229,8 @@ function(create_pipeline_tests)
   endif()
 
 
-  get_target_property(PIPELINE_RUNNER_NAME DREAM3DNX-cli NAME)
-  get_target_property(PIPELINE_RUNNER_DEBUG DREAM3DNX-cli DEBUG_POSTFIX)
+  get_target_property(PIPELINE_RUNNER_NAME nxrun NAME)
+  get_target_property(PIPELINE_RUNNER_DEBUG nxrun DEBUG_POSTFIX)
   
   set(test_index  "0")
   foreach(pipeline_file_path ${ARGS_PIPELINE_LIST} )
@@ -244,7 +244,7 @@ function(create_pipeline_tests)
     string(REPLACE "/" "-" test_file_name "${test_file_name}")
 
     add_test(NAME "${ARGS_PLUGIN_NAME} ${padding}${test_index} ${test_file_name}"
-            COMMAND "${PIPELINE_RUNNER_NAME}$<$<CONFIG:Debug>:${PIPELINE_RUNNER_DEBUG}>" "--execute ${pipeline_file_path}"
+            COMMAND "${PIPELINE_RUNNER_NAME}$<$<CONFIG:Debug>:${PIPELINE_RUNNER_DEBUG}> --execute ${pipeline_file_path}"
             #CONFIGURATIONS Debug
             WORKING_DIRECTORY ${TEST_WORKING_DIR})
   endforeach()
