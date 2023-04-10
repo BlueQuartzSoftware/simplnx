@@ -76,13 +76,15 @@ COMPLEX_EXPORT void PrintSingleDataObject(std::ostream& outputStrm, const DataPa
  * //params with defaults
  * @param delimiter The delimiter to be inserted into string
  * @param includeIndex The boolean that determines if "Feature_IDs" are printed
+ * @param writeFirstIndex Write the first tuple of the arrays. For Feature based data, this would be FeatureId = 0.
+ * @paragraph indexName The name of the "Index" column
  * @param includeHeaders The boolean that determines if headers are printed
  * @param neighborLists The list of dataPaths of neighborlists to include
  * @param writeNumOfFeatures The amount of elements per tuple printed at top
  */
 COMPLEX_EXPORT void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
                                               const std::atomic_bool& shouldCancel, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,
-                                              const std::vector<DataPath>& neighborLists = {}, bool writeNumOfFeatures = false);
+                                              bool writeFirstIndex = true, const std::string& indexName = "Index", const std::vector<DataPath>& neighborLists = {}, bool writeNumOfFeatures = false);
 } // namespace OStreamUtilities
 
 } // namespace complex

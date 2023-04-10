@@ -1,0 +1,466 @@
+{
+  "isDisabled": false,
+  "name": "avtr12_Analysis copy.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": "Cell Data",
+        "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
+        "data_container_name": "fw-ar-IF1-avtr12-corr",
+        "degrees_to_radians": true,
+        "edax_hexagonal_alignment": true,
+        "input_file": "Data/T12-MAI-2010/fw-ar-IF1-avtr12-corr.ctf"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ReadCtfDataFilter",
+        "uuid": "7751923c-afb9-4032-8372-8078325c69a4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "created_image_geometry": "",
+        "remove_original_geometry": true,
+        "rotate_slice_by_slice": false,
+        "rotation_axis": [
+          0.0,
+          1.0,
+          0.0,
+          180.0
+        ],
+        "rotation_matrix": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "rotation_representation": 0,
+        "selected_image_geometry": "fw-ar-IF1-avtr12-corr"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RotateSampleRefFrameFilter",
+        "uuid": "d2451dc1-a5a1-4ac2-a64d-7991669dcffc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "array_thresholds": {
+          "inverted": false,
+          "thresholds": [
+            {
+              "array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Error",
+              "comparison": 2,
+              "inverted": false,
+              "type": "array",
+              "union": 0,
+              "value": 0.0
+            }
+          ],
+          "type": "collection",
+          "union": 0
+        },
+        "created_data_path": "fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::MultiThresholdObjects",
+        "uuid": "4246245e-1011-4add-8436-0af6bed19228"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_orientation_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles",
+        "input_type": 0,
+        "output_orientation_array_name": "Quats",
+        "output_type": 2
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ConvertOrientations",
+        "uuid": "501e54e6-a66f-4eeb-ae37-00e649c00d4b"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "confidence_index_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Error",
+        "loop": true,
+        "min_confidence": 0.0,
+        "selected_comparison": 0,
+        "selected_image_geometry": "fw-ar-IF1-avtr12-corr"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ReplaceElementAttributesWithNeighborValuesFilter",
+        "uuid": "65128c53-d3be-4a69-a559-32a48d603884"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles",
+        "cell_ip_fcolors_array_name": "IPF_001",
+        "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
+        "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
+        "good_voxels_array_path": "",
+        "reference_dir": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "use_good_voxels": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "file_name": "Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_001.png",
+        "image_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/IPF_001",
+        "image_geom_path": "fw-ar-IF1-avtr12-corr",
+        "index_offset": 0,
+        "plane": 0
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ITKImageWriter",
+        "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles",
+        "cell_ip_fcolors_array_name": "IPF_010",
+        "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
+        "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
+        "good_voxels_array_path": "",
+        "reference_dir": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "use_good_voxels": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "file_name": "Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_010.png",
+        "image_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/IPF_010",
+        "image_geom_path": "fw-ar-IF1-avtr12-corr",
+        "index_offset": 0,
+        "plane": 0
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ITKImageWriter",
+        "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/EulerAngles",
+        "cell_ip_fcolors_array_name": "IPF_100",
+        "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
+        "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
+        "good_voxels_array_path": "",
+        "reference_dir": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "use_good_voxels": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::GenerateIPFColorsFilter",
+        "uuid": "64cb4f27-6e5e-4dd2-8a03-0c448cb8f5e6"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "file_name": "Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr_100.png",
+        "image_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/IPF_100",
+        "image_geom_path": "fw-ar-IF1-avtr12-corr",
+        "index_offset": 0,
+        "plane": 0
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ITKImageWriter",
+        "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "active_array_name": "Active",
+        "cell_feature_attribute_matrix_name": "CellFeatureData",
+        "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
+        "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
+        "feature_ids_array_name": "FeatureIds",
+        "good_voxels_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/ThresholdArray",
+        "grid_geometry_path": "fw-ar-IF1-avtr12-corr",
+        "misorientation_tolerance": 5.0,
+        "quats_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
+        "randomize_features": false,
+        "use_good_voxels": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::EBSDSegmentFeaturesFilter",
+        "uuid": "1810c2c7-63e3-41db-b204-a5821e6271c0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_phases_array_path": "Phases",
+        "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
+        "ignored_data_array_paths": [],
+        "min_allowed_defect_size": 10,
+        "selected_image_geometry": "fw-ar-IF1-avtr12-corr",
+        "store_as_new_phase": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FillBadDataFilter",
+        "uuid": "a59eb864-9e6b-40bb-9292-e5281b0b4f3e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "equivalent_diameters_path": "EquivalentDiameters",
+        "feature_attribute_matrix": "fw-ar-IF1-avtr12-corr/CellFeatureData",
+        "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
+        "geometry_path": "fw-ar-IF1-avtr12-corr",
+        "num_elements_path": "NumElements",
+        "save_element_sizes": false,
+        "volumes_path": "Volumes"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CalculateFeatureSizesFilter",
+        "uuid": "c666ee17-ca58-4969-80d0-819986c72485"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "apply_single_phase": false,
+        "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
+        "feature_phases_path": "",
+        "image_geom_path": "fw-ar-IF1-avtr12-corr",
+        "min_allowed_features_size": 5,
+        "num_cells_path": "fw-ar-IF1-avtr12-corr/CellFeatureData/NumElements",
+        "phase_number": 0
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::RemoveMinimumSizeFeaturesFilter",
+        "uuid": "074472d3-ba8d-4a1a-99f2-2d56a0d082a0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_euler_angles_array_path": "AvgEulerAngles",
+        "avg_quats_array_path": "AvgQuats",
+        "cell_feature_attribute_matrix": "fw-ar-IF1-avtr12-corr/CellFeatureData",
+        "cell_feature_ids_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
+        "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
+        "cell_quats_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
+        "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindAvgOrientationsFilter",
+        "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
+        "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
+        "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
+        "kernel_average_misorientations_array_name": "KernelAverageMisorientations",
+        "kernel_size": [
+          1,
+          1,
+          1
+        ],
+        "quats_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
+        "selected_image_geometry_path": "fw-ar-IF1-avtr12-corr"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindKernelAvgMisorientationsFilter",
+        "uuid": "61cfc9c1-aa0e-452b-b9ef-d3b9e6268035"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "centroids_array_path": "Centroids",
+        "feature_attribute_matrix": "fw-ar-IF1-avtr12-corr/CellFeatureData",
+        "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
+        "selected_image_geometry": "fw-ar-IF1-avtr12-corr"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindFeatureCentroidsFilter",
+        "uuid": "c6875ac7-8bdd-4f69-b6ce-82ac09bd3421"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "calc_manhattan_dist": true,
+        "do_boundaries": true,
+        "do_quad_points": false,
+        "do_triple_lines": false,
+        "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
+        "g_bdistances_array_name": "GBManhattanDistances",
+        "nearest_neighbors_array_name": "NearestNeighbors",
+        "q_pdistances_array_name": "QPManhattanDistances",
+        "save_nearest_neighbors": false,
+        "selected_image_geometry": "fw-ar-IF1-avtr12-corr",
+        "t_jdistances_array_name": "TJManhattanDistances"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindEuclideanDistMapFilter",
+        "uuid": "ba9ae8f6-443e-41d3-bb45-a08a139325c1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_quats_array_path": "fw-ar-IF1-avtr12-corr/CellFeatureData/AvgQuats",
+        "cell_feature_attribute_matrix_path": "CellFeatureData",
+        "cell_phases_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Phases",
+        "crystal_structures_array_path": "fw-ar-IF1-avtr12-corr/CellEnsembleData/CrystalStructures",
+        "feature_avg_misorientations_array_name": "FeatureAvgMisorientations",
+        "feature_ids_path": "fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds",
+        "feature_reference_misorientations_array_name": "FeatureReferenceMisorientations",
+        "g_beuclidean_distances_array_path": "CellData/GBEuclideanDistances",
+        "quats_array_path": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
+        "reference_orientation": 0
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindFeatureReferenceMisorientationsFilter",
+        "uuid": "24b54daf-3bf5-4331-93f6-03a49f719bf1"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_feature_attribute_matrix_path": "fw-ar-IF1-avtr12-corr/CellFeatureData",
+        "delimiter_choice_int": 2,
+        "feature_data_file": "Data/Output/fw-ar-IF1-avtr12-corr/FeatureData.csv",
+        "write_neighborlist_data": false,
+        "write_num_features_line": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FeatureDataCSVWriterFilter",
+        "uuid": "d734293f-3017-4699-b458-c05aca078b96"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "data_group_name": "",
+        "histogram_suffix": "Histogram",
+        "max_range": 1.0,
+        "min_range": 0.0,
+        "new_data_group": true,
+        "new_data_group_name": "fw-ar-IF1-avtr12-corr/Histograms",
+        "number_of_bins": 256,
+        "selected_array_paths": [
+          "fw-ar-IF1-avtr12-corr/CellFeatureData/EquivalentDiameters"
+        ],
+        "user_defined_range": false
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::CalculateArrayHistogramFilter",
+        "uuid": "c6b6d9e5-301d-4767-abf7-530f5ef5007d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "Output_path": "Data/Output/fw-ar-IF1-avtr12-corr/",
+        "delimiter": 2,
+        "file_extension": ".csv",
+        "file_name": "EqDiamHistogram",
+        "includes": 1,
+        "max_val_per_line": 0,
+        "output_style": 1,
+        "selected_data_array_paths": [
+          "fw-ar-IF1-avtr12-corr/Histograms/EquivalentDiametersHistogram"
+        ]
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::WriteASCIIDataFilter",
+        "uuid": "06c8bfe8-2b42-4956-aca3-580bc0620716"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/fw-ar-IF1-avtr12-corr/fw-ar-IF1-avtr12-corr.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "workflowParams": []
+}

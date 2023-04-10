@@ -144,7 +144,7 @@ Result<> FeatureDataCSVWriterFilter::executeImpl(DataStructure& dataStructure, c
   }
 
   // call ostream function
-  OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, neighborPaths, pWriteNumFeaturesLineValue);
+  OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
 
   return {};
 }
