@@ -54,6 +54,7 @@ set(FilterList
   GenerateFZQuaternions
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
+  GeneratePoleFigureFilter
   GenerateQuaternionConjugateFilter
   ImportH5EspritDataFilter
   ImportH5OimDataFilter
@@ -64,6 +65,7 @@ set(FilterList
   ReadH5EbsdFilter
   RodriguesConvertorFilter
   RotateEulerRefFrameFilter
+  WritePoleFigureFilter
 )
   
 set(STUB_FILTERS
@@ -88,12 +90,9 @@ set(STUB_FILTERS
   GenerateFaceIPFColoring
   GenerateFaceMisorientationColoring
   GenerateOrientationMatrixTranspose
-
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
   # OrientationUtility # MISSING 1 or more Parameter Implementations  
   #OrientationUtility # MISSING 1 or more Parameter Implementations
-
-  WritePoleFigure
   WriteStatsGenOdfAngleFile
 )
 
@@ -188,6 +187,7 @@ set(filter_algorithms
   GenerateFaceMisorientationColoring
   GenerateGBCDPoleFigure
   GenerateIPFColors
+  GeneratePoleFigure
   GenerateQuaternionConjugate
   GroupFeatures
   ImportH5EspritData
@@ -199,6 +199,7 @@ set(filter_algorithms
   ReadH5Ebsd
   RodriguesConvertor
   RotateEulerRefFrame
+  WritePoleFigure
 )
 
 

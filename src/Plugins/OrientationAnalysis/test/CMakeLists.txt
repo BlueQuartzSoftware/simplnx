@@ -12,6 +12,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CAxisSegmentFeaturesTest.cpp
   ConvertQuaternionTest.cpp
   ConvertOrientationsTest.cpp
+  ConvertQuaternionTest.cpp
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
@@ -33,6 +34,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   GenerateFZQuaternionsTest.cpp
   GenerateGBCDPoleFigureTest.cpp
   GenerateIPFColorsTest.cpp
+  GeneratePoleFigureTest.cpp
   GenerateQuaternionConjugateTest.cpp
   ImportH5EspritDataTest.cpp
   ImportH5OimDataTest.cpp
@@ -41,8 +43,9 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadAngDataTest.cpp
   ReadCtfDataTest.cpp
   ReadH5EbsdTest.cpp
-  RotateEulerRefFrameTest.cpp
   RodriguesConvertorTest.cpp
+  RotateEulerRefFrameTest.cpp
+  WritePoleFigureTest.cpp
 )
 set(DISABLED_TESTS
   # ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
@@ -68,7 +71,6 @@ set(DISABLED_TESTS
 
   ReplaceElementAttributesWithNeighborValuesTest.cpp
   Stereographic3DTest.cpp
-  WritePoleFigureTest.cpp
   WriteStatsGenOdfAngleFileTest.cpp
 )
 
