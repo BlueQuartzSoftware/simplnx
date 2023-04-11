@@ -273,9 +273,13 @@ public:
       {
         outputStrm << static_cast<int32>(m_DataArray[tupleIndex * m_NumComps + comp]);
       }
-      else if constexpr(std::is_same_v<ScalarType, float32> || std::is_same_v<ScalarType, float64>)
+      else if constexpr(std::is_same_v<ScalarType, float32>)
       {
-        outputStrm << fmt::format("{:.8f}", m_DataArray[tupleIndex * m_NumComps + comp]);
+        outputStrm <<  std::setprecision(8) << std::noshowpoint << m_DataArray[tupleIndex * m_NumComps + comp];
+      }
+      else if constexpr(std::is_same_v<ScalarType, float64>)
+      {
+        outputStrm <<  std::setprecision(16) << std::noshowpoint << m_DataArray[tupleIndex * m_NumComps + comp];
       }
       else
       {
