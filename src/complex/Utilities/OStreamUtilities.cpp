@@ -488,10 +488,6 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   if(writeNumOfFeatures)
   {
     size_t featureCount = 0;
-    //    if(includeHeaders)
-    //    {
-    //      featureCount++;
-    //    }
 
     featureCount += dataStructure.getDataRefAs<IArray>(objectPaths.at(0)).getNumberOfTuples();
     if(!writeFirstIndex)
