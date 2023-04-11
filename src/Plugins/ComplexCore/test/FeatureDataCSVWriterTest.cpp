@@ -88,7 +88,7 @@ TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Test Algorithm", "[FeatureDa
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  auto exemplarPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
+  auto exemplarPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
   REQUIRE(fs::exists(exemplarPath));
 
   REQUIRE(readIn(file) == readIn(exemplarPath));
