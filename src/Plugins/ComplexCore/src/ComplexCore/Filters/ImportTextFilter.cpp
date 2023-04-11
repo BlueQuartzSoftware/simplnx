@@ -88,7 +88,6 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
 {
   auto numericType = args.value<NumericType>(k_ScalarTypeKey);
   auto arrayPath = args.value<DataPath>(k_DataArrayKey);
-  auto nTuples = args.value<uint64>(k_NTuplesKey);
   auto nComp = args.value<uint64>(k_NCompKey);
 
   auto useDims = args.value<bool>(k_AdvancedOptions_Key);
