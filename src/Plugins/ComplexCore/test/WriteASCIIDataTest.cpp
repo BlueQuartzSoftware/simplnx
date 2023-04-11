@@ -68,37 +68,37 @@ private:
     if constexpr(std::is_same<T, int8>::value)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int8"));
-      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir,"int8"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "int8"));
       setFillValue(-65, -63, -61);
     }
     else if constexpr(std::is_same<T, int32>::value)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int32"));
-      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir,"int32"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "int32"));
       setFillValue(-6500, -6498, -6496);
     }
     else if constexpr(std::is_same<T, uint8>::value)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint8"));
-      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir,"uint8"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "uint8"));
       setFillValue(65, 67, 69);
     }
     else if constexpr(std::is_same<T, uint32>::value)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint32"));
-      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir,"uint32"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "uint32"));
       setFillValue(6500, 6502, 6504);
     }
     else if constexpr(std::is_same<T, float32>::value)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float32"));
-      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir,"float32"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "float32"));
       setFillValue(8.00, 67.001, 69.000001);
     }
     else if constexpr(std::is_same<T, float64>::value)
     {
       m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float64"));
-      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir,"float64"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "float64"));
       setFillValue(65.00, 67.54335100, 69.0000015436767341);
     }
   }
