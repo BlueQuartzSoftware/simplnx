@@ -44,6 +44,9 @@ public:
     auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
     SizeVec3 udims = gridGeom->getDimensions();
 
+    QuatD q1;
+    QuatD q2;
+
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);
     auto zPoints = static_cast<int64_t>(udims[2]);
@@ -64,47 +67,40 @@ public:
             int32 numVoxel = 0;
 
             size_t quatIndex = point * 4;
-            QuatF q1(quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]);
+            q1[0] = quats[quatIndex];
+            q1[1] = quats[quatIndex + 1];
+            q1[2] = quats[quatIndex + 2];
+            q1[3] = quats[quatIndex + 3];
 
             uint32_t phase1 = crystalStructures[cellPhases[point]];
             for(int32_t j = -kernelSize[2]; j < kernelSize[2] + 1; j++)
             {
               size_t jStride = j * xPoints * yPoints;
+              if(plane + j < 0 || plane + j > zPoints - 1)
+              {
+                continue;
+              }
               for(int32_t k = -kernelSize[1]; k < kernelSize[1] + 1; k++)
               {
                 size_t kStride = k * xPoints;
+                if(row + k < 0 || row + k > yPoints - 1)
+                {
+                  continue;
+                }
                 for(int32_t l = -kernelSize[0]; l < kernelSize[0] + 1; l++)
                 {
-                  bool good = true;
-                  size_t neighbor = point + (jStride) + (kStride) + (l);
-                  if(plane + j < 0)
+                  if(col + l < 0 || col + l > xPoints - 1)
                   {
-                    good = false;
+                    continue;
                   }
-                  else if(plane + j > zPoints - 1)
-                  {
-                    good = false;
-                  }
-                  else if(row + k < 0)
-                  {
-                    good = false;
-                  }
-                  else if(row + k > yPoints - 1)
-                  {
-                    good = false;
-                  }
-                  else if(col + l < 0)
-                  {
-                    good = false;
-                  }
-                  else if(col + l > xPoints - 1)
-                  {
-                    good = false;
-                  }
-                  if(good && featureIds[point] == featureIds[neighbor])
+                  const size_t neighbor = point + (jStride) + (kStride) + (l);
+                  if(featureIds[point] == featureIds[neighbor])
                   {
                     quatIndex = neighbor * 4;
-                    QuatF q2(quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]);
+                    q2[0] = quats[quatIndex];
+                    q2[1] = quats[quatIndex + 1];
+                    q2[2] = quats[quatIndex + 2];
+                    q2[3] = quats[quatIndex + 3];
                     OrientationF axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
                     totalMisorientation = totalMisorientation + (axisAngle[3] * complex::Constants::k_180OverPiD);
                     numVoxel++;
