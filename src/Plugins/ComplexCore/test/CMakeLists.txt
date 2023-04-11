@@ -6,6 +6,7 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+  AbaqusHexahedronWriterTest.cpp
   AddBadDataTest.cpp
   AlignGeometriesTest.cpp
   AlignSectionsFeatureCentroidTest.cpp
@@ -177,6 +178,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stl_test.tar.gz SHA512 560fe3f7d07bbda26c1d8097e1f3f7a7cf7287416eeac1f7c5ad3e32cb1b09ce05ee3a2741dde60e7a3d148d2685172e565f81d571e2ad0fc1adbd2753cfb3de)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME add_bad_data_test.tar.gz SHA512 cfb04a56e4d4c4098d30636922f35e5dc0a292b7e9a475fca745a7eeb820dcdde719fe62e371197bbca461047a4631e63d6f21cfd814b8755e09176951d5538c)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_feature_clustering.tar.gz SHA512 37d8b5fccfc137662362dc4d931f468ff45ece9622390f39b90b54e73a1a14fb26d8d31b8f2f6d4fa22a57399a5bf36bb5dea03743c324f0617ba2cbc3683a39)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME abaqus_hexahedron_writer_test.tar.gz SHA512 ae8626abfacdefeebed5c10c80808e1f047b8e4ba120bdcc0f6cde82508f4af24e6bd37d127be1b19b05df0d34efbfcd481426542cbb7f2ea599e7bfb32f5513)
 
 endif()
 

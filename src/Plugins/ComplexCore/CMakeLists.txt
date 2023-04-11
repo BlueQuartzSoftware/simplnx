@@ -7,6 +7,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${complex_SOURCE_DIR}/src/Plugins/${PLUGIN_NAME})
 # These are all the filters in the plugin. All filters should be kept in the
 # PLUGIN_NAME/src/PLUGIN_NAME/Filters/ directory.
 set(FilterList
+  AbaqusHexahedronWriterFilter
   AddBadDataFilter
   AlignGeometries
   AlignSectionsFeatureCentroidFilter
@@ -111,6 +112,7 @@ set(ActionList
 )
 
 set(AlgorithmList
+  AbaqusHexahedronWriter
   AddBadData
   AlignSectionsFeatureCentroid
   AlignSectionsList
