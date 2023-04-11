@@ -162,7 +162,6 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       return {MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
     }
-    // transformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(*precomputedMatrixPtr);
     preflightUpdatedValues.push_back({"Precomputed transformation matrix will be used.", ""});
     break;
   }
