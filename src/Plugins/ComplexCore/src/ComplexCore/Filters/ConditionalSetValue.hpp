@@ -30,6 +30,7 @@ public:
   static inline constexpr StringLiteral k_ReplaceValue_Key = "replace_value";
   static inline constexpr StringLiteral k_ConditionalArrayPath_Key = "conditional_array_path";
   static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static inline constexpr StringLiteral k_InvertMask_Key = "invert_mask";
 
   /**
    * @brief Returns the name of the filter.
