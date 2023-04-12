@@ -126,8 +126,9 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
     tupleDims = parentAM->getShape();
     if(useDims)
     {
-      resultOutputActions.warnings().push_back(Warning{-77604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                                        "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
+      resultOutputActions.warnings().push_back(
+          Warning{-77604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                          "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
