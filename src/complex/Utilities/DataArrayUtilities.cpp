@@ -2,6 +2,7 @@
 
 #include "complex/Common/Types.hpp"
 #include "complex/Common/TypesUtility.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <set>
 
@@ -132,48 +133,11 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
 }
 
 //-----------------------------------------------------------------------------
-Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
+Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, bool invertMask)
 {
   const IDataArray& iDataArray = dynamic_cast<IDataArray&>(inputDataObject);
   const complex::DataType arrayType = iDataArray.getDataType();
-  const Result<> resultFromConversion;
-  switch(arrayType)
-  {
-  case complex::DataType::int8:
-    return ConditionalReplaceValueInArrayFromString<int8>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::uint8:
-    return ConditionalReplaceValueInArrayFromString<uint8>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::int16:
-    return ConditionalReplaceValueInArrayFromString<int16>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::uint16:
-    return ConditionalReplaceValueInArrayFromString<uint16>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::int32:
-    return ConditionalReplaceValueInArrayFromString<int32>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::uint32:
-    return ConditionalReplaceValueInArrayFromString<uint32>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::int64:
-    return ConditionalReplaceValueInArrayFromString<int64>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::uint64:
-    return ConditionalReplaceValueInArrayFromString<uint64>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::float32:
-    return ConditionalReplaceValueInArrayFromString<float32>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::float64:
-    return ConditionalReplaceValueInArrayFromString<float64>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  case complex::DataType::boolean:
-    return ConditionalReplaceValueInArrayFromString<bool>(valueAsStr, inputDataObject, conditionalDataArray);
-    break;
-  }
-  return {};
+  return ExecuteDataFunction(ConditionalReplaceValueInArrayFromString{}, arrayType, valueAsStr, inputDataObject, conditionalDataArray, invertMask);
 }
 
 //-----------------------------------------------------------------------------

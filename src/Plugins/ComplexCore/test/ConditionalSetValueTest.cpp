@@ -46,28 +46,6 @@ bool RequireDataArrayEqualZero(const DataArray<T>& data)
 }
 } // namespace
 
-TEST_CASE("ComplexCore::ConditionalSetValue: Instantiate Filter", "[ConditionalSetValue]")
-{
-  ConditionalSetValue filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-
-  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
-  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
-  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(!preflightResult.outputActions.valid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(!executeResult.result.valid());
-}
-
 TEST_CASE("ComplexCore::ConditionalSetValue: Missing/Empty DataPaths", "[ConditionalSetValue]")
 {
   DataStructure dataStructure = UnitTest::CreateDataStructure();
@@ -341,4 +319,42 @@ TEST_CASE("ComplexCore::ConditionalSetValue: No Conditional", "[ConditionalSetVa
   {
     REQUIRE(value != removeVal);
   }
+}
+
+TEST_CASE("ComplexCore::ConditionalSetValue: Test Inverted Mask Algorithm Bool", "[ConditionalSetValue]")
+{
+  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  DataPath ebsdScanPath = DataPath({k_SmallIN100, k_EbsdScanData});
+  DataPath geomPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ImageGeometry});
+  const ImageGeom& imageGeometry = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  complex::SizeVec3 imageGeomDims = imageGeometry.getDimensions();
+
+  DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
+  auto& float32DataArray = dataStructure.getDataRefAs<Float32Array>(ciDataPath);
+  // Fill every value with 10.0 into the ciArray
+  float32DataArray.fill(10.0);
+
+  // Create a bool array where every value is TRUE
+  std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+  BoolArray& conditionalArray = dataStructure.getDataRefAs<BoolArray>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray}));
+  conditionalArray.fill(false);
+
+  ConditionalSetValue filter;
+  Arguments args;
+  // Replace every value with a zero
+  args.insertOrAssign(ConditionalSetValue::k_UseConditional_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValue::k_InvertMask_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ConditionalSetValue::k_ReplaceValue_Key, std::make_any<std::string>("0.0"));
+  args.insertOrAssign(ConditionalSetValue::k_ConditionalArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_ConditionalArray})));
+  args.insertOrAssign(ConditionalSetValue::k_SelectedArrayPath_Key, std::make_any<DataPath>(ciDataPath));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE(RequireDataArrayEqualZero(float32DataArray));
 }

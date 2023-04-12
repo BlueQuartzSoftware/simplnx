@@ -34,7 +34,7 @@ struct ReplaceValueInArrayFunctor
   template <typename ScalarType>
   void operator()(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue)
   {
-    DataArray<ScalarType>& dataArray = dynamic_cast<DataArray<ScalarType>&>(workingArray);
+    auto& dataArray = dynamic_cast<DataArray<ScalarType>&>(workingArray);
 
     auto removeVal = convertFromStringToType<ScalarType>(removeValue);
     auto replaceVal = convertFromStringToType<ScalarType>(replaceValue);
@@ -88,9 +88,10 @@ Parameters ConditionalSetValue::parameters() const
   params.insert(std::make_unique<StringParameter>(k_ReplaceValue_Key, "New Value", "The value that will be used as the replacement value", "0"));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseConditional_Key, "Use Conditional Mask", "Whether to use a boolean mask array to replace values marked true", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseConditional_Key, "Use Conditional Mask", "Whether to use a boolean mask array to replace values marked TRUE", false));
+  params.insert(std::make_unique<BoolParameter>(k_InvertMask_Key, "Invert Mask", "This makes the filter replace values that are marked FALSE in the conditional array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(
-      k_ConditionalArrayPath_Key, "Conditional Array", "The complete path to the conditional array that will determine which values/entries will be replaced if index is true", DataPath{},
+      k_ConditionalArrayPath_Key, "Conditional Array", "The complete path to the conditional array that will determine which values/entries will be replaced if index is TRUE", DataPath{},
       ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<StringParameter>(k_RemoveValue_Key, "Value To Replace", "The numerical value that will be replaced in the array", "0"));
 
@@ -100,6 +101,8 @@ Parameters ConditionalSetValue::parameters() const
 
   params.linkParameters(k_UseConditional_Key, k_RemoveValue_Key, false);
   params.linkParameters(k_UseConditional_Key, k_ConditionalArrayPath_Key, true);
+  params.linkParameters(k_UseConditional_Key, k_InvertMask_Key, true);
+
   return params;
 }
 
@@ -116,6 +119,7 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pConditionalPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
+  auto pInvertMask = filterArgs.value<bool>(k_InvertMask_Key);
 
   const DataObject& inputDataObject = dataStructure.getDataRef(selectedArrayPath);
 
@@ -167,6 +171,7 @@ Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Ar
   auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
   auto conditionalArrayPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  auto invertMask = filterArgs.value<bool>(k_InvertMask_Key);
 
   if(useConditionalValue)
   {
@@ -174,7 +179,7 @@ Result<> ConditionalSetValue::executeImpl(DataStructure& dataStructure, const Ar
 
     const IDataArray& conditionalArray = dataStructure.getDataRefAs<IDataArray>(conditionalArrayPath);
 
-    Result<> result = ConditionalReplaceValueInArray(replaceValueString, inputDataObject, conditionalArray);
+    Result<> result = ConditionalReplaceValueInArray(replaceValueString, inputDataObject, conditionalArray, invertMask);
 
     return result;
   }

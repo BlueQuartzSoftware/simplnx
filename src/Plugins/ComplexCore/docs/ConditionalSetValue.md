@@ -34,6 +34,7 @@ This **Filter** replaces values in a user specified **Attribute Array** with a u
 | Name             | Type | Description |
 |------------------|------|-------------|
 | Use Conditional Mask | bool | Whether to use a boolean mask array to replace values marked true |
+| Invert Mask | bool | If checked values marked FALSE will be replaced instead |
 | Any **Attribute Array** | None | Bool | (1) | The complete path to the conditional array that will determine which values/entries will be replaced if index is true|
 | Value to Replace | std::string | The numerical value that will be replaced in the array [will be typecasted to appropriate value later] |
 
