@@ -6,6 +6,7 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -24,7 +25,7 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   const uint64 k_NumComponents = 3;
-  const uint64 k_NumTuples = 480000;
+  const static DynamicTableInfo::TableDataType k_NumTuples = {{static_cast<double>(480000)}};
   const complex::NumericType k_NumericType = complex::NumericType::float32;
 
   // Constant strings and DataPaths to be used later
@@ -57,7 +58,7 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
     Arguments args;
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(k_NumTuples));
+    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(k_NumTuples));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(k_NumComponents));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(0));
@@ -79,7 +80,7 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
     Arguments args;
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(fs::path(comparisonDataFile)));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(k_NumTuples));
+    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(k_NumTuples));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(k_NumComponents));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(0));
