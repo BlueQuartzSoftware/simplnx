@@ -7,6 +7,8 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
+#include <chrono>
+
 namespace complex
 {
 
@@ -42,11 +44,20 @@ public:
 
   const std::atomic_bool& getCancel();
 
+  void sendThreadSafeProgressMessage(usize counter);
+
 private:
   DataStructure& m_DataStructure;
   const FindKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  // Thread safe Progress Message
+  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
+  mutable std::mutex m_ProgressMessage_Mutex;
+  size_t m_TotalElements = 0;
+  size_t m_ProgressCounter = 0;
+  size_t m_LastProgressInt = 0;
 };
 
 } // namespace complex

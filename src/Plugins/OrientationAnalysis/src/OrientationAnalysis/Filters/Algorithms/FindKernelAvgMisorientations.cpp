@@ -8,6 +8,8 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
+#include <chrono>
+
 using namespace complex;
 
 namespace
@@ -15,8 +17,9 @@ namespace
 class FindKernelAvgMisorientationsImpl
 {
 public:
-  FindKernelAvgMisorientationsImpl(DataStructure& dataStructure, const FindKernelAvgMisorientationsInputValues* inputValues, const std::atomic_bool& shouldCancel)
-  : m_DataStructure(dataStructure)
+  FindKernelAvgMisorientationsImpl(FindKernelAvgMisorientations* filter, DataStructure& dataStructure, const FindKernelAvgMisorientationsInputValues* inputValues, const std::atomic_bool& shouldCancel)
+  : m_Filter(filter)
+  , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
   {
@@ -47,6 +50,10 @@ public:
     QuatD q1;
     QuatD q2;
 
+    // messenger values
+    usize counter = 0;
+    usize increment = (zEnd - zStart) / 100;
+
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);
     auto zPoints = static_cast<int64_t>(udims[2]);
@@ -56,6 +63,14 @@ public:
       {
         break;
       }
+
+      if(counter > increment)
+      {
+        m_Filter->sendThreadSafeProgressMessage(counter);
+        counter = 0;
+      }
+      counter++;
+
       for(size_t row = yStart; row < yEnd; row++)
       {
         for(size_t col = xStart; col < xEnd; col++)
@@ -129,6 +144,7 @@ public:
   }
 
 private:
+  FindKernelAvgMisorientations* m_Filter = nullptr;
   DataStructure& m_DataStructure;
   const FindKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
@@ -156,15 +172,38 @@ const std::atomic_bool& FindKernelAvgMisorientations::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+void FindKernelAvgMisorientations::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  m_ProgressCounter += counter;
+  auto now = std::chrono::steady_clock::now();
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 10)
+  {
+    return;
+  }
+
+  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
+  std::string ss = fmt::format("Finding Average Kernel Misorientations || {}% Completed", progressInt);
+  m_MessageHandler(IFilter::Message::Type::Info, ss);
+
+  m_LastProgressInt = progressInt;
+  m_InitialPoint = std::chrono::steady_clock::now();
+}
+
+// -----------------------------------------------------------------------------
 Result<> FindKernelAvgMisorientations::operator()()
 {
   auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
   SizeVec3 udims = gridGeom->getDimensions();
 
+  // set up threadsafe messenger
+  m_TotalElements = udims[2];
+
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
   parallelAlgorithm.setParallelizationEnabled(true);
-  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(m_DataStructure, m_InputValues, m_ShouldCancel));
+  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(this, m_DataStructure, m_InputValues, m_ShouldCancel));
 
   return {};
 }
