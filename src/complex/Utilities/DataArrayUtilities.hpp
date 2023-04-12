@@ -236,17 +236,30 @@ COMPLEX_EXPORT Result<> CheckValueConvertsToArrayType(const std::string& value, 
  * @param replaceValue The value that will be used for every place the conditional array is TRUE
  */
 template <class T, typename ConditionalType>
-void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>* condArrayPtr, T replaceValue)
+void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>* condArrayPtr, T replaceValue, bool invertMask = false)
 {
   T replaceVal = static_cast<T>(replaceValue);
   usize numTuples = inputArrayPtr.getNumberOfTuples();
 
   const DataArray<ConditionalType>& conditionalArray = *condArrayPtr;
-  for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+  if(invertMask)
   {
-    if(conditionalArray[tupleIndex])
+    for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
     {
-      inputArrayPtr.initializeTuple(tupleIndex, replaceValue);
+      if(!conditionalArray[tupleIndex])
+      {
+        inputArrayPtr.initializeTuple(tupleIndex, replaceValue);
+      }
+    }
+  }
+  else
+  {
+    for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+    {
+      if(conditionalArray[tupleIndex])
+      {
+        inputArrayPtr.initializeTuple(tupleIndex, replaceValue);
+      }
     }
   }
 }
@@ -260,38 +273,41 @@ void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>*
  * @return True or False whether the replacement algorithm was run. This function can
  * return FALSE if the wrong array type is specified as the template parameter
  */
-template <class T>
-Result<> ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray)
+struct ConditionalReplaceValueInArrayFromString
 {
-  using DataArrayType = DataArray<T>;
+  template <class T>
+  Result<> operator()(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, const bool invertMask = false)
+  {
+    using DataArrayType = DataArray<T>;
 
-  auto& inputDataArray = dynamic_cast<DataArrayType&>(inputDataObject);
-  Result<T> conversionResult = ConvertTo<T>::convert(valueAsStr);
-  if(conversionResult.invalid())
-  {
-    return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
-  }
+    auto& inputDataArray = dynamic_cast<DataArrayType&>(inputDataObject);
+    Result<T> conversionResult = ConvertTo<T>::convert(valueAsStr);
+    if(conversionResult.invalid())
+    {
+      return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
+    }
 
-  const complex::DataType arrayType = conditionalDataArray.getDataType();
+    const complex::DataType arrayType = conditionalDataArray.getDataType();
 
-  if(complex::DataType::uint8 == arrayType)
-  {
-    ReplaceValue<T, uint8_t>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value());
+    if(complex::DataType::uint8 == arrayType)
+    {
+      ReplaceValue<T, uint8_t>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
+    }
+    else if(complex::DataType::int8 == arrayType)
+    {
+      ReplaceValue<T, int8_t>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
+    }
+    else if(complex::DataType::boolean == arrayType)
+    {
+      ReplaceValue<T, bool>(inputDataArray, dynamic_cast<const BoolArray*>(&conditionalDataArray), conversionResult.value(), invertMask);
+    }
+    else
+    {
+      return MakeErrorResult<>(-4001, "Mask array was not of type [BOOL | UINT8 | INT8].");
+    }
+    return {};
   }
-  else if(complex::DataType::int8 == arrayType)
-  {
-    ReplaceValue<T, int8_t>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value());
-  }
-  else if(complex::DataType::boolean == arrayType)
-  {
-    ReplaceValue<T, bool>(inputDataArray, dynamic_cast<const BoolArray*>(&conditionalDataArray), conversionResult.value());
-  }
-  else
-  {
-    return MakeErrorResult<>(-4001, "Mask array was not of type [BOOL | UINT8 | INT8].");
-  }
-  return {};
-}
+};
 
 /**
  * @brief Replaces a value in an array based on a boolean mask.
@@ -300,7 +316,7 @@ Result<> ConditionalReplaceValueInArrayFromString(const std::string& valueAsStr,
  * @param conditionalDataArray The mask array as a boolean array
  * @return
  */
-COMPLEX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray);
+COMPLEX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, bool invertmask = false);
 
 template <class T>
 uint64 CalculateDataSize(const IDataStore::ShapeType& tupleShape, const IDataStore::ShapeType& componentShape)
