@@ -47,13 +47,15 @@ Result<> CAxisSegmentFeatures::operator()()
     }
   }
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  const auto crystalStructureType = crystalStructures[1];
-  if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
+  for(usize i = 1; i < crystalStructures.size(); ++i)
   {
-    return MakeErrorResult(
-        -8363,
-        fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures.",
-                    CrystalStructureEnumToString(crystalStructureType)));
+    const auto crystalStructureType = crystalStructures[i];
+    if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
+    {
+      return MakeErrorResult(-8363, fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis mis orientation requires all phases to be either Hexagonal-Low 6/m "
+                                                "or Hexagonal-High 6/mmm type crystal structures.",
+                                                CrystalStructureEnumToString(crystalStructureType)));
+    }
   }
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayName);

@@ -94,9 +94,7 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto pMisorientationToleranceValue = filterArgs.value<float32>(k_MisorientationTolerance_Key);
   auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseGoodVoxels_Key);
-  auto pRandomizeFeatureIdsValue = filterArgs.value<bool>(k_RandomizeFeatureIds_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
@@ -109,7 +107,7 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   const DataPath activePath = cellFeatureAMPath.createChildPath(pActiveArrayNameValue);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<DataPath> dataPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue};

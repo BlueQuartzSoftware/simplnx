@@ -34,17 +34,32 @@ const std::atomic_bool& FindAvgCAxes::getCancel()
 Result<> FindAvgCAxes::operator()()
 {
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  const auto crystalStructureType = crystalStructures[1];
-  if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
+  bool allPhasesHexagonal = true;
+  bool noPhasesHexagonal = true;
+  for(usize i = 1; i < crystalStructures.size(); ++i)
   {
-    return MakeErrorResult(
-        -6402,
-        fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures.",
-                    CrystalStructureEnumToString(crystalStructureType)));
+    const auto crystalStructureType = crystalStructures[i];
+    const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low;
+    allPhasesHexagonal &= isHex;
+    noPhasesHexagonal &= !isHex;
+  }
+
+  if(noPhasesHexagonal)
+  {
+    return MakeErrorResult(-6402, "Finding the average c-axes requires at least one phase to be Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures but none were found.");
+  }
+
+  Result<> result;
+  if(!allPhasesHexagonal)
+  {
+    result.warnings().push_back(
+        {-6403,
+         "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. All calculations for non Hexagonal phases will be skipped and a NaN value inserted."});
   }
 
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   auto& avgCAxes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath);
 
   const usize totalPoints = featureIds.getNumberOfTuples();
@@ -66,48 +81,64 @@ Result<> FindAvgCAxes::operator()()
     if(featureIds[i] > 0)
     {
       cAxesIndex = 3 * featureIds[i];
-      const usize quatIndex = i * 4;
-      OrientationF oMatrix = OrientationTransformation::qu2om<QuatF, OrientationF>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
-
-      // Convert the quaternion matrix to a transposed g matrix so when caxis is multiplied by it, it will give the sample direction that the caxis is along
-      g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
-
-      c1 = g1T * cAxis;
-
-      // normalize so that the magnitude is 1
-      c1.normalize();
-
-      curCAxis[0] = avgCAxes[cAxesIndex] / counter[featureIds[i]];
-      curCAxis[1] = avgCAxes[cAxesIndex + 1] / counter[featureIds[i]];
-      curCAxis[2] = avgCAxes[cAxesIndex + 2] / counter[featureIds[i]];
-
-      curCAxis.normalize();
-      w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
-      if(w < 0)
+      const auto crystalStructureType = crystalStructures[cellPhases[i]];
+      if(crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low)
       {
-        c1 *= -1.0f;
+        const usize quatIndex = i * 4;
+        OrientationF oMatrix = OrientationTransformation::qu2om<QuatF, OrientationF>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
+
+        // Convert the quaternion matrix to a transposed g matrix so when caxis is multiplied by it, it will give the sample direction that the caxis is along
+        g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
+
+        c1 = g1T * cAxis;
+
+        // normalize so that the magnitude is 1
+        c1.normalize();
+
+        curCAxis[0] = avgCAxes[cAxesIndex] / counter[featureIds[i]];
+        curCAxis[1] = avgCAxes[cAxesIndex + 1] / counter[featureIds[i]];
+        curCAxis[2] = avgCAxes[cAxesIndex + 2] / counter[featureIds[i]];
+
+        curCAxis.normalize();
+        w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
+        if(w < 0)
+        {
+          c1 *= -1.0f;
+        }
+        counter[featureIds[i]]++;
+        avgCAxes[cAxesIndex] += c1[0];
+        avgCAxes[cAxesIndex + 1] += c1[1];
+        avgCAxes[cAxesIndex + 2] += c1[2];
       }
-      counter[featureIds[i]]++;
-      avgCAxes[cAxesIndex] += c1[0];
-      avgCAxes[cAxesIndex + 1] += c1[1];
-      avgCAxes[cAxesIndex + 2] += c1[2];
+      else
+      {
+        avgCAxes[cAxesIndex] = NAN;
+        avgCAxes[cAxesIndex + 1] = NAN;
+        avgCAxes[cAxesIndex + 2] = NAN;
+      }
     }
   }
 
   for(size_t i = 1; i < totalFeatures; i++)
   {
+    const usize tupleIndex = i * 3;
+    if(std::isnan(avgCAxes[tupleIndex]))
+    {
+      continue;
+    }
+
     if(counter[i] == 0)
     {
-      avgCAxes[3 * i] = 0;
-      avgCAxes[3 * i + 1] = 0;
-      avgCAxes[3 * i + 2] = 1;
+      avgCAxes[tupleIndex] = 0;
+      avgCAxes[tupleIndex + 1] = 0;
+      avgCAxes[tupleIndex + 2] = 1;
     }
     else
     {
-      avgCAxes[3 * i] /= counter[i];
-      avgCAxes[3 * i + 1] /= counter[i];
-      avgCAxes[3 * i + 2] /= counter[i];
+      avgCAxes[tupleIndex] /= counter[i];
+      avgCAxes[tupleIndex + 1] /= counter[i];
+      avgCAxes[tupleIndex + 2] /= counter[i];
     }
   }
-  return {};
+  return result;
 }

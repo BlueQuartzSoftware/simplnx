@@ -13,6 +13,7 @@ struct ORIENTATIONANALYSIS_EXPORT FindAvgCAxesInputValues
 {
   DataPath QuatsArrayPath;
   DataPath FeatureIdsArrayPath;
+  DataPath CellPhasesArrayPath;
   DataPath CellFeatureDataPath;
   DataPath AvgCAxesArrayPath;
   DataPath CrystalStructuresArrayPath;

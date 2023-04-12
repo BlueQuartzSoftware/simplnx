@@ -53,6 +53,8 @@ Parameters FindAvgCAxesFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each Cell belongs", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Required Cell Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrix_Key, "Cell Feature Attribute Matrix", "The path to the cell feature attribute matrix", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Required Cell Ensemble Data"});
@@ -76,16 +78,17 @@ IFilter::PreflightResult FindAvgCAxesFilter::preflightImpl(const DataStructure& 
 {
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
   auto pAvgCAxesArrayNameValue = filterArgs.value<std::string>(k_AvgCAxesArrayPath_Key);
 
   const DataPath avgCAxesPath = pCellFeatureAttributeMatrixPathValue.createChildPath(pAvgCAxesArrayNameValue);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  std::vector<DataPath> dataPaths = {pQuatsArrayPathValue, pFeatureIdsArrayPathValue};
+  std::vector<DataPath> dataPaths = {pQuatsArrayPathValue, pFeatureIdsArrayPathValue, pCellPhasesArrayPathValue};
   if(!dataStructure.validateNumberOfTuples(dataPaths))
   {
     return MakePreflightErrorResult(
@@ -114,6 +117,7 @@ Result<> FindAvgCAxesFilter::executeImpl(DataStructure& dataStructure, const Arg
 
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.CellFeatureDataPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrix_Key);
   inputValues.AvgCAxesArrayPath = inputValues.CellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_AvgCAxesArrayPath_Key));
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
