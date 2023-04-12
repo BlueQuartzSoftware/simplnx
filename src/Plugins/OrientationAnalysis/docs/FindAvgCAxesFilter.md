@@ -29,6 +29,7 @@ Not Applicable
 |------|--------------|------|----------------------|-------------|
 | **Element Attribute Array**  | Quats | float | (4) | Specifies the orientation of the **Element** in quaternion representation |
 | **Element Attribute Array** | FeatureIds | int32_t | (1) | Specifies to which **Feature** each **Element** belongs. |
+| **Cell Attribute Array** | Phases | int32_t | (1) | Specifies to which **Ensemble** each **Cell** belongs |
 | **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
 
 ## Created Objects 
@@ -40,7 +41,7 @@ Not Applicable
 
 ## Example Pipelines 
 
-BRS111d-redo_461
+Combo-EBSD-osc_r0c0
 
 ## License & Copyright 
 

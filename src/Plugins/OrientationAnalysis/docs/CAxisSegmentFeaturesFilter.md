@@ -51,7 +51,7 @@ Image
 
 ## Example Pipelines 
 
-BRS111d-redo_461
+Combo-EBSD-osc_r0c0
 
 ## License & Copyright 
 
