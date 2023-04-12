@@ -53,6 +53,7 @@ public:
     // messenger values
     usize counter = 0;
     usize increment = (zEnd - zStart) / 100;
+    auto start = std::chrono::steady_clock::now();
 
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);
@@ -66,10 +67,14 @@ public:
 
       if(counter > increment)
       {
-        m_Filter->sendThreadSafeProgressMessage(counter);
-        counter = 0;
+        auto now = std::chrono::steady_clock::now();
+        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() < 1000)
+        {
+          m_Filter->sendThreadSafeProgressMessage(counter);
+          counter = 0;
+          start = std::chrono::steady_clock::now();
+        }
       }
-      counter++;
 
       for(size_t row = yStart; row < yEnd; row++)
       {
@@ -133,9 +138,12 @@ public:
           {
             kernelAvgMisorientations[point] = 0.0f;
           }
+
+          counter++;
         }
       }
     }
+    m_Filter->sendThreadSafeProgressMessage(counter);
   }
 
   void operator()(const Range3D& range) const
@@ -178,13 +186,13 @@ void FindKernelAvgMisorientations::sendThreadSafeProgressMessage(usize counter)
 
   m_ProgressCounter += counter;
   auto now = std::chrono::steady_clock::now();
-  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 10)
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
   {
     return;
   }
 
   auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
-  std::string ss = fmt::format("Finding Average Kernel Misorientations || {}% Completed", progressInt);
+  std::string ss = fmt::format("Finding Kernel Average Misorientations || {}%", progressInt);
   m_MessageHandler(IFilter::Message::Type::Info, ss);
 
   m_LastProgressInt = progressInt;
@@ -198,7 +206,7 @@ Result<> FindKernelAvgMisorientations::operator()()
   SizeVec3 udims = gridGeom->getDimensions();
 
   // set up threadsafe messenger
-  m_TotalElements = udims[2];
+  m_TotalElements = udims[2] * udims[1] * udims[0];
 
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
