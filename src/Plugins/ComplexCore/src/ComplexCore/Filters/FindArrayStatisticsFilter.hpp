@@ -37,6 +37,7 @@ public:
   static inline constexpr StringLiteral k_FindMedian_Key = "find_median";
   static inline constexpr StringLiteral k_FindStdDeviation_Key = "find_std_deviation";
   static inline constexpr StringLiteral k_FindSummation_Key = "find_summation";
+  static inline constexpr StringLiteral k_FindUniqueValues_Key = "find_unique_values";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_ComputeByIndex_Key = "compute_by_index";
   static inline constexpr StringLiteral k_StandardizeData_Key = "standardize_data";
@@ -53,6 +54,7 @@ public:
   static inline constexpr StringLiteral k_StdDeviationArrayName_Key = "std_deviation_array_name";
   static inline constexpr StringLiteral k_SummationArrayName_Key = "summation_array_name";
   static inline constexpr StringLiteral k_StandardizedArrayName_Key = "standardized_array_name";
+  static inline constexpr StringLiteral k_NumUniqueValues_Key = "number_unique_values";
 
   /**
    * @brief Returns the name of the filter.

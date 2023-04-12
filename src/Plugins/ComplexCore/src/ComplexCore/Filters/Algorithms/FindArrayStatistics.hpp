@@ -30,6 +30,7 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
   bool UseMask;
   bool ComputeByIndex;
   bool StandardizeData;
+  bool FindNumUniqueValues;
   DataPath SelectedArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath MaskArrayPath;
@@ -43,6 +44,7 @@ struct COMPLEXCORE_EXPORT FindArrayStatisticsInputValues
   DataPath StdDeviationArrayName;
   DataPath SummationArrayName;
   DataPath StandardizedArrayName;
+  DataPath NumUniqueValuesName;
 };
 
 /**

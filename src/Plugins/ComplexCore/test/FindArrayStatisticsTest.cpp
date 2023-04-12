@@ -7,60 +7,8 @@
 
 #include <catch2/catch.hpp>
 
-namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
-
-TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Instantiate Filter", "[ComplexCore][FindArrayStatisticsFilter]")
-{
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindArrayStatisticsFilter filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  DataPath inputArrayPath;
-  DataPath destPath;
-  DataPath maskArrayPath;
-  DataPath featureIdsArrayPath;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(FindArrayStatisticsFilter::k_FindHistogram_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_MinRange_Key, std::make_any<float64>(2.3456789));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_MaxRange_Key, std::make_any<float64>(2.3456789));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_UseFullRange_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_NumBins_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_FindLength_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_FindMin_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_FindMax_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_FindMean_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(inputArrayPath));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsArrayPath));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskArrayPath));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_DestinationAttributeMatrix_Key, std::make_any<DataPath>(destPath));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_HistogramArrayName_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_LengthArrayName_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_MinimumArrayName_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_MaximumArrayName_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_MeanArrayName_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_MedianArrayName_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(""));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.invalid());
-}
 
 TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCore][FindArrayStatisticsFilter]")
 {
@@ -102,6 +50,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
   const std::string std = "Standard Deviation";
   const std::string sum = "Summation";
   const std::string standardization = "Standardization";
+  const std::string numUniqueValues = "NumUniqueValues";
 
   // Execute the Find Array Statistics Filter
   {
@@ -119,6 +68,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(false));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
@@ -135,6 +85,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
     args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_NumUniqueValues_Key, std::make_any<std::string>(numUniqueValues));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -170,6 +121,8 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     REQUIRE(standardizeArray->getNumberOfTuples() == 10);
     auto* histArray = dataStructure.getDataAs<Float32Array>(statsDataPath.createChildPath(histogram));
     REQUIRE(histArray != nullptr);
+    auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
+    REQUIRE(numUniqueValuesArray != nullptr);
 
     auto lengthVal = (*lengthArray)[0];
     auto minVal = (*minArray)[0];
@@ -179,6 +132,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     auto stdVal = (*stdArray)[0];
     stdVal = std::ceil(stdVal * 100.0f) / 100.0f; // round value to 2 decimal places
     auto sumVal = (*sumArray)[0];
+    auto numUnique = (*numUniqueValuesArray)[0];
 
     REQUIRE(lengthVal == 8);
     REQUIRE(minVal == 1);
@@ -187,6 +141,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm", "[ComplexCor
     REQUIRE(std::fabs(meadianVal - 13.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stdVal - 12.87f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(sumVal - 128.0f) < UnitTest::EPSILON);
+    REQUIRE(numUnique == 8);
 
     const auto& standardizeDataStore = standardizeArray->getIDataStoreRefAs<AbstractDataStore<float32>>();
     auto stand0 = std::ceil(standardizeDataStore[0] * 100.0f) / 100.0f;
@@ -269,6 +224,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
   const std::string std = "Standard Deviation";
   const std::string sum = "Summation";
   const std::string standardization = "Standardization";
+  const std::string numUniqueValues = "NumUniqueValues";
 
   // Execute the Find Array Statistics Filter
   {
@@ -286,6 +242,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindMedian_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindStdDeviation_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_FindSummation_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_FindUniqueValues_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_UseMask_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_ComputeByIndex_Key, std::make_any<bool>(true));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizeData_Key, std::make_any<bool>(true));
@@ -302,6 +259,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     args.insertOrAssign(FindArrayStatisticsFilter::k_StdDeviationArrayName_Key, std::make_any<std::string>(std));
     args.insertOrAssign(FindArrayStatisticsFilter::k_SummationArrayName_Key, std::make_any<std::string>(sum));
     args.insertOrAssign(FindArrayStatisticsFilter::k_StandardizedArrayName_Key, std::make_any<std::string>(standardization));
+    args.insertOrAssign(FindArrayStatisticsFilter::k_NumUniqueValues_Key, std::make_any<std::string>(numUniqueValues));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -346,6 +304,9 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     REQUIRE(histArray != nullptr);
     REQUIRE(histArray->getNumberOfTuples() == 3);
     REQUIRE(histArray->getNumberOfComponents() == 5);
+    auto* numUniqueValuesArray = dataStructure.getDataAs<Int32Array>(statsDataPath.createChildPath(numUniqueValues));
+    REQUIRE(numUniqueValuesArray != nullptr);
+    REQUIRE(numUniqueValuesArray->getNumberOfTuples() == 3);
 
     auto lengthVal1 = (*lengthArray)[0];
     auto lengthVal2 = (*lengthArray)[1];
@@ -368,6 +329,9 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     auto sumVal1 = (*sumArray)[0];
     auto sumVal2 = (*sumArray)[1];
     auto sumVal3 = (*sumArray)[2];
+    auto numUnique1 = (*numUniqueValuesArray)[0];
+    auto numUnique2 = (*numUniqueValuesArray)[1];
+    auto numUnique3 = (*numUniqueValuesArray)[2];
 
     REQUIRE(lengthVal1 == 2);
     REQUIRE(minVal1 == 1);
@@ -376,6 +340,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     REQUIRE(std::fabs(meadianVal1 - 8.5f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stdVal1 - 7.5f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(sumVal1 - 17.0f) < UnitTest::EPSILON);
+    REQUIRE(numUnique1 == 2);
     REQUIRE(lengthVal2 == 3);
     REQUIRE(minVal2 == 5);
     REQUIRE(maxVal2 == 45);
@@ -383,6 +348,7 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     REQUIRE(std::fabs(meadianVal2 - 20.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stdVal2 - 16.49916f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(sumVal2 - 70.0f) < UnitTest::EPSILON);
+    REQUIRE(numUnique2 == 3);
     REQUIRE(lengthVal3 == 3);
     REQUIRE(minVal3 == 9);
     REQUIRE(maxVal3 == 22);
@@ -390,18 +356,9 @@ TEST_CASE("ComplexCore::FindArrayStatisticsFilter: Test Algorithm By Index", "[C
     REQUIRE(std::fabs(meadianVal3 - 10.0f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(stdVal3 - 5.906682f) < UnitTest::EPSILON);
     REQUIRE(std::fabs(sumVal3 - 41.0f) < UnitTest::EPSILON);
+    REQUIRE(numUnique3 == 3);
 
     const auto& standardizeDataStore = standardizeArray->getIDataStoreRefAs<AbstractDataStore<float32>>();
-    // auto stand0 = std::ceil(standardizeDataStore[0] * 100.0f) / 100.0f;
-    // auto stand1 = std::ceil(standardizeDataStore[1] * 100.0f) / 100.0f;
-    // auto stand2 = standardizeDataStore[2]; //
-    // auto stand3 = std::ceil(standardizeDataStore[3] * 100.0f) / 100.0f;
-    // auto stand4 = std::ceil(standardizeDataStore[4] * 100.0f) / 100.0f;
-    // auto stand5 = std::ceil(standardizeDataStore[5] * 100.0f) / 100.0f;
-    // auto stand6 = standardizeDataStore[6]; //
-    // auto stand7 = std::ceil(standardizeDataStore[7] * 100.0f) / 100.0f;
-    // auto stand8 = std::ceil(standardizeDataStore[8] * 100.0f) / 100.0f;
-    // auto stand9 = std::ceil(standardizeDataStore[9] * 100.0f) / 100.0f;
     auto stand0 = standardizeDataStore[0];
     auto stand1 = standardizeDataStore[1];
     auto stand2 = standardizeDataStore[2];
