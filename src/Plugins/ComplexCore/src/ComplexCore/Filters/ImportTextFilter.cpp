@@ -66,7 +66,7 @@ Parameters ImportTextFilter::parameters() const
                                                   "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
 
   params.insertSeparator(Parameters::Separator{"Tuple Handling"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+  params.insert(std::make_unique<BoolParameter>(
       k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an Attribute Matrix]",
       "This allows the user to set the tuple dimensions directly rather than just inheriting them \n\nThis option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
 
@@ -93,6 +93,8 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
   auto useDims = args.value<bool>(k_AdvancedOptions_Key);
   auto tableData = args.value<DynamicTableParameter::ValueType>(k_NTuplesKey);
   auto dataFormat = args.value<std::string>(k_DataFormat_Key);
+
+  complex::Result<OutputActions> resultOutputActions;
 
   std::vector<usize> tupleDims = {};
 
@@ -124,19 +126,16 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
     tupleDims = parentAM->getShape();
     if(useDims)
     {
-      return {ConvertResultTo<OutputActions>(
-          MakeWarningVoidResult(-77604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                                        "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."),
-          {})};
+      resultOutputActions.warnings().push_back(Warning{-77604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                                        "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{nComp}, arrayPath, dataFormat);
 
-  OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  resultOutputActions.value().actions.push_back(std::move(action));
 
-  return {std::move(actions)};
+  return {std::move(resultOutputActions)};
 }
 
 Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
