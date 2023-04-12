@@ -279,7 +279,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
     return complex::MakeErrorResult(-3001, fmt::format("{} File System Path must not be empty", prefix));
   }
 
-  if(!m_acceptAllExtensions)
+  if(!m_acceptAllExtensions && (m_PathType == complex::FileSystemPathParameter::PathType::InputFile || m_PathType == complex::FileSystemPathParameter::PathType::OutputFile))
   {
     if(!path.has_extension())
     {

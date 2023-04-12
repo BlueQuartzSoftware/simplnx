@@ -37,8 +37,60 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
+#include <fstream>
+#include <vector>
+typedef unsigned char BYTE;
+
+std::vector<BYTE> readFile(const char* filename)
+{
+  // open the file:
+  std::streampos fileSize;
+  std::ifstream file(filename, std::ios::binary);
+
+  // get its size:
+  file.seekg(0, std::ios::end);
+  fileSize = file.tellg();
+  file.seekg(0, std::ios::beg);
+
+  // read the data:
+  std::vector<BYTE> fileData(fileSize);
+  file.read((char*)&fileData[0], fileSize);
+  return fileData;
+}
+
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Valid Filter Execution", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
+
+  // std::vector<uint8_t> contents = readFile("/Users/mjackson/Workspace1/DREAM3DNX/src/NXComponents/resources/fonts/FiraSans-Regular.ttf");
+  std::vector<uint8_t> contents = readFile("/tmp/Lato-Bold.ttf.b64");
+
+  std::string fontName = "LatoBold";
+  std::ofstream header("/Users/mjackson/Workspace1/complex/src/Plugins/OrientationAnalysis/src/OrientationAnalysis/utilities/LatoBold.hpp", std::ios_base::out);
+
+  header << "#pragma once\n";
+  header << "#include <vector>\n";
+  header << "namespace fonts {\n";
+  header << "// clang-format off\n";
+  header << "  char const k_" << fontName << "Base64 [] = \n    ";
+
+  header << "\"";
+  int count = 0;
+  for(size_t i = 0; i < contents.size(); i++)
+  {
+    header << contents[i];
+    // header << static_cast<int>(contents[i]) << ", ";
+
+    count++;
+    if(count == 72)
+    {
+      header << "\"\n    \"";
+      count = 0;
+    }
+  }
+  header << "\";\n\n";
+  header << "// clang-format on\n";
+  header << "}\n";
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WritePoleFigureFilter filter;
   DataStructure ds;

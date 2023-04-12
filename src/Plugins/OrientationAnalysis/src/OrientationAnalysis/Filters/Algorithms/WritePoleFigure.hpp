@@ -5,43 +5,11 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  WritePoleFigureInputValues inputValues;
-
-  inputValues.Title = filterArgs.value<StringParameter::ValueType>(k_Title_Key);
-  inputValues.GenerationAlgorithm = filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key);
-  inputValues.LambertSize = filterArgs.value<int32>(k_LambertSize_Key);
-  inputValues.NumColors = filterArgs.value<int32>(k_NumColors_Key);
-  inputValues.ImageFormat = filterArgs.value<ChoicesParameter::ValueType>(k_ImageFormat_Key);
-  inputValues.ImageLayout = filterArgs.value<ChoicesParameter::ValueType>(k_ImageLayout_Key);
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.ImagePrefix = filterArgs.value<StringParameter::ValueType>(k_ImagePrefix_Key);
-  inputValues.ImageSize = filterArgs.value<int32>(k_ImageSize_Key);
-  inputValues.UseGoodVoxels = filterArgs.value<bool>(k_UseGoodVoxels_Key);
-  inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.GoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.MaterialNameArrayPath = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
-
-  return WritePoleFigure(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/StringParameter.hpp"
 
 namespace complex
 {
@@ -63,7 +31,6 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
   DataPath GoodVoxelsArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath MaterialNameArrayPath;
-
 };
 
 /**
@@ -82,6 +49,31 @@ public:
   WritePoleFigure(WritePoleFigure&&) noexcept = delete;
   WritePoleFigure& operator=(const WritePoleFigure&) = delete;
   WritePoleFigure& operator=(WritePoleFigure&&) noexcept = delete;
+
+  enum ImageFormatType
+  {
+    TifImageType = 0,
+    BmpImageType = 1,
+    PngImageType = 2,
+    JpgImageType = 3,
+    PdfImageType = 4,
+  };
+
+  using EnumType = ChoicesParameter::ValueType;
+
+  enum class LayoutType : EnumType
+  {
+    Horizontal = 0,
+    Vertical = 1,
+    Square = 2,
+  };
+
+  enum class Algorithm : EnumType
+  {
+    LambertProjection = 0, //!<
+    Discrete = 1,          //!<
+    Unknown = 2,           //!
+  };
 
   Result<> operator()();
 

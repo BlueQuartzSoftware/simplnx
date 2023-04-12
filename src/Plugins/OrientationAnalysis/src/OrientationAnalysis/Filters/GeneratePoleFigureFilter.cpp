@@ -45,7 +45,7 @@ Uuid GeneratePoleFigureFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string GeneratePoleFigureFilter::humanName() const
 {
-  return "Export Pole Figure Images";
+  return "Generate Pole Figure Data (NOT IMPLEMENTED)";
 }
 
 //------------------------------------------------------------------------------

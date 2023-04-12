@@ -69,6 +69,13 @@ void for_each_token(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_
   }
 }
 
+/**
+ * @brief Replace characters in a string
+ * @param str Input String
+ * @param from Characters to replace (These characters are being replaced)
+ * @param to The characters to be used as the replacement
+ * @return The modified string
+ */
 inline std::string replace(std::string str, std::string_view from, std::string_view to)
 {
   usize startPos = 0;

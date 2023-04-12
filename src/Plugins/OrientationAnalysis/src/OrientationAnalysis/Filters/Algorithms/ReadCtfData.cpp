@@ -3,6 +3,7 @@
 #include "complex/Common/ComplexConstants.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/StringArray.hpp"
 
 #include "EbsdLib/IO/HKL/CtfConstants.h"
 #include "EbsdLib/Math/EbsdLibMath.h"
@@ -64,8 +65,7 @@ std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(CtfReader* reader) c
 
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::CrystalStructures));
 
-  auto& materialNames = m_DataStructure.getDataRefAs<Int8Array>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::MaterialName));
-  materialNames.fill(0); // ensure the strings are all null terminated by splatting 0 across all the values.
+  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::MaterialName));
   auto& latticeConstants = m_DataStructure.getDataRefAs<Float32Array>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::LatticeConstants));
 
   std::string k_InvalidPhase = "Invalid Phase";
@@ -73,10 +73,8 @@ std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(CtfReader* reader) c
   // Initialize the zero'th element to unknowns. The other elements will
   // be filled in based on values from the data file
   crystalStructures[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
-  for(size_t i = 0; i < k_InvalidPhase.size(); i++)
-  {
-    materialNames.getDataStoreRef().setComponent(0, i, k_InvalidPhase[i]);
-  }
+  materialNames[0] = k_InvalidPhase;
+
   for(size_t i = 0; i < 6; i++)
   {
     latticeConstants.getDataStoreRef().setComponent(0, i, 0.0F);
@@ -87,10 +85,7 @@ std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(CtfReader* reader) c
     int32_t phaseID = phase->getPhaseIndex();
     crystalStructures[phaseID] = phase->determineLaueGroup();
     std::string materialName = phase->getMaterialName();
-    for(size_t i = 0; i < materialName.size(); i++)
-    {
-      materialNames.getDataStoreRef().setComponent(0, i, materialName[i]);
-    }
+    materialNames[phaseID] = materialName;
 
     std::vector<float> lattConst = phase->getLatticeConstants();
 
