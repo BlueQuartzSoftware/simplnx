@@ -781,16 +781,23 @@ if(NOT EXISTS "${PIPELINE_EXAMPLES_DEST_DIR}")
   file(MAKE_DIRECTORY ${PIPELINE_EXAMPLES_DEST_DIR})
 endif()
 if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalysis)					 
-  add_custom_target(Copy_Example_Pipelines ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${complex_SOURCE_DIR}/pipelines/Combo-EBSD-osc_r0c0.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}"
+  add_custom_target(Copy_PorosityAnalysis_Pipelines ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/PorosityAnalysis.d3dpipeline"
     COMMENT "Copying Example Pipelines into Binary Directory"
     VERBATEM
   )
-  set_target_properties(Copy_Example_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
+  set_target_properties(Copy_PorosityAnalysis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
+  				 
+  add_custom_target(Copy_CAxis_Pipelines ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/Combo-EBSD-osc_r0c0.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/Combo-EBSD-osc_r0c0.d3dpipeline"
+    COMMENT "Copying Example Pipelines into Binary Directory"
+    VERBATEM
+  )
+  set_target_properties(Copy_CAxis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
   
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 7470e760ff9f0c2e0d9ce770e6db52cce08e3d81f939219b57632d47e394c55613614025ece56074d183f3442ef553d9616e9141f68b6815c462fa422b276899)
   add_custom_target(Copy_CAxis_Data ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/BRS111d-redo_461.ang ${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/Combo-EBSD-120130.osc_r0c0.ang ${DATA_DEST_DIR}/OrientationAnalysis/
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/Combo-EBSD-120130.osc_r0c0.ang ${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang
   COMMENT "Copying CAxis Data into Binary Directory"
   DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
   )
