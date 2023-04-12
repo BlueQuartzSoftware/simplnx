@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "BRS111d-redo_461.d3dpipeline",
+  "name": "Combo-EBSD-120130-osc_r0c0.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -8,7 +8,7 @@
         "cell_attribute_matrix_name": "CellData",
         "cell_ensemble_attribute_matrix_name": "CellEnsembleData",
         "data_container_name": "DataContainer",
-        "input_file": "Data/OrientationAnalysis/BRS111d-redo_461.ang"
+        "input_file": "Data/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
       },
       "comments": "",
       "filter": {
@@ -130,7 +130,7 @@
     },
     {
       "args": {
-        "file_name": "Data/Output/Examples/BRS111d-redo_0.png",
+        "file_name": "Data/Output/Examples/Combo-EBSD-osc_r0c0.png",
         "image_array_path": "DataContainer/CellData/IPFColors",
         "image_geom_path": "DataContainer",
         "index_offset": 0,
@@ -168,7 +168,7 @@
         "image_geometry_path": "DataContainer",
         "misorientation_tolerance": 5.0,
         "quats_array_path": "DataContainer/CellData/Quats",
-        "randomize_feature_ids": false,
+        "randomize_feature_ids": true,
         "use_good_voxels": true
       },
       "comments": "",
@@ -182,6 +182,7 @@
       "args": {
         "avg_c_axes_array_path": "AvgCAxes",
         "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
         "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
         "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
         "quats_array_path": "DataContainer/CellData/Quats"
@@ -282,7 +283,7 @@
     },
     {
       "args": {
-        "file_name": "Data/Output/Examples/BRS111d-redo_0._feature_ids.png",
+        "file_name": "Data/Output/Examples/Combo-EBSD-osc_r0c0._feature_ids.png",
         "image_array_path": "DataContainer/CellData/Feature Ids (Color)",
         "image_geom_path": "DataContainer",
         "index_offset": 0,
