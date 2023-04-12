@@ -66,7 +66,7 @@ Parameters ImportTextFilter::parameters() const
                                                   "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
 
   params.insertSeparator(Parameters::Separator{"Tuple Handling"});
-  params.insert(std::make_unique<BoolParameter>(
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
       k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an Attribute Matrix]",
       "This allows the user to set the tuple dimensions directly rather than just inheriting them \n\nThis option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
 
@@ -75,6 +75,8 @@ Parameters ImportTextFilter::parameters() const
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "DIM {}"));
   params.insert(std::make_unique<DynamicTableParameter>(k_NTuplesKey, "Data Array Dimensions (Slowest to Fastest Dimensions)",
                                                         "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
+
+  params.linkParameters(k_AdvancedOptions_Key, k_NTuplesKey, false);
 
   return params;
 }
