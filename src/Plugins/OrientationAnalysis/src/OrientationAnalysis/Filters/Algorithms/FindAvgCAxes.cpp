@@ -40,8 +40,8 @@ Result<> FindAvgCAxes::operator()()
   {
     const auto crystalStructureType = crystalStructures[i];
     const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low;
-    allPhasesHexagonal &= isHex;
-    noPhasesHexagonal &= !isHex;
+    allPhasesHexagonal = allPhasesHexagonal && isHex;
+    noPhasesHexagonal = noPhasesHexagonal && !isHex;
   }
 
   if(noPhasesHexagonal)
