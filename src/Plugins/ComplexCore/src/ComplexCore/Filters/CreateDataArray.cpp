@@ -112,6 +112,8 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
   auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
+  complex::Result<OutputActions> resultOutputActions;
+
   if(initValue.empty())
   {
     return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
@@ -154,19 +156,17 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
     tupleDims = parentAM->getShape();
     if(useDims)
     {
-      return {ConvertResultTo<OutputActions>(
-          MakeWarningVoidResult(-78604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                                        "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."),
-          {})};
+      resultOutputActions.warnings().push_back(
+          Warning{-78604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                          "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
-  OutputActions actions;
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat);
 
-  actions.actions.push_back(std::move(action));
+  resultOutputActions.value().actions.push_back(std::move(action));
 
-  return {std::move(actions)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
