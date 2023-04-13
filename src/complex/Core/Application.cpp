@@ -326,3 +326,8 @@ DataObject::Type Application::getDataType(const std::string& name) const
   }
   return m_NamedTypesMap.at(name);
 }
+
+std::vector<std::string> Application::getDataStoreFormats() const
+{
+  return m_DataIOCollection->getFormatNames();
+}

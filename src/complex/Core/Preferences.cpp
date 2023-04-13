@@ -74,15 +74,14 @@ void Preferences::setDefaultValues()
   m_DefaultValues[k_PreferredLargeDataFormat_Key] = k_LargeDataFormat;
 }
 
-void Preferences::addDefaultValues(AbstractPlugin& plugin, std::string& valueName, const nlohmann::json& value)
+void Preferences::addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value)
 {
-  const std::string pluginName = plugin.getName();
-  auto pluginGroup = m_DefaultValues[k_Plugin_Key];
+  auto& pluginGroup = m_DefaultValues[k_Plugin_Key];
   if(!pluginGroup.contains(pluginName))
   {
     pluginGroup[pluginName] = nlohmann::json::object();
   }
-  pluginGroup[valueName] = value;
+  pluginGroup[pluginName][valueName] = value;
 }
 
 void Preferences::clear()
@@ -103,6 +102,16 @@ bool Preferences::pluginContains(const std::string& pluginName, const std::strin
   }
 
   return m_Values[k_Plugin_Key][pluginName].contains(name);
+}
+
+bool Preferences::pluginContainsDefault(const std::string& pluginName, const std::string& name) const
+{
+  if(!m_DefaultValues[k_Plugin_Key].contains(pluginName))
+  {
+    return false;
+  }
+
+  return m_DefaultValues[k_Plugin_Key][pluginName].contains(name);
 }
 
 nlohmann::json Preferences::value(const std::string& name) const
@@ -136,11 +145,11 @@ nlohmann::json Preferences::pluginValue(const std::string& pluginName, const std
 {
   if(pluginContains(pluginName, valueName))
   {
-    return m_Values[k_Plugin_Key][valueName];
+    return m_Values[k_Plugin_Key][pluginName][valueName];
   }
-  else if(m_DefaultValues[k_Plugin_Key].contains(valueName))
+  else if(pluginContainsDefault(pluginName, valueName))
   {
-    return m_DefaultValues[k_Plugin_Key][valueName];
+    return m_DefaultValues[k_Plugin_Key][pluginName][valueName];
   }
 
   return {};

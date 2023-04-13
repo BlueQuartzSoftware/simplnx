@@ -44,6 +44,12 @@ public:
    */
   std::shared_ptr<IDataIOManager> getManager(const std::string& formatName) const;
 
+  /**
+   * @brief Returns a vector of names used to reference available DataStructure IO formats.
+   * @return std::vector<std::string>
+   */
+  std::vector<std::string> getFormatNames() const;
+
   bool hasDataStoreCreationFunction(const std::string& type) const;
   std::unique_ptr<IDataStore> createDataStore(const std::string& type, DataType numericType, const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape);
   template <typename T>
