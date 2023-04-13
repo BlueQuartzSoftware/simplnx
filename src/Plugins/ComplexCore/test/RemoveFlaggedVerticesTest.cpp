@@ -47,9 +47,9 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
   Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexAttributeMatrix->getId());
 
   BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataStructure, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexAttributeMatrix->getId());
-  conditionalArray->fill(true);
+  conditionalArray->fill(false);
   // initialize the coords just to have something other than 0.0
-  // Set the first 25 values of the conditional array to false, thus keeping 75 vertices
+  // Set the first 25 values of the conditional array to true, thus keeping 75 vertices
   for(size_t i = 0; i < vertexTupleDims[0]; i++)
   {
     coords->initializeTuple(i, static_cast<float>(i));
@@ -57,7 +57,7 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
     featureIds->initializeTuple(i, static_cast<int32>(i));
     if(i < 25)
     {
-      conditionalArray->initializeTuple(i, false);
+      conditionalArray->initializeTuple(i, true);
     }
   }
 
