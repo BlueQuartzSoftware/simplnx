@@ -721,7 +721,7 @@ target_include_directories(complex
 # ------------------------------------------------------------------------------
 # CLI Executable
 # ------------------------------------------------------------------------------
-add_subdirectory(${complex_SOURCE_DIR}/src/nxrun)
+add_subdirectory(${complex_SOURCE_DIR}/src/nxrunner)
 
 #------------------------------------------------------------------------------
 # Complex Plugins Section

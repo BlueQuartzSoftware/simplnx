@@ -1,6 +1,6 @@
-project(nxrun
+project(nxrunner
   VERSION 0.1.0
-  DESCRIPTION "nxrun"
+  DESCRIPTION "nxrunner"
   LANGUAGES CXX)
 
 set(CLI_HDRS
@@ -8,26 +8,26 @@ set(CLI_HDRS
 )
 
 set(CLI_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/nxrun.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/nxrunner.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/CliObserver.cpp
 )
 
-add_executable(nxrun)
+add_executable(nxrunner)
 
-set_target_properties(nxrun
+set_target_properties(nxrunner
   PROPERTIES
   DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
 )
 
-target_sources(nxrun
+target_sources(nxrunner
   PRIVATE
   ${CLI_HDRS}
   ${CLI_SRCS}
 )
 
-target_link_libraries(nxrun PRIVATE complex::complex)
+target_link_libraries(nxrunner PRIVATE complex::complex)
 
-source_group("nxrun" FILES ${CLI_HDRS} ${CLI_SRCS})
+source_group("nxrunner" FILES ${CLI_HDRS} ${CLI_SRCS})
 
 # -----------------------------------------------------------------------
 # Define install destination directories
@@ -39,7 +39,7 @@ if(UNIX AND NOT APPLE) # Linux we obey standard unix layout
 endif()
 
 # -- Create an Install Rule for the main app bundle target
-install(TARGETS nxrun
+install(TARGETS nxrunner
   COMPONENT Applications
   RUNTIME DESTINATION ${DEST_DIR}
   LIBRARY DESTINATION ${DEST_DIR}
@@ -49,9 +49,9 @@ install(TARGETS nxrun
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
   set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-  set_target_properties(nxrun
+  set_target_properties(nxrunner
     PROPERTIES
     INSTALL_RPATH \$ORIGIN/../lib)
-  target_link_options(nxrun PUBLIC "-Wl,--disable-new-dtags")
-  target_compile_options(nxrun PUBLIC "-no-pie")
+  target_link_options(nxrunner PUBLIC "-Wl,--disable-new-dtags")
+  target_compile_options(nxrunner PUBLIC "-no-pie")
 endif()

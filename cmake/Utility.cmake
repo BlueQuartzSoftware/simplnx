@@ -229,8 +229,8 @@ function(create_pipeline_tests)
   endif()
 
 
-  get_target_property(PIPELINE_RUNNER_NAME nxrun NAME)
-  get_target_property(PIPELINE_RUNNER_DEBUG nxrun DEBUG_POSTFIX)
+  get_target_property(PIPELINE_RUNNER_NAME nxrunner NAME)
+  get_target_property(PIPELINE_RUNNER_DEBUG nxrunner DEBUG_POSTFIX)
   
   set(test_index  "0")
   foreach(pipeline_file_path ${ARGS_PIPELINE_LIST} )

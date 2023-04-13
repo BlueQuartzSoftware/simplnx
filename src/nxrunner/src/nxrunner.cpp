@@ -355,6 +355,9 @@ Result<> DisplayHelpMenu(const std::vector<Argument>& arguments)
   case ArgumentType::Logfile:
     DisplayLogfileHelp();
     return {};
+  case ArgumentType::Invalid:
+  case ArgumentType::Help:
+    break;
   }
 
   std::string ss = "Incorrect Help Syntax";
@@ -375,17 +378,15 @@ Result<> SetLogFile(const Argument& argument)
 
 int main(int argc, char* argv[])
 {
-  
-  // cliOut << "nxrun";
+
+  // cliOut << "nxrunner";
   // cliOut.endline();
   // cliOut << "ARGUMENT LISTING START\n";
   // for(int argIndex = 0; argIndex < argc; argIndex++)
   // {
-  //   cliOut << "Argument[" << argIndex << "]: " << argv[argIndex] << "\n"; 
+  //   cliOut << "Argument[" << argIndex << "]: " << argv[argIndex] << "\n";
   // }
   // cliOut << "ARGUMENT LISTING END\n";
-  complex::Application app;
-  LoadApp(app);
 
   Result<CliArguments> parsingResult = ParseParameters(argc, argv);
   if(parsingResult.invalid())
@@ -407,14 +408,24 @@ int main(int argc, char* argv[])
     case ArgumentType::Logfile:
       results.push_back(SetLogFile(argument));
       break;
+    case ArgumentType::Execute:
+    case ArgumentType::Preflight:
+    case ArgumentType::Help:
+      break;
     }
   }
 
+  // Load the Complex Application instance and load the plugins
+  complex::Application app;
+  LoadApp(app);
+
+  int errorCode = 0;
   // Run target operation
   switch(arguments[0].type)
   {
   case ArgumentType::Help:
-    results.push_back(DisplayHelpMenu(arguments));
+    PrintResult(DisplayHelpMenu(arguments));
+    return errorCode;
     break;
   case ArgumentType::Execute:
     results.push_back(ExecutePipeline(arguments[0]));
@@ -427,7 +438,7 @@ int main(int argc, char* argv[])
   }
 
   // Print Results and set error code
-  int errorCode = 0;
+
   for(const auto& result : results)
   {
     if(int code = PrintResult(result); code != 0)

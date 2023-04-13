@@ -24,9 +24,9 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
 
   fs::path processOutput(fmt::format("{}/ExecuteProcessUnitTestOutput.txt", unit_test::k_BuildDir));
 #if NDEBUG // release build
-  std::string testCommand = fmt::format("{}/nxrun --help", unit_test::k_BuildDir);
+  std::string testCommand = fmt::format("{}/nxrunner --help", unit_test::k_BuildDir);
 #else
-  std::string testCommand = fmt::format("{}/nxrun_d --help", unit_test::k_BuildDir);
+  std::string testCommand = fmt::format("{}/nxrunner_d --help", unit_test::k_BuildDir);
 #endif
 
   // Create default Parameters for the filter.
@@ -48,7 +48,7 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
   std::string firstLine;
   std::getline(processOutputFile, firstLine);
   firstLine = StringUtilities::rtrim(firstLine);
-  REQUIRE(firstLine == "nxrun");
+  REQUIRE(firstLine == "nxrunner");
 }
 
 TEST_CASE("ComplexCore::ExecuteProcessFilter: InValid filter execution")

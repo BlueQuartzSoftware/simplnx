@@ -141,10 +141,10 @@ endif()
 # -----------------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Utility.cmake)
 
-set(TEST_PIPELINE_LIST_FILE ${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/nxrun_tests.txt)
+set(TEST_PIPELINE_LIST_FILE ${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/nxrunner_tests.txt)
 FILE(WRITE ${TEST_PIPELINE_LIST_FILE} "Prebuilt Pipeline Tests\n")
-get_target_property(PIPELINE_RUNNER_NAME nxrun NAME)
-get_target_property(PIPELINE_RUNNER_DEBUG nxrun DEBUG_POSTFIX)
+get_target_property(PIPELINE_RUNNER_NAME nxrunner NAME)
+get_target_property(PIPELINE_RUNNER_DEBUG nxrunner DEBUG_POSTFIX)
 # message(STATUS "PIPELINE_RUNNER_NAME: ${PIPELINE_RUNNER_NAME}")
 # message(STATUS "PIPELINE_RUNNER_DEBUG: ${PIPELINE_RUNNER_DEBUG}")
 
