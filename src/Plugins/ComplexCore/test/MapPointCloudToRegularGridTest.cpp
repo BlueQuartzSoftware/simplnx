@@ -72,11 +72,11 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 1", "[M
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
 TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 2", "[MapPointCloudToRegularGridFilter]")
@@ -107,9 +107,9 @@ TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Test Algorithm 2", "[M
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 }
