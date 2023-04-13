@@ -32,6 +32,7 @@
 #include "OrientationAnalysis/Filters/GenerateQuaternionConjugateFilter.hpp"
 #include "OrientationAnalysis/Filters/RodriguesConvertorFilter.hpp"
 #include "OrientationAnalysis/Filters/EnsembleInfoReaderFilter.hpp"
+#include "OrientationAnalysis/Filters/CAxisSegmentFeaturesFilter.hpp"
 // #include "OrientationAnalysis/Filters/ConvertHexGridToSquareGrid.hpp"
 // #include "OrientationAnalysis/Filters/CreateLambertSphere.hpp"
 // #include "OrientationAnalysis/Filters/EbsdToH5Ebsd.hpp"
@@ -59,6 +60,7 @@
 // #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFile.hpp"
 #include "OrientationAnalysis/Filters/ImportH5OimDataFilter.hpp"
 #include "OrientationAnalysis/Filters/ImportH5EspritDataFilter.hpp"
+#include "OrientationAnalysis/Filters/FindAvgCAxesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -99,6 +101,7 @@ namespace complex
     {complex::Uuid::FromString("630d7486-75ea-5e04-874c-894460cd7c4d").value(), complex::FilterTraits<GenerateQuaternionConjugateFilter>::uuid}, // GenerateQuaternionConjugate
     {complex::Uuid::FromString("a2b62395-1a7d-5058-a840-752d8f8e2430").value(), complex::FilterTraits<RodriguesConvertorFilter>::uuid}, // RodriguesConvertor
     {complex::Uuid::FromString("33a37a47-d002-5c18-b270-86025881fe1e").value(), complex::FilterTraits<EnsembleInfoReaderFilter>::uuid}, // EnsembleInfoReader
+    {complex::Uuid::FromString("bff6be19-1219-5876-8838-1574ad29d965").value(), complex::FilterTraits<CAxisSegmentFeaturesFilter>::uuid}, // CAxisSegmentFeatures
     // {complex::Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value(), complex::FilterTraits<ConvertHexGridToSquareGrid>::uuid}, // ConvertHexGridToSquareGrid
     // {complex::Uuid::FromString("c4398303-db7d-506e-81ea-08f253895ccb").value(), complex::FilterTraits<CreateLambertSphere>::uuid}, // CreateLambertSphere
     // {complex::Uuid::FromString("6e332fca-0475-5fec-821e-e01f668ec1d3").value(), complex::FilterTraits<EbsdToH5Ebsd>::uuid}, // EbsdToH5Ebsd
@@ -126,6 +129,7 @@ namespace complex
     // {complex::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), complex::FilterTraits<WriteStatsGenOdfAngleFile>::uuid}, // WriteStatsGenOdfAngleFile
     {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), complex::FilterTraits<ImportH5OimDataFilter>::uuid}, // ImportH5OimData
     {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), complex::FilterTraits<ImportH5EspritDataFilter>::uuid}, // ImportH5EspritData
+    {complex::Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value(), complex::FilterTraits<FindAvgCAxesFilter>::uuid}, // FindAvgCAxes
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

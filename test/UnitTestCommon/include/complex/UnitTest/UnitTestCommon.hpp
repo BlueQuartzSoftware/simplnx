@@ -329,7 +329,7 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
  * @param computedPath
  */
 template <typename T>
-void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON)
+void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
 {
   static_assert(std::is_floating_point_v<T>);
 
@@ -348,12 +348,16 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
   {
     auto oldVal = exemplaryDataArray[i];
     auto newVal = generatedDataArray[i];
+    if(!checkNans && std::isnan(newVal))
+    {
+      continue;
+    }
     if(std::isnan(oldVal) && std::isnan(newVal))
     {
       // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
       continue;
     }
-    else if(oldVal != newVal)
+    if(oldVal != newVal)
     {
       float diff = std::fabs(static_cast<float>(oldVal - newVal));
       REQUIRE(diff < epsilon);
