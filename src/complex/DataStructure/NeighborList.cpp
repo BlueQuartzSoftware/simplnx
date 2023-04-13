@@ -400,18 +400,18 @@ DataType COMPLEX_EXPORT NeighborList<float64>::getDataType() const
   return DataType::float64;
 }
 
-template class COMPLEX_EXPORT NeighborList<int8>;
-template class COMPLEX_EXPORT NeighborList<uint8>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<int8>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<uint8>;
 
-template class COMPLEX_EXPORT NeighborList<int16>;
-template class COMPLEX_EXPORT NeighborList<uint16>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<int16>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<uint16>;
 
-template class COMPLEX_EXPORT NeighborList<int32>;
-template class COMPLEX_EXPORT NeighborList<uint32>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<int32>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<uint32>;
 
-template class COMPLEX_EXPORT NeighborList<int64>;
-template class COMPLEX_EXPORT NeighborList<uint64>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<int64>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<uint64>;
 
-template class COMPLEX_EXPORT NeighborList<float32>;
-template class COMPLEX_EXPORT NeighborList<float64>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<float32>;
+template class COMPLEX_TEMPLATE_EXPORT NeighborList<float64>;
 } // namespace complex
