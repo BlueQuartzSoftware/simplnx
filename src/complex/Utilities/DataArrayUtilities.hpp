@@ -867,7 +867,7 @@ public:
   CopyTupleUsingIndexList(const IDataArray& oldCellArray, IDataArray& newCellArray, nonstd::span<const int64> newIndices)
   : m_OldCellArray(oldCellArray)
   , m_NewCellArray(newCellArray)
-  , m_NewIndices(newIndices)
+  , m_NewToOldIndices(newIndices)
   {
   }
   ~CopyTupleUsingIndexList() = default;
@@ -884,13 +884,12 @@ public:
 
     for(usize i = start; i < end; i++)
     {
-      int64 newIndices_I = m_NewIndices[i];
-      if(newIndices_I >= 0)
+      int64 oldIndexI = m_NewToOldIndices[i];
+      if(oldIndexI >= 0)
       {
-        if(!newDataStore.copyFrom(newIndices_I, oldDataStore, i, 1))
+        if(!newDataStore.copyFrom(i, oldDataStore, oldIndexI, 1))
         {
-          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), newIndices_I, i)
-                    << std::endl;
+          std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_OldCellArray.getName(), oldIndexI, i) << std::endl;
           break;
         }
       }
@@ -903,13 +902,13 @@ public:
 
   void operator()() const
   {
-    convert(0, m_NewIndices.size());
+    convert(0, m_NewToOldIndices.size());
   }
 
 private:
   const IDataArray& m_OldCellArray;
   IDataArray& m_NewCellArray;
-  nonstd::span<const int64> m_NewIndices;
+  nonstd::span<const int64> m_NewToOldIndices;
 };
 
 /**

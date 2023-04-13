@@ -42,7 +42,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ErodeDilateMaskTest.cpp
   ExecuteProcessTest.cpp
   ExtractComponentAsArrayTest.cpp
-  ExtractComponentAsArrayTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractVertexGeometryTest.cpp
   FeatureDataCSVWriterTest.cpp
@@ -60,13 +59,11 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindNeighborListStatisticsTest.cpp
   FindNeighborsTest.cpp
   FindNumFeaturesTest.cpp
-  FindNumFeaturesTest.cpp
   FindSurfaceAreaToVolumeTest.cpp
   FindSurfaceFeaturesTest.cpp
   FindTriangleGeomCentroidsTest.cpp
   FindTriangleGeomSizesTest.cpp
   FindVertexToTriangleDistancesTest.cpp
-  FindVolFractionsTest.cpp
   FindVolFractionsTest.cpp
   GenerateColorTableTest.cpp
   IdentifySampleTest.cpp
@@ -94,6 +91,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RemoveMinimumSizeFeaturesTest.cpp
   RenameDataObjectTest.cpp
   ReplaceElementAttributesWithNeighborValuesTest.cpp
+  ResampleImageGeomTest.cpp
   RobustAutomaticThresholdTest.cpp
   RotateSampleRefFrameTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
