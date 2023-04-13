@@ -33,11 +33,11 @@ jobs:
     runs-on: ${{matrix.os}}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          submodules: true        
+          submodules: true
       - name: Add C++ Problem Matcher
-        uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
+        uses: ammaraskar/gcc-problem-matcher@0.2.0
       - name: Install Dependencies
         run: |
           sudo apt-get -y install ninja-build
@@ -59,7 +59,7 @@ jobs:
           CC: ${{matrix.cc}}
           CXX: ${{matrix.cxx}}
         run: |
-          cmake --preset ci-linux-x64 ${{github.workspace}} 
+          cmake --preset ci-linux-x64 ${{github.workspace}}
       - name: Build
         run: |
           cmake --build --preset ci-linux-x64
