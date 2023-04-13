@@ -30,6 +30,7 @@ set(FilterList
   AlignSectionsMisorientationFilter
   AlignSectionsMutualInformationFilter
   BadDataNeighborOrientationCheckFilter
+  CAxisSegmentFeaturesFilter
   ConvertOrientations
   ConvertQuaternionFilter
   CreateEnsembleInfoFilter
@@ -38,6 +39,7 @@ set(FilterList
   EnsembleInfoReaderFilter
   ExportGBCDGMTFileFilter
   ExportGBCDTriangleDataFilter
+  FindAvgCAxesFilter
   FindAvgOrientationsFilter
   FindFeatureReferenceMisorientationsFilter
   FindGBCDFilter
@@ -69,7 +71,6 @@ set(STUB_FILTERS
   CreateLambertSphere
   EMsoftSO3Sampler
 
-  FindAvgCAxes
   FindBoundaryStrengths
   FindCAxisLocations
   FindDistsToCharactGBs
@@ -165,6 +166,7 @@ set(filter_algorithms
   AlignSectionsMisorientation
   AlignSectionsMutualInformation
   BadDataNeighborOrientationCheck
+  CAxisSegmentFeatures
   ConvertQuaternion
   CreateEnsembleInfo
   EBSDSegmentFeatures
@@ -172,6 +174,7 @@ set(filter_algorithms
   EnsembleInfoReader
   ExportGBCDGMTFile
   ExportGBCDTriangleData
+  FindAvgCAxes
   FindAvgOrientations
   FindFeatureReferenceMisorientations
   FindGBCD
@@ -226,6 +229,8 @@ set(PLUGIN_EXTRA_SOURCES
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.cpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ImportH5Data.hpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.hpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.cpp"
 )
 target_sources(${PLUGIN_NAME} PRIVATE ${PLUGIN_EXTRA_SOURCES})
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities" PREFIX ${PLUGIN_NAME} FILES ${PLUGIN_EXTRA_SOURCES})
