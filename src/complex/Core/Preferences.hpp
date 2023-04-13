@@ -29,6 +29,7 @@ public:
 
   bool contains(const std::string& name) const;
   bool pluginContains(const std::string& pluginName, const std::string& name) const;
+  bool pluginContainsDefault(const std::string& pluginName, const std::string& name) const;
 
   nlohmann::json value(const std::string& name) const;
 
@@ -53,7 +54,7 @@ public:
   template <typename T>
   T pluginValueAs(const std::string& pluginName, const std::string& valueName) const
   {
-    return pluginValue(pluginName, valueName).get<T>();
+    return pluginValue(pluginName, valueName);
   }
 
   nlohmann::json defaultPluginValue(const std::string& pluginName, const std::string& name) const;
@@ -73,7 +74,8 @@ public:
 
 protected:
   void setDefaultValues();
-  void addDefaultValues(AbstractPlugin& plugin, std::string& valueName, const nlohmann::json& value);
+
+  void addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value);
 
 private:
   nlohmann::json m_DefaultValues;

@@ -74,6 +74,20 @@ void DataIOCollection::checkStoreDataFormat(uint64 dataSize, std::string& dataFo
   }
 }
 
+std::vector<std::string> DataIOCollection::getFormatNames() const
+{
+  std::vector<std::string> keyNames;
+  for(const auto& [ioType, ioManager] : m_ManagerMap)
+  {
+    if(ioManager->hasDataStoreCreationFnc(ioType))
+    {
+      keyNames.push_back(ioType);
+    }
+  }
+
+  return keyNames;
+}
+
 DataIOCollection::iterator DataIOCollection::begin()
 {
   return m_ManagerMap.begin();

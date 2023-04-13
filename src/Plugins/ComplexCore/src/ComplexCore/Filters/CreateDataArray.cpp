@@ -4,6 +4,7 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataStoreFormatParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
@@ -83,8 +84,12 @@ Parameters CreateDataArray::parameters() const
                                                         "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
   params.insertSeparator(Parameters::Separator{"Created DataArray"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));
-  params.insert(std::make_unique<StringParameter>(k_DataFormat_Key, "Data Format",
-                                                  "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
+  params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
+                                                           "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
+
+  // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_AdvancedOptions_Key, k_TupleDims_Key, true);
+
   return params;
 }
 

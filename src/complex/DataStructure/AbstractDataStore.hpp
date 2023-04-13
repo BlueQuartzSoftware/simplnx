@@ -212,6 +212,7 @@ public:
     , m_Index(other.m_Index)
     {
     }
+
     ConstIterator(ConstIterator&& other) noexcept
     : m_DataStore(other.m_DataStore)
     , m_Index(other.m_Index)
@@ -235,7 +236,7 @@ public:
 
     bool isValid() const
     {
-      return m_Index < m_DataStore->getSize();
+      return m_DataStore != nullptr && m_Index < m_DataStore->getSize();
     }
 
     ConstIterator operator+(usize offset) const
