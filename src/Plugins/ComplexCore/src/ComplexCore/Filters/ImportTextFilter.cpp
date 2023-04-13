@@ -11,7 +11,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+#include "complex/Parameters/DataStoreFormatParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/Parsing/Text/CsvParser.hpp"
 
@@ -62,8 +62,8 @@ Parameters ImportTextFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created DataArray"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayKey, "Created Array Path", "DataPath or Name for the underlying Data Array", DataPath{}));
-  params.insert(std::make_unique<StringParameter>(k_DataFormat_Key, "Data Format",
-                                                  "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
+  params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
+                                                           "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
 
   params.insertSeparator(Parameters::Separator{"Tuple Handling"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
