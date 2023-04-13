@@ -72,10 +72,10 @@ public:
   Result<> saveToFile(const std::filesystem::path& filepath) const;
   Result<> loadFromFile(const std::filesystem::path& filepath);
 
-  void addDefaultValues(AbstractPlugin& plugin, std::string valueName, const nlohmann::json& value);
-
 protected:
   void setDefaultValues();
+
+  void addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value);
 
 private:
   nlohmann::json m_DefaultValues;

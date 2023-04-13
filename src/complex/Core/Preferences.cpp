@@ -74,9 +74,8 @@ void Preferences::setDefaultValues()
   m_DefaultValues[k_PreferredLargeDataFormat_Key] = k_LargeDataFormat;
 }
 
-void Preferences::addDefaultValues(AbstractPlugin& plugin, std::string valueName, const nlohmann::json& value)
+void Preferences::addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value)
 {
-  const std::string pluginName = plugin.getName();
   auto& pluginGroup = m_DefaultValues[k_Plugin_Key];
   if(!pluginGroup.contains(pluginName))
   {

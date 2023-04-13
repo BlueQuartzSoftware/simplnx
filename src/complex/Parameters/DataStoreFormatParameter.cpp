@@ -31,20 +31,16 @@ IParameter::AcceptedTypes DataStoreFormatParameter::acceptedTypes() const
 
 nlohmann::json DataStoreFormatParameter::toJson(const std::any& value) const
 {
-  const auto& stringValue = GetAnyRef<ValueType>(value);
-  nlohmann::json json = stringValue;
-  return json;
+  return GetAnyRef<ValueType>(value);
 }
 
 Result<std::any> DataStoreFormatParameter::fromJson(const nlohmann::json& json) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'DataStoreFormatParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("FilterParameter 'DataStoreFormatParameter' JSON Error: JSON value for key '{}' is not a string", name()));
   }
-  auto string = json.get<ValueType>();
-  return {{string}};
+  return {{json.get<ValueType>()}};
 }
 
 IParameter::UniquePointer DataStoreFormatParameter::clone() const
