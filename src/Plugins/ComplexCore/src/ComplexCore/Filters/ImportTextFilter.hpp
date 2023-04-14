@@ -26,6 +26,8 @@ public:
   static inline constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
   static inline constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
   static inline constexpr StringLiteral k_DataArrayKey = "output_data_array";
+  static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
+  static inline constexpr StringLiteral k_AdvancedOptions_Key = "advanced_options";
 
   /**
    * @brief

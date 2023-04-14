@@ -8,6 +8,7 @@
 #include "complex/Core/Application.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
@@ -76,7 +77,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     // read in the exemplar shift data file
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/align_sections_misorientation.txt", unit_test::k_TestFilesDir))));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::int32));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(116));
+    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(116)}}));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(4));
@@ -146,7 +147,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
     Arguments args;
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::int32));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(116));
+    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(116)}}));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(4));

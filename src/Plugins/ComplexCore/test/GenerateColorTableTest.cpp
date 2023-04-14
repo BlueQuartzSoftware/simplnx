@@ -1,13 +1,14 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/ColorPresetsUtilities.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
-
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/GenerateColorTableFilter.hpp"
 #include "ComplexCore/Filters/ImportTextFilter.hpp"
+
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/ColorPresetsUtilities.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 namespace fs = std::filesystem;
 using namespace complex;
@@ -82,7 +83,7 @@ TEST_CASE("ComplexCore::GenerateColorTableFilter: Valid filter execution")
     args.insertOrAssign(ImportTextFilter::k_InputFileKey, std::make_any<fs::path>(k_InputImageFilePath));
     args.insertOrAssign(ImportTextFilter::k_ScalarTypeKey, std::make_any<NumericType>(NumericType::float32));
     args.insertOrAssign(ImportTextFilter::k_NCompKey, std::make_any<uint64>(1));
-    args.insertOrAssign(ImportTextFilter::k_NTuplesKey, std::make_any<uint64>(37989));
+    args.insertOrAssign(ImportTextFilter::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(37989)}}));
     args.insertOrAssign(ImportTextFilter::k_DataArrayKey, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
 
     IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
