@@ -32,6 +32,7 @@ of doing that.
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
@@ -66,7 +67,7 @@ void runImportTextFilter(const std::string k_InputFileName, complex::NumericType
   args.insertOrAssign(FindAvgOrientationsTest::k_InputFileKey,
                       std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/ASCII_Data/{}.csv", unit_test::k_TestFilesDir, k_InputFileName))));
   args.insertOrAssign(FindAvgOrientationsTest::k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-  args.insertOrAssign(FindAvgOrientationsTest::k_NTuplesKey, std::make_any<uint64>(k_NumTuples));
+  args.insertOrAssign(FindAvgOrientationsTest::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NumTuples)}}));
   args.insertOrAssign(FindAvgOrientationsTest::k_NCompKey, std::make_any<uint64>(k_NumComponents));
   args.insertOrAssign(FindAvgOrientationsTest::k_NSkipLinesKey, std::make_any<uint64>(0));
   args.insertOrAssign(FindAvgOrientationsTest::k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(0));

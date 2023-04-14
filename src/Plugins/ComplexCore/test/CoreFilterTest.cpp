@@ -7,6 +7,7 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 
 #include <catch2/catch.hpp>
@@ -79,6 +80,7 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
   {
     static constexpr uint64 k_NComp = 3;
     static constexpr uint64 k_NSkipLines = 0;
+    const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NLines)}};
 
     ImportTextFilter filter;
     DataStructure dataStructure;
@@ -87,7 +89,7 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
 
     args.insert("input_file", std::make_any<fs::path>(k_FileName));
     args.insert("scalar_type", std::make_any<NumericType>(NumericType::int32));
-    args.insert("n_tuples", std::make_any<uint64>(k_NLines));
+    args.insert("n_tuples", std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insert("n_comp", std::make_any<uint64>(k_NComp));
     args.insert("n_skip_lines", std::make_any<uint64>(k_NSkipLines));
     args.insert("delimiter_choice", std::make_any<uint64>(0));

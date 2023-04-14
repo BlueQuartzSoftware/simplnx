@@ -7,6 +7,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
@@ -67,6 +68,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
+  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumSlices)}};
+
   // Read Exemplar Shifts File
   {
     static constexpr StringLiteral k_InputFileKey = "input_file";
@@ -87,7 +90,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(
                                             fs::path(fmt::format("{}/6_5_align_sections_mutual_information/6_5_align_sections_mutual_information.txt", unit_test::k_TestFilesDir))));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::int32));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(k_NumSlices));
+    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(4));
@@ -120,7 +123,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filt
     Arguments args;
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::int32));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(k_NumSlices));
+    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(6));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(0));
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(4));

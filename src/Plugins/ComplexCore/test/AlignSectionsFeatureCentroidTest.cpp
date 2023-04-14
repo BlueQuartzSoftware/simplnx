@@ -6,10 +6,10 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/Dream3dImportParameter.hpp"
+#include "complex/Parameters/DynamicTableParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumericTypeParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
-#include "complex/Utilities/Parsing/HDF5/Readers/FileReader.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -78,6 +78,8 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
 
   CompareExemplarToGeneratedData(dataStructure, dataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer);
 
+  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumSlices)}};
+
   // Read Exemplar Shifts File
   {
     static constexpr StringLiteral k_InputFileKey = "input_file";
@@ -97,7 +99,7 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(
                                             fs::path(fmt::format("{}/6_6_align_sections_feature_centroids/6_6_align_sections_feature_centroids.txt", unit_test::k_TestFilesDir))));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::float32));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(k_NumSlices));
+    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(k_NumColumns));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(k_SkipHeaderLines));
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(k_Comma));
@@ -129,7 +131,7 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
     Arguments args;
     args.insertOrAssign(k_InputFileKey, std::make_any<FileSystemPathParameter::ValueType>(computedShiftsFile));
     args.insertOrAssign(k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(complex::NumericType::float32));
-    args.insertOrAssign(k_NTuplesKey, std::make_any<uint64>(k_NumSlices));
+    args.insertOrAssign(k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
     args.insertOrAssign(k_NCompKey, std::make_any<uint64>(k_NumColumns));
     args.insertOrAssign(k_NSkipLinesKey, std::make_any<uint64>(k_SkipHeaderLines));
     args.insertOrAssign(k_DelimiterChoiceKey, std::make_any<ChoicesParameter::ValueType>(k_Comma));
