@@ -68,24 +68,25 @@ Parameters CreateDataArray::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(
-      k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an Attribute Matrix]",
-      "This allows the user to set the tuple dimensions directly rather than just inheriting them \n\nThis option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
-
   params.insert(std::make_unique<NumericTypeParameter>(k_NumericType_Key, "Numeric Type", "Numeric Type of data to create", NumericType::int32));
   params.insert(std::make_unique<StringParameter>(k_InitilizationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
   params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Number of Components", "Number of components", 1));
 
+  params.insertSeparator(Parameters::Separator{"Created DataArray"});
+  params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));
+  params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
+                                                           "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
+
+  params.insertSeparator(Parameters::Separator{"Tuple Handling"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an Attribute Matrix]",
+      "This allows the user to set the tuple dimensions directly rather than just inheriting them \n\nThis option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
   DynamicTableInfo tableInfo;
   tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
   tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "DIM {}"));
 
   params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions (Slowest to Fastest Dimensions)",
                                                         "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
-  params.insertSeparator(Parameters::Separator{"Created DataArray"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DataPath_Key, "Created Array", "Array storing the data", DataPath{}));
-  params.insert(std::make_unique<DataStoreFormatParameter>(k_DataFormat_Key, "Data Format",
-                                                           "This value will specify which data format is used by the array's data store. An empty string results in in-memory data store.", ""));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_AdvancedOptions_Key, k_TupleDims_Key, true);
@@ -111,9 +112,11 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
   auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
+  complex::Result<OutputActions> resultOutputActions;
+
   if(initValue.empty())
   {
-    return {MakeErrorResult<OutputActions>(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__)), {}};
+    return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
   }
   // Sanity check that what the user entered for an init value can be converted safely to the final numeric type
   Result<> result = CheckValueConverts(initValue, numericType);
@@ -130,8 +133,8 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
   {
     if(!useDims)
     {
-      return {MakeErrorResult<OutputActions>(
-          -78602, "The DataArray to be created is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. Check Set Tuple Dimensions to set the dimensions")};
+      return MakePreflightErrorResult(
+          -78602, "The DataArray to be created is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. Check Set Tuple Dimensions to set the dimensions");
     }
     else
     {
@@ -139,6 +142,11 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
       tupleDims.reserve(rowData.size());
       for(auto floatValue : rowData)
       {
+        if(floatValue == 0)
+        {
+          return MakePreflightErrorResult(-78603, "Tuple dimension cannot be zero");
+        }
+
         tupleDims.push_back(static_cast<usize>(floatValue));
       }
     }
@@ -148,19 +156,17 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
     tupleDims = parentAM->getShape();
     if(useDims)
     {
-      return {ConvertResultTo<OutputActions>(
-          MakeWarningVoidResult(-78603, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                                        "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."),
-          {})};
+      resultOutputActions.warnings().push_back(
+          Warning{-78604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                          "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
-  OutputActions actions;
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat);
 
-  actions.actions.push_back(std::move(action));
+  resultOutputActions.value().actions.push_back(std::move(action));
 
-  return {std::move(actions)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
