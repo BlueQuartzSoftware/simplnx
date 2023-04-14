@@ -139,7 +139,6 @@ Result<> FindFeatureReferenceCAxisMisorientations::operator()()
           avgMis[index]++;
           avgMis[index + 1] += w;
         }
-        // if(featureIds[point] == 0 && cellPhases[point] == 0)
         else
         {
           featRefCAxisMis[point] = 0.0f;

@@ -22,7 +22,7 @@ const DataPath k_AvgCAxesPath = k_CellFeatureDataPath.createChildPath("AvgCAxes"
 TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientationsFilter: Valid Filter Execution", "[OrientationAnalysis][FindFeatureReferenceCAxisMisorientationsFilter]")
 {
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_feat_ref_caxis_misorientation.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -42,13 +42,13 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientationsFilter: 
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_FeatRefCAxisMisExemplar), k_CellFeatureDataPath.createChildPath(k_FeatRefCAxisMisComputed),
+  UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellAttributeMatrix.createChildPath(k_FeatRefCAxisMisExemplar), k_CellAttributeMatrix.createChildPath(k_FeatRefCAxisMisComputed),
                                                 UnitTest::EPSILON, false);
   UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_FeatAvgCAxisMisExemplar), k_CellFeatureDataPath.createChildPath(k_FeatAvgCAxisMisComputed),
                                                 UnitTest::EPSILON, false);
@@ -59,7 +59,7 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientationsFilter: 
 TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientationsFilter: InValid Filter Execution", "[OrientationAnalysis][FindFeatureReferenceCAxisMisorientationsFilter]")
 {
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_feat_ref_caxis_misorientation.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   auto& crystalStructs = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresArrayPath);
@@ -82,9 +82,9 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientationsFilter: 
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
 }
