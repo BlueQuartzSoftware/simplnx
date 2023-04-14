@@ -20,6 +20,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExportGBCDTriangleDataTest.cpp
   FindAvgCAxesTest.cpp
   FindAvgOrientationsTest.cpp
+  FindFeatureReferenceCAxisMisorientationsTest.cpp
   FindFeatureReferenceMisorientationsTest.cpp
   FindGBCDTest.cpp
   FindKernelAvgMisorientationsTest.cpp
