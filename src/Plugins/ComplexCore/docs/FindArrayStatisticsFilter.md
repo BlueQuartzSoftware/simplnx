@@ -19,6 +19,7 @@ This **Filter** computes a variety of statistics for a given scalar array.  The 
 | Standard Deviation | double |
 | Summation | double |
 | Standardized | double |
+| Number of Unique Values | signed 32-bit integer |
 
 The user may optionally use a mask to specify points to be ignored when computing the statistics; only points where the supplied mask is _true_ will be considered when computing statistics.  Additionally, the user may select to have the statistics computed per **Feature** or **Ensemble** by supplying an Ids array.  For example, if the user opts to compute statistics per **Feature** and selects an array that has 10 unique **Feature** Ids, then this **Filter** will compute 10 sets of statistics (e.g., find the mean of the supplied array for each **Feature**, find the total number of points in each **Feature** (the length), etc.).  
 
@@ -44,6 +45,7 @@ Special operations occur for certain statistics if the supplied array is of type
 | Find Median | bool | Whether to compute the median of the input array |
 | Find Standard Deviation | bool | Whether to compute the standard deviation of the input array |
 | Find Summation | bool | Whether to compute the summation of the input array |
+| Find Number of Unique Values | bool | Whether to compute the number of unique values in the input array |
 | Use Mask | bool | Whether to use a boolean mask array to ignore certain points flagged as _false_ from the statistics |
 | Compute Statistics Per Feature/Ensemble | bool | Whether the statistics should be computed on a **Feature/Ensemble** basis |
 | Standardize Data | bool | Whether the input array should be standardized to have mean of 0 and unit variance; _Find Mean_ and _Find Standard Deviation_ must be selected to use this option |
@@ -74,6 +76,7 @@ None
 | **Attribute Array** | Standard Deviation | double | (1) | Standard deviation of the input array, if _Find Standard Deviation_ is checked |
 | **Attribute Array** | Summation | double | (1) | Summation of the input array, if _Find Summation_ is checked |
 | **Attribute Array** | Standardized | double | (1) | Standardized version of the input array, if _Standardize Data_ is checked |
+| **Attribute Array** | Number of Unique Values | int32_t | (1) | The number of unique values in the input array, if _Find Number of Unique Values_ is checked |
 
 ## Example Pipelines ##
 

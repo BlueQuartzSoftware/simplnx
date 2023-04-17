@@ -185,6 +185,18 @@ double findSummation(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
+size_t findNumUniqueValues(const C<T, Ts...>& source)
+{
+  if(source.empty())
+  {
+    return 0;
+  }
+  std::set<T> sourceSet(std::begin(source), std::end(source));
+  return sourceSet.size();
+}
+
+// -----------------------------------------------------------------------------
+template <template <typename, typename...> class C, typename T, typename... Ts>
 std::vector<float> findHistogram(const C<T, Ts...>& source, float histmin, float histmax, bool histfullrange, int32_t numBins)
 {
   if(source.empty())

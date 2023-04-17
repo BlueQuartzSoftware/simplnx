@@ -53,7 +53,6 @@ public:
 
   void compute(usize start, usize end) const
   {
-
     std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
     auto now = std::chrono::steady_clock::now();
     const usize milliDelay = 1000;
@@ -300,12 +299,15 @@ private:
 };
 
 template <typename T>
-class FindArrayMedianByIndexImpl
+class FindArrayMedianUniqueByIndexImpl
 {
 public:
-  FindArrayMedianByIndexImpl(const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, Float32Array* medianArray, DataArray<uint64>* lengthArray,
-                             FindArrayStatistics* filter)
-  : m_MedianArray(medianArray)
+  FindArrayMedianUniqueByIndexImpl(const std::unique_ptr<MaskCompare>& mask, const Int32Array* featureIds, const DataArray<T>& source, bool findMedian, bool findNumUnique, Float32Array* medianArray,
+                                   Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, FindArrayStatistics* filter)
+  : m_FindMedian(findMedian)
+  , m_FindNumUniqueValues(findNumUnique)
+  , m_MedianArray(medianArray)
+  , m_NumUniqueValuesArray(numUniqueValuesArray)
   , m_Mask(mask)
   , m_FeatureIds(featureIds)
   , m_Source(source)
@@ -314,12 +316,12 @@ public:
   {
   }
 
-  virtual ~FindArrayMedianByIndexImpl() = default;
+  virtual ~FindArrayMedianUniqueByIndexImpl() = default;
 
-  FindArrayMedianByIndexImpl(const FindArrayMedianByIndexImpl&) = default;           // Copy Constructor Not Implemented
-  FindArrayMedianByIndexImpl(FindArrayMedianByIndexImpl&&) = default;                // Move Constructor Not Implemented
-  FindArrayMedianByIndexImpl& operator=(const FindArrayMedianByIndexImpl&) = delete; // Copy Assignment Not Implemented
-  FindArrayMedianByIndexImpl& operator=(FindArrayMedianByIndexImpl&&) = delete;      // Move Assignment Not Implemented
+  FindArrayMedianUniqueByIndexImpl(const FindArrayMedianUniqueByIndexImpl&) = default;           // Copy Constructor Not Implemented
+  FindArrayMedianUniqueByIndexImpl(FindArrayMedianUniqueByIndexImpl&&) = default;                // Move Constructor Not Implemented
+  FindArrayMedianUniqueByIndexImpl& operator=(const FindArrayMedianUniqueByIndexImpl&) = delete; // Copy Assignment Not Implemented
+  FindArrayMedianUniqueByIndexImpl& operator=(FindArrayMedianUniqueByIndexImpl&&) = delete;      // Move Assignment Not Implemented
 
   void compute(usize start, usize end) const
   {
@@ -352,8 +354,16 @@ public:
 
     for(usize featureSourceIndex = 0; featureSourceIndex < numFeatureSources; featureSourceIndex++)
     {
-      const float32 val = StaticicsCalculations::findMedian(featureSources[featureSourceIndex]);
-      m_MedianArray->operator[](featureSourceIndex + start) = val;
+      if(m_FindMedian)
+      {
+        const float32 val = StaticicsCalculations::findMedian(featureSources[featureSourceIndex]);
+        m_MedianArray->operator[](featureSourceIndex + start) = val;
+      }
+      if(m_FindNumUniqueValues)
+      {
+        const auto val = StaticicsCalculations::findNumUniqueValues(featureSources[featureSourceIndex]);
+        m_NumUniqueValuesArray->operator[](featureSourceIndex + start) = val;
+      }
     }
   }
 
@@ -363,7 +373,10 @@ public:
   }
 
 private:
+  bool m_FindMedian;
+  bool m_FindNumUniqueValues;
   Float32Array* m_MedianArray;
+  Int32Array* m_NumUniqueValuesArray;
   const std::unique_ptr<MaskCompare>& m_Mask = nullptr;
   const Int32Array* m_FeatureIds = nullptr;
   const DataArray<T>& m_Source;
@@ -375,7 +388,6 @@ private:
 template <class ContainerType, typename T>
 void FindStatisticsImpl(const ContainerType& data, std::vector<IDataArray*>& arrays, const FindArrayStatisticsInputValues* inputValues)
 {
-
   if(inputValues->FindLength)
   {
     auto* array0Ptr = dynamic_cast<DataArray<uint64>*>(arrays[0]);
@@ -470,6 +482,17 @@ void FindStatisticsImpl(const ContainerType& data, std::vector<IDataArray*>& arr
       arr7DataStorePtr->setTuple(0, values);
     }
   }
+
+  if(inputValues->FindNumUniqueValues)
+  {
+    auto* array8Ptr = dynamic_cast<DataArray<int32>*>(arrays[8]);
+    if(array8Ptr == nullptr)
+    {
+      throw std::invalid_argument("findStatisticsImpl() could not dynamic_cast 'Number of Unique Values' array to needed type. Check input array selection.");
+    }
+    const auto val = static_cast<int32>(StaticicsCalculations::findNumUniqueValues(data));
+    array8Ptr->initializeTuple(0, val);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -498,20 +521,18 @@ void FindStatistics(const DataArray<T>& source, const Int32Array* featureIds, co
                                                         histArrayPtr, filter),
                       simplePartitioner);
 #endif
-    if(inputValues->FindMedian)
+    if(inputValues->FindMedian || inputValues->FindNumUniqueValues)
     {
       filter->sendThreadSafeInfoMessage("Starting Median Calculation..");
 
       auto* medianArrayPtr = dynamic_cast<Float32Array*>(arrays[4]);
-      if(medianArrayPtr == nullptr)
-      {
-        throw std::invalid_argument("FindArrayMedianByIndexImpl could not dynamic_cast 'Median' array to a Float32 array type. Check input array selection.");
-      }
+      auto* numUniqueValuesArrayPtr = dynamic_cast<Int32Array*>(arrays[8]);
 
       ParallelDataAlgorithm medianDataAlg;
       medianDataAlg.setParallelizationEnabled(false);
       medianDataAlg.setRange(0, numFeatures);
-      medianDataAlg.execute(FindArrayMedianByIndexImpl<T>(mask, featureIds, source, medianArrayPtr, lengthArrayPtr, filter));
+      medianDataAlg.execute(
+          FindArrayMedianUniqueByIndexImpl<T>(mask, featureIds, source, inputValues->FindMedian, inputValues->FindNumUniqueValues, medianArrayPtr, numUniqueValuesArrayPtr, lengthArrayPtr, filter));
     }
   }
   else
@@ -690,6 +711,15 @@ struct FindArrayStatisticsFunctor
       }
       arrayPtr->fill(0.0F);
     }
+    if(inputValues->FindNumUniqueValues)
+    {
+      auto* arrayPtr = dataStructure.getDataAs<Int32Array>(inputValues->NumUniqueValuesName);
+      if(arrayPtr == nullptr)
+      {
+        return MakeErrorResult(-563511, "FindArrayStatisticsFunctor could not dynamic_cast 'Number of Unique Values' array to needed type. Check input array selection.");
+      }
+      arrayPtr->fill(-1);
+    }
     // End Initialization
 
     // this level checks whether computing by index or not and preps the calculations accordingly
@@ -737,7 +767,7 @@ Result<> FindArrayStatistics::operator()()
     return {};
   }
 
-  std::vector<IDataArray*> arrays(8, nullptr);
+  std::vector<IDataArray*> arrays(9, nullptr);
 
   if(m_InputValues->FindLength)
   {
@@ -770,6 +800,10 @@ Result<> FindArrayStatistics::operator()()
   if(m_InputValues->FindHistogram)
   {
     arrays[7] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->HistogramArrayName);
+  }
+  if(m_InputValues->FindNumUniqueValues)
+  {
+    arrays[8] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NumUniqueValuesName);
   }
 
   usize numFeatures = 0;
