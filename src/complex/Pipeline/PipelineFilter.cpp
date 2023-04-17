@@ -181,7 +181,7 @@ bool PipelineFilter::preflight(DataStructure& data, RenamedPaths& renamedPaths, 
 bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& shouldCancel)
 {
   this->sendFilterRunStateMessage(m_Index, complex::RunState::Executing);
-  this->sendFilterUpdateMessage(m_Index, "Starting Execution...");
+  this->sendFilterUpdateMessage(m_Index, "Begin");
 
   m_Warnings.clear();
   m_Errors.clear();
@@ -209,7 +209,7 @@ bool PipelineFilter::execute(DataStructure& data, const std::atomic_bool& should
   }
   sendFilterFaultMessage(m_Index, getFaultState());
   this->sendFilterRunStateMessage(m_Index, complex::RunState::Idle);
-  this->sendFilterUpdateMessage(m_Index, "Ending Execution...");
+  this->sendFilterUpdateMessage(m_Index, "End");
 
   return result.result.valid();
 }

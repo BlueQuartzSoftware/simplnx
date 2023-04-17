@@ -307,8 +307,7 @@ download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
                     ARCHIVE_NAME 6_6_ImportH5Data.tar.gz 
                     SHA512 68cf620d28a515d04040d66c4f8fa9d8d46707c65138b366b47f40d1d56a36c40e2e2cd0c9d35168b68c2cb5b2ce95650fa2a0d4e6ffce980d0dd0654908f40d
-                    INSTALL
-                    COPY_DATA)
+                    )
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder

@@ -273,9 +273,13 @@ public:
       {
         outputStrm << static_cast<int32>(m_DataArray[tupleIndex * m_NumComps + comp]);
       }
-      else if constexpr(std::is_same_v<ScalarType, float32> || std::is_same_v<ScalarType, float64>)
+      else if constexpr(std::is_same_v<ScalarType, float32>)
       {
-        outputStrm << fmt::format("{}", m_DataArray[tupleIndex * m_NumComps + comp]);
+        outputStrm << std::setprecision(8) << std::noshowpoint << m_DataArray[tupleIndex * m_NumComps + comp];
+      }
+      else if constexpr(std::is_same_v<ScalarType, float64>)
+      {
+        outputStrm << std::setprecision(16) << std::noshowpoint << m_DataArray[tupleIndex * m_NumComps + comp];
       }
       else
       {
@@ -460,8 +464,8 @@ void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath,
  * @param neighborLists The list of dataPaths of neighborlists to include
  */
 void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
-                               const std::atomic_bool& shouldCancel, const std::string& delimiter, bool includeIndex, bool includeHeaders, const std::vector<DataPath>& neighborLists,
-                               bool writeNumOfFeatures)
+                               const std::atomic_bool& shouldCancel, const std::string& delimiter, bool includeIndex, bool includeHeaders, bool writeFirstIndex, const std::string& indexName,
+                               const std::vector<DataPath>& neighborLists, bool writeNumOfFeatures)
 {
   const auto& firstDataArray = dataStructure.getDataRefAs<IDataArray>(objectPaths[0]);
   usize numTuples = firstDataArray.getNumberOfTuples();
@@ -484,13 +488,11 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   if(writeNumOfFeatures)
   {
     size_t featureCount = 0;
-    if(includeHeaders)
+
+    featureCount += dataStructure.getDataRefAs<IArray>(objectPaths.at(0)).getNumberOfTuples();
+    if(!writeFirstIndex)
     {
-      featureCount++;
-    }
-    for(const auto& path : objectPaths)
-    {
-      featureCount += dataStructure.getDataRefAs<IArray>(path).getNumberOfComponents();
+      featureCount--;
     }
     outputStrm << featureCount << "\n";
   }
@@ -500,7 +502,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   {
     if(includeIndex)
     {
-      outputStrm << "Indices" << delimiter;
+      outputStrm << indexName << delimiter;
     }
     for(size_t writerIndex = 0; writerIndex < writersCount; writerIndex++)
     {
@@ -519,7 +521,12 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   }
 
   // Loop on ever tuple using our predefined writer for each data array
-  for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
+  size_t writerIndexStart = 0;
+  if(!writeFirstIndex)
+  {
+    writerIndexStart = 1;
+  }
+  for(usize tupleIndex = writerIndexStart; tupleIndex < numTuples; tupleIndex++)
   {
     auto now = std::chrono::steady_clock::now();
     if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
