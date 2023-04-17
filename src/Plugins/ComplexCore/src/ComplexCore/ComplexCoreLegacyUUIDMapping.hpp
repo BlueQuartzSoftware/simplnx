@@ -104,6 +104,8 @@
 #include "ComplexCore/Filters/AvizoRectilinearCoordinateWriterFilter.hpp"
 #include "ComplexCore/Filters/VtkRectilinearGridWriterFilter.hpp"
 #include "ComplexCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
+#include "ComplexCore/Filters/SampleSurfaceMeshSpecifiedPointsFilter.hpp"
+#include "ComplexCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -217,6 +219,8 @@ namespace complex
     {complex::Uuid::FromString("2861f4b4-8d50-5e69-9575-68c9d35f1256").value(), complex::FilterTraits<AvizoRectilinearCoordinateWriterFilter>::uuid}, // AvizoRectilinearCoordinateWriter
     {complex::Uuid::FromString("a043bd66-2681-5126-82e1-5fdc46694bf4").value(), complex::FilterTraits<VtkRectilinearGridWriterFilter>::uuid}, // VtkRectilinearGridWriter
     {complex::Uuid::FromString("0df3da89-9106-538e-b1a9-6bbf1cf0aa92").value(), complex::FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid}, // RegularGridSampleSurfaceMesh
+    {complex::Uuid::FromString("0f44da6f-5272-5d69-8378-9bf0bc4ae4f9").value(), complex::FilterTraits<SampleSurfaceMeshSpecifiedPointsFilter>::uuid}, // SampleSurfaceMeshSpecifiedPoints
+    {complex::Uuid::FromString("75cfeb9b-cd4b-5a20-a344-4170b39bbfaf").value(), complex::FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid}, // UncertainRegularGridSampleSurfaceMesh
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
