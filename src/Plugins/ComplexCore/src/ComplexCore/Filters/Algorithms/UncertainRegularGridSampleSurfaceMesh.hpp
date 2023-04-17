@@ -49,6 +49,10 @@ public:
 
   const std::atomic_bool& getCancel();
 
+protected:
+  virtual VertexGeom generatePoints() = 0;
+  virtual void assignPoints(Int32Array& dataArray) = 0;
+
 private:
   DataStructure& m_DataStructure;
   const UncertainRegularGridSampleSurfaceMeshInputValues* m_InputValues = nullptr;

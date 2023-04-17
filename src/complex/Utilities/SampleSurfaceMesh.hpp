@@ -3,6 +3,7 @@
 #include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -34,6 +35,8 @@ public:
 
 protected:
   void sendThreadSafeProgressMessage(int featureId, size_t numCompleted, size_t totalFeatures);
+  virtual VertexGeom generatePoints() = 0;
+  virtual void assignPoints(Int32Array& dataArray) = 0;
 
 private:
   DataStructure& m_DataStructure;

@@ -21,7 +21,6 @@ struct COMPLEXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
   VectorFloat32Parameter::ValueType Spacing;
   VectorFloat32Parameter::ValueType Origin;
   ChoicesParameter::ValueType LengthUnit;
-  <<<NOT_IMPLEMENTED>>> BoxDimensions;
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath FeatureIdsArrayName;
@@ -46,6 +45,10 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+
+protected:
+  virtual VertexGeom generatePoints() = 0;
+  virtual void assignPoints(Int32Array& dataArray) = 0;
 
 private:
   DataStructure& m_DataStructure;
