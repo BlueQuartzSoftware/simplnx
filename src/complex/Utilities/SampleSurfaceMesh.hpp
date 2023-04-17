@@ -27,16 +27,15 @@ public:
    * @param gridGeom
    * @return
    */
-  Result<> execute(const SizeVec3& udims);
-
-  const std::atomic_bool& getCancel();
+  Result<> execute();
 
   void updateProgress(const std::string& progMessage);
 
 protected:
   void sendThreadSafeProgressMessage(int featureId, size_t numCompleted, size_t totalFeatures);
-  virtual VertexGeom generatePoints() = 0;
-  virtual void assignPoints(Int32Array& dataArray) = 0;
+  void assignPoints(Int32Array& dataArray);
+
+  virtual void generatePoints(VertexGeom& vertexGeom) = 0;
 
 private:
   DataStructure& m_DataStructure;

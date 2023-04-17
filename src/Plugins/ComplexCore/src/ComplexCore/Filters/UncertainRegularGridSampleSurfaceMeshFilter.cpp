@@ -7,9 +7,12 @@
 #include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+
+#include <random>
 
 using namespace complex;
 
@@ -51,18 +54,17 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Optional Variables"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
+  params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed", "The seed fed into the random generator", std::mt19937::default_seed));
+
   params.insertSeparator(Parameters::Separator{"Face Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{},
-                                                          complex::GetAllDataTypes()));
-  params.insert(std::make_unique<Int32Parameter>(k_XPoints_Key, "X Points", "", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_YPoints_Key, "Y Points", "", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_ZPoints_Key, "Z Points", "", 0));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "", std::vector<float32>{0.0F, 0.0F, 0.0F},
-                                                         std::vector<std::string>{"label1", "label2", "label3"}));
-  params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"label1", "label2", "label3"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Uncertainty_Key, "Uncertainty", "", std::vector<float32>{0.0F, 0.0F, 0.0F},
-                                                         std::vector<std::string>{"label1", "label2", "label3"}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, complex::GetAllDataTypes()));
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Number of Cells per Axis", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X Points", "Y Points", "Z Points"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Uncertainty_Key, "Uncertainty", "uncertainty values associated with X, Y and Z positions of Cells", std::vector<float32>{0.0F, 0.0F, 0.0F},
+                                                         std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));
@@ -82,9 +84,6 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
                                                                                     const std::atomic_bool& shouldCancel) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  auto pXPointsValue = filterArgs.value<int32>(k_XPoints_Key);
-  auto pYPointsValue = filterArgs.value<int32>(k_YPoints_Key);
-  auto pZPointsValue = filterArgs.value<int32>(k_ZPoints_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pUncertaintyValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Uncertainty_Key);
@@ -126,9 +125,7 @@ Result<> UncertainRegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure&
   UncertainRegularGridSampleSurfaceMeshInputValues inputValues;
 
   inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.XPoints = filterArgs.value<int32>(k_XPoints_Key);
-  inputValues.YPoints = filterArgs.value<int32>(k_YPoints_Key);
-  inputValues.ZPoints = filterArgs.value<int32>(k_ZPoints_Key);
+  inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   inputValues.Uncertainty = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Uncertainty_Key);

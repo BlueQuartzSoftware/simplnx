@@ -43,9 +43,7 @@ TEST_CASE("ComplexCore::UncertainRegularGridSampleSurfaceMeshFilter: Valid Filte
 
   // Create default Parameters for the filter.
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_XPoints_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_YPoints_Key, std::make_any<int32>(1234356));
-  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_ZPoints_Key, std::make_any<int32>(1234356));
+  // Dims here
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));

@@ -181,15 +181,19 @@ SampleSurfaceMesh::SampleSurfaceMesh(DataStructure& data, const std::atomic_bool
 SampleSurfaceMesh::~SampleSurfaceMesh() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& SampleSurfaceMesh::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 void SampleSurfaceMesh::updateProgress(const std::string& progMessage)
 {
   m_MessageHandler({IFilter::Message::Type::Info, progMessage});
+}
+
+// -----------------------------------------------------------------------------
+void RegularGridSampleSurfaceMesh::assignPoints(Int32Array& sourceFeatureIds, Vec3<usize> udims)
+{
+  size_t totalPoints = m_Dimensions[0] * m_Dimensions[1] * m_Dimensions[2];
+  for(size_t i = 0; i < totalPoints; i++)
+  {
+    m_FeatureIds[i] = dataArray[i];
+  }
 }
 
 // -----------------------------------------------------------------------------

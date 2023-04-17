@@ -25,15 +25,15 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static inline constexpr StringLiteral k_XPoints_Key = "x_points";
-  static inline constexpr StringLiteral k_YPoints_Key = "y_points";
-  static inline constexpr StringLiteral k_ZPoints_Key = "z_points";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
   static inline constexpr StringLiteral k_Uncertainty_Key = "uncertainty";
   static inline constexpr StringLiteral k_DataContainerName_Key = "data_container_name";
   static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
 
   /**
    * @brief Returns the name of the filter.
