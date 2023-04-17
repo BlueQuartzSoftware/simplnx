@@ -244,6 +244,32 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
 }
 
 /**
+ * @brief Compares two Image Geometries
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+inline void CompareImageGeometry(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  const auto* exemplarGeom = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
+  const auto* computedGeom = dataStructure.getDataAs<ImageGeom>(computedPath);
+  REQUIRE(exemplarGeom != nullptr);
+  REQUIRE(computedGeom != nullptr);
+
+  const auto exemplarDims = exemplarGeom->getDimensions();
+  const auto computedDims = computedGeom->getDimensions();
+  REQUIRE(exemplarDims == computedDims);
+
+  const auto exemplarSpacing = exemplarGeom->getSpacing();
+  const auto computedSpacing = computedGeom->getSpacing();
+  REQUIRE(exemplarSpacing == computedSpacing);
+
+  const auto exemplarOrigin = exemplarGeom->getOrigin();
+  const auto computedOrigin = computedGeom->getOrigin();
+  REQUIRE(exemplarOrigin == computedOrigin);
+}
+
+/**
  * @brief Compares IDataArray
  * @tparam T
  * @param left

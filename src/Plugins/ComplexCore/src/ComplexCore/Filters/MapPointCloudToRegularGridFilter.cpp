@@ -316,7 +316,6 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
                                                        const std::atomic_bool& shouldCancel) const
 {
   const auto samplingGridType = args.value<uint64>(k_SamplingGridType_Key);
-  const auto gridDimensions = args.value<std::vector<int32>>(k_GridDimensions_Key);
   const auto vertexGeomPath = args.value<DataPath>(k_VertexGeometry_Key);
   const auto useMask = args.value<bool>(k_UseMask_Key);
   const auto maskArrayPath = args.value<DataPath>(k_MaskPath_Key);
@@ -326,6 +325,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   if(samplingGridType == 0)
   {
     // Create the regular grid
+    messageHandler("Creating Regular Grid");
     createRegularGrid(data, args);
     image = data.getDataAs<ImageGeom>(args.value<DataPath>(k_NewImageGeometry_Key));
   }
@@ -337,11 +337,7 @@ Result<> MapPointCloudToRegularGridFilter::executeImpl(DataStructure& data, cons
   const auto& vertices = data.getDataRefAs<VertexGeom>(vertexGeomPath);
   const DataPath voxelIndicesPath = vertexGeomPath.createChildPath(vertices.getVertexAttributeMatrix()->getName()).createChildPath(voxelIndicesName);
   auto& voxelIndices = data.getDataRefAs<UInt64Array>(voxelIndicesPath);
-  BoolArray* mask = nullptr;
-  if(useMask)
-  {
-    mask = data.getDataAs<BoolArray>(maskArrayPath);
-  }
+  const auto* mask = data.getDataAs<BoolArray>(maskArrayPath);
 
   int64 numVerts = vertices.getNumberOfVertices();
   SizeVec3 dims = image->getDimensions();
