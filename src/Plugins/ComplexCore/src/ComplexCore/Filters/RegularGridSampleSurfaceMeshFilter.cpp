@@ -10,6 +10,8 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 
+#include <sstream>
+
 using namespace complex;
 
 namespace complex
@@ -89,14 +91,6 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
-
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // These variables should be updated with the latest data generated for each variable during preflight.
-  // These will be returned through the preflightResult variable to the
-  // user interface. You could make these member variables instead if needed.
-  std::string boxDimensions;
 
   // If this filter makes changes to the DataStructure in the form of
   // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
@@ -116,10 +110,27 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
     resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
   }
 
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // These values should have been updated during the preflightImpl(...) method
-  preflightUpdatedValues.push_back({"BoxDimensions", boxDimensions});
+  std::vector<PreflightValue> preflightUpdatedValues;
+  std::stringstream boxDimensions = std::stringstream();
+
+  std::string lengthUnit = IGeometry::LengthUnitToString(static_cast<IGeometry::LengthUnit>(pLengthUnitValue));
+
+  boxDimensions << "X Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[0] << " to " << std::setprecision(8) << std::noshowpoint
+                << (pOriginValue[0] + (pDimensionsValue[0] * pSpacingValue[0])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[0] * pSpacingValue[0]) << ") "
+                << lengthUnit << "\n";
+  boxDimensions << "Y Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[1] << " to " << std::setprecision(8) << std::noshowpoint
+                << (pOriginValue[1] + (pDimensionsValue[1] * pSpacingValue[1])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[1] * pSpacingValue[1]) << ") "
+                << lengthUnit << "\n";
+  boxDimensions << "Z Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[2] << " to " << std::setprecision(8) << std::noshowpoint
+                << (pOriginValue[2] + (pDimensionsValue[2] * pSpacingValue[2])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[2] * pSpacingValue[2]) << ") "
+                << lengthUnit << "\n";
+
+  float vol = (pDimensionsValue[0] * pSpacingValue[0]) * (pDimensionsValue[1] * pSpacingValue[1]) * (pDimensionsValue[2] * pSpacingValue[2]);
+
+  boxDimensions << "Volume: " << std::setprecision(8) << std::noshowpoint << vol << " " << lengthUnit << "s ^3"
+                << "\n";
+
+  preflightUpdatedValues.push_back({"BoxDimensions", boxDimensions.str()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
