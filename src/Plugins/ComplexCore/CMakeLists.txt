@@ -101,6 +101,7 @@ set(FilterList
   ResampleRectGridToImageGeomFilter
   RobustAutomaticThreshold
   RotateSampleRefFrameFilter
+  SampleSurfaceMeshSpecifiedPointsFilter
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
@@ -109,6 +110,7 @@ set(FilterList
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
+  UncertainRegularGridSampleSurfaceMeshFilter
   VtkRectilinearGridWriterFilter
   WriteASCIIDataFilter
   WriteBinaryDataFilter
@@ -169,12 +171,14 @@ set(AlgorithmList
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
   ResampleRectGridToImageGeom
+  SampleSurfaceMeshSpecifiedPoints
   ScalarSegmentFeatures
   SharedFeatureFace
   SplitAttributeArray
   StlFileReader
   TriangleCentroid
   TupleTransfer
+  UncertainRegularGridSampleSurfaceMesh
   VtkRectilinearGridWriter
   WriteStlFile
 )

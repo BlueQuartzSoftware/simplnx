@@ -101,6 +101,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ResampleRectGridToImageGeomTest.cpp
   RobustAutomaticThresholdTest.cpp
   RotateSampleRefFrameTest.cpp
+  SampleSurfaceMeshSpecifiedPointsTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
@@ -109,6 +110,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
+  UncertainRegularGridSampleSurfaceMeshTest.cpp
   VtkRectilinearGridWriterTest.cpp
   WriteASCIIDataTest.cpp
   WriteBinaryDataTest.cpp
