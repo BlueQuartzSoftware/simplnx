@@ -61,6 +61,7 @@
 #include "OrientationAnalysis/Filters/ImportH5OimDataFilter.hpp"
 #include "OrientationAnalysis/Filters/ImportH5EspritDataFilter.hpp"
 #include "OrientationAnalysis/Filters/FindAvgCAxesFilter.hpp"
+#include "OrientationAnalysis/Filters/FindFeatureReferenceCAxisMisorientationsFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -130,6 +131,7 @@ namespace complex
     {complex::Uuid::FromString("3ff4701b-3a0c-52e3-910a-fa927aa6584c").value(), complex::FilterTraits<ImportH5OimDataFilter>::uuid}, // ImportH5OimData
     {complex::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), complex::FilterTraits<ImportH5EspritDataFilter>::uuid}, // ImportH5EspritData
     {complex::Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value(), complex::FilterTraits<FindAvgCAxesFilter>::uuid}, // FindAvgCAxes
+    {complex::Uuid::FromString("1a0848da-2edd-52c0-b111-62a4dc6d2886").value(), complex::FilterTraits<FindFeatureReferenceCAxisMisorientationsFilter>::uuid}, // FindFeatureReferenceCAxisMisorientations
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

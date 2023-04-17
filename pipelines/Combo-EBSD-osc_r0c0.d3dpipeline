@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "Combo-EBSD-120130-osc_r0c0.d3dpipeline",
+  "name": "Combo-EBSD-osc_r0c0.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {
@@ -196,6 +196,25 @@
     },
     {
       "args": {
+        "avg_c_axes_array_path": "DataContainer/CellFeatureData/AvgCAxes",
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_avg_c_axis_misorientations_array_name": "AvgCAxisMisorientation",
+        "feature_ids_array_path": "DataContainer/CellData/FeatureIds",
+        "feature_reference_c_axis_misorientations_array_name": "FeatureRefCAxisMisorientation",
+        "feature_stdev_c_axis_misorientations_array_name": "StdevCAxisMisorientation",
+        "image_geometry_path": "DataContainer",
+        "quats_array_path": "DataContainer/CellData/Quats"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindFeatureReferenceCAxisMisorientationsFilter",
+        "uuid": "16c487d2-8f99-4fb5-a4df-d3f70a8e6b25"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
         "rgb_array_path": "DataContainer/CellData/Feature Ids (Color)",
         "selected_data_array_path": "DataContainer/CellData/FeatureIds",
         "selected_preset": {
@@ -269,6 +288,7 @@
     {
       "args": {
         "conditional_array_path": "DataContainer/CellData/Mask Inverse",
+        "invert_mask": false,
         "remove_value": "0",
         "replace_value": "0",
         "selected_array_path": "DataContainer/CellData/Feature Ids (Color)",

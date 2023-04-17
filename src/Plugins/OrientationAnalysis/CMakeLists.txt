@@ -41,6 +41,7 @@ set(FilterList
   ExportGBCDTriangleDataFilter
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
+  FindFeatureReferenceCAxisMisorientationsFilter
   FindFeatureReferenceMisorientationsFilter
   FindGBCDFilter
   FindKernelAvgMisorientationsFilter
@@ -75,7 +76,6 @@ set(STUB_FILTERS
   FindCAxisLocations
   FindDistsToCharactGBs
   FindFeatureNeighborCAxisMisalignments
-  FindFeatureReferenceCAxisMisorientations
 
   FindGBCDMetricBased
   FindGBPDMetricBased
@@ -176,6 +176,7 @@ set(filter_algorithms
   ExportGBCDTriangleData
   FindAvgCAxes
   FindAvgOrientations
+  FindFeatureReferenceCAxisMisorientations
   FindFeatureReferenceMisorientations
   FindGBCD
   FindKernelAvgMisorientations
