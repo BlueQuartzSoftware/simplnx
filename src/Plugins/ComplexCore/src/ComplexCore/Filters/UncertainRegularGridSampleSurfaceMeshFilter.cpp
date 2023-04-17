@@ -53,16 +53,16 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{},
-                                                          complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
-  params.insert(std::make_unique<Int32Parameter>(k_XPoints_Key, "X Points", "", 0 #error Check default values));
-  params.insert(std::make_unique<Int32Parameter>(k_YPoints_Key, "Y Points", "", 0 #error Check default values));
-  params.insert(std::make_unique<Int32Parameter>(k_ZPoints_Key, "Z Points", "", 0 #error Check default values));
+                                                          complex::GetAllDataTypes()));
+  params.insert(std::make_unique<Int32Parameter>(k_XPoints_Key, "X Points", "", 0));
+  params.insert(std::make_unique<Int32Parameter>(k_YPoints_Key, "Y Points", "", 0));
+  params.insert(std::make_unique<Int32Parameter>(k_ZPoints_Key, "Z Points", "", 0));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "", std::vector<float32>{0.0F, 0.0F, 0.0F},
-                                                         std::vector<std::string>{"label1", "label2", "label3"} #error Check default values));
+                                                         std::vector<std::string>{"label1", "label2", "label3"}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"label1", "label2", "label3"} #error Check default values));
+      std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"label1", "label2", "label3"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Uncertainty_Key, "Uncertainty", "", std::vector<float32>{0.0F, 0.0F, 0.0F},
-                                                         std::vector<std::string>{"label1", "label2", "label3"} #error Check default values));
+                                                         std::vector<std::string>{"label1", "label2", "label3"}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerName_Key, "Data Container", "", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "", DataPath{}));

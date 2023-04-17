@@ -101,7 +101,6 @@ set(FilterList
   ResampleRectGridToImageGeomFilter
   RobustAutomaticThreshold
   RotateSampleRefFrameFilter
-  SampleSurfaceMeshSpecifiedPointsFilter
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
@@ -171,7 +170,6 @@ set(AlgorithmList
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
   ResampleRectGridToImageGeom
-  SampleSurfaceMeshSpecifiedPoints
   ScalarSegmentFeatures
   SharedFeatureFace
   SplitAttributeArray

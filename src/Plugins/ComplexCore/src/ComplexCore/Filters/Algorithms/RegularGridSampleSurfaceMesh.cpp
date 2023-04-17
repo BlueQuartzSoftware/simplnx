@@ -25,6 +25,18 @@ const std::atomic_bool& RegularGridSampleSurfaceMesh::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+VertexGeom RegularGridSampleSurfaceMesh::generatePoints()
+{
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+void RegularGridSampleSurfaceMesh::assignPoints(Int32Array& dataArray)
+{
+
+}
+
+// -----------------------------------------------------------------------------
 Result<> RegularGridSampleSurfaceMesh::operator()()
 {
   return {};

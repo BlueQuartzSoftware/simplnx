@@ -101,7 +101,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ResampleRectGridToImageGeomTest.cpp
   RobustAutomaticThresholdTest.cpp
   RotateSampleRefFrameTest.cpp
-  SampleSurfaceMeshSpecifiedPointsTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
