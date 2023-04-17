@@ -272,21 +272,23 @@ Result<> FileSystemPathParameter::validate(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 {
+  const std::string prefix = fmt::format("\n    Parameter Name: '{}'\n    Parameter Key: '{}'\n    Validation Error: ", humanName(), name());
+
   if(path.empty())
   {
-    return {nonstd::make_unexpected(std::vector<Error>{{-3001, "File System Path must not be empty"}})};
+    return complex::MakeErrorResult(-3001, fmt::format("{} File System Path must not be empty", prefix));
   }
 
   if(!m_acceptAllExtensions)
   {
     if(!path.has_extension())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-3002, "File System Path must include a file extension"}})};
+      return {nonstd::make_unexpected(std::vector<Error>{{-3002, fmt::format("{} File System Path must include a file extension", prefix)}})};
     }
     std::string lowerExtension = complex::StringUtilities::toLower(path.extension().string());
     if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
     {
-      return {nonstd::make_unexpected(std::vector<Error>{{-3003, fmt::format("File extension '{}' is not a valid file extension", path.extension().string())}})};
+      return {nonstd::make_unexpected(std::vector<Error>{{-3003, fmt::format("{} File extension '{}' is not a valid file extension", prefix, path.extension().string())}})};
     }
   }
 

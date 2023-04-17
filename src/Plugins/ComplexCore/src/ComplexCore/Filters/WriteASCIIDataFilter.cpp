@@ -7,6 +7,7 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/OStreamUtilities.hpp"
 
 #include <filesystem>
@@ -170,6 +171,13 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
     auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+    // Make sure any directory path is also available as the user may have just typed
+    // in a path without actually creating the full path
+    Result<> createDirectoriesResult = complex::CreateOutputDirectories(outputPath.parent_path());
+    if(createDirectoriesResult.invalid())
+    {
+      return createDirectoriesResult;
+    }
 
     // Create the output file
     std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);

@@ -431,7 +431,7 @@
     },
     {
       "args": {
-        "Output_path": "Data/Output/fw-ar-IF1-avtr12-corr/",
+        "output_path": "Data/Output/fw-ar-IF1-avtr12-corr/EqDiamHistogram.csv",
         "delimiter": 2,
         "file_extension": ".csv",
         "file_name": "EqDiamHistogram",

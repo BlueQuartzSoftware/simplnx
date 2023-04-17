@@ -101,6 +101,7 @@
     {
       "args": {
         "conditional_array_path": "DataContainer/Cell Data/Mask",
+        "invert_mask": false,
         "remove_value": "0",
         "replace_value": "0",
         "selected_array_path": "DataContainer/Cell Data/Confidence Index",
@@ -136,12 +137,12 @@
     },
     {
       "args": {
-        "Output_path": "Data/Output/Statistics/",
         "delimiter": 2,
         "file_extension": ".csv",
-        "file_name": "CI_Histogram",
         "includes": 1,
         "max_val_per_line": 0,
+        "output_dir": "Data/Output/OrientationAnalysis/",
+        "output_path": "Data/Output/OrientationAnalysis/Test/CI_Histogram.csv",
         "output_style": 1,
         "selected_data_array_paths": [
           "DataContainer/Statistics/Confidence Index Histogram"
