@@ -94,6 +94,7 @@ set(FilterList
   RenameDataObject
   ReplaceElementAttributesWithNeighborValuesFilter
   ResampleImageGeomFilter
+  ResampleRectGridToImageGeomFilter
   RobustAutomaticThreshold
   RotateSampleRefFrameFilter
   ScalarSegmentFeaturesFilter
@@ -158,6 +159,7 @@ set(AlgorithmList
   RemoveFlaggedFeatures
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
+  ResampleRectGridToImageGeom
   ScalarSegmentFeatures
   SharedFeatureFace
   SplitAttributeArray

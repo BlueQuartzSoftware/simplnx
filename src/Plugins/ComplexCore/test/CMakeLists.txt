@@ -92,6 +92,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RenameDataObjectTest.cpp
   ReplaceElementAttributesWithNeighborValuesTest.cpp
   ResampleImageGeomTest.cpp
+  ResampleRectGridToImageGeomTest.cpp
   RobustAutomaticThresholdTest.cpp
   RotateSampleRefFrameTest.cpp
   ScalarSegmentFeaturesFilterTest.cpp
