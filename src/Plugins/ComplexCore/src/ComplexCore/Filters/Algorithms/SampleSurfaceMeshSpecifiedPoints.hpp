@@ -7,19 +7,7 @@
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  SampleSurfaceMeshSpecifiedPointsInputValues inputValues;
-
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
-  inputValues.OutputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFilePath_Key);
-
-  return SampleSurfaceMeshSpecifiedPoints(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Utilities/SampleSurfaceMesh.hpp"
 
 namespace complex
 {
@@ -29,7 +17,6 @@ struct COMPLEXCORE_EXPORT SampleSurfaceMeshSpecifiedPointsInputValues
   DataPath SurfaceMeshFaceLabelsArrayPath;
   FileSystemPathParameter::ValueType InputFilePath;
   FileSystemPathParameter::ValueType OutputFilePath;
-
 };
 
 /**
@@ -37,11 +24,11 @@ struct COMPLEXCORE_EXPORT SampleSurfaceMeshSpecifiedPointsInputValues
  * @brief This filter replaces values in the target array with a user specified value
  * where a bool mask array specifies.
  */
-
-class COMPLEXCORE_EXPORT SampleSurfaceMeshSpecifiedPoints
+class COMPLEXCORE_EXPORT SampleSurfaceMeshSpecifiedPoints : public SampleSurfaceMesh
 {
 public:
-  SampleSurfaceMeshSpecifiedPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SampleSurfaceMeshSpecifiedPointsInputValues* inputValues);
+  SampleSurfaceMeshSpecifiedPoints(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                   SampleSurfaceMeshSpecifiedPointsInputValues* inputValues);
   ~SampleSurfaceMeshSpecifiedPoints() noexcept;
 
   SampleSurfaceMeshSpecifiedPoints(const SampleSurfaceMeshSpecifiedPoints&) = delete;

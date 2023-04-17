@@ -1,4 +1,4 @@
-#include "AlignSections.hpp"
+#include "SampleSurfaceMesh.hpp"
 
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
@@ -11,99 +11,166 @@ using namespace complex;
 
 namespace
 {
-// -----------------------------------------------------------------------------
-template <typename T>
-class AlignSectionsTransferDataImpl
+class SampleSurfaceMeshImplByPoints
 {
-public:
-  AlignSectionsTransferDataImpl() = delete;
-  AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default;     // Copy Constructor Default Implemented
-  AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&) noexcept = default; // Move Constructor Default Implemented
+  SampleSurfaceMesh* m_Filter = nullptr;
+  TriangleGeom::Pointer m_Faces;
+  Int32Int32DynamicListArray::Pointer m_FaceIds;
+  VertexGeom::Pointer m_FaceBBs;
+  VertexGeom::Pointer m_Points;
+  size_t m_FeatureId = 0;
+  int32_t* m_PolyIds = nullptr;
 
-  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
+public:
+  SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, TriangleGeom::Pointer faces, Int32Int32DynamicListArray::Pointer faceIds, VertexGeom::Pointer faceBBs, VertexGeom::Pointer points,
+                                size_t featureId, int32_t* polyIds)
   : m_Filter(filter)
-  , m_Dims(std::move(dims))
-  , m_Xshifts(std::move(xShifts))
-  , m_Yshifts(std::move(yShifts))
-  , m_DataArray(static_cast<DataArray<T>&>(dataArray))
+  , m_Faces(faces)
+  , m_FaceIds(faceIds)
+  , m_FaceBBs(faceBBs)
+  , m_Points(points)
+  , m_FeatureId(featureId)
+  , m_PolyIds(polyIds)
   {
   }
+  virtual ~SampleSurfaceMeshImplByPoints() = default;
 
-  ~AlignSectionsTransferDataImpl() = default;
-
-  AlignSectionsTransferDataImpl& operator=(const AlignSectionsTransferDataImpl&) = delete; // Copy Assignment Not Implemented
-  AlignSectionsTransferDataImpl& operator=(AlignSectionsTransferDataImpl&&) = delete;      // Move Assignment Not Implemented
-
-  void operator()() const
+  void checkPoints(size_t start, size_t end) const
   {
-    T var = static_cast<T>(0);
+    float radius = 0.0f;
+    float distToBoundary = 0.0f;
+    int64_t numPoints = m_Points->getNumberOfVertices();
+    std::array<float, 3> lowerLeft = {0.0F, 0.0F, 0.0F};
+    std::array<float, 3> upperRight = {0.0F, 0.0F, 0.0F};
+    float* point = nullptr;
+    char code = ' ';
 
-    auto start = std::chrono::steady_clock::now();
+    size_t iter = m_FeatureId;
 
-    for(size_t i = 1; i < m_Dims[2]; i++)
+    // find bounding box for current feature
+    GeometryMath::FindBoundingBoxOfFaces(m_Faces.get(), m_FaceIds->getElementList(iter), lowerLeft.data(), upperRight.data());
+    GeometryMath::FindDistanceBetweenPoints(lowerLeft.data(), upperRight.data(), radius);
+    int64_t pointsVisited = 0;
+    // check points in vertex array to see if they are in the bounding box of the feature
+    for(int64_t i = static_cast<int64_t>(start); i < static_cast<int64_t>(end); i++)
     {
-      auto now = std::chrono::steady_clock::now();
-      // Only send updates every 1 second
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+      point = m_Points->getVertexPointer(i);
+      if(m_PolyIds[i] == 0 && GeometryMath::PointInBox(point, lowerLeft.data(), upperRight.data()))
       {
-        std::string message = fmt::format("Processing {}: {}% completed", m_DataArray.getName(), static_cast<int32>(100 * (static_cast<float>(i) / static_cast<float>(m_Dims[2]))));
-        m_Filter->updateProgress(message);
-        start = std::chrono::steady_clock::now();
+        code = GeometryMath::PointInPolyhedron(m_Faces.get(), m_FaceIds->getElementList(iter), m_FaceBBs.get(), point, lowerLeft.data(), upperRight.data(), radius, distToBoundary);
+        if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
+        {
+          m_PolyIds[i] = iter;
+        }
       }
+      pointsVisited++;
+
+      // Send some feedback
+      if(pointsVisited % 1000 == 0)
+      {
+        m_Filter->sendThreadSafeProgressMessage(m_FeatureId, 1000, numPoints);
+      }
+      // Check for the filter being cancelled.
       if(m_Filter->getCancel())
       {
         return;
       }
-      size_t slice = (m_Dims[2] - 1) - i;
-      for(size_t yIndex = 0; yIndex < m_Dims[1]; yIndex++)
+    }
+  }
+
+  void operator()(const Range& range) const
+  {
+    checkPoints(range.min(), range.max());
+  }
+
+private:
+  float radius = 0.0f;
+  float distToBoundary = 0.0f;
+  int64_t numPoints = m_Points->getNumberOfVertices();
+  std::array<float, 3> lowerLeft = {0.0F, 0.0F, 0.0F};
+  std::array<float, 3> upperRight = {0.0F, 0.0F, 0.0F};
+  float* point = nullptr;
+  char code = ' ';
+};
+
+// -----------------------------------------------------------------------------
+class SampleSurfaceMeshImpl
+{
+public:
+  SampleSurfaceMeshImpl() = delete;
+  SampleSurfaceMeshImpl(const SampleSurfaceMeshImpl&) = default;     // Copy Constructor Default Implemented
+  SampleSurfaceMeshImpl(SampleSurfaceMeshImpl&&) noexcept = default; // Move Constructor Default Implemented
+
+  SampleSurfaceMeshImpl(SampleSurfaceMesh* filter, TriangleGeom::Pointer faces, Int32Int32DynamicListArray::Pointer faceIds, VertexGeom::Pointer faceBBs, VertexGeom::Pointer points, int32_t* polyIds)
+  : m_Filter(filter)
+  , m_Faces(faces)
+  , m_FaceIds(faceIds)
+  , m_FaceBBs(faceBBs)
+  , m_Points(points)
+  , m_PolyIds(polyIds)
+  {
+  }
+
+  ~SampleSurfaceMeshImpl() = default;
+
+  SampleSurfaceMeshImpl& operator=(const SampleSurfaceMeshImpl&) = delete; // Copy Assignment Not Implemented
+  SampleSurfaceMeshImpl& operator=(SampleSurfaceMeshImpl&&) = delete;      // Move Assignment Not Implemented
+
+  void checkPoints(usize start, usize end) const
+  {
+    float radius = 0.0f;
+    float distToBoundary = 0.0f;
+    int64_t numPoints = m_Points->getNumberOfVertices();
+    std::array<float, 3> lowerLeft = {0.0F, 0.0F, 0.0F};
+    std::array<float, 3> upperRight = {0.0F, 0.0F, 0.0F};
+    float* point = nullptr;
+    char code = ' ';
+
+    for(size_t iter = start; iter < end; iter++)
+    {
+      // find bounding box for current feature
+      GeometryMath::FindBoundingBoxOfFaces(m_Faces.get(), m_FaceIds->getElementList(iter), lowerLeft.data(), upperRight.data());
+      GeometryMath::FindDistanceBetweenPoints(lowerLeft.data(), upperRight.data(), radius);
+
+      // check points in vertex array to see if they are in the bounding box of the feature
+      for(int64_t i = 0; i < numPoints; i++)
       {
-        for(size_t xIndex = 0; xIndex < m_Dims[0]; xIndex++)
+        // Check for the filter being cancelled.
+        if(m_Filter->getCancel())
         {
-          int64_t xspot = 0;
-          int64_t yspot = 0;
-          if(m_Yshifts[i] >= 0)
+          return;
+        }
+
+        point = m_Points->getVertexPointer(i);
+        if(m_PolyIds[i] == 0 && GeometryMath::PointInBox(point, lowerLeft.data(), upperRight.data()))
+        {
+          code = GeometryMath::PointInPolyhedron(m_Faces.get(), m_FaceIds->getElementList(iter), m_FaceBBs.get(), point, lowerLeft.data(), upperRight.data(), radius, distToBoundary);
+          if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
           {
-            yspot = static_cast<int64_t>(yIndex);
-          }
-          else if(m_Yshifts[i] < 0)
-          {
-            yspot = static_cast<int64_t>(m_Dims[1]) - 1 - static_cast<int64_t>(yIndex);
-          }
-          if(m_Xshifts[i] >= 0)
-          {
-            xspot = static_cast<int64_t>(xIndex);
-          }
-          else if(m_Xshifts[i] < 0)
-          {
-            xspot = static_cast<int64_t>(m_Dims[0]) - 1 - static_cast<int64_t>(xIndex);
-          }
-          int64_t newPosition = (slice * m_Dims[0] * m_Dims[1]) + (yspot * m_Dims[0]) + xspot;
-          int64_t currentPosition = (slice * m_Dims[0] * m_Dims[1]) + ((yspot + m_Yshifts[i]) * m_Dims[0]) + (xspot + m_Xshifts[i]);
-          if((yspot + m_Yshifts[i]) >= 0 && (yspot + m_Yshifts[i]) <= static_cast<int64_t>(m_Dims[1]) - 1 && (xspot + m_Xshifts[i]) >= 0 &&
-             (xspot + m_Xshifts[i]) <= static_cast<int64_t>(m_Dims[0]) - 1)
-          {
-            m_DataArray.copyTuple(static_cast<size_t>(currentPosition), static_cast<size_t>(newPosition));
-          }
-          if((yspot + m_Yshifts[i]) < 0 || (yspot + m_Yshifts[i]) > static_cast<int64_t>(m_Dims[1] - 1) || (xspot + m_Xshifts[i]) < 0 || (xspot + m_Xshifts[i]) > static_cast<int64_t>(m_Dims[0]) - 1)
-          {
-            m_DataArray.initializeTuple(newPosition, var);
+            m_PolyIds[i] = iter;
           }
         }
       }
     }
   }
 
+  void operator()(const Range& range) const
+  {
+    checkPoints(range.min(), range.max());
+  }
+
 private:
-  AlignSections* m_Filter = nullptr;
-  SizeVec3 m_Dims;
-  std::vector<int64_t> m_Xshifts;
-  std::vector<int64_t> m_Yshifts;
-  complex::DataArray<T>& m_DataArray;
+  SampleSurfaceMesh* m_Filter = nullptr;
+  TriangleGeom::Pointer m_Faces;
+  Int32Int32DynamicListArray::Pointer m_FaceIds;
+  VertexGeom::Pointer m_FaceBBs;
+  VertexGeom::Pointer m_Points;
+  int32_t* m_PolyIds = nullptr;
 };
 } // namespace
 
 // -----------------------------------------------------------------------------
-AlignSections::AlignSections(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
+SampleSurfaceMesh::SampleSurfaceMesh(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(data)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
@@ -111,136 +178,199 @@ AlignSections::AlignSections(DataStructure& data, const std::atomic_bool& should
 }
 
 // -----------------------------------------------------------------------------
-AlignSections::~AlignSections() noexcept = default;
+SampleSurfaceMesh::~SampleSurfaceMesh() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& AlignSections::getCancel()
+const std::atomic_bool& SampleSurfaceMesh::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-void AlignSections::updateProgress(const std::string& progMessage)
+void SampleSurfaceMesh::updateProgress(const std::string& progMessage)
 {
   m_MessageHandler({IFilter::Message::Type::Info, progMessage});
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::execute(const SizeVec3& udims)
+Result<> SampleSurfaceMesh::execute(const SizeVec3& udims)
 {
-  std::array<int64, 3> dims = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
-  std::vector<int64_t> xShifts(dims[2], 0);
-  std::vector<int64_t> yShifts(dims[2], 0);
+  DataContainer::Pointer sm = getDataContainerArray()->getDataContainer(m_SurfaceMeshFaceLabelsArrayPath.getDataContainerName());
+  SIMPL_RANDOMNG_NEW()
 
-  // Find the voxel shifts that need to happen
-  Result<> foundShiftsResults = findShifts(xShifts, yShifts);
-  if(foundShiftsResults.invalid())
+  TriangleGeom::Pointer triangleGeom = sm->getGeometryAs<TriangleGeom>();
+
+  // pull down faces
+  int64_t numFaces = m_SurfaceMeshFaceLabelsPtr.lock()->getNumberOfTuples();
+
+  // create array to hold bounding vertices for each face
+  FloatArrayType::Pointer llPtr = FloatArrayType::CreateArray(3, std::string("_INTERNAL_USE_ONLY_Lower_Left"), true);
+  FloatArrayType::Pointer urPtr = FloatArrayType::CreateArray(3, std::string("_INTERNAL_USE_ONLY_Upper_Right"), true);
+  float* ll = llPtr->getPointer(0);
+  float* ur = urPtr->getPointer(0);
+  VertexGeom::Pointer faceBBs = VertexGeom::CreateGeometry(2 * numFaces, "_INTERNAL_USE_ONLY_faceBBs");
+
+  notifyStatusMessage("Counting number of Features...");
+
+  // walk through faces to see how many features there are
+  int32_t g1 = 0, g2 = 0;
+  int32_t maxFeatureId = 0;
+  for(int64_t i = 0; i < numFaces; i++)
   {
-    return foundShiftsResults;
+    g1 = m_SurfaceMeshFaceLabels[2 * i];
+    g2 = m_SurfaceMeshFaceLabels[2 * i + 1];
+    if(g1 > maxFeatureId)
+    {
+      maxFeatureId = g1;
+    }
+    if(g2 > maxFeatureId)
+    {
+      maxFeatureId = g2;
+    }
   }
 
+  // Check for user canceled flag.
   if(getCancel())
   {
-    return {};
+    return;
   }
 
-  // Now Adjust the actual DataArrays
-  std::vector<DataPath> selectedCellArrays = getSelectedDataPaths();
+  // add one to account for feature 0
+  int32_t numFeatures = maxFeatureId + 1;
 
-  ParallelTaskAlgorithm taskRunner;
+  // create a dynamic list array to hold face lists
+  Int32Int32DynamicListArray::Pointer faceLists = Int32Int32DynamicListArray::New();
+  std::vector<int32_t> linkCount(numFeatures, 0);
 
-  for(const auto& cellArrayPath : selectedCellArrays)
+  // fill out lists with number of references to cells
+  Int32ArrayType::Pointer linkLocPtr = Int32ArrayType::CreateArray(numFaces, std::string("_INTERNAL_USE_ONLY_cell refs"), true);
+  linkLocPtr->initializeWithZeros();
+  int32_t* linkLoc = linkLocPtr->getPointer(0);
+
+  notifyStatusMessage("Counting number of triangle faces per feature ...");
+
+  // traverse data to determine number of faces belonging to each feature
+  for(int64_t i = 0; i < numFaces; i++)
   {
-    if(m_ShouldCancel)
+    g1 = m_SurfaceMeshFaceLabels[2 * i];
+    g2 = m_SurfaceMeshFaceLabels[2 * i + 1];
+    if(g1 > 0)
     {
-      return {};
+      linkCount[g1]++;
     }
-
-    m_MessageHandler(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
-    auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-
-    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
+    if(g2 > 0)
+    {
+      linkCount[g2]++;
+    }
   }
-  // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-  taskRunner.wait();
+
+  // Check for user canceled flag.
+  if(getCancel())
+  {
+    return;
+  }
+
+  // now allocate storage for the faces
+  faceLists->allocateLists(linkCount);
+
+  notifyStatusMessage("Allocating triangle faces per feature ...");
+
+  // traverse data again to get the faces belonging to each feature
+  for(int64_t i = 0; i < numFaces; i++)
+  {
+    g1 = m_SurfaceMeshFaceLabels[2 * i];
+    g2 = m_SurfaceMeshFaceLabels[2 * i + 1];
+    if(g1 > 0)
+    {
+      faceLists->insertCellReference(g1, (linkLoc[g1])++, i);
+    }
+    if(g2 > 0)
+    {
+      faceLists->insertCellReference(g2, (linkLoc[g2])++, i);
+    }
+    // find bounding box for each face
+    GeometryMath::FindBoundingBoxOfFace(triangleGeom.get(), i, ll, ur);
+    faceBBs->setCoords(2 * i, ll);
+    faceBBs->setCoords(2 * i + 1, ur);
+  }
+
+  // Check for user canceled flag.
+  if(getCancel())
+  {
+    return;
+  }
+
+  notifyStatusMessage("Vertex Geometry generating sampling points");
+
+  // generate the list of sampling points from subclass
+  VertexGeom::Pointer points = generate_points();
+  if(getErrorCode() < 0 || nullptr == points.get())
+  {
+    return;
+  }
+  int64_t numPoints = points->getNumberOfVertices();
+
+  // create array to hold which polyhedron (feature) each point falls in
+  Int32ArrayType::Pointer iArray = Int32ArrayType::NullPointer();
+  iArray = Int32ArrayType::CreateArray(numPoints, std::string("_INTERNAL_USE_ONLY_polyhedronIds"), true);
+  iArray->initializeWithZeros();
+  int32_t* polyIds = iArray->getPointer(0);
+
+  notifyStatusMessage("Sampling triangle geometry ...");
+
+  // C++11 RIGHT HERE....
+  int32_t nthreads = static_cast<int32_t>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
+  // If the number of features is larger than the number of cores to do the work then parallelize over the number of features
+  // otherwise parallelize over the number of triangle points.
+  if(numFeatures > nthreads)
+  {
+#ifdef SIMPL_USE_PARALLEL_ALGORITHMS
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, numFeatures), SampleSurfaceMeshImpl(this, triangleGeom, faceLists, faceBBs, points, polyIds), tbb::auto_partitioner());
+#else
+    SampleSurfaceMeshImpl serial(this, triangleGeom, faceLists, faceBBs, points, polyIds);
+    serial.checkPoints(0, numFeatures);
+#endif
+  }
+  else
+  {
+    for(int featureId = 0; featureId < numFeatures; featureId++)
+    {
+      m_NumCompleted = 0;
+      m_StartMillis = QDateTime::currentMSecsSinceEpoch();
+      m_Millis = m_StartMillis;
+      size_t numPoints = points->getNumberOfVertices();
+
+#ifdef SIMPL_USE_PARALLEL_ALGORITHMS
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, numPoints), SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists, faceBBs, points, featureId, polyIds), tbb::auto_partitioner());
+
+#else
+      SampleSurfaceMeshImplByPoints serial(this, triangleGeom, faceLists, faceBBs, points, featureId, polyIds);
+      serial.checkPoints(0, numPoints);
+#endif
+    }
+  }
+  assign_points(iArray);
+
+  notifyStatusMessage("Complete");
 
   return {};
 }
 
 // -----------------------------------------------------------------------------
-Result<> AlignSections::readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const
+void SampleSurfaceMesh::sendThreadSafeProgressMessage(int featureId, size_t numCompleted, size_t totalFeatures)
 {
-  std::ifstream inFile;
-  inFile.open(file);
-
-  int64 slice = 0;
-  int64 newXShift = 0, newYShift = 0;
-  // These are ignored from the input file since DREAM.3D wrote the file
-  int64 slice2 = 0;
-  float32 xShift = 0.0f;
-  float32 yShift = 0.0f;
-
-  for(int64 iter = 1; iter < zDim; iter++)
+  static std::mutex mutex;
+  std::lock_guard<std::mutex> lock(mutex);
+  qint64 currentMillis = QDateTime::currentMSecsSinceEpoch();
+  m_NumCompleted = m_NumCompleted + numCompleted;
+  if(currentMillis - m_Millis > 1000)
   {
-    std::string line;
-    std::getline(inFile, line);
-    std::istringstream iss(line);
-    std::vector<std::string> tokens;
-    std::string token;
-    while(iss >> token)
-    {
-      tokens.push_back(token);
-    }
-    if(tokens.size() < 6)
-    {
-      std::string message = fmt::format(
-          "Error reading line {} of Input Shifts File with file path '{}'. 6 columns in the format <Slice_A,Slice_B,New X Shift,New Y Shift,X Shift, Y Shift> are required but only {} were found",
-          iter, file.string(), tokens.size());
-      inFile.close();
-      return MakeErrorResult(-84750, message);
-    }
-    std::istringstream temp(line);
-    iss.swap(temp); // reset the stream to beginning so we can read in the formatted tokens
-    iss >> slice >> slice2 >> newXShift >> newYShift >> xShift >> yShift;
-    xShifts[iter] = xShifts[iter - 1] + newXShift;
-    yShifts[iter] = yShifts[iter - 1] + newYShift;
+    float inverseRate = static_cast<float>(currentMillis - m_Millis) / static_cast<float>(m_NumCompleted - m_LastCompletedPoints);
+    qint64 remainMillis = inverseRate * (totalFeatures - m_NumCompleted);
+    QString ss = QObject::tr("Feature %3 | Points Completed: %1 of %2").arg(m_NumCompleted).arg(totalFeatures).arg(featureId);
+    ss = ss + QObject::tr(" || Est. Time Remain: %1").arg(DREAM3D::convertMillisToHrsMinSecs(remainMillis));
+    notifyStatusMessage(ss);
+    m_Millis = QDateTime::currentMSecsSinceEpoch();
+    m_LastCompletedPoints = m_NumCompleted;
   }
-  inFile.close();
-  return {};
-}
-
-// -----------------------------------------------------------------------------
-Result<> AlignSections::readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const
-{
-  int64 slice = 0;
-  int64 newXShift = 0, newYShift = 0;
-
-  std::ifstream inFile;
-  inFile.open(file);
-  for(int64 iter = 1; iter < zDim; iter++)
-  {
-    std::string line;
-    std::getline(inFile, line);
-    std::istringstream iss(line);
-    std::vector<std::string> tokens;
-    std::string token;
-    while(iss >> token)
-    {
-      tokens.push_back(token);
-    }
-    if(tokens.size() < 3)
-    {
-      std::string message = fmt::format("Error reading line {} of Input Shifts File with file path '{}'. 3 columns in the format <Slice_Number,X Shift,Y Shift> are required but only {} were found",
-                                        iter, file.string(), tokens.size());
-      inFile.close();
-      return MakeErrorResult(-84750, message);
-    }
-    std::istringstream temp(line);
-    iss.swap(temp); // reset the stream to beginning so we can read in the formatted tokens
-    inFile >> slice >> newXShift >> newYShift;
-    xShifts[iter] = xShifts[iter - 1] + newXShift;
-    yShifts[iter] = yShifts[iter - 1] + newYShift;
-  }
-  inFile.close();
-  return {};
 }

@@ -5,36 +5,15 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  RegularGridSampleSurfaceMeshInputValues inputValues;
-
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.Dimensions = filterArgs.value<VectorInt32Parameter::ValueType>(k_Dimensions_Key);
-  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  inputValues.LengthUnit = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
-  inputValues.BoxDimensions = filterArgs.value<<<<NOT_IMPLEMENTED>>>>(k_BoxDimensions_Key);
-  inputValues.DataContainerName = filterArgs.value<DataPath>(k_DataContainerName_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  inputValues.FeatureIdsArrayName = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
-
-  return RegularGridSampleSurfaceMesh(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/SampleSurfaceMesh.hpp"
 
 namespace complex
 {
-
 struct COMPLEXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
 {
   DataPath SurfaceMeshFaceLabelsArrayPath;
@@ -46,7 +25,6 @@ struct COMPLEXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
   DataPath FeatureIdsArrayName;
-
 };
 
 /**
@@ -54,8 +32,7 @@ struct COMPLEXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
  * @brief This filter replaces values in the target array with a user specified value
  * where a bool mask array specifies.
  */
-
-class COMPLEXCORE_EXPORT RegularGridSampleSurfaceMesh
+class COMPLEXCORE_EXPORT RegularGridSampleSurfaceMesh : public SampleSurfaceMesh
 {
 public:
   RegularGridSampleSurfaceMesh(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RegularGridSampleSurfaceMeshInputValues* inputValues);
@@ -76,5 +53,4 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
-
 } // namespace complex

@@ -10,19 +10,16 @@
 
 namespace complex
 {
-
-class IGridGeometry;
-
-class COMPLEX_EXPORT AlignSections
+class COMPLEX_EXPORT SampleSurfaceMesh
 {
 public:
-  AlignSections(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  virtual ~AlignSections() noexcept;
+  SampleSurfaceMesh(DataStructure& data, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  virtual ~SampleSurfaceMesh() noexcept;
 
-  AlignSections(const AlignSections&) = delete;            // Copy Constructor Not Implemented
-  AlignSections(AlignSections&&) = delete;                 // Move Constructor Not Implemented
-  AlignSections& operator=(const AlignSections&) = delete; // Copy Assignment Not Implemented
-  AlignSections& operator=(AlignSections&&) = delete;      // Move Assignment Not Implemented
+  SampleSurfaceMesh(const SampleSurfaceMesh&) = delete;            // Copy Constructor Not Implemented
+  SampleSurfaceMesh(SampleSurfaceMesh&&) = delete;                 // Move Constructor Not Implemented
+  SampleSurfaceMesh& operator=(const SampleSurfaceMesh&) = delete; // Copy Assignment Not Implemented
+  SampleSurfaceMesh& operator=(SampleSurfaceMesh&&) = delete;      // Move Assignment Not Implemented
 
   /**
    * @brief execute
@@ -36,40 +33,11 @@ public:
   void updateProgress(const std::string& progMessage);
 
 protected:
-  /**
-   * @brief This should be overridden in the subclass.
-   * @param xShifts
-   * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
-   */
-  virtual Result<> findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) = 0;
-
-  virtual std::vector<DataPath> getSelectedDataPaths() const = 0;
-
-  /**
-   * @brief This will read in a shifts file written by another DREAM3D alignment filter and populate the shifts parameters with the values as int64 numbers.
-   * @param file The DREAM3D formatted alignment file to read
-   * @param zDim The z dimension of the geometry being shifted
-   * @param xShifts
-   * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
-   */
-  Result<> readDream3dShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const;
-
-  /**
-   * @brief This will read in a shifts file defined by the user and populate the shifts parameters with the values as int64 numbers.
-   * @param file The user formatted alignment file to read
-   * @param zDim The z dimension of the geometry being shifted
-   * @param xShifts
-   * @param yShifts
-   * @return Whether or not the x and y shifts were successfully found
-   */
-  Result<> readUserShiftsFile(const std::filesystem::path& file, int64 zDim, std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) const;
+  void sendThreadSafeProgressMessage(int featureId, size_t numCompleted, size_t totalFeatures);
 
 private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
-
 } // namespace complex
