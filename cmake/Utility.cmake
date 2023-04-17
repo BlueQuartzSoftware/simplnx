@@ -244,7 +244,7 @@ function(create_pipeline_tests)
     string(REPLACE "/" "-" test_file_name "${test_file_name}")
 
     add_test(NAME "${ARGS_PLUGIN_NAME} ${padding}${test_index} ${test_file_name}"
-            COMMAND "${PIPELINE_RUNNER_NAME}$<$<CONFIG:Debug>:${PIPELINE_RUNNER_DEBUG}> --execute ${pipeline_file_path}"
+            COMMAND "${PIPELINE_RUNNER_NAME}$<$<CONFIG:Debug>:${PIPELINE_RUNNER_DEBUG}>" --execute ${pipeline_file_path}
             #CONFIGURATIONS Debug
             WORKING_DIRECTORY ${TEST_WORKING_DIR})
   endforeach()
