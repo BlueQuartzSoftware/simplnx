@@ -39,8 +39,8 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_OutputStyle_Key = "output_style";
-  static inline constexpr StringLiteral k_OutputPath_Key = "Output_path";
-  static inline constexpr StringLiteral k_FileName_Key = "file_name";
+  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static inline constexpr StringLiteral k_OutputDir_Key = "output_dir";
   static inline constexpr StringLiteral k_FileExtension_Key = "file_extension";
   static inline constexpr StringLiteral k_MaxValPerLine_Key = "max_val_per_line";
   static inline constexpr StringLiteral k_Delimiter_Key = "delimiter";

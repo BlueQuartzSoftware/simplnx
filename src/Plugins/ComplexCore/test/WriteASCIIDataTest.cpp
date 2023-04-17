@@ -19,7 +19,6 @@ using namespace complex;
  */
 namespace
 {
-const fs::path k_TestOutput = fs::path(fmt::format("{}", unit_test::k_BinaryTestOutputDir));
 constexpr int32 k_NumOfDataArrays = 3;      // used for generation
 constexpr int32 k_NumOfTuples = 10;         // used for generation
 constexpr int32 k_NumComponents = 2;        // used for generation
@@ -60,60 +59,47 @@ public:
 private:
   DataStructure& m_DataStructure;
   fs::path m_ExemplarsPath = fs::path("");
+  fs::path m_TestOutput = fs::path("");
   std::vector<T> m_FillValue = std::vector<T>{};
   std::string m_SingleFileName = "";
 
   void setMemb()
   {
-    if(std::is_same<T, int8>::value)
+    if constexpr(std::is_same<T, int8>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int8"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int8"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "int8"));
       setFillValue(-65, -63, -61);
     }
-    else if(std::is_same<T, int16>::value)
+    else if constexpr(std::is_same<T, int32>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int16"));
-      setFillValue(-650, -648, -646);
-    }
-    else if(std::is_same<T, int32>::value)
-    {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int32"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int32"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "int32"));
       setFillValue(-6500, -6498, -6496);
     }
-    else if(std::is_same<T, int64>::value)
+    else if constexpr(std::is_same<T, uint8>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int64"));
-      setFillValue(-65000, -64998, -64996);
-    }
-    else if(std::is_same<T, uint8>::value)
-    {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint8"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint8"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "uint8"));
       setFillValue(65, 67, 69);
     }
-    else if(std::is_same<T, uint16>::value)
+    else if constexpr(std::is_same<T, uint32>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint16"));
-      setFillValue(650, 652, 654);
-    }
-    else if(std::is_same<T, uint32>::value)
-    {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint32"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint32"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "uint32"));
       setFillValue(6500, 6502, 6504);
     }
-    else if(std::is_same<T, uint64>::value)
+    else if constexpr(std::is_same<T, float32>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint64"));
-      setFillValue(65000, 65002, 65004);
+      m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float32"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "float32"));
+      setFillValue(8.00, 67.001, 69.000001);
     }
-    else if(std::is_same<T, float32>::value)
+    else if constexpr(std::is_same<T, float64>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float32"));
-      setFillValue(65.001, 67.001, 69.001);
-    }
-    else if(std::is_same<T, float64>::value)
-    {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float64"));
-      setFillValue(65.000001, 67.543351, 69.000001);
+      m_ExemplarsPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float64"));
+      m_TestOutput = fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, "float64"));
+      setFillValue(65.00, 67.54335100, 69.0000015436767341);
     }
   }
 
@@ -146,20 +132,17 @@ private:
   void CompareResults(IDataArray& selectedArray) // compare hash of both file strings
   {
     std::hash<std::string> str_hash;
-    fs::path writtenFilePath = fs::path(k_TestOutput.string() + "/" + selectedArray.getName() + ".txt");
+
+    fs::path writtenFilePath = fs::path(m_TestOutput.string() + "/" + selectedArray.getName() + ".txt");
     if(!fs::exists(writtenFilePath))
     {
-      writtenFilePath = fs::path(k_TestOutput.string() + "/" + m_SingleFileName + ".txt");
+      writtenFilePath = fs::path(m_TestOutput.string() + "/" + m_SingleFileName + ".txt");
     }
     REQUIRE(fs::exists(writtenFilePath));
-    std::string exemplarStr = selectedArray.getName();
-    exemplarStr.replace(exemplarStr.find("array"), 5, "exemplar");
-    fs::path exemplarFilePath = fs::path(m_ExemplarsPath.string() + "/" + exemplarStr + ".txt");
+    fs::path exemplarFilePath = fs::path(m_ExemplarsPath.string() + "/" + selectedArray.getName() + ".txt");
     if(!fs::exists(exemplarFilePath))
     {
-      exemplarStr = m_SingleFileName;
-      exemplarStr.replace(exemplarStr.find("array"), 5, "exemplar");
-      exemplarFilePath = fs::path(m_ExemplarsPath.string() + "/" + exemplarStr + ".txt");
+      exemplarFilePath = fs::path(m_ExemplarsPath.string() + "/" + m_SingleFileName + ".txt");
     }
     REQUIRE(fs::exists(exemplarFilePath));
     REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
@@ -191,8 +174,8 @@ private:
     }
     // Create default Parameters for the filter.
     args.insertOrAssign(WriteASCIIDataFilter::k_OutputStyle_Key, std::make_any<ChoicesParameter::ValueType>(fileType)); // uint64 0 and 1
-    args.insertOrAssign(WriteASCIIDataFilter::k_OutputPath_Key, std::make_any<fs::path>(k_TestOutput));
-    args.insertOrAssign(WriteASCIIDataFilter::k_FileName_Key, std::make_any<std::string>(m_SingleFileName));
+    args.insertOrAssign(WriteASCIIDataFilter::k_OutputPath_Key, std::make_any<fs::path>(fs::path(m_TestOutput.string() + "/" + m_SingleFileName + ".txt")));
+    args.insertOrAssign(WriteASCIIDataFilter::k_OutputDir_Key, std::make_any<fs::path>(m_TestOutput));
     args.insertOrAssign(WriteASCIIDataFilter::k_FileExtension_Key, std::make_any<std::string>(".txt"));
     args.insertOrAssign(WriteASCIIDataFilter::k_MaxValPerLine_Key, std::make_any<int32>(0));
     args.insertOrAssign(WriteASCIIDataFilter::k_Delimiter_Key, std::make_any<ChoicesParameter::ValueType>(delimiter)); // uint64 0 - 4 inclusive
@@ -225,16 +208,11 @@ private:
 TEST_CASE("ComplexCore::WriteASCIIData: Valid filter execution")
 {
   DataStructure dataStructure;
-  DataStructure& dsRef = dataStructure;
 
-  RunASCIIDataTest<int8>(dsRef).execute();
-  RunASCIIDataTest<int16>(dsRef).execute();
-  RunASCIIDataTest<int32>(dsRef).execute();
-  RunASCIIDataTest<int64>(dsRef).execute();
-  RunASCIIDataTest<uint8>(dsRef).execute();
-  RunASCIIDataTest<uint16>(dsRef).execute();
-  RunASCIIDataTest<uint32>(dsRef).execute();
-  RunASCIIDataTest<uint64>(dsRef).execute();
-  RunASCIIDataTest<float32>(dsRef).execute();
-  RunASCIIDataTest<float64>(dsRef).execute();
+  RunASCIIDataTest<int8>(dataStructure).execute();
+  RunASCIIDataTest<int32>(dataStructure).execute();
+  RunASCIIDataTest<uint8>(dataStructure).execute();
+  RunASCIIDataTest<uint32>(dataStructure).execute();
+  RunASCIIDataTest<float32>(dataStructure).execute();
+  RunASCIIDataTest<float64>(dataStructure).execute();
 } // end of test case

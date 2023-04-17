@@ -7,6 +7,7 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/OStreamUtilities.hpp"
 
 #include <filesystem>
@@ -64,9 +65,10 @@ Parameters WriteASCIIDataFilter::parameters() const
                                                                     to_underlying(OutputStyle::MultipleFiles),
                                                                     ChoicesParameter::Choices{"Multiple Files", "Single File"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
+                                                          FileSystemPathParameter::PathType::OutputFile, true));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputDir_Key, "Output Directory", "The output file path", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
-  params.insert(std::make_unique<StringParameter>(k_FileName_Key, "Name of Output File", "The name of the output file(s)", "Data"));
-  params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "The file extension for the output file(s)", ".csv"));
+  params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "The file extension for the output file(s)", ".txt"));
   params.insert(std::make_unique<Int32Parameter>(k_MaxValPerLine_Key, "Maximum Elements Per Line", "Number of tuples to print on each line", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_Delimiter_Key, "Delimiter", "The delimiter separating the data", to_underlying(OStreamUtilities::Delimiter::Comma),
                                                    ChoicesParameter::Choices{"Space", "Semicolon", "Comma", "Colon", "Tab"})); // sequence dependent DO NOT REORDER
@@ -79,8 +81,11 @@ Parameters WriteASCIIDataFilter::parameters() const
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_OutputStyle_Key, k_MaxValPerLine_Key, std::make_any<uint64>(to_underlying(OutputStyle::MultipleFiles)));
-  params.linkParameters(k_OutputStyle_Key, k_FileName_Key, std::make_any<uint64>(to_underlying(OutputStyle::SingleFile)));
+  params.linkParameters(k_OutputStyle_Key, k_OutputDir_Key, std::make_any<uint64>(to_underlying(OutputStyle::MultipleFiles)));
+  params.linkParameters(k_OutputStyle_Key, k_FileExtension_Key, std::make_any<uint64>(to_underlying(OutputStyle::MultipleFiles)));
+
   params.linkParameters(k_OutputStyle_Key, k_Includes_Key, std::make_any<uint64>(to_underlying(OutputStyle::SingleFile)));
+  params.linkParameters(k_OutputStyle_Key, k_OutputPath_Key, std::make_any<uint64>(to_underlying(OutputStyle::SingleFile)));
 
   return params;
 }
@@ -96,7 +101,6 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pOutputStyleValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
-  auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
   // Declare the preflightResult variable
   PreflightResult preflightResult;
@@ -109,9 +113,11 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
   // VALIDATE THAT ALL DATA ARRAYS HAVE THE SAME NUMBER OF TUPLES.
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(pOutputStyleValue) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
+    auto pSelectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+
     if(!CheckArraysHaveSameTupleCount(dataStructure, pSelectedDataArrayPathsValue))
     {
-      return {MakeErrorResult<OutputActions>(k_UnmatchingTupleCountError, fmt::format("Arrays do not all have the same length, a requirement for single file."))};
+      return MakePreflightErrorResult(k_UnmatchingTupleCountError, "Arrays do not all have the same length, a requirement for single file.");
     }
   }
 
@@ -159,31 +165,25 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
   }
 
   const std::string delimiter = OStreamUtilities::DelimiterToString(filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key));
-  auto maxValPerLine = filterArgs.value<int32>(k_MaxValPerLine_Key);
   auto selectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   auto fileType = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
-  auto directoryPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  auto fileName = filterArgs.value<StringParameter::ValueType>(k_FileName_Key);
-  auto fileExtension = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
 
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::SingleFile)
   {
-    // Ensure the complete path to the output file exists or can be created
-    if(!fs::exists(directoryPath.parent_path()))
+    auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+    // Make sure any directory path is also available as the user may have just typed
+    // in a path without actually creating the full path
+    Result<> createDirectoriesResult = complex::CreateOutputDirectories(outputPath.parent_path());
+    if(createDirectoriesResult.invalid())
     {
-      if(!fs::create_directories(directoryPath.parent_path()))
-      {
-        return MakeErrorResult(-11020, fmt::format("Unable to create output directory {}", directoryPath.parent_path().string()));
-      }
+      return createDirectoriesResult;
     }
 
-    auto outputFilePath = fmt::format("{}/{}{}", directoryPath.string(), fileName, fileExtension);
-
     // Create the output file
-    std::ofstream outStrm(outputFilePath, std::ios_base::out | std::ios_base::binary);
+    std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);
     if(!outStrm.is_open())
     {
-      return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputFilePath));
+      return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
     }
 
     OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
@@ -191,6 +191,10 @@ Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const A
 
   if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::MultipleFiles)
   {
+    auto directoryPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputDir_Key);
+    auto fileExtension = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
+    auto maxValPerLine = filterArgs.value<int32>(k_MaxValPerLine_Key);
+
     if(!fs::exists(directoryPath))
     {
       if(!fs::create_directories(directoryPath))

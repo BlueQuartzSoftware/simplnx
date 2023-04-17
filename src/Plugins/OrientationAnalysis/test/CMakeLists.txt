@@ -284,6 +284,8 @@ if(TARGET ITKImageProcessing)
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Edax_IPF_Colors.d3dpipeline"
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/TxCopper_Exposed.d3dpipeline"
     "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/TxCopper_Unexposed.d3dpipeline"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/aptr12_Analysis.d3dpipeline"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/avtr12_Analysis.d3dpipeline"
   )
 endif()
 
