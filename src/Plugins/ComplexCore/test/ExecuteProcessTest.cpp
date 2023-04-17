@@ -48,7 +48,7 @@ TEST_CASE("ComplexCore::ExecuteProcessFilter: Valid filter execution")
   std::string firstLine;
   std::getline(processOutputFile, firstLine);
   firstLine = StringUtilities::rtrim(firstLine);
-  REQUIRE(firstLine == "nxrunner");
+  REQUIRE(firstLine == "nxrunner version 1.0.0");
 }
 
 TEST_CASE("ComplexCore::ExecuteProcessFilter: InValid filter execution")

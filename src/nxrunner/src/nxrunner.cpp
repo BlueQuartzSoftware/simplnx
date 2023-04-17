@@ -379,7 +379,7 @@ Result<> SetLogFile(const Argument& argument)
 int main(int argc, char* argv[])
 {
 
-  // cliOut << "nxrunner";
+  cliOut << "nxrunner version 1.0.0\n";
   // cliOut.endline();
   // cliOut << "ARGUMENT LISTING START\n";
   // for(int argIndex = 0; argIndex < argc; argIndex++)
@@ -410,8 +410,10 @@ int main(int argc, char* argv[])
       break;
     case ArgumentType::Execute:
     case ArgumentType::Preflight:
-    case ArgumentType::Help:
       break;
+    case ArgumentType::Help:
+      PrintResult(DisplayHelpMenu(arguments));
+      return 0;
     }
   }
 
