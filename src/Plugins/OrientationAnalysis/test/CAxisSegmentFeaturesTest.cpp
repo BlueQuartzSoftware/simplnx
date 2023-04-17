@@ -20,10 +20,6 @@ const std::string k_ComputedCellFeatureData = "NX_CellFeatureData";
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Execution", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = Application::Instance()->getFilterList();
-
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_caxis_segment_features.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -70,13 +66,12 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Valid Filter Executi
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Invalid Filter Execution", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = Application::Instance()->getFilterList();
-
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_avg_caxes.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+
+  auto& crystalStructs = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresArrayPath);
+  crystalStructs[1] = 1;
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CAxisSegmentFeaturesFilter filter;
@@ -85,11 +80,10 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeaturesFilter: Invalid Filter Execu
   // Invalid crystal structure type : should fail in execute
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
+  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseGoodVoxels_Key, std::make_any<bool>(false));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsArrayPath));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
-  args.insertOrAssign(CAxisSegmentFeaturesFilter::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(k_MaskArrayPath));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_ComputedFeatureIds));
   args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>(k_ComputedCellFeatureData));

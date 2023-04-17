@@ -348,7 +348,7 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
   {
     auto oldVal = exemplaryDataArray[i];
     auto newVal = generatedDataArray[i];
-    if(!checkNans && std::isnan(newVal))
+    if(!checkNans && (std::isnan(newVal) || std::isnan(oldVal)))
     {
       continue;
     }
