@@ -44,7 +44,7 @@ echo EXE_SFX %EXE_SFX%
 
 cd @CMAKE_RUNTIME_OUTPUT_DIRECTORY@\%CONFIG_DIR%
 
-@PIPELINE_RUNNER_NAME@%EXE_SFX%@EXE_EXT@ "@ARGS_PIPELINE_PATH@"
+@PIPELINE_RUNNER_NAME@%EXE_SFX%@EXE_EXT@ --execute "@ARGS_PIPELINE_PATH@"
 IF %ERRORLEVEL% NEQ 0 EXIT 1
 
 ::-----------------------------------------------------------------------------

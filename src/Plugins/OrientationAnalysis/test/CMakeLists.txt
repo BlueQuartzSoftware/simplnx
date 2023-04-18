@@ -175,8 +175,8 @@ function(add_pipeline_test)
   FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "[${ARGS_TEST_INDEX}]:${ARGS_PIPELINE_PATH}\n")
 
   get_filename_component(test "${ARGS_PIPELINE_PATH}" NAME)
-  set(SIMPL_CTEST_TEST_DRIVER "${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/${test}.${TEST_SCRIPT_FILE_EXT}")
-  # message(STATUS "==> ${SIMPL_CTEST_TEST_DRIVER}")
+  set(COMPLEX_CTEST_TEST_DRIVER "${${PLUGIN_NAME}_BINARY_DIR}/PrebuiltPipelineTests/${test}.${TEST_SCRIPT_FILE_EXT}")
+  # message(STATUS "==> ${COMPLEX_CTEST_TEST_DRIVER}")
   set(DELETE_FILE_COMMANDS "")
   if(WIN32)
     set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/%CONFIG_DIR%/")
@@ -194,10 +194,10 @@ function(add_pipeline_test)
   endforeach()
 
   configure_file(${${PLUGIN_NAME}_SOURCE_DIR}/test/ctest_pipeline_driver.${TEST_SCRIPT_FILE_EXT} 
-                "${SIMPL_CTEST_TEST_DRIVER}" @ONLY)
+                "${COMPLEX_CTEST_TEST_DRIVER}" @ONLY)
 
   string(REPLACE "/" "_" test "${test}")
-  add_test(NAME ${PLUGIN_NAME}_${ARGS_TEST_INDEX} COMMAND "${SIMPL_CTEST_TEST_DRIVER}" )    
+  add_test(NAME ${PLUGIN_NAME}_${ARGS_TEST_INDEX} COMMAND "${COMPLEX_CTEST_TEST_DRIVER}" )
 endfunction()
 
 #------------------------------------------------------------------------------
