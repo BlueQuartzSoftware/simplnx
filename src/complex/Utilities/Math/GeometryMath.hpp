@@ -1,9 +1,8 @@
 #pragma once
 
+#include "complex/Common/Array.hpp"
 #include "complex/Common/BoundingBox.hpp"
 #include "complex/Common/EulerAngle.hpp"
-#include "complex/Common/Point2D.hpp"
-#include "complex/Common/Point3D.hpp"
 #include "complex/Common/Ray.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"

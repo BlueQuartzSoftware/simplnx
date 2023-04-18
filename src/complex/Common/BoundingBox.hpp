@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include "complex/Common/Point3D.hpp"
+#include "complex/Common/Array.hpp"
 
 namespace complex
 {

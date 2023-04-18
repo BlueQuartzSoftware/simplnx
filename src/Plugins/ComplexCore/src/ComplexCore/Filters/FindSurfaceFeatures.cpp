@@ -1,7 +1,6 @@
 #include "FindSurfaceFeatures.hpp"
 
-#include "complex/Common/Point2D.hpp"
-#include "complex/Common/Point3D.hpp"
+#include "complex/Common/Array.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"

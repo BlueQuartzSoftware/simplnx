@@ -1,14 +1,11 @@
 #pragma once
 
-#include "complex/Common/Point3D.hpp"
+#include "complex/Common/Array.hpp"
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/DataStructure/Geometry/LinkedGeometryData.hpp"
-
-#include "complex/Common/Point2D.hpp"
-#include "complex/Common/Point3D.hpp"
 
 namespace complex
 {

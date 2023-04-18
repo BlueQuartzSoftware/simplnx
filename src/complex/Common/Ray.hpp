@@ -2,8 +2,8 @@
 
 #include <stdexcept>
 
+#include "complex/Common/Array.hpp"
 #include "complex/Common/EulerAngle.hpp"
-#include "complex/Common/Point3D.hpp"
 
 namespace complex
 {
