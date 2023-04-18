@@ -57,16 +57,20 @@ DataObject& DataObject::operator=(const DataObject& rhs)
     return *this;
   }
   m_DataStructure = rhs.m_DataStructure;
+  m_ParentList = rhs.m_ParentList;
   m_Id = rhs.m_Id;
   m_Name = rhs.m_Name;
+  m_Metadata = rhs.m_Metadata;
   return *this;
 }
 
 DataObject& DataObject::operator=(DataObject&& rhs) noexcept
 {
   m_DataStructure = rhs.m_DataStructure;
+  m_ParentList = std::move(rhs.m_ParentList);
   m_Id = rhs.m_Id;
   m_Name = std::move(rhs.m_Name);
+  m_Metadata = std::move(rhs.m_Metadata);
   return *this;
 }
 
@@ -187,6 +191,11 @@ bool DataObject::rename(const std::string& name)
 DataObject::ParentCollectionType DataObject::getParentIds() const
 {
   return m_ParentList;
+}
+
+void DataObject::clearParents()
+{
+  m_ParentList.clear();
 }
 
 Metadata& DataObject::getMetadata()

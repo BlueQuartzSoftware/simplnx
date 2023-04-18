@@ -589,6 +589,9 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
     dataObject->setId(generateId());
   }
 
+  // Clears the DataObject's parent IDs to avoid clashes.
+  dataObject->clearParents();
+
   if(dataPath.empty())
   {
     return insertIntoRoot(dataObject);
@@ -824,6 +827,7 @@ void DataStructure::resetIds(DataObject::IdType startingId)
       dataObjectPtr->checkUpdatedIds(updatedIds);
     }
   }
+  m_RootGroup.updateIds(updatedIds);
 }
 
 void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
