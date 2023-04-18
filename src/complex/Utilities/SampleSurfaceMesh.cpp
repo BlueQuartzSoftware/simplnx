@@ -1,11 +1,16 @@
 #include "SampleSurfaceMesh.hpp"
 
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+#include "complex/Utilities/Math/GeometryMath.hpp"
+#include "complex/Common/BoundingBox.hpp"
+#include "complex/DataStructure/NeighborList.hpp"
 
 #include <chrono>
+#include <random>
 
 using namespace complex;
 
@@ -13,17 +18,9 @@ namespace
 {
 class SampleSurfaceMeshImplByPoints
 {
-  SampleSurfaceMesh* m_Filter = nullptr;
-  TriangleGeom::Pointer m_Faces;
-  Int32Int32DynamicListArray::Pointer m_FaceIds;
-  VertexGeom::Pointer m_FaceBBs;
-  VertexGeom::Pointer m_Points;
-  size_t m_FeatureId = 0;
-  int32_t* m_PolyIds = nullptr;
-
 public:
-  SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, TriangleGeom::Pointer faces, Int32Int32DynamicListArray::Pointer faceIds, VertexGeom::Pointer faceBBs, VertexGeom::Pointer points,
-                                size_t featureId, int32_t* polyIds)
+  SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const Int32NeighborList& faceIds, VertexGeom::Pointer faceBBs, VertexGeom::Pointer points, usize featureId,
+                                int32_t* polyIds)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
@@ -35,24 +32,20 @@ public:
   }
   virtual ~SampleSurfaceMeshImplByPoints() = default;
 
-  void checkPoints(size_t start, size_t end) const
+  void checkPoints(usize start, usize end) const
   {
-    float radius = 0.0f;
     float distToBoundary = 0.0f;
-    int64_t numPoints = m_Points->getNumberOfVertices();
-    std::array<float, 3> lowerLeft = {0.0F, 0.0F, 0.0F};
-    std::array<float, 3> upperRight = {0.0F, 0.0F, 0.0F};
     float* point = nullptr;
-    char code = ' ';
+    usize iter = m_FeatureId;
 
-    size_t iter = m_FeatureId;
 
     // find bounding box for current feature
-    GeometryMath::FindBoundingBoxOfFaces(m_Faces.get(), m_FaceIds->getElementList(iter), lowerLeft.data(), upperRight.data());
-    GeometryMath::FindDistanceBetweenPoints(lowerLeft.data(), upperRight.data(), radius);
-    int64_t pointsVisited = 0;
+    BoundingBox<float> tempBoundingBox = GeometryMath::FindBoundingBoxOfFace(m_Faces, m_FaceIds->getElementList(iter));
+
+    float radius = GeometryMath::FindDistanceBetweenPoints(Point3D<float>(boundingBox.getMinPoint()), Point3D<float>(boundingBox.getMaxPoint()));
+    usize pointsVisited = 0;
     // check points in vertex array to see if they are in the bounding box of the feature
-    for(int64_t i = static_cast<int64_t>(start); i < static_cast<int64_t>(end); i++)
+    for(usize i = static_cast<usize>(start); i < static_cast<usize>(end); i++)
     {
       point = m_Points->getVertexPointer(i);
       if(m_PolyIds[i] == 0 && GeometryMath::PointInBox(point, lowerLeft.data(), upperRight.data()))
@@ -71,7 +64,7 @@ public:
         m_Filter->sendThreadSafeProgressMessage(m_FeatureId, 1000, numPoints);
       }
       // Check for the filter being cancelled.
-      if(m_Filter->getCancel())
+      if(m_ShouldCancel)
       {
         return;
       }
@@ -84,13 +77,14 @@ public:
   }
 
 private:
-  float radius = 0.0f;
-  float distToBoundary = 0.0f;
-  int64_t numPoints = m_Points->getNumberOfVertices();
-  std::array<float, 3> lowerLeft = {0.0F, 0.0F, 0.0F};
-  std::array<float, 3> upperRight = {0.0F, 0.0F, 0.0F};
-  float* point = nullptr;
-  char code = ' ';
+  SampleSurfaceMesh* m_Filter = nullptr;
+  const TriangleGeom& m_Faces;
+  const Int32NeighborList& m_FaceIds;
+  VertexGeom::Pointer m_FaceBBs;
+  VertexGeom::Pointer m_Points;
+  Int32Array& m_PolyIds = nullptr;
+  usize m_FeatureId = 0;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 // -----------------------------------------------------------------------------
@@ -101,7 +95,7 @@ public:
   SampleSurfaceMeshImpl(const SampleSurfaceMeshImpl&) = default;     // Copy Constructor Default Implemented
   SampleSurfaceMeshImpl(SampleSurfaceMeshImpl&&) noexcept = default; // Move Constructor Default Implemented
 
-  SampleSurfaceMeshImpl(SampleSurfaceMesh* filter, TriangleGeom::Pointer faces, Int32Int32DynamicListArray::Pointer faceIds, VertexGeom::Pointer faceBBs, VertexGeom::Pointer points, int32_t* polyIds)
+  SampleSurfaceMeshImpl(SampleSurfaceMesh* filter, TriangleGeom& faces, Int32Int32DynamicListArray::Pointer faceIds, VertexGeom::Pointer faceBBs, VertexGeom::Pointer points, Int32Array& polyIds)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
@@ -118,25 +112,25 @@ public:
 
   void checkPoints(usize start, usize end) const
   {
-    float radius = 0.0f;
-    float distToBoundary = 0.0f;
-    int64_t numPoints = m_Points->getNumberOfVertices();
-    std::array<float, 3> lowerLeft = {0.0F, 0.0F, 0.0F};
-    std::array<float, 3> upperRight = {0.0F, 0.0F, 0.0F};
-    float* point = nullptr;
-    char code = ' ';
-
     for(size_t iter = start; iter < end; iter++)
     {
+      float radius = 0.0f;
+      float distToBoundary = 0.0f;
+      int64_t numPoints = m_Points->getNumberOfVertices();\
+      std::pair<Point3D<float>, Point3D<float>> boundingBoxPoints; //structure Pair<lower left, upper right>
+      std::array<float, 3> lowerLeft = {0.0F, 0.0F, 0.0F};
+      std::array<float, 3> upperRight = {0.0F, 0.0F, 0.0F};
+      float* point = nullptr;
+
       // find bounding box for current feature
       GeometryMath::FindBoundingBoxOfFaces(m_Faces.get(), m_FaceIds->getElementList(iter), lowerLeft.data(), upperRight.data());
-      GeometryMath::FindDistanceBetweenPoints(lowerLeft.data(), upperRight.data(), radius);
+      radius = GeometryMath::FindDistanceBetweenPoints(boundingBoxPoints.first, boundingBoxPoints.second);
 
       // check points in vertex array to see if they are in the bounding box of the feature
       for(int64_t i = 0; i < numPoints; i++)
       {
         // Check for the filter being cancelled.
-        if(m_Filter->getCancel())
+        if(m_ShouldCancel)
         {
           return;
         }
@@ -161,11 +155,12 @@ public:
 
 private:
   SampleSurfaceMesh* m_Filter = nullptr;
-  TriangleGeom::Pointer m_Faces;
+  TriangleGeom& m_Faces;
   Int32Int32DynamicListArray::Pointer m_FaceIds;
   VertexGeom::Pointer m_FaceBBs;
   VertexGeom::Pointer m_Points;
-  int32_t* m_PolyIds = nullptr;
+  Int32Array& m_PolyIds = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
 
@@ -187,42 +182,23 @@ void SampleSurfaceMesh::updateProgress(const std::string& progMessage)
 }
 
 // -----------------------------------------------------------------------------
-void RegularGridSampleSurfaceMesh::assignPoints(Int32Array& sourceFeatureIds, Vec3<usize> udims)
+Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
 {
-  size_t totalPoints = m_Dimensions[0] * m_Dimensions[1] * m_Dimensions[2];
-  for(size_t i = 0; i < totalPoints; i++)
-  {
-    m_FeatureIds[i] = dataArray[i];
-  }
-}
-
-// -----------------------------------------------------------------------------
-Result<> SampleSurfaceMesh::execute(const SizeVec3& udims)
-{
-  DataContainer::Pointer sm = getDataContainerArray()->getDataContainer(m_SurfaceMeshFaceLabelsArrayPath.getDataContainerName());
-  SIMPL_RANDOMNG_NEW()
-
-  TriangleGeom::Pointer triangleGeom = sm->getGeometryAs<TriangleGeom>();
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(inputValues->TriangleGeometryPath);
+  auto& faceLabelsSM = m_DataStructure.getDataRefAs<Int32Array>(inputValues->SurfaceMeshFaceLabelsArrayPath);
 
   // pull down faces
-  int64_t numFaces = m_SurfaceMeshFaceLabelsPtr.lock()->getNumberOfTuples();
+  usize numFaces = faceLabelsSM.getNumberOfTuples();
 
-  // create array to hold bounding vertices for each face
-  FloatArrayType::Pointer llPtr = FloatArrayType::CreateArray(3, std::string("_INTERNAL_USE_ONLY_Lower_Left"), true);
-  FloatArrayType::Pointer urPtr = FloatArrayType::CreateArray(3, std::string("_INTERNAL_USE_ONLY_Upper_Right"), true);
-  float* ll = llPtr->getPointer(0);
-  float* ur = urPtr->getPointer(0);
-  VertexGeom::Pointer faceBBs = VertexGeom::CreateGeometry(2 * numFaces, "_INTERNAL_USE_ONLY_faceBBs");
-
-  notifyStatusMessage("Counting number of Features...");
+  updateProgress("Counting number of Features...");
 
   // walk through faces to see how many features there are
   int32_t g1 = 0, g2 = 0;
   int32_t maxFeatureId = 0;
-  for(int64_t i = 0; i < numFaces; i++)
+  for(usize i = 0; i < numFaces; i++)
   {
-    g1 = m_SurfaceMeshFaceLabels[2 * i];
-    g2 = m_SurfaceMeshFaceLabels[2 * i + 1];
+    g1 = faceLabelsSM[2 * i];
+    g2 = faceLabelsSM[2 * i + 1];
     if(g1 > maxFeatureId)
     {
       maxFeatureId = g1;
@@ -234,30 +210,28 @@ Result<> SampleSurfaceMesh::execute(const SizeVec3& udims)
   }
 
   // Check for user canceled flag.
-  if(getCancel())
+  if(m_ShouldCancel)
   {
-    return;
+    return {};
   }
 
   // add one to account for feature 0
-  int32_t numFeatures = maxFeatureId + 1;
+  usize numFeatures = maxFeatureId + 1;
 
   // create a dynamic list array to hold face lists
   Int32Int32DynamicListArray::Pointer faceLists = Int32Int32DynamicListArray::New();
-  std::vector<int32_t> linkCount(numFeatures, 0);
+  std::vector<int32> linkCount(numFeatures, 0);
 
   // fill out lists with number of references to cells
-  Int32ArrayType::Pointer linkLocPtr = Int32ArrayType::CreateArray(numFaces, std::string("_INTERNAL_USE_ONLY_cell refs"), true);
-  linkLocPtr->initializeWithZeros();
-  int32_t* linkLoc = linkLocPtr->getPointer(0);
+  Int32Array linkLoc = Int32Array::CreateArray(numFaces, std::string("_INTERNAL_USE_ONLY_cell refs"), true)->initializeWithZeros();
 
-  notifyStatusMessage("Counting number of triangle faces per feature ...");
+  updateProgress("Counting number of triangle faces per feature ...");
 
   // traverse data to determine number of faces belonging to each feature
   for(int64_t i = 0; i < numFaces; i++)
   {
-    g1 = m_SurfaceMeshFaceLabels[2 * i];
-    g2 = m_SurfaceMeshFaceLabels[2 * i + 1];
+    g1 = faceLabelsSM[2 * i];
+    g2 = faceLabelsSM[2 * i + 1];
     if(g1 > 0)
     {
       linkCount[g1]++;
@@ -269,7 +243,7 @@ Result<> SampleSurfaceMesh::execute(const SizeVec3& udims)
   }
 
   // Check for user canceled flag.
-  if(getCancel())
+  if(m_ShouldCancel)
   {
     return;
   }
@@ -277,13 +251,20 @@ Result<> SampleSurfaceMesh::execute(const SizeVec3& udims)
   // now allocate storage for the faces
   faceLists->allocateLists(linkCount);
 
-  notifyStatusMessage("Allocating triangle faces per feature ...");
+  updateProgress("Allocating triangle faces per feature ...");
+
+  // create array to hold bounding vertices for each face
+  Float32Array llPtr = Float32Array::CreateArray(3, std::string("_INTERNAL_USE_ONLY_Lower_Left"), true);
+  Float32Array urPtr = Float32Array::CreateArray(3, std::string("_INTERNAL_USE_ONLY_Upper_Right"), true);
+  float* ll = llPtr->getPointer(0);
+  float* ur = urPtr->getPointer(0);
+  VertexGeom::Pointer faceBBs = VertexGeom::CreateGeometry(2 * numFaces, "_INTERNAL_USE_ONLY_faceBBs");
 
   // traverse data again to get the faces belonging to each feature
   for(int64_t i = 0; i < numFaces; i++)
   {
-    g1 = m_SurfaceMeshFaceLabels[2 * i];
-    g2 = m_SurfaceMeshFaceLabels[2 * i + 1];
+    g1 = faceLabelsSM[2 * i];
+    g2 = faceLabelsSM[2 * i + 1];
     if(g1 > 0)
     {
       faceLists->insertCellReference(g1, (linkLoc[g1])++, i);
@@ -299,82 +280,69 @@ Result<> SampleSurfaceMesh::execute(const SizeVec3& udims)
   }
 
   // Check for user canceled flag.
-  if(getCancel())
+  if(m_ShouldCancel)
   {
-    return;
+    return {};
   }
 
-  notifyStatusMessage("Vertex Geometry generating sampling points");
+  updateProgress("Vertex Geometry generating sampling points");
 
   // generate the list of sampling points from subclass
-  VertexGeom::Pointer points = generate_points();
-  if(getErrorCode() < 0 || nullptr == points.get())
-  {
-    return;
-  }
-  int64_t numPoints = points->getNumberOfVertices();
+  VertexGeom points = generate_points();
+  m_TotalElements = points.getNumberOfVertices();
 
   // create array to hold which polyhedron (feature) each point falls in
-  Int32ArrayType::Pointer iArray = Int32ArrayType::NullPointer();
-  iArray = Int32ArrayType::CreateArray(numPoints, std::string("_INTERNAL_USE_ONLY_polyhedronIds"), true);
-  iArray->initializeWithZeros();
-  int32_t* polyIds = iArray->getPointer(0);
+  Int32Array& polyIds = Int32Array::CreateArray(m_TotalElements, std::string("_INTERNAL_USE_ONLY_polyhedronIds"), true)->initializeWithZeros();
 
-  notifyStatusMessage("Sampling triangle geometry ...");
+  updateProgress("Sampling triangle geometry ...");
 
   // C++11 RIGHT HERE....
-  int32_t nthreads = static_cast<int32_t>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
+  auto nthreads = static_cast<int32>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
   // If the number of features is larger than the number of cores to do the work then parallelize over the number of features
   // otherwise parallelize over the number of triangle points.
   if(numFeatures > nthreads)
   {
-#ifdef SIMPL_USE_PARALLEL_ALGORITHMS
     tbb::parallel_for(tbb::blocked_range<size_t>(0, numFeatures), SampleSurfaceMeshImpl(this, triangleGeom, faceLists, faceBBs, points, polyIds), tbb::auto_partitioner());
-#else
     SampleSurfaceMeshImpl serial(this, triangleGeom, faceLists, faceBBs, points, polyIds);
     serial.checkPoints(0, numFeatures);
-#endif
   }
   else
   {
     for(int featureId = 0; featureId < numFeatures; featureId++)
     {
-      m_NumCompleted = 0;
-      m_StartMillis = QDateTime::currentMSecsSinceEpoch();
-      m_Millis = m_StartMillis;
-      size_t numPoints = points->getNumberOfVertices();
-
-#ifdef SIMPL_USE_PARALLEL_ALGORITHMS
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, numPoints), SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists, faceBBs, points, featureId, polyIds), tbb::auto_partitioner());
-
-#else
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, m_TotalElements), SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists, faceBBs, points, featureId, polyIds), tbb::auto_partitioner());
       SampleSurfaceMeshImplByPoints serial(this, triangleGeom, faceLists, faceBBs, points, featureId, polyIds);
-      serial.checkPoints(0, numPoints);
-#endif
+      serial.checkPoints(0, m_TotalElements);
     }
   }
-  assign_points(iArray);
 
-  notifyStatusMessage("Complete");
+  updateProgress("Complete");
 
   return {};
 }
 
 // -----------------------------------------------------------------------------
-void SampleSurfaceMesh::sendThreadSafeProgressMessage(int featureId, size_t numCompleted, size_t totalFeatures)
+void SampleSurfaceMesh::sendThreadSafeProgressMessage(usize featureId, size_t numCompleted, size_t totalFeatures)
 {
-  static std::mutex mutex;
-  std::lock_guard<std::mutex> lock(mutex);
-  qint64 currentMillis = QDateTime::currentMSecsSinceEpoch();
-  m_NumCompleted = m_NumCompleted + numCompleted;
-  if(currentMillis - m_Millis > 1000)
+  std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
+
+  m_ProgressCounter += numCompleted;
+  auto now = std::chrono::steady_clock::now();
+  auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(m_InitialTime - now).count();
+  if(diff > 1000)
   {
-    float inverseRate = static_cast<float>(currentMillis - m_Millis) / static_cast<float>(m_NumCompleted - m_LastCompletedPoints);
-    qint64 remainMillis = inverseRate * (totalFeatures - m_NumCompleted);
-    QString ss = QObject::tr("Feature %3 | Points Completed: %1 of %2").arg(m_NumCompleted).arg(totalFeatures).arg(featureId);
-    ss = ss + QObject::tr(" || Est. Time Remain: %1").arg(DREAM3D::convertMillisToHrsMinSecs(remainMillis));
-    notifyStatusMessage(ss);
-    m_Millis = QDateTime::currentMSecsSinceEpoch();
-    m_LastCompletedPoints = m_NumCompleted;
+    std::string progMessage = fmt::format("Feature {} | Points Completed: {} of {}", featureId, m_ProgressCounter, m_TotalElements);
+    float inverseRate = static_cast<float>(diff) / static_cast<float>(m_ProgressCounter - m_LastProgressInt);
+    auto remainMillis = std::chrono::milliseconds(static_cast<int64>(inverseRate * (m_TotalElements - m_ProgressCounter)));
+    auto secs = std::chrono::duration_cast<std::chrono::seconds>(remainMillis);
+    remainMillis -= std::chrono::duration_cast<std::chrono::milliseconds>(secs);
+    auto mins = std::chrono::duration_cast<std::chrono::minutes>(secs);
+    secs -= std::chrono::duration_cast<std::chrono::seconds>(mins);
+    auto hour = std::chrono::duration_cast<std::chrono::hours>(mins);
+    mins -= std::chrono::duration_cast<std::chrono::minutes>(hour);
+    progMessage += fmt::format(" || Est. Time Remain: {} hours {} minutes {} seconds", hour.count(), mins.count(), secs.count());
+    m_MessageHandler({IFilter::Message::Type::Info, progMessage});
+    m_InitialTime = std::chrono::steady_clock::now();
+    m_LastProgressInt = m_ProgressCounter;
   }
 }
