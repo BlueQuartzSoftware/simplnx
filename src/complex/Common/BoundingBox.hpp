@@ -6,7 +6,6 @@
 
 namespace complex
 {
-
 /**
  * @class BoundingBox
  * @brief The BoundingBox class is designed to describe a box in 3D space
@@ -14,8 +13,11 @@ namespace complex
  * used to describe the getSize of a geometry but is also used by GeometryMath
  * for calculations checking for points in a given region. As the BoundingBox
  * class operates along X, Y, and Z axis, no rotation information is available.
+ *
+ * Template Type: Point - Point is a parameter for the type of (complex) Point used
+ * by the BoundingBox based on the templated value type.
  */
-template <typename T>
+template <typename T, template <typename> class Point = Point3D>
 class BoundingBox
 {
 public:
@@ -24,11 +26,7 @@ public:
   using reference = T&;
   using const_reference = const T&;
 
-  /**
-   * @brief PointType is an alias for the type of Point3D used by the
-   * BoundingBox based on the templated value type.
-   */
-  using PointType = complex::Point3D<T>;
+  using PointType = Point<T>;
 
   /**
    * @brief ValueType is an alias for the value type describing bounds along
@@ -49,29 +47,45 @@ public:
    * @param lowerLeft
    * @param upperRight
    */
-  BoundingBox(const PointType& lowerLeft, const PointType& upperRight)
-  : m_Bounds({lowerLeft[0], lowerLeft[1], lowerLeft[2], upperRight[0], upperRight[1], upperRight[2]})
+  BoundingBox(PointType lowerLeft, PointType upperRight)
+  : m_Lower(lowerLeft)
+  , m_Upper(upperRight)
   {
   }
 
   /**
-   * @brief Constructs a new BoundingBox defined by the array of position values.
+   * @brief Constructs a new BoundingBox3D defined by the array of position values.
    * The format is min X, min Y, min Z, max X, max Y, max Z.
    * @param arr
    */
-  BoundingBox(const std::array<T, 6>& arr)
-  : m_Bounds(arr)
+  explicit BoundingBox(const std::array<T, 6>& arr)
+  : m_Lower(Point3D<T>(arr[0], arr[1], arr[2]))
+  , m_Upper(Point3D<T>(arr[3], arr[4], arr[5]))
+  {
+  }
+
+  /**
+   * @brief Constructs a new BoundingBox2D defined by the array of position values.
+   * The format is min X, min Y, max X, max Y.
+   * @param arr
+   */
+  explicit BoundingBox(const std::array<T, 4>& arr)
+  : m_Lower(Point2D<T>(arr[0], arr[1]))
+  , m_Upper(Point2D<T>(arr[2], arr[3]))
   {
   }
 
   /**
    * @brief Constructs a new BoundingBox by copying values from the specified pointer.
-   * The pointer is assumed to contain at least six values formatted the same as the
-   * std::array<T, 6> constructor, min X, min Y, min Z, max X, max Y, max Z.
+   * The pointer is assumed to contain either 4 (2D) or 6 (3D) values formatted the same as the
+   * std::array<T, 6> constructor, min X, min Y, max X, max Y or the
+   * std::array<T, 6> constructor, min X, min Y, min Z, max X, max Y, max Z
+   * respectively
    * @param arr
    */
-  BoundingBox(Pointer arr)
-  : m_Bounds({arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]})
+  explicit BoundingBox(Pointer arr)
+  : m_Lower(Point3D<T>(arr[0], arr[1], arr[2]))
+  , m_Upper(Point3D<T>(arr[3], arr[4], arr[5]))
   {
   }
 
@@ -81,145 +95,62 @@ public:
    * @brief Returns the Min point
    * @return
    */
-  std::array<ValueType, 3> getMinPoint() const
+  PointType getMinPoint() const
   {
-    return {m_Bounds[0], m_Bounds[1], m_Bounds[2]};
+    return m_Lower;
   }
 
   /**
    * @brief Returns the Max point
    * @return
    */
-  std::array<ValueType, 3> getMaxPoint() const
+  PointType getMaxPoint() const
   {
-    return {m_Bounds[3], m_Bounds[4], m_Bounds[5]};
+    return m_Upper;
+  }
+
+  /**
+   * @brief Sets the Min point
+   * @return
+   */
+  void setMinPoint(PointType min)
+  {
+    m_Lower = min;
+  }
+
+  /**
+   * @brief Sets the Max point
+   * @return
+   */
+  void setMaxPoint(PointType max)
+  {
+    m_Upper = max;
   }
 
   /**
    * @brief Compute the length of each side of the bounding box
    * @return
    */
-  std::array<ValueType, 3> sideLengths() const
+  PointType sideLengths() const
   {
-    return {m_Bounds[3] - m_Bounds[0], m_Bounds[4] - m_Bounds[1], m_Bounds[5] - m_Bounds[2]};
+    return {m_Upper - m_Lower};
   }
 
   /**
    * @brief compute the center of the bounding box.
    * @return
    */
-  std::array<ValueType, 3> center() const
+  PointType center() const
   {
-    std::array<ValueType, 3> boxSize = sideLengths();
-    return {m_Bounds[0] + boxSize[0] / 2.0, m_Bounds[1] + boxSize[1] / 2.0, m_Bounds[2] + boxSize[2] / 2.0};
-  }
-
-  /**
-   * @brief Returns the current minimum X value.
-   * @return ValueType
-   */
-  ValueType getMinX() const
-  {
-    return m_Bounds[0];
-  }
-
-  /**
-   * @brief Returns the current maximum X value.
-   * @return ValueType
-   */
-  ValueType getMaxX() const
-  {
-    return m_Bounds[3];
-  }
-
-  /**
-   * @brief Returns the current minimum Y value.
-   * @return ValueType
-   */
-  ValueType getMinY() const
-  {
-    return m_Bounds[1];
-  }
-
-  /**
-   * @brief Returns the current maximum Y value.
-   * @return ValueType
-   */
-  ValueType getMaxY() const
-  {
-    return m_Bounds[4];
-  }
-
-  /**
-   * @brief Returns the current minimum Z value.
-   * @return ValueType
-   */
-  ValueType getMinZ() const
-  {
-    return m_Bounds[2];
-  }
-
-  /**
-   * @brief Returns the current maximum Z value.
-   * @return ValueType
-   */
-  ValueType getMaxZ() const
-  {
-    return m_Bounds[5];
-  }
-
-  /**
-   * @brief Sets the current minimum X value.
-   * @param value
-   */
-  void setMinX(ValueType value)
-  {
-    m_Bounds[0] = value;
-  }
-
-  /**
-   * @brief Sets the current maximum X value.
-   * @param value
-   */
-  void setMaxX(ValueType value)
-  {
-    m_Bounds[3] = value;
-  }
-
-  /**
-   * @brief Sets the current minimum Y value.
-   * @param value
-   */
-  void setMinY(ValueType value)
-  {
-    m_Bounds[1] = value;
-  }
-
-  /**
-   * @brief Sets the current maximum Y value.
-   * @param value
-   */
-  void setMaxY(ValueType value)
-  {
-    m_Bounds[4] = value;
-  }
-
-  /**
-   * @brief Sets the current minimum Z value.
-   * @param value
-   */
-  void setMinZ(ValueType value)
-  {
-    m_Bounds[2] = value;
-  }
-
-  /**
-   * @brief Sets the current maximum Z value.
-   * @param value
-   */
-  void setMaxZ(ValueType value)
-  {
-    m_Bounds[5] = value;
+    PointType boxSize = sideLengths();
+    if constexpr(std::is_same_v<Point<ValueType>, Point3D<ValueType>>)
+    {
+      return {m_Lower[0] + boxSize[0] / 2.0, m_Lower[1] + boxSize[1] / 2.0, m_Lower[2] + boxSize[2] / 2.0};
+    }
+    if constexpr(std::is_same_v<Point<ValueType>, Point2D<ValueType>>)
+    {
+      return {m_Lower[0] + boxSize[0] / 2.0, m_Lower[1] + boxSize[1] / 2.0};
+    }
   }
 
   /**
@@ -229,37 +160,12 @@ public:
    */
   bool isValid() const
   {
-    bool xValid = m_Bounds[0] <= m_Bounds[3];
-    bool yValid = m_Bounds[1] <= m_Bounds[4];
-    bool zValid = m_Bounds[2] <= m_Bounds[5];
-    return xValid && yValid && zValid;
-  }
-  /**
-   * @brief access specified element
-   * @param index
-   * @return reference
-   */
-  inline reference operator[](size_type index)
-  {
-    return m_Bounds[index];
-  }
-
-  /**
-   * @brief access specified element
-   * @param index
-   * @return const_reference
-   */
-  inline const_reference operator[](size_type index) const
-  {
-    return m_Bounds[index];
-  }
-  /**
-   * @brief Returns a std::array representation of the bounding box.
-   * @return std::array<T, 6>
-   */
-  std::array<T, 6> toArray() const
-  {
-    return m_Bounds;
+    bool valid = true;
+    for(usize i = 0; i < m_Lower.size(); i++)
+    {
+      valid = valid && (m_Lower[i] <= m_Upper[i]);
+    }
+    return valid;
   }
 
   /**
@@ -269,7 +175,8 @@ public:
    */
   BoundingBox& operator=(const BoundingBox& rhs)
   {
-    m_Bounds = rhs.m_Bounds;
+    m_Lower = rhs.m_Lower;
+    m_Upper = rhs.m_Upper;
     return *this;
   }
 
@@ -278,9 +185,10 @@ public:
    * @param rhs
    * @return BoundingBox&
    */
-  BoundingBox& operator=(BoundingBox&& rhs)
+  BoundingBox& operator=(BoundingBox&& rhs) noexcept
   {
-    m_Bounds = std::move(rhs.m_Bounds);
+    m_Lower = std::move(rhs.m_Lower);
+    m_Upper = std::move(rhs.m_Upper);
     return *this;
   }
 
@@ -291,7 +199,7 @@ public:
    */
   bool operator==(const BoundingBox& rhs) const
   {
-    return rhs.m_Bounds == m_Bounds;
+    return (rhs.m_Lower == m_Lower) && (rhs.m_Upper == m_Upper);
   }
 
   /**
@@ -301,11 +209,21 @@ public:
    */
   bool operator!=(const BoundingBox& rhs) const
   {
-    return rhs.m_Bounds != m_Bounds;
+    return (rhs.m_Lower != m_Lower) || (rhs.m_Upper != m_Upper);
   }
 
 protected:
-private:
-  std::array<T, 6> m_Bounds;
+  PointType m_Lower;
+  PointType m_Upper;
 };
+
+template<typename T>
+using BoundingBox3D = BoundingBox<T, Point3D>;
+using BoundingBox3Df = BoundingBox<float32, Point3D>;
+using BoundingBox3Dd = BoundingBox<float64, Point3D>;
+
+template<typename T>
+using BoundingBox2D = BoundingBox<T, Point2D>;
+using BoundingBox2Df = BoundingBox<float32, Point2D>;
+using BoundingBox2Dd = BoundingBox<float64, Point2D>;
 } // namespace complex

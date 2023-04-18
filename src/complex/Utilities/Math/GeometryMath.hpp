@@ -160,7 +160,7 @@ float32 FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Poin
  * @return bool
  */
 template <typename T>
-bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox<T>& box)
+bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox3D<T>& box)
 {
   throw std::runtime_error("");
 }
@@ -222,7 +222,7 @@ bool IsPointInTriangle2D(const complex::Point2D<T>& p0, const complex::Point2D<T
  * @return bool
  */
 template <typename T>
-bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox<T>& bounds)
+bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox3D<T>& bounds)
 {
   throw std::runtime_error("");
 }
@@ -251,7 +251,7 @@ uint8 FindRayIntersectionsWithSphere(const complex::Ray<T>& ray, const complex::
  * @return float
  */
 template <typename T>
-T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox<T>& box)
+T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox3D<T>& box)
 {
   throw std::runtime_error("");
 }
@@ -268,7 +268,7 @@ complex::Ray<float32> COMPLEX_EXPORT GenerateRandomRay(float32 length);
  * @param verts
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
+complex::BoundingBox3D<float32> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
 
 /**
  * @brief Returns the BoundingBox around the specified face.
@@ -276,7 +276,7 @@ complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::
  * @param faceId
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId);
+complex::BoundingBox3D<float32> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId);
 
 /**
  * @brief Returns the BoundingBox around the specified face manipulated by the
@@ -286,7 +286,7 @@ complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::Tria
  * @param float[3][3]
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3]);
+complex::BoundingBox3D<float32> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3]);
 
 /**
  * @param TriangleGeom* faces

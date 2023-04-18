@@ -24,17 +24,17 @@ complex::Ray<float32> complex::GeometryMath::GenerateRandomRay(float32 length)
   throw std::runtime_error("");
 }
 
-complex::BoundingBox<float32> complex::GeometryMath::FindBoundingBoxOfVertices(complex::VertexGeom* verts)
+complex::BoundingBox3D<float32> complex::GeometryMath::FindBoundingBoxOfVertices(complex::VertexGeom* verts)
 {
   throw std::runtime_error("");
 }
 
-complex::BoundingBox<float32> complex::GeometryMath::FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId)
+complex::BoundingBox3D<float32> complex::GeometryMath::FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId)
 {
   throw std::runtime_error("");
 }
 
-complex::BoundingBox<float32> complex::GeometryMath::FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3])
+complex::BoundingBox3D<float32> complex::GeometryMath::FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3])
 {
   throw std::runtime_error("");
 }
