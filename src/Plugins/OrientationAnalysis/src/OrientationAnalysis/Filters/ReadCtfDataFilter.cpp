@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -170,14 +171,14 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   }
 
   // Create the Ensemble AttributeMatrix
-  DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
-  {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(ensembleAttributeMatrixPath);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
-  }
-
   std::vector<std::shared_ptr<CtfPhase>> angPhases = reader.getPhaseVector();
   tupleDims = {angPhases.size() + 1}; // Always create 1 extra slot for the phases.
+  DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
+  {
+    auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(ensembleAttributeMatrixPath, tupleDims);
+    resultOutputActions.value().actions.push_back(std::move(createAttributeMatrixAction));
+  }
+
   // Create the Crystal Structures Array
   {
     cDims[0] = 1;
