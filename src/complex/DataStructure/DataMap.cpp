@@ -317,8 +317,12 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
   m_Map = std::move(rhs.m_Map);
   return *this;
 }
+
 void DataMap::updateIds(const std::vector<std::pair<IdType, IdType>>& updatedIds)
 {
+  using UpdatedValueType = std::pair<IdType, std::shared_ptr<DataObject>>;
+  std::list<UpdatedValueType> movedValues;
+
   for(const auto& updatedId : updatedIds)
   {
     if(!contains(updatedId.first))
@@ -326,8 +330,15 @@ void DataMap::updateIds(const std::vector<std::pair<IdType, IdType>>& updatedIds
       continue;
     }
 
-    auto extractedPair = m_Map.extract(updatedId.first);
-    extractedPair.key() = updatedId.second;
-    m_Map.insert(std::move(extractedPair));
+    // Copy and remove updated values
+    auto ptr = m_Map[updatedId.first];
+    movedValues.emplace_back(UpdatedValueType{updatedId.first, ptr});
+    m_Map.erase(updatedId.first);
+  }
+
+  // Re-assign updated values
+  for(const UpdatedValueType& updatedValue : movedValues)
+  {
+    m_Map[updatedValue.first] = updatedValue.second;
   }
 }

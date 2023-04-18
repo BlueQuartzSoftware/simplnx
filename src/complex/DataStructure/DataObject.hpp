@@ -222,6 +222,11 @@ public:
   ParentCollectionType getParentIds() const;
 
   /**
+   * @brief Clears the list of parent IDs.
+   */
+  void clearParents();
+
+  /**
    * @brief Returns a vector of DataPaths to the object.
    * @return std::vector<DataPath>
    */
