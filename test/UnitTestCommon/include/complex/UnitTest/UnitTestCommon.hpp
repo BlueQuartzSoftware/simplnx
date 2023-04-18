@@ -237,11 +237,8 @@ inline DataStructure LoadDataStructure(const fs::path& filepath)
  */
 inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
 {
-  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filepath);
-  COMPLEX_RESULT_REQUIRE_VALID(result);
-  complex::HDF5::FileWriter fileWriter = std::move(result.value());
-
-  const Result<> result2 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  Pipeline pipeline;
+  const Result<> result2 = DREAM3D::WriteFile(filepath, dataStructure, pipeline, true);
   COMPLEX_RESULT_REQUIRE_VALID(result2);
 }
 

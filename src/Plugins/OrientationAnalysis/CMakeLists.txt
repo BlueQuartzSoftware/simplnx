@@ -54,7 +54,6 @@ set(FilterList
   GenerateFZQuaternions
   GenerateGBCDPoleFigureFilter
   GenerateIPFColorsFilter
-  GeneratePoleFigureFilter
   GenerateQuaternionConjugateFilter
   ImportH5EspritDataFilter
   ImportH5OimDataFilter
@@ -187,7 +186,6 @@ set(filter_algorithms
   GenerateFaceMisorientationColoring
   GenerateGBCDPoleFigure
   GenerateIPFColors
-  GeneratePoleFigure
   GenerateQuaternionConjugate
   GroupFeatures
   ImportH5EspritData

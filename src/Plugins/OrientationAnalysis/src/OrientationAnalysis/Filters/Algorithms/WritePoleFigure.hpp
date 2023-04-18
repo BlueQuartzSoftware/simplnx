@@ -13,7 +13,11 @@
 
 namespace complex
 {
-
+namespace write_pole_figure
+{
+const std::string k_ImageAttrMatName("CellData");
+const std::string k_ImageDataName("Image");
+} // namespace write_pole_figure
 struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
 {
   StringParameter::ValueType Title;
@@ -31,6 +35,10 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
   DataPath GoodVoxelsArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath MaterialNameArrayPath;
+
+  bool SaveAsImageGeometry;
+  bool WriteImageToDisk;
+  DataPath OutputImageGeometryPath;
 };
 
 /**
@@ -84,6 +92,10 @@ private:
   const WritePoleFigureInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  std::vector<unsigned char> m_FiraSansRegular;
+  std::vector<unsigned char> m_LatoRegular;
+  std::vector<unsigned char> m_LatoBold;
 };
 
 } // namespace complex

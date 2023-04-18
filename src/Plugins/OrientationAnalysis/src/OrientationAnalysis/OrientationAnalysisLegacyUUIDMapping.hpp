@@ -51,7 +51,6 @@
 #include "OrientationAnalysis/Filters/GenerateFZQuaternions.hpp"
 #include "OrientationAnalysis/Filters/GenerateGBCDPoleFigureFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateIPFColorsFilter.hpp"
-#include "OrientationAnalysis/Filters/GeneratePoleFigureFilter.hpp"
 #include "OrientationAnalysis/Filters/GenerateQuaternionConjugateFilter.hpp"
 #include "OrientationAnalysis/Filters/ImportH5EspritDataFilter.hpp"
 #include "OrientationAnalysis/Filters/ImportH5OimDataFilter.hpp"
