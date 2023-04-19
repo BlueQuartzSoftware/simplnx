@@ -15,11 +15,10 @@ namespace
 const std::string k_Existing = "[Existing]";
 const std::string k_Masked = "[Mask]";
 const std::string k_Computed = "[Computed]";
-const std::string k_VoxelIndices = "VoxelIndices";
 
 const DataPath k_ExistingImageGeomPath({k_ImageGeometry.str() + " " + k_Existing});
-const DataPath k_VertexGeometryPath({"Point Cloud"});
-const DataPath k_VertexDataPath = k_VertexGeometryPath.createChildPath("VertexData");
+const DataPath k_VertexGeometryPath({k_PointCloudContainerName});
+const DataPath k_VertexDataPath = k_VertexGeometryPath.createChildPath(k_VertexData);
 const DataPath k_MaskPath = k_VertexDataPath.createChildPath(k_Mask);
 
 const DataPath k_ManualImageGeomPathExemplar({k_ImageGeometry});
@@ -29,12 +28,12 @@ const DataPath k_ManualImageGeomPathComputed({k_ImageGeometry.str() + " " + k_Co
 const DataPath k_ManualMaskImageGeomPathComputed({k_ImageGeometry.str() + " " + k_Masked + " " + k_Computed});
 
 const DataPath k_VoxelIndicesManualExemplar = k_VertexDataPath.createChildPath(k_VoxelIndices);
-const DataPath k_VoxelIndicesManualMaskExemplar = k_VertexDataPath.createChildPath(k_VoxelIndices + " " + k_Masked);
-const DataPath k_VoxelIndicesExistingMaskExemplar = k_VertexDataPath.createChildPath(k_VoxelIndices + " " + k_Existing);
+const DataPath k_VoxelIndicesManualMaskExemplar = k_VertexDataPath.createChildPath(k_VoxelIndices.str() + " " + k_Masked);
+const DataPath k_VoxelIndicesExistingMaskExemplar = k_VertexDataPath.createChildPath(k_VoxelIndices.str() + " " + k_Existing);
 
-const DataPath k_VoxelIndicesManualComputed = k_VertexDataPath.createChildPath(k_VoxelIndices + " " + k_Computed);
-const DataPath k_VoxelIndicesManualMaskComputed = k_VertexDataPath.createChildPath(k_VoxelIndices + " " + k_Masked + " " + k_Computed);
-const DataPath k_VoxelIndicesExistingMaskComputed = k_VertexDataPath.createChildPath(k_VoxelIndices + " " + k_Existing + " " + k_Computed);
+const DataPath k_VoxelIndicesManualComputed = k_VertexDataPath.createChildPath(k_VoxelIndices.str() + " " + k_Computed);
+const DataPath k_VoxelIndicesManualMaskComputed = k_VertexDataPath.createChildPath(k_VoxelIndices.str() + " " + k_Masked + " " + k_Computed);
+const DataPath k_VoxelIndicesExistingMaskComputed = k_VertexDataPath.createChildPath(k_VoxelIndices.str() + " " + k_Existing + " " + k_Computed);
 } // namespace
 
 TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Valid Filter Execution - Manual Geometry", "[MapPointCloudToRegularGridFilter]")

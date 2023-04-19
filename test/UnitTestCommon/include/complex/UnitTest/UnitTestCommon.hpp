@@ -65,6 +65,7 @@ inline constexpr StringLiteral k_Phase_Data("Phase Data");
 
 inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");
 inline constexpr StringLiteral k_VertexDataContainerName("VertexDataContainer");
+inline constexpr StringLiteral k_PointCloudContainerName("Point Cloud");
 inline constexpr StringLiteral k_FaceData("FaceData");
 inline constexpr StringLiteral k_Face_Data("Face Data");
 inline constexpr StringLiteral k_VertexData("VertexData");
@@ -123,6 +124,7 @@ inline constexpr StringLiteral k_FaceDataGroupName("Face Data");
 inline constexpr StringLiteral k_Face_Labels("Face Labels");
 inline constexpr StringLiteral k_NormalsLabels("Normals");
 inline constexpr StringLiteral k_TriangleAreas("Triangle Areas");
+inline constexpr StringLiteral k_VoxelIndices = "VoxelIndices";
 
 inline constexpr StringLiteral k_LevelZero("ZERO");
 inline constexpr StringLiteral k_LevelOne("ONE");
