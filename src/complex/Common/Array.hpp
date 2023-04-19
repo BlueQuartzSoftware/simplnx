@@ -422,6 +422,15 @@ public:
   }
 
   /**
+   * @brief Returns the sum of squares of this
+   * @return T
+   */
+  inline T sumOfSquares() const
+  {
+    return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1];
+  }
+
+  /**
    * @brief Converts the internal data structure to a tuple_type.
    * @return tuple_type
    */
@@ -658,6 +667,15 @@ public:
   inline T dot(const Vec3<T>& v) const
   {
     return (*this)[0] * v[0] + (*this)[1] * v[1] + (*this)[2] * v[2];
+  }
+
+  /**
+   * @brief Returns the sum of squares of this
+   * @return T
+   */
+  inline T sumOfSquares() const
+  {
+    return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1] + (*this)[2] * (*this)[2];
   }
 
   /**

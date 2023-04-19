@@ -22,12 +22,18 @@ namespace GeometryMath
  * vector. The vectors are assumed to cross at (0,0,0).
  * @param a
  * @param b
- * @return float
+ * @return T
  */
 template <typename T>
-T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
+inline T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  throw std::runtime_error("");
+  T norm1 = sqrt(a.sumOfSquares());
+  T norm2 = sqrt(b.sumOfSquares());
+  if(norm1 == 0 || norm2 == 0)
+  {
+    return 1.0;
+  }
+  return (a.dot(b)) / (norm1 * norm2);
 }
 
 /**
@@ -45,9 +51,9 @@ float32 COMPLEX_EXPORT AngleBetweenVectors(const complex::ZXZEuler& a, const com
  * @return T
  */
 template <typename T>
-T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
+inline T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  throw std::runtime_error("");
+  return sqrt((b - a).sumOfSquares());
 }
 
 /**
@@ -57,9 +63,9 @@ T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D
  * @return T
  */
 template <typename T>
-T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D<T>& b)
+inline T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D<T>& b)
 {
-  throw std::runtime_error("");
+  return sqrt((b - a).sumOfSquares());
 }
 
 /**
@@ -70,9 +76,9 @@ T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D
  * @return T
  */
 template <typename T>
-T FindTriangleArea(const complex::Point3D<T>& a, const complex::Point3D<T>& b, const complex::Point3D<T>& c)
+inline T FindTriangleArea(const complex::Point3D<T>& a, const complex::Point3D<T>& b, const complex::Point3D<T>& c)
 {
-  throw std::runtime_error("");
+  return ((b[0] - a[0]) * (c[1] - a[1])) - ((c[0] - a[0]) * (b[1] - a[1]));
 }
 
 /**
@@ -104,23 +110,25 @@ ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64 numVerts
  * @param p0
  * @param p1
  * @param p2
- * @return complex::ZXZEuler<T>
+ * @return complex::Vec3<T>
  */
-complex::ZXZEuler COMPLEX_EXPORT FindPlaneNormalVector(const complex::Point3D<float32>& p0, const complex::Point3D<float32>& p1, const complex::Point3D<float32>& p2);
+ template<typename T>
+inline complex::Vec3<T> FindPlaneNormalVector(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2)
+{
+  return (p1 - p0).cross(p2 - p0);
+}
 
 /**
- * @brief Finds the coefficients and normal for a plane defined by three points
+ * @brief Finds the coefficients for a plane defined by three points
  * along its surface.
  * @param p0
- * @param p1
- * @param p2
- * @param c
  * @param normal
+ * @return T - the coefficients for the plane
  */
 template <typename T>
-void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const float& c, ZXZEuler& normal)
+inline T FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Vec3<T>& normal)
 {
-  throw std::runtime_error("");
+  return p0.dot(normal);
 }
 
 /**
@@ -130,12 +138,12 @@ void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D
  * @param p1
  * @param p2
  * @param point
- * @return float
+ * @return T
  */
 template <typename T>
-float32 FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
+T FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
 {
-  throw std::runtime_error("");
+  return FindDistanceBetweenPoints((p0 + p1 + p2)/static_cast<T>(3.0), point);
 }
 
 /**
@@ -160,9 +168,11 @@ float32 FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Poin
  * @return bool
  */
 template <typename T>
-bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox3D<T>& box)
+inline bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox3D<T>& box)
 {
-  throw std::runtime_error("");
+  auto min = box.getMinPoint();
+  auto max = box.getMaxPoint();
+  return (min[0] <= point[0]) && (point[0] <= max[0]) && (min[1] <= point[1]) && (point[1] <= max[1]) && (min[2] <= point[2]) && (point[2] <= max[2]);
 }
 
 /**
@@ -268,7 +278,7 @@ complex::Ray<float32> COMPLEX_EXPORT GenerateRandomRay(float32 length);
  * @param verts
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox3D<float32> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
 
 /**
  * @brief Returns the BoundingBox around the specified face.
@@ -276,7 +286,7 @@ complex::BoundingBox3D<float32> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex
  * @param faceId
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox3D<float32> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId);
 
 /**
  * @brief Returns the BoundingBox around the specified face manipulated by the
@@ -286,14 +296,14 @@ complex::BoundingBox3D<float32> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::Tr
  * @param float[3][3]
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox3D<float32> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3]);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3]);
 
 /**
  * @param TriangleGeom* faces
  * @param Int32Int32DynamicListArray.ElementList faceIds
  * @return complex::BoundingBox<float32>
  */
-// complex::BoundingBox<float32> FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
+//complex::BoundingBox3Df FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
 //{
 //  throw std::runtime_error("");
 //}

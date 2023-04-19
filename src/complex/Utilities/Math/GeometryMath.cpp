@@ -14,27 +14,22 @@ ZXZEuler complex::GeometryMath::FindPolygonNormal(const float* vertices, uint64 
   throw std::runtime_error("");
 }
 
-complex::ZXZEuler complex::GeometryMath::FindPlaneNormalVector(const complex::Point3D<float32>& p0, const complex::Point3D<float32>& p1, const complex::Point3D<float32>& p2)
-{
-  throw std::runtime_error("");
-}
-
 complex::Ray<float32> complex::GeometryMath::GenerateRandomRay(float32 length)
 {
   throw std::runtime_error("");
 }
 
-complex::BoundingBox3D<float32> complex::GeometryMath::FindBoundingBoxOfVertices(complex::VertexGeom* verts)
+complex::BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfVertices(complex::VertexGeom* verts)
 {
   throw std::runtime_error("");
 }
 
-complex::BoundingBox3D<float32> complex::GeometryMath::FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId)
+complex::BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId)
 {
   throw std::runtime_error("");
 }
 
-complex::BoundingBox3D<float32> complex::GeometryMath::FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3])
+complex::BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3])
 {
   throw std::runtime_error("");
 }
