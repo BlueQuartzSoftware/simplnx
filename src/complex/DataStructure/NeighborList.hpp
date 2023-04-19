@@ -23,6 +23,8 @@ public:
   using value_type = T;
   using VectorType = std::vector<T>;
   using SharedVectorType = std::shared_ptr<VectorType>;
+  using iterator = typename std::vector<SharedVectorType>::iterator;
+  using const_iterator = typename std::vector<SharedVectorType>::const_iterator;
 
   NeighborList() = default;
 
@@ -332,6 +334,13 @@ public:
   void resizeTuples(const std::vector<usize>& tupleShape) override;
 
   const std::vector<SharedVectorType>& getValues() const;
+
+  iterator begin();
+  iterator end();
+  const_iterator begin() const;
+  const_iterator end() const;
+  const_iterator cbegin() const;
+  const_iterator cend() const;
 
 protected:
   /**
