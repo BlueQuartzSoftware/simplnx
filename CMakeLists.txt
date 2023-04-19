@@ -651,6 +651,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp

@@ -69,36 +69,35 @@ usize INodeGeometry0D::getNumberOfCells() const
   return vertices.getNumberOfTuples();
 }
 
-Result<INodeGeometry0D::BoundingBox> INodeGeometry0D::getBoundingBox() const
+BoundingBox3Df INodeGeometry0D::getBoundingBox() const
 {
   FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   FloatVec3 ur = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
 
-  try
+  const IGeometry::SharedVertexList& vertexList = getVerticesRef();
+  if(vertexList.getDataType() != DataType::float32)
   {
-    const IGeometry::SharedVertexList& vertexList = getVerticesRef();
-    auto& vertexListStore = vertexList.getIDataStoreRefAs<const DataStore<float32>>();
-
-    for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
-    {
-      float x = vertexListStore.getComponentValue(tuple, 0);
-      ll[0] = (x < ll[0]) ? x : ll[0];
-      ur[0] = (x > ur[0]) ? x : ur[0];
-
-      float y = vertexListStore.getComponentValue(tuple, 1);
-      ll[1] = (y < ll[1]) ? y : ll[1];
-      ur[1] = (y > ur[1]) ? y : ur[1];
-
-      float z = vertexListStore.getComponentValue(tuple, 2);
-      ll[2] = (z < ll[2]) ? z : ll[2];
-      ur[2] = (z > ur[2]) ? z : ur[2];
-    }
-  } catch(const std::bad_cast& exception)
-  {
-    return MakeErrorResult<INodeGeometry0D::BoundingBox>(-2000, fmt::format("Could not the geometry's bounding box because an exception was thrown: {}", exception.what()));
+    return {ll, ur}; // will be invalid
   }
 
-  return {std::make_pair(ll, ur)};
+  auto& vertexListStore = vertexList.getIDataStoreRefAs<const DataStore<float32>>();
+
+  for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
+  {
+    float x = vertexListStore.getComponentValue(tuple, 0);
+    ll[0] = (x < ll[0]) ? x : ll[0];
+    ur[0] = (x > ur[0]) ? x : ur[0];
+
+    float y = vertexListStore.getComponentValue(tuple, 1);
+    ll[1] = (y < ll[1]) ? y : ll[1];
+    ur[1] = (y > ur[1]) ? y : ur[1];
+
+    float z = vertexListStore.getComponentValue(tuple, 2);
+    ll[2] = (z < ll[2]) ? z : ll[2];
+    ur[2] = (z > ur[2]) ? z : ur[2];
+  }
+
+  return {ll, ur}; //should be valid
 }
 
 Result<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const

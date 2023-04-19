@@ -26,8 +26,6 @@ public:
 
   ~INodeGeometry0D() noexcept override = default;
 
-  using BoundingBox = std::pair<FloatVec3, FloatVec3>;
-
   /**
    * @brief Returns a shared pointer to the vertex coordinates array
    * @return
@@ -83,7 +81,7 @@ public:
    * @brief Calculates and returns the bounding box for this geometry
    * @return
    */
-  Result<BoundingBox> getBoundingBox() const;
+  BoundingBox3Df getBoundingBox() const;
 
   /**
    * @brief Returns whether or not this geometry is in a YZ plane.

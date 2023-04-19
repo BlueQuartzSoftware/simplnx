@@ -147,7 +147,7 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
     }
     else
     {
-      originResult = CalculateNodeBasedPartitionSchemeOrigin<Geom>(geometry);
+      originResult = CalculateNodeBasedPartitionSchemeOrigin(geometry);
     }
 
     Result<FloatVec3> pLengthResult = CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
