@@ -954,6 +954,38 @@ void AppendData(const K& inputArray, K& destArray, usize offset)
 }
 
 /**
+ * @brief Copies all of the data from the inputArray into the destination array using the given tuple offsets.
+ */
+template <class K>
+bool CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usize srcTupleOffset, usize totalSrcTuples)
+{
+  if(destTupleOffset >= destArray.getNumberOfTuples())
+  {
+    return false;
+  }
+
+  const usize sourceNumComponents = inputArray.getNumberOfComponents();
+  const usize numComponents = destArray.getNumberOfComponents();
+
+  if(sourceNumComponents != numComponents)
+  {
+    return false;
+  }
+
+  if((totalSrcTuples * sourceNumComponents + destTupleOffset * numComponents) > destArray.getSize())
+  {
+    return false;
+  }
+
+  auto srcBegin = inputArray.begin() + (srcTupleOffset * sourceNumComponents);
+  auto srcEnd = srcBegin + (totalSrcTuples * sourceNumComponents);
+  auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);
+  std::copy(srcBegin, srcEnd, dstBegin);
+
+  return true;
+}
+
+/**
  * @brief This class will append all of the data from the input array of any IArray type to the given destination array of the same IArray type starting at the given tupleOffset. This class DOES NOT
  * do any bounds checking and assumes that the destination array has already been properly resized to fit all of the data
  */
@@ -1066,6 +1098,88 @@ private:
 };
 
 /**
+ * @brief This class will copy all of the data from the input array of any IArray type to the given destination array of the same IArray using the newToOldIndices list. This class DOES NOT
+ * do any bounds checking and assumes that the destination array has already been properly resized to fit all of the data
+ */
+template <typename T>
+class CopyUsingIndexList
+{
+public:
+  CopyUsingIndexList(IArray& destCellArray, const IArray& inputCellArray, const nonstd::span<const int64>& newToOldIndices)
+  : m_ArrayType(destCellArray.getArrayType())
+  , m_InputCellArray(&inputCellArray)
+  , m_DestCellArray(&destCellArray)
+  , m_NewToOldIndices(newToOldIndices)
+  {
+  }
+
+  ~CopyUsingIndexList() = default;
+
+  CopyUsingIndexList(const CopyUsingIndexList&) = default;
+  CopyUsingIndexList(CopyUsingIndexList&&) noexcept = default;
+  CopyUsingIndexList& operator=(const CopyUsingIndexList&) = delete;
+  CopyUsingIndexList& operator=(CopyUsingIndexList&&) noexcept = delete;
+
+  void operator()() const
+  {
+    for(usize i = 0; i < m_NewToOldIndices.size(); i++)
+    {
+      int64 oldIndexI = m_NewToOldIndices[i];
+      bool copySucceeded = true;
+      if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+      {
+        using NeighborListT = NeighborList<T>;
+        auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+        // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+        destArray->setList(i, NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
+        if(oldIndexI >= 0)
+        {
+          copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
+        }
+      }
+      if(m_ArrayType == IArray::ArrayType::DataArray)
+      {
+        using DataArrayT = DataArray<T>;
+        auto* destArray = dynamic_cast<DataArrayT*>(m_DestCellArray);
+        if(oldIndexI >= 0)
+        {
+          copySucceeded = CopyData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
+        }
+        else
+        {
+          destArray->initializeTuple(i, 0);
+        }
+      }
+      if(m_ArrayType == IArray::ArrayType::StringArray)
+      {
+        auto destArray = *dynamic_cast<StringArray*>(m_DestCellArray);
+        if(oldIndexI >= 0)
+        {
+          copySucceeded = CopyData<StringArray>(*dynamic_cast<const StringArray*>(m_InputCellArray), destArray, i, oldIndexI, 1);
+        }
+        else
+        {
+          destArray[i] = "";
+        }
+      }
+
+      if(!copySucceeded)
+      {
+        std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), oldIndexI, i)
+                  << std::endl;
+        break;
+      }
+    }
+  }
+
+private:
+  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+  const IArray* m_InputCellArray = nullptr;
+  IArray* m_DestCellArray = nullptr;
+  nonstd::span<const int64> m_NewToOldIndices;
+};
+
+/**
  * @brief This function will make use of the AppendData class with the bool data type only to append data from the input IArray to the destination IArray at the given tupleOffset. This function DOES
  * NOT do any bounds checking!
  */
@@ -1085,6 +1199,16 @@ inline void RunCombineBoolAppend(const IArray& inputCellArray1, const IArray& in
   using DataArrayT = DataArray<bool>;
   AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(&inputCellArray1), *dynamic_cast<DataArrayT*>(&destCellArray), 0);
   AppendData<DataArrayT>(*dynamic_cast<const DataArrayT*>(&inputCellArray2), *dynamic_cast<DataArrayT*>(&destCellArray), inputCellArray1.getSize());
+}
+
+/**
+ * @brief This function will make use of the CopyUsingIndexList class with the bool data type only to copy data from the input IArray to the destination IArray using the given index list. This
+ * function DOES NOT do any bounds checking!
+ */
+inline void RunBoolCopyUsingIndexList(IArray& destCellArray, const IArray& inputCellArray, const nonstd::span<const int64>& newToOldIndices)
+{
+  using DataArrayT = DataArray<bool>;
+  CopyUsingIndexList<DataArrayT>(*dynamic_cast<DataArrayT*>(&destCellArray), *dynamic_cast<const DataArrayT*>(&inputCellArray), newToOldIndices);
 }
 
 template <class ParallelRunnerT, class... ArgsT>
@@ -1128,6 +1252,28 @@ void RunParallelCombine(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... 
 
   ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
 }
+
+template <class ParallelRunnerT, class... ArgsT>
+void RunParallelCopyUsingIndexList(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+{
+  const IArray::ArrayType arrayType = destArray.getArrayType();
+  DataType dataType = DataType::int32;
+  if(arrayType == IArray::ArrayType::NeighborListArray)
+  {
+    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
+  }
+  if(arrayType == IArray::ArrayType::DataArray)
+  {
+    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    if(dataType == DataType::boolean)
+    {
+      RunBoolCopyUsingIndexList(destArray, std::forward<ArgsT>(args)...);
+    }
+  }
+
+  ExecuteParallelFunction<CopyUsingIndexList, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
+}
+
 } // namespace CopyFromArray
 
 } // namespace complex
