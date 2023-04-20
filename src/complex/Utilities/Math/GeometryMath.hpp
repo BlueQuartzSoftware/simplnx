@@ -5,8 +5,8 @@
 #include "complex/Common/EulerAngle.hpp"
 #include "complex/Common/Ray.hpp"
 #include "complex/Common/Types.hpp"
-#include "complex/complex_export.hpp"
 #include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "complex/complex_export.hpp"
 
 #include <functional>
 #include <stdexcept>
@@ -108,7 +108,7 @@ T FindTetrahedronVolume(const complex::Point3D<T>& p0, const complex::Point3D<T>
  * @param p2
  * @return complex::Vec3<T>
  */
- template<typename T>
+template <typename T>
 inline complex::Vec3<T> FindPlaneNormalVector(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2)
 {
   return (p1 - p0).cross(p2 - p0);
@@ -120,7 +120,7 @@ inline complex::Vec3<T> FindPlaneNormalVector(const complex::Point3D<T>& p0, con
  * @param points must be greater than 2 in size
  * @return Point3D<T>
  */
-template<typename T>
+template <typename T>
 Point3D<T> FindPolygonNormal(nonstd::span<Point3D<T>> points)
 {
   if(points.size() < 3)
@@ -133,7 +133,7 @@ Point3D<T> FindPolygonNormal(nonstd::span<Point3D<T>> points)
     return FindPlaneNormalVector(points[0], points[1], points[2]);
   }
 
-  Point3D<T> normal = {0,0,0};
+  Point3D<T> normal = {0, 0, 0};
   for(usize i = 0; i < points.size() - 3; i++)
   {
     std::transform(normal.begin(), normal.end(), ((points[i + 2] - points[i + 1]).cross(points[i] - points[i + 1])).begin(), normal.begin(), std::plus<T>());
@@ -166,7 +166,7 @@ inline T FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Vec
 template <typename T>
 T FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
 {
-  return FindDistanceBetweenPoints((p0 + p1 + p2)/static_cast<T>(3.0), point);
+  return FindDistanceBetweenPoints((p0 + p1 + p2) / static_cast<T>(3.0), point);
 }
 
 /**
@@ -257,7 +257,7 @@ bool IsPointInTriangle2D(const complex::Point2D<T>& p0, const complex::Point2D<T
  */
 template <typename T>
 bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox3D<T>& bounds)
-{ 
+{
   throw std::runtime_error("");
 }
 
@@ -327,10 +327,10 @@ complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::Tri
  * @param Int32Int32DynamicListArray.ElementList faceIds
  * @return complex::BoundingBox<float32>
  */
-//complex::BoundingBox3Df FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
+// complex::BoundingBox3Df FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
 //{
-//  throw std::runtime_error("");
-//}
+//   throw std::runtime_error("");
+// }
 
 /**
  * @brief Returns the bounding box around the specified faces manipulated by the

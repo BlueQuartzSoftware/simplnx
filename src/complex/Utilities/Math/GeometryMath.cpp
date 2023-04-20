@@ -56,7 +56,7 @@ BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfVertices(INodeGeometry0D&
     ur[2] = (z > ur[2]) ? z : ur[2];
   }
 
-  return {ll, ur}; //should be valid
+  return {ll, ur}; // should be valid
 }
 
 BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFace(TriangleGeom& faces, int32 faceId)

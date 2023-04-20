@@ -217,12 +217,12 @@ protected:
   PointType m_Upper;
 };
 
-template<typename T>
+template <typename T>
 using BoundingBox3D = BoundingBox<T, Point3D>;
 using BoundingBox3Df = BoundingBox<float32, Point3D>;
 using BoundingBox3Dd = BoundingBox<float64, Point3D>;
 
-template<typename T>
+template <typename T>
 using BoundingBox2D = BoundingBox<T, Point2D>;
 using BoundingBox2Df = BoundingBox<float32, Point2D>;
 using BoundingBox2Dd = BoundingBox<float64, Point2D>;
