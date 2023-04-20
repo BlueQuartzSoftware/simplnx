@@ -202,7 +202,7 @@ public:
    * @brief Returns the number of elements
    * @return size_type
    */
-  static constexpr size_type size()
+  size_type size() const
   {
     return Dimensions;
   }
