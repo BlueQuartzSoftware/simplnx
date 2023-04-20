@@ -29,8 +29,8 @@ namespace GeometryMath
 template <typename T>
 inline T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  T norm1 = sqrt(a.sumOfSquares());
-  T norm2 = sqrt(b.sumOfSquares());
+  T norm1 = a.magnitude();
+  T norm2 = b.magnitude();
   if(norm1 == 0 || norm2 == 0)
   {
     return 1.0;

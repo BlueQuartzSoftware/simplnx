@@ -8,11 +8,11 @@ namespace complex
 {
 /**
  * @class BoundingBox
- * @brief The BoundingBox class is designed to describe a box in 3D space
+ * @brief The BoundingBox class is designed to describe a box in 3D/2D space
  * within which all points of interest are contained. This is primarily
  * used to describe the getSize of a geometry but is also used by GeometryMath
  * for calculations checking for points in a given region. As the BoundingBox
- * class operates along X, Y, and Z axis, no rotation information is available.
+ * class operates along X, Y, and Z axis (in 3D version), no rotation information is available.
  *
  * Template Type: Point - Point is a parameter for the type of (complex) Point used
  * by the BoundingBox based on the templated value type.
@@ -58,7 +58,7 @@ public:
    * The format is min X, min Y, min Z, max X, max Y, max Z.
    * @param arr
    */
-  template <class = std::enable_if_t<PointType::Dimensions == 6>>
+  template <class PointT = PointType, class = std::enable_if_t<std::is_same<PointT,Point3D<T>>::value>>
   explicit BoundingBox(const std::array<T, 6>& arr)
   : m_Lower(Point3D<T>(arr[0], arr[1], arr[2]))
   , m_Upper(Point3D<T>(arr[3], arr[4], arr[5]))
@@ -70,7 +70,7 @@ public:
    * The format is min X, min Y, max X, max Y.
    * @param arr
    */
-  template <class = std::enable_if_t<PointType::Dimensions == 4>>
+  template <class PointT = PointType, class = std::enable_if_t<std::is_same<PointT,Point2D<T>>::value>>
   explicit BoundingBox(const std::array<T, 4>& arr)
   : m_Lower(Point2D<T>(arr[0], arr[1]))
   , m_Upper(Point2D<T>(arr[2], arr[3]))

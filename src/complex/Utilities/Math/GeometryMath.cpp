@@ -9,8 +9,8 @@ using namespace complex;
 
 float32 complex::GeometryMath::AngleBetweenVectors(const complex::ZXZEuler& a, const complex::ZXZEuler& b)
 {
-  float norm1 = sqrtf(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-  float norm2 = sqrtf(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
+  float norm1 = std::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+  float norm2 = std::sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
   float cosAng = (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (norm1 * norm2);
   if(cosAng < -1.0f)
   {
@@ -20,7 +20,7 @@ float32 complex::GeometryMath::AngleBetweenVectors(const complex::ZXZEuler& a, c
   {
     cosAng = 1.0;
   }
-  return acosf(cosAng);
+  return std::acos(cosAng);
 }
 
 Ray<float32> complex::GeometryMath::GenerateRandomRay(float32 length)
