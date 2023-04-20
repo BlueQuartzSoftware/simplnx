@@ -1,5 +1,7 @@
 #include "GeometryMath.hpp"
 
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
+
 #include <stdexcept>
 
 using namespace complex;
@@ -14,22 +16,77 @@ ZXZEuler complex::GeometryMath::FindPolygonNormal(const float* vertices, uint64 
   throw std::runtime_error("");
 }
 
-complex::Ray<float32> complex::GeometryMath::GenerateRandomRay(float32 length)
+Ray<float32> complex::GeometryMath::GenerateRandomRay(float32 length)
 {
   throw std::runtime_error("");
 }
 
-complex::BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfVertices(complex::VertexGeom* verts)
+BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfVertices(VertexGeom* verts)
 {
   throw std::runtime_error("");
 }
 
-complex::BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId)
+BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFace(TriangleGeom& faces, int32 faceId)
 {
-  throw std::runtime_error("");
+  std::array<Point3Df, 3> points;
+  faces.getFaceCoordinates(faceId, points);
+
+  Point3Df ll = points[0];
+  Point3Df ur = points[0];
+
+  if(points[1][0] < ll[0])
+  {
+    ll[0] = points[1][0];
+  }
+  if(points[1][0] > ur[0])
+  {
+    ur[0] = points[1][0];
+  }
+  if(points[1][1] < ll[1])
+  {
+    ll[1] = points[1][1];
+  }
+  if(points[1][1] > ur[1])
+  {
+    ur[1] = points[1][1];
+  }
+  if(points[1][2] < ll[2])
+  {
+    ll[2] = points[1][2];
+  }
+  if(points[1][2] > ur[2])
+  {
+    ur[2] = points[1][2];
+  }
+  if(points[2][0] < ll[0])
+  {
+    ll[0] = points[2][0];
+  }
+  if(points[2][0] > ur[0])
+  {
+    ur[0] = points[2][0];
+  }
+  if(points[2][1] < ll[1])
+  {
+    ll[1] = points[2][1];
+  }
+  if(points[2][1] > ur[1])
+  {
+    ur[1] = points[2][1];
+  }
+  if(points[2][2] < ll[2])
+  {
+    ll[2] = points[2][2];
+  }
+  if(points[2][2] > ur[2])
+  {
+    ur[2] = points[2][2];
+  }
+
+  return {ll, ur};
 }
 
-complex::BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3])
+BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfRotatedFace(TriangleGeom* faces, int32 faceId, float32 g[3][3])
 {
   throw std::runtime_error("");
 }

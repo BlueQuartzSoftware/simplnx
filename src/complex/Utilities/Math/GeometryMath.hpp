@@ -92,7 +92,10 @@ inline T FindTriangleArea(const complex::Point3D<T>& a, const complex::Point3D<T
 template <typename T>
 T FindTetrahedronVolume(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& p3)
 {
-  throw std::runtime_error("");
+  auto diffA = p0 - p3;
+  auto diffB = p1 - p3;
+  auto diffC = p2 - p3;
+  return (diffA[2] * ((diffB[0] * diffC[1]) - (diffB[1] * diffC[0]))) + (diffA[1] * ((diffB[2] * diffC[0]) - (diffB[0] * diffC[2]))) + (diffA[0] * ((diffB[1] * diffC[2]) - (diffB[2] * diffC[1])));
 }
 
 /**
@@ -156,9 +159,10 @@ T FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::P
  * @return float
  */
 template <typename T>
-float32 FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& pos)
+T FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& pos)
 {
-  throw std::runtime_error("");
+  auto normal = FindPlaneNormalVector(p0, p1, p2);
+  return (pos.dot(normal) - FindPlaneCoefficients(p0, normal)) /= sqrt(normal.sumOfSquares());
 }
 
 /**
@@ -233,7 +237,7 @@ bool IsPointInTriangle2D(const complex::Point2D<T>& p0, const complex::Point2D<T
  */
 template <typename T>
 bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox3D<T>& bounds)
-{
+{ 
   throw std::runtime_error("");
 }
 
@@ -286,7 +290,7 @@ complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::Vertex
  * @param faceId
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom& faces, int32 faceId);
 
 /**
  * @brief Returns the BoundingBox around the specified face manipulated by the
@@ -343,7 +347,7 @@ uint8 RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, co
  * @brief Returns true if the specified Ray crosses into or out of the triangle
  * defined by its corner points. Returns false otherwise.
  *
- * Tangental intersections where the Ray touches the triangle but does not
+ * Tangential intersections where the Ray touches the triangle but does not
  * enter or leave will return false.
  * @param ray
  * @param p0
@@ -352,7 +356,7 @@ uint8 RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, co
  * @return bool
  */
 template <typename T>
-bool RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+bool RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2, const Ray<T>& ray)
 {
   throw std::runtime_error("");
 }
