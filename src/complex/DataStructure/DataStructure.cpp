@@ -754,16 +754,11 @@ bool DataStructure::validateNumberOfTuples(const std::vector<DataPath>& dataPath
   {
     auto* dataObject = getData(dataPath);
 
-    DataObject::Type dataObjectType = dataObject->getDataObjectType();
+    const DataObject::Type dataObjectType = dataObject->getDataObjectType();
     size_t numTuples = 0;
-    if(dataObjectType == DataObject::Type::NeighborList)
+    if(dataObjectType == DataObject::Type::NeighborList || dataObjectType == DataObject::Type::StringArray || dataObjectType == DataObject::Type::DataArray)
     {
-      auto* dataArray = getDataAs<INeighborList>(dataPath);
-      numTuples = dataArray->getNumberOfTuples();
-    }
-    else if(dataObjectType == DataObject::Type::DataArray)
-    {
-      auto* dataArray = getDataAs<IDataArray>(dataPath);
+      auto* dataArray = getDataAs<IArray>(dataPath);
       numTuples = dataArray->getNumberOfTuples();
     }
     else // We can only check DataObject subclasses that hold items that can be expressed as getNumberOfTuples();
