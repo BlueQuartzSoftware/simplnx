@@ -144,15 +144,7 @@ public:
    */
   PointType center() const
   {
-    PointType boxSize = sideLengths();
-    if constexpr(std::is_same_v<Point<ValueType>, Point3D<ValueType>>)
-    {
-      return {m_Lower[0] + boxSize[0] / 2.0, m_Lower[1] + boxSize[1] / 2.0, m_Lower[2] + boxSize[2] / 2.0};
-    }
-    if constexpr(std::is_same_v<Point<ValueType>, Point2D<ValueType>>)
-    {
-      return {m_Lower[0] + boxSize[0] / 2.0, m_Lower[1] + boxSize[1] / 2.0};
-    }
+    return {(m_Lower + sideLengths()) / static_cast<ValueType>(2.0)};
   }
 
   /**
