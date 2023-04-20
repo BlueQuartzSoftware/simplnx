@@ -175,24 +175,14 @@ public:
    * @param rhs
    * @return BoundingBox&
    */
-  BoundingBox& operator=(const BoundingBox& rhs)
-  {
-    m_Lower = rhs.m_Lower;
-    m_Upper = rhs.m_Upper;
-    return *this;
-  }
+  BoundingBox& operator=(const BoundingBox& rhs) = default;
 
   /**
    * @brief Move assignment operator
    * @param rhs
    * @return BoundingBox&
    */
-  BoundingBox& operator=(BoundingBox&& rhs) noexcept
-  {
-    m_Lower = std::move(rhs.m_Lower);
-    m_Upper = std::move(rhs.m_Upper);
-    return *this;
-  }
+  BoundingBox& operator=(BoundingBox&& rhs) noexcept = default;
 
   /**
    * @brief Equality operator
