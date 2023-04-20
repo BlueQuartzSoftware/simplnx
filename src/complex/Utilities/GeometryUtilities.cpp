@@ -13,7 +13,6 @@ Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const Image
   return {lengthPerPartition};
 }
 
-
 Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
   const Float32Array* xBounds = geometry.getXBounds();

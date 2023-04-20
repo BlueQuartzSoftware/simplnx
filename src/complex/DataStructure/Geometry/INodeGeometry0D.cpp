@@ -97,7 +97,7 @@ BoundingBox3Df INodeGeometry0D::getBoundingBox() const
     ur[2] = (z > ur[2]) ? z : ur[2];
   }
 
-  return {ll, ur}; //should be valid
+  return {ll, ur}; // should be valid
 }
 
 Result<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const
