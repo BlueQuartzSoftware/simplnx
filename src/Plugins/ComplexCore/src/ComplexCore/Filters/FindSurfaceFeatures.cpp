@@ -124,12 +124,12 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
           return;
         }
 
-        const int32 gnum = featureIds[zStride + yStride + x];
-        if(gnum != 0 && !surfaceFeatures[gnum])
+        const int32 gNum = featureIds[zStride + yStride + x];
+        if(gNum != 0 && !surfaceFeatures[gNum])
         {
-          if(IsPointASurfaceFeature(Point3D{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
+          if(IsPointASurfaceFeature(Point3D<usize>{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
           {
-            surfaceFeatures[gnum] = true;
+            surfaceFeatures[gNum] = true;
           }
         }
       }
@@ -166,6 +166,7 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
   for(usize y = 0; y < yPoints; y++)
   {
     const usize yStride = y * xPoints;
+
     for(usize x = 0; x < xPoints; x++)
     {
       if(shouldCancel)
@@ -173,12 +174,12 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
         return;
       }
 
-      const int32 gnum = featureIds[yStride + x];
-      if(gnum != 0 && surfaceFeatures[gnum] == 0)
+      const int32 gNum = featureIds[yStride + x];
+      if(gNum != 0 && surfaceFeatures[gNum] == 0)
       {
-        if(IsPointASurfaceFeature(Point2D{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
+        if(IsPointASurfaceFeature(Point2D<usize>{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
         {
-          surfaceFeatures[gnum] = true;
+          surfaceFeatures[gNum] = true;
         }
       }
     }
@@ -254,7 +255,7 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
   auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
   auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
 
-  const ImageGeom& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
+  const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
   usize geometryDimensionality = featureGeometry.getDimensionality();
   if(geometryDimensionality != 3 && geometryDimensionality != 2)
   {
