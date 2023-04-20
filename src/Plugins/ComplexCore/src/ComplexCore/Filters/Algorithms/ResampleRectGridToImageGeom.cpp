@@ -134,7 +134,7 @@ Result<> ResampleRectGridToImageGeom::operator()()
 
     const auto& srcArray = m_DataStructure.getDataRefAs<IArray>(srcArrayPath);
     const std::string srcName = srcArray.getName();
-    auto& destDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+    auto& destDataArray = dynamic_cast<IArray&>(destCellDataAM.at(srcName));
     m_MessageHandler(fmt::format("Resample Rect Grid To Image Geom || Copying Data Array {}", srcName));
 
     CopyFromArray::RunParallelCopyUsingIndexList(destDataArray, taskRunner, srcArray, newToOldIdxs);

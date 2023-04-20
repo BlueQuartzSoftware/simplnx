@@ -1131,7 +1131,7 @@ public:
         using NeighborListT = NeighborList<T>;
         auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
         // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
-        destArray->setList(i, NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
+        destArray->setList(i, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
         if(oldIndexI >= 0)
         {
           copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
