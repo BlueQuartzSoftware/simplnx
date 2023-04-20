@@ -6,7 +6,9 @@
 #include "complex/Common/Ray.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 
+#include <functional>
 #include <stdexcept>
 #include <vector>
 
@@ -99,15 +101,6 @@ T FindTetrahedronVolume(const complex::Point3D<T>& p0, const complex::Point3D<T>
 }
 
 /**
- * @brief Returns the normal angle for an arbitrary polygon defined by an array
- * of vertices.
- * @param vertices
- * @param numVerts
- * @return complex::ZXZEuler<float32>
- */
-ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64 numVerts);
-
-/**
  * @brief Returns the normal vector for a plane defined by three points along
  * its surface.
  * @param p0
@@ -119,6 +112,33 @@ ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64 numVerts
 inline complex::Vec3<T> FindPlaneNormalVector(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2)
 {
   return (p1 - p0).cross(p2 - p0);
+}
+
+/**
+ * @brief Returns the normal angle for an arbitrary polygon defined by an array
+ * of vertices.
+ * @param points must be greater than 2 in size
+ * @return Point3D<T>
+ */
+template<typename T>
+Point3D<T> FindPolygonNormal(nonstd::span<Point3D<T>> points)
+{
+  if(points.size() < 3)
+  {
+    throw std::runtime_error("This function cannot process under 3 points");
+  }
+
+  if(points.size() == 3)
+  {
+    return FindPlaneNormalVector(points[0], points[1], points[2]);
+  }
+
+  Point3D<T> normal = {0,0,0};
+  for(usize i = 0; i < points.size() - 3; i++)
+  {
+    std::transform(normal.begin(), normal.end(), ((points[i + 2] - points[i + 1]).cross(points[i] - points[i + 1])).begin(), normal.begin(), std::plus<T>());
+  }
+  return normal;
 }
 
 /**
@@ -282,7 +302,7 @@ complex::Ray<float32> COMPLEX_EXPORT GenerateRandomRay(float32 length);
  * @param verts
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::INodeGeometry0D& geom);
 
 /**
  * @brief Returns the BoundingBox around the specified face.
