@@ -140,7 +140,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
     if(srcCellDataPath != path.getParent())
     {
       resultOutputActions.warnings().push_back(
-          {-7365, fmt::format("Data Object at path '{}' is not a cell level array and thus cannot be copied over to the re-sampled image geometry", path.toString())});
+          {-7365, fmt::format("Data Object at path '{}' is not a cell level array but will be copied over to the re-sampled image geometry cell level attribute matrix", path.toString())});
     }
 
     IArray::ArrayType arrayType = srcArray->getArrayType();

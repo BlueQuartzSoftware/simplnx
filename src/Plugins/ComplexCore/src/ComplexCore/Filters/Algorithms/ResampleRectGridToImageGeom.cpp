@@ -116,7 +116,7 @@ Result<> ResampleRectGridToImageGeom::operator()()
       }
     }
   }
-  if(getCancel())
+  if(m_ShouldCancel)
   {
     return {};
   }
