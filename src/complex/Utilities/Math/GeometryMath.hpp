@@ -55,7 +55,7 @@ float32 COMPLEX_EXPORT AngleBetweenVectors(const complex::ZXZEuler& a, const com
 template <typename T>
 inline T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  return sqrt((b - a).sumOfSquares());
+  return std::sqrt((b - a).sumOfSquares());
 }
 
 /**
@@ -67,7 +67,7 @@ inline T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::
 template <typename T>
 inline T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D<T>& b)
 {
-  return sqrt((b - a).sumOfSquares());
+  return std::sqrt((b - a).sumOfSquares());
 }
 
 /**
