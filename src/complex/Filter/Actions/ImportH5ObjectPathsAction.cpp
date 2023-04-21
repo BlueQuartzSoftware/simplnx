@@ -24,33 +24,8 @@ void sortImportPaths(std::vector<DataPath>& importPaths)
 
 std::vector<DataPath> getImportPaths(const DataStructure& importStructure, const std::optional<std::vector<DataPath>>& importPaths)
 {
-  std::vector<DataPath> paths;
-
-  if(importPaths.has_value())
-  {
-    paths = importPaths.value();
-  }
-  else
-  {
-
-    //    importStructure.exportHeirarchyAsText(std::cout);
-    //    std::cout << "*************************************************************" << std::endl;
-    //    paths = importStructure.getAllDataPaths();
-    //    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-    //    for(const auto& path : paths)
-    //    {
-    //      std::cout << path.toString() << std::endl;
-    //    }
-    //    std::cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << std::endl;
-    paths = importStructure.gatherAllPaths();
-    //    for(const auto& path : paths)
-    //    {
-    //      std::cout << path.toString() << std::endl;
-    //    }
-  }
-
+  std::vector<DataPath> paths = (importPaths.has_value() ? importPaths.value() : importStructure.getAllDataPaths());
   sortImportPaths(paths);
-
   return paths;
 }
 } // namespace

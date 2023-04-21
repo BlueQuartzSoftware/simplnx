@@ -876,44 +876,6 @@ void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const
   outputStream << "\n"; // for readability
 }
 
-std::vector<DataPath> DataStructure::gatherAllPaths() const
-{
-  std::vector<DataPath> dataPaths;
-  for(const auto* object : getTopLevelData())
-  {
-    auto topLevelPath = DataPath::FromString(object->getDataPaths()[0].getTargetName()).value();
-    auto optionalDataPaths = GetAllChildDataPaths(*this, topLevelPath);
-
-    dataPaths.push_back(topLevelPath);
-
-    if(optionalDataPaths.has_value() || optionalDataPaths.value().size() != 0)
-    {
-      // Begin recursion
-      recurseHeirarchy(dataPaths, optionalDataPaths.value());
-    }
-  }
-  return dataPaths;
-}
-
-void DataStructure::recurseHeirarchy(std::vector<DataPath>& dataPaths, const std::vector<DataPath>& paths) const
-{
-  for(const auto& path : paths)
-  {
-    // Output parent node, child node, and edge connecting them in .dot format
-    dataPaths.push_back(path);
-
-    // pull child paths or skip to next iteration
-    auto optionalChildPaths = GetAllChildDataPaths(*this, path);
-    if(!optionalChildPaths.has_value() || optionalChildPaths.value().size() == 0)
-    {
-      continue;
-    }
-
-    // recurse
-    recurseHeirarchy(dataPaths, optionalChildPaths.value());
-  }
-}
-
 void DataStructure::exportHeirarchyAsText(std::ostream& outputStream) const
 {
   // set base case

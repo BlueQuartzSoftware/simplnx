@@ -615,10 +615,6 @@ public:
    */
   void exportHeirarchyAsText(std::ostream& outputStream) const;
 
-  std::vector<DataPath> gatherAllPaths() const;
-
-  void recurseHeirarchy(std::vector<DataPath>& dataPaths, const std::vector<DataPath>& paths) const;
-
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
    * @param rhs

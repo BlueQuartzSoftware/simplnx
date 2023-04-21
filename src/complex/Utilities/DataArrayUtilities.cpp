@@ -25,7 +25,7 @@ struct InitializeNeighborListFunctor
   void operator()(INeighborList* iNeighborList)
   {
     auto* neighborList = dynamic_cast<NeighborList<T>*>(iNeighborList);
-    neighborList->setList(neighborList->getNumberOfTuples() - 1, NeighborList<T>::SharedVectorType(new typename NeighborList<T>::VectorType));
+    neighborList->setList(neighborList->getNumberOfTuples() - 1, typename NeighborList<T>::SharedVectorType(new typename NeighborList<T>::VectorType));
   }
 };
 } // namespace
