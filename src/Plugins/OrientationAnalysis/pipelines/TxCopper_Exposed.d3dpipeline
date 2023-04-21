@@ -1,34 +1,8 @@
 {
   "isDisabled": false,
-  "name": "Untitled Pipeline",
+  "name": "TxCopper_Exposed.d3dpipeline",
+  "pinnedParams": [],
   "pipeline": [
-    {
-      "args": {
-        "cell_euler_angles_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles",
-        "cell_phases_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases",
-        "crystal_structures_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures",
-        "generation_algorithm": 0,
-        "good_voxels_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",
-        "image_geometry_path": "PoleFigure",
-        "image_layout": 2,
-        "image_prefix": "Cugrid_after 2nd_15kv_2kx_2 Exposed",
-        "image_size": 1024,
-        "lambert_size": 64,
-        "material_name_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/MaterialName",
-        "num_colors": 32,
-        "output_path": "Data/Output/TexturedCopper/Pole Figure",
-        "save_as_image_geometry": true,
-        "title": "Cugrid_after 2nd_15kv_2kx_2 Exposed",
-        "use_good_voxels": true,
-        "write_image_to_disk": true
-      },
-      "comments": "",
-      "filter": {
-        "name": "complex::WritePoleFigureFilter",
-        "uuid": "00cbb97e-a5c2-43e6-9a35-17a0f9ce26ed"
-      },
-      "isDisabled": false
-    },
     {
       "args": {
         "cell_attribute_matrix_name": "EBSD Scan Data",
@@ -171,6 +145,34 @@
         "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
       },
       "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_euler_angles_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/EulerAngles",
+        "cell_phases_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Phases",
+        "crystal_structures_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures",
+        "generation_algorithm": 0,
+        "good_voxels_array_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask",
+        "image_geometry_path": "PoleFigure",
+        "image_layout": 2,
+        "image_prefix": "Cugrid_after 2nd_15kv_2kx_2_Exposed_",
+        "image_size": 1024,
+        "lambert_size": 64,
+        "material_name_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/MaterialName",
+        "num_colors": 32,
+        "output_path": "",
+        "save_as_image_geometry": true,
+        "title": "Cugrid_after 2nd_15kv_2kx_2 Exposed",
+        "use_good_voxels": true,
+        "write_image_to_disk": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::WritePoleFigureFilter",
+        "uuid": "00cbb97e-a5c2-43e6-9a35-17a0f9ce26ed"
+      },
+      "isDisabled": false
     }
-  ]
+  ],
+  "workflowParams": []
 }

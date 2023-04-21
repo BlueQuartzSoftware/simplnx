@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "avtr12_Analysis copy.d3dpipeline",
+  "name": "avtr12_Analysis.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {

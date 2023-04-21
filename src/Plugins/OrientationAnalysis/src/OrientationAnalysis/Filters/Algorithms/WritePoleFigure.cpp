@@ -363,6 +363,22 @@ Result<> WritePoleFigure::operator()()
   const size_t numPhases = crystalStructures.getNumberOfTuples();
 
   // Loop over all the voxels gathering the Eulers for a specific phase into an array
+  std::vector<usize> tupleShape = {1, static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize)};
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->OutputImageGeometryPath);
+  auto cellAttrMatPath = imageGeom.getCellDataPath();
+  imageGeom.setDimensions({static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize), 1});
+  imageGeom.getCellData()->resizeTuples(tupleShape);
+  for(size_t phase = 1; phase < numPhases; ++phase)
+  {
+    auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("{}Phase_{}", m_InputValues->ImagePrefix, phase));
+    auto arrayCreationResult = complex::CreateArray<uint8>(m_DataStructure, tupleShape, {4ULL}, imageArrayPath, IDataAction::Mode::Execute);
+    if(arrayCreationResult.invalid())
+    {
+      return arrayCreationResult;
+    }
+  }
+
+  // Loop over all the voxels gathering the Eulers for a specific phase into an array
   for(size_t phase = 1; phase < numPhases; ++phase)
   {
     size_t count = 0;
@@ -654,11 +670,11 @@ Result<> WritePoleFigure::operator()()
       context.get_image_data(image.data(), pageWidth, pageHeight, pageWidth * 4, 0, 0);
       if(m_InputValues->SaveAsImageGeometry)
       {
-        auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->OutputImageGeometryPath);
         imageGeom.setDimensions({static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1});
         imageGeom.getCellData()->resizeTuples({1, static_cast<usize>(pageHeight), static_cast<usize>(pageWidth)});
-        auto& imageData =
-            m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->OutputImageGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(write_pole_figure::k_ImageDataName));
+
+        auto imageArrayPath = cellAttrMatPath.createChildPath(fmt::format("{}Phase_{}", m_InputValues->ImagePrefix, phase));
+        auto& imageData = m_DataStructure.getDataRefAs<UInt8Array>(imageArrayPath);
         std::copy(image.begin(), image.end(), imageData.begin());
       }
 
