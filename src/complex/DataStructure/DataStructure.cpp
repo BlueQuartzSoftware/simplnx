@@ -830,7 +830,7 @@ void DataStructure::resetIds(DataObject::IdType startingId)
   m_RootGroup.updateIds(updatedIds);
 }
 
-void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
+void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream) const
 {
   // initialize dot file
   outputStream << "digraph DataGraph {\n"
@@ -856,7 +856,7 @@ void DataStructure::exportHeirarchyAsGraphViz(std::ostream& outputStream)
   outputStream << "}" << std::endl; // for readability
 }
 
-void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent)
+void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const
 {
   for(const auto& path : paths)
   {
@@ -876,7 +876,7 @@ void DataStructure::recurseHeirarchyToGraphViz(std::ostream& outputStream, const
   outputStream << "\n"; // for readability
 }
 
-void DataStructure::exportHeirarchyAsText(std::ostream& outputStream)
+void DataStructure::exportHeirarchyAsText(std::ostream& outputStream) const
 {
   // set base case
   for(const auto* object : getTopLevelData())
@@ -895,7 +895,7 @@ void DataStructure::exportHeirarchyAsText(std::ostream& outputStream)
   outputStream << std::endl; // for readability
 }
 
-void DataStructure::recurseHeirarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent)
+void DataStructure::recurseHeirarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const
 {
   indent += "  ";
 

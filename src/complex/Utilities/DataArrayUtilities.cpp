@@ -18,6 +18,16 @@ Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, co
   dataStructure.removeData(dataPath);
   return CreateArray<T>(dataStructure, tupleShape, componentShape, dataPath, mode);
 }
+
+struct InitializeNeighborListFunctor
+{
+  template <typename T>
+  void operator()(INeighborList* iNeighborList)
+  {
+    auto* neighborList = dynamic_cast<NeighborList<T>*>(iNeighborList);
+    neighborList->setList(neighborList->getNumberOfTuples() - 1, typename NeighborList<T>::SharedVectorType(new typename NeighborList<T>::VectorType));
+  }
+};
 } // namespace
 
 namespace complex
@@ -240,6 +250,13 @@ Result<> ValidateNumFeaturesInArray(const DataStructure& dataStructure, const Da
   }
 
   return results;
+}
+
+//-----------------------------------------------------------------------------
+void InitializeNeighborList(DataStructure& dataStructure, const DataPath& neighborListPath)
+{
+  auto* neighborList = dataStructure.getDataAs<INeighborList>(neighborListPath);
+  ExecuteNeighborFunction(InitializeNeighborListFunctor{}, neighborList->getDataType(), neighborList);
 }
 
 //-----------------------------------------------------------------------------

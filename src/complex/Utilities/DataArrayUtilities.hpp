@@ -718,6 +718,15 @@ Result<> ResizeDataArray(DataStructure& dataStructure, const DataPath& arrayPath
 }
 
 /**
+ * @brief This function resize the outermost vector of the NeighborList's underlying data to the NeighborList's set
+ * number of tuples and initializes each item in the vector to a (non null) pointer to an empty vector
+ *
+ * @param dataStructure
+ * @param neighborListPath The path to the NeighborList to be initialized.
+ */
+COMPLEX_EXPORT void InitializeNeighborList(DataStructure& dataStructure, const DataPath& neighborListPath);
+
+/**
  * @brief These structs and functions are meant to make using a "mask array" or "Good Voxels Array" easier
  * for the developer. There is virtual function call overhead with using these structs and functions.
  *

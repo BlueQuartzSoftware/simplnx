@@ -10,7 +10,7 @@ namespace complex
 {
 /**
  * @class InterpolatePointCloudToRegularGridFilter
- * @brief
+ * @brief This Filter interpolates the values of arrays stored in a Vertex Geometry onto a user-selected Image Geometry.
  */
 class COMPLEXCORE_EXPORT InterpolatePointCloudToRegularGridFilter : public IFilter
 {
@@ -37,7 +37,9 @@ public:
   static inline constexpr StringLiteral k_InterpolateArrays_Key = "interpolate_arrays";
   static inline constexpr StringLiteral k_CopyArrays_Key = "copy_arrays";
   static inline constexpr StringLiteral k_InterpolatedGroup_Key = "interpolated_group";
-  static inline constexpr StringLiteral k_KernelDistancesGroup_Key = "kernel_distances_group";
+  static inline constexpr StringLiteral k_KernelDistancesArray_Key = "kernel_distances_array";
+  static inline constexpr uint64 k_Uniform = 0;
+  static inline constexpr uint64 k_Gaussian = 1;
 
   /**
    * @brief Returns the filter's name.

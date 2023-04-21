@@ -9,6 +9,7 @@
 #include <fmt/core.h>
 
 #include <algorithm>
+#include <sstream>
 
 using namespace complex;
 
@@ -61,11 +62,13 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   importStructure.resetIds(dataStructure.getNextId());
 
   auto importPaths = getImportPaths(importStructure, m_Paths);
+  std::stringstream errorMessages;
   for(const auto& targetPath : importPaths)
   {
     if(!importStructure.containsData(targetPath))
     {
-      return MakeErrorResult(-6201, fmt::format("{}DataStructure Object Path '{}' does not exist for importing.", prefix, targetPath.toString()));
+      errorMessages << fmt::format("{}DataStructure Object Path '{}' does not exist for importing.", prefix, targetPath.toString()) << std::endl;
+      continue;
     }
     auto importObject = importStructure.getSharedData(targetPath);
     auto importData = std::shared_ptr<DataObject>(importObject->shallowCopy());
@@ -79,6 +82,10 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     {
       return {nonstd::make_unexpected(std::vector<Error>{{k_InsertFailureError, fmt::format("{}Unable to import DataObject at '{}'", prefix, targetPath.toString())}})};
     }
+  }
+  if(!errorMessages.str().empty())
+  {
+    return MakeErrorResult(-6201, errorMessages.str());
   }
 
   return {};

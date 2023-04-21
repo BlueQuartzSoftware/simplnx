@@ -16,10 +16,8 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Instantiate", "[ComplexCore][Remo
   Arguments args;
 
   args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeomPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
   args.insertOrAssign(RemoveFlaggedVertices::k_MaskPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexPath_Key, std::make_any<DataPath>());
-  args.insertOrAssign(RemoveFlaggedVertices::k_VertexDataName_Key, std::make_any<std::string>("Vertex Data"));
+  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexGeometryPath_Key, std::make_any<DataPath>());
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -49,9 +47,9 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
   Int32Array* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, vertexTupleDims, {1}, vertexAttributeMatrix->getId());
 
   BoolArray* conditionalArray = UnitTest::CreateTestDataArray<bool>(dataStructure, Constants::k_ConditionalArray, vertexTupleDims, {1}, vertexAttributeMatrix->getId());
-  conditionalArray->fill(true);
+  conditionalArray->fill(false);
   // initialize the coords just to have something other than 0.0
-  // Set the first 25 values of the conditional array to false, thus keeping 75 vertices
+  // Set the first 25 values of the conditional array to true, thus keeping 75 vertices
   for(size_t i = 0; i < vertexTupleDims[0]; i++)
   {
     coords->initializeTuple(i, static_cast<float>(i));
@@ -59,7 +57,7 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
     featureIds->initializeTuple(i, static_cast<int32>(i));
     if(i < 25)
     {
-      conditionalArray->initializeTuple(i, false);
+      conditionalArray->initializeTuple(i, true);
     }
   }
 
@@ -71,10 +69,8 @@ TEST_CASE("ComplexCore::RemoveFlaggedVertices: Test Algorithm", "[ComplexCore][R
   DataPath reducedVertexAMPath = reducedVertexPath.createChildPath(Constants::k_VertexDataGroupName);
 
   args.insertOrAssign(RemoveFlaggedVertices::k_VertexGeomPath_Key, std::make_any<DataPath>(vertexGeomPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_ArraySelection_Key, std::make_any<std::vector<DataPath>>(arraySelection));
   args.insertOrAssign(RemoveFlaggedVertices::k_MaskPath_Key, std::make_any<DataPath>(maskPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexPath_Key, std::make_any<DataPath>(reducedVertexPath));
-  args.insertOrAssign(RemoveFlaggedVertices::k_VertexDataName_Key, std::make_any<std::string>(Constants::k_VertexDataGroupName));
+  args.insertOrAssign(RemoveFlaggedVertices::k_ReducedVertexGeometryPath_Key, std::make_any<DataPath>(reducedVertexPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
