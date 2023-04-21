@@ -160,7 +160,7 @@
         "lambert_size": 64,
         "material_name_array_path": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/MaterialName",
         "num_colors": 32,
-        "output_path": "",
+        "output_path": "Data/Output/TexturedCopper",
         "save_as_image_geometry": true,
         "title": "Cugrid_after 2nd_15kv_2kx_2 Exposed",
         "use_good_voxels": true,
