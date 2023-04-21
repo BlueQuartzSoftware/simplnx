@@ -29,6 +29,10 @@ This **Filter**  will read a binary STL File and create a **Triangle Geometry** 
 | STL File | File Path  | The input .stl file path |
 | Scale Output | Bool | Should the output vertex values be scaled |
 | Scale Factor | Float | Apply the scaling factor to each vertex |
+| Vertex Attribute Matrix | String | Name of the created Vertex Attribute Matrix |
+| Face Attribute Matrix | String | Name of the created Face Attribute Matrix |
+| Shared Vertex Attribute Matrix | String | Name of the created Shared Vertex Attribute Matrix |
+| Shared Face Attribute Matrix | String | Name of the created Shared Face Attribute Matrix |
 
 ## Required Geometry ##
 
