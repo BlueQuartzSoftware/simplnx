@@ -471,9 +471,9 @@ Result<> WritePoleFigure::operator()()
       float32 xCharWidth = 0.0f;
       {
         canvas_ity::canvas tempContext(m_InputValues->ImageSize, m_InputValues->ImageSize);
-        const char buf = {'X'};
+        const std::array<char, 2> buf = {'X', 0};
         tempContext.set_font(m_LatoBold.data(), static_cast<int>(m_LatoBold.size()), fontPtSize);
-        xCharWidth = tempContext.measure_text(&buf);
+        xCharWidth = tempContext.measure_text(buf.data());
       }
       // Each Pole Figure gets its own Square mini canvas to draw into.
       const float32 subCanvasWidth = margins + imageWidth + xCharWidth + margins;
@@ -596,7 +596,11 @@ Result<> WritePoleFigure::operator()()
           {
             const char charBuf[] = {figureSubtitle[idx + 1], 0};
             context.set_font(m_FiraSansRegular.data(), static_cast<int>(m_FiraSansRegular.size()), fontPtSize);
-            const float tw = context.measure_text(bottomPart.c_str());
+            float tw = 0.0f;
+            if(!bottomPart.empty())
+            {
+              tw = context.measure_text(bottomPart.c_str());
+            }
             const float charWidth = context.measure_text(charBuf);
             const float dashWidth = charWidth * 0.5f;
             const float dashOffset = charWidth * 0.25f;
@@ -651,6 +655,8 @@ Result<> WritePoleFigure::operator()()
       if(m_InputValues->SaveAsImageGeometry)
       {
         auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->OutputImageGeometryPath);
+        imageGeom.setDimensions({static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1});
+        imageGeom.getCellData()->resizeTuples({1, static_cast<usize>(pageHeight), static_cast<usize>(pageWidth)});
         auto& imageData =
             m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->OutputImageGeometryPath.createChildPath(write_pole_figure::k_ImageAttrMatName).createChildPath(write_pole_figure::k_ImageDataName));
         std::copy(image.begin(), image.end(), imageData.begin());
