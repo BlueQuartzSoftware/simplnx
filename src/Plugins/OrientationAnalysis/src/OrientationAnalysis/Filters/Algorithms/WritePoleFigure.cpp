@@ -303,9 +303,9 @@ WritePoleFigure::WritePoleFigure(DataStructure& dataStructure, const IFilter::Me
 , m_MessageHandler(mesgHandler)
 {
   // Initialize our fonts
-  fonts::base64_decode(fonts::k_FiraSansRegularBase64, m_FiraSansRegular);
-  fonts::base64_decode(fonts::k_LatoRegularBase64, m_LatoRegular);
-  fonts::base64_decode(fonts::k_LatoBoldBase64, m_LatoBold);
+  fonts::Base64Decode(fonts::k_FiraSansRegularBase64, m_FiraSansRegular);
+  fonts::Base64Decode(fonts::k_LatoRegularBase64, m_LatoRegular);
+  fonts::Base64Decode(fonts::k_LatoBoldBase64, m_LatoBold);
 }
 
 // -----------------------------------------------------------------------------

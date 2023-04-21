@@ -36,7 +36,7 @@ namespace
 float32 GetXCharWidth(int32 imageSize, float32 fontPtSize)
 {
   std::vector<unsigned char> m_LatoBold;
-  fonts::base64_decode(fonts::k_LatoBoldBase64, m_LatoBold);
+  fonts::Base64Decode(fonts::k_LatoBoldBase64, m_LatoBold);
 
   canvas_ity::canvas tempContext(imageSize, imageSize);
   const char buf = {'X'};
