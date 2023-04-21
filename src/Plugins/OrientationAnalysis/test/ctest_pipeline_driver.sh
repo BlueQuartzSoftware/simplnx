@@ -5,7 +5,7 @@
 #set -e
 
 echo "[@PLUGIN_NAME@_@ARGS_TEST_INDEX@] Prebuilt Pipeline Test Starting"
-echo "    @test@.d3dpipeline"
+echo "    @test@"
 
 PIPELINE_RUNNER_DEBUG=""
 if [ "@CMAKE_BUILD_TYPE@" = "Debug" ]; then
@@ -13,7 +13,7 @@ if [ "@CMAKE_BUILD_TYPE@" = "Debug" ]; then
 fi
 
 cd "@CMAKE_RUNTIME_OUTPUT_DIRECTORY@"
-"./@PIPELINE_RUNNER_NAME@${DEBUG_EXT}" "@ARGS_PIPELINE_PATH@"
+"./@PIPELINE_RUNNER_NAME@${DEBUG_EXT}" --execute "@ARGS_PIPELINE_PATH@"
 
 #-----------------------------------------------------------------------------
 # These files need to be deleted after the test has completed

@@ -1,4 +1,4 @@
-#include "PRObserver.hpp"
+#include "CliObserver.hpp"
 
 #include "complex/Pipeline/Messaging/AbstractPipelineMessage.hpp"
 
@@ -6,7 +6,7 @@
 #include <string>
 
 using namespace complex;
-using namespace complex::PipelineRunner;
+using namespace complex::CLI;
 
 PipelineObserver::PipelineObserver(Pipeline* pipeline)
 {
