@@ -78,8 +78,10 @@ Parameters StlFileReaderFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_VertexMatrix_Key, "Vertex Matrix Name", "Name of the created Vertex Attribute Matrix", INodeGeometry0D::k_VertexDataName));
   params.insert(std::make_unique<StringParameter>(k_FaceMatrix_Key, "Face Matrix Name", "Name of the created Face Attribute Matrix", INodeGeometry2D::k_FaceDataName));
 
-  params.insert(std::make_unique<StringParameter>(k_SharedVertexMatrix_Key, "Vertex Matrix Name", "Name of the created Vertex Attribute Matrix", CreateTriangleGeometryAction::k_DefaultVerticesName));
-  params.insert(std::make_unique<StringParameter>(k_SharedFaceMatrix_Key, "Face Matrix Name", "Name of the created Face Attribute Matrix", CreateTriangleGeometryAction::k_DefaultFacesName));
+  params.insert(std::make_unique<StringParameter>(k_SharedVertexMatrix_Key, "Shared Vertex Matrix Name", "Name of the created Shared Vertex Attribute Matrix",
+                                                  CreateTriangleGeometryAction::k_DefaultVerticesName));
+  params.insert(
+      std::make_unique<StringParameter>(k_SharedFaceMatrix_Key, "Shared Face Matrix Name", "Name of the created Shared Face Attribute Matrix", CreateTriangleGeometryAction::k_DefaultFacesName));
 
   return params;
 }
