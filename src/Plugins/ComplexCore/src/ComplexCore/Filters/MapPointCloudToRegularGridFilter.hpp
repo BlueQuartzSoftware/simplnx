@@ -30,7 +30,6 @@ public:
   static inline constexpr StringLiteral k_VertexGeometry_Key = "vertex_geometry";
   static inline constexpr StringLiteral k_NewImageGeometry_Key = "new_image_geometry";
   static inline constexpr StringLiteral k_ExistingImageGeometry_Key = "existing_image_geometry";
-  static inline constexpr StringLiteral k_ArraysToMap_Key = "arrays_to_map";
   static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
   static inline constexpr StringLiteral k_MaskPath_Key = "mask";
   static inline constexpr StringLiteral k_VoxelIndices_Key = "voxel_indices";

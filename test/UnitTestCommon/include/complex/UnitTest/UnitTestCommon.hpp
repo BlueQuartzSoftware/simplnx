@@ -65,6 +65,7 @@ inline constexpr StringLiteral k_Phase_Data("Phase Data");
 
 inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");
 inline constexpr StringLiteral k_VertexDataContainerName("VertexDataContainer");
+inline constexpr StringLiteral k_PointCloudContainerName("Point Cloud");
 inline constexpr StringLiteral k_FaceData("FaceData");
 inline constexpr StringLiteral k_Face_Data("Face Data");
 inline constexpr StringLiteral k_VertexData("VertexData");
@@ -123,6 +124,7 @@ inline constexpr StringLiteral k_FaceDataGroupName("Face Data");
 inline constexpr StringLiteral k_Face_Labels("Face Labels");
 inline constexpr StringLiteral k_NormalsLabels("Normals");
 inline constexpr StringLiteral k_TriangleAreas("Triangle Areas");
+inline constexpr StringLiteral k_VoxelIndices = "VoxelIndices";
 
 inline constexpr StringLiteral k_LevelZero("ZERO");
 inline constexpr StringLiteral k_LevelOne("ONE");
@@ -241,6 +243,32 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
 
   const Result<> result2 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
   COMPLEX_RESULT_REQUIRE_VALID(result2);
+}
+
+/**
+ * @brief Compares two Image Geometries
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+inline void CompareImageGeometry(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
+{
+  const auto* exemplarGeom = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
+  const auto* computedGeom = dataStructure.getDataAs<ImageGeom>(computedPath);
+  REQUIRE(exemplarGeom != nullptr);
+  REQUIRE(computedGeom != nullptr);
+
+  const auto exemplarDims = exemplarGeom->getDimensions();
+  const auto computedDims = computedGeom->getDimensions();
+  REQUIRE(exemplarDims == computedDims);
+
+  const auto exemplarSpacing = exemplarGeom->getSpacing();
+  const auto computedSpacing = computedGeom->getSpacing();
+  REQUIRE(exemplarSpacing == computedSpacing);
+
+  const auto exemplarOrigin = exemplarGeom->getOrigin();
+  const auto computedOrigin = computedGeom->getOrigin();
+  REQUIRE(exemplarOrigin == computedOrigin);
 }
 
 /**

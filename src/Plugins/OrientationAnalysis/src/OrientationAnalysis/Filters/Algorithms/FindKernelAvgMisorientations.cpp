@@ -8,6 +8,8 @@
 
 #include "EbsdLib/LaueOps/LaueOps.h"
 
+#include <chrono>
+
 using namespace complex;
 
 namespace
@@ -15,8 +17,9 @@ namespace
 class FindKernelAvgMisorientationsImpl
 {
 public:
-  FindKernelAvgMisorientationsImpl(DataStructure& dataStructure, const FindKernelAvgMisorientationsInputValues* inputValues, const std::atomic_bool& shouldCancel)
-  : m_DataStructure(dataStructure)
+  FindKernelAvgMisorientationsImpl(FindKernelAvgMisorientations* filter, DataStructure& dataStructure, const FindKernelAvgMisorientationsInputValues* inputValues, const std::atomic_bool& shouldCancel)
+  : m_Filter(filter)
+  , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
   {
@@ -44,6 +47,14 @@ public:
     auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
     SizeVec3 udims = gridGeom->getDimensions();
 
+    QuatD q1;
+    QuatD q2;
+
+    // messenger values
+    usize counter = 0;
+    usize increment = (zEnd - zStart) / 100;
+    auto start = std::chrono::steady_clock::now();
+
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);
     auto zPoints = static_cast<int64_t>(udims[2]);
@@ -53,6 +64,18 @@ public:
       {
         break;
       }
+
+      if(counter > increment)
+      {
+        auto now = std::chrono::steady_clock::now();
+        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() < 1000)
+        {
+          m_Filter->sendThreadSafeProgressMessage(counter);
+          counter = 0;
+          start = std::chrono::steady_clock::now();
+        }
+      }
+
       for(size_t row = yStart; row < yEnd; row++)
       {
         for(size_t col = xStart; col < xEnd; col++)
@@ -64,47 +87,40 @@ public:
             int32 numVoxel = 0;
 
             size_t quatIndex = point * 4;
-            QuatF q1(quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]);
+            q1[0] = quats[quatIndex];
+            q1[1] = quats[quatIndex + 1];
+            q1[2] = quats[quatIndex + 2];
+            q1[3] = quats[quatIndex + 3];
 
             uint32_t phase1 = crystalStructures[cellPhases[point]];
             for(int32_t j = -kernelSize[2]; j < kernelSize[2] + 1; j++)
             {
               size_t jStride = j * xPoints * yPoints;
+              if(plane + j < 0 || plane + j > zPoints - 1)
+              {
+                continue;
+              }
               for(int32_t k = -kernelSize[1]; k < kernelSize[1] + 1; k++)
               {
                 size_t kStride = k * xPoints;
+                if(row + k < 0 || row + k > yPoints - 1)
+                {
+                  continue;
+                }
                 for(int32_t l = -kernelSize[0]; l < kernelSize[0] + 1; l++)
                 {
-                  bool good = true;
-                  size_t neighbor = point + (jStride) + (kStride) + (l);
-                  if(plane + j < 0)
+                  if(col + l < 0 || col + l > xPoints - 1)
                   {
-                    good = false;
+                    continue;
                   }
-                  else if(plane + j > zPoints - 1)
-                  {
-                    good = false;
-                  }
-                  else if(row + k < 0)
-                  {
-                    good = false;
-                  }
-                  else if(row + k > yPoints - 1)
-                  {
-                    good = false;
-                  }
-                  else if(col + l < 0)
-                  {
-                    good = false;
-                  }
-                  else if(col + l > xPoints - 1)
-                  {
-                    good = false;
-                  }
-                  if(good && featureIds[point] == featureIds[neighbor])
+                  const size_t neighbor = point + (jStride) + (kStride) + (l);
+                  if(featureIds[point] == featureIds[neighbor])
                   {
                     quatIndex = neighbor * 4;
-                    QuatF q2(quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]);
+                    q2[0] = quats[quatIndex];
+                    q2[1] = quats[quatIndex + 1];
+                    q2[2] = quats[quatIndex + 2];
+                    q2[3] = quats[quatIndex + 3];
                     OrientationF axisAngle = m_OrientationOps[phase1]->calculateMisorientation(q1, q2);
                     totalMisorientation = totalMisorientation + (axisAngle[3] * complex::Constants::k_180OverPiD);
                     numVoxel++;
@@ -122,9 +138,12 @@ public:
           {
             kernelAvgMisorientations[point] = 0.0f;
           }
+
+          counter++;
         }
       }
     }
+    m_Filter->sendThreadSafeProgressMessage(counter);
   }
 
   void operator()(const Range3D& range) const
@@ -133,6 +152,7 @@ public:
   }
 
 private:
+  FindKernelAvgMisorientations* m_Filter = nullptr;
   DataStructure& m_DataStructure;
   const FindKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
@@ -160,15 +180,38 @@ const std::atomic_bool& FindKernelAvgMisorientations::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+void FindKernelAvgMisorientations::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  m_ProgressCounter += counter;
+  auto now = std::chrono::steady_clock::now();
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
+  {
+    return;
+  }
+
+  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalElements)) * 100.0f);
+  std::string ss = fmt::format("Finding Kernel Average Misorientations || {}%", progressInt);
+  m_MessageHandler(IFilter::Message::Type::Info, ss);
+
+  m_LastProgressInt = progressInt;
+  m_InitialPoint = std::chrono::steady_clock::now();
+}
+
+// -----------------------------------------------------------------------------
 Result<> FindKernelAvgMisorientations::operator()()
 {
   auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
   SizeVec3 udims = gridGeom->getDimensions();
 
+  // set up threadsafe messenger
+  m_TotalElements = udims[2] * udims[1] * udims[0];
+
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
   parallelAlgorithm.setParallelizationEnabled(true);
-  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(m_DataStructure, m_InputValues, m_ShouldCancel));
+  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(this, m_DataStructure, m_InputValues, m_ShouldCancel));
 
   return {};
 }

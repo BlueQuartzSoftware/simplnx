@@ -380,9 +380,8 @@ IFilter::PreflightResult CropImageGeometry::preflightImpl(const DataStructure& d
     }
   }
 
-  // This section covers the option of renumbering the Feature Data where we need to do a
-  // similar creation of the Data Arrays based on the arrays in the Source Image Geometry's
-  // Feature Attribute Matrix
+  // This section covers copying the other Attribute Matrix objects from the source geometry
+  // to the destination geometry
   auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
   if(childPaths.has_value())
   {

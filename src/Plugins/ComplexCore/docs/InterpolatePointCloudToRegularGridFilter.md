@@ -7,7 +7,7 @@ Sampling (Interpolation)
 
 ## Description ##
 
-This **Filter** interpolates the values of arrays stored in a **Vertex Geometry** onto a user-selected **Image Geometry**.  The use defines the (x,y,z) radii of a kernel is *real space units*.  This kernel can be intialized to either *uniform* or *Gaussian*.  The interpolation algorithm proceeds as follows:
+This **Filter** interpolates the values of arrays stored in a **Vertex Geometry** onto a user-selected **Image Geometry**.  The user defines the (x,y,z) radii of a kernel in *real space units*.  This kernel can be intialized to either *uniform* or *Gaussian*.  The interpolation algorithm proceeds as follows:
 
 1. The kernel radii defined by the user in real space units are converted into voxel units, based on the spacing of the supplied **Image Geometry**.
 2. The kernel is centered on each vertex in the **Vertex Geometry**.
