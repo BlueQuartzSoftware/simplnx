@@ -8,7 +8,7 @@ namespace fonts
 // Simple Base64 decoder.  This is used at startup to decode the string
 // literals containing embedded resource data, namely font files in TTF form.
 //
-inline void base64_decode(char const* input, std::vector<unsigned char>& output)
+inline void Base64Decode(char const* input, std::vector<unsigned char>& output)
 {
   int index = 0;
   int data = 0;
@@ -16,13 +16,17 @@ inline void base64_decode(char const* input, std::vector<unsigned char>& output)
   while(int symbol = input[index++])
   {
     if(symbol == '=')
+    {
       break;
-    int value = ('A' <= symbol && symbol <= 'Z' ? symbol - 'A' :
-                 'a' <= symbol && symbol <= 'z' ? symbol - 'a' + 26 :
-                 '0' <= symbol && symbol <= '9' ? symbol - '0' + 52 :
-                 symbol == '+'                  ? 62 :
-                 symbol == '/'                  ? 63 :
-                                                  0);
+    }
+    // clang-format off
+    const int value = ('A' <= symbol && symbol <= 'Z' ? symbol - 'A' :
+                       'a' <= symbol && symbol <= 'z' ? symbol - 'a' + 26 :
+                       '0' <= symbol && symbol <= '9' ? symbol - '0' + 52 :
+                       symbol == '+'                  ? 62 :
+                       symbol == '/'                  ? 63 :
+                                                        0);
+    // clang-format on
     data = data << 6 | value;
     held += 6;
     if(held >= 8)

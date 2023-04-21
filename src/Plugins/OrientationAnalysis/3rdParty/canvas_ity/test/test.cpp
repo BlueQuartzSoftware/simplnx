@@ -2116,13 +2116,15 @@ void base64_decode(char const* input, vector<unsigned char>& output)
   while(int symbol = input[index++])
   {
     if(symbol == '=')
+    {
       break;
-    int value = ('A' <= symbol && symbol <= 'Z' ? symbol - 'A' :
-                 'a' <= symbol && symbol <= 'z' ? symbol - 'a' + 26 :
-                 '0' <= symbol && symbol <= '9' ? symbol - '0' + 52 :
-                 symbol == '+'                  ? 62 :
-                 symbol == '/'                  ? 63 :
-                                                  0);
+    }
+    const int value = ('A' <= symbol && symbol <= 'Z' ? symbol - 'A' :
+                       'a' <= symbol && symbol <= 'z' ? symbol - 'a' + 26 :
+                       '0' <= symbol && symbol <= '9' ? symbol - '0' + 52 :
+                       symbol == '+'                  ? 62 :
+                       symbol == '/'                  ? 63 :
+                                                        0);
     data = data << 6 | value;
     held += 6;
     if(held >= 8)
