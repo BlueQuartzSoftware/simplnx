@@ -33,6 +33,10 @@ public:
   static inline constexpr StringLiteral k_FaceNormalsDataPath_Key = "face_normals_data_path";
   static inline constexpr StringLiteral k_ScaleOutput = "scale_output";
   static inline constexpr StringLiteral k_ScaleFactor = "scale_factor";
+  static inline constexpr StringLiteral k_VertexMatrix_Key = "vertex_matrix";
+  static inline constexpr StringLiteral k_FaceMatrix_Key = "face_matrix";
+  static inline constexpr StringLiteral k_SharedVertexMatrix_Key = "shared_vertex_matrix";
+  static inline constexpr StringLiteral k_SharedFaceMatrix_Key = "shared_face_matrix";
 
   /**
    * @brief Returns the name of the filter.

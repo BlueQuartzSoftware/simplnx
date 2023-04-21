@@ -10,6 +10,7 @@
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Parameters/StringParameter.hpp"
 
 #include <filesystem>
 #include <tuple>
@@ -74,6 +75,14 @@ Parameters StlFileReaderFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryDataPath_Key, "Geometry Name [Data Group]", "The complete path to the DataGroup containing the created Geometry data",
                                                              DataPath({"[Triangle Geometry]"})));
 
+  params.insert(std::make_unique<StringParameter>(k_VertexMatrix_Key, "Vertex Matrix Name", "Name of the created Vertex Attribute Matrix", INodeGeometry0D::k_VertexDataName));
+  params.insert(std::make_unique<StringParameter>(k_FaceMatrix_Key, "Face Matrix Name", "Name of the created Face Attribute Matrix", INodeGeometry2D::k_FaceDataName));
+
+  params.insert(std::make_unique<StringParameter>(k_SharedVertexMatrix_Key, "Shared Vertex Matrix Name", "Name of the created Shared Vertex Attribute Matrix",
+                                                  CreateTriangleGeometryAction::k_DefaultVerticesName));
+  params.insert(
+      std::make_unique<StringParameter>(k_SharedFaceMatrix_Key, "Shared Face Matrix Name", "Name of the created Shared Face Attribute Matrix", CreateTriangleGeometryAction::k_DefaultFacesName));
+
   return params;
 }
 
@@ -94,6 +103,10 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
    */
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
+  auto vertexMatrixName = filterArgs.value<std::string>(k_VertexMatrix_Key);
+  auto faceMatrixName = filterArgs.value<std::string>(k_FaceMatrix_Key);
+  auto sharedVertexMatrixName = filterArgs.value<std::string>(k_SharedVertexMatrix_Key);
+  auto sharedFaceMatrixName = filterArgs.value<std::string>(k_SharedFaceMatrix_Key);
 
   PreflightResult preflightResult;
 
@@ -147,8 +160,8 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   // past this point, we are going to scope each section so that we don't accidentally introduce bugs
 
   // Create the Triangle Geometry action and store it
-  auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, INodeGeometry0D::k_VertexDataName, INodeGeometry2D::k_FaceDataName,
-                                                                                     CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
+  auto createTriangleGeometryAction =
+      std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName, sharedVertexMatrixName, sharedFaceMatrixName);
   auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(k_FaceNormals);
   resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
   // Create the face Normals DataArray action and store it
