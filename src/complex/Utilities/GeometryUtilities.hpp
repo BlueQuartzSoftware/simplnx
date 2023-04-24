@@ -39,4 +39,4 @@ Result<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D&
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  */
 Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis);
-} // namespace GeometryUtilities
+} // namespace complex::GeometryUtilities

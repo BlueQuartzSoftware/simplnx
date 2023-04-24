@@ -8,7 +8,7 @@ namespace
 {
 constexpr float32 k_PartitionEdgePadding = 0.000001;
 const Point3Df k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
-}
+} // namespace
 
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
