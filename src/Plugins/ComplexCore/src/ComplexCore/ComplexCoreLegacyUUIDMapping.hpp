@@ -56,7 +56,7 @@
 #include "ComplexCore/Filters/IdentifySample.hpp"
 #include "ComplexCore/Filters/ImportBinaryCTNorthstarFilter.hpp"
 #include "ComplexCore/Filters/ImportCSVDataFilter.hpp"
-#include "ComplexCore/Filters/ImportDeformV12Filter.hpp"
+#include "ComplexCore/Filters/ImportDeformKeyFileV12Filter.hpp"
 #include "ComplexCore/Filters/ImportDREAM3DFilter.hpp"
 #include "ComplexCore/Filters/ImportHDF5Dataset.hpp"
 #include "ComplexCore/Filters/ImportTextFilter.hpp"
@@ -230,7 +230,7 @@ namespace complex
     {complex::Uuid::FromString("9b9fb9e1-074d-54b6-a6ce-0be21ab4496d").value(), complex::FilterTraits<ReverseTriangleWindingFilter>::uuid}, // ReverseTriangleWinding
     {complex::Uuid::FromString("158ebe9e-f772-57e2-ac1b-71ff213cf890").value(), complex::FilterTraits<LosAlamosFFTWriterFilter>::uuid}, // LosAlamosFFTWriter
     {complex::Uuid::FromString("ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc").value(), complex::FilterTraits<GenerateVectorColorsFilter>::uuid}, // GenerateVectorColors
-    {complex::Uuid::FromString("3c6337da-e232-4420-a5ca-451496748d88").value(), complex::FilterTraits<ImportDeformV12Filter>::uuid}, // ImportDeformV12Filter
+    {complex::Uuid::FromString("3c6337da-e232-4420-a5ca-451496748d88").value(), complex::FilterTraits<ImportDeformKeyFileV12Filter>::uuid}, // ImportDeformKeyFileV12Filter
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

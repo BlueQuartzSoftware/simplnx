@@ -77,7 +77,7 @@ set(FilterList
   IdentifySample
   ImportBinaryCTNorthstarFilter
   ImportCSVDataFilter
-  ImportDeformV12Filter
+  ImportDeformKeyFileV12Filter
   ImportDREAM3DFilter
   ImportHDF5Dataset
   ImportTextFilter
@@ -164,7 +164,7 @@ set(AlgorithmList
   GenerateColorTable
   GenerateVectorColors
   ImageContouring
-  ImportDeformV12
+  ImportDeformKeyFileV12
   ImportVolumeGraphicsFile
   ImportBinaryCTNorthstar
   LaplacianSmoothing

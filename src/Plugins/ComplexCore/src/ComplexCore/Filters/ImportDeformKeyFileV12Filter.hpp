@@ -8,44 +8,24 @@
 namespace complex
 {
 /**
- * @class ImportDeformV12Filter
- * @brief This filter will export data from **DataArray** as "plaintext" to one or more files according to selection parameters
+ * @class ImportDeformKeyFileV12Filter
+ * @brief This filter will...
  */
-class COMPLEXCORE_EXPORT ImportDeformV12Filter : public IFilter
+class COMPLEXCORE_EXPORT ImportDeformKeyFileV12Filter : public IFilter
 {
 public:
-  ImportDeformV12Filter() = default;
-  ~ImportDeformV12Filter() noexcept override = default;
+  ImportDeformKeyFileV12Filter() = default;
+  ~ImportDeformKeyFileV12Filter() noexcept override = default;
 
-  ImportDeformV12Filter(const ImportDeformV12Filter&) = delete;
-  ImportDeformV12Filter(ImportDeformV12Filter&&) noexcept = delete;
+  ImportDeformKeyFileV12Filter(const ImportDeformKeyFileV12Filter&) = delete;
+  ImportDeformKeyFileV12Filter(ImportDeformKeyFileV12Filter&&) noexcept = delete;
 
-  ImportDeformV12Filter& operator=(const ImportDeformV12Filter&) = delete;
-  ImportDeformV12Filter& operator=(ImportDeformV12Filter&&) noexcept = delete;
-
-  enum class OutputStyle : uint64
-  {
-    MultipleFiles = 0,
-    SingleFile = 1
-  };
-
-  enum class Includes : uint64
-  {
-    Neither = 0,
-    Headers = 1,
-    ColumnIndex = 2,
-    Both = 3,
-  };
+  ImportDeformKeyFileV12Filter& operator=(const ImportDeformKeyFileV12Filter&) = delete;
+  ImportDeformKeyFileV12Filter& operator=(ImportDeformKeyFileV12Filter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputStyle_Key = "output_style";
-  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
-  static inline constexpr StringLiteral k_OutputDir_Key = "output_dir";
-  static inline constexpr StringLiteral k_FileExtension_Key = "file_extension";
-  static inline constexpr StringLiteral k_MaxValPerLine_Key = "max_val_per_line";
-  static inline constexpr StringLiteral k_Delimiter_Key = "delimiter";
-  static inline constexpr StringLiteral k_Includes_Key = "includes";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "selected_data_array_paths";
+  static inline constexpr StringLiteral k_InputPath_Key = "input_path";
+  static inline constexpr StringLiteral k_UseVerboseOutput_Key = "use_verbose_output";
 
   /**
    * @brief Returns the name of the filter.
@@ -113,4 +93,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ImportDeformV12Filter, "22c421c3-573c-4125-883c-4d95bd6e3bcb");
+COMPLEX_DEF_FILTER_TRAITS(complex, ImportDeformKeyFileV12Filter, "22c421c3-573c-4125-883c-4d95bd6e3bcb");
