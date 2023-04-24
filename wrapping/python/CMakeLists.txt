@@ -1,4 +1,4 @@
-find_package(pybind11 2.6.2 CONFIG REQUIRED)
+find_package(pybind11 2.10.0 CONFIG REQUIRED)
 
 pybind11_add_module(complexpy complexpy.cpp)
 
