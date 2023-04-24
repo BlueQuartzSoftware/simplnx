@@ -4,7 +4,23 @@
 
 using namespace complex;
 
-Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+namespace
+{
+constexpr float32 k_PartitionEdgePadding = 0.000001;
+const Point3Df k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
+}
+
+Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+{
+  BoundingBox3Df boundingBox = geometry.getBoundingBox();
+  if(!boundingBox.isValid())
+  {
+    return {};
+  }
+  return GeometryUtilities::CalculatePartitionLengthsOfBoundingBox({(boundingBox.getMinPoint() - k_Padding), (boundingBox.getMaxPoint() + k_Padding)}, numberOfPartitionsPerAxis);
+}
+
+Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
   SizeVec3 dims = geometry.getDimensions();
   FloatVec3 spacing = geometry.getSpacing();
@@ -14,7 +30,7 @@ Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const Image
   return {FloatVec3(lengthX, lengthY, lengthZ)};
 }
 
-Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
   const Float32Array* xBounds = geometry.getXBounds();
   const Float32Array* yBounds = geometry.getYBounds();
@@ -67,7 +83,7 @@ Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const RectG
   return {lengthPerPartition};
 }
 
-Result<FloatVec3> complex::CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
+Result<FloatVec3> GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
 {
   BoundingBox3Df boundingBox = geometry.getBoundingBox();
   if(!boundingBox.isValid())
@@ -77,7 +93,7 @@ Result<FloatVec3> complex::CalculateNodeBasedPartitionSchemeOrigin(const INodeGe
   return {FloatVec3(boundingBox.getMinPoint() - k_Padding)};
 }
 
-Result<FloatVec3> complex::CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)
 {
   auto min = boundingBox.getMinPoint();
   auto max = boundingBox.getMaxPoint();

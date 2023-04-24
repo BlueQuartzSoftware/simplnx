@@ -148,10 +148,10 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
     }
     else
     {
-      originResult = CalculateNodeBasedPartitionSchemeOrigin(geometry);
+      originResult = GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(geometry);
     }
 
-    Result<FloatVec3> pLengthResult = CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
+    Result<FloatVec3> pLengthResult = GeometryUtilities::CalculatePartitionLengthsByPartitionCount(geometry, numOfPartitionsPerAxisValue);
     if(originResult.valid() && pLengthResult.valid())
     {
       psGeomMetadata.geometryDims = {static_cast<usize>(pNumberOfPartitionsPerAxisValue[0]), static_cast<usize>(pNumberOfPartitionsPerAxisValue[1]),
@@ -182,7 +182,7 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
     const FloatVec3 llCoord(pLowerLeftCoordValue[0], pLowerLeftCoordValue[1], pLowerLeftCoordValue[2]);
     const FloatVec3 urCoord(pUpperRightCoordValue[0], pUpperRightCoordValue[1], pUpperRightCoordValue[2]);
 
-    Result<FloatVec3> result = CalculatePartitionLengthsOfBoundingBox({llCoord, urCoord}, numOfPartitionsPerAxisValue);
+    Result<FloatVec3> result = GeometryUtilities::CalculatePartitionLengthsOfBoundingBox({llCoord, urCoord}, numOfPartitionsPerAxisValue);
     if(result.valid())
     {
       psGeomMetadata.geometrySpacing = result.value();
