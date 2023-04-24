@@ -80,15 +80,23 @@ public:
   /**
    * @brief Constructs a new BoundingBox by copying values from the specified pointer.
    * The pointer is assumed to contain either 4 (2D) or 6 (3D) values formatted the same as the
-   * std::array<T, 6> constructor, min X, min Y, max X, max Y or the
+   * std::array<T, 4> constructor, min X, min Y, max X, max Y or the
    * std::array<T, 6> constructor, min X, min Y, min Z, max X, max Y, max Z
    * respectively
    * @param arr
    */
   explicit BoundingBox(const Pointer arr)
-  : m_Lower(Point3D<T>(arr[0], arr[1], arr[2]))
-  , m_Upper(Point3D<T>(arr[3], arr[4], arr[5]))
   {
+    if(arr->size() == 6)
+    {
+      m_Lower = Point3D<T>(arr[0], arr[1], arr[2]);
+      m_Upper = Point3D<T>(arr[3], arr[4], arr[5]);
+    }
+    else if(arr->size() == 4)
+    {
+      m_Lower = Point3D<T>(arr[0], arr[1]);
+      m_Upper = Point3D<T>(arr[2], arr[3]);
+    }
   }
 
   ~BoundingBox() = default;
