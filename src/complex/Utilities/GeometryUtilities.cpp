@@ -1,6 +1,7 @@
 #include "GeometryUtilities.hpp"
 
 #include "complex/Common/Array.hpp"
+#include "complex/Common/Result.hpp"
 
 using namespace complex;
 
@@ -27,7 +28,7 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(c
   float32 lengthX = static_cast<float32>(dims.getX()) / static_cast<float32>(numberOfPartitionsPerAxis.getX()) * spacing[0];
   float32 lengthY = static_cast<float32>(dims.getY()) / static_cast<float32>(numberOfPartitionsPerAxis.getY()) * spacing[1];
   float32 lengthZ = static_cast<float32>(dims.getZ()) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()) * spacing[2];
-  return {FloatVec3(lengthX, lengthY, lengthZ)};
+  return Result<FloatVec3>{FloatVec3(lengthX, lengthY, lengthZ)};
 }
 
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
@@ -80,7 +81,7 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(c
   float32 maxZ = zStore.getValue(zBounds->getNumberOfTuples() - 1);
   lengthPerPartition.setZ(maxZ / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
 
-  return {lengthPerPartition};
+  return Result<FloatVec3>{lengthPerPartition};
 }
 
 Result<FloatVec3> GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
@@ -90,7 +91,7 @@ Result<FloatVec3> GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(con
   {
     return {};
   }
-  return {FloatVec3(boundingBox.getMinPoint() - k_Padding)};
+  return Result<FloatVec3>{FloatVec3(boundingBox.getMinPoint() - k_Padding)};
 }
 
 Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)
@@ -102,5 +103,5 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(cons
   float32 lengthY = ((max[1] - min[1]) / static_cast<float32>(numberOfPartitionsPerAxis.getY()));
   float32 lengthZ = ((max[2] - min[2]) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
   FloatVec3 lengthPerPartition = {lengthX, lengthY, lengthZ};
-  return {lengthPerPartition};
+  return Result<FloatVec3>{lengthPerPartition};
 }
