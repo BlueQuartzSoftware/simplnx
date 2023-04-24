@@ -24,7 +24,7 @@ public:
   ImportDeformKeyFileV12Filter& operator=(ImportDeformKeyFileV12Filter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputPath_Key = "input_path";
+  static inline constexpr StringLiteral k_InputFilePath_Key = "input_file_path";
   static inline constexpr StringLiteral k_UseVerboseOutput_Key = "use_verbose_output";
 
   /**

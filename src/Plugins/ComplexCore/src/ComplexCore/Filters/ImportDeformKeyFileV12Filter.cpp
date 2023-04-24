@@ -3,17 +3,12 @@
 #include "Algorithms/ImportDeformKeyFileV12.hpp"
 
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
 using namespace complex;
-
-namespace
-{
-// Error Code constants
-constexpr complex::int32 k_UnmatchingTupleCountError = -51001;
-} // namespace
 
 namespace complex
 {
@@ -54,9 +49,11 @@ Parameters ImportDeformKeyFileV12Filter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFilePath_Key, "Input File", "File path that points to the imported file", fs::path(""),
+                                                          FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<BoolParameter>(k_UseVerboseOutput_Key, "Use Verbose Output", "", false));
 
-  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
 
   return params;
 }
@@ -71,7 +68,7 @@ IFilter::UniquePointer ImportDeformKeyFileV12Filter::clone() const
 IFilter::PreflightResult ImportDeformKeyFileV12Filter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                              const std::atomic_bool& shouldCancel) const
 {
-  auto pOutputStyleValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
+  //auto pOutputStyleValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
 
   // Declare the preflightResult variable
   PreflightResult preflightResult;
@@ -88,13 +85,8 @@ Result<> ImportDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure,
 {
   ImportDeformKeyFileV12InputValues inputValues;
 
-  inputValues.MultiplesOfAverage = filterArgs.value<float32>(k_MultiplesOfAverage_Key);
-  inputValues.EquivalentDiametersArrayPath = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.NeighborhoodsArrayName = filterArgs.value<DataPath>(k_NeighborhoodsArrayName_Key);
-  inputValues.NeighborhoodListArrayName = filterArgs.value<DataPath>(k_NeighborhoodListArrayName_Key);
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  inputValues.UseVerboseOutput = filterArgs.value<bool>(k_UseVerboseOutput_Key);
+  inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
 
   return ImportDeformKeyFileV12(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -5,17 +5,16 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 namespace complex
 {
 struct COMPLEXCORE_EXPORT ImportDeformKeyFileV12InputValues
 {
-  float32 MultiplesOfAverage;
-  DataPath EquivalentDiametersArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CentroidsArrayPath;
-  DataPath NeighborhoodsArrayName;
-  DataPath NeighborhoodListArrayName;
-  DataPath InputImageGeometry;
+  bool UseVerboseOutput;
+  fs::path InputFilePath;
 };
 
 /**
