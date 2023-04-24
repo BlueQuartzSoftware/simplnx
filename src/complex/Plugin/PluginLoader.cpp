@@ -148,7 +148,12 @@ bool PluginLoader::isLoaded() const
   return m_Plugin != nullptr;
 }
 
-AbstractPlugin* PluginLoader::getPlugin() const
+AbstractPlugin* PluginLoader::getPlugin()
+{
+  return m_Plugin.get();
+}
+
+const AbstractPlugin* PluginLoader::getPlugin() const
 {
   return m_Plugin.get();
 }

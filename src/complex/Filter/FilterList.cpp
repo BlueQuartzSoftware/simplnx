@@ -1,7 +1,6 @@
 #include "FilterList.hpp"
 
 #include "complex/Core/Application.hpp"
-#include "complex/Plugin/PluginLoader.hpp"
 
 #include <fmt/core.h>
 
@@ -92,7 +91,7 @@ AbstractPlugin* FilterList::getPlugin(const FilterHandle& handle) const
   return nullptr;
 }
 
-bool FilterList::addPlugin(const std::shared_ptr<PluginLoader>& loader)
+bool FilterList::addPlugin(const std::shared_ptr<IPluginLoader>& loader)
 {
   if(!loader->isLoaded())
   {
@@ -113,7 +112,7 @@ bool FilterList::addPlugin(const std::shared_ptr<PluginLoader>& loader)
 
 bool FilterList::addPlugin(const std::string& path)
 {
-  return addPlugin(std::make_shared<PluginLoader>(path));
+  return addPlugin(std::dynamic_pointer_cast<IPluginLoader>(std::make_shared<PluginLoader>(path)));
 }
 
 const FilterList::FilterContainerType& FilterList::getFilterHandles() const
