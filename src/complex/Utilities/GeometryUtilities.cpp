@@ -1,5 +1,7 @@
 #include "GeometryUtilities.hpp"
 
+#include "complex/Common/Array.hpp"
+
 using namespace complex;
 
 Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
@@ -9,8 +11,7 @@ Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const Image
   float32 lengthX = static_cast<float32>(dims.getX()) / static_cast<float32>(numberOfPartitionsPerAxis.getX()) * spacing[0];
   float32 lengthY = static_cast<float32>(dims.getY()) / static_cast<float32>(numberOfPartitionsPerAxis.getY()) * spacing[1];
   float32 lengthZ = static_cast<float32>(dims.getZ()) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()) * spacing[2];
-  FloatVec3 lengthPerPartition = {lengthX, lengthY, lengthZ};
-  return {lengthPerPartition};
+  return {FloatVec3(lengthX, lengthY, lengthZ)};
 }
 
 Result<FloatVec3> complex::CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
@@ -73,7 +74,7 @@ Result<FloatVec3> complex::CalculateNodeBasedPartitionSchemeOrigin(const INodeGe
   {
     return {};
   }
-  return {boundingBox.getMinPoint() - k_Padding};
+  return {FloatVec3(boundingBox.getMinPoint() - k_Padding)};
 }
 
 Result<FloatVec3> complex::CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)
