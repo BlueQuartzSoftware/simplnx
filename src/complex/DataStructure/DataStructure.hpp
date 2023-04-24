@@ -391,7 +391,7 @@ public:
    * @param identifier
    * @return std::shared_ptr<DataObject>
    */
-  std::shared_ptr<DataObject> getSharedData(DataObject::IdType identifier) const;
+  std::shared_ptr<DataObject> getSharedData(DataObject::IdType id);
 
   /**
    * @brief Returns the shared pointer for the specified DataObject.
@@ -400,14 +400,43 @@ public:
    * Use getData(DataObject::IdType) instead. This was only made public for
    * use in visualization where select data might need to be preserved beyond
    * the rest of the DataStructure.
-   * @param identifier
+   * @param id
+   * @return std::shared_ptr<DataObject>
+   */
+  std::shared_ptr<const DataObject> getSharedData(DataObject::IdType id) const;
+
+  /**
+   * @brief Returns the shared pointer for the specified DataObject.
+   * Returns nullptr if no DataObject is found.
+   *
+   * Use getData(DataObject::IdType) instead. This was only made public for
+   * use in visualization where select data might need to be preserved beyond
+   * the rest of the DataStructure.
+   * @param id
    * @return std::shared_ptr<DataObject>
    */
   template <class T>
-  inline std::shared_ptr<T> getSharedDataAs(DataObject::IdType identifier) const
+  std::shared_ptr<T> getSharedDataAs(DataObject::IdType id)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    return std::dynamic_pointer_cast<T>(getSharedData(identifier));
+    return std::dynamic_pointer_cast<T>(getSharedData(id));
+  }
+
+  /**
+   * @brief Returns the shared pointer for the specified DataObject.
+   * Returns nullptr if no DataObject is found.
+   *
+   * Use getData(DataObject::IdType) instead. This was only made public for
+   * use in visualization where select data might need to be preserved beyond
+   * the rest of the DataStructure.
+   * @param id
+   * @return std::shared_ptr<DataObject>
+   */
+  template <class T>
+  std::shared_ptr<const T> getSharedDataAs(DataObject::IdType id) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return std::dynamic_pointer_cast<const T>(getSharedData(id));
   }
 
   /**
@@ -420,7 +449,19 @@ public:
    * @param path
    * @return std::shared_ptr<DataObject>
    */
-  std::shared_ptr<DataObject> getSharedData(const DataPath& path) const;
+  std::shared_ptr<DataObject> getSharedData(const DataPath& path);
+
+  /**
+   * @brief Returns the shared pointer for the DataObject at the target path.
+   * Returns nullptr if no DataObject is found.
+   *
+   * Use getData(const DataPath&) instead. This was only made public for
+   * use in importing a DataObject from another DataStructure when select data
+   * needs to be preserved beyond the imported DataStructure.
+   * @param path
+   * @return std::shared_ptr<DataObject>
+   */
+  std::shared_ptr<const DataObject> getSharedData(const DataPath& path) const;
 
   /**
    * @brief Returns the shared pointer for the DataObject at the target path.
@@ -433,10 +474,27 @@ public:
    * @return std::shared_ptr<DataObject>
    */
   template <class T>
-  inline std::shared_ptr<T> getSharedDataAs(const DataPath& path) const
+  std::shared_ptr<T> getSharedDataAs(const DataPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return std::dynamic_pointer_cast<T>(getSharedData(path));
+  }
+
+  /**
+   * @brief Returns the shared pointer for the DataObject at the target path.
+   * Returns nullptr if no DataObject is found.
+   *
+   * Use getData(const DataPath&) instead. This was only made public for
+   * use in importing a DataObject from another DataStructure when select data
+   * needs to be preserved beyond the imported DataStructure.
+   * @param path
+   * @return std::shared_ptr<DataObject>
+   */
+  template <class T>
+  std::shared_ptr<const T> getSharedDataAs(const DataPath& path) const
+  {
+    static_assert(std::is_base_of_v<DataObject, T>);
+    return std::dynamic_pointer_cast<const T>(getSharedData(path));
   }
 
   /**
