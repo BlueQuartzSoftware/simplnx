@@ -1,5 +1,9 @@
 #include "ImportDeformKeyFileV12.hpp"
 
+#include "complex/Utilities/StringUtilities.hpp"
+
+#include <fstream>
+
 using namespace complex;
 
 namespace
@@ -28,8 +32,7 @@ void setUSRNODTuple(size_t tuple, const std::vector<std::string>& tokens, size_t
       value = std::stof(tokens[c]);
     } catch(const std::exception& e)
     {
-      QString msg = QString("Error at line %1: Unable to convert data array %2's string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
-                        .arg(QString::number(lineCount), QString::fromStdString(m_UserDefinedVariables[c]), QString::fromStdString(tokens[c + 1]), e.what());
+      std::string msg = fmt::format("Error at line {}: Unable to convert data array {}'s string value \"{}\" to float.  Threw standard exception with text: \"{}\"", StringUtilities::number(lineCount), m_UserDefinedVariables[c]), tokens[c + 1], e.what());
       tryNotifyErrorMessage(-2008, msg);
       return;
     }
@@ -47,8 +50,8 @@ void setTuple(size_t tuple, FloatArrayType* data, const std::vector<std::string>
       value = std::stof(tokens[c]);
     } catch(const std::exception& e)
     {
-      QString msg = QString("Error at line %1: Unable to convert data array %2's string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
-                        .arg(QString::number(lineCount), data->getName(), QString::fromStdString(tokens[c + 1]), e.what());
+      std::string msg = fmt::format("Error at line %1: Unable to convert data array %2's string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
+                            .arg(QString::number(lineCount), data->getName(), QString::fromStdString(tokens[c + 1]), e.what());
       tryNotifyErrorMessage(-2008, msg);
       return;
     }
@@ -64,8 +67,8 @@ size_t parse_ull(const std::string& token, size_t lineCount)
     value = std::stoull(token);
   } catch(const std::exception& e)
   {
-    QString msg = QString("Error at line %1: Unable to convert string value \"%2\" to unsigned long long.  Threw standard exception with text: \"%3\"")
-                      .arg(QString::number(lineCount), QString::fromStdString(token), e.what());
+    std::string msg = fmt::format("Error at line %1: Unable to convert string value \"%2\" to unsigned long long.  Threw standard exception with text: \"%3\"")
+                          .arg(QString::number(lineCount), QString::fromStdString(token), e.what());
     tryNotifyErrorMessage(-2000, msg);
     return 0;
   }
@@ -155,7 +158,7 @@ void readUserDefinedVariables(std::ifstream& inStream, size_t& lineCount)
   for(size_t i = 0; i < numVars; i++)
   {
     std::getline(inStream, buf);
-    buf = SIMPL::StringUtilities::trimmed(buf);
+    buf = StringUtilities::trimmed(buf);
     lineCount++;
     std::string cleanedString = StringUtilities::replace(buf, "/", "|");
     m_UserDefinedVariables[i] = cleanedString;
@@ -290,7 +293,7 @@ void readDEFORMFile(DataContainer* dataContainer, AttributeMatrix* vertexAttribu
     }
 
     // Unrecognized section
-    QString msg = QString("Warning at line %1: Unrecognized section \"%2\"").arg(QString::number(lineCount), QString::fromStdString(SIMPL::StringUtilities::join(tokens, ' ')));
+    std::string msg = fmt::format("Warning at line %1: Unrecognized section \"%2\"").arg(QString::number(lineCount), QString::fromStdString(SIMPL::StringUtilities::join(tokens, ' ')));
     tryNotifyWarningMessage(-2010, msg);
   }
 }
@@ -393,8 +396,9 @@ void readDataForObject(std::ifstream& inStream, size_t& lineCount, DataContainer
         }
         else
         {
-          QString msg = QString("Unable to read data: %1.  Its tuple size (%2) doesn't match the correct number of tuples to be either a vertex array (%3) or cell array (%4).  Skipping...")
-                            .arg(QString::fromStdString(dataArrayName), QString::number(tupleCount), QString::number(vertexPtr->getNumberOfTuples()), QString::number(quadGeomPtr->getNumberOfQuads()));
+          std::string msg =
+              fmt::format("Unable to read data: %1.  Its tuple size (%2) doesn't match the correct number of tuples to be either a vertex array (%3) or cell array (%4).  Skipping...")
+                  .arg(QString::fromStdString(dataArrayName), QString::number(tupleCount), QString::number(vertexPtr->getNumberOfTuples()), QString::number(quadGeomPtr->getNumberOfQuads()));
           tryNotifyStatusMessage(msg);
         }
       }
@@ -435,8 +439,8 @@ SharedVertexList::Pointer readVertexCoordinates(std::ifstream& inStream, size_t&
       vertex[3 * i] = std::stof(tokens[1]);
     } catch(const std::exception& e)
     {
-      QString msg = QString("Error at line %1: Unable to convert vertex coordinate %2's 1st string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
-                        .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[1]), e.what());
+      std::string msg = fmt::format("Error at line %1: Unable to convert vertex coordinate %2's 1st string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
+                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[1]), e.what());
       tryNotifyErrorMessage(-2001, msg);
       return SharedVertexList::NullPointer();
     }
@@ -446,8 +450,8 @@ SharedVertexList::Pointer readVertexCoordinates(std::ifstream& inStream, size_t&
       vertex[3 * i + 1] = std::stof(tokens[2]);
     } catch(const std::exception& e)
     {
-      QString msg = QString("Error at line %1: Unable to convert vertex coordinate %2's 2nd string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
-                        .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[2]), e.what());
+      std::string msg = fmt::format("Error at line %1: Unable to convert vertex coordinate %2's 2nd string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
+                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[2]), e.what());
       tryNotifyErrorMessage(-2002, msg);
       return SharedVertexList::NullPointer();
     }
@@ -458,7 +462,7 @@ SharedVertexList::Pointer readVertexCoordinates(std::ifstream& inStream, size_t&
   return vertexPtr;
 }
 
-QuadGeom::Pointer readQuadGeometry(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* cellAttrMat, SharedVertexList::Pointer vertexPtr, DataContainer* dataContainer, size_t numCells)
+void readQuadGeometry(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* cellAttrMat, SharedVertexList::Pointer vertexPtr, DataContainer* dataContainer, size_t numCells)
 {
   std::string buf;
   std::vector<std::string> tokens; /* vector to store the split data */
@@ -477,7 +481,7 @@ QuadGeom::Pointer readQuadGeometry(std::ifstream& inStream, size_t& lineCount, A
   {
     if(shouldCancel())
     {
-      return QuadGeom::NullPointer();
+      return;
     }
 
     tokens = getNextLineTokens(inStream, lineCount);
@@ -488,10 +492,10 @@ QuadGeom::Pointer readQuadGeometry(std::ifstream& inStream, size_t& lineCount, A
       quads[4 * i] = std::stoi(tokens[1]) - 1;
     } catch(const std::exception& e)
     {
-      QString msg = QString("Error at line %1: Unable to convert quad %2's 1st string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
-                        .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[1]), e.what());
+      std::string msg = fmt::format("Error at line %1: Unable to convert quad %2's 1st string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
+                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[1]), e.what());
       tryNotifyErrorMessage(-2004, msg);
-      return QuadGeom::NullPointer();
+      return;
     }
 
     try
@@ -499,10 +503,10 @@ QuadGeom::Pointer readQuadGeometry(std::ifstream& inStream, size_t& lineCount, A
       quads[4 * i + 1] = std::stoi(tokens[2]) - 1;
     } catch(const std::exception& e)
     {
-      QString msg = QString("Error at line %1: Unable to convert quad %2's 2nd string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
-                        .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[2]), e.what());
+      std::string msg = fmt::format("Error at line %1: Unable to convert quad %2's 2nd string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
+                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[2]), e.what());
       tryNotifyErrorMessage(-2005, msg);
-      return QuadGeom::NullPointer();
+      return;
     }
 
     try
@@ -510,10 +514,10 @@ QuadGeom::Pointer readQuadGeometry(std::ifstream& inStream, size_t& lineCount, A
       quads[4 * i + 2] = std::stoi(tokens[3]) - 1;
     } catch(const std::exception& e)
     {
-      QString msg = QString("Error at line %1: Unable to convert quad %2's 3rd string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
-                        .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[3]), e.what());
+      std::string msg = fmt::format("Error at line %1: Unable to convert quad %2's 3rd string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
+                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[3]), e.what());
       tryNotifyErrorMessage(-2005, msg);
-      return QuadGeom::NullPointer();
+      return;
     }
 
     try
@@ -521,10 +525,10 @@ QuadGeom::Pointer readQuadGeometry(std::ifstream& inStream, size_t& lineCount, A
       quads[4 * i + 3] = std::stoi(tokens[4]) - 1;
     } catch(const std::exception& e)
     {
-      QString msg = QString("Error at line %1: Unable to convert quad %2's 4th string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
-                        .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[4]), e.what());
+      std::string msg = fmt::format("Error at line %1: Unable to convert quad %2's 4th string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
+                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[4]), e.what());
       tryNotifyErrorMessage(-2006, msg);
-      return QuadGeom::NullPointer();
+      return;
     }
   }
 
@@ -564,7 +568,7 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
         line[i] = ' ';
       }
     }
-    // We have replaced all of the first 8 chars with spaces, so now tokenize and save the tokens
+    // We have replaced all the first 8 chars with spaces, so now tokenize and save the tokens
     {
       line = StringUtilities::trimmed(line);
       line = StringUtilities::simplified(line);
@@ -594,7 +598,7 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
       if(keepGoing)
       {
         tupleLineCount++;
-        // We have replaced all of the first 8 chars with spaces, so now tokenize and save the tokens
+        // We have replaced all the first 8 chars with spaces, so now tokenize and save the tokens
         line = StringUtilities::trimmed(line);
         line = StringUtilities::simplified(line);
         std::vector<std::string> tempTokens = StringUtilities::split(line, ' ');
@@ -633,7 +637,7 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
     }
   }
 
-  // Just read and skip since this is probably a preflight or we are just reading throug the file to find the interesting data
+  // Just read and skip since this is probably a preflight, or we are just reading through the file to find the interesting data
   if(!allocate)
   {
     std::string line;
