@@ -385,7 +385,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/StringArray.hpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/AnyParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/AnyCloneable.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.hpp

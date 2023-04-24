@@ -1,7 +1,6 @@
 #pragma once
 
 #include "complex/Common/Types.hpp"
-#include "complex/Filter/AnyParameter.hpp"
 #include "complex/Filter/IParameter.hpp"
 #include "complex/complex_export.hpp"
 
