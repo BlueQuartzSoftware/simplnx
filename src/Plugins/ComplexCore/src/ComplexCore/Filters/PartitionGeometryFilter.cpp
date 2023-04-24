@@ -1,5 +1,6 @@
 #include "PartitionGeometryFilter.hpp"
 
+#include "complex/Common/Array.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/Geometry/RectGridGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
