@@ -12,6 +12,7 @@ set_target_properties(complexpy
 target_link_libraries(complexpy
   PUBLIC
     complex
+    ComplexCore
 )
 
 target_compile_options(complexpy
