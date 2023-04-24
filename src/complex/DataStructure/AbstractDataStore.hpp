@@ -951,4 +951,20 @@ protected:
    */
   AbstractDataStore() = default;
 };
+
+using UInt8AbstractDataStore = AbstractDataStore<uint8>;
+using UInt16AbstractDataStore = AbstractDataStore<uint16>;
+using UInt32AbstractDataStore = AbstractDataStore<uint32>;
+using UInt64AbstractDataStore = AbstractDataStore<uint64>;
+
+using Int8AbstractDataStore = AbstractDataStore<int8>;
+using Int16AbstractDataStore = AbstractDataStore<int16>;
+using Int32AbstractDataStore = AbstractDataStore<int32>;
+using Int64AbstractDataStore = AbstractDataStore<int64>;
+
+using USizeAbstractDataStore = AbstractDataStore<usize>;
+using BoolAbstractDataStore = AbstractDataStore<bool>;
+
+using Float32AbstractDataStore = AbstractDataStore<float32>;
+using Float64AbstractDataStore = AbstractDataStore<float64>;
 } // namespace complex
