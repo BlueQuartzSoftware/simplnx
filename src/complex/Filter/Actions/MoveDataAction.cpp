@@ -89,6 +89,11 @@ Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode mode) const
   return {};
 }
 
+IDataAction::UniquePointer MoveDataAction::clone() const
+{
+  return std::make_unique<MoveDataAction>(m_Path, m_NewParentPath);
+}
+
 DataPath MoveDataAction::newParentPath() const
 {
   return m_NewParentPath;

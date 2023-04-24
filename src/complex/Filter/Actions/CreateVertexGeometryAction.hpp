@@ -25,8 +25,6 @@ public:
   static constexpr StringLiteral k_SharedVertexListName = "SharedVertexList";
   static constexpr StringLiteral k_VertexAttributeMatrixName = "VertexData";
 
-  CreateVertexGeometryAction() = delete;
-
   /**
    * @brief Constructor to create the vertex geometry and allocate a default array for the shared vertex list
    * @param geometryPath The path to the created geometry
@@ -172,6 +170,21 @@ public:
   }
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override
+  {
+    auto action = std::unique_ptr<CreateVertexGeometryAction>(new CreateVertexGeometryAction());
+    action->m_NumVertices = m_NumVertices;
+    action->m_VertexDataName = m_VertexDataName;
+    action->m_SharedVertexListName = m_SharedVertexListName;
+    action->m_InputVertices = m_InputVertices;
+    action->m_ArrayHandlingType = m_ArrayHandlingType;
+    return action;
+  }
+
+  /**
    * @brief Returns the path of the ImageGeometry to be created.
    * @return DataPath
    */
@@ -221,6 +234,9 @@ public:
     }
     return createdPaths;
   }
+
+protected:
+  CreateVertexGeometryAction() = default;
 
 private:
   IGeometry::MeshIndexType m_NumVertices = 1;

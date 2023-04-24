@@ -47,6 +47,11 @@ Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode mode) co
   return {};
 }
 
+IDataAction::UniquePointer CopyDataObjectAction::clone() const
+{
+  return std::make_unique<CopyDataObjectAction>(path(), newPath(), getAllCreatedPaths());
+}
+
 const DataPath& CopyDataObjectAction::path() const
 {
   return m_Path;

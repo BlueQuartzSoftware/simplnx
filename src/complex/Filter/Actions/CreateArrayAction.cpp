@@ -65,6 +65,11 @@ Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
   }
 }
 
+IDataAction::UniquePointer CreateArrayAction::clone() const
+{
+  return std::make_unique<CreateArrayAction>(m_Type, m_Dims, m_CDims, getCreatedPath());
+}
+
 DataType CreateArrayAction::type() const
 {
   return m_Type;

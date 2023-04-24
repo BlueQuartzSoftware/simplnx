@@ -37,6 +37,11 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
   return {};
 }
 
+IDataAction::UniquePointer RenameDataAction::clone() const
+{
+  return std::make_unique<RenameDataAction>(m_Path, m_NewName);
+}
+
 std::string RenameDataAction::newName() const
 {
   return m_NewName;

@@ -55,6 +55,11 @@ Result<> CreateAttributeMatrixAction::apply(DataStructure& dataStructure, Mode m
   return {};
 }
 
+IDataAction::UniquePointer CreateAttributeMatrixAction::clone() const
+{
+  return std::make_unique<CreateAttributeMatrixAction>(getCreatedPath(), m_TupleShape);
+}
+
 std::vector<DataPath> CreateAttributeMatrixAction::getAllCreatedPaths() const
 {
   return {getCreatedPath()};

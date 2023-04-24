@@ -17,8 +17,6 @@ public:
   using OriginType = std::vector<float>;
   using SpacingType = std::vector<float>;
 
-  CreateRectGridGeometryAction() = delete;
-
   /**
    * @brief Constructor to create the geometry and allocate default arrays for the x, y, and z bounds
    * @param path The path to the created geometry
@@ -61,6 +59,12 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override;
+
+  /**
    * @brief Returns the path of the RectGridGeometry to be created.
    * @return DataPath
    */
@@ -89,6 +93,9 @@ public:
    * @return std::vector<DataPath>
    */
   std::vector<DataPath> getAllCreatedPaths() const override;
+
+protected:
+  CreateRectGridGeometryAction() = default;
 
 private:
   usize m_NumXBoundTuples = 2;

@@ -28,8 +28,6 @@ public:
   static constexpr StringLiteral k_DefaultVerticesName = "SharedVertexList";
   static constexpr StringLiteral k_DefaultCellsName = "SharedCellList";
 
-  CreateGeometry3DAction() = delete;
-
   /**
    * @brief Constructor to create the 3D geometry and allocate a default arrays for the shared vertex & shared calls lists
    * @param geometryPath The path to the created geometry
@@ -238,6 +236,25 @@ public:
   }
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override
+  {
+    auto action = std::unique_ptr<CreateGeometry3DAction>(new CreateGeometry3DAction());
+    action->m_NumCells = m_NumCells;
+    action->m_NumVertices = m_NumVertices;
+    action->m_VertexDataName = m_VertexDataName;
+    action->m_CellDataName = m_CellDataName;
+    action->m_SharedVerticesName = m_SharedVerticesName;
+    action->m_SharedCellsName = m_SharedCellsName;
+    action->m_InputVertices = m_InputVertices;
+    action->m_InputCells = m_InputCells;
+    action->m_ArrayHandlingType = m_ArrayHandlingType;
+    return action;
+  }
+
+  /**
    * @brief Returns the path of the ImageGeometry to be created.
    * @return
    */
@@ -297,6 +314,9 @@ public:
     }
     return createdPaths;
   }
+
+protected:
+  CreateGeometry3DAction() = default;
 
 private:
   IGeometry::MeshIndexType m_NumCells = 1;

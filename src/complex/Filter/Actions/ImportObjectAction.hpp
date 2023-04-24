@@ -31,6 +31,12 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override;
+
+  /**
    * @brief Returns a shared_ptr to the DataObject being imported into the DataStructure.
    * @return std::shared_ptr<DataObject>
    */

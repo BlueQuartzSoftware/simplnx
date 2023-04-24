@@ -42,6 +42,12 @@ public:
    */
   virtual Result<> apply(DataStructure& dataStructure, Mode mode) const = 0;
 
+  /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  virtual UniquePointer clone() const = 0;
+
 protected:
   IDataAction() = default;
 };
@@ -90,6 +96,9 @@ public:
    * @return std::vector<DataPath>
    */
   virtual std::vector<DataPath> getAllCreatedPaths() const = 0;
+
+protected:
+  IDataCreationAction() = default;
 
 private:
   DataPath m_CreatedPath;

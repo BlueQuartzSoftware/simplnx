@@ -69,6 +69,11 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
   return {};
 }
 
+IDataAction::UniquePointer CreateImageGeometryAction::clone() const
+{
+  return std::make_unique<CreateImageGeometryAction>(getCreatedPath(), m_Dims, m_Origin, m_Spacing, m_CellDataName);
+}
+
 DataPath CreateImageGeometryAction::path() const
 {
   return getCreatedPath();

@@ -31,6 +31,12 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override;
+
+  /**
    * @brief The selecte data array path to be copied
    * @return DataPath
    */
