@@ -3,6 +3,7 @@
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/complex_export.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -15,7 +16,7 @@ namespace complex
  * @brief IDataAction is the interface for declaratively stating what changes to be made to a DataStructure.
  * Can then be applied in preflight or execute mode to actually make those changes.
  */
-class IDataAction
+class COMPLEX_EXPORT IDataAction
 {
 public:
   using UniquePointer = std::unique_ptr<IDataAction>;
@@ -49,7 +50,7 @@ protected:
  * @brief The IDataCreationAction class is a subclass of IDataAction used for
  * inserting a DataObject to a target DataStructure.
  */
-class IDataCreationAction : public IDataAction
+class COMPLEX_EXPORT IDataCreationAction : public IDataAction
 {
 public:
   enum class ArrayHandlingType : uint64
@@ -97,10 +98,20 @@ private:
 /**
  * @brief Container for IDataActions
  */
-struct OutputActions
+struct COMPLEX_EXPORT OutputActions
 {
   std::vector<IDataAction::UniquePointer> actions;
   std::vector<IDataAction::UniquePointer> deferredActions;
+
+  OutputActions() = default;
+
+  ~OutputActions() noexcept = default;
+
+  OutputActions(const OutputActions&) = delete;
+  OutputActions(OutputActions&&) noexcept = default;
+
+  OutputActions& operator=(const OutputActions&) = delete;
+  OutputActions& operator=(OutputActions&&) noexcept = default;
 
   static Result<> ApplyActions(nonstd::span<const IDataAction::UniquePointer> actions, DataStructure& dataStructure, IDataAction::Mode mode);
 
