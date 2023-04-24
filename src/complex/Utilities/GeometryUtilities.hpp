@@ -41,7 +41,7 @@ Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& b
  * @param geometry The geometry to be partitioned
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  */
-template <typename Geom>
+template <typename Geom, class = std::enable_if_t<std::is_same<Geom, INodeGeometry0D>::value>>
 Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const Geom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
   BoundingBox3Df boundingBox = geometry.getBoundingBox();
