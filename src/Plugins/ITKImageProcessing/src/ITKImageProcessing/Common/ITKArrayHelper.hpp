@@ -508,7 +508,7 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
   std::vector<usize> tDims(std::make_reverse_iterator(imageDims.end()), std::make_reverse_iterator(imageDims.begin()));
   std::vector<usize> outputPixelDims = ITK::GetComponentDimensions<OutputPixelT>();
 
-  outputActions.actions.push_back(std::make_unique<CreateArrayAction>(outputType, tDims, outputPixelDims, outputArrayPath));
+  outputActions.appendAction(std::make_unique<CreateArrayAction>(outputType, tDims, outputPixelDims, outputArrayPath));
 
   return {std::move(outputActions)};
 }

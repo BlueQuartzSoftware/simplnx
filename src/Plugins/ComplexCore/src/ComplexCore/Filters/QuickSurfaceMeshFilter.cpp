@@ -129,33 +129,33 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   {
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numElements, 1, pVertexGroupDataName, pFaceGroupDataName,
                                                                                        CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
-    resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
+    resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
   // Create the face NodesType DataArray action and store it
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int8, std::vector<usize>{1}, std::vector<usize>{1},
                                                                  pTriangleGeometryPath.createChildPath(pVertexGroupDataName).createChildPath(pNodeTypesName));
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the face Labels DataArray action and store it
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2},
                                                                  pTriangleGeometryPath.createChildPath(pFaceGroupDataName).createChildPath(pFaceLabelsName));
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
     DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
     auto createArrayAction = std::make_unique<CopyArrayInstanceAction>(selectedDataPath, createdDataPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   {
     auto faceFeatureAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FaceFeatureAttributeMatrixName_Key);
     DataPath pFaceFeatureAttrMatrixPath = pTriangleGeometryPath.createChildPath(faceFeatureAttributeMatrixName);
     auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(pFaceFeatureAttrMatrixPath, std::vector<usize>{1});
-    resultOutputActions.value().actions.push_back(std::move(createFeatureGroupAction));
+    resultOutputActions.value().appendAction(std::move(createFeatureGroupAction));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

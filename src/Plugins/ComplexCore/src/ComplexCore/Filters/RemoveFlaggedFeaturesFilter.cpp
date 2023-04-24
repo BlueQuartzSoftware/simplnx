@@ -153,7 +153,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
     auto action = std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{featureIds->getNumberOfTuples()}, std::vector<usize>{featureIds->getNumberOfComponents() * 6}, tempPath);
 
     // After the execute function has been done, delete the temp array
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

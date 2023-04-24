@@ -129,7 +129,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     }
 
     auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, numTuples, pVertexGroupDataName, CreateVertexGeometryAction::k_SharedVertexListName);
-    resultOutputActions.value().actions.push_back(std::move(createVertexGeometryAction));
+    resultOutputActions.value().appendAction(std::move(createVertexGeometryAction));
   }
 
   // Create all the target DataArray based on the Selected Node Arrays
@@ -137,7 +137,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   {
     DataPath createdDataPath = pVertexGroupDataPath.createChildPath(selectedDataPath.getTargetName());
     auto createArrayAction = std::make_unique<CopyArrayInstanceAction>(selectedDataPath, createdDataPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Collect all the errors

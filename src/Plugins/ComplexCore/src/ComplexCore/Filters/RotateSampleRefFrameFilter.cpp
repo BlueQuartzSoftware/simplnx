@@ -409,9 +409,9 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     tempPathVector.back() = tempName;
     DataPath tempPath(tempPathVector);
     // Rename the current image geometry
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(srcImagePath, tempName));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(srcImagePath, tempName));
     // After the execute function has been done, delete the moved image geometry
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
 
     tempPathVector = srcImagePath.getPathVector();
     tempName = k_TempGeometryName;
@@ -428,7 +428,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
-    resultOutputActions.value().actions.push_back(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
+    resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
 
     // Create the Cell AttributeMatrix in the Destination Geometry
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
@@ -439,7 +439,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
       DataType dataType = srcArray.getDataType();
       IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
     }
 
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using
@@ -473,18 +473,18 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
             allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
           }
         }
-        resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
+        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
       }
       else
       {
-        resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
+        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
       }
     }
   }
 
   if(pRemoveOriginalGeometry)
   {
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
   }
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

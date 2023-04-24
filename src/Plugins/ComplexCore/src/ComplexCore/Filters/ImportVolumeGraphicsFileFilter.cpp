@@ -426,7 +426,7 @@ IFilter::PreflightResult ImportVolumeGraphicsFileFilter::preflightImpl(const Dat
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
       pNewImageGeometryPathValue, CreateImageGeometryAction::DimensionType{metadata.Dimensions[0], metadata.Dimensions[1], metadata.Dimensions[2]}, CreateImageGeometryAction::OriginType{0, 0, 0},
       CreateImageGeometryAction::SpacingType{metadata.Spacing[0], metadata.Spacing[1], metadata.Spacing[2]}, pCellAttributeMatrixNameValue);
-  resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   const fs::path fiData = fs::path(metadata.DataFilePath);
   s_HeaderCache[m_InstanceId].VgiDataFilePath = fiData; // Store the data file path in the cache
@@ -439,7 +439,7 @@ IFilter::PreflightResult ImportVolumeGraphicsFileFilter::preflightImpl(const Dat
   const DataPath dap = pNewImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
   auto createArrayAction =
       std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{metadata.Dimensions[0], metadata.Dimensions[1], metadata.Dimensions[2]}, std::vector<usize>{1}, dap);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), {}};
 }

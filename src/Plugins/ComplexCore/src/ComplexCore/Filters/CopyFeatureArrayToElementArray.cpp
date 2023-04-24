@@ -147,7 +147,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArray::preflightImpl(const Dat
 
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, featureIdsArrayStore.getTupleShape(), selectedFeatureArrayStore.getComponentShape(), createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

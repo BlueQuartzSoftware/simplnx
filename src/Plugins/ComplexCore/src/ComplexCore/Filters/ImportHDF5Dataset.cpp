@@ -307,7 +307,7 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
       }
       DataType dataType = complex::HDF5::toCommonType(type.value()).value();
       auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(action));
+      resultOutputActions.value().appendAction(std::move(action));
     }
   } // End For Loop over dataset imoprt info list
 

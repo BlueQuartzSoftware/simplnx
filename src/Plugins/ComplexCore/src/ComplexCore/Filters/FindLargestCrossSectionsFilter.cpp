@@ -93,7 +93,7 @@ IFilter::PreflightResult FindLargestCrossSectionsFilter::preflightImpl(const Dat
   {
     const auto& cellFeatAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPath);
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, cellFeatAM.getShape(), std::vector<usize>{1}, largestCrossSectionPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath);

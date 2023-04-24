@@ -112,11 +112,11 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
 
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, componentDims, omega1Path);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, componentDims, omega2Path);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   if(pSaveCentralMomentsValue)
@@ -125,7 +125,7 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
     const DataPath centralMomentsPath = pFeatureAttributeMatrixPathValue.createChildPath(pCentralMomentsArrayNameValue);
     componentDims = {3, 3};
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, componentDims, centralMomentsPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

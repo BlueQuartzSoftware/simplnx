@@ -87,7 +87,7 @@ IFilter::PreflightResult FindNumFeaturesFilter::preflightImpl(const DataStructur
   }
 
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, cellEnsembleData->getShape(), std::vector<usize>{1}, pNumFeaturesArrayPathValue);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

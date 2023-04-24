@@ -141,7 +141,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
   const uint64 numVertices = inputVertexGeomPtr->getNumberOfVertices();
   auto reduced = std::make_unique<CreateVertexGeometryAction>(reducedVertexPath, numVertices, vertexAttrMatName, CreateVertexGeometryAction::k_SharedVertexListName);
   const DataPath reducedVertexDataPath = reduced->getVertexDataPath();
-  resultOutputActions.value().actions.push_back(std::move(reduced));
+  resultOutputActions.value().appendAction(std::move(reduced));
 
   dataStructure.validateNumberOfTuples(dataArrayPaths);
   std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
@@ -171,7 +171,7 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
       const IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       const IDataStore::ShapeType tupleShape = srcArray.getIDataStoreRef().getTupleShape();
       const DataPath dataArrayPath = reducedVertGeomAttrMatPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tupleShape, componentShape, dataArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleShape, componentShape, dataArrayPath));
     }
   }
 
@@ -196,11 +196,11 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
             allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
           }
         }
-        resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
+        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
       }
       else
       {
-        resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
+        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
       }
     }
   }

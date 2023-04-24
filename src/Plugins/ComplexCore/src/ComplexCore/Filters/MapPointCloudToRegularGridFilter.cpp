@@ -280,7 +280,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
     CreateImageGeometryAction::OriginType origin = {0, 0, 0};
     CreateImageGeometryAction::SpacingType spacing = {1, 1, 1};
     auto imageAction = std::make_unique<CreateImageGeometryAction>(newImageGeomPath, dims, origin, spacing, cellDataName);
-    actions.actions.push_back(std::move(imageAction));
+    actions.appendAction(std::move(imageAction));
   }
 
   const auto& vertexGeom = data.getDataRefAs<VertexGeom>(vertexGeomPath);
@@ -306,7 +306,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   }
 
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint64, vertexData->getShape(), std::vector<usize>{1}, voxelIndicesPath);
-  actions.actions.push_back(std::move(createArrayAction));
+  actions.appendAction(std::move(createArrayAction));
 
   return {std::move(actions)};
 }

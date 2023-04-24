@@ -118,14 +118,14 @@ IFilter::PreflightResult GenerateGBCDPoleFigureFilter::preflightImpl(const DataS
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
       pImageGeometryPath, imageDims, CreateImageGeometryAction::OriginType{-1.0f, -1.0f, 0.0f},
       CreateImageGeometryAction::SpacingType{2.0f / pOutputImageDimension, 2.0f / pOutputImageDimension, 2.0f / pOutputImageDimension}, pCellAttributeMatrixName);
-  resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   std::vector<usize> cDims = {1};
   std::vector<usize> tDims = {1ULL, pOutputImageDimension, pOutputImageDimension}; // The DataArray Tuple Dims should be slowest to fastest, "C" Order
 
   DataPath cellIntensityArrayPath = pImageGeometryPath.createChildPath(pCellAttributeMatrixName).createChildPath(pCellIntensityArrayName);
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float64, tDims, cDims, cellIntensityArrayPath);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

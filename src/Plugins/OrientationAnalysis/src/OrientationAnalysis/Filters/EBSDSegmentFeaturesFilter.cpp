@@ -181,9 +181,9 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
   auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, quats.getIDataStore()->getTupleShape(), std::vector<usize>{1}, featureIdsPath);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(createFeatureGroupAction));
-  actions.actions.push_back(std::move(createActiveAction));
-  actions.actions.push_back(std::move(createFeatureIdsAction));
+  actions.appendAction(std::move(createFeatureGroupAction));
+  actions.appendAction(std::move(createActiveAction));
+  actions.appendAction(std::move(createFeatureIdsAction));
 
   return {std::move(actions)};
 }

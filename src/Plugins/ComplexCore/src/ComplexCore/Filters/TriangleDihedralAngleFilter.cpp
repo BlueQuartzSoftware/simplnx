@@ -184,7 +184,7 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
     DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pMinDihedralAnglesName);
     // Create the face areas DataArray Action and store it into the resultOutputActions
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

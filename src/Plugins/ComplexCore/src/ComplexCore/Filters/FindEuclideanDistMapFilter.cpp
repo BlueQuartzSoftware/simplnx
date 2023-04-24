@@ -137,31 +137,31 @@ IFilter::PreflightResult FindEuclideanDistMapFilter::preflightImpl(const DataStr
   {
     auto arrayPath = parentGroup.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1ULL}, arrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the TJDistancesArray
   {
     auto arrayPath = parentGroup.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1ULL}, arrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the QPDistancesArray
   {
     auto arrayPath = parentGroup.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1ULL}, arrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the NearestNeighborsArray
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{3ULL}, pNearestNeighborsArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // If we are NOT saving the nearest neighbors then we need to delete this array that gets created.
   if(!pSaveNearestNeighborsValue)
   {
     auto action = std::make_unique<DeleteDataAction>(pNearestNeighborsArrayPath, DeleteDataAction::DeleteType::JustObject);
-    resultOutputActions.value().deferredActions.push_back(std::move(action));
+    resultOutputActions.value().appendDeferredAction(std::move(action));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;

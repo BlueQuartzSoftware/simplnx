@@ -120,9 +120,9 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   auto createNumElementsAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDimensions, std::vector<usize>{numberOfComponents}, numElementsPath);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(createVolumesAction));
-  actions.actions.push_back(std::move(createEquivalentDiametersAction));
-  actions.actions.push_back(std::move(createNumElementsAction));
+  actions.appendAction(std::move(createVolumesAction));
+  actions.appendAction(std::move(createEquivalentDiametersAction));
+  actions.appendAction(std::move(createNumElementsAction));
 
   return {std::move(actions)};
 }

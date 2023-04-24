@@ -112,7 +112,7 @@ IFilter::PreflightResult CreateImageGeometry::preflightImpl(const DataStructure&
 
   // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via a push_back
   complex::Result<OutputActions> resultOutputActions;
-  resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   IFilter::PreflightResult preflightResult;
   // Assign/Move the resultOutputActions to the preflightResult object

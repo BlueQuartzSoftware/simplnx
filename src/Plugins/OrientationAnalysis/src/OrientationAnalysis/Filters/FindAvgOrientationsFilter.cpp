@@ -153,8 +153,8 @@ IFilter::PreflightResult FindAvgOrientationsFilter::preflightImpl(const DataStru
   auto createAvgEulerAction = std::make_unique<CreateArrayAction>(DataType::float32, tDims, std::vector<usize>{3}, pAvgEulerAnglesArrayPathValue);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(createAvgQuatAction));
-  actions.actions.push_back(std::move(createAvgEulerAction));
+  actions.appendAction(std::move(createAvgQuatAction));
+  actions.appendAction(std::move(createAvgEulerAction));
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(actions)};

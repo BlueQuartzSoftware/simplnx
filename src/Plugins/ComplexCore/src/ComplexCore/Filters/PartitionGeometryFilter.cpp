@@ -445,11 +445,11 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
   DataPath dap = pInputGeomCellAMPathValue.createChildPath(pPartitionIdsArrayNameValue);
   auto action = std::make_unique<CreateArrayAction>(DataType::int32, attrMatrix.getShape(), std::vector<usize>{1}, dap);
-  resultOutputActions.value().actions.push_back(std::move(action));
+  resultOutputActions.value().appendAction(std::move(action));
 
   dap = pInputGeomCellAMPathValue.getParent();
   dap = dap.createChildPath(pFeatureAttrMatrixNameValue);
-  resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(dap, attrMatrix.getShape()));
+  resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(dap, attrMatrix.getShape()));
 
   std::string partitioningSchemeInformation;
 
@@ -473,12 +473,12 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   if(static_cast<PartitionGeometryFilter::PartitioningMode>(pPartitioningModeValue) != PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
   {
     auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pPartitionGridGeomValue, psDims, psOrigin, psSpacing, pPartitionGridCellAMNameValue);
-    resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+    resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
     dap = pPartitionGridGeomValue;
     dap = dap.createChildPath(pPartitionGridCellAMNameValue).createChildPath(pPartitionGridFeatureIDsNameValue);
     action = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{psMetadata.geometryDims[2], psMetadata.geometryDims[1], psMetadata.geometryDims[0]}, std::vector<usize>{1}, dap);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;

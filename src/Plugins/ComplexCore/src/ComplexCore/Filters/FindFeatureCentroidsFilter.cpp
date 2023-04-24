@@ -100,7 +100,7 @@ IFilter::PreflightResult FindFeatureCentroidsFilter::preflightImpl(const DataStr
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {
     auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3ULL}, pCentroidsArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createFeatureCentroidsAction));
+    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

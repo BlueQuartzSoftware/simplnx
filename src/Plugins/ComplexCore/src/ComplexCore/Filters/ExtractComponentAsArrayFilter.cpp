@@ -109,7 +109,7 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   {
     // Create new array to hold extracted components
     auto createNewComponentArrayAction = std::make_unique<CreateArrayAction>(selectedArray.getDataType(), selectedArray.getTupleShape(), std::vector<usize>{1}, pNewArrayPathValue);
-    resultOutputActions.value().actions.push_back(std::move(createNewComponentArrayAction));
+    resultOutputActions.value().appendAction(std::move(createNewComponentArrayAction));
   }
 
   // Default to removal if user elects to not extract components because parameter is hidden if move extracted components is false
@@ -121,16 +121,16 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
 
     // Rename original array to temp
     auto renameSelectedArrayAction = std::make_unique<RenameDataAction>(pSelectedArrayPathValue, tempSelectedArrayName);
-    resultOutputActions.value().actions.push_back(std::move(renameSelectedArrayAction));
+    resultOutputActions.value().appendAction(std::move(renameSelectedArrayAction));
 
     // Create new array with old DataPath of new size
     auto createNewSelectedArrayAction =
         std::make_unique<CreateArrayAction>(selectedArray.getDataType(), selectedArray.getTupleShape(), std::vector<usize>{selectedArray.getNumberOfComponents() - 1}, baseSelectedArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createNewSelectedArrayAction));
+    resultOutputActions.value().appendAction(std::move(createNewSelectedArrayAction));
 
     // Remove the old array after execution
     auto removeTempArrayAction = std::make_unique<DeleteDataAction>(DataPath::FromString(pSelectedArrayPathValue.toString() + "Temp", '/').value());
-    resultOutputActions.value().deferredActions.push_back(std::move(removeTempArrayAction));
+    resultOutputActions.value().appendDeferredAction(std::move(removeTempArrayAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

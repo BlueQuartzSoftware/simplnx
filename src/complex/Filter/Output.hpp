@@ -3,6 +3,7 @@
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Filter/AnyCloneable.hpp"
 #include "complex/complex_export.hpp"
 
 #include <nonstd/span.hpp>
@@ -51,6 +52,8 @@ public:
 protected:
   IDataAction() = default;
 };
+
+using AnyDataAction = AnyCloneable<IDataAction>;
 
 /**
  * @brief The IDataCreationAction class is a subclass of IDataAction used for
@@ -109,20 +112,34 @@ private:
  */
 struct COMPLEX_EXPORT OutputActions
 {
-  std::vector<IDataAction::UniquePointer> actions;
-  std::vector<IDataAction::UniquePointer> deferredActions;
+  std::vector<AnyDataAction> actions;
+  std::vector<AnyDataAction> deferredActions;
 
   OutputActions() = default;
 
   ~OutputActions() noexcept = default;
 
-  OutputActions(const OutputActions&) = delete;
+  OutputActions(const OutputActions&) = default;
   OutputActions(OutputActions&&) noexcept = default;
 
-  OutputActions& operator=(const OutputActions&) = delete;
+  OutputActions& operator=(const OutputActions&) = default;
   OutputActions& operator=(OutputActions&&) noexcept = default;
 
-  static Result<> ApplyActions(nonstd::span<const IDataAction::UniquePointer> actions, DataStructure& dataStructure, IDataAction::Mode mode);
+  template <class T>
+  void appendAction(std::unique_ptr<T> action)
+  {
+    static_assert(std::is_base_of_v<IDataAction, T>, "OutputActions::appendAction requires T to be derived from IDataAction");
+    actions.emplace_back(std::move(action));
+  }
+
+  template <class T>
+  void appendDeferredAction(std::unique_ptr<T> action)
+  {
+    static_assert(std::is_base_of_v<IDataAction, T>, "OutputActions::appendDeferredAction requires T to be derived from IDataAction");
+    deferredActions.emplace_back(std::move(action));
+  }
+
+  static Result<> ApplyActions(nonstd::span<const AnyDataAction> actions, DataStructure& dataStructure, IDataAction::Mode mode);
 
   Result<> applyRegular(DataStructure& dataStructure, IDataAction::Mode mode) const;
 

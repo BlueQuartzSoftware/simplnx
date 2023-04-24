@@ -91,7 +91,7 @@ IFilter::PreflightResult FindFeaturePhasesFilter::preflightImpl(const DataStruct
 
   {
     auto createFeaturePhasesAction = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatData->getShape(), std::vector<usize>{1}, pFeaturePhasesArrayPathValue);
-    resultOutputActions.value().actions.push_back(std::move(createFeaturePhasesAction));
+    resultOutputActions.value().appendAction(std::move(createFeaturePhasesAction));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;

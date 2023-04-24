@@ -113,13 +113,13 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
 
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
 
-  resultOutputActions.value().actions.push_back(
+  resultOutputActions.value().appendAction(
       std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(imageGeomDims), std::move(origin), std::move(spacing), pCellAttributeMatrixNameValue));
 
   // Create the Ensemble AttributeMatrix
   {
     auto createDataGroupAction = std::make_unique<CreateAttributeMatrixAction>(pCellEnsembleAttributeMatrixNameValue, std::vector<size_t>{2});
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
   EbsdLib::OEM m_Manufacturer = {EbsdLib::OEM::Unknown};
@@ -170,13 +170,13 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     {
       DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
       auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(action));
+      resultOutputActions.value().appendAction(std::move(action));
     }
     else if(reader->getPointerType(names[i]) == EbsdLib::NumericTypes::Type::Float)
     {
       DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
       auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(action));
+      resultOutputActions.value().appendAction(std::move(action));
     }
   }
 
@@ -186,7 +186,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     cDims[0] = 3;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Only read the phases if the user wants it.
@@ -195,7 +195,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     cDims[0] = 1;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::H5Ebsd::Phases);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Now create the Ensemble arrays for the XTal Structures, Material Names and LatticeConstants
@@ -204,20 +204,20 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   {
     DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::uint32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   //  {
   //    DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(EbsdLib::EnsembleData::MaterialName);
   //    auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
-  //    resultOutputActions.value().actions.push_back(std::move(action));
+  //    resultOutputActions.value().appendAction(std::move(action));
   //  }
 
   cDims[0] = 6;
   {
     DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

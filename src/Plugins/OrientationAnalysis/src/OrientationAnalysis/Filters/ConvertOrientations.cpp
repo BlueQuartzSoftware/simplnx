@@ -397,7 +397,7 @@ IFilter::PreflightResult ConvertOrientations::preflightImpl(const DataStructure&
 
   // Create the Output actions
   OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
 
   return {std::move(actions)};
 }

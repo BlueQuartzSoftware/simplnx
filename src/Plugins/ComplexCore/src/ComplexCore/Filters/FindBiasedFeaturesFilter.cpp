@@ -103,7 +103,7 @@ IFilter::PreflightResult FindBiasedFeaturesFilter::preflightImpl(const DataStruc
 
   auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataStructure.getDataRefAs<BoolArray>(pSurfaceFeaturesArrayPathValue).getTupleShape(), std::vector<usize>{1},
                                                     pCentroidsArrayPathValue.getParent().createChildPath(pBiasedFeaturesArrayNameValue));
-  resultOutputActions.value().actions.push_back(std::move(action));
+  resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

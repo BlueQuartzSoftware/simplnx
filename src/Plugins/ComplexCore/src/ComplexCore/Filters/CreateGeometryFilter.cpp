@@ -273,7 +273,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(
         pGeometryPath, CreateImageGeometryAction::DimensionType({pDimensionsValue[0], pDimensionsValue[1], pDimensionsValue[2]}), pOriginValue, pSpacingValue, pCellAMName);
 
-    resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+    resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
     preflightUpdatedValues.push_back({"BoxDimensions", boxDimensions});
   }
   if(pGeometryType == k_RectGridGeometry) // RectGridGeom
@@ -309,12 +309,12 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 
     auto createRectGridGeometryAction =
         std::make_unique<CreateRectGridGeometryAction>(pGeometryPath, pXBoundsPath, pYBoundsPath, pZBoundsPath, pCellAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
-    resultOutputActions.value().actions.push_back(std::move(createRectGridGeometryAction));
+    resultOutputActions.value().appendAction(std::move(createRectGridGeometryAction));
   }
   if(pGeometryType == k_VertexGeometry) // VertexGeom
   {
     auto createVertexGeomAction = std::make_unique<CreateVertexGeometryAction>(pGeometryPath, pVertexListPath, pVertexAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
-    resultOutputActions.value().actions.push_back(std::move(createVertexGeomAction));
+    resultOutputActions.value().appendAction(std::move(createVertexGeomAction));
   }
   if(pGeometryType == k_EdgeGeometry) // EdgeGeom
   {
@@ -327,7 +327,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 
     auto createEdgeGeomAction =
         std::make_unique<CreateEdgeGeometryAction>(pGeometryPath, pVertexListPath, pEdgeListPath, pVertexAMName, pEdgeAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
-    resultOutputActions.value().actions.push_back(std::move(createEdgeGeomAction));
+    resultOutputActions.value().appendAction(std::move(createEdgeGeomAction));
   }
   if(pGeometryType == k_TriangleGeometry) // TriangleGeom
   {
@@ -339,7 +339,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 
     auto createTriangleGeomAction =
         std::make_unique<CreateTriangleGeometryAction>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
-    resultOutputActions.value().actions.push_back(std::move(createTriangleGeomAction));
+    resultOutputActions.value().appendAction(std::move(createTriangleGeomAction));
   }
   if(pGeometryType == k_QuadGeometry) // QuadGeom
   {
@@ -351,7 +351,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 
     auto createQuadGeomAction =
         std::make_unique<CreateQuadGeometryAction>(pGeometryPath, pVertexListPath, pQuadListPath, pVertexAMName, pFaceAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
-    resultOutputActions.value().actions.push_back(std::move(createQuadGeomAction));
+    resultOutputActions.value().appendAction(std::move(createQuadGeomAction));
   }
   if(pGeometryType == k_TetGeometry) // TetrahedralGeom
   {
@@ -363,7 +363,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 
     auto createTetGeomAction =
         std::make_unique<CreateTetrahedralGeometryAction>(pGeometryPath, pVertexListPath, pTetListPath, pVertexAMName, pCellAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
-    resultOutputActions.value().actions.push_back(std::move(createTetGeomAction));
+    resultOutputActions.value().appendAction(std::move(createTetGeomAction));
   }
   if(pGeometryType == k_HexGeometry) // HexahedralGeom
   {
@@ -375,7 +375,7 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 
     auto createHexGeomAction =
         std::make_unique<CreateHexahedralGeometryAction>(pGeometryPath, pVertexListPath, pHexListPath, pVertexAMName, pCellAMName, IDataCreationAction::ArrayHandlingType{pArrayHandling});
-    resultOutputActions.value().actions.push_back(std::move(createHexGeomAction));
+    resultOutputActions.value().appendAction(std::move(createHexGeomAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

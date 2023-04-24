@@ -84,7 +84,7 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
     return {nonstd::make_unexpected(std::vector<Error>{Error{-15201, fmt::format("Cannot find input data array at path '{}'", pInputArrayPath.toString())}})};
   }
 
-  resultOutputActions.value().actions.push_back(
+  resultOutputActions.value().appendAction(
       std::make_unique<CreateArrayAction>(pScalarType, inputArray->getIDataStoreRef().getTupleShape(), inputArray->getIDataStoreRef().getComponentShape(), convertedArrayPath));
 
   std::vector<PreflightValue> preflightUpdatedValues;

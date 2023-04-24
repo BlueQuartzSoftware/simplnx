@@ -273,14 +273,14 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
       FloatVec3 originVec = {rotateArgs.OriginalOrigin[0] + pTranslationValue[0], rotateArgs.OriginalOrigin[1] + pTranslationValue[1], rotateArgs.OriginalOrigin[2] + pTranslationValue[2]};
       auto spacingVec = imageGeomPtr->getSpacing();
-      resultOutputActions.value().actions.push_back(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
+      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
     else if(pTransformationMatrixTypeValue == k_ScaleIdx)
     {
       auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
       FloatVec3 spacingVec = {rotateArgs.OriginalSpacing[0] * pScaleValue[0], rotateArgs.OriginalSpacing[1] * pScaleValue[1], rotateArgs.OriginalSpacing[2] * pScaleValue[2]};
       auto originVec = imageGeomPtr->getOrigin();
-      resultOutputActions.value().actions.push_back(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
+      resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
     else // We are Rotating or scaling, manual transformation or precomputed. we need to create a brand new Image Geometry
     {
@@ -317,7 +317,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         const std::string cellDataName = selectedCellDataPtr->getName();
         ignorePaths.push_back(srcImagePath.createChildPath(cellDataName)); // This is needed so that we don't attempt to copy it later on
         // Create the new Image Geometry
-        resultOutputActions.value().actions.push_back(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
+        resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
 
         // Create a DataPath object that points to the Cell AttributeMatrix in the new ImageGeometry
         const DataPath targetCellAttrMatrix = destImagePath.createChildPath(cellDataName);
@@ -328,7 +328,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
           const DataPath srcCellArrayDataPath = srcImagePath.createChildPath(cellDataName).createChildPath(cellArrayName);
           const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcCellArrayDataPath);
           const IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
-          resultOutputActions.value().actions.push_back(
+          resultOutputActions.value().appendAction(
               std::make_unique<CreateArrayAction>(srcArray.getDataType(), dataArrayShape, componentShape, targetCellAttrMatrix.createChildPath(srcArray.getName())));
         }
 
@@ -371,11 +371,11 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
                 allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
               }
             }
-            resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
+            resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
           }
           else
           {
-            resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
+            resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
           }
         }
       }
@@ -383,9 +383,9 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       if(pRemoveOriginalGeometry)
       {
         // After the execute function has been done, delete the original image geometry
-        resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(srcImagePath));
+        resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(srcImagePath));
         // Rename the target Image Geometry (the one that just got created) to the original image geometry's name
-        resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
+        resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
       }
     }
   }

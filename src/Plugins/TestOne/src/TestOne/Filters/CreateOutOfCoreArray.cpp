@@ -110,7 +110,7 @@ IFilter::PreflightResult CreateOutOfCoreArray::preflightImpl(const DataStructure
 
   OutputActions actions;
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{numComponents}, dataArrayPath, false);
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
 
   return {std::move(actions)};
 }

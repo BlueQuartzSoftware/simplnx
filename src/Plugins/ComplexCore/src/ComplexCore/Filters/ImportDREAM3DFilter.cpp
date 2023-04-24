@@ -87,7 +87,7 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
 
   OutputActions actions;
   auto action = std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, importData.DataPaths);
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
   return {std::move(actions)};
 }
 

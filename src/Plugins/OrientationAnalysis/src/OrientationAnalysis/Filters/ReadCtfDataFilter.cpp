@@ -131,7 +131,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
 
   // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via a push_back
   complex::Result<OutputActions> resultOutputActions;
-  resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   DataPath cellAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue);
 
@@ -145,13 +145,13 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
     {
       DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
       auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(action));
+      resultOutputActions.value().appendAction(std::move(action));
     }
     else if(reader.getPointerType(name) == EbsdLib::NumericTypes::Type::Float)
     {
       DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
       auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(action));
+      resultOutputActions.value().appendAction(std::move(action));
     }
   }
 
@@ -160,7 +160,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
     cDims[0] = 1;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::Phases);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Create the Cell Euler Angles Array
@@ -168,7 +168,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
     cDims[0] = 3;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::EulerAngles);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Create the Ensemble AttributeMatrix
@@ -177,7 +177,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   {
     auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(ensembleAttributeMatrixPath, tupleDims);
-    resultOutputActions.value().actions.push_back(std::move(createAttributeMatrixAction));
+    resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
   }
 
   // Create the Crystal Structures Array
@@ -185,20 +185,20 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
     cDims[0] = 1;
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::CrystalStructures);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::uint32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the Lattice Constants Array
   {
     cDims[0] = 6;
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::LatticeConstants);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the Material Names Array
   {
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::MaterialName);
     auto action = std::make_unique<CreateStringArrayAction>(tupleDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

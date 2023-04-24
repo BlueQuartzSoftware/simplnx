@@ -125,7 +125,7 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
 
   // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via a push_back
   complex::Result<OutputActions> resultOutputActions;
-  resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   DataPath cellAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue);
 
@@ -139,13 +139,13 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     {
       DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
       auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(action));
+      resultOutputActions.value().appendAction(std::move(action));
     }
     else if(reader.getPointerType(name) == EbsdLib::NumericTypes::Type::Float)
     {
       DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
       auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(action));
+      resultOutputActions.value().appendAction(std::move(action));
     }
   }
 
@@ -154,7 +154,7 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     cDims[0] = 1;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::AngFile::Phases);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::int32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Create the Cell Euler Angles Array
@@ -162,14 +162,14 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     cDims[0] = 3;
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::AngFile::EulerAngles);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Create the Ensemble AttributeMatrix
   DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   {
     auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(ensembleAttributeMatrixPath);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
   std::vector<std::shared_ptr<AngPhase>> angPhases = reader.getPhaseVector();
@@ -179,20 +179,20 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
     cDims[0] = 1;
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::CrystalStructures);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::uint32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the Lattice Constants Array
   {
     cDims[0] = 6;
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::LatticeConstants);
     auto action = std::make_unique<CreateArrayAction>(complex::DataType::float32, tupleDims, cDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the Material Names Array
   {
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::MaterialName);
     auto action = std::make_unique<CreateStringArrayAction>(tupleDims, dataArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

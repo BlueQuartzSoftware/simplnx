@@ -132,7 +132,7 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
     pNewImageGeomPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
     auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeomPath, newDims, std::vector<float>{origin[0], origin[1], origin[2]},
                                                                         std::vector<float>{spacing[0], spacing[1], spacing[2]}, ImageGeom::k_CellDataName);
-    resultOutputActions.value().actions.push_back(std::move(createGeomAction));
+    resultOutputActions.value().appendAction(std::move(createGeomAction));
   }
 
   std::vector<usize> newCellDataDims(newDims.rbegin(), newDims.rend());
@@ -217,7 +217,7 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
       if(pSaveAsNewGeometry)
       {
         auto createArrayAction = std::make_unique<CreateArrayAction>(dataType1, newCellDataDims, dataArray1->getComponentShape(), newCellDataPath.createChildPath(name));
-        resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+        resultOutputActions.value().appendAction(std::move(createArrayAction));
       }
     }
     if(arrayType == IArray::ArrayType::NeighborListArray)
@@ -235,13 +235,13 @@ IFilter::PreflightResult AppendImageGeometryZSliceFilter::preflightImpl(const Da
       if(pSaveAsNewGeometry)
       {
         auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataType1, numNewCellDataTuples, newCellDataPath.createChildPath(name));
-        resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+        resultOutputActions.value().appendAction(std::move(createArrayAction));
       }
     }
     if(arrayType == IArray::ArrayType::StringArray && pSaveAsNewGeometry)
     {
       auto createArrayAction = std::make_unique<CreateStringArrayAction>(newCellDataDims, newCellDataPath.createChildPath(name));
-      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
 

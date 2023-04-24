@@ -121,7 +121,7 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
     auto tupleShape = dataArray->getTupleShape();
     auto action =
         std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].getParent().createChildPath(stackedDataArrayName));
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // If we are MOVING the data arrays, then we need to delete the data arrays at
@@ -131,7 +131,7 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
     for(const auto& dataPath : selectedDataArrayPathsValue)
     {
       auto action = std::make_unique<DeleteDataAction>(dataPath, DeleteDataAction::DeleteType::JustObject);
-      resultOutputActions.value().deferredActions.push_back(std::move(action));
+      resultOutputActions.value().appendDeferredAction(std::move(action));
     }
   }
 

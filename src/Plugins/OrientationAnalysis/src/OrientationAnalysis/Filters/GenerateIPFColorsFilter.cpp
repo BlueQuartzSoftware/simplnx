@@ -164,7 +164,7 @@ IFilter::PreflightResult GenerateIPFColorsFilter::preflightImpl(const DataStruct
   auto createIpfColorsAction = std::make_unique<CreateArrayAction>(DataType::uint8, eulersArray->getIDataStore()->getTupleShape(), std::vector<usize>{3}, pCellIPFColorsArrayNameValue);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(createIpfColorsAction));
+  actions.appendAction(std::move(createIpfColorsAction));
 
   return {std::move(actions)};
 }

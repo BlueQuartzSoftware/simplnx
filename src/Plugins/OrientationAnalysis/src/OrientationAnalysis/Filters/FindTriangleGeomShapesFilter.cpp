@@ -107,7 +107,7 @@ IFilter::PreflightResult FindTriangleGeomShapesFilter::preflightImpl(const DataS
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_Omega3sArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{1}, createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Create the Axis Lengths Output Array
@@ -115,21 +115,21 @@ IFilter::PreflightResult FindTriangleGeomShapesFilter::preflightImpl(const DataS
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisLengthsArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the Axis Euler Angles Output Array
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisEulerAnglesArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the Aspect Ratios Output Array
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AspectRatiosArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{2}, createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // No preflight updated values are generated in this filter

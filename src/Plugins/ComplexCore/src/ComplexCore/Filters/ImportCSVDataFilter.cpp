@@ -400,7 +400,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
       return {std::move(result)};
     }
     groupPath = createdDataGroup;
-    resultOutputActions.value().actions.push_back(std::make_unique<CreateDataGroupAction>(createdDataGroup));
+    resultOutputActions.value().appendAction(std::make_unique<CreateDataGroupAction>(createdDataGroup));
   }
 
   // Create the arrays
@@ -419,7 +419,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
     DataPath arrayPath = groupPath;
     arrayPath = arrayPath.createChildPath(name);
 
-    resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, cDims, arrayPath));
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tDims, cDims, arrayPath));
   }
 
   // Create preflight updated values

@@ -135,7 +135,7 @@ IFilter::PreflightResult FindFeatureReferenceMisorientationsFilter::preflightImp
   // Create output Feature Reference Misorientations
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, cellPhases.getIDataStore()->getTupleShape(), std::vector<usize>{1}, pFeatureReferenceMisorientationsArrayPathValue);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Create output Feature Average Misorientations
@@ -161,7 +161,7 @@ IFilter::PreflightResult FindFeatureReferenceMisorientationsFilter::preflightImp
     }
 
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, featAvgMisorientationsPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using

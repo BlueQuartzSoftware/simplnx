@@ -149,7 +149,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples, vertexDataName, CreateVertexGeometryAction::k_SharedVertexListName);
   DataPath croppedVertexDataPath = action->getVertexDataPath();
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
 
   for(auto&& targetArrayPath : targetArrays)
   {
@@ -159,7 +159,7 @@ IFilter::PreflightResult CropVertexGeometry::preflightImpl(const DataStructure& 
     auto tDims = targetArray.getNumberOfTuples();
     auto cDims = targetArray.getNumberOfComponents();
     auto createArrayAction = std::make_unique<CreateArrayAction>(type, std::vector<usize>{tDims}, std::vector<usize>{cDims}, croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
-    actions.actions.push_back(std::move(createArrayAction));
+    actions.appendAction(std::move(createArrayAction));
   }
 
   return {std::move(actions)};

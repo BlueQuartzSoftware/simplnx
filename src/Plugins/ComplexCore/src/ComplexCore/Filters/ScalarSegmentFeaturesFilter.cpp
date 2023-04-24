@@ -172,9 +172,9 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{numTuples}, std::vector<usize>{1}, activeArrayPath);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(createAttributeMatrixAction));
-  actions.actions.push_back(std::move(createActiveAction));
-  actions.actions.push_back(std::move(createFeatureIdsAction));
+  actions.appendAction(std::move(createAttributeMatrixAction));
+  actions.appendAction(std::move(createActiveAction));
+  actions.appendAction(std::move(createFeatureIdsAction));
 
   return {std::move(actions)};
 }

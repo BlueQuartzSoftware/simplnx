@@ -95,7 +95,7 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
 
   complex::Result<OutputActions> resultOutputActions;
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, tDims, std::vector<usize>{6}, featureRectArrayPath);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   std::vector<PreflightValue> preflightUpdatedValues;
 

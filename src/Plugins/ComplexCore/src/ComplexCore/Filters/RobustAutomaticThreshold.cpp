@@ -180,7 +180,7 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
   auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{numComponents}, createdMaskPath);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
 
   return {std::move(actions)};
 }

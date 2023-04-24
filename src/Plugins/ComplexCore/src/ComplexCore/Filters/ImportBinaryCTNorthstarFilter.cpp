@@ -498,10 +498,10 @@ IFilter::PreflightResult ImportBinaryCTNorthstarFilter::preflightImpl(const Data
   complex::Result<OutputActions> resultOutputActions;
   auto createImageGeometryAction =
       std::make_unique<CreateImageGeometryAction>(pImageGeometryPathValue, importedGeometryInfo.Dimensions, importedGeometryInfo.Origin, importedGeometryInfo.Spacing, pCellAttributeMatrixNameValue);
-  resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   DataPath densityArrayPath = pImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
-  resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(
       DataType::float32, std::vector<usize>{importedGeometryInfo.Dimensions[2], importedGeometryInfo.Dimensions[1], importedGeometryInfo.Dimensions[0]}, std::vector<usize>{1}, densityArrayPath));
 
   // Set the preflight updated values

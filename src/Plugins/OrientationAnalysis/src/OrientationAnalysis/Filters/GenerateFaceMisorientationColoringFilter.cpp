@@ -102,7 +102,7 @@ IFilter::PreflightResult GenerateFaceMisorientationColoringFilter::preflightImpl
 
   DataPath faceMisorientationColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshFaceMisorientationColorsArrayNameValue);
   auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{3}, faceMisorientationColorsArrayPath);
-  resultOutputActions.value().actions.push_back(std::move(action));
+  resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

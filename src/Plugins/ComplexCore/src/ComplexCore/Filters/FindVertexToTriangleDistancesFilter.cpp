@@ -109,20 +109,20 @@ IFilter::PreflightResult FindVertexToTriangleDistancesFilter::preflightImpl(cons
 
   auto createDistancesArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, std::vector<usize>{vertexGeomPtr->getNumberOfVertices()}, std::vector<usize>{1},
                                                                         vertexDataPath.createChildPath(pDistancesDataName));
-  resultOutputActions.value().actions.push_back(std::move(createDistancesArrayAction));
+  resultOutputActions.value().appendAction(std::move(createDistancesArrayAction));
 
   auto createClosestTriangleIdArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int64, std::vector<usize>{vertexGeomPtr->getNumberOfVertices()}, std::vector<usize>{1},
                                                                                 vertexDataPath.createChildPath(pClosestTriangleIdDataName));
-  resultOutputActions.value().actions.push_back(std::move(createClosestTriangleIdArrayAction));
+  resultOutputActions.value().appendAction(std::move(createClosestTriangleIdArrayAction));
 
   // Create temp array then deferred delete
   auto tempTriBoundsDataPath = DataPath({::k_TriangleBounds});
   auto createTriBoundsArrayAction =
       std::make_unique<CreateArrayAction>(complex::DataType::float32, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{6}, tempTriBoundsDataPath);
-  resultOutputActions.value().actions.push_back(std::move(createTriBoundsArrayAction));
+  resultOutputActions.value().appendAction(std::move(createTriBoundsArrayAction));
 
   auto removeTempArrayAction = std::make_unique<DeleteDataAction>(tempTriBoundsDataPath);
-  resultOutputActions.value().deferredActions.push_back(std::move(removeTempArrayAction));
+  resultOutputActions.value().appendDeferredAction(std::move(removeTempArrayAction));
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
