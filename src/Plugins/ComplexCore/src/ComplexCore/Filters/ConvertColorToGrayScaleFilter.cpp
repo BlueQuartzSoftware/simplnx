@@ -138,7 +138,7 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
     std::string outputArrayName = fmt::format("{}{}", outputArrayPrefix, inputArrayName);
     inputPathVector.back() = outputArrayName;
     outputDataArrayPath = DataPath(inputPathVector);
-    resultOutputActions.value().actions.push_back(
+    resultOutputActions.value().appendAction(
         std::make_unique<CreateArrayAction>(complex::DataType::uint8, inputArray->getIDataStoreRef().getTupleShape(), std::vector<usize>(1, 1), outputDataArrayPath));
   }
 
