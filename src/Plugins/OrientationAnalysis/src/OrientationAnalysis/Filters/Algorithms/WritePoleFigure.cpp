@@ -681,7 +681,7 @@ Result<> WritePoleFigure::operator()()
       if(m_InputValues->WriteImageToDisk)
       {
         const std::string filename = fmt::format("{}/{}Phase_{}.tiff", m_InputValues->OutputPath.string(), m_InputValues->ImagePrefix, phase);
-        auto result = TiffWriter::WriteColorImage(filename, pageWidth, pageHeight, 4, image.data());
+        auto result = TiffWriter::WriteImage(filename, pageWidth, pageHeight, 4, image.data());
         if(result.first < 0)
         {
           return MakeErrorResult(-53900, fmt::format("Error writing pole figure image '{}' to disk.\n    Error Code from Tiff Writer: {}\n    Message: {}", filename, result.first, result.second));
