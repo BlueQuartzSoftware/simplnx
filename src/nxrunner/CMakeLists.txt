@@ -29,6 +29,15 @@ target_link_libraries(nxrunner PRIVATE complex::complex)
 
 source_group("nxrunner" FILES ${CLI_HDRS} ${CLI_SRCS})
 
+if(COMPLEX_BUILD_PYTHON)
+  find_package(pybind11 2.10.0 CONFIG REQUIRED)
+
+  target_link_libraries(nxrunner
+    PRIVATE
+      pybind11::embed
+  )
+endif()
+
 # -----------------------------------------------------------------------
 # Define install destination directories
 # -----------------------------------------------------------------------
