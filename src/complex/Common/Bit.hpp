@@ -24,6 +24,14 @@ enum class endian : uint8
   native = COMPLEX_BYTE_ORDER
 };
 
+inline endian checkEndian()
+{
+  constexpr uint32_t i = 0x01020304;
+  const auto* u8 = reinterpret_cast<const std::byte*>(&i);
+
+  return u8[0] == std::byte{0x01} ? endian::big : endian::little;
+}
+
 inline constexpr uint16 byteswap16(uint16 value) noexcept
 {
   return ((value >> 8) & 0xFFu) | ((value & 0xFFu) << 8);

@@ -8,6 +8,7 @@
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "complex/Filter/Actions/CreateStringArrayAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
@@ -195,9 +196,8 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   }
   // Create the Material Names Array
   {
-    cDims[0] = 256;
     DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::MaterialName);
-    auto action = std::make_unique<CreateArrayAction>(complex::DataType::int8, tupleDims, cDims, dataArrayPath);
+    auto action = std::make_unique<CreateStringArrayAction>(tupleDims, dataArrayPath);
     resultOutputActions.value().actions.push_back(std::move(action));
   }
 

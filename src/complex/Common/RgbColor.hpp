@@ -1,10 +1,11 @@
 #pragma once
 
-#include <iostream>
-#include <tuple>
-
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
+
+#include <iostream>
+#include <tuple>
+#include <vector>
 
 namespace complex
 {
@@ -14,6 +15,7 @@ namespace complex
  * ranging from 0 to 255 describing red, green, blue, and alpha values.
  */
 using Rgba = uint32;
+using Rgb = uint32;
 
 /**
  * @brief The RgbColor namespace stores calculations on or for ARGB values.
@@ -95,5 +97,13 @@ bool COMPLEX_EXPORT isEqual(complex::Rgba lhs, complex::Rgba rhs);
  * @return tuple<float32, float32, float32>
  */
 std::tuple<float32, float32, float32> COMPLEX_EXPORT fRgb(complex::Rgba rgb);
+
+/**
+ * @brief Generate a color table.
+ * @param numColors The number of colors to generate
+ * @param colorsOut The vector to store the colors into.
+ */
+void COMPLEX_EXPORT GetColorTable(int numColors, std::vector<float32>& colorsOut);
+
 } // namespace RgbColor
 } // namespace complex
