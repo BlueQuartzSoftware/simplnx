@@ -78,6 +78,7 @@
 #include <complex/Parameters/DataGroupSelectionParameter.hpp>
 #include <complex/Parameters/DataObjectNameParameter.hpp>
 #include <complex/Parameters/DataPathSelectionParameter.hpp>
+#include <complex/Parameters/DataStoreFormatParameter.hpp>
 #include <complex/Parameters/Dream3dImportParameter.hpp>
 #include <complex/Parameters/DynamicTableParameter.hpp>
 #include <complex/Parameters/FileSystemPathParameter.hpp>
@@ -86,6 +87,7 @@
 #include <complex/Parameters/ImportCSVDataParameter.hpp>
 #include <complex/Parameters/ImportHDF5DatasetParameter.hpp>
 #include <complex/Parameters/MultiArraySelectionParameter.hpp>
+#include <complex/Parameters/MultiPathSelectionParameter.hpp>
 #include <complex/Parameters/NeighborListSelectionParameter.hpp>
 #include <complex/Parameters/NumberParameter.hpp>
 #include <complex/Parameters/NumericTypeParameter.hpp>
@@ -243,21 +245,19 @@ struct PyParameterInfo
   }
 };
 
+class PythonPlugin;
+
 class Internals
 {
 public:
   static inline constexpr StringLiteral k_Key = "COMPLEX_INTERNAL";
 
   Internals()
-  : m_App(Application::Instance())
+  : m_App(Application::GetOrCreateInstance())
   {
-    if(m_App == nullptr)
-    {
-      m_App = new Application();
-    }
   }
 
-  static Internals& instance()
+  static Internals& Instance()
   {
     auto* ptr = py::get_shared_data(k_Key);
     if(ptr == nullptr)
@@ -354,9 +354,34 @@ public:
     return m_PluginFilterMap.at(pluginUuid);
   }
 
+  void loadPythonPlugin(py::module_& mod);
+
+  PythonPlugin* getPythonPlugin(const Uuid& id)
+  {
+    return m_PythonPlugins.at(id).get();
+  }
+
+  const PythonPlugin* getPythonPlugin(const Uuid& id) const
+  {
+    return m_PythonPlugins.at(id).get();
+  }
+
+  void reloadPythonPlugins();
+
+  std::vector<std::shared_ptr<PythonPlugin>> getPythonPlugins()
+  {
+    std::vector<std::shared_ptr<PythonPlugin>> plugins;
+    for(auto&& [id, plugin] : m_PythonPlugins)
+    {
+      plugins.push_back(plugin);
+    }
+    return plugins;
+  }
+
 private:
   std::unordered_map<Uuid, PyParameterInfo> m_ParameterConversionMap;
   std::unordered_map<Uuid, std::vector<py::type>> m_PluginFilterMap;
+  std::unordered_map<Uuid, std::shared_ptr<PythonPlugin>> m_PythonPlugins;
   Application* m_App;
 };
 
@@ -559,6 +584,13 @@ public:
   : IFilter()
   , m_Object(std::move(object))
   {
+    py::gil_scoped_acquire gil;
+    m_Name = m_Object.attr("name")().cast<std::string>();
+    m_ClassName = m_Object.attr("class_name")().cast<std::string>();
+    m_Uuid = m_Object.attr("uuid")().cast<Uuid>();
+    m_HumanName = m_Object.attr("human_name")().cast<std::string>();
+    m_DefaultTags = m_Object.attr("default_tags")().cast<std::vector<std::string>>();
+    m_Parameters = m_Object.attr("parameters")().cast<Parameters>();
   }
 
   ~PyFilter() noexcept = default;
@@ -571,38 +603,32 @@ public:
 
   std::string name() const override
   {
-    py::gil_scoped_acquire gil;
-    return m_Object.attr("name")().cast<std::string>();
+    return m_Name;
   }
 
   std::string className() const override
   {
-    py::gil_scoped_acquire gil;
-    return m_Object.attr("class_name")().cast<std::string>();
+    return m_ClassName;
   }
 
   Uuid uuid() const override
   {
-    py::gil_scoped_acquire gil;
-    return m_Object.attr("uuid")().cast<Uuid>();
+    return m_Uuid;
   }
 
   std::string humanName() const override
   {
-    py::gil_scoped_acquire gil;
-    return m_Object.attr("human_name")().cast<std::string>();
+    return m_HumanName;
   }
 
   std::vector<std::string> defaultTags() const override
   {
-    py::gil_scoped_acquire gil;
-    return m_Object.attr("default_tags")().cast<std::vector<std::string>>();
+    return m_DefaultTags;
   }
 
   Parameters parameters() const override
   {
-    py::gil_scoped_acquire gil;
-    return m_Object.attr("parameters")().cast<Parameters>();
+    return m_Parameters;
   }
 
   UniquePointer clone() const override
@@ -618,7 +644,7 @@ protected:
     Parameters params = parameters();
     auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
     auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-    auto result = m_Object.attr("preflight_impl")(data, ConvertArgsToDict(Internals::instance(), params, args), messageHandler, shouldCancelProxy).cast<PreflightResult>();
+    auto result = m_Object.attr("preflight_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), messageHandler, shouldCancelProxy).cast<PreflightResult>();
     return result;
   }
 
@@ -628,13 +654,92 @@ protected:
     Parameters params = parameters();
     auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
     auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-    auto result = m_Object.attr("execute_impl")(data, ConvertArgsToDict(Internals::instance(), params, args), /* pipelineNode,*/ messageHandler, shouldCancelProxy).cast<Result<>>();
+    auto result = m_Object.attr("execute_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), /* pipelineNode,*/ messageHandler, shouldCancelProxy).cast<Result<>>();
     return result;
   }
 
 private:
   py::object m_Object;
+  std::string m_Name;
+  std::string m_ClassName;
+  Uuid m_Uuid{};
+  std::string m_HumanName;
+  std::vector<std::string> m_DefaultTags;
+  Parameters m_Parameters;
 };
+
+class PythonPlugin : public AbstractPlugin
+{
+public:
+  ~PythonPlugin() noexcept override = default;
+
+  static std::shared_ptr<PythonPlugin> Create(py::module_& mod)
+  {
+    py::gil_scoped_acquire gil;
+
+    py::object object = mod.attr("get_plugin")();
+
+    auto id = object.attr("id")().cast<Uuid>();
+    auto name = object.attr("name")().cast<std::string>();
+    auto description = object.attr("description")().cast<std::string>();
+    auto vendor = object.attr("vendor")().cast<std::string>();
+    auto filters = object.attr("get_filters")().cast<py::list>();
+
+    auto plugin = std::shared_ptr<PythonPlugin>(new PythonPlugin(id, name, description, vendor));
+
+    plugin->m_PythonModule = mod;
+
+    for(py::handle filterTypeHandle : filters)
+    {
+      FilterCreationFunc filterCreationFunc = [filterType = py::reinterpret_borrow<py::object>(filterTypeHandle)]() -> IFilter::UniquePointer {
+        py::gil_scoped_acquire gil;
+        return std::make_unique<PyFilter>(filterType());
+      };
+      plugin->addFilter(std::move(filterCreationFunc));
+    }
+
+    return plugin;
+  }
+
+  std::map<complex::Uuid, complex::Uuid> getSimplToComplexMap() const override
+  {
+    return {};
+  }
+
+  void reload()
+  {
+    py::gil_scoped_acquire gil;
+    m_PythonModule.reload();
+  }
+
+protected:
+  PythonPlugin(IdType id, const std::string& name, const std::string& description, const std::string& vendor)
+  : AbstractPlugin(id, name, description, vendor)
+  {
+  }
+
+private:
+  py::module_ m_PythonModule;
+};
+
+void Internals::loadPythonPlugin(py::module_& mod)
+{
+  auto plugin = PythonPlugin::Create(mod);
+
+  auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
+
+  m_App->getFilterList()->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
+
+  m_PythonPlugins.insert({plugin->getId(), plugin});
+}
+
+void Internals::reloadPythonPlugins()
+{
+  for(auto&& [id, plugin] : m_PythonPlugins)
+  {
+    plugin->reload();
+  }
+}
 
 template <class ParameterT>
 void PyInsertLinkableParameter(Parameters& self, const ParameterT& param)
@@ -871,84 +976,8 @@ PYBIND11_MODULE(complex, mod)
   csvWizardData.def_readwrite("consecutive_delimiters", &CSVWizardData::consecutiveDelimiters);
   csvWizardData.def("__repr__", [](const CSVWizardData& self) { return "CSVWizardData()"; });
 
-  auto arrayCreationParameter = COMPLEX_PY_BIND_PARAMETER(mod, ArrayCreationParameter);
-  auto arraySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, ArraySelectionParameter);
-  auto arrayThresholdsParameter = COMPLEX_PY_BIND_PARAMETER(mod, ArrayThresholdsParameter);
-  auto attributeMatrixSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, AttributeMatrixSelectionParameter);
-  auto boolParameter = COMPLEX_PY_BIND_PARAMETER(mod, BoolParameter);
-  auto choicesParameter = COMPLEX_PY_BIND_PARAMETER(mod, ChoicesParameter);
-  auto dataGroupCreationParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataGroupCreationParameter);
-  auto dataGroupSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataGroupSelectionParameter);
-  auto dataObjectNameParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataObjectNameParameter);
-  auto dataPathSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataPathSelectionParameter);
-  auto dream3dImportParameter = COMPLEX_PY_BIND_PARAMETER(mod, Dream3dImportParameter);
-  auto dynamicTableParameter = COMPLEX_PY_BIND_PARAMETER(mod, DynamicTableParameter);
-  auto fileSystemPathParameter = COMPLEX_PY_BIND_PARAMETER(mod, FileSystemPathParameter);
-  auto generatedFileListParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeneratedFileListParameter);
-  auto geometrySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeometrySelectionParameter);
-  auto importCSVDataParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportCSVDataParameter);
-  auto importHDF5DatasetParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportHDF5DatasetParameter);
-  auto multiArraySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiArraySelectionParameter);
-  auto neighborListSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, NeighborListSelectionParameter);
-  auto int8Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Int8Parameter);
-  auto uInt8Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, UInt8Parameter);
-  auto int16Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Int16Parameter);
-  auto uInt16Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, UInt16Parameter);
-  auto int32Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Int32Parameter);
-  auto uInt32Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, UInt32Parameter);
-  auto int64Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Int64Parameter);
-  auto uInt64Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, UInt64Parameter);
-  auto float32Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Float32Parameter);
-  auto float64Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Float64Parameter);
-  auto numericTypeParameter = COMPLEX_PY_BIND_PARAMETER(mod, NumericTypeParameter);
-  auto stringParameter = COMPLEX_PY_BIND_PARAMETER(mod, StringParameter);
-  auto vectorInt8Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorInt8Parameter);
-  auto vectorUInt8Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorUInt8Parameter);
-  auto vectorInt16Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorInt16Parameter);
-  auto vectorUInt16Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorUInt16Parameter);
-  auto vectorInt32Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorInt32Parameter);
-  auto vectorUInt32Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorUInt32Parameter);
-  auto vectorInt64Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorInt64Parameter);
-  auto vectorUInt64Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorUInt64Parameter);
-  auto vectorFloat32Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorFloat32Parameter);
-  auto vectorFloat64Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorFloat64Parameter);
-
-  py::class_<ImportHDF5DatasetParameter::DatasetImportInfo> datasetImportInfo(importHDF5DatasetParameter, "DatasetImportInfo");
-  datasetImportInfo.def(py::init<>());
-  datasetImportInfo.def_readwrite("dataset_path", &ImportHDF5DatasetParameter::DatasetImportInfo::dataSetPath);
-  datasetImportInfo.def_readwrite("component_dims", &ImportHDF5DatasetParameter::DatasetImportInfo::componentDimensions);
-  datasetImportInfo.def_readwrite("tuple_dims", &ImportHDF5DatasetParameter::DatasetImportInfo::tupleDimensions);
-
-  py::class_<ImportHDF5DatasetParameter::ValueType> importHdf5DatasetInfo(importHDF5DatasetParameter, "ValueType");
-  importHdf5DatasetInfo.def(py::init<>());
-  importHdf5DatasetInfo.def_readwrite("parent", &ImportHDF5DatasetParameter::ValueType::parent);
-  importHdf5DatasetInfo.def_readwrite("input_file", &ImportHDF5DatasetParameter::ValueType::inputFile);
-  importHdf5DatasetInfo.def_readwrite("datasets", &ImportHDF5DatasetParameter::ValueType::datasets);
-  importHdf5DatasetInfo.def("__repr__", [](const ImportHDF5DatasetParameter::ValueType& self) { return "ImportHDF5DatasetParameter.ValueType()"; });
-
-  py::enum_<GeneratedFileListParameter::Ordering> generatedFileListOrdering(generatedFileListParameter, "Ordering");
-  generatedFileListOrdering.value("LowToHigh", GeneratedFileListParameter::Ordering::LowToHigh);
-  generatedFileListOrdering.value("HighToLow", GeneratedFileListParameter::Ordering::HighToLow);
-
-  py::class_<GeneratedFileListParameter::ValueType> generatedFileList(generatedFileListParameter, "ValueType");
-  generatedFileList.def(py::init<>());
-  generatedFileList.def_readwrite("start_index", &GeneratedFileListParameter::ValueType::startIndex);
-  generatedFileList.def_readwrite("end_index", &GeneratedFileListParameter::ValueType::endIndex);
-  generatedFileList.def_readwrite("increment_index", &GeneratedFileListParameter::ValueType::incrementIndex);
-  generatedFileList.def_readwrite("padding_digits", &GeneratedFileListParameter::ValueType::paddingDigits);
-  generatedFileList.def_readwrite("ordering", &GeneratedFileListParameter::ValueType::ordering);
-  generatedFileList.def_readwrite("input_path", &GeneratedFileListParameter::ValueType::inputPath);
-  generatedFileList.def_readwrite("file_prefix", &GeneratedFileListParameter::ValueType::filePrefix);
-  generatedFileList.def_readwrite("file_suffix", &GeneratedFileListParameter::ValueType::fileSuffix);
-  generatedFileList.def_readwrite("file_extension", &GeneratedFileListParameter::ValueType::fileExtension);
-  generatedFileList.def("generate", &GeneratedFileListParameter::ValueType::generate);
-  generatedFileList.def("generate_and_validate", &GeneratedFileListParameter::ValueType::generateAndValidate);
-
-  py::class_<Dream3dImportParameter::ImportData> dream3dImportData(dream3dImportParameter, "ImportData");
-  dream3dImportData.def(py::init<>());
-  dream3dImportData.def_readwrite("file_path", &Dream3dImportParameter::ImportData::FilePath);
-  dream3dImportData.def_readwrite("data_paths", &Dream3dImportParameter::ImportData::DataPaths);
-  dream3dImportData.def("__repr__", [](const Dream3dImportParameter::ImportData& self) { return "Dream3dImportParameter.ImportData()"; });
+  py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
+  py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
 
   py::class_<IDataStore, std::shared_ptr<IDataStore>> iDataStore(mod, "IDataStore");
   iDataStore.def_property_readonly("data_type", &IDataStore::getDataType);
@@ -1020,6 +1049,12 @@ PYBIND11_MODULE(complex, mod)
   iArray.def_property_readonly("tuple_shape", &IArray::getTupleShape);
   iArray.def_property_readonly("component_shape", &IArray::getComponentShape);
 
+  py::enum_<IArray::ArrayType> iArrayArrayType(iArray, "ArrayType");
+  iArrayArrayType.value("StringArray", IArray::ArrayType::StringArray);
+  iArrayArrayType.value("DataArray", IArray::ArrayType::DataArray);
+  iArrayArrayType.value("NeighborListArray", IArray::ArrayType::NeighborListArray);
+  iArrayArrayType.value("Any", IArray::ArrayType::Any);
+
   py::class_<IDataArray, IArray, std::shared_ptr<IDataArray>> iDataArray(mod, "IDataArray");
   iDataArray.def_property_readonly("store", py::overload_cast<>(&IDataArray::getIDataStore, py::const_));
   iDataArray.def_property_readonly("tdims", &IDataArray::getTupleShape);
@@ -1049,9 +1084,91 @@ PYBIND11_MODULE(complex, mod)
   outputActions.def(py::init<>());
   // outputActions.def_readwrite("actions", &OutputActions::actions);
 
+  auto arrayCreationParameter = COMPLEX_PY_BIND_PARAMETER(mod, ArrayCreationParameter);
+  auto arraySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, ArraySelectionParameter);
+  auto arrayThresholdsParameter = COMPLEX_PY_BIND_PARAMETER(mod, ArrayThresholdsParameter);
+  auto attributeMatrixSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, AttributeMatrixSelectionParameter);
+  auto boolParameter = COMPLEX_PY_BIND_PARAMETER(mod, BoolParameter);
+  auto choicesParameter = COMPLEX_PY_BIND_PARAMETER(mod, ChoicesParameter);
+  auto dataGroupCreationParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataGroupCreationParameter);
+  auto dataGroupSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataGroupSelectionParameter);
+  auto dataObjectNameParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataObjectNameParameter);
+  auto dataPathSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataPathSelectionParameter);
+  auto dataStoreFormatParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataStoreFormatParameter);
+  auto dream3dImportParameter = COMPLEX_PY_BIND_PARAMETER(mod, Dream3dImportParameter);
+  auto dynamicTableParameter = COMPLEX_PY_BIND_PARAMETER(mod, DynamicTableParameter);
+  auto fileSystemPathParameter = COMPLEX_PY_BIND_PARAMETER(mod, FileSystemPathParameter);
+  auto generatedFileListParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeneratedFileListParameter);
+  auto geometrySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, GeometrySelectionParameter);
+  auto importCSVDataParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportCSVDataParameter);
+  auto importHDF5DatasetParameter = COMPLEX_PY_BIND_PARAMETER(mod, ImportHDF5DatasetParameter);
+  auto multiArraySelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiArraySelectionParameter);
+  auto multiPathSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, MultiPathSelectionParameter);
+  auto neighborListSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, NeighborListSelectionParameter);
+  auto int8Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Int8Parameter);
+  auto uInt8Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, UInt8Parameter);
+  auto int16Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Int16Parameter);
+  auto uInt16Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, UInt16Parameter);
+  auto int32Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Int32Parameter);
+  auto uInt32Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, UInt32Parameter);
+  auto int64Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Int64Parameter);
+  auto uInt64Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, UInt64Parameter);
+  auto float32Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Float32Parameter);
+  auto float64Parameter = COMPLEX_PY_BIND_NUMBER_PARAMETER(mod, Float64Parameter);
+  auto numericTypeParameter = COMPLEX_PY_BIND_PARAMETER(mod, NumericTypeParameter);
+  auto stringParameter = COMPLEX_PY_BIND_PARAMETER(mod, StringParameter);
+  auto vectorInt8Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorInt8Parameter);
+  auto vectorUInt8Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorUInt8Parameter);
+  auto vectorInt16Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorInt16Parameter);
+  auto vectorUInt16Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorUInt16Parameter);
+  auto vectorInt32Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorInt32Parameter);
+  auto vectorUInt32Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorUInt32Parameter);
+  auto vectorInt64Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorInt64Parameter);
+  auto vectorUInt64Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorUInt64Parameter);
+  auto vectorFloat32Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorFloat32Parameter);
+  auto vectorFloat64Parameter = COMPLEX_PY_BIND_VECTOR_PARAMETER(mod, VectorFloat64Parameter);
+
+  py::class_<ImportHDF5DatasetParameter::DatasetImportInfo> datasetImportInfo(importHDF5DatasetParameter, "DatasetImportInfo");
+  datasetImportInfo.def(py::init<>());
+  datasetImportInfo.def_readwrite("dataset_path", &ImportHDF5DatasetParameter::DatasetImportInfo::dataSetPath);
+  datasetImportInfo.def_readwrite("component_dims", &ImportHDF5DatasetParameter::DatasetImportInfo::componentDimensions);
+  datasetImportInfo.def_readwrite("tuple_dims", &ImportHDF5DatasetParameter::DatasetImportInfo::tupleDimensions);
+
+  py::class_<ImportHDF5DatasetParameter::ValueType> importHdf5DatasetInfo(importHDF5DatasetParameter, "ValueType");
+  importHdf5DatasetInfo.def(py::init<>());
+  importHdf5DatasetInfo.def_readwrite("parent", &ImportHDF5DatasetParameter::ValueType::parent);
+  importHdf5DatasetInfo.def_readwrite("input_file", &ImportHDF5DatasetParameter::ValueType::inputFile);
+  importHdf5DatasetInfo.def_readwrite("datasets", &ImportHDF5DatasetParameter::ValueType::datasets);
+  importHdf5DatasetInfo.def("__repr__", [](const ImportHDF5DatasetParameter::ValueType& self) { return "ImportHDF5DatasetParameter.ValueType()"; });
+
+  py::enum_<GeneratedFileListParameter::Ordering> generatedFileListOrdering(generatedFileListParameter, "Ordering");
+  generatedFileListOrdering.value("LowToHigh", GeneratedFileListParameter::Ordering::LowToHigh);
+  generatedFileListOrdering.value("HighToLow", GeneratedFileListParameter::Ordering::HighToLow);
+
+  py::class_<GeneratedFileListParameter::ValueType> generatedFileList(generatedFileListParameter, "ValueType");
+  generatedFileList.def(py::init<>());
+  generatedFileList.def_readwrite("start_index", &GeneratedFileListParameter::ValueType::startIndex);
+  generatedFileList.def_readwrite("end_index", &GeneratedFileListParameter::ValueType::endIndex);
+  generatedFileList.def_readwrite("increment_index", &GeneratedFileListParameter::ValueType::incrementIndex);
+  generatedFileList.def_readwrite("padding_digits", &GeneratedFileListParameter::ValueType::paddingDigits);
+  generatedFileList.def_readwrite("ordering", &GeneratedFileListParameter::ValueType::ordering);
+  generatedFileList.def_readwrite("input_path", &GeneratedFileListParameter::ValueType::inputPath);
+  generatedFileList.def_readwrite("file_prefix", &GeneratedFileListParameter::ValueType::filePrefix);
+  generatedFileList.def_readwrite("file_suffix", &GeneratedFileListParameter::ValueType::fileSuffix);
+  generatedFileList.def_readwrite("file_extension", &GeneratedFileListParameter::ValueType::fileExtension);
+  generatedFileList.def("generate", &GeneratedFileListParameter::ValueType::generate);
+  generatedFileList.def("generate_and_validate", &GeneratedFileListParameter::ValueType::generateAndValidate);
+
+  py::class_<Dream3dImportParameter::ImportData> dream3dImportData(dream3dImportParameter, "ImportData");
+  dream3dImportData.def(py::init<>());
+  dream3dImportData.def_readwrite("file_path", &Dream3dImportParameter::ImportData::FilePath);
+  dream3dImportData.def_readwrite("data_paths", &Dream3dImportParameter::ImportData::DataPaths);
+  dream3dImportData.def("__repr__", [](const Dream3dImportParameter::ImportData& self) { return "Dream3dImportParameter.ImportData()"; });
+
   boolParameter.def(py::init<const std::string&, const std::string&, const std::string&, bool>());
   multiArraySelectionParameter.def(
-      py::init<const std::string&, const std::string&, const std::string&, const MultiArraySelectionParameter::ValueType&, const MultiArraySelectionParameter::AllowedTypes&>());
+      py::init<const std::string&, const std::string&, const std::string&, const MultiArraySelectionParameter::ValueType&, const MultiArraySelectionParameter::AllowedTypes&,
+               const MultiArraySelectionParameter::AllowedDataTypes&, MultiArraySelectionParameter::AllowedComponentShapes>());
   geometrySelectionParameter.def(py::init<const std::string&, const std::string&, const std::string&, const GeometrySelectionParameter::ValueType&, const GeometrySelectionParameter::AllowedTypes&>());
   choicesParameter.def(py::init<const std::string&, const std::string&, const std::string&, ChoicesParameter::ValueType, const ChoicesParameter::Choices&>());
 
@@ -1165,6 +1282,7 @@ PYBIND11_MODULE(complex, mod)
   internals->addConversion<DataGroupSelectionParameter>();
   internals->addConversion<DataObjectNameParameter>();
   internals->addConversion<DataPathSelectionParameter>();
+  internals->addConversion<DataStoreFormatParameter>();
   internals->addConversion<Dream3dImportParameter>();
   internals->addConversion<DynamicTableParameter>();
   internals->addConversion<FileSystemPathParameter>();
@@ -1173,6 +1291,7 @@ PYBIND11_MODULE(complex, mod)
   internals->addConversion<ImportCSVDataParameter>();
   internals->addConversion<ImportHDF5DatasetParameter>();
   internals->addConversion<MultiArraySelectionParameter>();
+  internals->addConversion<MultiPathSelectionParameter>();
   internals->addConversion<NeighborListSelectionParameter>();
   internals->addConversion<NumberParameter<int8>>();
   internals->addConversion<NumberParameter<uint8>>();
@@ -1253,4 +1372,12 @@ PYBIND11_MODULE(complex, mod)
   mod.def("get_filters", [internals, corePlugin]() { return internals->getPluginPyFilters(corePlugin->getId()); });
 
   mod.def("test_filter", [](const IFilter& filter) { return py::make_tuple(filter.uuid(), filter.name(), filter.humanName(), filter.className(), filter.defaultTags()); });
+
+  mod.def("load_python_plugin", [internals](py::module_& mod) { internals->loadPythonPlugin(mod); });
+
+  mod.def("get_python_plugins", [internals]() {
+    auto plugins = internals->getPythonPlugins();
+    std::vector<std::shared_ptr<AbstractPlugin>> abstractPlugins(plugins.cbegin(), plugins.cend());
+    return abstractPlugins;
+  });
 }
