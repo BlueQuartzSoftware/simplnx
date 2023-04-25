@@ -139,8 +139,23 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
 
     if(srcCellDataPath != path.getParent())
     {
-      resultOutputActions.warnings().push_back(
-          {-7365, fmt::format("Data Object at path '{}' is not a cell level array but will be copied over to the re-sampled image geometry cell level attribute matrix", path.toString())});
+      const usize numGeomCells = rectGridGeom.getNumberOfCells();
+      const usize numArrayElements = srcArray->getNumberOfTuples() * srcArray->getNumberOfComponents();
+      if(numGeomCells == numArrayElements)
+      {
+        resultOutputActions.warnings().push_back({-7365, fmt::format("Data Object at path '{}' is not a cell level array but has the same number of elements as the parent geometry and will be copied "
+                                                                     "over to the re-sampled image geometry cell level attribute matrix",
+                                                                     path.toString())});
+      }
+      else
+      {
+        return MakePreflightErrorResult(
+            -7365,
+            fmt::format(
+                "Data Object at path '{}' is not a cell level array and has {} elements. The selected arrays must have the same number of elements as the parent geometry ({}) in order to be copied "
+                "over to the re-sampled image geometry",
+                path.toString(), numArrayElements, numGeomCells));
+      }
     }
 
     IArray::ArrayType arrayType = srcArray->getArrayType();
