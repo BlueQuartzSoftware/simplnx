@@ -206,7 +206,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   if(!pSaveAsImageGeometry)
   {
     // After the execute function has been done, delete the original image geometry
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(pOutputImageGeometryPath));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pOutputImageGeometryPath));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;
