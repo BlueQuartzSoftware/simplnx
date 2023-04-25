@@ -26,46 +26,46 @@ const std::vector<std::string> k_InterMaterialData = {"Inter-Material", "Data"};
 const std::vector<std::string> k_InterObjectData = {"Inter-Object", "Data"};
 const std::vector<std::string> k_DataForObject = {"Data", "for", "Object", "#"};
 
-void setUSRNODTuple(usize tuple, const std::vector<std::string>& tokens, usize lineCount)
+[[nodiscard]] Result<> setUSRNODTuple(usize tuple, const std::vector<std::string>& tokens, usize lineCount)
 {
-  for(int32_t c = 0; c < m_UserDefinedVariables.size(); c++)
+  for(usize i = 0; i < m_UserDefinedVariables.size(); i++)
   {
     float value = 0.0f;
     try
     {
-      value = std::stof(tokens[c]);
+      value = std::stof(tokens[i]);
     } catch(const std::exception& e)
     {
-      std::string msg = fmt::format("Error at line {}: Unable to convert data array {}'s string value \"{}\" to float.  Threw standard exception with text: \"{}\"", StringUtilities::number(lineCount), m_UserDefinedVariables[c]), tokens[c + 1], e.what());
-      tryNotifyErrorMessage(-2008, msg);
-      return;
+      std::string msg = fmt::format("Error at line {}: Unable to convert data array {}'s string value \"{}\" to float.  Threw standard exception with text: \"{}\"", lineCount, m_UserDefinedVariables[i], tokens[i + 1], e.what());
+      return MakeErrorResult(-2009, msg);
     }
-    m_UserDefinedArrays[c]->setTuple(tuple, &value);
+    m_UserDefinedArrays[i]->setTuple(tuple, &value);
   }
+  return {};
 }
 
-void setTuple(usize tuple, Float32Array& data, const std::vector<std::string>& tokens, usize lineCount)
+[[nodiscard]] Result<> setTuple(usize tuple, Float32Array& data, const std::vector<std::string>& tokens, usize lineCount)
 {
-  for(int32_t c = 0; c < data.getNumberOfComponents(); c++)
+  usize numComp = data.getNumberOfComponents();
+  for(usize comp = 0; comp < numComp; comp++)
   {
     float value = 0.0f;
     try
     {
-      value = std::stof(tokens[c]);
+      value = std::stof(tokens[comp]);
     } catch(const std::exception& e)
     {
-      std::string msg = fmt::format("Error at line {}: Unable to convert data array {}'s string value \"{}\" to float.  Threw standard exception with text: \"{}\"", StringUtilities::number(lineCount),
-                                    data.getName(), tokens[c + 1], e.what());
-      tryNotifyErrorMessage(-2008, msg);
-      return;
+      std::string msg = fmt::format("Error at line {}: Unable to convert data array {}'s string value \"{}\" to float.  Threw standard exception with text: \"{}\"", lineCount, data.getName(),
+                                    tokens[comp + 1], e.what());
+      return MakeErrorResult(-2008, msg);
     }
-    data.setComponent(tuple, c, value);
+    data[tuple * numComp + comp] = value;
   }
+  return {};
 }
 
-inline usize parse_ull(const std::string& token, usize lineCount)
+inline Result<> parse_ull(const std::string& token, usize lineCount, usize& value)
 {
-  usize value = 0;
   try
   {
     value = std::stoull(token);
@@ -73,10 +73,10 @@ inline usize parse_ull(const std::string& token, usize lineCount)
   {
     std::string msg =
         fmt::format("Error at line {}: Unable to convert string value \"{}\" to unsigned long long.  Threw standard exception with text: \"{}\"", StringUtilities::number(lineCount), token, e.what());
-    MakeErrorResult(-2000, msg);
+    return MakeErrorResult(-2000, msg);
   }
 
-  return value;
+  return {};
 }
 
 std::vector<std::string> getNextLineTokens(std::ifstream& inStream, usize& lineCount)
@@ -147,7 +147,7 @@ void readInterObjectData(std::ifstream& inStream, usize& lineCount)
   findNextSection(inStream, lineCount);
 }
 
-void readUserDefinedVariables(std::ifstream& inStream, usize& lineCount)
+[[nodiscard]] Result<> readUserDefinedVariables(std::ifstream& inStream, usize& lineCount)
 {
   std::string buf;
   std::getline(inStream, buf);
@@ -156,7 +156,13 @@ void readUserDefinedVariables(std::ifstream& inStream, usize& lineCount)
   auto tokens = StringUtilities::split(buf, ' ');
   lineCount++;
 
-  usize numVars = parse_ull(tokens.at(2), lineCount);
+  usize numVars;
+  Result<> result = parse_ull(tokens.at(2), lineCount, numVars);
+  if(result.invalid())
+  {
+    return result;
+  }
+
   m_UserDefinedVariables.resize(12);
   for(usize i = 0; i < numVars; i++)
   {
@@ -168,143 +174,11 @@ void readUserDefinedVariables(std::ifstream& inStream, usize& lineCount)
   }
 }
 
-Result<> readDEFORMFile(ImportDeformKeyFileV12* filter, DataStructure& dataStructure, AttributeMatrix& vertexAttributeMatrix, AttributeMatrix& cellAttributeMatrix, bool allocate)
-{
-  std::ifstream inStream(m_InputValues->deformInputFile);
-  usize lineCount = 0;
-
-  std::string word;
-  std::string buf;
-  std::vector<std::string> tokens; /* vector to store the split data */
-
-  IGeometry::SharedVertexList& vertex;
-  QuadGeom& quadGeom;
-
-  while(inStream.peek() != EOF)
-  {
-    if(filter->getCancel())
-    {
-      return {};
-    }
-
-    tokens = getNextLineTokens(inStream, lineCount);
-
-    if(tokens.size() <= 1)
-    {
-      // This is either an empty line or a singular star comment
-      continue;
-    }
-
-    // Erase the star
-    tokens.erase(tokens.begin());
-
-    if(tokens == k_ProcessDefinition)
-    {
-      // Skip the comment line that ends the header
-      getNextLineTokens(inStream, lineCount);
-
-      // Read "Process Definition" section
-      readProcessDefinition(inStream, lineCount);
-      continue;
-    }
-    else if(tokens == k_StoppingAndStepControls)
-    {
-      // Skip the comment line that ends the header
-      getNextLineTokens(inStream, lineCount);
-
-      // Read "Stopping & Step Controls" section
-      readStoppingAndStepControls(inStream, lineCount);
-      continue;
-    }
-    else if(tokens == k_IterationControls)
-    {
-      // Skip the comment line that ends the header
-      getNextLineTokens(inStream, lineCount);
-
-      // Read "Iteration Controls" section
-      readIterationControls(inStream, lineCount);
-      continue;
-    }
-    else if(tokens == k_ProcessingConditions)
-    {
-      // Skip the comment line that ends the header
-      getNextLineTokens(inStream, lineCount);
-
-      // Read "Processing Conditions" section
-      readProcessingConditions(inStream, lineCount);
-      continue;
-    }
-    else if(tokens == k_UserDefinedVariables)
-    {
-      // Skip the comment line that ends the header
-      getNextLineTokens(inStream, lineCount);
-
-      // Read "User Defined Variables" section
-      readUserDefinedVariables(inStream, lineCount);
-      continue;
-    }
-    else if(tokens == k_InterMaterialData)
-    {
-      // Skip the comment line that ends the header
-      getNextLineTokens(inStream, lineCount);
-
-      // Read "Inter-Material Data" section
-      readInterMaterialData(inStream, lineCount);
-      continue;
-    }
-    else if(tokens == k_InterObjectData)
-    {
-      // Skip the comment line that ends the header
-      getNextLineTokens(inStream, lineCount);
-
-      // Read "Inter-Object Data" section
-      readInterObjectData(inStream, lineCount);
-      continue;
-    }
-    else if(tokens.size() == 5)
-    {
-      std::vector<std::string> tmp = tokens;
-      tmp.erase(tmp.begin() + 1);
-      if(tmp == k_FileTitle)
-      {
-        // File title.  Continue...
-        continue;
-      }
-
-      tmp = tokens;
-      tmp.pop_back();
-
-      if(tmp == k_PropertyDataOfMaterial)
-      {
-        // Skip the comment line that ends the header
-        getNextLineTokens(inStream, lineCount);
-
-        // Read "Property Data of Material" section
-        readPropertyDataOfMaterial(inStream, lineCount);
-        continue;
-      }
-      else if(tmp == k_DataForObject)
-      {
-        // Skip the comment line that ends the header
-        getNextLineTokens(inStream, lineCount);
-
-        // Read "Data For Object" section
-        readDataForObject(inStream, lineCount, dataContainer, vertexAttributeMatrix, cellAttributeMatrix, allocate);
-
-        continue;
-      }
-    }
-
-    // Unrecognized section
-    filter->updateProgress(fmt::format("Warning at line {}: Unrecognized section \"{}\"", StringUtilities::number(lineCount), StringUtilities::join(tokens.data(), ' ')));
-  }
-}
-
-void readDataArray(std::ifstream& inStream, usize& lineCount, AttributeMatrix& attrMat, const std::string& dataArrayName, usize arrayTupleSize, bool allocate)
+[[nodiscard]] Result<> readDataArray(std::ifstream& inStream, usize& lineCount, AttributeMatrix& attrMat, const std::string& dataArrayName, usize arrayTupleSize, bool allocate, const std::atomic_bool& shouldCancel)
 {
   if(arrayTupleSize == 0)
   {
-    return;
+    return {};
   }
   usize componentCount = 0;
   auto data = dataStructure.getDataRefAs<Float32Array>();
@@ -391,13 +265,18 @@ void readDataArray(std::ifstream& inStream, usize& lineCount, AttributeMatrix& a
 
     if(allocate)
     {
+      Result<> setResult;
       if(dataArrayName == "USRNOD")
       {
-        setUSRNODTuple(0, tokens, lineCount);
+        setResult = setUSRNODTuple(0, tokens, lineCount);
       }
       else
       {
-        setTuple(0, data.get(), tokens, lineCount);
+        setResult = setTuple(0, data, tokens, lineCount);
+      }
+      if(setResult.invalid())
+      {
+        return setResult;
       }
     }
   }
@@ -418,9 +297,9 @@ void readDataArray(std::ifstream& inStream, usize& lineCount, AttributeMatrix& a
     // Read each tuple's data starting at the second tuple
     for(usize tupleIndex = 1; tupleIndex < arrayTupleSize; tupleIndex++)
     {
-      if(shouldCancel())
+      if(shouldCancel)
       {
-        return;
+        return {};
       }
       std::vector<std::string> tokens;
 
@@ -438,16 +317,22 @@ void readDataArray(std::ifstream& inStream, usize& lineCount, AttributeMatrix& a
         tokens.insert(tokens.end(), subTokens.begin() + offset, subTokens.end());
       }
 
+      Result<> setResult;
       if(dataArrayName == "USRNOD")
       {
-        setUSRNODTuple(tupleIndex, tokens, lineCount);
+       setResult = setUSRNODTuple(tupleIndex, tokens, lineCount);
       }
       else
       {
-        setTuple(tupleIndex, data.get(), tokens, lineCount);
+        setResult = setTuple(tupleIndex, data, tokens, lineCount);
+      }
+      if(setResult.invalid())
+      {
+        return setResult;
       }
     }
   }
+  return {};
 }
 
 Result<> readVertexCoordinates(ImportDeformKeyFileV12* filter, std::ifstream& inStream, usize& lineCount, IGeometry::SharedVertexList& vertex, usize numVerts)
@@ -546,9 +431,9 @@ Result<> readQuadGeometry(std::ifstream& inStream, usize& lineCount, IGeometry::
   }
 }
 
-Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStream, usize& lineCount, AttributeMatrix& vertexAttributeMatrix, AttributeMatrix& cellAttributeMatrix, bool allocate)
+[[nodiscard]] Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStream, usize& lineCount, AttributeMatrix& vertexAttributeMatrix, AttributeMatrix& cellAttributeMatrix, bool allocate)
 {
-  SharedVertexList& vertex;
+  IGeometry::SharedVertexList& vertex;
   QuadGeom& quadGeom;
 
   while(inStream.peek() != EOF)
@@ -589,9 +474,11 @@ Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStre
     }
     if(word == k_VertexTitle)
     {
-      usize numVerts = parse_ull(tokens.at(2), lineCount);
-      if(numVerts == 0)
+      usize numVerts;
+      Result<> result = parse_ull(tokens.at(2), lineCount, numVerts);
+      if(result.invalid())
       {
+        filter->updateProgress(result.errors().data()->message);
         continue;
       }
 
@@ -608,16 +495,18 @@ Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStre
     }
     else if(word == k_CellTitle)
     {
-      usize numCells = parse_ull(tokens.at(2), lineCount);
-      if(numCells == 0)
+      usize numCells;
+      Result<> result = parse_ull(tokens.at(2), lineCount, numCells);
+      if(result.invalid())
       {
+        filter->updateProgress(result.errors().data()->message);
         continue;
       }
 
       // Set the number of cells and then create cells array and resize cell attr mat.
       filter->updateProgress(fmt::format("DEFORM Data File: Number of Quad Cells = {}", StringUtilities::number(numCells)));
       cellAttributeMatrix.resizeTuples({numCells});
-      QuadGeom quadGeom = QuadGeom::CreateGeometry(static_cast<int64>(numCells), vertexPtr, Geometry::QuadGeometry, true);
+      QuadGeom quadGeom = QuadGeom::CreateGeometry(static_cast<int64>(numCells), vertex, IGeometry::QuadGeometry, true);
       quadGeom.setSpatialDimensionality(2);
       IGeometry::MeshIndexArrayType& quads = quadGeom.getFacesRef();
 
@@ -628,23 +517,30 @@ Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStre
         return quadResult;
       }
     }
-    else if(tokens.size() >= 3 && (vertexPtr != SharedVertexList::NullPointer() || quadGeomPtr != QuadGeom::NullPointer()))
+    else if(tokens.size() >= 3 && (vertex != SharedVertexList::NullPointer() || quadGeom != QuadGeom::NullPointer()))
     {
       // This is most likely the beginning of a data array
       std::string dataArrayName = tokens.at(0);
-      usize tupleCount = parse_ull(tokens.at(2), lineCount);
+      usize tupleCount;
+      Result<> tupResult = parse_ull(tokens.at(2), lineCount, tupleCount);
+      if(tupResult.invalid())
+      {
+        filter->updateProgress(tupResult.errors().data()->message);
+        continue;
+      }
 
+      Result<> readInResult;
       if(tupleCount == vertex.getNumberOfTuples())
       {
         filter->updateProgress(fmt::format("Reading Vertex Data: {}", dataArrayName));
 
-        readDataArray(inStream, lineCount, vertexAttributeMatrix, dataArrayName, tupleCount, allocate);
+        readInResult = readDataArray(inStream, lineCount, vertexAttributeMatrix, dataArrayName, tupleCount, allocate, filter->getCancel());
       }
       else if(tupleCount == quadGeom.getNumberOfCells())
       {
         filter->updateProgress(fmt::format("Reading Cell Data: {}", dataArrayName));
 
-        readDataArray(inStream, lineCount, cellAttributeMatrix, dataArrayName, tupleCount, allocate);
+        readInResult =readDataArray(inStream, lineCount, cellAttributeMatrix, dataArrayName, tupleCount, allocate, filter->getCancel());
       }
       else if(m_InputValues->verboseOutput)
       {
@@ -652,14 +548,14 @@ Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStre
         // for either vertex or cell arrays.
 
         // This data is not able to be read.  Display a status message that explains why, based on what information we have available.
-        if(vertexPtr == SharedVertexList::NullPointer() && quadGeomPtr != QuadGeom::NullPointer())
+        if(vertex == SharedVertexList::NullPointer() && quadGeom != QuadGeom::NullPointer())
         {
           std::string msg = fmt::format(
               "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a cell array ({]), and the vertex tuple count has not been read yet.  Skipping...",
               dataArrayName, tupleCount, quadGeom.getNumberOfCells());
           filter->updateProgress(msg);
         }
-        else if(vertexPtr != SharedVertexList::NullPointer() && quadGeomPtr == QuadGeom::NullPointer())
+        else if(vertex != SharedVertexList::NullPointer() && quadGeom == QuadGeom::NullPointer())
         {
           std::string msg = fmt::format(
               "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a vertex array ({}), and the cell tuple count has not been read yet.  Skipping...",
@@ -673,6 +569,10 @@ Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStre
           filter->updateProgress(msg);
         }
       }
+      if(readInResult.invalid())
+      {
+        return readInResult;
+      }
     }
     else
     {
@@ -681,6 +581,144 @@ Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStre
   }
 
   return {};
+}
+
+[[nodiscard]] Result<> readDEFORMFile(ImportDeformKeyFileV12* filter, std::ifstream& inStream, DataStructure& dataStructure, AttributeMatrix& vertexAttributeMatrix, AttributeMatrix& cellAttributeMatrix, bool allocate)
+{
+  usize lineCount = 0;
+  std::string word;
+  std::string buf;
+  std::vector<std::string> tokens; /* vector to store the split data */
+
+  IGeometry::SharedVertexList& vertex;
+  QuadGeom& quadGeom;
+
+  while(inStream.peek() != EOF)
+  {
+    if(filter->getCancel())
+    {
+      return {};
+    }
+
+    tokens = getNextLineTokens(inStream, lineCount);
+
+    if(tokens.size() <= 1)
+    {
+      // This is either an empty line or a singular star comment
+      continue;
+    }
+
+    // Erase the star
+    tokens.erase(tokens.begin());
+
+    if(tokens == k_ProcessDefinition)
+    {
+      // Skip the comment line that ends the header
+      getNextLineTokens(inStream, lineCount);
+
+      // Read "Process Definition" section
+      readProcessDefinition(inStream, lineCount);
+      continue;
+    }
+    else if(tokens == k_StoppingAndStepControls)
+    {
+      // Skip the comment line that ends the header
+      getNextLineTokens(inStream, lineCount);
+
+      // Read "Stopping & Step Controls" section
+      readStoppingAndStepControls(inStream, lineCount);
+      continue;
+    }
+    else if(tokens == k_IterationControls)
+    {
+      // Skip the comment line that ends the header
+      getNextLineTokens(inStream, lineCount);
+
+      // Read "Iteration Controls" section
+      readIterationControls(inStream, lineCount);
+      continue;
+    }
+    else if(tokens == k_ProcessingConditions)
+    {
+      // Skip the comment line that ends the header
+      getNextLineTokens(inStream, lineCount);
+
+      // Read "Processing Conditions" section
+      readProcessingConditions(inStream, lineCount);
+      continue;
+    }
+    else if(tokens == k_UserDefinedVariables)
+    {
+      // Skip the comment line that ends the header
+      getNextLineTokens(inStream, lineCount);
+
+      // Read "User Defined Variables" section
+      auto result = readUserDefinedVariables(inStream, lineCount);
+      if(result.invalid())
+      {
+        filter->updateProgress(result.errors().data()->message);
+      }
+      continue;
+    }
+    else if(tokens == k_InterMaterialData)
+    {
+      // Skip the comment line that ends the header
+      getNextLineTokens(inStream, lineCount);
+
+      // Read "Inter-Material Data" section
+      readInterMaterialData(inStream, lineCount);
+      continue;
+    }
+    else if(tokens == k_InterObjectData)
+    {
+      // Skip the comment line that ends the header
+      getNextLineTokens(inStream, lineCount);
+
+      // Read "Inter-Object Data" section
+      readInterObjectData(inStream, lineCount);
+      continue;
+    }
+    else if(tokens.size() == 5)
+    {
+      std::vector<std::string> tmp = tokens;
+      tmp.erase(tmp.begin() + 1);
+      if(tmp == k_FileTitle)
+      {
+        // File title.  Continue...
+        continue;
+      }
+
+      tmp = tokens;
+      tmp.pop_back();
+
+      if(tmp == k_PropertyDataOfMaterial)
+      {
+        // Skip the comment line that ends the header
+        getNextLineTokens(inStream, lineCount);
+
+        // Read "Property Data of Material" section
+        readPropertyDataOfMaterial(inStream, lineCount);
+        continue;
+      }
+      else if(tmp == k_DataForObject)
+      {
+        // Skip the comment line that ends the header
+        getNextLineTokens(inStream, lineCount);
+
+        // Read "Data For Object" section
+        Result<> result = readDataForObject(filter, inStream, lineCount,vertexAttributeMatrix, cellAttributeMatrix, allocate);
+        if(result.invalid())
+        {
+          return result;
+        }
+
+        continue;
+      }
+    }
+
+    // Unrecognized section
+    filter->updateProgress(fmt::format("Warning at line {}: Unrecognized section \"{}\"", StringUtilities::number(lineCount), StringUtilities::join(tokens.data(), ' ')));
+  }
 }
 } // namespace
 
@@ -712,8 +750,11 @@ void ImportDeformKeyFileV12::updateProgress(const std::string& progressMessage)
 // -----------------------------------------------------------------------------
 Result<> ImportDeformKeyFileV12::operator()()
 {
+  std::ifstream inStream(m_InputValues->deformInputFile);
+  ///!!!!!! VALIDATE THE STREAM !!!!!!!///
+
   // Read from the file
-  readDEFORMFile(this, dc.get(), vertexAttrMat.get(), cellAttrMat.get(), !getInPreflight());
+  readDEFORMFile(this, inStream, m_DataStructure, vertexAttrMat.get(), cellAttrMat.get(), !getInPreflight());
   auto userDefinedValues = algorithm.getUserDefinedVariables();
 
   // Cache the results
