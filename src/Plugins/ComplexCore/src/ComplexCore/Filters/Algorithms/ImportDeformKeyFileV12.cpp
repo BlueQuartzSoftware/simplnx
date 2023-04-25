@@ -1,5 +1,9 @@
 #include "ImportDeformKeyFileV12.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "complex/DataStructure/Geometry/QuadGeom.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <fstream>
@@ -22,7 +26,7 @@ const std::vector<std::string> k_InterMaterialData = {"Inter-Material", "Data"};
 const std::vector<std::string> k_InterObjectData = {"Inter-Object", "Data"};
 const std::vector<std::string> k_DataForObject = {"Data", "for", "Object", "#"};
 
-void setUSRNODTuple(size_t tuple, const std::vector<std::string>& tokens, size_t lineCount)
+void setUSRNODTuple(usize tuple, const std::vector<std::string>& tokens, usize lineCount)
 {
   for(int32_t c = 0; c < m_UserDefinedVariables.size(); c++)
   {
@@ -40,9 +44,9 @@ void setUSRNODTuple(size_t tuple, const std::vector<std::string>& tokens, size_t
   }
 }
 
-void setTuple(size_t tuple, FloatArrayType* data, const std::vector<std::string>& tokens, size_t lineCount)
+void setTuple(usize tuple, Float32Array& data, const std::vector<std::string>& tokens, usize lineCount)
 {
-  for(int32_t c = 0; c < data->getNumberOfComponents(); c++)
+  for(int32_t c = 0; c < data.getNumberOfComponents(); c++)
   {
     float value = 0.0f;
     try
@@ -50,33 +54,32 @@ void setTuple(size_t tuple, FloatArrayType* data, const std::vector<std::string>
       value = std::stof(tokens[c]);
     } catch(const std::exception& e)
     {
-      std::string msg = fmt::format("Error at line %1: Unable to convert data array %2's string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
-                            .arg(QString::number(lineCount), data->getName(), QString::fromStdString(tokens[c + 1]), e.what());
+      std::string msg = fmt::format("Error at line {}: Unable to convert data array {}'s string value \"{}\" to float.  Threw standard exception with text: \"{}\"", StringUtilities::number(lineCount),
+                                    data.getName(), tokens[c + 1], e.what());
       tryNotifyErrorMessage(-2008, msg);
       return;
     }
-    data->setComponent(tuple, c, value);
+    data.setComponent(tuple, c, value);
   }
 }
 
-size_t parse_ull(const std::string& token, size_t lineCount)
+inline usize parse_ull(const std::string& token, usize lineCount)
 {
-  size_t value = 0;
+  usize value = 0;
   try
   {
     value = std::stoull(token);
   } catch(const std::exception& e)
   {
-    std::string msg = fmt::format("Error at line %1: Unable to convert string value \"%2\" to unsigned long long.  Threw standard exception with text: \"%3\"")
-                          .arg(QString::number(lineCount), QString::fromStdString(token), e.what());
-    tryNotifyErrorMessage(-2000, msg);
-    return 0;
+    std::string msg =
+        fmt::format("Error at line {}: Unable to convert string value \"{}\" to unsigned long long.  Threw standard exception with text: \"{}\"", StringUtilities::number(lineCount), token, e.what());
+    MakeErrorResult(-2000, msg);
   }
 
   return value;
 }
 
-std::vector<std::string> getNextLineTokens(std::ifstream& inStream, size_t& lineCount)
+std::vector<std::string> getNextLineTokens(std::ifstream& inStream, usize& lineCount)
 {
   std::vector<std::string> tokens; /* vector to store the split data */
   std::string buf;
@@ -89,7 +92,7 @@ std::vector<std::string> getNextLineTokens(std::ifstream& inStream, size_t& line
   return tokens;
 }
 
-void findNextSection(std::ifstream& inStream, size_t& lineCount)
+void findNextSection(std::ifstream& inStream, usize& lineCount)
 {
   std::vector<std::string> tokens;
   while(inStream.peek() != EOF)
@@ -102,49 +105,49 @@ void findNextSection(std::ifstream& inStream, size_t& lineCount)
   }
 }
 
-void readProcessDefinition(std::ifstream& inStream, size_t& lineCount)
+void readProcessDefinition(std::ifstream& inStream, usize& lineCount)
 {
   // We currently don't care about the "Process Definition" section...
   findNextSection(inStream, lineCount);
 }
 
-void readStoppingAndStepControls(std::ifstream& inStream, size_t& lineCount)
+void readStoppingAndStepControls(std::ifstream& inStream, usize& lineCount)
 {
   // We currently don't care about the "Stopping & Step Controls" section...
   findNextSection(inStream, lineCount);
 }
 
-void readIterationControls(std::ifstream& inStream, size_t& lineCount)
+void readIterationControls(std::ifstream& inStream, usize& lineCount)
 {
   // We currently don't care about the "Iteration Controls" section...
   findNextSection(inStream, lineCount);
 }
 
-void readProcessingConditions(std::ifstream& inStream, size_t& lineCount)
+void readProcessingConditions(std::ifstream& inStream, usize& lineCount)
 {
   // We currently don't care about the "Processing Conditions" section...
   findNextSection(inStream, lineCount);
 }
 
-void readPropertyDataOfMaterial(std::ifstream& inStream, size_t& lineCount)
+void readPropertyDataOfMaterial(std::ifstream& inStream, usize& lineCount)
 {
   // We currently don't care about the "Property Data of Material" section...
   findNextSection(inStream, lineCount);
 }
 
-void readInterMaterialData(std::ifstream& inStream, size_t& lineCount)
+void readInterMaterialData(std::ifstream& inStream, usize& lineCount)
 {
   // We currently don't care about the "Inter-Material Data" section...
   findNextSection(inStream, lineCount);
 }
 
-void readInterObjectData(std::ifstream& inStream, size_t& lineCount)
+void readInterObjectData(std::ifstream& inStream, usize& lineCount)
 {
   // We currently don't care about the "Inter-Object Data" section...
   findNextSection(inStream, lineCount);
 }
 
-void readUserDefinedVariables(std::ifstream& inStream, size_t& lineCount)
+void readUserDefinedVariables(std::ifstream& inStream, usize& lineCount)
 {
   std::string buf;
   std::getline(inStream, buf);
@@ -153,9 +156,9 @@ void readUserDefinedVariables(std::ifstream& inStream, size_t& lineCount)
   auto tokens = StringUtilities::split(buf, ' ');
   lineCount++;
 
-  size_t numVars = parse_ull(tokens.at(2), lineCount);
+  usize numVars = parse_ull(tokens.at(2), lineCount);
   m_UserDefinedVariables.resize(12);
-  for(size_t i = 0; i < numVars; i++)
+  for(usize i = 0; i < numVars; i++)
   {
     std::getline(inStream, buf);
     buf = StringUtilities::trimmed(buf);
@@ -165,23 +168,23 @@ void readUserDefinedVariables(std::ifstream& inStream, size_t& lineCount)
   }
 }
 
-void readDEFORMFile(DataContainer* dataContainer, AttributeMatrix* vertexAttributeMatrix, AttributeMatrix* cellAttributeMatrix, bool allocate)
+Result<> readDEFORMFile(ImportDeformKeyFileV12* filter, DataStructure& dataStructure, AttributeMatrix& vertexAttributeMatrix, AttributeMatrix& cellAttributeMatrix, bool allocate)
 {
   std::ifstream inStream(m_InputValues->deformInputFile);
-  size_t lineCount = 0;
+  usize lineCount = 0;
 
   std::string word;
   std::string buf;
   std::vector<std::string> tokens; /* vector to store the split data */
 
-  SharedVertexList::Pointer vertexPtr = SharedVertexList::NullPointer();
-  QuadGeom::Pointer quadGeomPtr = QuadGeom::NullPointer();
+  IGeometry::SharedVertexList& vertex;
+  QuadGeom& quadGeom;
 
   while(inStream.peek() != EOF)
   {
-    if(shouldCancel())
+    if(filter->getCancel())
     {
-      return;
+      return {};
     }
 
     tokens = getNextLineTokens(inStream, lineCount);
@@ -293,256 +296,18 @@ void readDEFORMFile(DataContainer* dataContainer, AttributeMatrix* vertexAttribu
     }
 
     // Unrecognized section
-    std::string msg = fmt::format("Warning at line %1: Unrecognized section \"%2\"").arg(QString::number(lineCount), QString::fromStdString(SIMPL::StringUtilities::join(tokens, ' ')));
-    tryNotifyWarningMessage(-2010, msg);
+    filter->updateProgress(fmt::format("Warning at line {}: Unrecognized section \"{}\"", StringUtilities::number(lineCount), StringUtilities::join(tokens.data(), ' ')));
   }
 }
 
-void readDataForObject(std::ifstream& inStream, size_t& lineCount, DataContainer* dataContainer, AttributeMatrix* vertexAttributeMatrix, AttributeMatrix* cellAttributeMatrix, bool allocate)
-{
-  SharedVertexList::Pointer vertexPtr = SharedVertexList::NullPointer();
-  QuadGeom::Pointer quadGeomPtr = QuadGeom::NullPointer();
-
-  while(inStream.peek() != EOF)
-  {
-    if(shouldCancel())
-    {
-      return;
-    }
-    bool isWord = false;
-    std::vector<std::string> tokens;
-    // Read the line. This line _Should_ be the start of "section" of data.
-    {
-      std::string buf;
-      std::getline(inStream, buf);
-      isWord = (buf[0] > 64 /*@ character */ && buf[0] < 91);
-      buf = StringUtilities::trimmed(buf);
-      buf = StringUtilities::simplified(buf);
-      tokens = StringUtilities::split(buf, ' ');
-      lineCount++;
-    }
-    // std::vector<std::string> tokens = getNextLineTokens(inStream, lineCount);
-
-    if(tokens.empty())
-    {
-      // This is an empty line
-      continue;
-    }
-    if(!isWord)
-    {
-      continue;
-    }
-
-    std::string word = tokens.at(0);
-
-    if(tokens.size() == 1 && word == k_Star)
-    {
-      // We are at the next header, so we are done with this section
-      return;
-    }
-    if(word == k_VertexTitle)
-    {
-      size_t numVerts = parse_ull(tokens.at(2), lineCount);
-
-      vertexPtr = readVertexCoordinates(inStream, lineCount, vertexAttributeMatrix, numVerts);
-    }
-    else if(word == k_CellTitle)
-    {
-      size_t numCells = parse_ull(tokens.at(2), lineCount);
-
-      quadGeomPtr = readQuadGeometry(inStream, lineCount, cellAttributeMatrix, vertexPtr, dataContainer, numCells);
-    }
-    else if(tokens.size() >= 3 && (vertexPtr != SharedVertexList::NullPointer() || quadGeomPtr != QuadGeom::NullPointer()))
-    {
-      // This is most likely the beginning of a data array
-      std::string dataArrayName = tokens.at(0);
-      size_t tupleCount = parse_ull(tokens.at(2), lineCount);
-
-      if(vertexPtr != SharedVertexList::NullPointer() && tupleCount == vertexPtr->getNumberOfTuples())
-      {
-        QString statusMsg = QString("Reading Vertex Data: %1").arg(QString::fromStdString(dataArrayName));
-        tryNotifyStatusMessage(statusMsg);
-
-        readDataArray(inStream, lineCount, vertexAttributeMatrix, dataArrayName, tupleCount, allocate);
-      }
-      else if(quadGeomPtr != QuadGeom::NullPointer() && tupleCount == quadGeomPtr->getNumberOfQuads())
-      {
-        QString statusMsg = QString("Reading Cell Data: %1").arg(QString::fromStdString(dataArrayName));
-        tryNotifyStatusMessage(statusMsg);
-
-        readDataArray(inStream, lineCount, cellAttributeMatrix, dataArrayName, tupleCount, allocate);
-      }
-      else if(m_InputValues->verboseOutput)
-      {
-        // If verbose, dump the word, number of tuples, and some warning saying that it doesn't have the right number of tuples
-        // for either vertex or cell arrays.
-
-        // This data is not able to be read.  Display a status message that explains why, based on what information we have available.
-        if(vertexPtr == SharedVertexList::NullPointer() && quadGeomPtr != QuadGeom::NullPointer())
-        {
-          QString msg =
-              QString(
-                  "Unable to read data: %1.  Its tuple size (%2) doesn't match the correct number of tuples to be a cell array (%3), and the vertex tuple count has not been read yet.  Skipping...")
-                  .arg(QString::fromStdString(dataArrayName), QString::number(tupleCount), QString::number(quadGeomPtr->getNumberOfQuads()));
-          tryNotifyStatusMessage(msg);
-        }
-        else if(vertexPtr != SharedVertexList::NullPointer() && quadGeomPtr == QuadGeom::NullPointer())
-        {
-          QString msg =
-              QString(
-                  "Unable to read data: %1.  Its tuple size (%2) doesn't match the correct number of tuples to be a vertex array (%3), and the cell tuple count has not been read yet.  Skipping...")
-                  .arg(QString::fromStdString(dataArrayName), QString::number(tupleCount), QString::number(vertexPtr->getNumberOfTuples()));
-          tryNotifyStatusMessage(msg);
-        }
-        else
-        {
-          std::string msg =
-              fmt::format("Unable to read data: %1.  Its tuple size (%2) doesn't match the correct number of tuples to be either a vertex array (%3) or cell array (%4).  Skipping...")
-                  .arg(QString::fromStdString(dataArrayName), QString::number(tupleCount), QString::number(vertexPtr->getNumberOfTuples()), QString::number(quadGeomPtr->getNumberOfQuads()));
-          tryNotifyStatusMessage(msg);
-        }
-      }
-    }
-    else
-    {
-      continue;
-    }
-  }
-}
-
-SharedVertexList::Pointer readVertexCoordinates(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* vertexAttrMat, size_t numVerts)
-{
-  std::string buf;
-  std::vector<std::string> tokens; /* vector to store the split data */
-
-  // Set the number of vertices and then create vertices array and resize vertex attr mat.
-  std::vector<size_t> tDims(1, numVerts);
-  vertexAttrMat->resizeAttributeArrays(tDims);
-
-  SharedVertexList::Pointer vertexPtr = QuadGeom::CreateSharedVertexList(static_cast<int64_t>(numVerts), true);
-  float* vertex = vertexPtr->getPointer(0);
-  QString statusMsg = QString("DEFORM Data File: Number of Vertex Points = %1").arg(QString::number(numVerts));
-  tryNotifyStatusMessage(statusMsg);
-
-  // Read or Skip past all the vertex data
-  for(size_t i = 0; i < numVerts; i++)
-  {
-    if(shouldCancel())
-    {
-      return SharedVertexList::NullPointer();
-    }
-
-    tokens = getNextLineTokens(inStream, lineCount);
-
-    try
-    {
-      vertex[3 * i] = std::stof(tokens[1]);
-    } catch(const std::exception& e)
-    {
-      std::string msg = fmt::format("Error at line %1: Unable to convert vertex coordinate %2's 1st string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
-                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[1]), e.what());
-      tryNotifyErrorMessage(-2001, msg);
-      return SharedVertexList::NullPointer();
-    }
-
-    try
-    {
-      vertex[3 * i + 1] = std::stof(tokens[2]);
-    } catch(const std::exception& e)
-    {
-      std::string msg = fmt::format("Error at line %1: Unable to convert vertex coordinate %2's 2nd string value \"%3\" to float.  Threw standard exception with text: \"%4\"")
-                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[2]), e.what());
-      tryNotifyErrorMessage(-2002, msg);
-      return SharedVertexList::NullPointer();
-    }
-
-    vertex[3 * i + 2] = 0.0f;
-  }
-
-  return vertexPtr;
-}
-
-void readQuadGeometry(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* cellAttrMat, SharedVertexList::Pointer vertexPtr, DataContainer* dataContainer, size_t numCells)
-{
-  std::string buf;
-  std::vector<std::string> tokens; /* vector to store the split data */
-
-  // Set the number of cells and then create cells array and resize cell attr mat.
-  std::vector<size_t> tDims(1, numCells);
-  QString statusMsg = QString("DEFORM Data File: Number of Quad Cells = %1").arg(QString::number(numCells));
-  tryNotifyStatusMessage(statusMsg);
-  cellAttrMat->resizeAttributeArrays(tDims);
-  QuadGeom::Pointer quadGeomPtr = QuadGeom::CreateGeometry(static_cast<int64_t>(numCells), vertexPtr, SIMPL::Geometry::QuadGeometry, true);
-  quadGeomPtr->setSpatialDimensionality(2);
-  dataContainer->setGeometry(quadGeomPtr);
-  MeshIndexType* quads = quadGeomPtr->getQuadPointer(0);
-
-  for(size_t i = 0; i < numCells; i++)
-  {
-    if(shouldCancel())
-    {
-      return;
-    }
-
-    tokens = getNextLineTokens(inStream, lineCount);
-
-    // Subtract one from the node number because DEFORM starts at node 1 and we start at node 0
-    try
-    {
-      quads[4 * i] = std::stoi(tokens[1]) - 1;
-    } catch(const std::exception& e)
-    {
-      std::string msg = fmt::format("Error at line %1: Unable to convert quad %2's 1st string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
-                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[1]), e.what());
-      tryNotifyErrorMessage(-2004, msg);
-      return;
-    }
-
-    try
-    {
-      quads[4 * i + 1] = std::stoi(tokens[2]) - 1;
-    } catch(const std::exception& e)
-    {
-      std::string msg = fmt::format("Error at line %1: Unable to convert quad %2's 2nd string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
-                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[2]), e.what());
-      tryNotifyErrorMessage(-2005, msg);
-      return;
-    }
-
-    try
-    {
-      quads[4 * i + 2] = std::stoi(tokens[3]) - 1;
-    } catch(const std::exception& e)
-    {
-      std::string msg = fmt::format("Error at line %1: Unable to convert quad %2's 3rd string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
-                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[3]), e.what());
-      tryNotifyErrorMessage(-2005, msg);
-      return;
-    }
-
-    try
-    {
-      quads[4 * i + 3] = std::stoi(tokens[4]) - 1;
-    } catch(const std::exception& e)
-    {
-      std::string msg = fmt::format("Error at line %1: Unable to convert quad %2's 4th string value \"%3\" to integer.  Threw standard exception with text: \"%4\"")
-                            .arg(QString::number(lineCount), QString::number(i + 1), QString::fromStdString(tokens[4]), e.what());
-      tryNotifyErrorMessage(-2006, msg);
-      return;
-    }
-  }
-
-  return quadGeomPtr;
-}
-
-void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* attrMat, const std::string& dataArrayName, size_t arrayTupleSize, bool allocate)
+void readDataArray(std::ifstream& inStream, usize& lineCount, AttributeMatrix& attrMat, const std::string& dataArrayName, usize arrayTupleSize, bool allocate)
 {
   if(arrayTupleSize == 0)
   {
     return;
   }
-  size_t componentCount = 0;
-  FloatArrayType::Pointer data = FloatArrayType::NullPointer();
+  usize componentCount = 0;
+  auto data = dataStructure.getDataRefAs<Float32Array>();
   int32_t tupleLineCount = 1;
   // We are here because the calling function *should* have determined correctly (hopefully) that we are now reading a
   // section of data. We are going to make the assumption this is correct and go from here. What is *not* figured out
@@ -561,7 +326,7 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
     std::getline(inStream, line);
     lineCount++;
     // First Scan the first 8 characters to see if there are any non-space characters
-    for(size_t i = 0; i < 8; i++)
+    for(usize i = 0; i < 8; i++)
     {
       if(line[i] != ' ')
       {
@@ -572,7 +337,7 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
     {
       line = StringUtilities::trimmed(line);
       line = StringUtilities::simplified(line);
-      std::vector<std::string> tempTokens = SIMPL::StringUtilities::split(line, ' ');
+      std::vector<std::string> tempTokens = StringUtilities::split(line, ' ');
       tokens.insert(tokens.end(), tempTokens.begin(), tempTokens.end());
     }
 
@@ -585,7 +350,7 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
       std::getline(inStream, line);
       lineCount++;
       // Figure out if there is anything in the first 8 chars
-      for(size_t i = 0; i < 8; i++)
+      for(usize i = 0; i < 8; i++)
       {
         if(line[i] != ' ')
         {
@@ -613,14 +378,14 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
       m_UserDefinedArrays.clear();
       for(const auto& userDefinedVariable : m_UserDefinedVariables)
       {
-        data = FloatArrayType::CreateArray(arrayTupleSize, {1}, QString::fromStdString(userDefinedVariable), allocate);
+        data = Float32Array::CreateArray(arrayTupleSize, {1}, userDefinedVariable, allocate);
         attrMat->insertOrAssign(data);
         m_UserDefinedArrays.push_back(data);
       }
     }
     else
     {
-      data = FloatArrayType::CreateArray(arrayTupleSize, {componentCount}, QString::fromStdString(dataArrayName), allocate);
+      data = Float32Array::CreateArray(arrayTupleSize, {componentCount}, dataArrayName, allocate);
       attrMat->insertOrAssign(data);
     }
 
@@ -641,8 +406,8 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
   if(!allocate)
   {
     std::string line;
-    size_t totalLinesToRead = (arrayTupleSize - 1) * tupleLineCount;
-    for(size_t i = 0; i < totalLinesToRead; i++)
+    usize totalLinesToRead = (arrayTupleSize - 1) * tupleLineCount;
+    for(usize i = 0; i < totalLinesToRead; i++)
     {
       std::getline(inStream, line);
       lineCount++;
@@ -651,7 +416,7 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
   else
   {
     // Read each tuple's data starting at the second tuple
-    for(size_t tupleIndex = 1; tupleIndex < arrayTupleSize; tupleIndex++)
+    for(usize tupleIndex = 1; tupleIndex < arrayTupleSize; tupleIndex++)
     {
       if(shouldCancel())
       {
@@ -666,7 +431,7 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
         std::string compLineData;
         std::getline(inStream, compLineData);
         lineCount++;
-        size_t offset = (compLine == 0 ? 1 : 0);
+        usize offset = (compLine == 0 ? 1 : 0);
         compLineData = StringUtilities::trimmed(compLineData);
         compLineData = StringUtilities::simplified(compLineData);
         auto subTokens = StringUtilities::split(compLineData, ' ');
@@ -683,6 +448,239 @@ void readDataArray(std::ifstream& inStream, size_t& lineCount, AttributeMatrix* 
       }
     }
   }
+}
+
+Result<> readVertexCoordinates(ImportDeformKeyFileV12* filter, std::ifstream& inStream, usize& lineCount, IGeometry::SharedVertexList& vertex, usize numVerts)
+{
+  std::string buf;
+  std::vector<std::string> tokens; /* vector to store the split data */
+
+  // Read or Skip past all the vertex data
+  for(usize i = 0; i < numVerts; i++)
+  {
+    if(filter->getCancel())
+    {
+      return {};
+    }
+
+    tokens = getNextLineTokens(inStream, lineCount);
+
+    try
+    {
+      vertex[3 * i] = std::stof(tokens[1]);
+    } catch(const std::exception& e)
+    {
+      std::string msg = fmt::format("Error at line {}: Unable to convert vertex coordinate {}'s 1st string value \"{}\" to float.  Threw standard exception with text: \"{}\"",
+                                    StringUtilities::number(lineCount), StringUtilities::number(i + 1), tokens[1], e.what());
+      return MakeErrorResult(-2001, std::move(msg));
+    }
+
+    try
+    {
+      vertex[3 * i + 1] = std::stof(tokens[2]);
+    } catch(const std::exception& e)
+    {
+      std::string msg = fmt::format("Error at line {}: Unable to convert vertex coordinate {}'s 2nd string value \"{}\" to float.  Threw standard exception with text: \"{}\"",
+                                    StringUtilities::number(lineCount), StringUtilities::number(i + 1), tokens[2], e.what());
+      return MakeErrorResult(-2002, std::move(msg));
+    }
+
+    vertex[3 * i + 2] = 0.0f;
+  }
+}
+
+Result<> readQuadGeometry(std::ifstream& inStream, usize& lineCount, IGeometry::MeshIndexArrayType& quads, usize numCells, const std::atomic_bool& shouldCancel)
+{
+  std::string buf;
+  std::vector<std::string> tokens; /* vector to store the split data */
+
+  for(usize i = 0; i < numCells; i++)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+
+    tokens = getNextLineTokens(inStream, lineCount);
+
+    // Subtract one from the node number because DEFORM starts at node 1 and we start at node 0
+    try
+    {
+      quads[4 * i] = std::stoi(tokens[1]) - 1;
+    } catch(const std::exception& e)
+    {
+      std::string msg =
+          fmt::format("Error at line {}: Unable to convert quad {}'s 1st string value \"{}\" to integer.  Threw standard exception with text: \"{}\"", lineCount, (i + 1), tokens[1], e.what());
+      return MakeErrorResult(-2004, msg);
+    }
+
+    try
+    {
+      quads[4 * i + 1] = std::stoi(tokens[2]) - 1;
+    } catch(const std::exception& e)
+    {
+      std::string msg =
+          fmt::format("Error at line {}: Unable to convert quad {}'s 2nd string value \"{}\" to integer.  Threw standard exception with text: \"{}\"", lineCount, (i + 1), tokens[2], e.what());
+      return MakeErrorResult(-2005, msg);
+    }
+
+    try
+    {
+      quads[4 * i + 2] = std::stoi(tokens[3]) - 1;
+    } catch(const std::exception& e)
+    {
+      std::string msg =
+          fmt::format("Error at line {}: Unable to convert quad {}'s 3rd string value \"{}\" to integer.  Threw standard exception with text: \"{}\"", lineCount, (i + 1), tokens[3], e.what());
+      return MakeErrorResult(-2006, msg);
+    }
+
+    try
+    {
+      quads[4 * i + 3] = std::stoi(tokens[4]) - 1;
+    } catch(const std::exception& e)
+    {
+      std::string msg =
+          fmt::format("Error at line {}: Unable to convert quad {}'s 4th string value \"{}\" to integer.  Threw standard exception with text: \"{}\"", lineCount, (i + 1), tokens[4], e.what());
+      return MakeErrorResult(-2007, msg);
+    }
+  }
+}
+
+Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStream, usize& lineCount, AttributeMatrix& vertexAttributeMatrix, AttributeMatrix& cellAttributeMatrix, bool allocate)
+{
+  SharedVertexList& vertex;
+  QuadGeom& quadGeom;
+
+  while(inStream.peek() != EOF)
+  {
+    if(filter->getCancel())
+    {
+      return {};
+    }
+    bool isWord = false;
+    std::vector<std::string> tokens;
+    // Read the line. This line _Should_ be the start of "section" of data.
+    {
+      std::string buf;
+      std::getline(inStream, buf);
+      isWord = (buf[0] > 64 /*@ character */ && buf[0] < 91);
+      buf = StringUtilities::trimmed(buf);
+      buf = StringUtilities::simplified(buf);
+      tokens = StringUtilities::split(buf, ' ');
+      lineCount++;
+    }
+
+    if(tokens.empty())
+    {
+      // This is an empty line
+      continue;
+    }
+    if(!isWord)
+    {
+      continue;
+    }
+
+    std::string word = tokens.at(0);
+
+    if(tokens.size() == 1 && word == k_Star)
+    {
+      // We are at the next header, so we are done with this section
+      return {};
+    }
+    if(word == k_VertexTitle)
+    {
+      usize numVerts = parse_ull(tokens.at(2), lineCount);
+      if(numVerts == 0)
+      {
+        continue;
+      }
+
+      // Set the number of vertices and then create vertices array and resize vertex attr mat.
+      filter->updateProgress(fmt::format("DEFORM Data File: Number of Vertex Points = {}", StringUtilities::number(numVerts)));
+      vertexAttributeMatrix.resizeTuples({numVerts});
+      IGeometry::SharedVertexList vertex = CreateSharedVertexList(static_cast<int64_t>(numVerts), true);
+
+      auto vertexResult = readVertexCoordinates(filter, inStream, lineCount, vertex, numVerts);
+      if(vertexResult.invalid())
+      {
+        return vertexResult;
+      }
+    }
+    else if(word == k_CellTitle)
+    {
+      usize numCells = parse_ull(tokens.at(2), lineCount);
+      if(numCells == 0)
+      {
+        continue;
+      }
+
+      // Set the number of cells and then create cells array and resize cell attr mat.
+      filter->updateProgress(fmt::format("DEFORM Data File: Number of Quad Cells = {}", StringUtilities::number(numCells)));
+      cellAttributeMatrix.resizeTuples({numCells});
+      QuadGeom quadGeom = QuadGeom::CreateGeometry(static_cast<int64>(numCells), vertexPtr, Geometry::QuadGeometry, true);
+      quadGeom.setSpatialDimensionality(2);
+      IGeometry::MeshIndexArrayType& quads = quadGeom.getFacesRef();
+
+      auto quadResult = readQuadGeometry(inStream, lineCount, quads, numCells, filter->getCancel());
+
+      if(quadResult.invalid())
+      {
+        return quadResult;
+      }
+    }
+    else if(tokens.size() >= 3 && (vertexPtr != SharedVertexList::NullPointer() || quadGeomPtr != QuadGeom::NullPointer()))
+    {
+      // This is most likely the beginning of a data array
+      std::string dataArrayName = tokens.at(0);
+      usize tupleCount = parse_ull(tokens.at(2), lineCount);
+
+      if(tupleCount == vertex.getNumberOfTuples())
+      {
+        filter->updateProgress(fmt::format("Reading Vertex Data: {}", dataArrayName));
+
+        readDataArray(inStream, lineCount, vertexAttributeMatrix, dataArrayName, tupleCount, allocate);
+      }
+      else if(tupleCount == quadGeom.getNumberOfCells())
+      {
+        filter->updateProgress(fmt::format("Reading Cell Data: {}", dataArrayName));
+
+        readDataArray(inStream, lineCount, cellAttributeMatrix, dataArrayName, tupleCount, allocate);
+      }
+      else if(m_InputValues->verboseOutput)
+      {
+        // If verbose, dump the word, number of tuples, and some warning saying that it doesn't have the right number of tuples
+        // for either vertex or cell arrays.
+
+        // This data is not able to be read.  Display a status message that explains why, based on what information we have available.
+        if(vertexPtr == SharedVertexList::NullPointer() && quadGeomPtr != QuadGeom::NullPointer())
+        {
+          std::string msg = fmt::format(
+              "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a cell array ({]), and the vertex tuple count has not been read yet.  Skipping...",
+              dataArrayName, tupleCount, quadGeom.getNumberOfCells());
+          filter->updateProgress(msg);
+        }
+        else if(vertexPtr != SharedVertexList::NullPointer() && quadGeomPtr == QuadGeom::NullPointer())
+        {
+          std::string msg = fmt::format(
+              "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a vertex array ({}), and the cell tuple count has not been read yet.  Skipping...",
+              dataArrayName, tupleCount, vertex.getNumberOfTuples());
+          filter->updateProgress(msg);
+        }
+        else
+        {
+          std::string msg = fmt::format("Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be either a vertex array ({}) or cell array ({}).  Skipping...",
+                                        dataArrayName, tupleCount, vertex.getNumberOfTuples(), quadGeom.getNumberOfCells());
+          filter->updateProgress(msg);
+        }
+      }
+    }
+    else
+    {
+      continue;
+    }
+  }
+
+  return {};
 }
 } // namespace
 
@@ -706,17 +704,23 @@ const std::atomic_bool& ImportDeformKeyFileV12::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+void ImportDeformKeyFileV12::updateProgress(const std::string& progressMessage)
+{
+  m_MessageHandler({IFilter::Message::Type::Info, progressMessage});
+}
+
+// -----------------------------------------------------------------------------
 Result<> ImportDeformKeyFileV12::operator()()
 {
   // Read from the file
-  readDEFORMFile(dc.get(), vertexAttrMat.get(), cellAttrMat.get(), !getInPreflight());
+  readDEFORMFile(this, dc.get(), vertexAttrMat.get(), cellAttrMat.get(), !getInPreflight());
   auto userDefinedValues = algorithm.getUserDefinedVariables();
 
   // Cache the results
   std::vector<DataArrayMetadata> dataArrays;
 
-  d_ptr->m_Cache.vertexAttrMatTupleCount = vertexAttrMat->getNumberOfTuples();
-  d_ptr->m_Cache.cellAttrMatTupleCount = cellAttrMat->getNumberOfTuples();
+  d_ptr->m_Cache.vertexAttrMatTupleCount = vertexAttrMat.getNumberOfTuples();
+  d_ptr->m_Cache.cellAttrMatTupleCount = cellAttrMat.getNumberOfTuples();
 
   for(const auto& vertexArray : *vertexAttrMat)
   {
@@ -724,22 +728,22 @@ Result<> ImportDeformKeyFileV12::operator()()
     {
       for(const auto& userDefinedValue : userDefinedValues)
       {
-        dataArrays.push_back({userDefinedValue, vertexArray->getNumberOfTuples(), static_cast<size_t>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
+        dataArrays.push_back({userDefinedValue, vertexArray->getNumberOfTuples(), static_cast<usize>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
       }
     }
     else
     {
-      dataArrays.push_back({vertexArray->getName().toStdString(), vertexArray->getNumberOfTuples(), static_cast<size_t>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
+      dataArrays.push_back({vertexArray->getName().toStdString(), vertexArray->getNumberOfTuples(), static_cast<usize>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
     }
   }
   for(const auto& cellArray : *cellAttrMat)
   {
-    dataArrays.push_back({cellArray->getName().toStdString(), cellArray->getNumberOfTuples(), static_cast<size_t>(cellArray->getNumberOfComponents()), DataArrayType::CELL});
+    dataArrays.push_back({cellArray->getName().toStdString(), cellArray->getNumberOfTuples(), static_cast<usize>(cellArray->getNumberOfComponents()), DataArrayType::CELL});
   }
 
-  d_ptr->m_Cache.inputFile = getDEFORMInputFile().toStdString();
+  d_ptr->m_Cache.inputFile = getDEFORMInputFile();
   d_ptr->m_Cache.dataArrays = dataArrays;
-  d_ptr->m_Cache.timeStamp = fs::last_write_time(getDEFORMInputFile().toStdString());
+  d_ptr->m_Cache.timeStamp = fs::last_write_time(getDEFORMInputFile());
 
   return {};
 }

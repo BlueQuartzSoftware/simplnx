@@ -37,6 +37,7 @@ public:
   Result<> operator()();
 
   const std::atomic_bool& getCancel();
+  void updateProgress(const std::string& progMessage);
 
 private:
   DataStructure& m_DataStructure;
