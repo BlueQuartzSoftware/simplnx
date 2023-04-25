@@ -35,9 +35,13 @@ PipelineObserver::PipelineObserver(Pipeline* pipeline)
     }));
 
     m_SignalConnections.push_back(cxFilter->getFilterFaultSignal().connect([currentFilterIndex](complex::AbstractPipelineNode*, int32_t filterIndex, complex::FaultState state) {
-      if(state != complex::FaultState::None)
+      if(state == complex::FaultState::Errors)
       {
-        std::cout << "[" << currentFilterIndex << "] Error Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
+        std::cout << "[" << currentFilterIndex << "] Error(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
+      }
+      if(state != complex::FaultState::Warnings)
+      {
+        std::cout << "[" << currentFilterIndex << "] Warning(s) Encountered during filter execution. Fault state= " << static_cast<int32_t>(state) << std::endl;
       }
     }));
 

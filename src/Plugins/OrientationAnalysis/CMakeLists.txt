@@ -64,6 +64,7 @@ set(FilterList
   ReadH5EbsdFilter
   RodriguesConvertorFilter
   RotateEulerRefFrameFilter
+  WritePoleFigureFilter
 )
   
 set(STUB_FILTERS
@@ -88,12 +89,9 @@ set(STUB_FILTERS
   GenerateFaceIPFColoring
   GenerateFaceMisorientationColoring
   GenerateOrientationMatrixTranspose
-
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
   # OrientationUtility # MISSING 1 or more Parameter Implementations  
   #OrientationUtility # MISSING 1 or more Parameter Implementations
-
-  WritePoleFigure
   WriteStatsGenOdfAngleFile
 )
 
@@ -199,6 +197,7 @@ set(filter_algorithms
   ReadH5Ebsd
   RodriguesConvertor
   RotateEulerRefFrame
+  WritePoleFigure
 )
 
 
@@ -232,6 +231,9 @@ set(PLUGIN_EXTRA_SOURCES
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/ImportH5Data.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.hpp"
 "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/OrientationUtilities.cpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/Fonts.hpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/TiffWriter.hpp"
+"${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/TiffWriter.cpp"
 )
 target_sources(${PLUGIN_NAME} PRIVATE ${PLUGIN_EXTRA_SOURCES})
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities" PREFIX ${PLUGIN_NAME} FILES ${PLUGIN_EXTRA_SOURCES})
@@ -250,6 +252,7 @@ target_include_directories(${PLUGIN_NAME}
   PUBLIC
     "${EbsdLib_INCLUDE_DIRS}"
     "${${PLUGIN_NAME}_BINARY_DIR}"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/3rdParty/canvas_ity/src"
 )
 
 # ------------------------------------------------------------------------------

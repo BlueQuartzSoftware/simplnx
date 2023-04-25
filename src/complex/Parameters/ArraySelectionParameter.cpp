@@ -143,64 +143,70 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
-  if(dataArray == nullptr)
+  const auto* iArrayPtr = dynamic_cast<const IArray*>(object);
+  if(iArrayPtr == nullptr)
   {
     return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
   }
 
-  if(!m_AllowedTypes.empty())
+  // Only validate IDataArray? Ignore StringData Array because there is only a
+  // single type and component dims do not matter?
+  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
+  if(dataArray != nullptr)
   {
-    DataType dataType = dataArray->getDataType();
-    if(m_AllowedTypes.count(dataType) == 0)
+    if(!m_AllowedTypes.empty())
     {
-      return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
-                                      fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
-    }
-  }
 
-  if(!m_RequiredComponentShapes.empty())
-  {
-    std::string compStr;
-    bool foundMatch = false;
-    for(const auto& compShape : m_RequiredComponentShapes)
-    {
-      if(compShape == dataArray->getComponentShape())
+      DataType dataType = dataArray->getDataType();
+      if(m_AllowedTypes.count(dataType) == 0)
       {
-        foundMatch = true;
-        break;
+        return complex::MakeErrorResult(complex::FilterParameter::Constants::k_Validate_AllowedType_Error,
+                                        fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
       }
-      compStr += StringUtilities::number(compShape[0]);
-      for(usize i = 1; i < compShape.size(); ++i)
+    }
+
+    if(!m_RequiredComponentShapes.empty())
+    {
+      std::string compStr;
+      bool foundMatch = false;
+      for(const auto& compShape : m_RequiredComponentShapes)
       {
-        compStr += " x " + StringUtilities::number(compShape[i]);
+        if(compShape == dataArray->getComponentShape())
+        {
+          foundMatch = true;
+          break;
+        }
+        compStr += StringUtilities::number(compShape[0]);
+        for(usize i = 1; i < compShape.size(); ++i)
+        {
+          compStr += " x " + StringUtilities::number(compShape[i]);
+        }
+        compStr += " or ";
       }
-      compStr += " or ";
+      if(!foundMatch)
+      {
+        return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_TupleShapeValue,
+                                          fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, value.toString(), compStr));
+      }
     }
-    if(!foundMatch)
+
+    if(m_Location != DataLocation::Any)
     {
-      return complex::MakeErrorResult<>(complex::FilterParameter::Constants::k_Validate_TupleShapeValue,
-                                        fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, value.toString(), compStr));
+      IDataStore::StoreType storeType = dataArray->getStoreType();
+
+      if(allowsInMemory() && (storeType == IDataStore::StoreType::Empty))
+      {
+        return {};
+      }
+      else if(allowsOutOfCore() && (storeType == IDataStore::StoreType::EmptyOutOfCore))
+      {
+        return {};
+      }
+
+      return MakeErrorResult(FilterParameter::Constants::k_Validate_DataLocation_Error,
+                             fmt::format("{}DataArray at path '{}' was stored at '{}', but only {} are allowed", prefix, value.toString(), storeType, m_Location));
     }
   }
-
-  if(m_Location != DataLocation::Any)
-  {
-    IDataStore::StoreType storeType = dataArray->getStoreType();
-
-    if(allowsInMemory() && (storeType == IDataStore::StoreType::Empty))
-    {
-      return {};
-    }
-    else if(allowsOutOfCore() && (storeType == IDataStore::StoreType::EmptyOutOfCore))
-    {
-      return {};
-    }
-
-    return MakeErrorResult(FilterParameter::Constants::k_Validate_DataLocation_Error,
-                           fmt::format("{}DataArray at path '{}' was stored at '{}', but only {} are allowed", prefix, value.toString(), storeType, m_Location));
-  }
-
   return {};
 }
 
