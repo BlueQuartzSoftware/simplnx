@@ -973,7 +973,7 @@ bool CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usize sr
     return false;
   }
 
-  if((totalSrcTuples * sourceNumComponents + destTupleOffset * numComponents) > destArray.getSize())
+  if((totalSrcTuples * sourceNumComponents + destTupleOffset * numComponents) > destArray.getNumberOfTuples() * numComponents)
   {
     return false;
   }
