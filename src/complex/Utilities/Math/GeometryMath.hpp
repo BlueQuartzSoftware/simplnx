@@ -1,13 +1,14 @@
 #pragma once
 
+#include "complex/Common/Array.hpp"
 #include "complex/Common/BoundingBox.hpp"
 #include "complex/Common/EulerAngle.hpp"
-#include "complex/Common/Point2D.hpp"
-#include "complex/Common/Point3D.hpp"
 #include "complex/Common/Ray.hpp"
 #include "complex/Common/Types.hpp"
+#include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "complex/complex_export.hpp"
 
+#include <functional>
 #include <stdexcept>
 #include <vector>
 
@@ -23,12 +24,18 @@ namespace GeometryMath
  * vector. The vectors are assumed to cross at (0,0,0).
  * @param a
  * @param b
- * @return float
+ * @return T
  */
 template <typename T>
-T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
+inline T CosThetaBetweenVectors(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  throw std::runtime_error("");
+  T norm1 = a.magnitude();
+  T norm2 = b.magnitude();
+  if(norm1 == 0 || norm2 == 0)
+  {
+    return 1.0;
+  }
+  return (a.dot(b)) / (norm1 * norm2);
 }
 
 /**
@@ -46,9 +53,9 @@ float32 COMPLEX_EXPORT AngleBetweenVectors(const complex::ZXZEuler& a, const com
  * @return T
  */
 template <typename T>
-T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
+inline T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D<T>& b)
 {
-  throw std::runtime_error("");
+  return std::sqrt((b - a).sumOfSquares());
 }
 
 /**
@@ -58,9 +65,9 @@ T FindDistanceBetweenPoints(const complex::Point3D<T>& a, const complex::Point3D
  * @return T
  */
 template <typename T>
-T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D<T>& b)
+inline T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D<T>& b)
 {
-  throw std::runtime_error("");
+  return std::sqrt((b - a).sumOfSquares());
 }
 
 /**
@@ -71,9 +78,9 @@ T FindDistanceBetweenPoints(const complex::Point2D<T>& a, const complex::Point2D
  * @return T
  */
 template <typename T>
-T FindTriangleArea(const complex::Point3D<T>& a, const complex::Point3D<T>& b, const complex::Point3D<T>& c)
+inline T FindTriangleArea(const complex::Point3D<T>& a, const complex::Point3D<T>& b, const complex::Point3D<T>& c)
 {
-  throw std::runtime_error("");
+  return ((b[0] - a[0]) * (c[1] - a[1])) - ((c[0] - a[0]) * (b[1] - a[1]));
 }
 
 /**
@@ -87,17 +94,11 @@ T FindTriangleArea(const complex::Point3D<T>& a, const complex::Point3D<T>& b, c
 template <typename T>
 T FindTetrahedronVolume(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& p3)
 {
-  throw std::runtime_error("");
+  auto diffA = p0 - p3;
+  auto diffB = p1 - p3;
+  auto diffC = p2 - p3;
+  return (diffA[2] * ((diffB[0] * diffC[1]) - (diffB[1] * diffC[0]))) + (diffA[1] * ((diffB[2] * diffC[0]) - (diffB[0] * diffC[2]))) + (diffA[0] * ((diffB[1] * diffC[2]) - (diffB[2] * diffC[1])));
 }
-
-/**
- * @brief Returns the normal angle for an arbitrary polygon defined by an array
- * of vertices.
- * @param vertices
- * @param numVerts
- * @return complex::ZXZEuler<float32>
- */
-ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64 numVerts);
 
 /**
  * @brief Returns the normal vector for a plane defined by three points along
@@ -105,23 +106,52 @@ ZXZEuler COMPLEX_EXPORT FindPolygonNormal(const float* vertices, uint64 numVerts
  * @param p0
  * @param p1
  * @param p2
- * @return complex::ZXZEuler<T>
- */
-complex::ZXZEuler COMPLEX_EXPORT FindPlaneNormalVector(const complex::Point3D<float32>& p0, const complex::Point3D<float32>& p1, const complex::Point3D<float32>& p2);
-
-/**
- * @brief Finds the coefficients and normal for a plane defined by three points
- * along its surface.
- * @param p0
- * @param p1
- * @param p2
- * @param c
- * @param normal
+ * @return complex::Vec3<T>
  */
 template <typename T>
-void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const float& c, ZXZEuler& normal)
+inline complex::Vec3<T> FindPlaneNormalVector(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2)
 {
-  throw std::runtime_error("");
+  return (p1 - p0).cross(p2 - p0);
+}
+
+/**
+ * @brief Returns the normal angle for an arbitrary polygon defined by an array
+ * of vertices.
+ * @param points must be greater than 2 in size
+ * @return Point3D<T>
+ */
+template <typename T>
+Point3D<T> FindPolygonNormal(nonstd::span<Point3D<T>> points)
+{
+  if(points.size() < 3)
+  {
+    throw std::runtime_error("This function cannot process under 3 points");
+  }
+
+  if(points.size() == 3)
+  {
+    return FindPlaneNormalVector(points[0], points[1], points[2]);
+  }
+
+  Point3D<T> normal = {0, 0, 0};
+  for(usize i = 0; i < points.size() - 3; i++)
+  {
+    std::transform(normal.begin(), normal.end(), ((points[i + 2] - points[i + 1]).cross(points[i] - points[i + 1])).begin(), normal.begin(), std::plus<T>());
+  }
+  return normal;
+}
+
+/**
+ * @brief Finds the coefficients for a plane defined by three points
+ * along its surface.
+ * @param p0
+ * @param normal
+ * @return T - the coefficients for the plane
+ */
+template <typename T>
+inline T FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Vec3<T>& normal)
+{
+  return p0.dot(normal);
 }
 
 /**
@@ -131,12 +161,12 @@ void FindPlaneCoefficients(const complex::Point3D<T>& p0, const complex::Point3D
  * @param p1
  * @param p2
  * @param point
- * @return float
+ * @return T
  */
 template <typename T>
-float32 FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
+T FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
 {
-  throw std::runtime_error("");
+  return FindDistanceBetweenPoints((p0 + p1 + p2) / static_cast<T>(3.0), point);
 }
 
 /**
@@ -149,9 +179,10 @@ float32 FindDistanceToTriangleCentroid(const complex::Point3D<T>& p0, const comp
  * @return float
  */
 template <typename T>
-float32 FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& pos)
+T FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& pos)
 {
-  throw std::runtime_error("");
+  auto normal = FindPlaneNormalVector(p0, p1, p2);
+  return (pos.dot(normal) - FindPlaneCoefficients(p0, normal)) /= sqrt(normal.sumOfSquares());
 }
 
 /**
@@ -161,9 +192,11 @@ float32 FindDistanceFromPlane(const complex::Point3D<T>& p0, const complex::Poin
  * @return bool
  */
 template <typename T>
-bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox<T>& box)
+inline bool IsPointInBox(const complex::Point3D<T>& point, const complex::BoundingBox3D<T>& box)
 {
-  throw std::runtime_error("");
+  auto min = box.getMinPoint();
+  auto max = box.getMaxPoint();
+  return (min[0] <= point[0]) && (point[0] <= max[0]) && (min[1] <= point[1]) && (point[1] <= max[1]) && (min[2] <= point[2]) && (point[2] <= max[2]);
 }
 
 /**
@@ -223,7 +256,7 @@ bool IsPointInTriangle2D(const complex::Point2D<T>& p0, const complex::Point2D<T
  * @return bool
  */
 template <typename T>
-bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox<T>& bounds)
+bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox3D<T>& bounds)
 {
   throw std::runtime_error("");
 }
@@ -252,7 +285,7 @@ uint8 FindRayIntersectionsWithSphere(const complex::Ray<T>& ray, const complex::
  * @return float
  */
 template <typename T>
-T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox<T>& box)
+T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox3D<T>& box)
 {
   throw std::runtime_error("");
 }
@@ -269,7 +302,7 @@ complex::Ray<float32> COMPLEX_EXPORT GenerateRandomRay(float32 length);
  * @param verts
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::VertexGeom* verts);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::INodeGeometry0D& geom);
 
 /**
  * @brief Returns the BoundingBox around the specified face.
@@ -277,7 +310,7 @@ complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::
  * @param faceId
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom* faces, int32 faceId);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom& faces, int32 faceId);
 
 /**
  * @brief Returns the BoundingBox around the specified face manipulated by the
@@ -287,17 +320,17 @@ complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfFace(complex::Tria
  * @param float[3][3]
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox<float32> COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3]);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3]);
 
 /**
  * @param TriangleGeom* faces
  * @param Int32Int32DynamicListArray.ElementList faceIds
  * @return complex::BoundingBox<float32>
  */
-// complex::BoundingBox<float32> FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
+// complex::BoundingBox3Df FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
 //{
-//  throw std::runtime_error("");
-//}
+//   throw std::runtime_error("");
+// }
 
 /**
  * @brief Returns the bounding box around the specified faces manipulated by the
@@ -334,7 +367,7 @@ uint8 RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, co
  * @brief Returns true if the specified Ray crosses into or out of the triangle
  * defined by its corner points. Returns false otherwise.
  *
- * Tangental intersections where the Ray touches the triangle but does not
+ * Tangential intersections where the Ray touches the triangle but does not
  * enter or leave will return false.
  * @param ray
  * @param p0
@@ -343,7 +376,7 @@ uint8 RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, co
  * @return bool
  */
 template <typename T>
-bool RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+bool RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2, const Ray<T>& ray)
 {
   throw std::runtime_error("");
 }

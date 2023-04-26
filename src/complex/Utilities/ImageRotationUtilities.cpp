@@ -10,15 +10,17 @@ namespace complex::ImageRotationUtilities
 FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR& transformationMatrix)
 {
   auto origImageGeomBox = imageGeometry.getBoundingBoxf();
+  auto min = origImageGeomBox.getMinPoint();
+  auto max = origImageGeomBox.getMaxPoint();
   // clang-format off
-  std::vector<FloatVec3> imageGeomCornerCoords = {{origImageGeomBox[0], origImageGeomBox[2], origImageGeomBox[4]},
-                                                      {origImageGeomBox[1], origImageGeomBox[2], origImageGeomBox[4]},
-                                                      {origImageGeomBox[1], origImageGeomBox[3], origImageGeomBox[4]},
-                                                      {origImageGeomBox[0], origImageGeomBox[3], origImageGeomBox[4]},
-                                                      {origImageGeomBox[0], origImageGeomBox[2], origImageGeomBox[5]},
-                                                      {origImageGeomBox[1], origImageGeomBox[2], origImageGeomBox[5]},
-                                                      {origImageGeomBox[1], origImageGeomBox[3], origImageGeomBox[5]},
-                                                      {origImageGeomBox[0], origImageGeomBox[3], origImageGeomBox[5]}};
+  std::vector<FloatVec3> imageGeomCornerCoords = {{min[0], min[2], max[1]},
+                                                  {min[1], min[2], max[1]},
+                                                  {min[1], max[0], max[1]},
+                                                  {min[0], max[0], max[1]},
+                                                  {min[0], min[2], max[2]},
+                                                  {min[1], min[2], max[2]},
+                                                  {min[1], max[0], max[2]},
+                                                  {min[0], max[0], max[2]}};
   // clang-format on
   FloatVec6 minMaxValues = {std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
                             -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max()};

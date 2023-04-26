@@ -4,7 +4,6 @@
 #include "complex/complex_export.hpp"
 
 #include "complex/Common/Array.hpp"
-#include "complex/Common/Point3D.hpp"
 
 #include <optional>
 

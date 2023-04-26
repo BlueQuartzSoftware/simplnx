@@ -984,7 +984,9 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     return;
   }
   auto& elemAreas = *areas;
-  std::vector<float32> coords(3 * numVertsPerElem, 0.0f);
+  std::vector<Point3Df> coords;
+  coords.reserve(numVertsPerElem);
+  std::vector<float32> coordinate(3 * numVertsPerElem, 0.0f);
 
   for(usize i = 0; i < numElems; i++)
   {
@@ -996,11 +998,11 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     for(usize j = 0; j < numVertsPerElem; j++)
     {
       std::vector<float32> point{vertices->at(3 * elems[offset + j]), vertices->at(3 * elems[offset + j] + 1), vertices->at(3 * elems[offset + j] + 2)};
-      coords.insert(coords.begin(), point.begin(), point.end());
+      coordinate.insert(coordinate.begin(), point.begin(), point.end());
+      coords.emplace_back(vertices->at(3 * elems[offset + j]), vertices->at(3 * elems[offset + j] + 1), vertices->at(3 * elems[offset + j] + 2));
     }
 
-    float* coordinates = coords.data();
-    ZXZEuler normal = GeometryMath::FindPolygonNormal(coordinates, numVertsPerElem);
+    ZXZEuler normal = ZXZEuler(GeometryMath::FindPolygonNormal<float32>({coords.data(), coords.size()}).data());
     normal.normalize();
 
     nx = (normal[0] > 0.0 ? normal[0] : -normal[0]);
@@ -1008,6 +1010,7 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     nz = (normal[2] > 0.0 ? normal[2] : -normal[2]);
     projection = (nx > ny ? (nx > nz ? 0 : 2) : (ny > nz ? 1 : 2));
 
+    float* coordinates = coordinate.data();
     for(int64 j = 0; j < numVertsPerElem; j++)
     {
       Point3D<float32> vert0(coordinates + (3 * j));

@@ -268,8 +268,6 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${COMPLEX_SOURCE_DIR}/Common/IteratorUtility.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Numbers.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Point2D.hpp
-  ${COMPLEX_SOURCE_DIR}/Common/Point3D.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Range.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Range2D.hpp
   ${COMPLEX_SOURCE_DIR}/Common/Range3D.hpp
@@ -653,6 +651,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Utilities/AlignSections.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/GeometryHelpers.cpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/GeometryUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ColorPresetsUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
