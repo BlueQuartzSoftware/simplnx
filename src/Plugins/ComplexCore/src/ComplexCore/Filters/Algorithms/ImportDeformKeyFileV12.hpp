@@ -15,6 +15,9 @@ struct COMPLEXCORE_EXPORT ImportDeformKeyFileV12InputValues
 {
   bool UseVerboseOutput;
   fs::path InputFilePath;
+  DataPath QuadGeomPath;
+  DataPath VertexAMPath;
+  DataPath CellAMPath;
 };
 
 /**
@@ -44,5 +47,7 @@ private:
   const ImportDeformKeyFileV12InputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  std::vector<std::string> m_UserDefinedVariables;
+  std::vector<DataPath> m_UserDefinedArrays;
 };
 }

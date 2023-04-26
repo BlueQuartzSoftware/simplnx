@@ -5,8 +5,42 @@
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 namespace complex
 {
+//enum class DataArrayType : uint8
+//{
+//  VERTEX,
+//  CELL
+//};
+//
+//struct DataArrayMetadata
+//{
+//  std::string name;
+//  usize tupleCount;
+//  usize componentCount;
+//  DataArrayType type;
+//};
+//
+//struct FileCache
+//{
+//  std::string inputFile;
+//  std::vector<DataArrayMetadata> dataArrays;
+//  usize vertexAttrMatTupleCount;
+//  usize cellAttrMatTupleCount;
+//  fs::file_time_type timeStamp;
+//
+//  void flush()
+//  {
+//    inputFile.clear();
+//    dataArrays.clear();
+//    timeStamp = fs::file_time_type();
+//  }
+//};
+
 /**
  * @class ImportDeformKeyFileV12Filter
  * @brief This filter will...

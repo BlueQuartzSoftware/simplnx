@@ -750,7 +750,7 @@ void ImportDeformKeyFileV12::updateProgress(const std::string& progressMessage)
 // -----------------------------------------------------------------------------
 Result<> ImportDeformKeyFileV12::operator()()
 {
-  std::ifstream inStream(m_InputValues->deformInputFile);
+  std::ifstream inStream(m_InputValues->InputFilePath);
   ///!!!!!! VALIDATE THE STREAM !!!!!!!///
 
   // Read from the file
@@ -785,6 +785,76 @@ Result<> ImportDeformKeyFileV12::operator()()
   d_ptr->m_Cache.inputFile = getDEFORMInputFile();
   d_ptr->m_Cache.dataArrays = dataArrays;
   d_ptr->m_Cache.timeStamp = fs::last_write_time(getDEFORMInputFile());
+
+  // Read from the file if we are executing, the input file has changed, or the input file's time stamp is out of date.
+  // Otherwise, read from the cache
+  if(!getInPreflight() || getDEFORMInputFile().toStdString() != d_ptr->m_Cache.inputFile || d_ptr->m_Cache.timeStamp < fs::last_write_time(getDEFORMInputFile().toStdString()))
+  {
+    // Read from the file
+    SimulationIO::ImportDeformKeyFilev12 algorithm(&inputValues, this);
+    algorithm.readDEFORMFile(dc.get(), vertexAttrMat.get(), cellAttrMat.get(), !getInPreflight());
+    auto userDefinedValues = algorithm.getUserDefinedVariables();
+
+    // Cache the results
+    std::vector<DataArrayMetadata> dataArrays;
+
+    d_ptr->m_Cache.vertexAttrMatTupleCount = vertexAttrMat->getNumberOfTuples();
+    d_ptr->m_Cache.cellAttrMatTupleCount = cellAttrMat->getNumberOfTuples();
+
+    for(const auto& vertexArray : *vertexAttrMat)
+    {
+      if(vertexArray->getName() == "USRNOD")
+      {
+        for(const auto& userDefinedValue : userDefinedValues)
+        {
+          dataArrays.push_back({userDefinedValue, vertexArray->getNumberOfTuples(), static_cast<size_t>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
+        }
+      }
+      else
+      {
+        dataArrays.push_back({vertexArray->getName().toStdString(), vertexArray->getNumberOfTuples(), static_cast<size_t>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
+      }
+    }
+    for(const auto& cellArray : *cellAttrMat)
+    {
+      dataArrays.push_back({cellArray->getName().toStdString(), cellArray->getNumberOfTuples(), static_cast<size_t>(cellArray->getNumberOfComponents()), DataArrayType::CELL});
+    }
+
+    d_ptr->m_Cache.inputFile = getDEFORMInputFile().toStdString();
+    d_ptr->m_Cache.dataArrays = dataArrays;
+    d_ptr->m_Cache.timeStamp = fs::last_write_time(getDEFORMInputFile().toStdString());
+  }
+  else
+  {
+    // Read from the cache
+    setDEFORMInputFile(QString::fromStdString(d_ptr->m_Cache.inputFile));
+
+    std::vector<size_t> tDims = {d_ptr->m_Cache.vertexAttrMatTupleCount};
+    vertexAttrMat->resizeAttributeArrays(tDims);
+
+    tDims = {d_ptr->m_Cache.cellAttrMatTupleCount};
+    cellAttrMat->resizeAttributeArrays(tDims);
+
+    for(const DataArrayMetadata& daMetadata : d_ptr->m_Cache.dataArrays)
+    {
+      std::vector<size_t> cDims(1, static_cast<size_t>(daMetadata.componentCount));
+      FloatArrayType::Pointer data = FloatArrayType::CreateArray(daMetadata.tupleCount, cDims, QString::fromStdString(daMetadata.name), false);
+
+      if(daMetadata.type == DataArrayType::VERTEX)
+      {
+        vertexAttrMat->insertOrAssign(data);
+      }
+      else if(daMetadata.type == DataArrayType::CELL)
+      {
+        cellAttrMat->insertOrAssign(data);
+      }
+      else
+      {
+        QString msg = QString("Unable to determine the type for cached data array \"%1\".  The type must be either vertex or cell.").arg(QString::fromStdString(daMetadata.name));
+        setErrorCondition(-2020, msg);
+      }
+    }
+  }
 
   return {};
 }
