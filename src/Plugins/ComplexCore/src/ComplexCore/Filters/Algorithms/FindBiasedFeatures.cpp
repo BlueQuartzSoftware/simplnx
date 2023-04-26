@@ -86,13 +86,17 @@ void FindBiasedFeatures::findBoundingBoxFeatures()
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Phase {} of {}", iter, numPhases));
     }
     // reset boundBox for each phase
-    const BoundingBox<float32> bb = imageGeometry.getBoundingBoxf();
-    boundBox[0] = bb.getMinX();
-    boundBox[1] = bb.getMinY();
-    boundBox[2] = bb.getMinZ();
-    boundBox[3] = bb.getMaxX();
-    boundBox[4] = bb.getMaxY();
-    boundBox[5] = bb.getMaxZ();
+    const BoundingBox3D<float32> bb = imageGeometry.getBoundingBoxf();
+
+    auto min = bb.getMinPoint();
+    boundBox[0] = min.getX();
+    boundBox[1] = min.getY();
+    boundBox[2] = min.getZ();
+
+    auto max = bb.getMaxPoint();
+    boundBox[3] = max.getX();
+    boundBox[4] = max.getY();
+    boundBox[5] = max.getZ();
 
     for(usize i = 1; i < size; i++)
     {

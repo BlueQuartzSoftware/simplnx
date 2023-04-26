@@ -148,13 +148,13 @@ public:
    * @brief
    * @return BoundingBox<float32>
    */
-  BoundingBox<float32> getBoundingBoxf() const;
+  BoundingBox3D<float32> getBoundingBoxf() const;
 
   /**
    * @brief
    * @return BoundingBox<float64>
    */
-  BoundingBox<float64> getBoundingBox() const;
+  BoundingBox3D<float64> getBoundingBox() const;
 
   /**
    * @brief

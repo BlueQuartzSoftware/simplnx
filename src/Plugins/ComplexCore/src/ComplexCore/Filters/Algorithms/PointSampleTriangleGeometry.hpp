@@ -37,7 +37,7 @@
 
 #include "ComplexCore/ComplexCore_export.hpp"
 
-#include "complex/Common/Point3D.hpp"
+#include "complex/Common/Array.hpp"
 #include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"

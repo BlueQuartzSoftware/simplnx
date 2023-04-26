@@ -1,6 +1,5 @@
 #pragma once
 
-#include "complex/Common/Point3D.hpp"
 #include "complex/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "complex/complex_export.hpp"
 

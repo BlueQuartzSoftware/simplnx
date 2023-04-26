@@ -439,6 +439,120 @@ public:
   {
     return Vec2<OutType>(static_cast<OutType>((*this)[0]), static_cast<OutType>((*this)[1]));
   }
+
+  /**
+   * @brief Returns the dot product of this and an input Vec2
+   * @return Vec2<T>
+   */
+  inline T dot(const Vec2<T>& v) const
+  {
+    return (*this)[0] * v[0] + (*this)[1] * v[1];
+  }
+
+  /**
+   * @brief Returns the sum of squares of this
+   * @return T
+   */
+  inline T sumOfSquares() const
+  {
+    return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1];
+  }
+
+  /**
+   * @brief Returns the magnitude of the 3x1 vector
+   */
+  inline T magnitude() const
+  {
+    return std::sqrt(sumOfSquares());
+  }
+
+  /**
+   * @brief Multiples this Vec2 with another Vec2 using element wise multiplication and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 elemMultiply(const Vec2& v) const
+  {
+    return Vec2((*this)[0] * v.x, (*this)[1] * v.y);
+  }
+
+  /**
+   * @brief Divides this Vec2 with another Vec2 using element wise multiplication and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 elemDivide(const Vec2& v) const
+  {
+    return Vec2((*this)[0] / v.x, (*this)[1] / v.y);
+  }
+
+  /**
+   * @brief Adds this Vec2 to another Vec2 and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 operator+(const Vec2& v) const
+  {
+    return Vec2((*this)[0] + v[0], (*this)[1] + v[1]);
+  }
+  /**
+   * @brief Subtracts this Vec2 to another Vec2 and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 operator-(const Vec2& v) const
+  {
+    return Vec2((*this)[0] - v[0], (*this)[1] - v[1]);
+  }
+  /**
+   * @brief Negates this Vec2 and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 operator-() const
+  {
+    return Vec2(-(*this)[0], -(*this)[1]);
+  }
+  /**
+   * @brief Multiples this Vec2 by a scalar value and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 operator*(const T r) const
+  {
+    return Vec2((*this)[0] * r, (*this)[1] * r);
+  }
+  /**
+   * @brief Divides this Vec2 by a scalar value and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 operator/(const T r) const
+  {
+    return Vec2((*this)[0] / r, (*this)[1] / r);
+  }
+  /**
+   * @brief Divides this Vec2 with another Vec2 using element wise division. Performs in-place division
+   * @param Vec2
+   * @return Current Instance is returned
+   */
+  inline Vec2& operator/=(const T r)
+  {
+    (*this)[0] /= r;
+    (*this)[1] /= r;
+    return *this;
+  }
+  /**
+   * @brief Multiplies this Vec2 by a scalar value using element wise multiplication. Performs in-place.
+   * @param Vec2
+   * @return Current Instance is returned
+   */
+  inline Vec2& operator*=(const T r)
+  {
+    (*this)[0] *= r;
+    (*this)[1] *= r;
+    return *this;
+  }
 };
 
 using FloatVec2Type = Vec2<float32>;
@@ -661,11 +775,40 @@ public:
   }
 
   /**
+   * @brief Returns the sum of squares of this
+   * @return T
+   */
+  inline T sumOfSquares() const
+  {
+    return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1] + (*this)[2] * (*this)[2];
+  }
+
+  /**
    * @brief Returns the magnitude of the 3x1 vector
    */
   inline T magnitude() const
   {
     return std::sqrt(dot(*this));
+  }
+
+  /**
+   * @brief Multiples this Vec3 with another Vec3 using element wise multiplication and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 elemMultiply(const Vec3& v) const
+  {
+    return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
+  }
+
+  /**
+   * @brief Divides this Vec3 with another Vec3 using element wise multiplication and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 elemDivide(const Vec3& v) const
+  {
+    return Vec3((*this)[0] / v.x, (*this)[1] / v.y, (*this)[2] / v.z);
   }
 
   /**
@@ -705,13 +848,13 @@ public:
     return Vec3((*this)[0] * r, (*this)[1] * r, (*this)[2] * r);
   }
   /**
-   * @brief Multiples this Vec3 with another Vec3 using element wise multiplication and returns a new instance
+   * @brief Divides this Vec3 by a scalar value and returns a new instance
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator*(const Vec3& v) const
+  inline Vec3 operator/(const T r) const
   {
-    return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
+    return Vec3((*this)[0] / r, (*this)[1] / r, (*this)[2] / r);
   }
   /**
    * @brief Divides this Vec3 with another Vec3 using element wise division. Performs in-place division
@@ -1300,4 +1443,16 @@ using IntVec6 = Vec6<int32>;
 using FloatVec7 = Vec7<float32>;
 using IntVec7 = Vec7<int32>;
 
+// type aliasing to protect deprecated API
+template <typename T>
+using Point3D = Vec3<T>;
+
+using Point3Df = Vec3<float32>;
+using Point3Dd = Vec3<float64>;
+
+template <typename T>
+using Point2D = Vec2<T>;
+
+using Point2Df = Vec2<float32>;
+using Point2Dd = Vec2<float64>;
 } // namespace complex
