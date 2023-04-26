@@ -1203,7 +1203,7 @@ public:
   , m_XGridValues(xGridValues)
   , m_YGridValues(yGridValues)
   , m_ZGridValues(zGridValues)
-  , m_HalfSpacing({imageGeoSpacing[0] * 0.5f, imageGeoSpacing[1] * 0.5f, imageGeoSpacing[2] * 0.5f})
+  , m_HalfSpacing(FloatVec3{imageGeoSpacing[0] * 0.5f, imageGeoSpacing[1] * 0.5f, imageGeoSpacing[2] * 0.5f})
   {
   }
 
