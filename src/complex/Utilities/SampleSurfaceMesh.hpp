@@ -22,7 +22,7 @@ struct COMPLEX_EXPORT SampleSurfaceMeshInputValues
   VectorFloat32Parameter::ValueType Uncertainty;
   DataPath DataContainerName;
   DataPath CellAttributeMatrixName;
-  DataPath FeatureIdsArrayName;
+  DataPath FeatureIdsArrayPath; // Make sure it's been initialized with zeroes
 };
 
 class COMPLEX_EXPORT SampleSurfaceMesh
@@ -41,7 +41,7 @@ public:
    * @param gridGeom
    * @return
    */
-  Result<> execute();
+  Result<> execute(SampleSurfaceMeshInputValues* inputValues);
 
   void updateProgress(const std::string& progMessage);
   void sendThreadSafeProgressMessage(usize featureId, size_t numCompleted, size_t totalFeatures);

@@ -19,8 +19,8 @@ namespace
 class SampleSurfaceMeshImplByPoints
 {
 public:
-  SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const Int32NeighborList& faceIds, VertexGeom::Pointer faceBBs, VertexGeom::Pointer points, usize featureId,
-                                int32_t* polyIds)
+  SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const Int32NeighborList& faceIds, VertexGeom& faceBBs, VertexGeom& points, usize featureId,
+                                Int32Array& polyIds, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
@@ -28,6 +28,7 @@ public:
   , m_Points(points)
   , m_FeatureId(featureId)
   , m_PolyIds(polyIds)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   virtual ~SampleSurfaceMeshImplByPoints() = default;
@@ -80,9 +81,9 @@ private:
   SampleSurfaceMesh* m_Filter = nullptr;
   const TriangleGeom& m_Faces;
   const Int32NeighborList& m_FaceIds;
-  VertexGeom::Pointer m_FaceBBs;
-  VertexGeom::Pointer m_Points;
-  Int32Array& m_PolyIds = nullptr;
+  VertexGeom& m_FaceBBs;
+  VertexGeom& m_Points;
+  Int32Array& m_PolyIds;
   usize m_FeatureId = 0;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -95,13 +96,14 @@ public:
   SampleSurfaceMeshImpl(const SampleSurfaceMeshImpl&) = default;     // Copy Constructor Default Implemented
   SampleSurfaceMeshImpl(SampleSurfaceMeshImpl&&) noexcept = default; // Move Constructor Default Implemented
 
-  SampleSurfaceMeshImpl(SampleSurfaceMesh* filter, TriangleGeom& faces, Int32Int32DynamicListArray::Pointer faceIds, VertexGeom::Pointer faceBBs, VertexGeom::Pointer points, Int32Array& polyIds)
+  SampleSurfaceMeshImpl(SampleSurfaceMesh* filter, TriangleGeom& faces, Int32Int32DynamicListArray& faceIds, VertexGeom& faceBBs, VertexGeom& points, Int32Array& polyIds, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
   , m_FaceBBs(faceBBs)
   , m_Points(points)
   , m_PolyIds(polyIds)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -112,22 +114,22 @@ public:
 
   void checkPoints(usize start, usize end) const
   {
-    for(size_t iter = start; iter < end; iter++)
+    for(usize iter = start; iter < end; iter++)
     {
       float radius = 0.0f;
       float distToBoundary = 0.0f;
-      int64_t numPoints = m_Points->getNumberOfVertices();\
+      usize numPoints = m_Points.getNumberOfVertices();\
       std::pair<Point3D<float>, Point3D<float>> boundingBoxPoints; //structure Pair<lower left, upper right>
       std::array<float, 3> lowerLeft = {0.0F, 0.0F, 0.0F};
       std::array<float, 3> upperRight = {0.0F, 0.0F, 0.0F};
       float* point = nullptr;
 
       // find bounding box for current feature
-      GeometryMath::FindBoundingBoxOfFaces(m_Faces.get(), m_FaceIds->getElementList(iter), lowerLeft.data(), upperRight.data());
+      GeometryMath::FindBoundingBoxOfFaces(m_Faces, m_FaceIds->getElementList(iter), lowerLeft.data(), upperRight.data());
       radius = GeometryMath::FindDistanceBetweenPoints(boundingBoxPoints.first, boundingBoxPoints.second);
 
       // check points in vertex array to see if they are in the bounding box of the feature
-      for(int64_t i = 0; i < numPoints; i++)
+      for(usize i = 0; i < numPoints; i++)
       {
         // Check for the filter being cancelled.
         if(m_ShouldCancel)
@@ -156,10 +158,10 @@ public:
 private:
   SampleSurfaceMesh* m_Filter = nullptr;
   TriangleGeom& m_Faces;
-  Int32Int32DynamicListArray::Pointer m_FaceIds;
-  VertexGeom::Pointer m_FaceBBs;
-  VertexGeom::Pointer m_Points;
-  Int32Array& m_PolyIds = nullptr;
+  Int32Int32DynamicListArray& m_FaceIds;
+  VertexGeom& m_FaceBBs;
+  VertexGeom& m_Points;
+  Int32Array& m_PolyIds;
   const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace
@@ -219,11 +221,8 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
   usize numFeatures = maxFeatureId + 1;
 
   // create a dynamic list array to hold face lists
-  Int32Int32DynamicListArray::Pointer faceLists = Int32Int32DynamicListArray::New();
+  Int32Int32DynamicListArray faceLists = Int32Int32DynamicListArray::New();
   std::vector<int32> linkCount(numFeatures, 0);
-
-  // fill out lists with number of references to cells
-  Int32Array linkLoc = Int32Array::CreateArray(numFaces, std::string("_INTERNAL_USE_ONLY_cell refs"), true)->initializeWithZeros();
 
   updateProgress("Counting number of triangle faces per feature ...");
 
@@ -245,7 +244,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
   // Check for user canceled flag.
   if(m_ShouldCancel)
   {
-    return;
+    return {};
   }
 
   // now allocate storage for the faces
@@ -253,15 +252,12 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
 
   updateProgress("Allocating triangle faces per feature ...");
 
-  // create array to hold bounding vertices for each face
-  Float32Array llPtr = Float32Array::CreateArray(3, std::string("_INTERNAL_USE_ONLY_Lower_Left"), true);
-  Float32Array urPtr = Float32Array::CreateArray(3, std::string("_INTERNAL_USE_ONLY_Upper_Right"), true);
-  float* ll = llPtr->getPointer(0);
-  float* ur = urPtr->getPointer(0);
-  VertexGeom::Pointer faceBBs = VertexGeom::CreateGeometry(2 * numFaces, "_INTERNAL_USE_ONLY_faceBBs");
+  // fill out lists with number of references to cells
+  std::vector<int32> linkLoc(numFaces, 0);
 
+  std::vector<BoundingBox3Df> faceBBs;
   // traverse data again to get the faces belonging to each feature
-  for(int64_t i = 0; i < numFaces; i++)
+  for(int32 i = 0; i < numFaces; i++)
   {
     g1 = faceLabelsSM[2 * i];
     g2 = faceLabelsSM[2 * i + 1];
@@ -274,9 +270,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
       faceLists->insertCellReference(g2, (linkLoc[g2])++, i);
     }
     // find bounding box for each face
-    GeometryMath::FindBoundingBoxOfFace(triangleGeom.get(), i, ll, ur);
-    faceBBs->setCoords(2 * i, ll);
-    faceBBs->setCoords(2 * i + 1, ur);
+    faceBBs.emplace_back(GeometryMath::FindBoundingBoxOfFace(triangleGeom, i));
   }
 
   // Check for user canceled flag.
@@ -288,13 +282,16 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
   updateProgress("Vertex Geometry generating sampling points");
 
   // generate the list of sampling points from subclass
-  VertexGeom points = generate_points();
+  VertexGeom points; // Doesn't NEED to be a geom could be though
+  generatePoints(points);
   m_TotalElements = points.getNumberOfVertices();
 
   // create array to hold which polyhedron (feature) each point falls in
-  Int32Array& polyIds = Int32Array::CreateArray(m_TotalElements, std::string("_INTERNAL_USE_ONLY_polyhedronIds"), true)->initializeWithZeros();
+  auto& polyIds = m_DataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath);
 
   updateProgress("Sampling triangle geometry ...");
+
+  ParallelDataAlgorithm dataAlg;
 
   // C++11 RIGHT HERE....
   auto nthreads = static_cast<int32>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
@@ -302,17 +299,15 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
   // otherwise parallelize over the number of triangle points.
   if(numFeatures > nthreads)
   {
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, numFeatures), SampleSurfaceMeshImpl(this, triangleGeom, faceLists, faceBBs, points, polyIds), tbb::auto_partitioner());
-    SampleSurfaceMeshImpl serial(this, triangleGeom, faceLists, faceBBs, points, polyIds);
-    serial.checkPoints(0, numFeatures);
+    dataAlg.setRange(0, numFeatures);
+    dataAlg.execute(SampleSurfaceMeshImpl(this, triangleGeom, faceLists, faceBBs, points, polyIds, m_ShouldCancel));
   }
   else
   {
     for(int featureId = 0; featureId < numFeatures; featureId++)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, m_TotalElements), SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists, faceBBs, points, featureId, polyIds), tbb::auto_partitioner());
-      SampleSurfaceMeshImplByPoints serial(this, triangleGeom, faceLists, faceBBs, points, featureId, polyIds);
-      serial.checkPoints(0, m_TotalElements);
+      dataAlg.setRange(0, m_TotalElements);
+      dataAlg.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists, faceBBs, points, featureId, polyIds, m_ShouldCancel));
     }
   }
 

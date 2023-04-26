@@ -81,6 +81,12 @@ public:
 
   ~BoundingBox() = default;
 
+  BoundingBox(BoundingBox& boundingBox) = default;
+  BoundingBox(BoundingBox&& boundingBox) noexcept = default;
+  BoundingBox(const BoundingBox& boundingBox) = default;
+  BoundingBox(const BoundingBox&& boundingBox) noexcept = default;
+
+
   /**
    * @brief Returns the Min point
    * @return
