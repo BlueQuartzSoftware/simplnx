@@ -1,5 +1,6 @@
 #pragma once
 
+#include "complex/Common/Array.hpp"
 #include "complex/Common/Result.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/AttributeMatrix.hpp"
@@ -1100,6 +1101,8 @@ private:
 /**
  * @brief This class will copy all of the data from the input array of any IArray type to the given destination array of the same IArray using the newToOldIndices list. This class DOES NOT
  * do any bounds checking and assumes that the destination array has already been properly resized to fit all of the data
+ *
+ * WARNING: This method can be very memory intensive for larger geometries. Use this method with caution!
  */
 template <typename T>
 class CopyUsingIndexList
@@ -1180,6 +1183,155 @@ private:
 };
 
 /**
+ * @brief This class will copy all of the data from the RectGrid geometry input array of any IArray type to the given Image geometry destination array of the same IArray type by calculating the mapped
+ * RectGrid geometry index from the Image geometry dimensions/spacing. This class DOES NOT do any bounds checking and assumes that the destination array has already been properly resized to fit all of
+ * the data
+ */
+template <typename T>
+class MapRectGridDataToImageData
+{
+public:
+  MapRectGridDataToImageData(IArray& destCellArray, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims, const std::vector<float32>& imageGeoSpacing,
+                             const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues, const Float32Array* zGridValues)
+  : m_ArrayType(destCellArray.getArrayType())
+  , m_InputCellArray(&inputCellArray)
+  , m_DestCellArray(&destCellArray)
+  , m_Origin(origin)
+  , m_ImageGeomDims(imageGeoDims)
+  , m_ImageGeomSpacing(imageGeoSpacing)
+  , m_RectGridDims(rectGridDims)
+  , m_XGridValues(xGridValues)
+  , m_YGridValues(yGridValues)
+  , m_ZGridValues(zGridValues)
+  , m_HalfSpacing({imageGeoSpacing[0] * 0.5f, imageGeoSpacing[1] * 0.5f, imageGeoSpacing[2] * 0.5f})
+  {
+  }
+
+  ~MapRectGridDataToImageData() = default;
+
+  MapRectGridDataToImageData(const MapRectGridDataToImageData&) = default;
+  MapRectGridDataToImageData(MapRectGridDataToImageData&&) noexcept = default;
+  MapRectGridDataToImageData& operator=(const MapRectGridDataToImageData&) = delete;
+  MapRectGridDataToImageData& operator=(MapRectGridDataToImageData&&) noexcept = delete;
+
+  void operator()() const
+  {
+    usize imageIndex = 0;
+    usize rgZIdxStart = 1;
+    for(usize z = 0; z < m_ImageGeomDims[2]; z++)
+    {
+      float32 zCoord = m_Origin[2] + (z * m_ImageGeomSpacing[2]) + m_HalfSpacing[2];
+      usize zIndex = 0;
+      for(usize rgZIdx = rgZIdxStart; rgZIdx < m_ZGridValues->size(); rgZIdx++)
+      {
+        if(zCoord > m_ZGridValues->at(rgZIdx - 1) && zCoord <= m_ZGridValues->at(rgZIdx))
+        {
+          zIndex = rgZIdx - 1;
+          rgZIdxStart = rgZIdx;
+          break;
+        }
+      }
+
+      usize rgYIdxStart = 1;
+      for(usize y = 0; y < m_ImageGeomDims[1]; y++)
+      {
+        float32 yCoord = m_Origin[1] + (y * m_ImageGeomSpacing[1]) + m_HalfSpacing[1];
+        usize yIndex = 0;
+        for(usize rgYIdx = rgYIdxStart; rgYIdx < m_YGridValues->size(); rgYIdx++)
+        {
+          if(yCoord > m_YGridValues->at(rgYIdx - 1) && yCoord <= m_YGridValues->at(rgYIdx))
+          {
+            yIndex = rgYIdx - 1;
+            rgYIdxStart = rgYIdx;
+            break;
+          }
+        }
+
+        usize rgXIdxStart = 1;
+        for(usize x = 0; x < m_ImageGeomDims[0]; x++)
+        {
+          float32 xCoord = m_Origin[0] + (x * m_ImageGeomSpacing[0]) + m_HalfSpacing[0];
+          usize xIndex = 0;
+          for(usize rgXIdx = rgXIdxStart; rgXIdx < m_XGridValues->size(); rgXIdx++)
+          {
+            if(xCoord > m_XGridValues->at(rgXIdx - 1) && xCoord <= m_XGridValues->at(rgXIdx))
+            {
+              xIndex = rgXIdx - 1;
+              rgXIdxStart = rgXIdx;
+              break;
+            }
+          }
+
+          // Compute the index into the RectGrid Data Array
+          const int64 rectGridIndex = (m_RectGridDims[0] * m_RectGridDims[1] * zIndex) + (m_RectGridDims[0] * yIndex) + xIndex;
+
+          // Use the computed index to copy the data from the RectGrid to the Image Geometry
+          bool copySucceeded = true;
+          if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+          {
+            using NeighborListT = NeighborList<T>;
+            auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+            // Make sure the destination array is allocated AND each tuple list is initialized so we can use the [] operator to copy over the data
+            destArray->setList(imageIndex, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
+            if(rectGridIndex >= 0)
+            {
+              copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, imageIndex, rectGridIndex, 1);
+            }
+          }
+          if(m_ArrayType == IArray::ArrayType::DataArray)
+          {
+            using DataArrayT = DataArray<T>;
+            auto* destArray = dynamic_cast<DataArrayT*>(m_DestCellArray);
+            if(rectGridIndex >= 0)
+            {
+              copySucceeded = CopyData<DataArrayT>(*dynamic_cast<const DataArrayT*>(m_InputCellArray), *destArray, imageIndex, rectGridIndex, 1);
+            }
+            else
+            {
+              destArray->initializeTuple(imageIndex, 0);
+            }
+          }
+          if(m_ArrayType == IArray::ArrayType::StringArray)
+          {
+            auto destArray = *dynamic_cast<StringArray*>(m_DestCellArray);
+            if(rectGridIndex >= 0)
+            {
+              copySucceeded = CopyData<StringArray>(*dynamic_cast<const StringArray*>(m_InputCellArray), destArray, imageIndex, rectGridIndex, 1);
+            }
+            else
+            {
+              destArray[imageIndex] = "";
+            }
+          }
+          if(!copySucceeded)
+          {
+            std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_InputCellArray->getName(), rectGridIndex,
+                                     imageIndex)
+                      << std::endl;
+            break;
+          }
+
+          ++imageIndex;
+        }
+      }
+    }
+  }
+
+private:
+  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+  const IArray* m_InputCellArray = nullptr;
+  IArray* m_DestCellArray = nullptr;
+  const FloatVec3 m_Origin;
+  const SizeVec3 m_ImageGeomDims;
+  const std::vector<float32> m_ImageGeomSpacing;
+  const SizeVec3 m_RectGridDims;
+  const Float32Array* m_XGridValues = nullptr;
+  const Float32Array* m_YGridValues = nullptr;
+  const Float32Array* m_ZGridValues = nullptr;
+  const FloatVec3 m_HalfSpacing;
+};
+
+/**
  * @brief This function will make use of the AppendData class with the bool data type only to append data from the input IArray to the destination IArray at the given tupleOffset. This function DOES
  * NOT do any bounds checking!
  */
@@ -1209,6 +1361,18 @@ inline void RunBoolCopyUsingIndexList(IArray& destCellArray, const IArray& input
 {
   using DataArrayT = DataArray<bool>;
   CopyUsingIndexList<DataArrayT>(*dynamic_cast<DataArrayT*>(&destCellArray), *dynamic_cast<const DataArrayT*>(&inputCellArray), newToOldIndices);
+}
+
+/**
+ * @brief This function will make use of the MapRectGridDataToImageData class with the bool data type only to copy data from the input IArray to the destination IArray using the given index list. This
+ * function DOES NOT do any bounds checking!
+ */
+inline void RunBoolMapRectToImage(IArray& destCellArray, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims, const std::vector<float32>& imageGeoSpacing,
+                                  const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues, const Float32Array* zGridValues)
+{
+  using DataArrayT = DataArray<bool>;
+  MapRectGridDataToImageData<DataArrayT>(*dynamic_cast<DataArrayT*>(&destCellArray), *dynamic_cast<const DataArrayT*>(&inputCellArray), origin, imageGeoDims, imageGeoSpacing, rectGridDims,
+                                         xGridValues, yGridValues, zGridValues);
 }
 
 template <class ParallelRunnerT, class... ArgsT>
@@ -1253,6 +1417,9 @@ void RunParallelCombine(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... 
   ExecuteParallelFunction<CombineArrays, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
 }
 
+/**
+ * WARNING: This method can be very memory intensive for larger geometries. Use this method with caution!
+ */
 template <class ParallelRunnerT, class... ArgsT>
 void RunParallelCopyUsingIndexList(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
 {
@@ -1272,6 +1439,27 @@ void RunParallelCopyUsingIndexList(IArray& destArray, ParallelRunnerT&& runner, 
   }
 
   ExecuteParallelFunction<CopyUsingIndexList, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
+}
+
+template <class ParallelRunnerT, class... ArgsT>
+void RunParallelMapRectToImage(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+{
+  const IArray::ArrayType arrayType = destArray.getArrayType();
+  DataType dataType = DataType::int32;
+  if(arrayType == IArray::ArrayType::NeighborListArray)
+  {
+    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
+  }
+  if(arrayType == IArray::ArrayType::DataArray)
+  {
+    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    if(dataType == DataType::boolean)
+    {
+      RunBoolMapRectToImage(destArray, std::forward<ArgsT>(args)...);
+    }
+  }
+
+  ExecuteParallelFunction<MapRectGridDataToImageData, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, std::forward<ArgsT>(args)...);
 }
 
 } // namespace CopyFromArray

@@ -47,75 +47,10 @@ Result<> ResampleRectGridToImageGeom::operator()()
   const SizeVec3 imageGeomDims = imageGeom.getDimensions();
   const std::vector<float32> max = {xGridValues->back(), yGridValues->back(), zGridValues->back()};
   const std::vector<float32> imageGeomSpacing = {(max[0] - origin[0]) / imageGeomDims[0], (max[1] - origin[1]) / imageGeomDims[1], (max[2] - origin[2]) / imageGeomDims[2]};
-  const FloatVec3 halfSpacing = {imageGeomSpacing[0] * 0.5f, imageGeomSpacing[1] * 0.5f, imageGeomSpacing[2] * 0.5f};
 
   imageGeom.setSpacing(imageGeomSpacing);
   imageGeom.setOrigin(origin);
 
-  usize rgIdxStart = 1;
-  std::vector<usize> xIdx(imageGeomDims[0], 0);
-  for(usize x = 0; x < imageGeomDims[0]; x++)
-  {
-    float32 coord = origin[0] + (x * imageGeomSpacing[0]) + halfSpacing[0];
-    for(usize rgIdx = rgIdxStart; rgIdx < xGridValues->size(); rgIdx++)
-    {
-      if(coord > xGridValues->at(rgIdx - 1) && coord <= xGridValues->at(rgIdx))
-      {
-        xIdx[x] = rgIdx - 1;
-        rgIdxStart = rgIdx;
-        break;
-      }
-    }
-  }
-
-  rgIdxStart = 1;
-  std::vector<usize> yIdx(imageGeomDims[1], 0);
-  for(usize y = 0; y < imageGeomDims[1]; y++)
-  {
-    float32 coord = origin[1] + (y * imageGeomSpacing[1]) + halfSpacing[1];
-    for(usize rgIdx = rgIdxStart; rgIdx < yGridValues->size(); rgIdx++)
-    {
-      if(coord > yGridValues->at(rgIdx - 1) && coord <= yGridValues->at(rgIdx))
-      {
-        yIdx[y] = rgIdx - 1;
-        rgIdxStart = rgIdx;
-        break;
-      }
-    }
-  }
-
-  rgIdxStart = 1;
-  std::vector<usize> zIdx(imageGeomDims[2], 0);
-  for(usize z = 0; z < imageGeomDims[2]; z++)
-  {
-    float32 coord = origin[2] + (z * imageGeomSpacing[2]) + halfSpacing[2];
-    for(usize rgIdx = rgIdxStart; rgIdx < zGridValues->size(); rgIdx++)
-    {
-      if(coord > zGridValues->at(rgIdx - 1) && coord <= zGridValues->at(rgIdx))
-      {
-        zIdx[z] = rgIdx - 1;
-        rgIdxStart = rgIdx;
-        break;
-      }
-    }
-  }
-
-  // Store the mapped XYZ index into the RectGrid data ararys
-  std::vector<int64> newToOldIdxs(imageGeom.getNumberOfCells());
-  usize currIdx = 0;
-  for(const usize z : zIdx)
-  {
-    for(const usize y : yIdx)
-    {
-      for(const usize x : xIdx)
-      {
-        // Compute the index into the RectGrid Data Array
-        const usize idx = (rectGridDims[0] * rectGridDims[1] * z) + (rectGridDims[0] * y) + x;
-        // Compute the index into the new Idx Array
-        newToOldIdxs[currIdx++] = idx;
-      }
-    }
-  }
   if(m_ShouldCancel)
   {
     return {};
@@ -137,7 +72,7 @@ Result<> ResampleRectGridToImageGeom::operator()()
     auto& destDataArray = dynamic_cast<IArray&>(destCellDataAM.at(srcName));
     m_MessageHandler(fmt::format("Resample Rect Grid To Image Geom || Copying Data Array {}", srcName));
 
-    CopyFromArray::RunParallelCopyUsingIndexList(destDataArray, taskRunner, srcArray, newToOldIdxs);
+    CopyFromArray::RunParallelMapRectToImage(destDataArray, taskRunner, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValues, yGridValues, zGridValues);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
