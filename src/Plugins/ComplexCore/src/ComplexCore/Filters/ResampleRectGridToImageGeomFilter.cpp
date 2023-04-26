@@ -173,7 +173,6 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
     }
     else if(arrayType == IArray::ArrayType::StringArray)
     {
-      const auto* srcDataArray = dataStructure.getDataAs<StringArray>(path);
       auto createArrayAction = std::make_unique<CreateStringArrayAction>(dims, destPath);
       resultOutputActions.value().actions.push_back(std::move(createArrayAction));
     }
