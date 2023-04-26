@@ -29,7 +29,7 @@
     {
       "args": {
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/ConfidenceIndex.csv",
+        "input_file": "Data/ASCIIData/ConfidenceIndex.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
         "n_tuples": [
@@ -48,7 +48,7 @@
     {
       "args": {
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/FeatureIds.csv",
+        "input_file": "Data/ASCIIData/FeatureIds.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
         "n_tuples": [
@@ -67,7 +67,7 @@
     {
       "args": {
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/ImageQuality.csv",
+        "input_file": "Data/ASCIIData/ImageQuality.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
         "n_tuples": [
@@ -86,7 +86,7 @@
     {
       "args": {
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/IPFColor.csv",
+        "input_file": "Data/ASCIIData/IPFColor.csv",
         "n_comp": 3,
         "n_skip_lines": 0,
         "n_tuples": [

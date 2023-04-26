@@ -32,7 +32,7 @@
           ],
           "Header Line": 1,
           "Header Mode": 0,
-          "Input File Path": "Data/ASCII_Data/RectilinearGrid.csv",
+          "Input File Path": "Data/ASCIIData/RectilinearGrid.csv",
           "Number of Lines": 15,
           "Semicolon As Delimiter": false,
           "Space As Delimiter": false,
@@ -94,7 +94,7 @@
         "advanced_options": false,
         "data_format": "",
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/ConfidenceIndex.csv",
+        "input_file": "Data/ASCIIData/ConfidenceIndex.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
         "n_tuples": [
@@ -117,7 +117,7 @@
         "advanced_options": false,
         "data_format": "",
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/ImageQuality.csv",
+        "input_file": "Data/ASCIIData/ImageQuality.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
         "n_tuples": [
@@ -140,7 +140,7 @@
         "advanced_options": false,
         "data_format": "",
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/SEM Signal.csv",
+        "input_file": "Data/ASCIIData/SEM Signal.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
         "n_tuples": [
@@ -163,7 +163,7 @@
         "advanced_options": false,
         "data_format": "",
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/Fit.csv",
+        "input_file": "Data/ASCIIData/Fit.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
         "n_tuples": [
@@ -186,7 +186,7 @@
         "advanced_options": false,
         "data_format": "",
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/EulerAngles.csv",
+        "input_file": "Data/ASCIIData/EulerAngles.csv",
         "n_comp": 3,
         "n_skip_lines": 0,
         "n_tuples": [
@@ -209,7 +209,7 @@
         "advanced_options": false,
         "data_format": "",
         "delimiter_choice": 0,
-        "input_file": "Data/ASCII_Data/Phases.csv",
+        "input_file": "Data/ASCIIData/Phases.csv",
         "n_comp": 1,
         "n_skip_lines": 0,
         "n_tuples": [

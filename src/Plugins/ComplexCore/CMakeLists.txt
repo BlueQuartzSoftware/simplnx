@@ -328,7 +328,7 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # -----------------------------------------------------------------------
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 									 ARCHIVE_NAME ASCIIData.tar.gz
-									 SHA512 b3499fd1e16cfbd3ca9a7e6e0c5f7f6142f208269473eadadd7c4b5b2bf16288c223baddcd2db56ee6797c2ebec4aa0c23449cc60343af1c69a8174c4e72df93
+									 SHA512 70388864301ca1ea7fce7b1666d3abf682eee68c7d8b7a9bf532df7aff11e7ea9de7dc2dc80e33f0e363cbad023b663bff97df4be362f0312d311e9d5bedf370
 									 INSTALL
 									 COPY_DATA)
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}

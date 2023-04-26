@@ -2,17 +2,17 @@
 # Test Plan
 
 Input Files:
-DREAM3D_Data/TestFiles/ASCII_Data/FeatureIds.csv (int32, 1 component)
-DREAM3D_Data/TestFiles/ASCII_Data/Quats.csv (float32, 4 component)
-DREAM3D_Data/TestFiles/ASCII_Data/Phases.csv (int32, 1 component)
+DREAM3D_Data/TestFiles/ASCIIData/FeatureIds.csv (int32, 1 component)
+DREAM3D_Data/TestFiles/ASCIIData/Quats.csv (float32, 4 component)
+DREAM3D_Data/TestFiles/ASCIIData/Phases.csv (int32, 1 component)
 
 Output DataArrays:
 AvgEulerAngles  (float32, 3 component)
 AvgQuats  (float32, 4 component)
 
 Comparison Files:
-DREAM3D_Data/TestFiles/ASCII_Data/AvgEulerAngles.csv
-DREAM3D_Data/TestFiles/ASCII_Data/AvgQuats.csv
+DREAM3D_Data/TestFiles/ASCIIData/AvgEulerAngles.csv
+DREAM3D_Data/TestFiles/ASCIIData/AvgQuats.csv
 
 You will need to create a UInt32 DataArray with 2 values in it: [ 999, 1 ]. This will
 be the input 'k_CrystalStructuresArrayPath_Key' path and data.
@@ -65,7 +65,7 @@ void runImportTextFilter(const std::string k_InputFileName, complex::NumericType
 
   Arguments args;
   args.insertOrAssign(FindAvgOrientationsTest::k_InputFileKey,
-                      std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/ASCII_Data/{}.csv", unit_test::k_TestFilesDir, k_InputFileName))));
+                      std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/ASCIIData/{}.csv", unit_test::k_TestFilesDir, k_InputFileName))));
   args.insertOrAssign(FindAvgOrientationsTest::k_ScalarTypeKey, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
   args.insertOrAssign(FindAvgOrientationsTest::k_NTuplesKey, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NumTuples)}}));
   args.insertOrAssign(FindAvgOrientationsTest::k_NCompKey, std::make_any<uint64>(k_NumComponents));
