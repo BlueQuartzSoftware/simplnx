@@ -4,6 +4,8 @@
 
 #include "complex/Common/Array.hpp"
 
+#include <nonstd/span.hpp>
+
 namespace complex
 {
 /**
@@ -85,7 +87,7 @@ public:
    * respectively
    * @param arr
    */
-  explicit BoundingBox(const Pointer arr)
+  explicit BoundingBox(nonstd::span<ValueType> arr)
   {
     if(arr->size() == 6)
     {
