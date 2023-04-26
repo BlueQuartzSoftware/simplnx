@@ -467,6 +467,26 @@ public:
   }
 
   /**
+   * @brief Multiples this Vec2 with another Vec2 using element wise multiplication and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 elemMultiply(const Vec2& v) const
+  {
+    return Vec2((*this)[0] * v.x, (*this)[1] * v.y);
+  }
+
+  /**
+   * @brief Divides this Vec2 with another Vec2 using element wise multiplication and returns a new instance
+   * @param Vec2
+   * @return new Vec2 instance with the result
+   */
+  inline Vec2 elemDivide(const Vec2& v) const
+  {
+    return Vec2((*this)[0] / v.x, (*this)[1] / v.y);
+  }
+
+  /**
    * @brief Adds this Vec2 to another Vec2 and returns a new instance
    * @param Vec2
    * @return new Vec2 instance with the result
@@ -503,15 +523,6 @@ public:
     return Vec2((*this)[0] * r, (*this)[1] * r);
   }
   /**
-   * @brief Multiples this Vec2 with another Vec2 using element wise multiplication and returns a new instance
-   * @param Vec2
-   * @return new Vec2 instance with the result
-   */
-  inline Vec2 operator*(const Vec2& v) const
-  {
-    return Vec2((*this)[0] * v.x, (*this)[1] * v.y);
-  }
-  /**
    * @brief Divides this Vec2 by a scalar value and returns a new instance
    * @param Vec2
    * @return new Vec2 instance with the result
@@ -519,15 +530,6 @@ public:
   inline Vec2 operator/(const T r) const
   {
     return Vec2((*this)[0] / r, (*this)[1] / r);
-  }
-  /**
-   * @brief Divides this Vec2 with another Vec2 using element wise multiplication and returns a new instance
-   * @param Vec2
-   * @return new Vec2 instance with the result
-   */
-  inline Vec2 operator/(const Vec2& v) const
-  {
-    return Vec2((*this)[0] / v.x, (*this)[1] / v.y);
   }
   /**
    * @brief Divides this Vec2 with another Vec2 using element wise division. Performs in-place division
@@ -790,6 +792,26 @@ public:
   }
 
   /**
+   * @brief Multiples this Vec3 with another Vec3 using element wise multiplication and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 elemMultiply(const Vec3& v) const
+  {
+    return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
+  }
+
+  /**
+   * @brief Divides this Vec3 with another Vec3 using element wise multiplication and returns a new instance
+   * @param Vec3
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 elemDivide(const Vec3& v) const
+  {
+    return Vec3((*this)[0] / v.x, (*this)[1] / v.y, (*this)[2] / v.z);
+  }
+
+  /**
    * @brief Adds this Vec3 to another Vect3 and returns a new instance
    * @param Vec3
    * @return new Vec3 instance with the result
@@ -826,15 +848,6 @@ public:
     return Vec3((*this)[0] * r, (*this)[1] * r, (*this)[2] * r);
   }
   /**
-   * @brief Multiples this Vec3 with another Vec3 using element wise multiplication and returns a new instance
-   * @param Vec3
-   * @return new Vec3 instance with the result
-   */
-  inline Vec3 operator*(const Vec3& v) const
-  {
-    return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
-  }
-  /**
    * @brief Divides this Vec3 by a scalar value and returns a new instance
    * @param Vec3
    * @return new Vec3 instance with the result
@@ -842,15 +855,6 @@ public:
   inline Vec3 operator/(const T r) const
   {
     return Vec3((*this)[0] / r, (*this)[1] / r, (*this)[2] / r);
-  }
-  /**
-   * @brief Divides this Vec3 with another Vec3 using element wise multiplication and returns a new instance
-   * @param Vec3
-   * @return new Vec3 instance with the result
-   */
-  inline Vec3 operator/(const Vec3& v) const
-  {
-    return Vec3((*this)[0] / v.x, (*this)[1] / v.y, (*this)[2] / v.z);
   }
   /**
    * @brief Divides this Vec3 with another Vec3 using element wise division. Performs in-place division
