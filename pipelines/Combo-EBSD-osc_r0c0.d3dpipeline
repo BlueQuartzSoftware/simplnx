@@ -215,6 +215,20 @@
     },
     {
       "args": {
+        "c_axis_locations_array_name": "CAxisLocations",
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "quats_array_path": "DataContainer/CellData/Quats"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindCAxisLocationsFilter",
+        "uuid": "a51c257a-ddc1-499a-9b21-f2d25a19d098"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
         "rgb_array_path": "DataContainer/CellData/Feature Ids (Color)",
         "selected_data_array_path": "DataContainer/CellData/FeatureIds",
         "selected_preset": {
