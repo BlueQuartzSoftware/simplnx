@@ -94,6 +94,7 @@ set(FilterList
   RenameDataObject
   ReplaceElementAttributesWithNeighborValuesFilter
   ResampleImageGeomFilter
+  ResampleRectGridToImageGeomFilter
   RobustAutomaticThreshold
   RotateSampleRefFrameFilter
   ScalarSegmentFeaturesFilter
@@ -158,6 +159,7 @@ set(AlgorithmList
   RemoveFlaggedFeatures
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
+  ResampleRectGridToImageGeom
   ScalarSegmentFeatures
   SharedFeatureFace
   SplitAttributeArray
@@ -325,8 +327,8 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
-									 ARCHIVE_NAME ASCII_Data.tar.gz
-									 SHA512 4696b919510aa400b9de6c72d0abe66e7c8be2a4effd350bfd07c4fc24d25ccb45c22e7aca5ad162d88db3e04d700b86f7d1d7e954db90ef00b31b5b46955ed4
+									 ARCHIVE_NAME ASCIIData.tar.gz
+									 SHA512 70388864301ca1ea7fce7b1666d3abf682eee68c7d8b7a9bf532df7aff11e7ea9de7dc2dc80e33f0e363cbad023b663bff97df4be362f0312d311e9d5bedf370
 									 INSTALL
 									 COPY_DATA)
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}

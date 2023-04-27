@@ -340,6 +340,42 @@ const std::vector<typename NeighborList<T>::SharedVectorType>& NeighborList<T>::
   return m_Array;
 }
 
+template <typename T>
+typename NeighborList<T>::iterator NeighborList<T>::begin()
+{
+  return m_Array.begin();
+}
+
+template <typename T>
+typename NeighborList<T>::iterator NeighborList<T>::end()
+{
+  return m_Array.end();
+}
+
+template <typename T>
+typename NeighborList<T>::const_iterator NeighborList<T>::begin() const
+{
+  return m_Array.begin();
+}
+
+template <typename T>
+typename NeighborList<T>::const_iterator NeighborList<T>::end() const
+{
+  return m_Array.end();
+}
+
+template <typename T>
+typename NeighborList<T>::const_iterator NeighborList<T>::cbegin() const
+{
+  return m_Array.begin();
+}
+
+template <typename T>
+typename NeighborList<T>::const_iterator NeighborList<T>::cend() const
+{
+  return m_Array.end();
+}
+
 template <>
 DataType COMPLEX_EXPORT NeighborList<int8>::getDataType() const
 {

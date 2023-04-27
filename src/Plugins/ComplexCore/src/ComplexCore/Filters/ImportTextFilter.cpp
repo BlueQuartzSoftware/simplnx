@@ -76,7 +76,7 @@ Parameters ImportTextFilter::parameters() const
   params.insert(std::make_unique<DynamicTableParameter>(k_NTuplesKey, "Data Array Dimensions (Slowest to Fastest Dimensions)",
                                                         "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
 
-  params.linkParameters(k_AdvancedOptions_Key, k_NTuplesKey, false);
+  params.linkParameters(k_AdvancedOptions_Key, k_NTuplesKey, true);
 
   return params;
 }

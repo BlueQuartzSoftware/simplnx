@@ -34,8 +34,8 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
   const std::string k_EulersRotated("EulersRotated");
   const DataPath k_EulersRotatedDataPath({k_EulersRotated});
 
-  std::string inputFile = fmt::format("{}/ASCII_Data/EulerAngles.csv", unit_test::k_TestFilesDir.view());
-  std::string comparisonDataFile = fmt::format("{}/ASCII_Data/EulersRotated.csv", unit_test::k_TestFilesDir.view());
+  std::string inputFile = fmt::format("{}/ASCIIData/EulerAngles.csv", unit_test::k_TestFilesDir.view());
+  std::string comparisonDataFile = fmt::format("{}/ASCIIData/EulersRotated.csv", unit_test::k_TestFilesDir.view());
 
   // These are the argument keys for the Import Text filter. We cannot use the ones from the
   // header file as that would bring in a dependency on the ComplexCorePlugin
