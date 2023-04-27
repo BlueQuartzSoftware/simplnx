@@ -1,10 +1,8 @@
 #include "SampleSurfaceMesh.hpp"
 
 #include "complex/Common/BoundingBox.hpp"
-#include "complex/DataStructure/DynamicListArray.hpp"
 #include "complex/DataStructure/Geometry/RectGridGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
-#include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Utilities/Math/GeometryMath.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
