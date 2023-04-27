@@ -62,6 +62,7 @@
 #include "OrientationAnalysis/Filters/RodriguesConvertorFilter.hpp"
 #include "OrientationAnalysis/Filters/RotateEulerRefFrameFilter.hpp"
 #include "OrientationAnalysis/Filters/WritePoleFigureFilter.hpp"
+#include "OrientationAnalysis/Filters/FindCAxisLocationsFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -133,6 +134,7 @@ namespace complex
     // {complex::Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value(), complex::FilterTraits<FindGBCDMetricBased>::uuid}, // FindGBCDMetricBased
     // {complex::Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value(), complex::FilterTraits<ConvertHexGridToSquareGrid>::uuid}, // ConvertHexGridToSquareGrid
     // {complex::Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value(), complex::FilterTraits<GenerateOrientationMatrixTranspose>::uuid}, // GenerateOrientationMatrixTranspose
+    {complex::Uuid::FromString("68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e").value(), complex::FilterTraits<FindCAxisLocationsFilter>::uuid}, // FindCAxisLocations
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

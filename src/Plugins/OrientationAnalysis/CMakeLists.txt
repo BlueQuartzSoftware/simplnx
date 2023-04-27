@@ -41,6 +41,7 @@ set(FilterList
   ExportGBCDTriangleDataFilter
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
+  FindCAxisLocationsFilter
   FindFeatureReferenceCAxisMisorientationsFilter
   FindFeatureReferenceMisorientationsFilter
   FindGBCDFilter
@@ -74,7 +75,6 @@ set(STUB_FILTERS
   EMsoftSO3Sampler
 
   FindBoundaryStrengths
-  FindCAxisLocations
   FindDistsToCharactGBs
   FindFeatureNeighborCAxisMisalignments
 
@@ -174,6 +174,7 @@ set(filter_algorithms
   ExportGBCDTriangleData
   FindAvgCAxes
   FindAvgOrientations
+  FindCAxisLocations
   FindFeatureReferenceCAxisMisorientations
   FindFeatureReferenceMisorientations
   FindGBCD
