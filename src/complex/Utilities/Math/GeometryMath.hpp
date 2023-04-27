@@ -6,6 +6,7 @@
 #include "complex/Common/Ray.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/complex_export.hpp"
 
 #include <functional>
@@ -209,12 +210,83 @@ inline bool IsPointInBox(const complex::Point3D<T>& point, const complex::Boundi
  * @param distToBoundary
  * @return bool
  */
-// template <typename T>
-// bool IsPointInPolyhedron(complex::TriangleGeom* faces, complex::Int32Int32DynamicListArray::ElementList* faceIds, complex::VertexGeom* vertices, const Point3D<T>& point,
-//                         const complex::BoundingBox<float32>& bounds, float32 radius, float& distToBoundary)
-//{
-// throw std::runtime_error("");
-//}
+template <typename T>
+char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
+                         const complex::BoundingBox3D<T>& bounds, float32 radius)
+{
+  Point3D<T> rayEnd(0,0,0);   /* Ray endpoint. */
+  Point3D<T> intersection(0,0,0);   /* Intersection point; not used. */
+  int k = 0, crossings = 0;
+  char code = '?';
+
+  //* If query point is outside bounding box, finished. */
+  if(!IsPointInBox(point, bounds))
+  {
+    return 'o';
+  }
+
+  usize numFaces = faceIds.size();
+  while(k++ < numFaces)
+  {
+    crossings = 0;
+
+    // Generate and add ray to point to find other end
+    Ray<T> ray = GenerateRandomRay<T>(radius);
+    rayEnd[0] = point[0] + ray[0];
+    rayEnd[1] = point[1] + ray[1];
+    rayEnd[2] = point[2] + ray[2];
+    bool doNextCheck = false;
+
+    for(usize face = 0; face < numFaces; face++)
+    {
+      if(!RayIntersectsBox(point, rayEnd, faceBBs[faceIds[face]]))
+      {
+        code = '0';
+      }
+      else
+      {
+        std::array<Point3D<T>, 3> coords;
+        faces.getFaceCoordinates(faceIds[face], coords);
+        code = RayIntersectsTriangle(rayEnd, coords[0], coords[1], coords[2], intersection);
+      }
+
+      /* If ray is degenerate, then goto outer while to generate another. */
+      if(code == 'p' || code == 'v' || code == 'e' || code == '?')
+      {
+        doNextCheck = true;
+        break;
+      }
+
+      /* If ray hits face at interior point, increment crossings. */
+      else if(code == 'f')
+      {
+        crossings++;
+      }
+
+      /* If query endpoint q sits on a V/E/F, return that code. */
+      else if(code == 'V' || code == 'E' || code == 'F')
+      {
+        return (code);
+      }
+
+    } /* End check each face */
+    if(doNextCheck)
+    {
+      continue;
+    }
+    /* No degeneracies encountered: ray is generic, so finished. */
+    break;
+
+  } /* End while loop */
+
+  /* q strictly interior to polyhedron if an odd number of crossings. */
+  if((crossings % 2) == 1)
+  {
+    return 'i';
+  }
+
+  return 'o';
+}
 
 /**
  * @brief Returns true if a point is within the triangle defined by three
@@ -295,7 +367,11 @@ T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox3D<T
  * @param length
  * @return complex::Ray<float32>
  */
-complex::Ray<float32> COMPLEX_EXPORT GenerateRandomRay(float32 length);
+ template<typename T>
+complex::Ray<T> COMPLEX_EXPORT GenerateRandomRay(float32 length)
+ {
+  throw std::runtime_error("");
+ }
 
 /**
  * @brief Returns the BoundingBox around the specified vertices.

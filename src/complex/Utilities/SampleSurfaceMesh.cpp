@@ -45,7 +45,6 @@ public:
     for(usize iter = start; iter < end; iter++)
     {
       float32 radius = 0.0f;
-      float32 distToBoundary = 0.0f;
       usize numPoints = m_Points.size();
 
       // find bounding box for current feature
@@ -62,9 +61,9 @@ public:
         }
 
         Point3Df point = m_Points[i];
-        if(m_PolyIds[i] == 0 && GeometryMath::IsPointInBox(point, boundingBox))
+        if(m_PolyIds[i] == 0)
         {
-          code = GeometryMath::PointInPolyhedron(m_Faces, m_FaceIds[iter], m_FaceBBs, point, radius, distToBoundary);
+          char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceIds[iter], m_FaceBBs, point, boundingBox, radius);
           if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
           {
             m_PolyIds[i] = iter;
@@ -121,9 +120,9 @@ public:
     for(usize i = 0; i < m_Points.size(); i++)
     {
       Point3Df point = m_Points[i];
-      if(m_PolyIds[i] == 0 && GeometryMath::IsPointInBox(point, boundingBox))
+      if(m_PolyIds[i] == 0)
       {
-        code = GeometryMath::PointInPolyhedron(m_Faces, m_FaceIds[iter], m_FaceBBs, point, radius, distToBoundary);
+        char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceIds, m_FaceBBs, point, boundingBox, radius);
         if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
         {
           m_PolyIds[i] = iter;

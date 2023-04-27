@@ -23,11 +23,6 @@ float32 complex::GeometryMath::AngleBetweenVectors(const complex::ZXZEuler& a, c
   return std::acos(cosAng);
 }
 
-Ray<float32> complex::GeometryMath::GenerateRandomRay(float32 length)
-{
-  throw std::runtime_error("");
-}
-
 BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfVertices(INodeGeometry0D& geom)
 {
   FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
