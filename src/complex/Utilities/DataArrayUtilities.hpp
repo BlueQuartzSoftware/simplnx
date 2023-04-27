@@ -1140,7 +1140,7 @@ public:
           copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
         }
       }
-      if(m_ArrayType == IArray::ArrayType::DataArray)
+      else if(m_ArrayType == IArray::ArrayType::DataArray)
       {
         using DataArrayT = DataArray<T>;
         auto* destArray = dynamic_cast<DataArrayT*>(m_DestCellArray);
@@ -1153,7 +1153,7 @@ public:
           destArray->initializeTuple(i, 0);
         }
       }
-      if(m_ArrayType == IArray::ArrayType::StringArray)
+      else if(m_ArrayType == IArray::ArrayType::StringArray)
       {
         auto destArray = *dynamic_cast<StringArray*>(m_DestCellArray);
         if(oldIndexI >= 0)
@@ -1278,7 +1278,7 @@ public:
               copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, imageIndex, rectGridIndex, 1);
             }
           }
-          if(m_ArrayType == IArray::ArrayType::DataArray)
+          else if(m_ArrayType == IArray::ArrayType::DataArray)
           {
             using DataArrayT = DataArray<T>;
             auto* destArray = dynamic_cast<DataArrayT*>(m_DestCellArray);
@@ -1291,7 +1291,7 @@ public:
               destArray->initializeTuple(imageIndex, 0);
             }
           }
-          if(m_ArrayType == IArray::ArrayType::StringArray)
+          else if(m_ArrayType == IArray::ArrayType::StringArray)
           {
             auto destArray = *dynamic_cast<StringArray*>(m_DestCellArray);
             if(rectGridIndex >= 0)
