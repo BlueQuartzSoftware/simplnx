@@ -21,6 +21,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExportGBCDTriangleDataTest.cpp
   FindAvgCAxesTest.cpp
   FindAvgOrientationsTest.cpp
+  FindCAxisLocationsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
   FindFeatureReferenceMisorientationsTest.cpp
   FindGBCDTest.cpp
@@ -51,7 +52,6 @@ set(DISABLED_TESTS
   CreateLambertSphereTest.cpp
   EMsoftSO3SamplerTest.cpp
   FindBoundaryStrengthsTest.cpp
-  FindCAxisLocationsTest.cpp
   FindDistsToCharactGBsTest.cpp
   FindFeatureNeighborCAxisMisalignmentsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
