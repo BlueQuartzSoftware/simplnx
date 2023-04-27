@@ -108,7 +108,6 @@ public:
 
   void checkPoints() const
   {
-    float32 distToBoundary = 0.0f;
     usize iter = m_FeatureId;
 
     // find bounding box for current feature

@@ -207,16 +207,15 @@ inline bool IsPointInBox(const complex::Point3D<T>& point, const complex::Boundi
  * @param point
  * @param bounds
  * @param radius
- * @param distToBoundary
+ * @param distToBoundary can be added down the line (subtract intersect point from origin)
  * @return bool
  */
 template <typename T>
 char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
-                         const complex::BoundingBox3D<T>& bounds, float32 radius)
+                         const complex::BoundingBox3D<T>& bounds, T radius)
 {
-  Point3D<T> rayEnd(0,0,0);   /* Ray endpoint. */
   Point3D<T> intersection(0,0,0);   /* Intersection point; not used. */
-  int k = 0, crossings = 0;
+  usize iter = 0, crossings = 0;
   char code = '?';
 
   //* If query point is outside bounding box, finished. */
@@ -226,20 +225,17 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
   }
 
   usize numFaces = faceIds.size();
-  while(k++ < numFaces)
+  while(iter++ < numFaces)
   {
     crossings = 0;
 
     // Generate and add ray to point to find other end
-    Ray<T> ray = GenerateRandomRay<T>(radius);
-    rayEnd[0] = point[0] + ray[0];
-    rayEnd[1] = point[1] + ray[1];
-    rayEnd[2] = point[2] + ray[2];
-    bool doNextCheck = false;
+    Ray<T> ray(point, /* Some Random Angle Here */, radius);
 
+    bool doNextCheck = false;
     for(usize face = 0; face < numFaces; face++)
     {
-      if(!RayIntersectsBox(point, rayEnd, faceBBs[faceIds[face]]))
+      if(!DoesRayIntersectBox(ray, faceBBs[faceIds[face]]))
       {
         code = '0';
       }
@@ -247,7 +243,7 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
       {
         std::array<Point3D<T>, 3> coords;
         faces.getFaceCoordinates(faceIds[face], coords);
-        code = RayIntersectsTriangle(rayEnd, coords[0], coords[1], coords[2], intersection);
+        code = RayIntersectsTriangle(ray, coords[0], coords[1], coords[2], intersection);
       }
 
       /* If ray is degenerate, then goto outer while to generate another. */
@@ -317,7 +313,34 @@ bool IsPointInTriangle3D(const complex::Point3D<T>& p0, const complex::Point3D<T
 template <typename T>
 bool IsPointInTriangle2D(const complex::Point2D<T>& p0, const complex::Point2D<T>& p1, const complex::Point2D<T>& p2, const complex::Point2D<T>& point)
 {
-  throw std::runtime_error("");
+  T area0 = FindTriangleArea(point, p0, p1, area0);
+  T area1 = FindTriangleArea(point, p1, p2, area1);
+  T area2 = FindTriangleArea(point, p2, p0, area2);
+
+  if((area0 == 0 && area1 > 0 && area2 > 0) || (area1 == 0 && area0 > 0 && area2 > 0) || (area2 == 0 && area0 > 0 && area1 > 0))
+  {
+    return 'E';
+  }
+  if((area0 == 0 && area1 < 0 && area2 < 0) || (area1 == 0 && area0 < 0 && area2 < 0) || (area2 == 0 && area0 < 0 && area1 < 0))
+  {
+    return 'E';
+  }
+  if((area0 > 0 && area1 > 0 && area2 > 0) || (area0 < 0 && area1 < 0 && area2 < 0))
+  {
+    return 'F';
+  }
+  if((area0 == 0 && area1 == 0 && area2 == 0))
+  {
+    return '?';
+  }
+  else if((area0 == 0 && area1 == 0) || (area0 == 0 && area2 == 0) || (area1 == 0 && area2 == 0))
+  {
+    return 'V';
+  }
+  else
+  {
+    return '0';
+  }
 }
 
 /**
@@ -330,7 +353,36 @@ bool IsPointInTriangle2D(const complex::Point2D<T>& p0, const complex::Point2D<T
 template <typename T>
 bool DoesRayIntersectBox(complex::Ray<T> ray, const complex::BoundingBox3D<T>& bounds)
 {
-  throw std::runtime_error("");
+  auto origin = ray.getOrigin();
+  auto end = ray.getEndPoint();
+  auto min = bounds.getMinPoint();
+  auto max = bounds.getMaxPoint();
+
+  if((min[0] > origin[0]) && (min[0] > end[0]))
+  {
+    return false;
+  }
+  if((max[0] < origin[0]) && (max[0] < end[0]))
+  {
+    return false;
+  }
+  if((min[1] > origin[1]) && (min[1] > end[1]))
+  {
+    return false;
+  }
+  if((max[1] < origin[1]) && (max[1] < end[1]))
+  {
+    return false;
+  }
+  if((min[2] > origin[2]) && (min[2] > end[2]))
+  {
+    return false;
+  }
+  if((max[2] < origin[2]) && (max[2] < end[2]))
+  {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -361,17 +413,6 @@ T GetLengthOfRayInBox(const complex::Ray<T>& ray, const complex::BoundingBox3D<T
 {
   throw std::runtime_error("");
 }
-
-/**
- * @brief Generates a random Ray with the specified length.
- * @param length
- * @return complex::Ray<float32>
- */
- template<typename T>
-complex::Ray<T> COMPLEX_EXPORT GenerateRandomRay(float32 length)
- {
-  throw std::runtime_error("");
- }
 
 /**
  * @brief Returns the BoundingBox around the specified vertices.
@@ -431,9 +472,36 @@ complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFaces(const complex::Tri
  * @return char
  */
 template <typename T>
-uint8 RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, std::vector<Point3D<T>>& inter)
+char RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, std::vector<Point3D<T>>& inter)
 {
-  throw std::runtime_error("");
+  char code = '?';
+
+  code = RayIntersectsPlane(ray, p0, p1, p2);
+
+  if(code == '0')
+  {
+    return '0';
+  }
+  if(code == 'q')
+  {
+    return IsPointInTriangle2D(p0, p1, p2, ray.getOrigin());
+  }
+  if(code == 'r')
+  {
+    return IsPointInTriangle2D(p0, p1, p2, ray.getEndPoint());
+  }
+  if(code == 'p')
+  {
+    return 'p';
+  }
+  else if(code == '1')
+  {
+    return RayCrossesTriangle(p0, p1, p2, ray);
+  }
+  else
+  {
+    return code;
+  }
 }
 
 /**
@@ -449,9 +517,36 @@ uint8 RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, co
  * @return bool
  */
 template <typename T>
-bool RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2, const Ray<T>& ray)
+char RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2, const Ray<T>& ray)
 {
-  throw std::runtime_error("");
+  T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPoint());
+  T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPoint());
+  T vol2 = FindTetrahedronVolume(ray.getOrigin(), p2, p0, ray.getEndPoint());
+
+  if((vol0 > 0 && vol1 > 0 && vol2 > 0) || (vol0 < 0 && vol1 < 0 && vol2 < 0))
+  {
+    return 'f';
+  }
+  if((vol0 > 0 || vol1 > 0 || vol2 > 0) && (vol0 < 0 || vol1 < 0 || vol2 < 0))
+  {
+    return '0';
+  }
+  if((vol0 == 0 && vol1 == 0 && vol2 == 0))
+  {
+    return '?';
+  }
+  if((vol0 == 0 && vol1 == 0) || (vol0 == 0 && vol2 == 0) || (vol1 == 0 && vol2 == 0))
+  {
+    return 'v';
+  }
+  else if(vol0 == 0 || vol1 == 0 || vol2 == 0)
+  {
+    return 'e';
+  }
+  else
+  {
+    return '?';
+  }
 }
 
 /**
@@ -464,9 +559,41 @@ bool RayCrossesTriangle(const Point3D<T>& p0, const Point3D<T>& p1, const Point3
  * @return bool
  */
 template <typename T>
-bool RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
 {
-  throw std::runtime_error("");
+  Vec3<T> normal = FindPlaneNormalVector(p0, p1, p2);
+  T d = FindPlaneCoefficients(p0, normal);
+
+  T numerator = d - ray.getOrigin().dot(normal);
+
+  Point3D<T> rq = ray.getEndPoint() - ray.getOrigin();
+  T denominator = rq.dot(normal);
+
+  if(denominator == 0.0)
+  {
+    if(numerator == 0.0)
+    {
+      return 'p';
+    }
+
+    return '0';
+  }
+
+  T t = numerator / denominator;
+  if(t > 0.0 && t < 1.0)
+  {
+    return '1';
+  }
+  if(numerator == 0.0)
+  {
+    return 'q';
+  }
+  if(numerator == denominator)
+  {
+    return 'r';
+  }
+
+  return '0';
 }
 } // namespace GeometryMath
 } // namespace complex
