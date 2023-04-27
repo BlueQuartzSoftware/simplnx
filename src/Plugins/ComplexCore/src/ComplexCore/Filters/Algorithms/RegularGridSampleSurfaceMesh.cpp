@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/DataStructure/Geometry/RectGridGeom.hpp"
 
 using namespace complex;
 
@@ -25,30 +26,24 @@ const std::atomic_bool& RegularGridSampleSurfaceMesh::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-void RegularGridSampleSurfaceMesh::generatePoints(VertexGeom& vertexGeom)
+void RegularGridSampleSurfaceMesh::generatePoints(std::vector<Point3Df>& points)
 {
-  auto& points = vertexGeom.getVerticesRef();
-  usize numComp = points.getNumberOfComponents();
-
   auto dims = m_InputValues->Dimensions;
   auto spacing = m_InputValues->Spacing;
   auto origin = m_InputValues->Origin;
 
-  usize count = 0;
-  for(int32_t k = 0; k < dims[2]; k++)
+  points.reserve(dims[0] * dims[1] * dims[2]);
+
+  for(int32 k = 0; k < dims[2]; k++)
   {
-    float f_k = static_cast<float>(k) + 0.5f;
-    for(int32_t j = 0; j < dims[1]; j++)
+    float32 f_k = static_cast<float32>(k) + 0.5f;
+    for(int32 j = 0; j < dims[1]; j++)
     {
-      float f_j = static_cast<float>(j) + 0.5f;
-      for(int32_t i = 0; i < dims[0]; i++)
+      float32 f_j = static_cast<float32>(j) + 0.5f;
+      for(int32 i = 0; i < dims[0]; i++)
       {
-        usize index = count * numComp;
-        float f_i = static_cast<float>(i) + 0.5f;
-        points[index] = f_i * spacing[0] + origin[0];
-        points[index + 1] = f_j * spacing[1] + origin[1];
-        points[index + 2] = f_k * spacing[2] + origin[2];
-        count++;
+        float32 f_i = static_cast<float32>(i) + 0.5f;
+        points.emplace_back(f_i * spacing[0] + origin[0], f_j * spacing[1] + origin[1], f_k * spacing[2] + origin[2]);
       }
     }
   }

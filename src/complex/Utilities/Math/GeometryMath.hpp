@@ -310,7 +310,7 @@ complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfVertices(complex::INodeG
  * @param faceId
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGeom& faces, int32 faceId);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFace(const complex::TriangleGeom& faces, int32 faceId);
 
 /**
  * @brief Returns the BoundingBox around the specified face manipulated by the
@@ -320,17 +320,14 @@ complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFace(complex::TriangleGe
  * @param float[3][3]
  * @return complex::BoundingBox<float32>
  */
-complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom* faces, int32 faceId, float32 g[3][3]);
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfRotatedFace(complex::TriangleGeom& faces, int32 faceId, float32 g[3][3]);
 
 /**
  * @param TriangleGeom* faces
  * @param Int32Int32DynamicListArray.ElementList faceIds
  * @return complex::BoundingBox<float32>
  */
-// complex::BoundingBox3Df FindBoundingBoxOfFaces(complex::TriangleGeom* faces, const Int32Int32DynamicListArray.ElementList& faceIds)
-//{
-//   throw std::runtime_error("");
-// }
+complex::BoundingBox3Df COMPLEX_EXPORT FindBoundingBoxOfFaces(const complex::TriangleGeom& faces, const std::vector<int32>& faceIds);
 
 /**
  * @brief Returns the bounding box around the specified faces manipulated by the

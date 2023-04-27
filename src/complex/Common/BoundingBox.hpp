@@ -81,10 +81,10 @@ public:
 
   ~BoundingBox() = default;
 
-  BoundingBox(BoundingBox& boundingBox) = default;
-  BoundingBox(BoundingBox&& boundingBox) noexcept = default;
   BoundingBox(const BoundingBox& boundingBox) = default;
-  BoundingBox(const BoundingBox&& boundingBox) noexcept = default;
+  BoundingBox(BoundingBox&& boundingBox) noexcept = default;
+  BoundingBox& operator=(const BoundingBox& boundingBox) = default;
+  BoundingBox& operator=(BoundingBox&& boundingBox) noexcept = default;
 
 
   /**
@@ -155,20 +155,6 @@ public:
     }
     return valid;
   }
-
-  /**
-   * @brief Copy assignment operator
-   * @param rhs
-   * @return BoundingBox&
-   */
-  BoundingBox& operator=(const BoundingBox& rhs) = default;
-
-  /**
-   * @brief Move assignment operator
-   * @param rhs
-   * @return BoundingBox&
-   */
-  BoundingBox& operator=(BoundingBox&& rhs) noexcept = default;
 
   /**
    * @brief Equality operator

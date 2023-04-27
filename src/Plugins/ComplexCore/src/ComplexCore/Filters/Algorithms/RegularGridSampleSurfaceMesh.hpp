@@ -47,7 +47,7 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  void generatePoints(VertexGeom& vertexGeom) override;
+  void generatePoints(std::vector<float32>& vertexGeom) override;
 
 private:
   DataStructure& m_DataStructure;

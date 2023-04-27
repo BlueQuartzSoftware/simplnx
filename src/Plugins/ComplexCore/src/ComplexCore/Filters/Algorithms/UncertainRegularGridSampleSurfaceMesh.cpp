@@ -28,15 +28,14 @@ const std::atomic_bool& UncertainRegularGridSampleSurfaceMesh::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-void UncertainRegularGridSampleSurfaceMesh::generatePoints(VertexGeom& vertexGeom)
+void UncertainRegularGridSampleSurfaceMesh::generatePoints(std::vector<Point3Df>& points)
 {
-  auto& points = vertexGeom.getVerticesRef();
-  usize numComp = points.getNumberOfComponents();
-
   auto dims = m_InputValues->Dimensions;
   auto spacing = m_InputValues->Spacing;
   auto origin = m_InputValues->Origin;
   auto uncertainty = m_InputValues->Uncertainty;
+
+  points.reserve(dims[0] * dims[1] * dims[2]);
 
   std::random_device randomDevice;        // Will be used to obtain a seed for the random number engine
   std::mt19937 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
@@ -50,7 +49,6 @@ void UncertainRegularGridSampleSurfaceMesh::generatePoints(VertexGeom& vertexGeo
   generator.seed(seed);
   std::uniform_real_distribution<float32> distribution(0.0F, 1.0F);
 
-  usize count = 0;
   for(usize k = 0; k < dims[2]; k++)
   {
     float randomZ = 2.0f * distribution(generator) - 1.0f;
@@ -59,12 +57,10 @@ void UncertainRegularGridSampleSurfaceMesh::generatePoints(VertexGeom& vertexGeo
       float randomY = 2.0f * distribution(generator) - 1.0f;
       for(usize i = 0; i < dims[0]; i++)
       {
-        usize index = count * numComp;
         float randomX = 2.0f * distribution(generator) - 1.0f;
-        points[index] = ((static_cast<float>(i) + 0.5f) * spacing[0]) + (uncertainty[0] * randomX) + origin[0];
-        points[index + 1] = ((static_cast<float>(j) + 0.5f) * spacing[1]) + (uncertainty[1] * randomY) + origin[1];
-        points[index + 2] = ((static_cast<float>(k) + 0.5f) * spacing[2]) + (uncertainty[2] * randomZ) + origin[2];
-        count++;
+        points.emplace_back(((static_cast<float>(i) + 0.5f) * spacing[0]) + (uncertainty[0] * randomX) + origin[0],
+                            ((static_cast<float>(j) + 0.5f) * spacing[1]) + (uncertainty[1] * randomY) + origin[1],
+                            ((static_cast<float>(k) + 0.5f) * spacing[2]) + (uncertainty[2] * randomZ) + origin[2]);
       }
     }
   }

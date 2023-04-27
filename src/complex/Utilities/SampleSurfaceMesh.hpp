@@ -16,12 +16,8 @@ struct COMPLEX_EXPORT SampleSurfaceMeshInputValues
 {
   DataPath TriangleGeometryPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
-  VectorUInt64Parameter::ValueType Dimensions;
-  VectorFloat32Parameter::ValueType Spacing;
-  VectorFloat32Parameter::ValueType Origin;
-  VectorFloat32Parameter::ValueType Uncertainty;
-  DataPath DataContainerName;
-  DataPath CellAttributeMatrixName;
+  DataPath RectGeomPath;
+  DataPath CellAMPath;
   DataPath FeatureIdsArrayPath; // Make sure it's been initialized with zeroes
 };
 
@@ -47,7 +43,7 @@ public:
   void sendThreadSafeProgressMessage(usize featureId, size_t numCompleted, size_t totalFeatures);
 
 protected:
-  virtual void generatePoints(VertexGeom& vertexGeom) = 0;
+  virtual void generatePoints(std::vector<Point3Df>& vertexGeom) = 0;
 
 private:
   DataStructure& m_DataStructure;
@@ -56,7 +52,6 @@ private:
 
   // Thread safe Progress Message
   mutable std::mutex m_ProgressMessage_Mutex;
-  usize m_TotalElements = 0;
   usize m_ProgressCounter = 0;
   usize m_LastProgressInt = 0;
   std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();

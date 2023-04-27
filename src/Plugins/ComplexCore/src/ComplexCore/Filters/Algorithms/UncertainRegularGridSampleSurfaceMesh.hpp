@@ -50,7 +50,7 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  void generatePoints(VertexGeom& vertexGeom) override;
+  void generatePoints(std::vector<Point3Df>& vertexGeom) override;
 
 private:
   DataStructure& m_DataStructure;
