@@ -116,6 +116,7 @@ set(FilterList
   SilhouetteFilter
   SplitAttributeArrayFilter
   StlFileReaderFilter
+  SurfaceNetsFilter
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
@@ -192,6 +193,7 @@ set(AlgorithmList
   Silhouette
   SplitAttributeArray
   StlFileReader
+  SurfaceNets
   TriangleCentroid
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh

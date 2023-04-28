@@ -117,6 +117,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SilhouetteTest.cpp
   SplitAttributeArrayTest.cpp
   StlFileReaderTest.cpp
+  SurfaceNetsTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
