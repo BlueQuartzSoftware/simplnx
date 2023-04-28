@@ -784,14 +784,14 @@ if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalys
   add_custom_target(Copy_PorosityAnalysis_Pipelines ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/PorosityAnalysis.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/PorosityAnalysis.d3dpipeline"
     COMMENT "Copying Example Pipelines into Binary Directory"
-    VERBATEM
+    VERBATIM
   )
   set_target_properties(Copy_PorosityAnalysis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
   				 
   add_custom_target(Copy_CAxis_Pipelines ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${complex_SOURCE_DIR}/pipelines/Combo-EBSD-osc_r0c0.d3dpipeline" "${PIPELINE_EXAMPLES_DEST_DIR}/Combo-EBSD-osc_r0c0.d3dpipeline"
     COMMENT "Copying Example Pipelines into Binary Directory"
-    VERBATEM
+    VERBATIM
   )
   set_target_properties(Copy_CAxis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
   
