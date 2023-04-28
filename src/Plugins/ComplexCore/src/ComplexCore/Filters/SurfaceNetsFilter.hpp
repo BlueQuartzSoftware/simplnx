@@ -108,5 +108,5 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, SurfaceNetsFilter, "13dd00bd-ad49-4e04-95eb-3267952fd6e5");
+COMPLEX_DEF_FILTER_TRAITS(complex, SurfaceNetsFilter, "13ddf0bd-af49-4e0f-95fb-3267952fd6e5");
 /* LEGACY UUID FOR THIS FILTER 07b49e30-3900-5c34-862a-f1fb48bad568 */

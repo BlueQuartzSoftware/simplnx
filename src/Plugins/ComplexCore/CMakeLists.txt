@@ -310,6 +310,18 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/CeilOperator.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.cpp"
+
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.h"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellMap.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellMap.h"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMGeometryGL.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMGeometryGL.h"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMGeometryOBJ.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMGeometryOBJ.h"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMSurfaceNet.cpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMSurfaceNet.h"
+
 )
 
 target_sources(${PLUGIN_NAME}
