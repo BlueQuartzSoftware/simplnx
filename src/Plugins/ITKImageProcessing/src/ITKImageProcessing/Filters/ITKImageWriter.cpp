@@ -316,11 +316,11 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
 
   if(currentData.getStoreType() != IDataStore::StoreType::InMemory)
   {
-    return {MakeErrorResult(-1, "DataArray must be in memory")};
+    return {MakeErrorResult(-19001, "DataArray must be in memory")};
   }
-
   std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
-
+  return cxITKImageWriter::SaveImageData(filePath, *sliceData, imageGeom, indexOffset, dims.getZ(), indexOffset);
+#if 0
   switch(plane)
   {
   case k_XYPlane: {
@@ -392,5 +392,6 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
   }
 
   return {};
+#endif
 }
 } // namespace complex
