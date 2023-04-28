@@ -107,6 +107,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   SharedFeatureFaceTest.cpp
   SplitAttributeArrayTest.cpp
   StlFileReaderTest.cpp
+  SurfaceNetsTest.cpp
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp

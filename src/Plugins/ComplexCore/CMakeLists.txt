@@ -107,6 +107,7 @@ set(FilterList
   SharedFeatureFaceFilter
   SplitAttributeArrayFilter
   StlFileReaderFilter
+  SurfaceNetsFilter
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
@@ -175,6 +176,7 @@ set(AlgorithmList
   SharedFeatureFace
   SplitAttributeArray
   StlFileReader
+  SurfaceNets
   TriangleCentroid
   TupleTransfer
   UncertainRegularGridSampleSurfaceMesh
