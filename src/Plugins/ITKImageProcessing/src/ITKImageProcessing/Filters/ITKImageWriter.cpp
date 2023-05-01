@@ -319,13 +319,17 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
     return {MakeErrorResult(-19001, "DataArray must be in memory")};
   }
   std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
-  return cxITKImageWriter::SaveImageData(filePath, *sliceData, imageGeom, indexOffset, dims.getZ(), indexOffset);
-#if 0
+  
+  DataStructure tempDataStructureBecauseReasons;
   switch(plane)
   {
   case k_XYPlane: {
     usize dA = dims.getX();
     usize dB = dims.getY();
+    ImageGeom* saveImageGeomPtr = ImageGeom::Create(tempDataStructureBecauseReasons, "INTERNAL");
+    saveImageGeomPtr->setDimensions({dA, dB, dims.getZ()});
+    saveImageGeomPtr->setSpacing(imageGeom.getSpacing());
+    saveImageGeomPtr->setOrigin(imageGeom.getOrigin());
 
     for(usize slice = 0; slice < dims.getZ(); ++slice)
     {
@@ -337,11 +341,11 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
           cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, imageGeom, slice + indexOffset, dims.getZ(), indexOffset);
-      if(result.invalid())
-      {
-        return result;
-      }
+    }
+    Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, *saveImageGeomPtr,  indexOffset, dims.getZ(), indexOffset);
+    if(result.invalid())
+    {
+      return result;
     }
     break;
   }
@@ -392,6 +396,6 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
   }
 
   return {};
-#endif
+
 }
 } // namespace complex
