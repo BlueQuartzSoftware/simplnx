@@ -118,7 +118,8 @@ IFilter::PreflightResult FindFeatureNeighborCAxisMisalignmentsFilter::preflightI
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
-  resultOutputActions.warnings().push_back({-1561, "Finding the feature neighbor c-axis mis orientation requires Hexagonal-High 6/mmm type crystal structures. Make sure your data is of this type."});
+  resultOutputActions.warnings().push_back(
+      {-1561, "Finding the feature neighbor c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure your data is of one of these types."});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

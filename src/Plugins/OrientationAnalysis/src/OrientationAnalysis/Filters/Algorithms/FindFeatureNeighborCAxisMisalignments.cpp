@@ -41,21 +41,23 @@ Result<> FindFeatureNeighborCAxisMisalignments::operator()()
   for(usize i = 1; i < crystalStructures.size(); ++i)
   {
     const auto crystalStructureType = crystalStructures[i];
-    const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High;
+    const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low;
     allPhasesHexagonal = allPhasesHexagonal && isHex;
     noPhasesHexagonal = noPhasesHexagonal && !isHex;
   }
 
   if(noPhasesHexagonal)
   {
-    return MakeErrorResult(-1562, "Finding the feature neighbor c-axis mis orientation requires at least one phase to be Hexagonal-High 6/mmm type crystal structures but none were found.");
+    return MakeErrorResult(
+        -1562, "Finding the feature neighbor c-axis mis orientation requires at least one phase to be Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures but none were found.");
   }
 
   Result<> result;
   if(!allPhasesHexagonal)
   {
-    result.warnings().push_back({-1563, "Finding the feature neighbor c-axis mis orientation requires Hexagonal-High 6/mmm type crystal structures. Calculations for non Hexagonal-High phases will be "
-                                        "skipped and a NAN value will be used instead."});
+    result.warnings().push_back(
+        {-1563, "Finding the feature neighbor c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Calculations for non Hexagonal phases will be "
+                "skipped and a NAN value will be used instead."});
   }
 
   auto& neighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborListArrayPath);
@@ -104,7 +106,7 @@ Result<> FindFeatureNeighborCAxisMisalignments::operator()()
       nName = neighborList[i][j];
       phase2 = crystalStructures[featurePhases[nName]];
       hexNeighborListSize = neighborList[i].size();
-      if(phase1 == phase2 && (phase1 == EbsdLib::CrystalStructure::Hexagonal_High))
+      if(phase1 == phase2 && (phase1 == EbsdLib::CrystalStructure::Hexagonal_High || phase1 == EbsdLib::CrystalStructure::Hexagonal_Low))
       {
         const usize quatTupleIndex2 = nName * numQuatComps;
         OrientationF oMatrix2 =
