@@ -795,7 +795,7 @@ if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalys
   )
   set_target_properties(Copy_CAxis_Pipelines PROPERTIES FOLDER ZZ_COPY_FILES)
   
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 f51e9b8d2a0aca23a8eb1fc2d29ef3970ec22e206b100cafbec10ead33d472b09a7d6acc2cdb4faff113dd92832a4e779a13728350a0144f098621d4bf777c90)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293)
   add_custom_target(Copy_CAxis_Data ALL
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/Combo-EBSD-120130.osc_r0c0.ang ${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang
   COMMENT "Copying CAxis Data into Binary Directory"

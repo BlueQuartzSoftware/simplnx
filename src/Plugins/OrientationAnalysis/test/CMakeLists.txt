@@ -22,6 +22,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindAvgCAxesTest.cpp
   FindAvgOrientationsTest.cpp
   FindCAxisLocationsTest.cpp
+  FindFeatureNeighborCAxisMisalignmentsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
   FindFeatureReferenceMisorientationsTest.cpp
   FindGBCDTest.cpp
@@ -53,7 +54,6 @@ set(DISABLED_TESTS
   EMsoftSO3SamplerTest.cpp
   FindBoundaryStrengthsTest.cpp
   FindDistsToCharactGBsTest.cpp
-  FindFeatureNeighborCAxisMisalignmentsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
   FindGBCDMetricBasedTest.cpp
   FindGBPDMetricBasedTest.cpp
@@ -133,7 +133,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d.tar.gz SHA512 6dd8a3412532bdc7481f7781c7087b4477c6a1efbe6b214f997dad30c53c59714a751be522f084b98065fe75100c74df901bb8af2f512ef47344d8f7941575cf)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_h5ebsd.tar.gz SHA512 31e606285ea9e8235dcb5f608fd2b252a5ab1492abd975e5ec33a21d083aa9720fe16fb8f752742c140f40e963d692f1a46256b9d36e96b1b09796c1e4ea3db9)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME so3_cubic_high_ipf_001.tar.gz SHA512 dfe4598cd4406e8b83f244302dc4fe0d4367527835c5ddd6567fe8d8ab3484d5b10ba24a8bb31db269256ec0b5272daa4340eedb5a8b397755541b32dd616b85)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 f51e9b8d2a0aca23a8eb1fc2d29ef3970ec22e206b100cafbec10ead33d472b09a7d6acc2cdb4faff113dd92832a4e779a13728350a0144f098621d4bf777c90)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME PoleFigure_Exemplars.tar.gz SHA512 7c90c69020a4fd4de10da81c1bc87499f5aededca57f3fc1aae3c60aad344cab1bdad2927d957a8d5848aca599028a9ade532dabc784f099bce2de39f61060e9)
 
 endif()

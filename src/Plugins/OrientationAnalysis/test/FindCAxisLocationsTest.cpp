@@ -14,7 +14,7 @@ const std::string k_CAxisLocationsExemplar = "CAxisLocations";
 const std::string k_CAxisLocationsComputed = "NX_CAxisLocations";
 } // namespace
 
-TEST_CASE("OrientationAnalysis::FindCAxisLocationsFilter: Valid Filter Execution", "[OrientationAnalysis][FindCAxisLocationsFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindCAxisLocationsFilter: Valid Filter Execution", "[OrientationAnalysis][FindCAxisLocationsFilter]")
 {
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
@@ -38,7 +38,7 @@ TEST_CASE("OrientationAnalysis::FindCAxisLocationsFilter: Valid Filter Execution
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_CAxisLocationsExemplar), k_CellFeatureDataPath.createChildPath(k_CAxisLocationsComputed),
+  UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellAttributeMatrix.createChildPath(k_CAxisLocationsExemplar), k_CellAttributeMatrix.createChildPath(k_CAxisLocationsComputed),
                                                 UnitTest::EPSILON, false);
 }
 
