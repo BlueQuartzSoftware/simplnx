@@ -329,6 +329,86 @@
         "uuid": "a181ee3e-1678-4133-b9c5-a9dd7bfec62f"
       },
       "isDisabled": false
+    },
+    {
+      "args": {
+        "cell_features_attribute_matrix_path": "DataContainer/CellFeatureData",
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "feature_ids_path": "DataContainer/CellData/FeatureIds",
+        "feature_phases_array_path": "Phases"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindFeaturePhasesFilter",
+        "uuid": "da5bb20e-4a8e-49d9-9434-fbab7bc434fc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_euler_angles_array_path": "AvgEulerAngles",
+        "avg_quats_array_path": "AvgQuats",
+        "cell_feature_attribute_matrix": "DataContainer/CellFeatureData",
+        "cell_feature_ids_array_path": "DataContainer/CellData/FeatureIds",
+        "cell_phases_array_path": "DataContainer/CellData/Phases",
+        "cell_quats_array_path": "DataContainer/CellData/Quats",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindAvgOrientationsFilter",
+        "uuid": "086ddb9a-928f-46ab-bad6-b1498270d71e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "boundary_cells": "BoundaryCells",
+        "cell_feature_arrays": "DataContainer/CellFeatureData",
+        "feature_ids": "DataContainer/CellData/FeatureIds",
+        "image_geometry": "DataContainer",
+        "neighbor_list": "NeighborList",
+        "number_of_neighbors": "NumNeighbors",
+        "shared_surface_area_list": "SharedSurfaceAreaList",
+        "store_boundary_cells": false,
+        "store_surface_features": false,
+        "surface_features": "SurfaceFeatures"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindNeighbors",
+        "uuid": "7177e88c-c3ab-4169-abe9-1fdaff20e598"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "avg_c_axis_misalignments_array_name": "AvgCAxisMisalignments",
+        "avg_quats_array_path": "DataContainer/CellFeatureData/AvgQuats",
+        "c_axis_misalignment_list_array_name": "CAxisMisalignmentList",
+        "crystal_structures_array_path": "DataContainer/CellEnsembleData/CrystalStructures",
+        "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
+        "find_avg_misals": true,
+        "neighbor_list_array_path": "DataContainer/CellFeatureData/NeighborList"
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::FindFeatureNeighborCAxisMisalignmentsFilter",
+        "uuid": "636ee030-9f07-4f16-a4f3-592eff8ef1ee"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": "Data/Output/Examples/Combo-EBSD-osc_r0c0_CAxis.dream3d",
+        "write_xdmf_file": true
+      },
+      "comments": "",
+      "filter": {
+        "name": "complex::ExportDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
     }
   ],
   "workflowParams": []
