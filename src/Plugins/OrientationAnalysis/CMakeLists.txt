@@ -42,6 +42,7 @@ set(FilterList
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
   FindCAxisLocationsFilter
+  FindFeatureNeighborCAxisMisalignmentsFilter
   FindFeatureReferenceCAxisMisorientationsFilter
   FindFeatureReferenceMisorientationsFilter
   FindGBCDFilter
@@ -76,7 +77,6 @@ set(STUB_FILTERS
 
   FindBoundaryStrengths
   FindDistsToCharactGBs
-  FindFeatureNeighborCAxisMisalignments
 
   FindGBCDMetricBased
   FindGBPDMetricBased
@@ -175,6 +175,7 @@ set(filter_algorithms
   FindAvgCAxes
   FindAvgOrientations
   FindCAxisLocations
+  FindFeatureNeighborCAxisMisalignments
   FindFeatureReferenceCAxisMisorientations
   FindFeatureReferenceMisorientations
   FindGBCD
