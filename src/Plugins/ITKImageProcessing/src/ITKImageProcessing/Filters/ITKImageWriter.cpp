@@ -80,7 +80,7 @@ void WriteAs2DStack(itk::Image<PixelT, Dimensions>& image, uint32 z_size, const 
 }
 
 template <class PixelT, uint32 Dimensions>
-Result<> WriteImage(IDataStore& dataStore, const ImageGeom& imageGeom, const fs::path& filePath, uint64 indexOffset)
+Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath, uint64 indexOffset)
 {
   using ImageType = itk::Image<PixelT, Dimensions>;
 
@@ -113,7 +113,7 @@ Result<> WriteImage(IDataStore& dataStore, const ImageGeom& imageGeom, const fs:
 template <class InputT, class OutputT, uint32 Dimensions>
 struct WriteImageFunctor
 {
-  Result<> operator()(IDataStore& dataStore, const ImageGeom& imageGeom, const fs::path& filePath, uint64 indexOffset) const
+  Result<> operator()(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, const fs::path& filePath, uint64 indexOffset) const
   {
     return WriteImage<InputT, Dimensions>(dataStore, imageGeom, filePath, indexOffset);
   }
@@ -184,7 +184,7 @@ void CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, con
   }
 }
 
-Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const ImageGeom& imageGeom, usize slice, usize maxSlice, uint64 indexOffset)
+Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom, usize slice, usize maxSlice, uint64 indexOffset)
 {
   std::stringstream ss;
   ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
@@ -316,20 +316,20 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
 
   if(currentData.getStoreType() != IDataStore::StoreType::InMemory)
   {
-    return {MakeErrorResult(-19001, "DataArray must be in memory")};
+    return {MakeErrorResult(-1, "DataArray must be in memory")};
   }
+
   std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
-  
-  DataStructure tempDataStructureBecauseReasons;
+
+  ITK::ImageGeomData newImageGeom(imageGeom);
+
   switch(plane)
   {
   case k_XYPlane: {
     usize dA = dims.getX();
     usize dB = dims.getY();
-    ImageGeom* saveImageGeomPtr = ImageGeom::Create(tempDataStructureBecauseReasons, "INTERNAL");
-    saveImageGeomPtr->setDimensions({dA, dB, dims.getZ()});
-    saveImageGeomPtr->setSpacing(imageGeom.getSpacing());
-    saveImageGeomPtr->setOrigin(imageGeom.getOrigin());
+
+    newImageGeom.dims = {dims.getX(), dims.getY(), 1};
 
     for(usize slice = 0; slice < dims.getZ(); ++slice)
     {
@@ -341,17 +341,19 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
           cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-    }
-    Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, *saveImageGeomPtr,  indexOffset, dims.getZ(), indexOffset);
-    if(result.invalid())
-    {
-      return result;
+      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getZ(), indexOffset);
+      if(result.invalid())
+      {
+        return result;
+      }
     }
     break;
   }
   case k_XZPlane: {
     usize dA = dims.getZ();
     usize dB = dims.getX();
+
+    newImageGeom.dims = {dims.getX(), dims.getZ(), 1};
 
     for(usize slice = 0; slice < dims.getY(); ++slice)
     {
@@ -363,7 +365,7 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
           cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, imageGeom, slice, dims.getY(), indexOffset);
+      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, newImageGeom, slice, dims.getY(), indexOffset);
       if(result.invalid())
       {
         return result;
@@ -375,6 +377,8 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
     usize dA = dims.getZ();
     usize dB = dims.getY();
 
+    newImageGeom.dims = {dims.getY(), dims.getZ(), 1};
+
     for(usize slice = 0; slice < dims.getX(); ++slice)
     {
       for(usize axisA = 0; axisA < dA; ++axisA)
@@ -385,7 +389,7 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
           cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, imageGeom, slice, dims.getX(), indexOffset);
+      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, newImageGeom, slice, dims.getX(), indexOffset);
       if(result.invalid())
       {
         return result;
@@ -396,6 +400,5 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
   }
 
   return {};
-
 }
 } // namespace complex
