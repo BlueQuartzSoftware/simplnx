@@ -73,7 +73,7 @@ MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
   for(int idxVtx = 0; idxVtx < cellMap->numVertices(); idxVtx++)
   {
     float vertexPositions[12];
-    unsigned short labels[2];
+    int32_t labels[2];
 
     // Back-bottom edge
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexPositions, labels) == true)
@@ -126,7 +126,7 @@ void MMGeometryGL::maxSize(float size[3])
   size[2] = m_size[2];
 }
 
-void MMGeometryGL::makeGLQuad(float* positions, unsigned short tissueLabels[2], float* quadVerts, unsigned int* quadIndices, int idxOffset)
+void MMGeometryGL::makeGLQuad(float* positions, int32_t tissueLabels[2], float* quadVerts, unsigned int* quadIndices, int idxOffset)
 {
   float norm[3];
   computeQuadNormal(positions, norm);

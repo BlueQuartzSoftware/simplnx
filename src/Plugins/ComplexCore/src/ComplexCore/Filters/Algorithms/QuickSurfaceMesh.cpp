@@ -986,6 +986,11 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 
   auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFaceLabelsDataPath);
   linkedGeometryData.addFaceData(m_Inputs->pFaceLabelsDataPath);
+
+  // Remove and then insert a properly sized int8 for the NodeTypes
+  m_DataStructure.removeData(m_Inputs->pNodeTypesDataPath);
+  Result<> nodeTypeResult = complex::CreateArray<int8_t>(m_DataStructure, {nodeCount}, {1}, m_Inputs->pNodeTypesDataPath, IDataAction::Mode::Execute);
+  Int32Array& nodeTypes = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFaceLabelsDataPath);
   linkedGeometryData.addVertexData(m_Inputs->pNodeTypesDataPath);
 
   IGeometry::SharedVertexList& vertex = *(triangleGeom->getVertices());

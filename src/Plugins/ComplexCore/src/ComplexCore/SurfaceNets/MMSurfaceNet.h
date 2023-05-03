@@ -75,7 +75,7 @@ public:
   // Label used internally. Not available as a material index.
   enum ReservedLabel
   {
-    Pading = 65535
+    Pading = -1
   };
 
   MMCellMap* getCellMap() const;

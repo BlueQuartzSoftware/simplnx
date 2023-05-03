@@ -27,10 +27,12 @@ public:
   int numVertices();
   int numEdgeCrossings();
   MMCellFlag::VertexType vertexType(int vertexIndex);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], unsigned short quadLabels[2]);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], unsigned short quadLabels[2]);
+  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2]);
+  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2]);
   void getVertexPosition(int vertexIndex, float position[3]);
 
+  MMCellFlag::VertexType cellVertexType(int cellArrayIndex);
+  
 private:
   // Use of C-style arrays. C-style arrays are used deliberately for cell indices,
   // vertex positions, cells in the cell map, vertices, etc. This was done after
@@ -44,7 +46,7 @@ private:
 
   struct Cell
   {
-    unsigned short label;
+    int32_t label;
     MMCellFlag flag;
     int vertexIndex;
     float vertexOffset[3];
@@ -56,7 +58,7 @@ private:
   };
   int m_numVertices;
   Vertex* m_vertices;
-  void initCell(Cell* cell, unsigned short label);
+  void initCell(Cell* cell, int32_t label);
   void setCellVertices();
 
   // Access cell map
@@ -65,10 +67,9 @@ private:
   Cell* getCell(int cellArrayIndex);
   int cellArrayIndex(int cellIndex[3]);
   int cellArrayIndex(int i, int j, int k);
-  void getCellLabels(Cell* cell, unsigned short labels[8]);
+  void getCellLabels(Cell* cell, int32_t labels[8]);
   bool isEdgeCrossing(int cellArrayIndex, MMCellFlag::Edge edge);
-  MMCellFlag::VertexType cellVertexType(int cellArrayIndex);
-  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, unsigned short quadLabels[2]);
+  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2]);
   void getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12]);
   void getEdgeQuadVtxIndices(int cellIndex[3], MMCellFlag::Edge edge, int quadVtxIndices[4]);
 
