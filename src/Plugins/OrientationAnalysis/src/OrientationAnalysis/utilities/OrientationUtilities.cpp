@@ -54,5 +54,19 @@ std::string CrystalStructureEnumToString(uint32_t crystalStructureType)
   return allLaueNames[crystalStructureType];
 }
 
+Matrix3fR EbsdLibMatrixToEigenMatrix(const EbsdLib::Matrix3X3F& ebsdMatrix)
+{
+  Matrix3fR eigenMatrix;
+  eigenMatrix(0, 0) = ebsdMatrix[0];
+  eigenMatrix(0, 1) = ebsdMatrix[1];
+  eigenMatrix(0, 2) = ebsdMatrix[2];
+  eigenMatrix(1, 0) = ebsdMatrix[3];
+  eigenMatrix(1, 1) = ebsdMatrix[4];
+  eigenMatrix(1, 2) = ebsdMatrix[5];
+  eigenMatrix(2, 0) = ebsdMatrix[6];
+  eigenMatrix(2, 1) = ebsdMatrix[7];
+  eigenMatrix(2, 2) = ebsdMatrix[8];
+  return eigenMatrix;
+}
 } // namespace OrientationUtilities
 } // namespace complex

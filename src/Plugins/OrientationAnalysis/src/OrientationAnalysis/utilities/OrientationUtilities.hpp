@@ -16,5 +16,7 @@ Matrix3fR OrientationMatrixToGMatrix(const Orientation<float>& oMatrix);
 Matrix3fR OrientationMatrixToGMatrixTranspose(const Orientation<float>& oMatrix);
 
 std::string CrystalStructureEnumToString(uint32_t crystalStructureType);
+
+Matrix3fR EbsdLibMatrixToEigenMatrix(const EbsdLib::Matrix3X3F& ebsdMatrix);
 } // namespace OrientationUtilities
 } // namespace complex
