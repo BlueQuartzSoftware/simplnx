@@ -56,7 +56,7 @@ std::vector<int> MMSurfaceNet::labels()
     for(int idxVtx = 0; idxVtx < m_cellMap->numVertices(); idxVtx++)
     {
       int vertexIndices[4];
-      unsigned short quadLabels[2];
+      int32_t quadLabels[2];
 
       // Back-bottom edge
       if(m_cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices, quadLabels) == true)

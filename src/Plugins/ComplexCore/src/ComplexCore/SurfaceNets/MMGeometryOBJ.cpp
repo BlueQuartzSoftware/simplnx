@@ -23,7 +23,7 @@ public:
   , m_labels{0, 0}
   {
   }
-  MMQuad(int vi[4], unsigned short labels[2])
+  MMQuad(int vi[4], int32_t labels[2])
   : m_vertexIndices{vi[0], vi[1], vi[2], vi[3]}
   , m_labels{labels[0], labels[1]}
   {
@@ -52,7 +52,7 @@ public:
 
 private:
   int m_vertexIndices[4];
-  unsigned short m_labels[2];
+  int32_t m_labels[2];
 };
 
 //
@@ -73,7 +73,7 @@ MMGeometryOBJ::MMGeometryOBJ(MMSurfaceNet* surfaceNet)
   for(int idxVtx = 0; idxVtx < cellMap->numVertices(); idxVtx++)
   {
     int vertexIndices[4];
-    unsigned short quadLabels[2];
+    int32_t quadLabels[2];
 
     // Back-bottom edge
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices, quadLabels) == true)
