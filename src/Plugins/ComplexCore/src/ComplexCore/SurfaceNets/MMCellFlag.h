@@ -109,7 +109,7 @@ private:
   const unsigned int m_rightFrontEdgeCrossingBit = 1 << 25;
 
   // The bitflag
-  unsigned int m_bitFlag;
+  unsigned short m_bitFlag;
 
   // Determine face crossing type from the face's vertex labels
   unsigned int faceCrossingTypeAsBits(unsigned short c0, unsigned short c1, unsigned short c2, unsigned short c3);

@@ -37,21 +37,21 @@ public:
     for(int i = 0; i < 4; i++)
       vertexIndices[i] = m_vertexIndices[i];
   }
-  void getLabels(unsigned short labels[2])
+  void getLabels(int32_t labels[2])
   {
     for(int i = 0; i < 2; i++)
       labels[i] = m_labels[i];
   }
-  void setVertexIndices(int vertexIndices[4])
-  {
-    for(int i = 0; i < 4; i++)
-      m_vertexIndices[i] = vertexIndices[i];
-  }
-  void setLabels(unsigned short labels[2])
-  {
-    for(int i = 0; i < 2; i++)
-      m_labels[i] = labels[i];
-  }
+  //  void setVertexIndices(int vertexIndices[4])
+  //  {
+  //    for(int i = 0; i < 4; i++)
+  //      m_vertexIndices[i] = vertexIndices[i];
+  //  }
+  //  void setLabels(int32_t labels[2])
+  //  {
+  //    for(int i = 0; i < 2; i++)
+  //      m_labels[i] = labels[i];
+  //}
 
 private:
   int m_vertexIndices[4];
@@ -221,13 +221,14 @@ Result<> SurfaceNets::operator()()
   std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
   std::array<int32, 2> quadLabels = {0, 0};
   bool isQuadFrontFacing = false;
+  vtxData vData[4];
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
 
     // Back-bottom edge
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
-      vtxData vData[4];
+
       for(int i = 0; i < 4; i++)
       {
         vData[i] = {vertexIndices[i], 00.0f, 0.0f, 0.0f};
@@ -250,13 +251,13 @@ Result<> SurfaceNets::operator()()
     // Left-bottom edge
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
-      vtxData vData[4];
+
       for(int i = 0; i < 4; i++)
       {
         vData[i] = {vertexIndices[i], 00.0f, 0.0f, 0.0f};
       }
 
-      isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+      isQuadFrontFacing = (quadLabels[0] < quadLabels[1]); ///
 
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs.data());
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
@@ -273,7 +274,7 @@ Result<> SurfaceNets::operator()()
     // Left-back edge
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
     {
-      vtxData vData[4];
+
       for(int i = 0; i < 4; i++)
       {
         vData[i] = {vertexIndices[i], 00.0f, 0.0f, 0.0f};
@@ -286,10 +287,13 @@ Result<> SurfaceNets::operator()()
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
       triangleGeom.setFacePointIds(faceIndex, t1);
-      faceLabels[faceIndex] = quadLabels[0];
+      faceLabels[faceIndex * 2] = quadLabels[0];
+      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
+
       triangleGeom.setFacePointIds(faceIndex, t2);
-      faceLabels[faceIndex] = quadLabels[1];
+      faceLabels[faceIndex * 2] = quadLabels[0];
+      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
     }
   }
