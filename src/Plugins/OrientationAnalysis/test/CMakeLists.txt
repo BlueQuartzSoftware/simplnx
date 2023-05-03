@@ -25,6 +25,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindFeatureNeighborCAxisMisalignmentsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
   FindFeatureReferenceMisorientationsTest.cpp
+  FindGBCDMetricBasedTest.cpp
   FindGBCDTest.cpp
   FindKernelAvgMisorientationsTest.cpp
   FindMisorientationsTest.cpp
@@ -55,7 +56,6 @@ set(DISABLED_TESTS
   FindBoundaryStrengthsTest.cpp
   FindDistsToCharactGBsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
-  FindGBCDMetricBasedTest.cpp
   FindGBPDMetricBasedTest.cpp
   FindSlipTransmissionMetricsTest.cpp
   FindTwinBoundariesTest.cpp
@@ -135,6 +135,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME so3_cubic_high_ipf_001.tar.gz SHA512 dfe4598cd4406e8b83f244302dc4fe0d4367527835c5ddd6567fe8d8ab3484d5b10ba24a8bb31db269256ec0b5272daa4340eedb5a8b397755541b32dd616b85)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME PoleFigure_Exemplars.tar.gz SHA512 7c90c69020a4fd4de10da81c1bc87499f5aededca57f3fc1aae3c60aad344cab1bdad2927d957a8d5848aca599028a9ade532dabc784f099bce2de39f61060e9)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_gbcd_metric_based.tar.gz SHA512 df91821900b7fe91db104882dd4258d593c32065fb36fc8a67b4a42bf6d192aa6be5279c7419911d2693c51920bdf835a19f707fdb4a506cb5fe1914f5cce4c1)
 
 endif()
 
