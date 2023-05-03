@@ -71,19 +71,15 @@ Result<> FindFeatureNeighborCAxisMisalignments::operator()()
   const usize numQuatComps = avgQuats.getNumberOfComponents();
 
   std::vector<std::vector<float>> misalignmentLists;
+  misalignmentLists.resize(totalFeatures);
 
   float32 w = 0.0f;
-  Matrix3fR g1T;
-  g1T.fill(0.0f);
-  Matrix3fR g2T;
-  g2T.fill(0.0f);
   Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
   Eigen::Vector3f c2{0.0f, 0.0f, 0.0f};
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
   usize hexNeighborListSize = 0;
   uint32 phase1 = 0, phase2 = 0;
   usize nName = 0;
-  misalignmentLists.resize(totalFeatures);
   for(usize i = 1; i < totalFeatures; i++)
   {
     phase1 = crystalStructures[featurePhases[i]];
@@ -94,8 +90,7 @@ Result<> FindFeatureNeighborCAxisMisalignments::operator()()
 
     // transpose the g matrix so when c-axis is multiplied by it
     // it will give the sample direction that the c-axis is along
-    g1T = OrientationMatrixToGMatrixTranspose(oMatrix1);
-    c1 = g1T * cAxis;
+    c1 = OrientationMatrixToGMatrixTranspose(oMatrix1) * cAxis;
     // normalize so that the dot product can be taken below without
     // dividing by the magnitudes (they would be 1)
     c1.normalize();
@@ -114,8 +109,7 @@ Result<> FindFeatureNeighborCAxisMisalignments::operator()()
 
         // transpose the g matrix so when c-axis is multiplied by it
         // it will give the sample direction that the c-axis is along
-        g2T = OrientationMatrixToGMatrixTranspose(oMatrix2);
-        c2 = g2T * cAxis;
+        c2 = OrientationMatrixToGMatrixTranspose(oMatrix2) * cAxis;
         // normalize so that the dot product can be taken below without
         // dividing by the magnitudes (they would be 1)
         c2.normalize();

@@ -63,8 +63,6 @@ Result<> FindCAxisLocations::operator()()
 
   const usize totalPoints = quaternions.getNumberOfTuples();
 
-  Matrix3fR g1T;
-  g1T.fill(0.0f);
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
 
@@ -79,8 +77,7 @@ Result<> FindCAxisLocations::operator()()
       OrientationF oMatrix = OrientationTransformation::qu2om<QuatF, OrientationF>({quaternions[quatIndex], quaternions[quatIndex + 1], quaternions[quatIndex + 2], quaternions[quatIndex + 3]});
       // transpose the g matrices so when c-axis is multiplied by it
       // it will give the sample direction that the c-axis is along
-      g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
-      c1 = g1T * cAxis;
+      c1 = OrientationMatrixToGMatrixTranspose(oMatrix) * cAxis;
       // normalize so that the magnitude is 1
       c1.normalize();
       if(c1[2] < 0)
