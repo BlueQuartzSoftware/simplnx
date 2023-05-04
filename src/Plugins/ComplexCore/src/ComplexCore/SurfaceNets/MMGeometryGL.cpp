@@ -4,12 +4,13 @@
 //
 // Sarah Frisken, Brigham and Women's Hospital, Boston MA USA
 
-#include "MMGeometryGL.h"
+#include <algorithm>
+
 #include "MMCellFlag.h"
 #include "MMCellMap.h"
+#include "MMGeometryGL.h"
 #include "MMSurfaceNet.h"
 
-#include <algorithm>
 #include <cmath>
 
 MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
@@ -59,10 +60,10 @@ MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
   }
 
   // Make a mapping from each label to a texture coordinate for GL rendering
-  std::vector<int> surfaceLabels = surfaceNet->labels();
-  for(int i = 0; i < surfaceLabels.size(); i++)
+  std::vector<int> labels = surfaceNet->labels();
+  for(int i = 0; i < labels.size(); i++)
   {
-    m_labelToTexCoord.insert(std::make_pair(surfaceLabels[i], float(i)));
+    m_labelToTexCoord.insert(std::make_pair(labels[i], float(i)));
   }
 
   // Construct geometry
@@ -73,12 +74,12 @@ MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
   for(int idxVtx = 0; idxVtx < cellMap->numVertices(); idxVtx++)
   {
     float vertexPositions[12];
-    int32_t labels[2];
+    unsigned short labelsTmp[2];
 
     // Back-bottom edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexPositions, labels) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexPositions, labelsTmp) == true)
     {
-      MMGeometryGL::makeGLQuad(vertexPositions, labels, pVertices, pIndices, m_numVertices);
+      MMGeometryGL::makeGLQuad(vertexPositions, labelsTmp, pVertices, pIndices, m_numVertices);
       pVertices += 4 * 8;
       pIndices += 6;
       m_numVertices += 4;
@@ -86,9 +87,9 @@ MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
     }
 
     // Left-bottom edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexPositions, labels) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexPositions, labelsTmp) == true)
     {
-      MMGeometryGL::makeGLQuad(vertexPositions, labels, pVertices, pIndices, m_numVertices);
+      MMGeometryGL::makeGLQuad(vertexPositions, labelsTmp, pVertices, pIndices, m_numVertices);
       pVertices += 4 * 8;
       pIndices += 6;
       m_numVertices += 4;
@@ -96,9 +97,9 @@ MMGeometryGL::MMGeometryGL(MMSurfaceNet* surfaceNet)
     }
 
     // Left-back edge
-    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexPositions, labels) == true)
+    if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexPositions, labelsTmp) == true)
     {
-      MMGeometryGL::makeGLQuad(vertexPositions, labels, pVertices, pIndices, m_numVertices);
+      MMGeometryGL::makeGLQuad(vertexPositions, labelsTmp, pVertices, pIndices, m_numVertices);
       pVertices += 4 * 8;
       pIndices += 6;
       m_numVertices += 4;
@@ -126,7 +127,7 @@ void MMGeometryGL::maxSize(float size[3])
   size[2] = m_size[2];
 }
 
-void MMGeometryGL::makeGLQuad(float* positions, int32_t tissueLabels[2], float* quadVerts, unsigned int* quadIndices, int idxOffset)
+void MMGeometryGL::makeGLQuad(float* positions, unsigned short tissueLabels[2], float* quadVerts, unsigned int* quadIndices, int idxOffset)
 {
   float norm[3];
   computeQuadNormal(positions, norm);

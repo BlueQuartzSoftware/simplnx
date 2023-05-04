@@ -14,7 +14,7 @@ class MMCellMap
 {
 public:
   // Basic cell map containing tissue-type labels
-  MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3]);
+  MMCellMap(unsigned short* labels, int arraySize[3], float voxelSize[3]);
   ~MMCellMap();
 
   // Relax vertex positions using relaxation attributes or reset to cell centers
@@ -27,11 +27,29 @@ public:
   int numVertices();
   int numEdgeCrossings();
   MMCellFlag::VertexType vertexType(int vertexIndex);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2]);
-  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2]);
+  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], unsigned short quadLabels[2]);
+  bool getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], unsigned short quadLabels[2]);
   void getVertexPosition(int vertexIndex, float position[3]);
 
   MMCellFlag::VertexType cellVertexType(int cellArrayIndex);
+  struct Cell
+  {
+    unsigned short label;
+    MMCellFlag flag;
+    int vertexIndex;
+    float vertexOffset[3];
+  };
+  struct Vertex
+  {
+    int cellIndex[3];
+  };
+
+  Cell* getCell(int cellIndex[3]);
+  Cell* getCell(int i, int j, int k);
+  Cell* getCell(int cellArrayIndex);
+
+  void getVertexCellIndex(int vertexIndex, int cellIndex[3]);
+  int cellArrayIndex(int cellIndex[3]);
   
 private:
   // Use of C-style arrays. C-style arrays are used deliberately for cell indices,
@@ -44,37 +62,23 @@ private:
   int m_arraySize[3];
   float m_voxelSize[3];
 
-  struct Cell
-  {
-    int32_t label;
-    MMCellFlag flag;
-    int vertexIndex;
-    float vertexOffset[3];
-  };
   Cell* m_cellArray;
-  struct Vertex
-  {
-    int cellIndex[3];
-  };
+
   int m_numVertices;
   Vertex* m_vertices;
-  void initCell(Cell* cell, int32_t label);
+  void initCell(Cell* cell, unsigned short label);
   void setCellVertices();
 
   // Access cell map
-  Cell* getCell(int cellIndex[3]);
-  Cell* getCell(int i, int j, int k);
-  Cell* getCell(int cellArrayIndex);
-  int cellArrayIndex(int cellIndex[3]);
+
   int cellArrayIndex(int i, int j, int k);
-  void getCellLabels(Cell* cell, int32_t labels[8]);
+  void getCellLabels(Cell* cell, unsigned short labels[8]);
   bool isEdgeCrossing(int cellArrayIndex, MMCellFlag::Edge edge);
-  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2]);
+  void getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, unsigned short quadLabels[2]);
   void getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12]);
   void getEdgeQuadVtxIndices(int cellIndex[3], MMCellFlag::Edge edge, int quadVtxIndices[4]);
 
   // Access vertex data
-  void getVertexCellIndex(int vertexIndex, int cellIndex[3]);
   void getVertexPosition(int cellIndex[3], float position[3]);
   void getVertexPosition(int i, int j, int k, float position[3]);
   int vertexFaceNeighborVertexIndex(int vertexIndex, MMCellFlag::Face face);

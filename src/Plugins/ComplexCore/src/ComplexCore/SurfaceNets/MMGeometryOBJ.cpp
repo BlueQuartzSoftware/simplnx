@@ -23,7 +23,7 @@ public:
   , m_labels{0, 0}
   {
   }
-  MMQuad(int vi[4], int32_t labels[2])
+  MMQuad(int vi[4], unsigned short labels[2])
   : m_vertexIndices{vi[0], vi[1], vi[2], vi[3]}
   , m_labels{labels[0], labels[1]}
   {
@@ -34,25 +34,25 @@ public:
     for(int i = 0; i < 4; i++)
       vertexIndices[i] = m_vertexIndices[i];
   }
-  void getLabels(int32_t labels[2])
+  void getLabels(unsigned short labels[2])
   {
     for(int i = 0; i < 2; i++)
       labels[i] = m_labels[i];
   }
-  //  void setVertexIndices(int vertexIndices[4])
-  //  {
-  //    for(int i = 0; i < 4; i++)
-  //      m_vertexIndices[i] = vertexIndices[i];
-  //  }
-  //  void setLabels(int32_t labels[2])
-  //  {
-  //    for(int i = 0; i < 2; i++)
-  //      m_labels[i] = labels[i];
-  //  }
+  void setVertexIndices(int vertexIndices[4])
+  {
+    for(int i = 0; i < 4; i++)
+      m_vertexIndices[i] = vertexIndices[i];
+  }
+  void setLabels(unsigned short labels[2])
+  {
+    for(int i = 0; i < 2; i++)
+      m_labels[i] = labels[i];
+  }
 
 private:
   int m_vertexIndices[4];
-  int32_t m_labels[2];
+  unsigned short m_labels[2];
 };
 
 //
@@ -73,7 +73,7 @@ MMGeometryOBJ::MMGeometryOBJ(MMSurfaceNet* surfaceNet)
   for(int idxVtx = 0; idxVtx < cellMap->numVertices(); idxVtx++)
   {
     int vertexIndices[4];
-    int32_t quadLabels[2];
+    unsigned short quadLabels[2];
 
     // Back-bottom edge
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices, quadLabels) == true)
@@ -105,7 +105,6 @@ std::vector<int> MMGeometryOBJ::labels()
 {
   return m_surfaceNet->labels();
 }
-
 MMGeometryOBJ::OBJData MMGeometryOBJ::objData(int label)
 {
   OBJData output;
@@ -114,7 +113,7 @@ MMGeometryOBJ::OBJData MMGeometryOBJ::objData(int label)
   std::map<int, vtxData> vtxDataMap; // key: vertexIndex, value: vtxData for this vertex
   for(std::vector<MMQuad>::iterator itQuad = m_quads.begin(); itQuad != m_quads.end(); itQuad++)
   {
-    int32_t quadLabels[2];
+    unsigned short quadLabels[2];
     itQuad->getLabels(quadLabels);
     if(label == quadLabels[0] || label == quadLabels[1])
     {
@@ -147,7 +146,7 @@ MMGeometryOBJ::OBJData MMGeometryOBJ::objData(int label)
   for(std::vector<MMQuad>::iterator itQuad = m_quads.begin(); itQuad != m_quads.end(); itQuad++)
   {
     int quadVtxIndices[4];
-    int32_t quadLabels[2];
+    unsigned short quadLabels[2];
     itQuad->getLabels(quadLabels);
     itQuad->getVertexIndices(quadVtxIndices);
     if(label == quadLabels[0] || label == quadLabels[1])
