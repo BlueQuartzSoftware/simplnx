@@ -11,36 +11,6 @@ namespace fs = std::filesystem;
 
 namespace complex
 {
-//enum class DataArrayType : uint8
-//{
-//  VERTEX,
-//  CELL
-//};
-//
-//struct DataArrayMetadata
-//{
-//  std::string name;
-//  usize tupleCount;
-//  usize componentCount;
-//  DataArrayType type;
-//};
-//
-//struct FileCache
-//{
-//  std::string inputFile;
-//  std::vector<DataArrayMetadata> dataArrays;
-//  usize vertexAttrMatTupleCount;
-//  usize cellAttrMatTupleCount;
-//  fs::file_time_type timeStamp;
-//
-//  void flush()
-//  {
-//    inputFile.clear();
-//    dataArrays.clear();
-//    timeStamp = fs::file_time_type();
-//  }
-//};
-
 /**
  * @class ImportDeformKeyFileV12Filter
  * @brief This filter will...
@@ -48,8 +18,8 @@ namespace complex
 class COMPLEXCORE_EXPORT ImportDeformKeyFileV12Filter : public IFilter
 {
 public:
-  ImportDeformKeyFileV12Filter() = default;
-  ~ImportDeformKeyFileV12Filter() noexcept override = default;
+  ImportDeformKeyFileV12Filter();
+  ~ImportDeformKeyFileV12Filter() noexcept override;
 
   ImportDeformKeyFileV12Filter(const ImportDeformKeyFileV12Filter&) = delete;
   ImportDeformKeyFileV12Filter(ImportDeformKeyFileV12Filter&&) noexcept = delete;
@@ -59,7 +29,10 @@ public:
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputFilePath_Key = "input_file_path";
-  static inline constexpr StringLiteral k_UseVerboseOutput_Key = "use_verbose_output";
+
+  static inline constexpr StringLiteral k_QuadGeomPath_Key = "quad_geom_path";
+  static inline constexpr StringLiteral k_VertexAMName_Key = "vertex_attribute_matrix_name";
+  static inline constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.
@@ -124,6 +97,9 @@ protected:
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+
+private:
+  int32 m_InstanceId;
 };
 } // namespace complex
 

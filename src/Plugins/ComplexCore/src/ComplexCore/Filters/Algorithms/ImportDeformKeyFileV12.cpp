@@ -174,7 +174,7 @@ void readInterObjectData(std::ifstream& inStream, usize& lineCount)
   }
 }
 
-[[nodiscard]] Result<> readDataArray(std::ifstream& inStream, usize& lineCount, AttributeMatrix& attrMat, const std::string& dataArrayName, usize arrayTupleSize, bool allocate, const std::atomic_bool& shouldCancel)
+[[nodiscard]] Result<> readDataArray(std::ifstream& inStream, usize& lineCount, AttributeMatrix& attrMat, const std::string& dataArrayName, usize arrayTupleSize, bool allocate, const std::atomic_bool& shouldCancel, FileCache& cache, DataArrayType type)
 {
   if(arrayTupleSize == 0)
   {
@@ -187,12 +187,12 @@ void readInterObjectData(std::ifstream& inStream, usize& lineCount)
   // section of data. We are going to make the assumption this is correct and go from here. What is *not* figured out
   // at this point is how many components are in each tuple. That is what this next scoped section is going to figure out.
   // We are going to read the very fist line, strip off the index value that appears (at least it seems that way from the
-  // file) in the first 8 chars of the line. (The file is written by FORTRAN so I'm hoping that they used fixed width
+  // file) in the first 8 chars of the line. (The file is written by FORTRAN, so I'm hoping that they used fixed width
   // fields when writing the data otherwise this whole section is based on a very bad assumption). We then tokenize the
-  // values and read the next line. IFF there are NON SPACE characters in the first 8 bytes of this second line that was
-  // read then we now know that all of the components are on a single line. We count the tokens and use that as the number
+  // values and read the next line. IFF there are NON-SPACE characters in the first 8 bytes of this second line that was
+  // read then we now know that all the components are on a single line. We count the tokens and use that as the number
   // of components, otherwise we add these tokens to the last set of tokens and read another line. This continues until
-  // we find a line that DOES have a NON SPACE character in the first 8 bytes of the line.
+  // we find a line that DOES have a NON-SPACE character in the first 8 bytes of the line.
   {
     std::vector<std::string> tokens;
     std::string line;
@@ -252,15 +252,24 @@ void readInterObjectData(std::ifstream& inStream, usize& lineCount)
       m_UserDefinedArrays.clear();
       for(const auto& userDefinedVariable : m_UserDefinedVariables)
       {
-        data = Float32Array::CreateArray(arrayTupleSize, {1}, userDefinedVariable, allocate);
-        attrMat->insertOrAssign(data);
-        m_UserDefinedArrays.push_back(data);
+        DataArrayMetadata metadata = {};
+        metadata.name = userDefinedVariable;
+        metadata.tupleCount = arrayTupleSize;
+        metadata.componentCount = 1;
+        metadata.type = type;
+
+        cache.dataArrays.emplace_back(std::move(metadata));
       }
     }
     else
     {
-      data = Float32Array::CreateArray(arrayTupleSize, {componentCount}, dataArrayName, allocate);
-      attrMat->insertOrAssign(data);
+      DataArrayMetadata metadata = {};
+      metadata.name = componentCount;
+      metadata.tupleCount = arrayTupleSize;
+      metadata.componentCount = 1;
+      metadata.type = type;
+
+      cache.dataArrays.emplace_back(std::move(metadata));
     }
 
     if(allocate)
@@ -431,10 +440,13 @@ Result<> readQuadGeometry(std::ifstream& inStream, usize& lineCount, IGeometry::
   }
 }
 
-[[nodiscard]] Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStream, usize& lineCount, AttributeMatrix& vertexAttributeMatrix, AttributeMatrix& cellAttributeMatrix, bool allocate)
+[[nodiscard]] Result<> readDataForObject(ImportDeformKeyFileV12* filter, std::ifstream& inStream, usize& lineCount, AttributeMatrix& vertexAttributeMatrix, AttributeMatrix& cellAttributeMatrix, bool allocate, FileCache& cache)
 {
   IGeometry::SharedVertexList& vertex;
   QuadGeom& quadGeom;
+
+  bool quadHit = false;
+  bool vertHit = false;
 
   while(inStream.peek() != EOF)
   {
@@ -474,6 +486,7 @@ Result<> readQuadGeometry(std::ifstream& inStream, usize& lineCount, IGeometry::
     }
     if(word == k_VertexTitle)
     {
+      vertHit = true;
       usize numVerts;
       Result<> result = parse_ull(tokens.at(2), lineCount, numVerts);
       if(result.invalid())
@@ -484,17 +497,23 @@ Result<> readQuadGeometry(std::ifstream& inStream, usize& lineCount, IGeometry::
 
       // Set the number of vertices and then create vertices array and resize vertex attr mat.
       filter->updateProgress(fmt::format("DEFORM Data File: Number of Vertex Points = {}", StringUtilities::number(numVerts)));
-      vertexAttributeMatrix.resizeTuples({numVerts});
-      IGeometry::SharedVertexList vertex = CreateSharedVertexList(static_cast<int64_t>(numVerts), true);
+      cache.vertexAttrMatTupleCount = numVerts;
 
-      auto vertexResult = readVertexCoordinates(filter, inStream, lineCount, vertex, numVerts);
-      if(vertexResult.invalid())
+      if(allocate)
       {
-        return vertexResult;
+        // Grab vertex list from quad geom
+        IGeometry::SharedVertexList vertex = CreateSharedVertexList(static_cast<int64_t>(numVerts), true);
+
+        auto vertexResult = readVertexCoordinates(filter, inStream, lineCount, vertex, numVerts);
+        if(vertexResult.invalid())
+        {
+          return vertexResult;
+        }
       }
     }
     else if(word == k_CellTitle)
     {
+      quadHit = true;
       usize numCells;
       Result<> result = parse_ull(tokens.at(2), lineCount, numCells);
       if(result.invalid())
@@ -505,19 +524,21 @@ Result<> readQuadGeometry(std::ifstream& inStream, usize& lineCount, IGeometry::
 
       // Set the number of cells and then create cells array and resize cell attr mat.
       filter->updateProgress(fmt::format("DEFORM Data File: Number of Quad Cells = {}", StringUtilities::number(numCells)));
-      cellAttributeMatrix.resizeTuples({numCells});
-      QuadGeom quadGeom = QuadGeom::CreateGeometry(static_cast<int64>(numCells), vertex, IGeometry::QuadGeometry, true);
-      quadGeom.setSpatialDimensionality(2);
-      IGeometry::MeshIndexArrayType& quads = quadGeom.getFacesRef();
+      cache.cellAttrMatTupleCount = numCells;
 
-      auto quadResult = readQuadGeometry(inStream, lineCount, quads, numCells, filter->getCancel());
-
-      if(quadResult.invalid())
+      if(allocate)
       {
-        return quadResult;
+        QuadGeom quadGeom = QuadGeom::CreateGeometry(static_cast<int64>(numCells), vertex, IGeometry::QuadGeometry, true);
+        quadGeom.setSpatialDimensionality(2);
+        IGeometry::MeshIndexArrayType& quads = quadGeom.getFacesRef();
+        auto quadResult = readQuadGeometry(inStream, lineCount, quads, numCells, filter->getCancel());
+        if(quadResult.invalid())
+        {
+          return quadResult;
+        }
       }
     }
-    else if(tokens.size() >= 3 && (vertex != SharedVertexList::NullPointer() || quadGeom != QuadGeom::NullPointer()))
+    else if(tokens.size() >= 3 && (vertHit || quadHit))
     {
       // This is most likely the beginning of a data array
       std::string dataArrayName = tokens.at(0);
@@ -530,32 +551,32 @@ Result<> readQuadGeometry(std::ifstream& inStream, usize& lineCount, IGeometry::
       }
 
       Result<> readInResult;
-      if(tupleCount == vertex.getNumberOfTuples())
+      if(tupleCount == cache.vertexAttrMatTupleCount)
       {
         filter->updateProgress(fmt::format("Reading Vertex Data: {}", dataArrayName));
 
-        readInResult = readDataArray(inStream, lineCount, vertexAttributeMatrix, dataArrayName, tupleCount, allocate, filter->getCancel());
+        readInResult = readDataArray(inStream, lineCount, vertexAttributeMatrix, dataArrayName, tupleCount, allocate, filter->getCancel(), cache, DataArrayType::VERTEX);
       }
-      else if(tupleCount == quadGeom.getNumberOfCells())
+      else if(tupleCount == cache.cellAttrMatTupleCount)
       {
         filter->updateProgress(fmt::format("Reading Cell Data: {}", dataArrayName));
 
-        readInResult =readDataArray(inStream, lineCount, cellAttributeMatrix, dataArrayName, tupleCount, allocate, filter->getCancel());
+        readInResult =readDataArray(inStream, lineCount, cellAttributeMatrix, dataArrayName, tupleCount, allocate, filter->getCancel(), cache, DataArrayType::CELL);
       }
-      else if(m_InputValues->verboseOutput)
+      else
       {
         // If verbose, dump the word, number of tuples, and some warning saying that it doesn't have the right number of tuples
         // for either vertex or cell arrays.
 
         // This data is not able to be read.  Display a status message that explains why, based on what information we have available.
-        if(vertex == SharedVertexList::NullPointer() && quadGeom != QuadGeom::NullPointer())
+        if(!vertHit && quadHit)
         {
           std::string msg = fmt::format(
               "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a cell array ({]), and the vertex tuple count has not been read yet.  Skipping...",
               dataArrayName, tupleCount, quadGeom.getNumberOfCells());
           filter->updateProgress(msg);
         }
-        else if(vertex != SharedVertexList::NullPointer() && quadGeom == QuadGeom::NullPointer())
+        else if(vertHit && !quadHit)
         {
           std::string msg = fmt::format(
               "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a vertex array ({}), and the cell tuple count has not been read yet.  Skipping...",
@@ -748,113 +769,20 @@ void ImportDeformKeyFileV12::updateProgress(const std::string& progressMessage)
 }
 
 // -----------------------------------------------------------------------------
-Result<> ImportDeformKeyFileV12::operator()()
+Result<> ImportDeformKeyFileV12::operator()(bool allocate)
 {
+ /*
+  * IF allocate is false DO NOT TOUCH DATA STRUCTURE IN ANY WAY
+  *
+  * If allocate is false then we are here in preflight meaning we
+  * DO NOT have a working DataStructure and that the DataPaths that
+  * have been passed in within inputValues are not valid as they have
+  * not been created.
+  */
+
   std::ifstream inStream(m_InputValues->InputFilePath);
   ///!!!!!! VALIDATE THE STREAM !!!!!!!///
 
   // Read from the file
-  readDEFORMFile(this, inStream, m_DataStructure, vertexAttrMat.get(), cellAttrMat.get(), !getInPreflight());
-  auto userDefinedValues = algorithm.getUserDefinedVariables();
-
-  // Cache the results
-  std::vector<DataArrayMetadata> dataArrays;
-
-  d_ptr->m_Cache.vertexAttrMatTupleCount = vertexAttrMat.getNumberOfTuples();
-  d_ptr->m_Cache.cellAttrMatTupleCount = cellAttrMat.getNumberOfTuples();
-
-  for(const auto& vertexArray : *vertexAttrMat)
-  {
-    if(vertexArray->getName() == "USRNOD")
-    {
-      for(const auto& userDefinedValue : userDefinedValues)
-      {
-        dataArrays.push_back({userDefinedValue, vertexArray->getNumberOfTuples(), static_cast<usize>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
-      }
-    }
-    else
-    {
-      dataArrays.push_back({vertexArray->getName().toStdString(), vertexArray->getNumberOfTuples(), static_cast<usize>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
-    }
-  }
-  for(const auto& cellArray : *cellAttrMat)
-  {
-    dataArrays.push_back({cellArray->getName().toStdString(), cellArray->getNumberOfTuples(), static_cast<usize>(cellArray->getNumberOfComponents()), DataArrayType::CELL});
-  }
-
-  d_ptr->m_Cache.inputFile = getDEFORMInputFile();
-  d_ptr->m_Cache.dataArrays = dataArrays;
-  d_ptr->m_Cache.timeStamp = fs::last_write_time(getDEFORMInputFile());
-
-  // Read from the file if we are executing, the input file has changed, or the input file's time stamp is out of date.
-  // Otherwise, read from the cache
-  if(!getInPreflight() || getDEFORMInputFile().toStdString() != d_ptr->m_Cache.inputFile || d_ptr->m_Cache.timeStamp < fs::last_write_time(getDEFORMInputFile().toStdString()))
-  {
-    // Read from the file
-    SimulationIO::ImportDeformKeyFilev12 algorithm(&inputValues, this);
-    algorithm.readDEFORMFile(dc.get(), vertexAttrMat.get(), cellAttrMat.get(), !getInPreflight());
-    auto userDefinedValues = algorithm.getUserDefinedVariables();
-
-    // Cache the results
-    std::vector<DataArrayMetadata> dataArrays;
-
-    d_ptr->m_Cache.vertexAttrMatTupleCount = vertexAttrMat->getNumberOfTuples();
-    d_ptr->m_Cache.cellAttrMatTupleCount = cellAttrMat->getNumberOfTuples();
-
-    for(const auto& vertexArray : *vertexAttrMat)
-    {
-      if(vertexArray->getName() == "USRNOD")
-      {
-        for(const auto& userDefinedValue : userDefinedValues)
-        {
-          dataArrays.push_back({userDefinedValue, vertexArray->getNumberOfTuples(), static_cast<size_t>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
-        }
-      }
-      else
-      {
-        dataArrays.push_back({vertexArray->getName().toStdString(), vertexArray->getNumberOfTuples(), static_cast<size_t>(vertexArray->getNumberOfComponents()), DataArrayType::VERTEX});
-      }
-    }
-    for(const auto& cellArray : *cellAttrMat)
-    {
-      dataArrays.push_back({cellArray->getName().toStdString(), cellArray->getNumberOfTuples(), static_cast<size_t>(cellArray->getNumberOfComponents()), DataArrayType::CELL});
-    }
-
-    d_ptr->m_Cache.inputFile = getDEFORMInputFile().toStdString();
-    d_ptr->m_Cache.dataArrays = dataArrays;
-    d_ptr->m_Cache.timeStamp = fs::last_write_time(getDEFORMInputFile().toStdString());
-  }
-  else
-  {
-    // Read from the cache
-    setDEFORMInputFile(QString::fromStdString(d_ptr->m_Cache.inputFile));
-
-    std::vector<size_t> tDims = {d_ptr->m_Cache.vertexAttrMatTupleCount};
-    vertexAttrMat->resizeAttributeArrays(tDims);
-
-    tDims = {d_ptr->m_Cache.cellAttrMatTupleCount};
-    cellAttrMat->resizeAttributeArrays(tDims);
-
-    for(const DataArrayMetadata& daMetadata : d_ptr->m_Cache.dataArrays)
-    {
-      std::vector<size_t> cDims(1, static_cast<size_t>(daMetadata.componentCount));
-      FloatArrayType::Pointer data = FloatArrayType::CreateArray(daMetadata.tupleCount, cDims, QString::fromStdString(daMetadata.name), false);
-
-      if(daMetadata.type == DataArrayType::VERTEX)
-      {
-        vertexAttrMat->insertOrAssign(data);
-      }
-      else if(daMetadata.type == DataArrayType::CELL)
-      {
-        cellAttrMat->insertOrAssign(data);
-      }
-      else
-      {
-        QString msg = QString("Unable to determine the type for cached data array \"%1\".  The type must be either vertex or cell.").arg(QString::fromStdString(daMetadata.name));
-        setErrorCondition(-2020, msg);
-      }
-    }
-  }
-
-  return {};
+  return readDEFORMFile(this, inStream, m_DataStructure, vertexAttrMat, cellAttrMat);
 }
