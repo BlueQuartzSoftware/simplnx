@@ -7,7 +7,8 @@
 using namespace complex;
 
 // -----------------------------------------------------------------------------
-RegularGridSampleSurfaceMesh::RegularGridSampleSurfaceMesh(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RegularGridSampleSurfaceMeshInputValues* inputValues)
+RegularGridSampleSurfaceMesh::RegularGridSampleSurfaceMesh(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                           RegularGridSampleSurfaceMeshInputValues* inputValues)
 : SampleSurfaceMesh(dataStructure, shouldCancel, mesgHandler)
 , m_DataStructure(dataStructure)
 , m_InputValues(inputValues)

@@ -116,8 +116,8 @@ BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFace(const TriangleGeom& 
 
 BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFaces(const TriangleGeom& faces, const std::vector<int32>& faceIds)
 {
-  Point3Df ll(0,0,0);
-  Point3Df ur(0,0,0);
+  Point3Df ll(0, 0, 0);
+  Point3Df ur(0, 0, 0);
 
   if(faceIds.empty())
   {

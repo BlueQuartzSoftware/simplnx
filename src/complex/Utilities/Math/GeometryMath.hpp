@@ -2,19 +2,19 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/Common/BoundingBox.hpp"
+#include "complex/Common/Constants.hpp"
 #include "complex/Common/EulerAngle.hpp"
 #include "complex/Common/Ray.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/complex_export.hpp"
-#include "complex/Common/Constants.hpp"
 
+#include <chrono>
 #include <functional>
+#include <random>
 #include <stdexcept>
 #include <vector>
-#include <chrono>
-#include <random>
 
 namespace complex
 {
@@ -539,12 +539,11 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
     return 'o';
   }
 
-  std::random_device randomDevice;        // Will be used to obtain a seed for the random number engine
+  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
   std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
   std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   generator.seed(seed);
   std::uniform_real_distribution<T> distribution(0.0, Constants::k_PiD);
-
 
   usize numFaces = faceIds.size();
   while(iter++ < numFaces)

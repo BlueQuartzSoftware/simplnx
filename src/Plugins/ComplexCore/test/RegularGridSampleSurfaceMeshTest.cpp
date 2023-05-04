@@ -20,21 +20,20 @@
  * and report errors.
  */
 
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/VectorParameter.hpp"
 
-#include "ComplexCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Execution","[ComplexCore][RegularGridSampleSurfaceMeshFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Execution", "[ComplexCore][RegularGridSampleSurfaceMeshFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   RegularGridSampleSurfaceMeshFilter filter;
@@ -47,10 +46,9 @@ TEST_CASE("ComplexCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Executi
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
-//  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-//  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  //  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+  //  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -61,7 +59,7 @@ TEST_CASE("ComplexCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Executi
   REQUIRE(executeResult.result.valid());
 }
 
-//TEST_CASE("ComplexCore::RegularGridSampleSurfaceMeshFilter: InValid Filter Execution")
+// TEST_CASE("ComplexCore::RegularGridSampleSurfaceMeshFilter: InValid Filter Execution")
 //{
 //
-//}
+// }
