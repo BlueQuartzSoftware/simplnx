@@ -86,7 +86,6 @@ public:
   BoundingBox& operator=(const BoundingBox& boundingBox) = default;
   BoundingBox& operator=(BoundingBox&& boundingBox) noexcept = default;
 
-
   /**
    * @brief Returns the Min point
    * @return

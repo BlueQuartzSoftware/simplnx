@@ -135,16 +135,12 @@ public:
   {
     // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
     Vec3<T> localXRotationVec((-std::sin(m_Angle[0]) * std::cos(m_Angle[1]) * std::sin(m_Angle[2])) + (std::cos(m_Angle[0]) * std::cos(m_Angle[2])),
-                              (std::cos(m_Angle[0]) * std::cos(m_Angle[1]) * std::sin(m_Angle[2])) + (std::sin(m_Angle[0]) * std::cos(m_Angle[2])),
-                              std::sin(m_Angle[1]) * std::sin(m_Angle[2]));
+                              (std::cos(m_Angle[0]) * std::cos(m_Angle[1]) * std::sin(m_Angle[2])) + (std::sin(m_Angle[0]) * std::cos(m_Angle[2])), std::sin(m_Angle[1]) * std::sin(m_Angle[2]));
     Vec3<T> localYRotationVec((-std::sin(m_Angle[0]) * std::cos(m_Angle[1]) * std::cos(m_Angle[2])) - (std::cos(m_Angle[0]) * std::cos(m_Angle[2])),
-                        (std::cos(m_Angle[0]) * std::cos(m_Angle[1]) * std::cos(m_Angle[2])) - (std::sin(m_Angle[0]) * std::sin(m_Angle[2])),
-                        std::sin(m_Angle[1]) * std::cos(m_Angle[2]));
-    Vec3<T> localZRotationVec((std::sin(m_Angle[0]) * std::sin(m_Angle[1])),
-                              -std::cos(m_Angle[0]) * std::sin(m_Angle[1]),
-                              std::cos(m_Angle[1]));
+                              (std::cos(m_Angle[0]) * std::cos(m_Angle[1]) * std::cos(m_Angle[2])) - (std::sin(m_Angle[0]) * std::sin(m_Angle[2])), std::sin(m_Angle[1]) * std::cos(m_Angle[2]));
+    Vec3<T> localZRotationVec((std::sin(m_Angle[0]) * std::sin(m_Angle[1])), -std::cos(m_Angle[0]) * std::sin(m_Angle[1]), std::cos(m_Angle[1]));
 
-    return m_Origin + (localXRotationVec * m_Length) +  (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
+    return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
   }
 
   /**
