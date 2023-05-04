@@ -6,7 +6,6 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
-#include "complex/Utilities/Math/MatrixMath.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
@@ -37,8 +36,8 @@ namespace GBCDMetricBased
  */
 struct TriAreaAndNormals
 {
-  TriAreaAndNormals(float64 area, float32 n1x, float32 n1y, float32 n1z, float32 n2x, float32 n2y, float32 n2z)
-  : area(area)
+  TriAreaAndNormals(float64 triArea, float32 n1x, float32 n1y, float32 n1z, float32 n2x, float32 n2y, float32 n2z)
+  : area(triArea)
   , normalGrain1X(n1x)
   , normalGrain1Y(n1y)
   , normalGrain1Z(n1z)

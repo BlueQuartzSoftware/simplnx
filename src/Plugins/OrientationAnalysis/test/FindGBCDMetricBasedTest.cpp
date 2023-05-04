@@ -203,7 +203,7 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: InValid Filter Execut
   {
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
-    args.insertOrAssign(FindGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 0.0f, 17.9f}));
+    args.insertOrAssign(FindGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.0f, 0.0f, 0.0f, 17.9f}));
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
   }
   SECTION("Invalid Number of Sample Points")
