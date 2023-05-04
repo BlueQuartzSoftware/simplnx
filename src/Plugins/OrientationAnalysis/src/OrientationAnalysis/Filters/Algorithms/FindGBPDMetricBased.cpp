@@ -65,16 +65,16 @@ class TrianglesSelector
 public:
   TrianglesSelector(bool excludeTripleLines, const IGeometry::SharedFaceList& triangles, const Int8Array& nodeTypes,
 #ifdef COMPLEX_ENABLE_MULTICORE
-                    tbb::concurrent_vector<TriAreaAndNormals>& m_SelectedTriangles,
+                    tbb::concurrent_vector<TriAreaAndNormals>& selectedTriangles,
 #else
-                    std::vector<TriAreaAndNormals>& m_SelectedTriangles,
+                    std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
                     int32_t phaseOfInterest, const UInt32Array& crystalStructures, const Float32Array& euler, const Int32Array& phases, const Int32Array& faceLabels, const Float64Array& faceNormals,
                     const Float64Array& faceAreas)
   : m_ExcludeTripleLines(excludeTripleLines)
   , m_Triangles(triangles)
   , m_NodeTypes(nodeTypes)
-  , m_SelectedTriangles(m_SelectedTriangles)
+  , m_SelectedTriangles(selectedTriangles)
   , m_PhaseOfInterest(phaseOfInterest)
   , m_EulerAngles(euler)
   , m_Phases(phases)
