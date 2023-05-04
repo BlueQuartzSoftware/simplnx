@@ -47,8 +47,8 @@ TEST_CASE("ComplexCore::RegularGridSampleSurfaceMeshFilter: Valid Filter Executi
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+//  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+//  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
 

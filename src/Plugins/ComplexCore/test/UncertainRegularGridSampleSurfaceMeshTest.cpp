@@ -47,8 +47,8 @@ TEST_CASE("ComplexCore::UncertainRegularGridSampleSurfaceMeshFilter: Valid Filte
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_Uncertainty_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>(3)));
-  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+//  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
+//  args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(UncertainRegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
 

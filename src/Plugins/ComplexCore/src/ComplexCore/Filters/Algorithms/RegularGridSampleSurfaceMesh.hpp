@@ -16,14 +16,12 @@ namespace complex
 {
 struct COMPLEXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
 {
-  DataPath SurfaceMeshFaceLabelsArrayPath;
   VectorInt32Parameter::ValueType Dimensions;
   VectorFloat32Parameter::ValueType Spacing;
   VectorFloat32Parameter::ValueType Origin;
-  ChoicesParameter::ValueType LengthUnit;
-  DataPath DataContainerName;
-  DataPath CellAttributeMatrixName;
-  DataPath FeatureIdsArrayName;
+  DataPath TriangleGeometryPath;
+  DataPath SurfaceMeshFaceLabelsArrayPath;
+  DataPath FeatureIdsArrayPath;
 };
 
 /**
@@ -47,7 +45,7 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  void generatePoints(std::vector<float32>& vertexGeom) override;
+  void generatePoints(std::vector<Point3Df>& points) override;
 
 private:
   DataStructure& m_DataStructure;

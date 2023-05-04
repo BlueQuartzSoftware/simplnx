@@ -175,10 +175,10 @@ void SampleSurfaceMesh::updateProgress(const std::string& progMessage)
 }
 
 // -----------------------------------------------------------------------------
-Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
+Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
 {
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(inputValues->TriangleGeometryPath);
-  auto& faceLabelsSM = m_DataStructure.getDataRefAs<Int32Array>(inputValues->SurfaceMeshFaceLabelsArrayPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(inputValues.TriangleGeometryPath);
+  auto& faceLabelsSM = m_DataStructure.getDataRefAs<Int32Array>(inputValues.SurfaceMeshFaceLabelsArrayPath);
 
   // pull down faces
   usize numFaces = faceLabelsSM.getNumberOfTuples();
@@ -186,8 +186,8 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
   updateProgress("Counting number of Features...");
 
   // walk through faces to see how many features there are
-  int32_t g1 = 0, g2 = 0;
-  int32_t maxFeatureId = 0;
+  int32 g1 = 0, g2 = 0;
+  int32 maxFeatureId = 0;
   for(usize i = 0; i < numFaces; i++)
   {
     g1 = faceLabelsSM[2 * i];
@@ -215,7 +215,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
   updateProgress("Counting number of triangle faces per feature ...");
 
   // traverse data to determine number of faces belonging to each feature
-  for(int64_t i = 0; i < numFaces; i++)
+  for(usize i = 0; i < numFaces; i++)
   {
     g1 = faceLabelsSM[2 * i];
     g2 = faceLabelsSM[2 * i + 1];
@@ -271,7 +271,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
   generatePoints(points);
 
   // create array to hold which polyhedron (feature) each point falls in
-  auto& polyIds = m_DataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath);
+  auto& polyIds = m_DataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsArrayPath);
 
   updateProgress("Sampling triangle geometry ...");
 
@@ -288,7 +288,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues* inputValues)
   else
   {
     ParallelTaskAlgorithm taskRunner;
-    for(int featureId = 0; featureId < numFeatures; featureId++)
+    for(int32 featureId = 0; featureId < numFeatures; featureId++)
     {
       taskRunner.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel));
     }

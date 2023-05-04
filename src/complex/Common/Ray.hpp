@@ -13,7 +13,8 @@ namespace complex
  * @brief The Ray class describes a ray or line segment in 3D space. Using
  * the origin and angle values, points can be found at any specified length or
  * the endpoint can be found at the current length. Rays are primarily used to
- * simplify and better describe values used in GeometryMath.
+ * simplify and better describe values used in GeometryMath. The rays initial alignment
+ * is assumed to be with the Y-axis.
  */
 template <typename T>
 class Ray
@@ -127,11 +128,23 @@ public:
 
   /**
    * @brief Returns the end point determined by the origin point, Euler angle, and length.
+   * Based on the assumption the point is initially aligned with the global axis' and the that this vector specifically aligned with the local y-axis.
    * @return PointType
    */
   PointType getEndPoint() const
   {
-    throw std::runtime_error("");
+    // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
+    Vec3<T> localXRotationVec((-std::sin(m_Angle[0]) * std::cos(m_Angle[1]) * std::sin(m_Angle[2])) + (std::cos(m_Angle[0]) * std::cos(m_Angle[2])),
+                              (std::cos(m_Angle[0]) * std::cos(m_Angle[1]) * std::sin(m_Angle[2])) + (std::sin(m_Angle[0]) * std::cos(m_Angle[2])),
+                              std::sin(m_Angle[1]) * std::sin(m_Angle[2]));
+    Vec3<T> localYRotationVec((-std::sin(m_Angle[0]) * std::cos(m_Angle[1]) * std::cos(m_Angle[2])) - (std::cos(m_Angle[0]) * std::cos(m_Angle[2])),
+                        (std::cos(m_Angle[0]) * std::cos(m_Angle[1]) * std::cos(m_Angle[2])) - (std::sin(m_Angle[0]) * std::sin(m_Angle[2])),
+                        std::sin(m_Angle[1]) * std::cos(m_Angle[2]));
+    Vec3<T> localZRotationVec((std::sin(m_Angle[0]) * std::sin(m_Angle[1])),
+                              -std::cos(m_Angle[0]) * std::sin(m_Angle[1]),
+                              std::cos(m_Angle[1]));
+
+    return m_Origin + (localXRotationVec * m_Length) +  (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
   }
 
   /**

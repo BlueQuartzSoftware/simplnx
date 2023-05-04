@@ -69,5 +69,9 @@ void UncertainRegularGridSampleSurfaceMesh::generatePoints(std::vector<Point3Df>
 // -----------------------------------------------------------------------------
 Result<> UncertainRegularGridSampleSurfaceMesh::operator()()
 {
-  return execute();
+  SampleSurfaceMeshInputValues inputs;
+  inputs.TriangleGeometryPath = m_InputValues->TriangleGeometryPath;
+  inputs.SurfaceMeshFaceLabelsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath;
+  inputs.FeatureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
+  return execute(inputs);
 }

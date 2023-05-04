@@ -16,8 +16,6 @@ struct COMPLEX_EXPORT SampleSurfaceMeshInputValues
 {
   DataPath TriangleGeometryPath;
   DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath RectGeomPath;
-  DataPath CellAMPath;
   DataPath FeatureIdsArrayPath; // Make sure it's been initialized with zeroes
 };
 
@@ -37,13 +35,13 @@ public:
    * @param gridGeom
    * @return
    */
-  Result<> execute(SampleSurfaceMeshInputValues* inputValues);
+  Result<> execute(SampleSurfaceMeshInputValues& inputValues);
 
   void updateProgress(const std::string& progMessage);
   void sendThreadSafeProgressMessage(usize featureId, size_t numCompleted, size_t totalFeatures);
 
 protected:
-  virtual void generatePoints(std::vector<Point3Df>& vertexGeom) = 0;
+  virtual void generatePoints(std::vector<Point3Df>& points) = 0;
 
 private:
   DataStructure& m_DataStructure;

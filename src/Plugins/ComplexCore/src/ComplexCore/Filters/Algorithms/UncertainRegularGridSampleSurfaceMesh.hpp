@@ -16,16 +16,15 @@ namespace complex
 {
 struct COMPLEXCORE_EXPORT UncertainRegularGridSampleSurfaceMeshInputValues
 {
-  DataPath SurfaceMeshFaceLabelsArrayPath;
+  bool UseSeed;
+  uint64 SeedValue;
   VectorUInt64Parameter::ValueType Dimensions;
   VectorFloat32Parameter::ValueType Spacing;
   VectorFloat32Parameter::ValueType Origin;
   VectorFloat32Parameter::ValueType Uncertainty;
-  DataPath DataContainerName;
-  DataPath CellAttributeMatrixName;
-  DataPath FeatureIdsArrayName;
-  bool UseSeed;
-  uint64 SeedValue;
+  DataPath TriangleGeometryPath;
+  DataPath SurfaceMeshFaceLabelsArrayPath;
+  DataPath FeatureIdsArrayPath;
 };
 
 /**
@@ -50,7 +49,7 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  void generatePoints(std::vector<Point3Df>& vertexGeom) override;
+  void generatePoints(std::vector<Point3Df>& points) override;
 
 private:
   DataStructure& m_DataStructure;
