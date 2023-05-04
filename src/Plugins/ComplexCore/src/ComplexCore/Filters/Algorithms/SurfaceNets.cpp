@@ -9,6 +9,7 @@
 
 #include "ComplexCore/SurfaceNets/MMCellFlag.h"
 #include "ComplexCore/SurfaceNets/MMCellMap.h"
+#include "ComplexCore/SurfaceNets/MMGeometryOBJ.h"
 #include "ComplexCore/SurfaceNets/MMSurfaceNet.h"
 
 using namespace complex;
@@ -114,6 +115,43 @@ void getQuadTriangleIDs(vtxData vData[4], bool isQuadFrontFacing, int triangleVt
   triangleVtxIDs[5] = vData[3].vID;
 }
 
+void ExportObjFiles(MMSurfaceNet* m_surfaceNet)
+{
+  if(!m_surfaceNet)
+    return;
+  std::shared_ptr<MMGeometryOBJ> geometry = std::make_shared<MMGeometryOBJ>(m_surfaceNet);
+
+  // Export an OBJ file for each material to the specified path
+  std::vector<int> materials = geometry->labels();
+  for(const auto& itMatIdx : materials)
+  // for(std::vector<int>::iterator itMatIdx = materials.begin(); itMatIdx != materials.end(); itMatIdx++)
+  {
+    if(itMatIdx > 20 && itMatIdx < 65530)
+    {
+      continue;
+    }
+    std::string filename = fmt::format("/tmp/surface_mash_test_{}.obj", itMatIdx);
+    std::cout << "Export file Obj file: " << filename << std::endl;
+    std::ofstream stream(filename, std::ios_base::binary);
+    if(stream.is_open())
+    {
+      MMGeometryOBJ::OBJData data = geometry->objData(itMatIdx);
+      stream << "# vertices for feature id " << itMatIdx << std::endl;
+      // for(std::vector<std::array<float, 3>>::iterator v = data.vertexPositions.begin(); v != data.vertexPositions.end(); v++)
+      for(const auto& vertex : data.vertexPositions)
+      {
+        stream << "v " << (vertex)[0] << ' ' << (vertex)[1] << ' ' << (vertex)[2] << std::endl;
+      }
+      // for(std::vector<std::array<int, 3>>::iterator t = data.triangles.begin(); t != data.triangles.end(); t++)
+      stream << "# triangles for feature id " << itMatIdx << std::endl;
+      for(const auto& face : data.triangles)
+      {
+        stream << "f " << (face)[0] << ' ' << (face)[1] << ' ' << (face)[2] << std::endl;
+      }
+    }
+  }
+}
+
 } // namespace
 // -----------------------------------------------------------------------------
 SurfaceNets::SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SurfaceNetsInputValues* inputValues)
@@ -148,7 +186,15 @@ Result<> SurfaceNets::operator()()
 
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto& featureIdDataStore = featureIds.getIDataStoreRefAs<Int32DataStore>();
-  MMSurfaceNet surfaceNet(featureIdDataStore.data(), arraySize.data(), voxelSize.data());
+
+  using LabelType = uint16;
+  std::vector<LabelType> labels(featureIds.getNumberOfTuples());
+  for(size_t idx = 0; idx < featureIds.getNumberOfTuples(); idx++)
+  {
+    labels[idx] = static_cast<LabelType>(featureIds[idx]);
+  }
+
+  MMSurfaceNet surfaceNet(labels.data(), arraySize.data(), voxelSize.data());
 
   // Use current parameters to relax the SurfaceNet
   if(m_InputValues->ApplySmoothing)
@@ -161,8 +207,14 @@ Result<> SurfaceNets::operator()()
     surfaceNet.relax(m_relaxAttrs);
   }
 
+  // ExportObjFiles(&surfaceNet);
+
   auto* cellMap = surfaceNet.getCellMap();
   int nodeCount = cellMap->numVertices();
+
+  std::array<int, 3> arraySize2 = {0, 0, 0};
+  cellMap->getArraySize(arraySize2.data());
+
   triangleGeom.resizeVertexList(nodeCount);
   triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nodeCount)});
 
@@ -175,20 +227,33 @@ Result<> SurfaceNets::operator()()
   linkedGeometryData.addVertexData(m_InputValues->NodeTypesDataPath);
 
   Point3D<float32> position = {0.0f, 0.0f, 0.0f};
+
+  //  std::string filename = fmt::format("/tmp/surface_mash_verts.csv");
+  //  std::cout << "Export file nodes to file: " << filename << std::endl;
+  //  std::ofstream stream(filename, std::ios_base::binary);
+  std::array<int, 3> vertCellIndex = {0, 0, 0};
   for(int32 vertIndex = 0; vertIndex < nodeCount; vertIndex++)
   {
     cellMap->getVertexPosition(vertIndex, position.data());
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
-    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<uint8>(cellMap->cellVertexType(vertIndex));
-  }
+    cellMap->getVertexCellIndex(vertIndex, vertCellIndex.data());
 
-  std::vector<MMQuad> m_quads;
+    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<uint8>(cellMap->getCell(vertCellIndex.data())->flag.numJunctions());
+
+    //    MMCellMap::Cell* pCell = cellMap->getCell(vertIndex);
+    //
+    //    stream << position[0] << "," << position[1] << "," << position[2] << "," << pCell->label << "," << pCell->flag.getBitFlag() << "," << pCell->vertexIndex << ","
+    //           << static_cast<uint32>(pCell->flag.vertexType()) << std::endl;
+  }
+  //  stream.close();
+
+  //  std::vector<::MMQuad> m_quads;
   usize triangleCount = 0;
   // First Pass through to just count the number of triangles:
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
   {
     std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
-    std::array<int32, 2> quadLabels = {0, 0};
+    std::array<LabelType, 2> quadLabels = {0, 0};
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
       triangleCount += 2;
@@ -219,7 +284,7 @@ Result<> SurfaceNets::operator()()
   std::array<usize, 3> t2;
   std::array<int, 6> triangleVtxIDs;
   std::array<int32, 4> vertexIndices = {0, 0, 0, 0};
-  std::array<int32, 2> quadLabels = {0, 0};
+  std::array<LabelType, 2> quadLabels = {0, 0};
   bool isQuadFrontFacing = false;
   vtxData vData[4];
   for(int idxVtx = 0; idxVtx < nodeCount; idxVtx++)
@@ -241,11 +306,19 @@ Result<> SurfaceNets::operator()()
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
       triangleGeom.setFacePointIds(faceIndex, t1);
-      faceLabels[faceIndex] = quadLabels[0];
+      faceLabels[faceIndex * 2] = quadLabels[0];
+      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
+
       triangleGeom.setFacePointIds(faceIndex, t2);
-      faceLabels[faceIndex] = quadLabels[1];
+      faceLabels[faceIndex * 2] = quadLabels[0];
+      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
+
+      //      for(usize i = 0; i < 6; i++)
+      //      {
+      //        nodeTypes[static_cast<usize>(triangleVtxIDs[i])] = static_cast<uint8>(cellMap->getCell(triangleVtxIDs[i])->flag.numJunctions());
+      //      }
     }
 
     // Left-bottom edge
@@ -264,11 +337,19 @@ Result<> SurfaceNets::operator()()
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
 
       triangleGeom.setFacePointIds(faceIndex, t1);
-      faceLabels[faceIndex] = quadLabels[0];
+      faceLabels[faceIndex * 2] = quadLabels[0];
+      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
+
       triangleGeom.setFacePointIds(faceIndex, t2);
-      faceLabels[faceIndex] = quadLabels[1];
+      faceLabels[faceIndex * 2] = quadLabels[0];
+      faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
+
+      //      for(usize i = 0; i < 6; i++)
+      //      {
+      //        nodeTypes[static_cast<usize>(triangleVtxIDs[i])] = static_cast<uint8>(cellMap->getCell(triangleVtxIDs[i])->flag.numJunctions());
+      //      }
     }
 
     // Left-back edge
@@ -295,6 +376,10 @@ Result<> SurfaceNets::operator()()
       faceLabels[faceIndex * 2] = quadLabels[0];
       faceLabels[faceIndex * 2 + 1] = quadLabels[1];
       faceIndex++;
+      //      for(usize i = 0; i < 6; i++)
+      //      {
+      //        nodeTypes[static_cast<usize>(triangleVtxIDs[i])] = static_cast<uint8>(cellMap->getCell(triangleVtxIDs[i])->flag.numJunctions());
+      //      }
     }
   }
 

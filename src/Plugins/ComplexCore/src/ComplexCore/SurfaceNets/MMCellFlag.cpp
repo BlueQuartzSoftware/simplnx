@@ -15,7 +15,7 @@ MMCellFlag::~MMCellFlag()
 {
 }
 
-void MMCellFlag::set(int32_t cellLabels[8])
+void MMCellFlag::set(unsigned short cellLabels[8])
 {
   // By default the cell has no vertex and no face or edge crossings
   m_bitFlag = 0;
@@ -104,7 +104,7 @@ void MMCellFlag::set(int32_t cellLabels[8])
 
   // Determine vertex type
   int numFaceCrossings = 0;
-  int numJunctionCrossings = 0;
+  m_numJunctions = 0;
   for(Face face = Face::LeftFace; face <= Face::TopFace; ++face)
   {
     if(faceCrossingType(face) != FaceCrossingType::NoFaceCrossing)
@@ -112,21 +112,32 @@ void MMCellFlag::set(int32_t cellLabels[8])
       numFaceCrossings++;
       if(faceCrossingType(face) == FaceCrossingType::JunctionFaceCrossing)
       {
-        numJunctionCrossings++;
+        m_numJunctions++;
       }
     }
   }
   if(numFaceCrossings != 0)
   {
     unsigned int vertexTypeBits = 0;
-    if(numJunctionCrossings < 1)
+    if(m_numJunctions < 1)
+    {
       vertexTypeBits = (unsigned int)VertexType::SurfaceVertex;
-    else if(numJunctionCrossings <= 2)
+    }
+    else if(m_numJunctions <= 2)
+    {
       vertexTypeBits = (unsigned int)VertexType::EdgeVertex;
+    }
     else
+    {
       vertexTypeBits = (unsigned int)VertexType::CornerVertex;
+    }
     m_bitFlag |= (vertexTypeBits << VertexTypeShift);
   }
+}
+
+unsigned char MMCellFlag::numJunctions() const
+{
+  return m_numJunctions;
 }
 
 MMCellFlag::VertexType MMCellFlag::vertexType()

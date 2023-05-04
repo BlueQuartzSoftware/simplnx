@@ -56,7 +56,7 @@ class MMCellMap;
 class MMSurfaceNet
 {
 public:
-  MMSurfaceNet(int32_t* labels, int arraySize[3], float voxelSize[3]);
+  MMSurfaceNet(unsigned short* labels, int arraySize[3], float voxelSize[3]);
   ~MMSurfaceNet();
 
   // Surface smoothing (relaxation)
@@ -75,10 +75,13 @@ public:
   // Label used internally. Not available as a material index.
   enum ReservedLabel
   {
-    Pading = -1
+    Pading = 65535
   };
 
-  MMCellMap* getCellMap() const;
+  MMCellMap* getCellMap() const
+  {
+    return m_cellMap;
+  }
 
 private:
   friend class MMGeometryGL;

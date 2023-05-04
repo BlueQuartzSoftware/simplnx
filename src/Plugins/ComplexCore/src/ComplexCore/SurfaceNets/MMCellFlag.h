@@ -8,7 +8,6 @@
 #ifndef MM_CELL_FLAG_H
 #define MM_CELL_FLAG_H
 
-#include <cstdint>
 class MMCellFlag
 {
 public:
@@ -18,6 +17,11 @@ public:
   void operator=(const MMCellFlag& t)
   {
     m_bitFlag = t.m_bitFlag;
+  }
+
+  unsigned int getBitFlag() const
+  {
+    return m_bitFlag;
   }
 
   enum class VertexType
@@ -63,7 +67,8 @@ public:
   // bottom-to-top (i.e., left-back-bottom vertex first and right-front-top vertex
   // last). Clearing the cell flag encodes types NoVertex, NoFaceCrossing, and no
   // edge or face crossings.
-  void set(int32_t cellLabels[8]);
+  void set(unsigned short cellLabels[8]);
+
   void clear()
   {
     m_bitFlag = 0;
@@ -73,6 +78,7 @@ public:
   VertexType vertexType();
   FaceCrossingType faceCrossingType(Face face);
   bool isEdgeCrossing(Edge edge);
+  unsigned char numJunctions() const;
 
 private:
   // Bit shifts to locate various components of the cell flag
@@ -109,7 +115,8 @@ private:
   const unsigned int m_rightFrontEdgeCrossingBit = 1 << 25;
 
   // The bitflag
-  unsigned short m_bitFlag;
+  unsigned int m_bitFlag;
+  unsigned char m_numJunctions = 0;
 
   // Determine face crossing type from the face's vertex labels
   unsigned int faceCrossingTypeAsBits(unsigned short c0, unsigned short c1, unsigned short c2, unsigned short c3);
