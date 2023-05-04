@@ -27,6 +27,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindFeatureReferenceMisorientationsTest.cpp
   FindGBCDMetricBasedTest.cpp
   FindGBCDTest.cpp
+  FindGBPDMetricBasedTest.cpp
   FindKernelAvgMisorientationsTest.cpp
   FindMisorientationsTest.cpp
   FindSchmidsTest.cpp
@@ -56,7 +57,6 @@ set(DISABLED_TESTS
   FindBoundaryStrengthsTest.cpp
   FindDistsToCharactGBsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
-  FindGBPDMetricBasedTest.cpp
   FindSlipTransmissionMetricsTest.cpp
   FindTwinBoundariesTest.cpp
   FindTwinBoundarySchmidFactorsTest.cpp
