@@ -6,10 +6,10 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -61,21 +61,25 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed", "The seed fed into the random generator", std::mt19937::default_seed));
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Number of Cells per Axis", "", std::vector<uint64>{0, 0, 0}, std::vector<std::string>{"X Points", "Y Points", "Z Points"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Number of Cells per Axis", "The dimensions of the created Image geometry", std::vector<uint64>{0, 0, 0},
+                                                        std::vector<std::string>{"X Points", "Y Points", "Z Points"}));
+  params.insert(
+      std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(
+      std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Uncertainty_Key, "Uncertainty", "uncertainty values associated with X, Y and Z positions of Cells", std::vector<float32>{0.0F, 0.0F, 0.0F},
                                                          std::vector<std::string>{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Required Objects"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "", DataPath{},
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType ::Triangle}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, complex::GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Array specifying which Features are on either side of each Face", DataPath{},
+                                                          complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeomPath_Key, "Data Container", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellAMName_Key, "Cell Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeomPath_Key, "Image Geometry", "The name and path for the image geometry to be created", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CellAMName_Key, "Cell Data Name", "The name for the cell data Attribute Matrix within the Image geometry", "Cell Data"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Feature Ids Name", "The name for the feature ids array in cell data Attribute Matrix", "Feature Ids"));
 
   return params;
 }
