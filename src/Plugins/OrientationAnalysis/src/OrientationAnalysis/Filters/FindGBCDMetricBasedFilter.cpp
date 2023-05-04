@@ -70,7 +70,7 @@ Parameters FindGBCDMetricBasedFilter::parameters() const
                                                          "Axis-angle representation of the misorientation of interest. Angle value should be in degrees.",
                                                          std::vector<float32>{1.0F, 1.0F, 1.0F, 17.9F}, std::vector<std::string>{"x", "y", "z", "w"}));
   params.insert(std::make_unique<ChoicesParameter>(k_ChosenLimitDists_Key, "Limiting Distances",
-                                                   "The max distances from within which boundary segments are selected for the misorientations and plane inclinations", 2, choices));
+                                                   "The max angles from within which boundary segments are selected for the misorientations and plane inclinations", 2, choices));
   params.insert(std::make_unique<Int32Parameter>(k_NumSamplPts_Key, "Number of Sampling Points (on a Hemisphere)", "The approximate number of sampling directions", 3000));
   params.insert(std::make_unique<BoolParameter>(k_ExcludeTripleLines_Key, "Exclude Triangles Directly Neighboring Triple Lines", "If checked, only interiors of Faces are included in GBCD", false));
   params.insert(std::make_unique<BoolParameter>(k_SaveRelativeErr_Key, "Save Relative Errors Instead of Their Absolute Values",
@@ -120,12 +120,9 @@ IFilter::PreflightResult FindGBCDMetricBasedFilter::preflightImpl(const DataStru
 {
   auto pPhaseOfInterestValue = filterArgs.value<int32>(k_PhaseOfInterest_Key);
   auto pMisorientationRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
-  auto pChosenLimitDistsValue = filterArgs.value<ChoicesParameter::ValueType>(k_ChosenLimitDists_Key);
   auto pNumSamplePtsValue = filterArgs.value<int32>(k_NumSamplPts_Key);
-  auto pExcludeTripleLinesValue = filterArgs.value<bool>(k_ExcludeTripleLines_Key);
   auto pDistOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_DistOutputFile_Key);
   auto pErrOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_ErrOutputFile_Key);
-  auto pSaveRelativeErrValue = filterArgs.value<bool>(k_SaveRelativeErr_Key);
   auto pNodeTypesArrayPathValue = filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key);
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pSurfaceMeshFaceNormalsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceNormalsArrayPath_Key);

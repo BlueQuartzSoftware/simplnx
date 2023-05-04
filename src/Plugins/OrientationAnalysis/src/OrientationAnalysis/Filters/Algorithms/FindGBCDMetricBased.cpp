@@ -101,30 +101,14 @@ public:
   {
     Eigen::Vector3f g1ea = {0.0f, 0.0f, 0.0f};
     Eigen::Vector3f g2ea = {0.0f, 0.0f, 0.0f};
-
-    Matrix3fR g1;
-    g1.fill(0.0f);
-    Matrix3fR g2;
-    g2.fill(0.0f);
-
     Matrix3fR g1s;
     g1s.fill(0.0f);
     Matrix3fR g2s;
     g2s.fill(0.0f);
-
-    Matrix3fR sym1;
-    sym1.fill(0.0f);
-    Matrix3fR sym2;
-    sym2.fill(0.0f);
-
-    Matrix3fR g2sT;
-    g2sT.fill(0.0f);
-
     Matrix3fR dg;
     dg.fill(0.0f);
     Matrix3fR dgT;
     dgT.fill(0.0f);
-
     Matrix3fR diffFromFixed;
     diffFromFixed.fill(0.0f);
 
@@ -152,11 +136,7 @@ public:
 
       if(m_ExcludeTripleLines)
       {
-        const int64 node1 = m_Triangles[triIdx * 3];
-        const int64 node2 = m_Triangles[triIdx * 3 + 1];
-        const int64 node3 = m_Triangles[triIdx * 3 + 2];
-
-        if(m_NodeTypes[node1] != 2 || m_NodeTypes[node2] != 2 || m_NodeTypes[node3] != 2)
+        if(m_NodeTypes[m_Triangles[triIdx * 3]] != 2 || m_NodeTypes[m_Triangles[triIdx * 3 + 1]] != 2 || m_NodeTypes[m_Triangles[triIdx * 3 + 2]] != 2)
         {
           continue;
         }
@@ -175,28 +155,23 @@ public:
       }
 
       auto oMatrix1 = OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g1ea[0], g1ea[1], g1ea[2], 3));
-      g1 = OrientationMatrixToGMatrix(oMatrix1);
       auto oMatrix2 = OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g2ea[0], g2ea[1], g2ea[2], 3));
-      g2 = OrientationMatrixToGMatrix(oMatrix2);
 
       for(int j = 0; j < m_NSym; j++)
       {
         // rotate g1 by symOp
-        sym1 = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpF(j));
-        g1s = sym1 * g1;
+        g1s = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpF(j)) * OrientationMatrixToGMatrix(oMatrix1);
         // get the crystal directions along the triangle normals
         normalGrain1 = g1s * normalLab;
 
         for(int k = 0; k < m_NSym; k++)
         {
           // calculate the symmetric mis orientation
-          sym2 = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpF(k));
           // rotate g2 by symOp
-          g2s = sym2 * g2;
+          g2s = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpF(k)) * OrientationMatrixToGMatrix(oMatrix2);
           // transpose rotated g2
-          g2sT = g2s.transpose();
           // calculate delta g
-          dg = g1s * g2sT; // dg -- the mis orientation between adjacent grains
+          dg = g1s * g2s.transpose(); // dg -- the mis orientation between adjacent grains
           dgT = dg.transpose();
 
           for(int32 transpose = 0; transpose <= 1; transpose++)
@@ -303,10 +278,9 @@ public:
     for(usize ptIdx = start; ptIdx < end; ptIdx++)
     {
       Eigen::Vector3f fixedNormal1 = {m_SamplePtsX.at(ptIdx), m_SamplePtsY.at(ptIdx), m_SamplePtsZ.at(ptIdx)};
-      Eigen::Vector3f fixedNormal2 = {0.0f, 0.0f, 0.0f};
-      fixedNormal2 = m_GFixedT * fixedNormal1;
+      Eigen::Vector3f fixedNormal2 = m_GFixedT * fixedNormal1;
 
-      for(int32 triRepIdx = 0; triRepIdx < static_cast<int32>(m_SelectedTriangles.size()); triRepIdx++)
+      for(const auto& selectedTriangle : m_SelectedTriangles)
       {
         for(int32 inversion = 0; inversion <= 1; inversion++)
         {
@@ -316,17 +290,13 @@ public:
             sign = -1.0f;
           }
 
-          const float32 theta1 = acosf(sign * (m_SelectedTriangles[triRepIdx].normalGrain1X * fixedNormal1[0] + m_SelectedTriangles[triRepIdx].normalGrain1Y * fixedNormal1[1] +
-                                               m_SelectedTriangles[triRepIdx].normalGrain1Z * fixedNormal1[2]));
+          const float32 theta1 = acosf(sign * (selectedTriangle.normalGrain1X * fixedNormal1[0] + selectedTriangle.normalGrain1Y * fixedNormal1[1] + selectedTriangle.normalGrain1Z * fixedNormal1[2]));
+          const float32 theta2 =
+              acosf(-sign * (selectedTriangle.normalGrain2X * fixedNormal2[0] + selectedTriangle.normalGrain2Y * fixedNormal2[1] + selectedTriangle.normalGrain2Z * fixedNormal2[2]));
 
-          const float32 theta2 = acosf(-sign * (m_SelectedTriangles[triRepIdx].normalGrain2X * fixedNormal2[0] + m_SelectedTriangles[triRepIdx].normalGrain2Y * fixedNormal2[1] +
-                                                m_SelectedTriangles[triRepIdx].normalGrain2Z * fixedNormal2[2]));
-
-          const float32 distSq = 0.5f * (theta1 * theta1 + theta2 * theta2);
-
-          if(distSq < m_PlaneResolutionSq)
+          if(const float32 distSq = 0.5f * (theta1 * theta1 + theta2 * theta2); distSq < m_PlaneResolutionSq)
           {
-            m_DistributionValues[ptIdx] += m_SelectedTriangles[triRepIdx].area;
+            m_DistributionValues[ptIdx] += selectedTriangle.area;
           }
         }
       }
@@ -450,7 +420,7 @@ Result<> FindGBCDMetricBased::operator()()
   float64 ballVolume = k_BallVolumesM3M[m_InputValues->ChosenLimitDists];
   {
     std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
-    int32 crystalStruct = crystalStructures[m_InputValues->PhaseOfInterest];
+    auto crystalStruct = static_cast<int32>(crystalStructures[m_InputValues->PhaseOfInterest]);
     int32 nSym = m_OrientationOps[crystalStruct]->getNumSymOps();
 
     if(crystalStruct != 1)
@@ -470,7 +440,6 @@ Result<> FindGBCDMetricBased::operator()()
   std::vector<float32> samplePtsY(0);
   std::vector<float32> samplePtsZ(0);
 
-  float32 inc = 2.3999632f; // = pi * (3 - sqrt(5))
   float32 off = 2.0f / static_cast<float32>(numSamplePtsWholeSphere);
 
   for(int32 ptIdxWholeSph = 0; ptIdxWholeSph < numSamplePtsWholeSphere; ptIdxWholeSph++)
@@ -482,7 +451,7 @@ Result<> FindGBCDMetricBased::operator()()
 
     float32 y = (static_cast<float32>(ptIdxWholeSph) * off) - 1.0f + (0.5f * off);
     float32 r = sqrtf(fmaxf(1.0f - y * y, 0.0f));
-    float32 phi = static_cast<float32>(ptIdxWholeSph) * inc;
+    float32 phi = static_cast<float32>(ptIdxWholeSph) * 2.3999632f; // 2.3999632f = pi * (3 - sqrt(5))
 
     float32 z = sinf(phi) * r;
 
@@ -503,15 +472,11 @@ Result<> FindGBCDMetricBased::operator()()
   }
 
   // Convert axis angle to matrix representation of mis orientation
-  Matrix3fR gFixedT;
-  gFixedT.fill(0.0f);
-  {
-    auto gFixedAngle = m_InputValues->MisorientationRotation[3] * Constants::k_PiOver180F;
-    Eigen::Vector3f gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
-    gFixedAxis.normalize();
-    auto oMatrix = OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle));
-    gFixedT = OrientationMatrixToGMatrixTranspose(oMatrix);
-  }
+  auto gFixedAngle = m_InputValues->MisorientationRotation[3] * Constants::k_PiOver180F;
+  Eigen::Vector3f gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
+  gFixedAxis.normalize();
+  auto oMatrix = OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle));
+  Matrix3fR gFixedT = OrientationMatrixToGMatrixTranspose(oMatrix);
 
   usize numMeshTriangles = faceAreas.getNumberOfTuples();
 
@@ -530,7 +495,7 @@ Result<> FindGBCDMetricBased::operator()()
     triChunkSize = numMeshTriangles;
   }
 
-  for(usize i = 0; i < numMeshTriangles; i = i + triChunkSize)
+  for(usize i = 0; i < numMeshTriangles; i += triChunkSize)
   {
     if(getCancel())
     {
@@ -553,7 +518,7 @@ Result<> FindGBCDMetricBased::operator()()
   int32 numDistinctGBs = 0;
   usize numFaceFeatures = featureFaceLabels.getNumberOfTuples();
 
-  for(int32 featureFaceIdx = 0; featureFaceIdx < numFaceFeatures; featureFaceIdx++)
+  for(usize featureFaceIdx = 0; featureFaceIdx < numFaceFeatures; featureFaceIdx++)
   {
     int32 feature1 = featureFaceLabels[2 * featureFaceIdx];
     int32 feature2 = featureFaceLabels[2 * featureFaceIdx + 1];
@@ -584,13 +549,13 @@ Result<> FindGBCDMetricBased::operator()()
   std::vector<float64> distributionValues(samplePtsX.size(), 0.0);
   std::vector<float64> errorValues(samplePtsX.size(), 0.0);
 
-  int32 pointsChunkSize = 100;
+  usize pointsChunkSize = 100;
   if(samplePtsX.size() < pointsChunkSize)
   {
     pointsChunkSize = samplePtsX.size();
   }
 
-  for(int32 i = 0; i < samplePtsX.size(); i = i + pointsChunkSize)
+  for(usize i = 0; i < samplePtsX.size(); i += pointsChunkSize)
   {
     if(getCancel())
     {
@@ -615,7 +580,7 @@ Result<> FindGBCDMetricBased::operator()()
   distributionOutStream << outputString;
   errorOutStream << outputString;
 
-  for(int32 ptIdx = 0; ptIdx < samplePtsX.size(); ptIdx++)
+  for(usize ptIdx = 0; ptIdx < samplePtsX.size(); ptIdx++)
   {
     float32 zenith = acosf(samplePtsZ.at(ptIdx));
     float32 azimuth = atan2f(samplePtsY.at(ptIdx), samplePtsX.at(ptIdx));
