@@ -1,25 +1,25 @@
-# Find Feature Reference C-Axis Misalignments  #
+# Find Feature Reference C-Axis Misalignments 
 
 
-## Group (Subgroup) ##
+## Group (Subgroup) 
 
 Statistics (Crystallographic)
 
-## Description ##
+## Description 
 
 This **Filter** calculates the misorientation angle between the C-axis of each **Cell** within a **Feature** and the average C-axis for that **Feature** and stores that value for each **Cell**.  The average and standard deviation of those values for all **Cells** belonging to the same **Feature** is also stored for each **Feature**.
 
 This filter requires at least one Hexagonal crystal structure phase (Hexagonal-Low 6/m or Hexagonal-High 6/mmm). Although it is not recommended, you can give input data with mixed phase types and all non hexagonal phases will be skipped in the calculations.
 
-## Parameters ##
+## Parameters 
 
 None
 
-## Required Geometry ##
+## Required Geometry 
 
 Image
 
-## Required Objects ##
+## Required Objects 
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
@@ -29,7 +29,7 @@ Image
 | **Feature Attribute Array** | AvgCAxes | float | (3) | The direction <u,v,w> of the **Feature's** C-axis in the sample reference frame |
 | **Ensemble Attribute Array** | CrystalStructures | uint32_t | (1) | Enumeration representing the crystal structure for each **Ensemble** |
 
-## Created Objects ##
+## Created Objects 
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
@@ -38,15 +38,15 @@ Image
 | **Feature Attribute Array** | FeatureStdevCAxisMisorientations | float | (1) | Standard deviation of the *FeatureReferenceCAxisMisorientation* values for all of the **Cells** that belong to the **Feature** |
 
 
-## Example Pipelines ##
+## Example Pipelines 
 
 Combo-EBSD-osc_r0c0
 
-## License & Copyright ##
+## License & Copyright 
 
 Please see the description file distributed with this **Plugin**
 
-## DREAM.3D Mailing Lists ##
+## DREAM.3D Mailing Lists 
 
 If you need more help with a **Filter**, please consider asking your question on the [DREAM.3D Users Google group!](https://groups.google.com/forum/?hl=en#!forum/dream3d-users)
 

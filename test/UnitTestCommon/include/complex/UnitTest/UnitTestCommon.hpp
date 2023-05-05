@@ -392,6 +392,60 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
 }
 
 /**
+ * @brief Compares 2 NeighborList arrays using an EPSILON value. Useful for floating point comparisons
+ * @tparam T
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+template <typename T>
+void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(computedPath));
+
+  const auto& exemplaryList = dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath);
+  const auto& computedNeighborList = dataStructure.getDataRefAs<NeighborList<T>>(computedPath);
+  REQUIRE(computedNeighborList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
+
+  for(usize i = 0; i < exemplaryList.getNumberOfTuples(); i++)
+  {
+    const auto exemplary = exemplaryList.getList(i);
+    const auto computed = computedNeighborList.getList(i);
+    if(exemplary.get() != nullptr && computed.get() != nullptr)
+    {
+      REQUIRE(exemplary->size() == computed->size());
+      std::sort(exemplary->begin(), exemplary->end());
+      std::sort(computed->begin(), computed->end());
+      for(usize j = 0; j < exemplary->size(); ++j)
+      {
+        auto exemplaryVal = exemplary->at(j);
+        auto computedVal = computed->at(j);
+        if(!checkNans && (std::isnan(computedVal) || std::isnan(exemplaryVal)))
+        {
+          continue;
+        }
+        if(std::isnan(exemplaryVal) && std::isnan(computedVal))
+        {
+          // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
+          continue;
+        }
+        if(exemplaryVal != computedVal)
+        {
+          float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+          INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary->size(),
+                           computedPath.toString(), computed->size()));
+          INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
+
+          REQUIRE(diff < epsilon);
+          break;
+        }
+      }
+    }
+  }
+}
+
+/**
  * @brief
  * @tparam T
  * @param exemplaryNeighborList

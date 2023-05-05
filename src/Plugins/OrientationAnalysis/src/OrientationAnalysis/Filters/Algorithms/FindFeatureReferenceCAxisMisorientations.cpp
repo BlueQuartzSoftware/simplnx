@@ -54,14 +54,16 @@ Result<> FindFeatureReferenceCAxisMisorientations::operator()()
 
   if(noPhasesHexagonal)
   {
-    return MakeErrorResult(-9802, "Finding the average c-axes requires at least one phase to be Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures but none were found.");
+    return MakeErrorResult(
+        -9802, "Finding the feature reference c-axis mis orientation requires at least one phase to be Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures but none were found.");
   }
 
   Result<> result;
   if(!allPhasesHexagonal)
   {
     result.warnings().push_back(
-        {-9803, "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Calculations for non Hexagonal phases will be skipped."});
+        {-9803,
+         "Finding the feature reference c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Calculations for non Hexagonal phases will be skipped."});
   }
 
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
