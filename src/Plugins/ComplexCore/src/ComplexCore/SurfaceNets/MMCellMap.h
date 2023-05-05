@@ -50,7 +50,7 @@ public:
 
   void getVertexCellIndex(int vertexIndex, int cellIndex[3]);
   int cellArrayIndex(int cellIndex[3]);
-  
+
 private:
   // Use of C-style arrays. C-style arrays are used deliberately for cell indices,
   // vertex positions, cells in the cell map, vertices, etc. This was done after
