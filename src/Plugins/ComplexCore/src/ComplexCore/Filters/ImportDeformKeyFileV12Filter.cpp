@@ -3,9 +3,7 @@
 #include "Algorithms/ImportDeformKeyFileV12.hpp"
 
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/CreateGeometry2DAction.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
@@ -139,32 +137,29 @@ IFilter::PreflightResult ImportDeformKeyFileV12Filter::preflightImpl(const DataS
 
   for(const DataArrayMetadata& daMetadata : s_HeaderCache[m_InstanceId].dataArrays)
   {
-    DataPath myPath = {};
-    if(daMetadata.type == DataArrayType::VERTEX)
+    if(daMetadata.path.getParent() == vertexDataPath)
     {
       if(s_HeaderCache[m_InstanceId].vertexAttrMatTupleCount != daMetadata.tupleCount)
       {
-        return MakePreflightErrorResult(-2020, fmt::format("{}'s tuple dims ({}) do not match, the parent {} Attribute Matrix's tuple count({})", daMetadata.name, daMetadata.tupleCount,
-                                                           pVertexAMNameValue, s_HeaderCache[m_InstanceId].vertexAttrMatTupleCount));
+        return MakePreflightErrorResult(-2020, fmt::format("{}'s tuple dims ({}) do not match, the parent {} Attribute Matrix's tuple count({})", daMetadata.path.getTargetName(),
+                                                           daMetadata.tupleCount, pVertexAMNameValue, s_HeaderCache[m_InstanceId].vertexAttrMatTupleCount));
       }
-      myPath = vertexDataPath.createChildPath(daMetadata.name);
     }
-    else if(daMetadata.type == DataArrayType::CELL)
+    else if(daMetadata.path.getParent() == cellDataPath)
     {
       if(s_HeaderCache[m_InstanceId].cellAttrMatTupleCount != daMetadata.tupleCount)
       {
-        return MakePreflightErrorResult(-2021, fmt::format("{}'s tuple dims ({}) do not match, the parent {} Attribute Matrix's tuple count({})", daMetadata.name, daMetadata.tupleCount,
-                                                           pCellAMNameValue, s_HeaderCache[m_InstanceId].cellAttrMatTupleCount));
+        return MakePreflightErrorResult(-2021, fmt::format("{}'s tuple dims ({}) do not match, the parent {} Attribute Matrix's tuple count({})", daMetadata.path.getTargetName(),
+                                                           daMetadata.tupleCount, pCellAMNameValue, s_HeaderCache[m_InstanceId].cellAttrMatTupleCount));
       }
-      myPath = cellDataPath.createChildPath(daMetadata.name);
     }
     else
     {
-      return MakePreflightErrorResult(-2022, fmt::format("Unable to determine the type for cached data array \"{}\".  The type must be either vertex or cell.", daMetadata.name));
+      return MakePreflightErrorResult(-2022, fmt::format("Unable to determine the type for cached data array \"{}\".  The type must be either vertex or cell.", daMetadata.path.getTargetName()));
     }
 
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{daMetadata.tupleCount}, std::vector<usize>{daMetadata.componentCount}, myPath);
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{daMetadata.tupleCount}, std::vector<usize>{daMetadata.componentCount}, daMetadata.path);
       resultOutputActions.value().actions.push_back(std::move(createAction));
     }
   }

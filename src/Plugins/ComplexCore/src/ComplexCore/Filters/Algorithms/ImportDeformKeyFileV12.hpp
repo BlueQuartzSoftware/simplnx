@@ -11,18 +11,11 @@ namespace fs = std::filesystem;
 
 namespace complex
 {
-enum class COMPLEXCORE_EXPORT DataArrayType : uint8
-{
-  VERTEX,
-  CELL
-};
-
 struct COMPLEXCORE_EXPORT DataArrayMetadata
 {
-  std::string name;
+  DataPath path;
   usize tupleCount;
   usize componentCount;
-  DataArrayType type;
 };
 
 struct COMPLEXCORE_EXPORT FileCache
@@ -70,7 +63,7 @@ public:
 
   const std::atomic_bool& getCancel();
   void updateProgress(const std::string& progMessage);
-  FileCache getCache();
+  FileCache& getCache();
 
 private:
   DataStructure& m_DataStructure;
@@ -78,7 +71,5 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   FileCache m_Cache = {};
-  std::vector<std::string> m_UserDefinedVariables;
-  std::vector<DataPath> m_UserDefinedArrays;
 };
-}
+} // namespace complex
