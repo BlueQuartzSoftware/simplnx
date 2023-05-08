@@ -34,7 +34,9 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 
   TriangleGeom& surfaceMesh = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->pTriangleGeometryDataPath);
 
-  Float32Array& verts = *(surfaceMesh.getVertices());
+  Float32Array& vertsArray = *(surfaceMesh.getVertices());
+  AbstractFloat32Store& verts = vertsArray.getDataStoreRef();
+
   IGeometry::MeshIndexType nvert = surfaceMesh.getNumberOfVertices();
 
   // Generate the Lambda Array
@@ -50,7 +52,8 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     return MakeErrorResult(-560, "Error retrieving the shared edge list");
   }
 
-  IGeometry::SharedEdgeList& uedges = *(surfaceMesh.getEdges());
+  IGeometry::SharedEdgeList& uedgesArray = *(surfaceMesh.getEdges());
+  AbstractUInt64Store& uedges = uedgesArray.getDataStoreRef();
   IGeometry::MeshIndexType nedges = uedges.getNumberOfTuples();
 
   std::vector<int32_t> numConnections(nvert, 0);
@@ -155,6 +158,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 std::vector<float> LaplacianSmoothing::generateLambdaArray()
 {
   Int8Array& surfaceMeshNodeType = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath);
+  AbstractInt8Store& surfaceMeshNode = surfaceMeshNodeType.getDataStoreRef();
 
   size_t numNodes = surfaceMeshNodeType.getNumberOfTuples();
 
@@ -162,7 +166,7 @@ std::vector<float> LaplacianSmoothing::generateLambdaArray()
 
   for(size_t i = 0; i < numNodes; ++i)
   {
-    switch(surfaceMeshNodeType[i])
+    switch(surfaceMeshNode[i])
     {
     case complex::NodeType::Unused:
       break;

@@ -234,7 +234,8 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
   // At this point we have two valid arrays of the same type and component dimensions, so we
   // are safe to make the output array with the correct type and component dimensions
   DataType dataType = firstInputArray->getDataType();
-  auto action = std::make_unique<CreateArrayAction>(dataType, firstInputArray->getIDataStore()->getTupleShape(), firstInputArray->getIDataStore()->getComponentShape(), differenceMapArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(dataType, firstInputArray->getIDataStore()->getTupleShape(), firstInputArray->getIDataStore()->getComponentShape(), differenceMapArrayPath,
+                                                    firstInputArray->getDataFormat());
 
   //
   complex::Result<OutputActions> actions;

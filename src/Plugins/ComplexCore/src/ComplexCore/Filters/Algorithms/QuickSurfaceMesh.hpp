@@ -65,7 +65,7 @@ public:
    * @param v5
    * @param v6
    */
-  void flipProblemVoxelCase1(Int32Array& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4, MeshIndexType v5, MeshIndexType v6);
+  void flipProblemVoxelCase1(AbstractInt32Store& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4, MeshIndexType v5, MeshIndexType v6) const;
 
   /**
    * @brief flipProblemVoxelCase2
@@ -74,7 +74,7 @@ public:
    * @param v3
    * @param v4
    */
-  void flipProblemVoxelCase2(Int32Array& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4);
+  void flipProblemVoxelCase2(AbstractInt32Store& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4) const;
 
   /**
    * @brief flipProblemVoxelCase3
@@ -82,7 +82,7 @@ public:
    * @param v2
    * @param v3
    */
-  void flipProblemVoxelCase3(Int32Array& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3);
+  void flipProblemVoxelCase3(AbstractInt32Store& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3) const;
 
   /**
    * @brief

@@ -171,7 +171,8 @@ IFilter::PreflightResult RemoveFlaggedVertices::preflightImpl(const DataStructur
       const IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       const IDataStore::ShapeType tupleShape = srcArray.getIDataStoreRef().getTupleShape();
       const DataPath dataArrayPath = reducedVertGeomAttrMatPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleShape, componentShape, dataArrayPath));
+      const std::string dataStoreFormat = srcArray.getDataFormat();
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tupleShape, componentShape, dataArrayPath, dataStoreFormat));
     }
   }
 
