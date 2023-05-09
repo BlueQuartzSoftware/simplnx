@@ -1,5 +1,7 @@
 #include "H5.hpp"
 
+#include <fmt/core.h>
+
 #include <stdexcept>
 #include <vector>
 
@@ -115,12 +117,25 @@ complex::HDF5::IdType complex::HDF5::getIdForType(Type type)
 
 std::string complex::HDF5::GetNameFromBuffer(std::string_view buffer)
 {
-  size_t substrIndex = buffer.find_last_of('/');
-  if(substrIndex > 0)
+  if(buffer.empty())
   {
-    substrIndex++;
+    throw std::runtime_error(fmt::format("complex::HDF5::GetNameFromBuffer : HDF5 data path cannot be empty."));
   }
-  return std::string(buffer.substr(substrIndex));
+
+  size_t substrIndex = buffer.find_last_of('/');
+  if(substrIndex == std::string::npos)
+  {
+    return std::string(buffer);
+  }
+  if(substrIndex == buffer.size() - 1)
+  {
+    if(buffer.size() == 1)
+    {
+      return std::string(buffer);
+    }
+    throw std::runtime_error(fmt::format("complex::HDF5::GetNameFromBuffer : Invalid HDF5 data path '{}'. Path cannot end with a /", buffer));
+  }
+  return std::string(buffer.substr(++substrIndex));
 }
 
 std::string complex::HDF5::GetPathFromId(IdType id)
