@@ -768,3 +768,17 @@ TEST_CASE("xdmf")
   Result<> result = DREAM3D::WriteFile(GetDataDir() / "xdmfTest.dream3d", dataStructure, {}, true);
   COMPLEX_RESULT_REQUIRE_VALID(result);
 }
+
+TEST_CASE("H5 Utilities")
+{
+  REQUIRE_THROWS(complex::HDF5::GetNameFromBuffer(""));
+  REQUIRE_THROWS(complex::HDF5::GetNameFromBuffer("/Group/"));
+  std::string objectName = complex::HDF5::GetNameFromBuffer("/");
+  REQUIRE(objectName == "/");
+  objectName = complex::HDF5::GetNameFromBuffer("/Group/Geometry/Data");
+  REQUIRE(objectName == "Data");
+  objectName = complex::HDF5::GetNameFromBuffer("Data");
+  REQUIRE(objectName == "Data");
+  objectName = complex::HDF5::GetNameFromBuffer("/Data");
+  REQUIRE(objectName == "Data");
+}
