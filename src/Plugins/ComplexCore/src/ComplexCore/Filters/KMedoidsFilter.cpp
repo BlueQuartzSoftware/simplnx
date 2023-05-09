@@ -4,10 +4,10 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
@@ -49,28 +49,24 @@ Parameters KMedoidsFilter::parameters() const
 {
   Parameters params;
 
-  /**
-   * Please separate the parameters into groups generally of the following:
-   *
-   * params.insertSeparator(Parameters::Separator{"Input Parameters"});
-   * params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-   * params.insertSeparator(Parameters::Separator{"Required Input Feature Data"});
-   * params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-   * params.insertSeparator(Parameters::Separator{"Created Cell Feature Data"});
-   *
-   * .. or create appropriate separators as needed. The UI in COMPLEX no longer
-   * does this for the developer by using catgories as in SIMPL
-   */
-
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<Int32Parameter>(k_InitClusters_Key, "Number of Clusters", "", 0 #error Check default values));
-  params.insert(std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}/* Change this to the proper choices */));
+  params.insert(
+      std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"} /* Change this to the proper choices */));
+
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false #error Check default values));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+  params.insert(
+      std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "", DataPath{},
+                                                          complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+
+  params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureAttributeMatrixName_Key, "Cluster Attribute Matrix", "", DataPath{}));
   params.insert(std::make_unique<ArrayCreationParameter>(k_MedoidsArrayName_Key, "Cluster Medoids", "", DataPath{}));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
@@ -84,17 +80,9 @@ IFilter::UniquePointer KMedoidsFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel) const
 {
-  /****************************************************************************
-   * Write any preflight sanity checking codes in this function
-   ***************************************************************************/
-
-  /**
-   * These are the values that were gathered from the UI or the pipeline file or
-   * otherwise passed into the filter. These are here for your convenience. If you
-   * do not need some of them remove them.
-   */
   auto pInitClustersValue = filterArgs.value<int32>(k_InitClusters_Key);
   auto pDistanceMetricValue = filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
@@ -103,8 +91,6 @@ IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& data
   auto pFeatureIdsArrayNameValue = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
   auto pFeatureAttributeMatrixNameValue = filterArgs.value<DataPath>(k_FeatureAttributeMatrixName_Key);
   auto pMedoidsArrayNameValue = filterArgs.value<DataPath>(k_MedoidsArrayName_Key);
-
-
 
   // Declare the preflightResult variable that will be populated with the results
   // of the preflight. The PreflightResult type contains the output Actions and
@@ -149,12 +135,12 @@ IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& data
 }
 
 //------------------------------------------------------------------------------
-Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
+Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                     const std::atomic_bool& shouldCancel) const
 {
-
   KMedoidsInputValues inputValues;
 
-    inputValues.InitClusters = filterArgs.value<int32>(k_InitClusters_Key);
+  inputValues.InitClusters = filterArgs.value<int32>(k_InitClusters_Key);
   inputValues.DistanceMetric = filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key);
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.SelectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
@@ -162,7 +148,6 @@ Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Argumen
   inputValues.FeatureIdsArrayName = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
   inputValues.FeatureAttributeMatrixName = filterArgs.value<DataPath>(k_FeatureAttributeMatrixName_Key);
   inputValues.MedoidsArrayName = filterArgs.value<DataPath>(k_MedoidsArrayName_Key);
-
 
   return KMedoids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
