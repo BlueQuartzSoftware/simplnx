@@ -53,8 +53,11 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
 
   fs::path exemplarDistOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbcd_distribution_1.dat", unit_test::k_TestFilesDir));
   fs::path exemplarErrorsOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbcd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
-  fs::path computedDistOutput(fmt::format("{}/computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
-  fs::path computedErrorsOutput(fmt::format("{}/computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
+  //  fs::path computedDistOutput(fmt::format("{}/computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
+  //  fs::path computedErrorsOutput(fmt::format("{}/computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
+
+  fs::path computedDistOutput("/tmp/mac_computed_gbcd_distribution_1.dat");
+  fs::path computedErrorsOutput("/tmp/mac_computed_gbcd_distribution_errors_1.dat");
 
   // Run the FindGBCDMetricBased filter
   {

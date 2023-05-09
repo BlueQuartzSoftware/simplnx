@@ -13,9 +13,22 @@
 
 #include <Eigen/Dense>
 
+#include <H5Support/H5Lite.h>
+#include <H5Support/H5Utilities.h>
+
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/concurrent_vector.h>
 #endif
+
+#ifdef __APPLE__
+#define FILE_PREFIX "macOS"
+#elif defined(_WIN32_)
+#define FILE_PREFIX "win32"
+#else
+#define FILE_PREFIX "Linux"
+#endif
+
+#include <cstdio>
 
 using namespace complex;
 using namespace complex::OrientationUtilities;
@@ -36,7 +49,7 @@ namespace GBCDMetricBased
  */
 struct TriAreaAndNormals
 {
-  TriAreaAndNormals(float64 triArea, float32 n1x, float32 n1y, float32 n1z, float32 n2x, float32 n2y, float32 n2z)
+  TriAreaAndNormals(float64 triArea, float64 n1x, float64 n1y, float64 n1z, float64 n2x, float64 n2y, float64 n2z)
   : area(triArea)
   , normalGrain1X(n1x)
   , normalGrain1Y(n1y)
@@ -49,12 +62,12 @@ struct TriAreaAndNormals
   TriAreaAndNormals() = default;
 
   float64 area = 0.0;
-  float32 normalGrain1X = 0.0f;
-  float32 normalGrain1Y = 0.0f;
-  float32 normalGrain1Z = 0.0f;
-  float32 normalGrain2X = 0.0f;
-  float32 normalGrain2Y = 0.0f;
-  float32 normalGrain2Z = 0.0f;
+  float64 normalGrain1X = 0.0;
+  float64 normalGrain1Y = 0.0;
+  float64 normalGrain1Z = 0.0;
+  float64 normalGrain2X = 0.0;
+  float64 normalGrain2Y = 0.0;
+  float64 normalGrain2Z = 0.0;
 };
 
 /**
@@ -70,7 +83,7 @@ public:
 #else
                     std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    std::vector<int8>& triIncluded, float32 misResolution, int32 phaseOfInterest, const Matrix3fR& gFixedT, const UInt32Array& crystalStructures, const Float32Array& euler,
+                    std::vector<int8>& triIncluded, float64 misResolution, int32 phaseOfInterest, const Matrix3dR& gFixedT, const UInt32Array& crystalStructures, const Float32Array& euler,
                     const Int32Array& phases, const Int32Array& faceLabels, const Float64Array& faceNormals, const Float64Array& faceAreas)
   : m_ExcludeTripleLines(excludeTripleLines)
   , m_Triangles(triangles)
@@ -99,22 +112,24 @@ public:
 
   void select(usize start, usize end) const
   {
-    Eigen::Vector3f g1ea = {0.0f, 0.0f, 0.0f};
-    Eigen::Vector3f g2ea = {0.0f, 0.0f, 0.0f};
-    Matrix3fR g1s;
-    g1s.fill(0.0f);
-    Matrix3fR g2s;
-    g2s.fill(0.0f);
-    Matrix3fR dg;
-    dg.fill(0.0f);
-    Matrix3fR dgT;
-    dgT.fill(0.0f);
-    Matrix3fR diffFromFixed;
-    diffFromFixed.fill(0.0f);
+    Eigen::Vector3d g1ea = {0.0, 0.0, 0.0};
+    Eigen::Vector3d g2ea = {0.0, 0.0, 0.0};
+    Matrix3dR g1s;
+    g1s.fill(0.0);
+    Matrix3dR g2s;
+    g2s.fill(0.0);
+    Matrix3dR dg;
+    dg.fill(0.0);
+    Matrix3dR dgT;
+    dgT.fill(0.0);
+    Matrix3dR diffFromFixed;
+    diffFromFixed.fill(0.0);
 
-    Eigen::Vector3f normalLab = {0.0f, 0.0f, 0.0f};
-    Eigen::Vector3f normalGrain1 = {0.0f, 0.0f, 0.0f};
-    Eigen::Vector3f normalGrain2 = {0.0f, 0.0f, 0.0f};
+    Eigen::Vector3d normalLab = {0.0, 0.0, 0.0};
+    Eigen::Vector3d normalGrain1 = {0.0, 0.0, 0.0};
+    Eigen::Vector3d normalGrain2 = {0.0, 0.0, 0.0};
+
+    std::set<usize> uniqueTri;
 
     for(usize triIdx = start; triIdx < end; triIdx++)
     {
@@ -144,9 +159,9 @@ public:
 
       m_TriIncluded[triIdx] = 1;
 
-      normalLab[0] = static_cast<float>(m_FaceNormals[3 * triIdx]);
-      normalLab[1] = static_cast<float>(m_FaceNormals[3 * triIdx + 1]);
-      normalLab[2] = static_cast<float>(m_FaceNormals[3 * triIdx + 2]);
+      normalLab[0] = (m_FaceNormals[3 * triIdx]);
+      normalLab[1] = (m_FaceNormals[3 * triIdx + 1]);
+      normalLab[2] = (m_FaceNormals[3 * triIdx + 2]);
 
       for(int whichEa = 0; whichEa < 3; whichEa++)
       {
@@ -154,13 +169,13 @@ public:
         g2ea[whichEa] = m_Euler[3 * feature2 + whichEa];
       }
 
-      auto oMatrix1 = OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g1ea[0], g1ea[1], g1ea[2], 3));
-      auto oMatrix2 = OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g2ea[0], g2ea[1], g2ea[2], 3));
+      auto oMatrix1 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g1ea[0], g1ea[1], g1ea[2], 3.0f));
+      auto oMatrix2 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g2ea[0], g2ea[1], g2ea[2], 3.0f));
 
       for(int j = 0; j < m_NSym; j++)
       {
         // rotate g1 by symOp
-        g1s = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpF(j)) * OrientationMatrixToGMatrix(oMatrix1);
+        g1s = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j)) * OrientationMatrixToGMatrix(oMatrix1);
         // get the crystal directions along the triangle normals
         normalGrain1 = g1s * normalLab;
 
@@ -168,7 +183,7 @@ public:
         {
           // calculate the symmetric mis orientation
           // rotate g2 by symOp
-          g2s = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpF(k)) * OrientationMatrixToGMatrix(oMatrix2);
+          g2s = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(k)) * OrientationMatrixToGMatrix(oMatrix2);
           // transpose rotated g2
           // calculate delta g
           dg = g1s * g2s.transpose(); // dg -- the mis orientation between adjacent grains
@@ -186,7 +201,7 @@ public:
               diffFromFixed = dgT * m_GFixedT;
             }
 
-            const float32 diffAngle = acosf((diffFromFixed(0, 0) + diffFromFixed(1, 1) + diffFromFixed(2, 2) - 1.0f) * 0.5f);
+            const float64 diffAngle = std::acos((diffFromFixed(0, 0) + diffFromFixed(1, 1) + diffFromFixed(2, 2) - 1.0f) * 0.5f);
 
             if(diffAngle < m_MisResolution)
             {
@@ -200,11 +215,14 @@ public:
               {
                 m_SelectedTriangles.push_back(TriAreaAndNormals(m_FaceAreas[triIdx], -normalGrain2[0], -normalGrain2[1], -normalGrain2[2], normalGrain1[0], normalGrain1[1], normalGrain1[2]));
               }
+              uniqueTri.insert(triIdx);
             }
           }
         }
       }
     }
+
+    std::cout << "Selecting Triangles: " << start << "    " << end << "    Unique Triangles Selected: " << uniqueTri.size() << std::endl;
   }
 
   void operator()(const Range& range) const
@@ -223,9 +241,9 @@ private:
   std::vector<TriAreaAndNormals>& m_SelectedTriangles;
 #endif
   std::vector<int8_t>& m_TriIncluded;
-  float32 m_MisResolution;
+  float64 m_MisResolution;
   int32 m_PhaseOfInterest;
-  const Matrix3fR& m_GFixedT;
+  const Matrix3dR& m_GFixedT;
 
   LaueOpsContainer m_OrientationOps;
   uint32 m_Crystal;
@@ -245,14 +263,14 @@ private:
 class ProbeDistribution
 {
 public:
-  ProbeDistribution(std::vector<float64>& distributionValues, std::vector<float64>& errorValues, const std::vector<float32>& samplePtsX, const std::vector<float32>& samplePtsY,
-                    const std::vector<float32>& samplePtsZ,
+  ProbeDistribution(std::vector<float64>& distributionValues, std::vector<float64>& errorValues, const std::vector<float64>& samplePtsX, const std::vector<float64>& samplePtsY,
+                    const std::vector<float64>& samplePtsZ,
 #ifdef COMPLEX_ENABLE_MULTICORE
                     const tbb::concurrent_vector<TriAreaAndNormals>& selectedTriangles,
 #else
                     const std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    float32 planeResolutionSq, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, const Matrix3fR& gFixedT)
+                    float64 planeResolutionSq, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, const Matrix3dR& gFixedT)
   : m_DistributionValues(distributionValues)
   , m_ErrorValues(errorValues)
   , m_SamplePtsX(samplePtsX)
@@ -275,26 +293,29 @@ public:
 
   void probe(usize start, usize end) const
   {
+
     for(usize ptIdx = start; ptIdx < end; ptIdx++)
     {
-      Eigen::Vector3f fixedNormal1 = {m_SamplePtsX.at(ptIdx), m_SamplePtsY.at(ptIdx), m_SamplePtsZ.at(ptIdx)};
-      Eigen::Vector3f fixedNormal2 = m_GFixedT * fixedNormal1;
+      Eigen::Vector3d fixedNormal1 = {m_SamplePtsX.at(ptIdx), m_SamplePtsY.at(ptIdx), m_SamplePtsZ.at(ptIdx)};
+      Eigen::Vector3d fixedNormal2 = m_GFixedT * fixedNormal1;
 
       for(const auto& selectedTriangle : m_SelectedTriangles)
       {
         for(int32 inversion = 0; inversion <= 1; inversion++)
         {
-          float32 sign = 1.0f;
+          float64 sign = 1.0f;
           if(inversion == 1)
           {
             sign = -1.0f;
           }
 
-          const float32 theta1 = acosf(sign * (selectedTriangle.normalGrain1X * fixedNormal1[0] + selectedTriangle.normalGrain1Y * fixedNormal1[1] + selectedTriangle.normalGrain1Z * fixedNormal1[2]));
-          const float32 theta2 =
-              acosf(-sign * (selectedTriangle.normalGrain2X * fixedNormal2[0] + selectedTriangle.normalGrain2Y * fixedNormal2[1] + selectedTriangle.normalGrain2Z * fixedNormal2[2]));
+          const float64 theta1 =
+              std::acos(sign * (selectedTriangle.normalGrain1X * fixedNormal1[0] + selectedTriangle.normalGrain1Y * fixedNormal1[1] + selectedTriangle.normalGrain1Z * fixedNormal1[2]));
+          const float64 theta2 =
+              std::acos(-sign * (selectedTriangle.normalGrain2X * fixedNormal2[0] + selectedTriangle.normalGrain2Y * fixedNormal2[1] + selectedTriangle.normalGrain2Z * fixedNormal2[2]));
+          const float64 distSq = 0.5f * (theta1 * theta1 + theta2 * theta2);
 
-          if(const float32 distSq = 0.5f * (theta1 * theta1 + theta2 * theta2); distSq < m_PlaneResolutionSq)
+          if(distSq < m_PlaneResolutionSq)
           {
             m_DistributionValues[ptIdx] += selectedTriangle.area;
           }
@@ -315,19 +336,19 @@ public:
 private:
   std::vector<float64>& m_DistributionValues;
   std::vector<float64>& m_ErrorValues;
-  std::vector<float32> m_SamplePtsX;
-  std::vector<float32> m_SamplePtsY;
-  std::vector<float32> m_SamplePtsZ;
+  std::vector<float64> m_SamplePtsX;
+  std::vector<float64> m_SamplePtsY;
+  std::vector<float64> m_SamplePtsZ;
 #ifdef COMPLEX_ENABLE_MULTICORE
   const tbb::concurrent_vector<TriAreaAndNormals>& m_SelectedTriangles;
 #else
   const std::vector<TriAreaAndNormals>& m_SelectedTriangles;
 #endif
-  float32 m_PlaneResolutionSq;
+  float64 m_PlaneResolutionSq;
   float64 m_TotalFaceArea;
   int32 m_NumDistinctGBs;
   float64 m_BallVolume;
-  Matrix3fR m_GFixedT;
+  Matrix3dR m_GFixedT;
 };
 
 } // namespace GBCDMetricBased
@@ -384,25 +405,13 @@ Result<> FindGBCDMetricBased::operator()()
     return createDirectoriesResult;
   }
 
-  std::ofstream distributionOutStream(distributionOutput, std::ios_base::out);
-  if(!distributionOutStream.is_open())
-  {
-    return MakeErrorResult(-7237, fmt::format("Error creating distribution output file {}", distributionOutput.string()));
-  }
-
-  std::ofstream errorOutStream(errorOutput, std::ios_base::out);
-  if(!errorOutStream.is_open())
-  {
-    return MakeErrorResult(-7238, fmt::format("Error creating distribution errors output file {}", errorOutput.string()));
-  }
-
   // -------------------- set resolutions and 'ball volumes' based on user's selection -------------
-  float32 misResolution = k_ResolutionChoices[m_InputValues->ChosenLimitDists][0];
-  float32 planeResolution = k_ResolutionChoices[m_InputValues->ChosenLimitDists][1];
+  float64 misResolution = k_ResolutionChoices[m_InputValues->ChosenLimitDists][0];
+  float64 planeResolution = k_ResolutionChoices[m_InputValues->ChosenLimitDists][1];
 
   misResolution *= Constants::k_PiOver180F;
   planeResolution *= Constants::k_PiOver180F;
-  float32 planeResolutionSq = planeResolution * planeResolution;
+  float64 planeResolutionSq = planeResolution * planeResolution;
 
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
@@ -436,11 +445,11 @@ Result<> FindGBCDMetricBased::operator()()
 
   // generate "Golden Section Spiral", see http://www.softimageblog.com/archives/115
   int32 numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts; // here we generate points on the whole sphere
-  std::vector<float32> samplePtsX(0);
-  std::vector<float32> samplePtsY(0);
-  std::vector<float32> samplePtsZ(0);
+  std::vector<float64> samplePtsX(0);
+  std::vector<float64> samplePtsY(0);
+  std::vector<float64> samplePtsZ(0);
 
-  float32 off = 2.0f / static_cast<float32>(numSamplePtsWholeSphere);
+  float64 off = 2.0f / static_cast<float64>(numSamplePtsWholeSphere);
 
   for(int32 ptIdxWholeSph = 0; ptIdxWholeSph < numSamplePtsWholeSphere; ptIdxWholeSph++)
   {
@@ -449,15 +458,15 @@ Result<> FindGBCDMetricBased::operator()()
       return {};
     }
 
-    float32 y = (static_cast<float32>(ptIdxWholeSph) * off) - 1.0f + (0.5f * off);
-    float32 r = sqrtf(fmaxf(1.0f - y * y, 0.0f));
-    float32 phi = static_cast<float32>(ptIdxWholeSph) * 2.3999632f; // 2.3999632f = pi * (3 - sqrt(5))
+    float64 y = (static_cast<float64>(ptIdxWholeSph) * off) - 1.0 + (0.5 * off);
+    float64 r = sqrtf(fmaxf(1.0 - y * y, 0.0));
+    float64 phi = static_cast<float64>(ptIdxWholeSph) * 2.3999632; // 2.3999632f = pi * (3 - sqrt(5))
 
-    float32 z = sinf(phi) * r;
+    float64 z = sinf(phi) * r;
 
-    if(z > 0.0f)
+    if(z > 0.0)
     {
-      samplePtsX.push_back(cosf(phi) * r);
+      samplePtsX.push_back(std::cos(phi) * r);
       samplePtsY.push_back(y);
       samplePtsZ.push_back(z);
     }
@@ -466,17 +475,17 @@ Result<> FindGBCDMetricBased::operator()()
   // Add points at the equator for better performance of some plotting tools
   for(float64 phi = 0.0; phi <= Constants::k_2PiD; phi += planeResolution)
   {
-    samplePtsX.push_back(cosf(static_cast<float32>(phi)));
-    samplePtsY.push_back(sinf(static_cast<float32>(phi)));
-    samplePtsZ.push_back(0.0f);
+    samplePtsX.push_back(std::cos(phi));
+    samplePtsY.push_back(std::sin(phi));
+    samplePtsZ.push_back(0.0);
   }
 
   // Convert axis angle to matrix representation of mis orientation
   auto gFixedAngle = m_InputValues->MisorientationRotation[3] * Constants::k_PiOver180F;
-  Eigen::Vector3f gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
+  Eigen::Vector3d gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
   gFixedAxis.normalize();
-  auto oMatrix = OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle));
-  Matrix3fR gFixedT = OrientationMatrixToGMatrixTranspose(oMatrix);
+  auto oMatrix = OrientationTransformation::ax2om<OrientationD, OrientationD>(OrientationD(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle));
+  Matrix3dR gFixedT = OrientationMatrixToGMatrixTranspose(oMatrix);
 
   usize numMeshTriangles = faceAreas.getNumberOfTuples();
 
@@ -502,7 +511,7 @@ Result<> FindGBCDMetricBased::operator()()
       return {};
     }
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Step 1/2: Selecting Triangles with the Specified Misorientation ({}% completed)",
-                                                               static_cast<int32>(100.0f * static_cast<float32>(i) / static_cast<float32>(numMeshTriangles))));
+                                                               static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(numMeshTriangles))));
     if(i + triChunkSize >= numMeshTriangles)
     {
       triChunkSize = numMeshTriangles - i;
@@ -510,10 +519,12 @@ Result<> FindGBCDMetricBased::operator()()
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + triChunkSize);
+    dataAlg.setParallelizationEnabled(false);
     dataAlg.execute(GBCDMetricBased::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, triIncluded, misResolution, m_InputValues->PhaseOfInterest, gFixedT,
                                                        crystalStructures, eulerAngles, phases, faceLabels, faceNormals, faceAreas));
   }
 
+  std::cout << "SelectedTriangles.size(): " << selectedTriangles.size() << std::endl;
   // ------------------------  find the number of distinct boundaries ------------------------------
   int32 numDistinctGBs = 0;
   usize numFaceFeatures = featureFaceLabels.getNumberOfTuples();
@@ -562,7 +573,7 @@ Result<> FindGBCDMetricBased::operator()()
       return {};
     }
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Step 2/2: Computing Distribution Values at the Section of Interest ({}% completed)",
-                                                               static_cast<int32>(100.0f * static_cast<float32>(i) / static_cast<float32>(samplePtsX.size()))));
+                                                               static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;
@@ -570,30 +581,69 @@ Result<> FindGBCDMetricBased::operator()()
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + pointsChunkSize);
+    dataAlg.setParallelizationEnabled(false);
     dataAlg.execute(GBCDMetricBased::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, planeResolutionSq, totalFaceArea, numDistinctGBs,
                                                        ballVolume, gFixedT));
   }
+  distributionValues.push_back(0.0);
+  errorValues.push_back(0.0);
+  samplePtsX.push_back(0.0);
+  samplePtsY.push_back(0.0);
+  samplePtsZ.push_back(0.0);
+
+  hid_t fid = H5Support::H5Utilities::createFile(fmt::format("/tmp/{}_7_0_find_gbcd_metric_based.h5", FILE_PREFIX));
+  H5Support::H5Lite::writeVectorDataset(fid, "7_distributionValues", {static_cast<hsize_t>(distributionValues.size())}, distributionValues);
+  H5Support::H5Lite::writeVectorDataset(fid, "7_errorValues", {static_cast<hsize_t>(errorValues.size())}, errorValues);
+  H5Support::H5Lite::writeVectorDataset(fid, "7_samplePtsX", {static_cast<hsize_t>(samplePtsX.size())}, samplePtsX);
+  H5Support::H5Lite::writeVectorDataset(fid, "7_samplePtsY", {static_cast<hsize_t>(samplePtsY.size())}, samplePtsY);
+  H5Support::H5Lite::writeVectorDataset(fid, "7_samplePtsZ", {static_cast<hsize_t>(samplePtsZ.size())}, samplePtsZ);
+
+  std::vector<double> selectedTriAreas(selectedTriangles.size());
+  for(size_t i = 0; i < selectedTriangles.size(); i++)
+  {
+    selectedTriAreas[i] = selectedTriangles[i].area;
+  }
+  H5Support::H5Lite::writeVectorDataset(fid, "7_triAreas", {static_cast<hsize_t>(selectedTriAreas.size())}, selectedTriAreas);
+
+  H5Support::H5Utilities::closeFile(fid);
 
   // ------------------------------------------- writing the output --------------------------------
-  std::string outputString = fmt::format("{:.1f} {:.1f} {:.1f} {:.1f}\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2],
-                                         m_InputValues->MisorientationRotation[3]);
+
+  std::ofstream distributionOutStream(distributionOutput, std::ios_base::out);
+  if(!distributionOutStream.is_open())
+  {
+    return MakeErrorResult(-7237, fmt::format("Error creating distribution output file {}", distributionOutput.string()));
+  }
+  // FILE* fDist = fopen(distributionOutput.c_str(), "w");
+
+  std::ofstream errorOutStream(errorOutput, std::ios_base::out);
+  if(!errorOutStream.is_open())
+  {
+    return MakeErrorResult(-7238, fmt::format("Error creating distribution errors output file {}", errorOutput.string()));
+  }
+
+  std::string outputString = fmt::format("{:1.5E} {:1.5E} {:1.5E} {:1.5E}\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1],
+                                         m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]);
+  //  fprintf(fDist, "%1.5E %1.5E %1.5E %1.5E\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2],
+  //          m_InputValues->MisorientationRotation[3]);
   distributionOutStream << outputString;
   errorOutStream << outputString;
 
   for(usize ptIdx = 0; ptIdx < samplePtsX.size(); ptIdx++)
   {
-    float32 zenith = acosf(samplePtsZ.at(ptIdx));
-    float32 azimuth = atan2f(samplePtsY.at(ptIdx), samplePtsX.at(ptIdx));
+    float64 zenith = std::acos(samplePtsZ.at(ptIdx));
+    float64 azimuth = std::atan2(samplePtsY.at(ptIdx), samplePtsX.at(ptIdx));
 
     auto zenithDeg = Constants::k_180OverPiF * zenith;
     auto azimuthDeg = Constants::k_180OverPiF * azimuth;
 
-    outputString = fmt::format("{:.2f} {:.2f} {:.4f}\n", azimuthDeg, 90.0f - zenithDeg, distributionValues[ptIdx]);
+    outputString = fmt::format("{:1.5E} {:1.5E} {:1.5E}\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
     distributionOutStream << outputString;
+    //  fprintf(fDist, "%1.5E %1.5E %1.5E\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
 
     if(!m_InputValues->SaveRelativeErr)
     {
-      outputString = fmt::format("{:.2f} {:.2f} {:.4f}\n", azimuthDeg, 90.0f - zenithDeg, errorValues[ptIdx]);
+      outputString = fmt::format("{:1.5E} {:1.5E} {:1.5E}\n", azimuthDeg, 90.0 - zenithDeg, errorValues[ptIdx]);
       errorOutStream << outputString;
     }
     else
@@ -603,10 +653,11 @@ Result<> FindGBCDMetricBased::operator()()
       {
         saneErr = fmin(100.0, 100.0 * errorValues[ptIdx] / distributionValues[ptIdx]);
       }
-      outputString = fmt::format("{:.2f} {:.2f} {:.2f}\n", azimuthDeg, 90.0f - zenithDeg, saneErr);
+      outputString = fmt::format("{:1.5E} {:1.5E} {:1.5E}\n", azimuthDeg, 90.0 - zenithDeg, saneErr);
       errorOutStream << outputString;
     }
   }
+  // fclose(fDist);
   distributionOutStream.close();
   errorOutStream.close();
 

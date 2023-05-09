@@ -43,12 +43,12 @@ public:
   TriAreaAndNormals() = default;
 
   float64 area = 0.0;
-  float32 normalGrain1X = 0.0f;
-  float32 normalGrain1Y = 0.0f;
-  float32 normalGrain1Z = 0.0f;
-  float32 normalGrain2X = 0.0f;
-  float32 normalGrain2Y = 0.0f;
-  float32 normalGrain2Z = 0.0f;
+  float32 normalGrain1X = 0.0;
+  float32 normalGrain1Y = 0.0;
+  float32 normalGrain1Z = 0.0;
+  float32 normalGrain2X = 0.0;
+  float32 normalGrain2Y = 0.0;
+  float32 normalGrain2Z = 0.0;
 
   bool operator<(const TriAreaAndNormals& other) const
   {
@@ -95,11 +95,11 @@ public:
 
   void select(usize start, usize end) const
   {
-    Eigen::Vector3f g1ea = {0.0f, 0.0f, 0.0f};
-    Eigen::Vector3f g2ea = {0.0f, 0.0f, 0.0f};
-    Eigen::Vector3f normalLab = {0.0f, 0.0f, 0.0f};
-    Eigen::Vector3f normalGrain1 = {0.0f, 0.0f, 0.0f};
-    Eigen::Vector3f normalGrain2 = {0.0f, 0.0f, 0.0f};
+    Eigen::Vector3d g1ea = {0.0, 0.0, 0.0};
+    Eigen::Vector3d g2ea = {0.0, 0.0, 0.0};
+    Eigen::Vector3d normalLab = {0.0, 0.0, 0.0};
+    Eigen::Vector3d normalGrain1 = {0.0, 0.0, 0.0};
+    Eigen::Vector3d normalGrain2 = {0.0, 0.0, 0.0};
 
     for(usize triIdx = start; triIdx < end; triIdx++)
     {
@@ -137,8 +137,8 @@ public:
         g2ea[whichEa] = m_EulerAngles[3 * feature2 + whichEa];
       }
 
-      auto oMatrix1 = OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g1ea[0], g1ea[1], g1ea[2], 3));
-      auto oMatrix2 = OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g2ea[0], g2ea[1], g2ea[2], 3));
+      auto oMatrix1 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g1ea[0], g1ea[1], g1ea[2], 3.0));
+      auto oMatrix2 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g2ea[0], g2ea[1], g2ea[2], 3.0));
 
       normalGrain1 = OrientationMatrixToGMatrix(oMatrix1) * normalLab;
       normalGrain2 = OrientationMatrixToGMatrix(oMatrix2) * normalLab;
@@ -219,15 +219,15 @@ public:
 
       for(const auto& selectedTriangle : m_SelectedTriangles)
       {
-        Eigen::Vector3f normal1 = {selectedTriangle.normalGrain1X, selectedTriangle.normalGrain1Y, selectedTriangle.normalGrain1Z};
-        Eigen::Vector3f normal2 = {selectedTriangle.normalGrain2X, selectedTriangle.normalGrain2Y, selectedTriangle.normalGrain2Z};
+        Eigen::Vector3d normal1 = {selectedTriangle.normalGrain1X, selectedTriangle.normalGrain1Y, selectedTriangle.normalGrain1Z};
+        Eigen::Vector3d normal2 = {selectedTriangle.normalGrain2X, selectedTriangle.normalGrain2Y, selectedTriangle.normalGrain2Z};
 
         for(int32 j = 0; j < m_NSym; j++)
         {
-          Matrix3fR sym = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpF(j));
+          Matrix3dR sym = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
 
-          Eigen::Vector3f symNormal1 = sym * normal1;
-          Eigen::Vector3f symNormal2 = sym * normal2;
+          Eigen::Vector3d symNormal1 = sym * normal1;
+          Eigen::Vector3d symNormal2 = sym * normal2;
 
           for(int32 inversion = 0; inversion <= 1; inversion++)
           {
@@ -400,10 +400,10 @@ Result<> FindGBPDMetricBased::operator()()
     }
 
     float32 y = (static_cast<float32>(ptIdxWholeSphere) * off) - 1.0f + (0.5f * off);
-    float32 r = sqrtf(fmaxf(1.0f - y * y, 0.0f));
+    float32 r = sqrtf(fmaxf(1.0f - y * y, 0.0));
     float32 phi = static_cast<float32>(ptIdxWholeSphere) * 2.3999632f; // 2.3999632f = pi * (3 - sqrt(5))
 
-    if(float32 z = sinf(phi) * r; z >= 0.0f)
+    if(float32 z = sinf(phi) * r; z >= 0.0)
     {
       samplePtsXHemisphere.push_back(cosf(phi) * r);
       samplePtsYHemisphere.push_back(y);
@@ -425,28 +425,28 @@ Result<> FindGBPDMetricBased::operator()()
 
     if(crystal == 0) // 6/mmm
     {
-      if(x < 0.0f || y < 0.0f || y > x * Constants::k_1OverRoot3F)
+      if(x < 0.0 || y < 0.0 || y > x * Constants::k_1OverRoot3F)
       {
         continue;
       }
     }
     if(crystal == 1) // m-3m
     {
-      if(y < 0.0f || x < y || z < x)
+      if(y < 0.0 || x < y || z < x)
       {
         continue;
       }
     }
     if(crystal == 2 || crystal == 10) // 6/m || -3m
     {
-      if(x < 0.0f || y < 0.0f || y > x * Constants::k_Sqrt3F)
+      if(x < 0.0 || y < 0.0 || y > x * Constants::k_Sqrt3F)
       {
         continue;
       }
     }
     if(crystal == 3) // m-3
     {
-      if(x < 0.0f || y < 0.0f || z < x || z < y)
+      if(x < 0.0 || y < 0.0 || z < x || z < y)
       {
         continue;
       }
@@ -454,28 +454,28 @@ Result<> FindGBPDMetricBased::operator()()
     // m_Crystal = 4  =>  -1
     if(crystal == 5) // 2/m
     {
-      if(y < 0.0f)
+      if(y < 0.0)
       {
         continue;
       }
     }
     if(crystal == 6 || crystal == 7) // mmm || 4/m
     {
-      if(x < 0.0f || y < 0.0f)
+      if(x < 0.0 || y < 0.0)
       {
         continue;
       }
     }
     if(crystal == 8) // 4/mmm
     {
-      if(x < 0.0f || y < 0.0f || y > x)
+      if(x < 0.0 || y < 0.0 || y > x)
       {
         continue;
       }
     }
     if(crystal == 9) // -3
     {
-      if(y < 0.0f || x < -y * Constants::k_1OverRoot3F)
+      if(y < 0.0 || x < -y * Constants::k_1OverRoot3F)
       {
         continue;
       }
@@ -646,7 +646,7 @@ Result<> FindGBPDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0f * static_cast<float32>(i) / static_cast<float32>(samplePtsX.size()))));
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0 * static_cast<float32>(i) / static_cast<float32>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;
@@ -659,23 +659,23 @@ Result<> FindGBPDMetricBased::operator()()
   }
 
   // ------------------------------------------- writing the output --------------------------------
-  std::string outputString = fmt::format("{:.1f} {:.1f} {:.1f} {:.1f}\n", 0.0f, 0.0f, 0.0f, 0.0f);
+  std::string outputString = fmt::format("{:.1f} {:.1f} {:.1f} {:.1f}\n", 0.0, 0.0, 0.0, 0.0);
   distributionOutStream << outputString;
   errorOutStream << outputString;
 
   for(usize ptIdx = 0; ptIdx < samplePtsX.size(); ptIdx++)
   {
-    Eigen::Vector3f point = {samplePtsX.at(ptIdx), samplePtsY.at(ptIdx), samplePtsZ.at(ptIdx)};
-    Matrix3fR sym;
-    sym.fill(0.0f);
+    Eigen::Vector3d point = {samplePtsX.at(ptIdx), samplePtsY.at(ptIdx), samplePtsZ.at(ptIdx)};
+    Matrix3dR sym;
+    sym.fill(0.0);
 
     for(int32 j = 0; j < nSym; j++)
     {
-      sym = EbsdLibMatrixToEigenMatrix(m_OrientationOps[crystal]->getMatSymOpF(j));
-      Eigen::Vector3f symPoint = {0.0f, 0.0f, 0.0f};
+      sym = EbsdLibMatrixToEigenMatrix(m_OrientationOps[crystal]->getMatSymOpD(j));
+      Eigen::Vector3d symPoint = {0.0, 0.0, 0.0};
       symPoint = sym * point;
 
-      if(symPoint[2] < 0.0f)
+      if(symPoint[2] < 0.0)
       {
         symPoint[0] = -symPoint[0];
         symPoint[1] = -symPoint[1];
@@ -688,12 +688,12 @@ Result<> FindGBPDMetricBased::operator()()
       float32 zenithDeg = Constants::k_180OverPiF * zenith;
       float32 azimuthDeg = Constants::k_180OverPiF * azimuth;
 
-      outputString = fmt::format("{:.2f} {:.2f} {:.4f}\n", azimuthDeg, 90.0f - zenithDeg, distributionValues[ptIdx]);
+      outputString = fmt::format("{:.2f} {:.2f} {:.4f}\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
       distributionOutStream << outputString;
 
       if(!m_InputValues->SaveRelativeErr)
       {
-        outputString = fmt::format("{:.2f} {:.2f} {:.4f}\n", azimuthDeg, 90.0f - zenithDeg, errorValues[ptIdx]);
+        outputString = fmt::format("{:.2f} {:.2f} {:.4f}\n", azimuthDeg, 90.0 - zenithDeg, errorValues[ptIdx]);
         errorOutStream << outputString;
       }
       else
@@ -703,7 +703,7 @@ Result<> FindGBPDMetricBased::operator()()
         {
           saneErr = fmin(100.0, 100.0 * errorValues[ptIdx] / distributionValues[ptIdx]);
         }
-        outputString = fmt::format("{:.2f} {:.2f} {:.2f}\n", azimuthDeg, 90.0f - zenithDeg, saneErr);
+        outputString = fmt::format("{:.2f} {:.2f} {:.2f}\n", azimuthDeg, 90.0 - zenithDeg, saneErr);
         errorOutStream << outputString;
       }
     }
