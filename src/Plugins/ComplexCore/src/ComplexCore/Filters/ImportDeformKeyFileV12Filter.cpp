@@ -75,7 +75,7 @@ Parameters ImportDeformKeyFileV12Filter::parameters() const
                                                           FileSystemPathParameter::PathType::InputFile));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_QuadGeomPath_Key, "Quad Geometry", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_QuadGeomPath_Key, "Quad Geometry", "The created Quad Geometry from  imported from file", DataPath({"Quad Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAMName_Key, "Vertex Data Name", "The name of the created Attribute Matrix for vertex data", "Vertex Data"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAMName_Key, "Cell Data Name", "The name of the created Attribute Matrix for cell data", "Cell Data"));
 
