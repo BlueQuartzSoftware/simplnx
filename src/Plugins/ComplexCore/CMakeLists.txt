@@ -85,6 +85,7 @@ set(FilterList
   InitializeData
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
+  KMedoidsFilter
   LaplacianSmoothingFilter
   LosAlamosFFTWriterFilter
   MapPointCloudToRegularGridFilter
@@ -167,6 +168,7 @@ set(AlgorithmList
   ImportDeformKeyFileV12
   ImportVolumeGraphicsFile
   ImportBinaryCTNorthstar
+  KMedoids
   LaplacianSmoothing
   LosAlamosFFTWriter
   NearestPointFuseRegularGrids
