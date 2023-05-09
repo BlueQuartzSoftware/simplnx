@@ -20,7 +20,7 @@ namespace
 const DataPath k_QuadGeomPath = DataPath({k_DataContainer});
 const DataPath k_CellPath = k_QuadGeomPath.createChildPath(k_CellData);
 const DataPath k_VertexPath = k_QuadGeomPath.createChildPath(k_VertexData);
-}
+} // namespace
 
 TEST_CASE("ComplexCore::FillBadData", "[Core][FillBadData]")
 {
@@ -29,12 +29,12 @@ TEST_CASE("ComplexCore::FillBadData", "[Core][FillBadData]")
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Filter
-  //auto exemplarFilePath = fs::path(fmt::format("{}/6_6_fill_bad_data/6_6_exemplar.dream3d", unit_test::k_TestFilesDir));
+  // auto exemplarFilePath = fs::path(fmt::format("{}/6_6_fill_bad_data/6_6_exemplar.dream3d", unit_test::k_TestFilesDir));
   auto exemplarFilePath = fs::path("");
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
-  //auto baseDataFilePath = fs::path(fmt::format("{}/6_6_fill_bad_data/6_6_input.dream3d", unit_test::k_TestFilesDir));
+  // auto baseDataFilePath = fs::path(fmt::format("{}/6_6_fill_bad_data/6_6_input.dream3d", unit_test::k_TestFilesDir));
   auto baseDataFilePath = fs::path("");
   DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
 
