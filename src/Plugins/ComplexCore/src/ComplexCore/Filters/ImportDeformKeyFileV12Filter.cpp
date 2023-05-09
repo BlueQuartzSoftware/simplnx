@@ -117,7 +117,7 @@ IFilter::PreflightResult ImportDeformKeyFileV12Filter::preflightImpl(const DataS
     inputValues.VertexAMPath = vertexDataPath;
 
     // Read from the file
-    DataStructure throwaway{};
+    DataStructure throwaway = DataStructure();
     ImportDeformKeyFileV12 algorithm(throwaway, messageHandler, shouldCancel, &inputValues);
     algorithm.operator()(false);
     // Cache the results from algorithm run
@@ -175,6 +175,9 @@ Result<> ImportDeformKeyFileV12Filter::executeImpl(DataStructure& dataStructure,
   ImportDeformKeyFileV12InputValues inputValues;
 
   inputValues.InputFilePath = s_HeaderCache[m_InstanceId].inputFile;
+  inputValues.QuadGeomPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key);
+  inputValues.CellAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_CellAMName_Key));
+  inputValues.VertexAMPath = filterArgs.value<DataPath>(k_QuadGeomPath_Key).createChildPath(filterArgs.value<std::string>(k_VertexAMName_Key));
 
   return ImportDeformKeyFileV12(dataStructure, messageHandler, shouldCancel, &inputValues)(true);
 }

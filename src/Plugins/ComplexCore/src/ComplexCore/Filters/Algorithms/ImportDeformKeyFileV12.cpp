@@ -176,8 +176,10 @@ public:
       }
 
       // Unrecognized section
-      m_Filter->updateProgress(fmt::format("Warning at line {}: Unrecognized section \"{}\"", StringUtilities::number(m_LineCount), StringUtilities::join(tokens.data(), ' ')));
+      m_Filter->updateProgress(fmt::format("Warning at line {}: Unrecognized section", StringUtilities::number(m_LineCount)));
     }
+
+    return {};
   }
 
 private:
@@ -215,7 +217,7 @@ private:
     return {};
   }
 
-  inline Result<> parse_ull(const std::string& token, usize& value)
+  inline Result<> parse_ull(const std::string& token, usize& value) const
   {
     try
     {
@@ -323,9 +325,11 @@ private:
       std::string cleanedString = StringUtilities::replace(buf, "/", "|");
       m_UserDefinedVariables[i] = cleanedString;
     }
+
+    return {};
   }
 
-  [[nodiscard]] Result<> readDataArray(DataPath parentPath, const std::string& dataArrayName, usize arrayTupleSize)
+  [[nodiscard]] Result<> readDataArray(const DataPath& parentPath, const std::string& dataArrayName, usize arrayTupleSize)
   {
     if(arrayTupleSize == 0)
     {
@@ -401,6 +405,7 @@ private:
       if(dataArrayName == "USRNOD")
       {
         m_UserDefinedArrays.clear();
+        m_UserDefinedArrays.reserve(m_UserDefinedVariables.size());
         for(const auto& userDefinedVariable : m_UserDefinedVariables)
         {
           DataArrayMetadata metadata = {};
@@ -409,6 +414,7 @@ private:
           metadata.componentCount = 1;
 
           m_Cache.dataArrays.emplace_back(std::move(metadata));
+          m_UserDefinedArrays.emplace_back(parentPath.createChildPath(userDefinedVariable));
         }
       }
       else
@@ -477,7 +483,7 @@ private:
           compLineData = StringUtilities::trimmed(compLineData);
           compLineData = StringUtilities::simplified(compLineData);
           auto subTokens = StringUtilities::split(compLineData, ' ');
-          tokens.insert(tokens.end(), subTokens.begin() + offset, subTokens.end());
+          tokens.insert(tokens.end(), subTokens.begin() + static_cast<int64>(offset), subTokens.end());
         }
 
         Result<> setResult;
@@ -503,7 +509,7 @@ private:
     return {};
   }
 
-  Result<> readVertexCoordinates(IGeometry::SharedVertexList& vertex, usize numVerts)
+  Result<> readVertexCoordinates(IGeometry::SharedVertexList* vertex, usize numVerts)
   {
     std::string buf;
     std::vector<std::string> tokens; /* vector to store the split data */
@@ -520,7 +526,7 @@ private:
 
       try
       {
-        vertex[3 * i] = std::stof(tokens[1]);
+        vertex->operator[](3 * i) = std::stof(tokens[1]);
       } catch(const std::exception& e)
       {
         std::string msg = fmt::format("Error at line {}: Unable to convert vertex coordinate {}'s 1st string value \"{}\" to float.  Threw standard exception with text: \"{}\"",
@@ -530,7 +536,7 @@ private:
 
       try
       {
-        vertex[3 * i + 1] = std::stof(tokens[2]);
+        vertex->operator[](3 * i + 1) = std::stof(tokens[2]);
       } catch(const std::exception& e)
       {
         std::string msg = fmt::format("Error at line {}: Unable to convert vertex coordinate {}'s 2nd string value \"{}\" to float.  Threw standard exception with text: \"{}\"",
@@ -538,8 +544,10 @@ private:
         return MakeErrorResult(-2002, std::move(msg));
       }
 
-      vertex[3 * i + 2] = 0.0f;
+      vertex->operator[](3 * i + 2) = 0.0f;
     }
+
+    return {};
   }
 
   Result<> readQuadGeometry(IGeometry::MeshIndexArrayType& quads, usize numCells)
@@ -556,7 +564,7 @@ private:
 
       tokens = getNextLineTokens();
 
-      // Subtract one from the node number because DEFORM starts at node 1 and we start at node 0
+      // Subtract one from the node number because DEFORM starts at node 1, and we start at node 0
       try
       {
         quads[4 * i] = std::stoi(tokens[1]) - 1;
@@ -597,6 +605,8 @@ private:
         return MakeErrorResult(-2007, msg);
       }
     }
+
+    return {};
   }
 
   [[nodiscard]] Result<> readDataForObject()
@@ -658,7 +668,7 @@ private:
         if(m_Allocate)
         {
           // Grab vertex list from quad geom
-          IGeometry::SharedVertexList& vertex = *m_DataStructure.getDataAs<QuadGeom>(m_QuadGeomPath)->getVertices();
+          IGeometry::SharedVertexList* vertex = m_DataStructure.getDataAs<QuadGeom>(m_QuadGeomPath)->getVertices();
 
           auto vertexResult = readVertexCoordinates(vertex, numVerts);
           if(vertexResult.invalid())
@@ -806,7 +816,10 @@ Result<> ImportDeformKeyFileV12::operator()(bool allocate)
    * not been created.
    */
   std::ifstream inStream(m_InputValues->InputFilePath);
-  ///!!!!!! VALIDATE THE STREAM !!!!!!!///
+  if(!inStream.is_open())
+  {
+    return MakeErrorResult(-2013, fmt::format("Unable to open the provided file to read at path : {}", m_InputValues->InputFilePath.string()));
+  }
 
   IOHandler handler = IOHandler(this, m_DataStructure, inStream, m_InputValues->QuadGeomPath, m_InputValues->VertexAMPath, m_InputValues->CellAMPath, allocate);
 
