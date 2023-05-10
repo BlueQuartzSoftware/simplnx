@@ -22,7 +22,7 @@ const DataPath k_CellPath = k_QuadGeomPath.createChildPath(k_CellData);
 const DataPath k_VertexPath = k_QuadGeomPath.createChildPath(k_VertexData);
 } // namespace
 
-TEST_CASE("ComplexCore::FillBadData", "[Core][FillBadData]")
+TEST_CASE("ComplexCore::ImportDeformKeyFileV12", "[Core][ImportDeformKeyFileV12]")
 {
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
