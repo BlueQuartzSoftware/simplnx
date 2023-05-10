@@ -113,6 +113,7 @@
 #include "ComplexCore/Filters/GenerateVectorColorsFilter.hpp"
 #include "ComplexCore/Filters/KMedoidsFilter.hpp"
 #include "ComplexCore/Filters/KMeansFilter.hpp"
+#include "ComplexCore/Filters/SilhouetteFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -235,6 +236,7 @@ namespace complex
     {complex::Uuid::FromString("3c6337da-e232-4420-a5ca-451496748d88").value(), complex::FilterTraits<ImportDeformKeyFileV12Filter>::uuid}, // ImportDeformKeyFileV12Filter
     {complex::Uuid::FromString("f7486aa6-3049-5be7-8511-ae772b70c90b").value(), complex::FilterTraits<KMedoidsFilter>::uuid}, // KMedoids
     {complex::Uuid::FromString("b56a04de-0ca0-509d-809f-52219fca9c98").value(), complex::FilterTraits<KMeansFilter>::uuid}, // KMeans
+    {complex::Uuid::FromString("f84d4d69-9ea5-54b6-a71c-df76d76d50cf").value(), complex::FilterTraits<SilhouetteFilter>::uuid}, // Silhouette
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
