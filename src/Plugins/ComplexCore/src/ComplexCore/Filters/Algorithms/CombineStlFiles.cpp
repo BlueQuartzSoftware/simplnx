@@ -33,14 +33,13 @@ const std::atomic_bool& CombineStlFiles::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CombineStlFiles::operator()()
 {
-  StlFileReaderFilter stlFileReader;
   DataStructure tempDataStructure;
-
   for(const auto& dirEntry : std::filesystem::directory_iterator{m_InputValues->StlFilesPath})
   {
     const fs::path& stlFilePath = dirEntry.path();
     if(fs::is_regular_file(stlFilePath) && StringUtilities::toLower(stlFilePath.extension().string()) == ".stl")
     {
+      StlFileReaderFilter stlFileReader;
       Arguments args;
       args.insertOrAssign(StlFileReaderFilter::k_StlFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(stlFilePath));
       args.insertOrAssign(StlFileReaderFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(DataPath({stlFilePath.stem().string()})));
