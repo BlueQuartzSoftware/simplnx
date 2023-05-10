@@ -422,7 +422,7 @@ private:
         DataArrayMetadata metadata = {};
         metadata.path = parentPath.createChildPath(dataArrayName);
         metadata.tupleCount = arrayTupleSize;
-        metadata.componentCount = 1;
+        metadata.componentCount = componentCount;
 
         m_Cache.dataArrays.emplace_back(std::move(metadata));
       }
