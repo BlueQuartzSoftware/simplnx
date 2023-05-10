@@ -85,6 +85,7 @@ set(FilterList
   InitializeData
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
+  KMeansFilter
   KMedoidsFilter
   LaplacianSmoothingFilter
   LosAlamosFFTWriterFilter
@@ -111,6 +112,7 @@ set(FilterList
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
+  SilhouetteFilter
   SplitAttributeArrayFilter
   StlFileReaderFilter
   TriangleCentroidFilter
@@ -168,6 +170,7 @@ set(AlgorithmList
   ImportDeformKeyFileV12
   ImportVolumeGraphicsFile
   ImportBinaryCTNorthstar
+  KMeans
   KMedoids
   LaplacianSmoothing
   LosAlamosFFTWriter
@@ -183,6 +186,7 @@ set(AlgorithmList
   ResampleRectGridToImageGeom
   ScalarSegmentFeatures
   SharedFeatureFace
+  Silhouette
   SplitAttributeArray
   StlFileReader
   TriangleCentroid

@@ -84,6 +84,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
+  KMeansTest.cpp
   KMedoidsTest.cpp
   LaplacianSmoothingFilterTest.cpp
   LosAlamosFFTWriterTest.cpp
@@ -111,6 +112,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
+  SilhouetteTest.cpp
   SplitAttributeArrayTest.cpp
   StlFileReaderTest.cpp
   TriangleCentroidTest.cpp
