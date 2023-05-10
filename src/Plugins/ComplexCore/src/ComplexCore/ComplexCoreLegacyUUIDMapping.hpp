@@ -112,6 +112,7 @@
 #include "ComplexCore/Filters/LosAlamosFFTWriterFilter.hpp"
 #include "ComplexCore/Filters/GenerateVectorColorsFilter.hpp"
 #include "ComplexCore/Filters/KMedoidsFilter.hpp"
+#include "ComplexCore/Filters/KMeansFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -233,6 +234,7 @@ namespace complex
     {complex::Uuid::FromString("ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc").value(), complex::FilterTraits<GenerateVectorColorsFilter>::uuid}, // GenerateVectorColors
     {complex::Uuid::FromString("3c6337da-e232-4420-a5ca-451496748d88").value(), complex::FilterTraits<ImportDeformKeyFileV12Filter>::uuid}, // ImportDeformKeyFileV12Filter
     {complex::Uuid::FromString("f7486aa6-3049-5be7-8511-ae772b70c90b").value(), complex::FilterTraits<KMedoidsFilter>::uuid}, // KMedoids
+    {complex::Uuid::FromString("b56a04de-0ca0-509d-809f-52219fca9c98").value(), complex::FilterTraits<KMeansFilter>::uuid}, // KMeans
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
