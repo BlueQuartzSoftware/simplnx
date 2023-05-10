@@ -309,6 +309,12 @@ private:
     auto tokens = StringUtilities::split(buf, ' ');
     m_LineCount++;
 
+    if(tokens.size() != 3)
+    {
+      findNextSection();
+      return {};
+    }
+
     usize numVars;
     Result<> result = parse_ull(tokens.at(2), numVars);
     if(result.invalid())
