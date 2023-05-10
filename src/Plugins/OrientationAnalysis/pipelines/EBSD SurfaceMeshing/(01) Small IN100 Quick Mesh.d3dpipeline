@@ -101,7 +101,7 @@
     },
     {
       "args": {
-        "data": "DataContainer/CellEnsembleData",
+        "data": ["DataContainer/CellEnsembleData"],
         "new_parent": "DataContainer"
       },
       "comments": "",
