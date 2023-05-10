@@ -25,7 +25,7 @@ TEST_CASE("ComplexCore::CombineStlFilesFilter: Valid Filter Execution", "[Comple
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_combine_stl_files.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
-  std::string inputStlDir = fmt::format("{}/Data/Models", unit_test::k_DREAM3DDataDir.view());
+  std::string inputStlDir = fmt::format("{}/STL_Models", unit_test::k_TestFilesDir.view());
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CombineStlFilesFilter filter;
