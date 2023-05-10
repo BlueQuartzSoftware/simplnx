@@ -99,6 +99,7 @@
 #include "ComplexCore/Filters/AbaqusHexahedronWriterFilter.hpp"
 #include "ComplexCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
 #include "ComplexCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
+#include "ComplexCore/Filters/CombineStlFilesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -207,6 +208,7 @@ namespace complex
     {complex::Uuid::FromString("0559aa37-c5ad-549a-82d4-bff4bfcb6cc6").value(), complex::FilterTraits<AbaqusHexahedronWriterFilter>::uuid}, // AbaqusHexahedronWriter
     {complex::Uuid::FromString("cbaf9e68-5ded-560c-9440-509289100ea8").value(), complex::FilterTraits<NearestPointFuseRegularGridsFilter>::uuid}, // NearestPointFuseRegularGrids
     {complex::Uuid::FromString("77befd69-4536-5856-9f81-02996d038f73").value(), complex::FilterTraits<ResampleRectGridToImageGeomFilter>::uuid}, // ResampleRectGridToImageGeom
+    {complex::Uuid::FromString("71d46128-1d2d-58fd-9924-1714695768c3").value(), complex::FilterTraits<CombineStlFilesFilter>::uuid}, // CombineStlFiles
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

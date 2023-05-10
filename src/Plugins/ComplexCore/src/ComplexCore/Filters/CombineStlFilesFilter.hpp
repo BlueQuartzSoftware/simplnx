@@ -8,37 +8,27 @@
 namespace complex
 {
 /**
- * @brief StlFileReaderFilter This filter will read a Binary STL file into a Triangle
- * Geometry including the Normal Vector for each face. The actual algorithm is
- * contained in the ComplexCore/Filters/Algorithms/StlFileReader
- *
+ * @class CombineStlFilesFilter
+ * @brief This filter will combine all of the STL files from a given directory into a single triangle geometry
  */
-class COMPLEXCORE_EXPORT StlFileReaderFilter : public IFilter
+class COMPLEXCORE_EXPORT CombineStlFilesFilter : public IFilter
 {
 public:
-  StlFileReaderFilter() = default;
-  ~StlFileReaderFilter() noexcept override = default;
+  CombineStlFilesFilter() = default;
+  ~CombineStlFilesFilter() noexcept override = default;
 
-  StlFileReaderFilter(const StlFileReaderFilter&) = delete;
-  StlFileReaderFilter(StlFileReaderFilter&&) noexcept = delete;
+  CombineStlFilesFilter(const CombineStlFilesFilter&) = delete;
+  CombineStlFilesFilter(CombineStlFilesFilter&&) noexcept = delete;
 
-  StlFileReaderFilter& operator=(const StlFileReaderFilter&) = delete;
-  StlFileReaderFilter& operator=(StlFileReaderFilter&&) noexcept = delete;
+  CombineStlFilesFilter& operator=(const CombineStlFilesFilter&) = delete;
+  CombineStlFilesFilter& operator=(CombineStlFilesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_StlFilePath_Key = "stl_file_path";
-  static inline constexpr StringLiteral k_GeometryDataPath_Key = "geometry_data_path";
-
-  static inline constexpr StringLiteral k_FaceGroupDataPath_Key = "face_data_path";
-  static inline constexpr StringLiteral k_FaceNormalsDataPath_Key = "face_normals_data_path";
-  static inline constexpr StringLiteral k_ScaleOutput = "scale_output";
-  static inline constexpr StringLiteral k_ScaleFactor = "scale_factor";
-  static inline constexpr StringLiteral k_VertexMatrix_Key = "vertex_matrix";
-  static inline constexpr StringLiteral k_FaceMatrix_Key = "face_matrix";
-  static inline constexpr StringLiteral k_SharedVertexMatrix_Key = "shared_vertex_matrix";
-  static inline constexpr StringLiteral k_SharedFaceMatrix_Key = "shared_face_matrix";
-
-  static inline constexpr StringLiteral k_FaceNormals = "FaceNormals";
+  static inline constexpr StringLiteral k_StlFilesPath_Key = "stl_files_path";
+  static inline constexpr StringLiteral k_TriangleDataContainerName_Key = "triangle_data_container_name";
+  static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FaceNormalsArrayName_Key = "face_normals_array_name";
+  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
 
   /**
    * @brief Returns the name of the filter.
@@ -87,17 +77,17 @@ protected:
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
    * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
    * Some parts of the actions may not be completely filled out if all the required information is not available at preflight time.
-   * @param dataStructure The input DataStructure instance
+   * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+  PreflightResult preflightImpl(const DataStructure& ds, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
    * On failure, there is no guarantee that the DataStructure is in a correct state.
-   * @param dataStructure The input DataStructure instance
+   * @param ds The input DataStructure instance
    * @param filterArgs These are the input values for each parameter that is required for the filter
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
@@ -106,4 +96,5 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, StlFileReaderFilter, "2f64bd45-9d28-4254-9e07-6aa7c6d3d015");
+COMPLEX_DEF_FILTER_TRAITS(complex, CombineStlFilesFilter, "76b56f80-fcbe-4d48-a34d-a73d0fc6e5ae");
+/* LEGACY UUID FOR THIS FILTER 71d46128-1d2d-58fd-9924-1714695768c3 */

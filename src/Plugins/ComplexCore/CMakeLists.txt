@@ -21,6 +21,7 @@ set(FilterList
   CalculateTriangleAreasFilter
   ChangeAngleRepresentation
   CombineAttributeArraysFilter
+  CombineStlFilesFilter
   ComputeMomentInvariants2DFilter
   ComputeFeatureRectFilter
   ConditionalSetValue
@@ -123,6 +124,7 @@ set(AlgorithmList
   ArrayCalculator
   CalculateArrayHistogram
   CombineAttributeArrays
+  CombineStlFiles
   ComputeMomentInvariants2D
   ComputeFeatureRect
   ConvertColorToGrayScale
