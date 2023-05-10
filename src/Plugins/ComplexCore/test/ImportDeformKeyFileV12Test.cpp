@@ -4,6 +4,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/ImportDeformKeyFileV12Filter.hpp"
@@ -20,7 +21,139 @@ namespace
 const DataPath k_QuadGeomPath = DataPath({k_DataContainer});
 const DataPath k_CellPath = k_QuadGeomPath.createChildPath(k_CellData);
 const DataPath k_VertexPath = k_QuadGeomPath.createChildPath(k_VertexData);
+
+std::array<size_t, 3> dims = {48, 48, 1};
+std::array<float, 3> spacing = {1.0f, 1.0f, 1.0f};
+std::array<float, 3> origin = {0.0f, 0.0f, 0.0f};
+
 } // namespace
+
+void MakeNodeFile(std::string nodeFilePath, std::string sectionTitle, int numComp)
+{
+  size_t numNodes = dims[0] * dims[1] * dims[2];
+  FloatVec3 center0(12.0f, 12.0f, 0.0f);
+  FloatVec3 center1(36.0f, 36.0f, 0.0f);
+
+  int index = 1;
+  std::ofstream nodes(nodeFilePath, std::ios_base::out);
+  nodes << fmt::format("{:<8}       1    {}    0.0000000000E+000      {}", sectionTitle, numNodes, numComp) << std::endl;
+  for(size_t z = 0; z < dims[2]; z++)
+  {
+    for(size_t y = 0; y < dims[1]; y++)
+    {
+      for(size_t x = 0; x < dims[1]; x++)
+      {
+        nodes << fmt::format("{:>8}    ", index);
+
+        FloatVec3 point(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+
+        float r0 = (center0 - point).magnitude();
+        float r1 = (center1 - point).magnitude();
+
+        for(int c = 0; c < numComp; c++)
+        {
+          nodes << fmt::format("{:>17E}   ", std::abs(r0 - r1));
+          if(c % 5 == 0 && c > 0)
+          {
+            nodes << std::endl << "            ";
+          }
+        }
+
+        nodes << std::endl;
+        index++;
+      }
+    }
+  }
+}
+
+void MakeElementFile(std::string nodeFilePath, std::string sectionTitle, int numComp)
+{
+  size_t numElements = (dims[0] - 1) * (dims[1] - 1) * dims[2];
+  FloatVec3 center0(24.0f, 12.0f, 0.0f);
+  FloatVec3 center1(36.0f, 36.0f, 0.0f);
+
+  int index = 1;
+  std::ofstream nodes(nodeFilePath, std::ios_base::out);
+  nodes << fmt::format("{:<8}       1    {}    0.0000000000E+000      {}", sectionTitle, numElements, numComp) << std::endl;
+  for(size_t z = 0; z < dims[2]; z++)
+  {
+    for(size_t y = 0; y < dims[1] - 1; y++)
+    {
+      for(size_t x = 0; x < dims[1] - 1; x++)
+      {
+        nodes << fmt::format("{:>8}    ", index);
+
+        FloatVec3 point(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+
+        float r0 = (center0 - point).magnitude();
+        float r1 = (center1 - point).magnitude();
+
+        for(int c = 0; c < numComp; c++)
+        {
+          nodes << fmt::format("{:>17E}   ", (c + 1) * std::abs(r0 - r1));
+          if(c % 5 == 0 && c > 0)
+          {
+            nodes << std::endl << "            ";
+          }
+        }
+
+        nodes << std::endl;
+        index++;
+      }
+    }
+  }
+}
+
+TEST_CASE("Generate_Quad_Geom", "")
+{
+  MakeNodeFile("/tmp/USRNOD.txt", "USRNOD", 1);
+  MakeElementFile("/tmp/NDTMP.txt", "DAMAGE", 1);
+
+  size_t numNodes = dims[0] * dims[1] * dims[2];
+  int index = 1;
+  std::ofstream nodes("/tmp/nodes.csv", std::ios_base::out);
+  nodes << fmt::format("RZ           1    {}", numNodes) << std::endl;
+  for(size_t z = 0; z < dims[2]; z++)
+  {
+    for(size_t y = 0; y < dims[1]; y++)
+    {
+      for(size_t x = 0; x < dims[1]; x++)
+      {
+        float xpos = (x * spacing[0] + origin[0]);
+        float ypos = (y * spacing[1] + origin[1]);
+
+        std::string output = fmt::format("{:>8}   {:>17.10E}   {:>17.10E}", index, xpos, ypos);
+        output = StringUtilities::replace(output, "E+", "E+0");
+        nodes << output << std::endl;
+        index++;
+      }
+    }
+  }
+
+  std::ofstream elecon("/tmp/elecon.csv", std::ios_base::out);
+  size_t numElements = (dims[0] - 1) * (dims[1] - 1) * dims[2];
+
+  elecon << fmt::format("ELMCON       1    {}", numElements) << std::endl;
+  index = 1;
+  for(size_t z = 0; z < dims[2]; z++)
+  {
+    for(size_t y = 0; y < dims[1] - 1; y++)
+    {
+      for(size_t x = 0; x < dims[1] - 1; x++)
+      {
+        size_t idx0 = (y * dims[0]) + x;
+        size_t idx1 = (y * dims[0]) + x + 1;
+
+        size_t idx2 = ((y + 1) * dims[0]) + x + 1;
+        size_t idx3 = ((y + 1) * dims[0]) + x;
+        std::string output = fmt::format("{:>8}{:>8}{:>8}{:>8}{:>8}", index, idx0 + 1, idx1 + 1, idx2 + 1, idx3 + 1);
+
+        elecon << output << std::endl;
+        index++;
+      }
+    }
+  }
+}
 
 TEST_CASE("ComplexCore::ImportDeformKeyFileV12", "[Core][ImportDeformKeyFileV12]")
 {
