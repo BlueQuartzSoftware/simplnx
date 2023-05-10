@@ -2,6 +2,7 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/KUtilities.hpp"
 
 #include <random>
 
@@ -9,127 +10,6 @@ using namespace complex;
 
 namespace
 {
-/**
- * @brief The DistanceTemplate class contains a templated function getDistance to find the distance, via a variety of
- * metrics, between two vectors of arbitrary dimensions. The developer should ensure that the pointers passed to
- * getDistance do indeed contain vectors of the same component dimensions and start at the desired tuples.
- */
-template <typename leftDataType, typename rightDataType>
-auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDataType& rightVector, usize rightOffset, usize compDims, int distMetric)
-{
-  float64 dist = 0.0;
-  float64 lVal = 0.0;
-  float64 rVal = 0.0;
-
-  float64 epsilon = std::numeric_limits<float64>::min();
-
-  // Euclidean
-  if(distMetric == 0)
-  {
-    for(usize i = 0; i < compDims; i++)
-    {
-      lVal = static_cast<float64>(leftVector[i + leftOffset]);
-      rVal = static_cast<float64>(rightVector[i + rightOffset]);
-      dist += (lVal - rVal) * (lVal - rVal);
-    }
-
-    dist = std::sqrt(dist);
-  }
-  // Squared Euclidean
-  else if(distMetric == 1)
-  {
-    for(usize i = 0; i < compDims; i++)
-    {
-      lVal = static_cast<float64>(leftVector[i + leftOffset]);
-      rVal = static_cast<float64>(rightVector[i + rightOffset]);
-      dist += (lVal - rVal) * (lVal - rVal);
-    }
-  }
-  // Manhattan
-  else if(distMetric == 2)
-  {
-    for(usize i = 0; i < compDims; i++)
-    {
-      lVal = static_cast<float64>(leftVector[i + leftOffset]);
-      rVal = static_cast<float64>(rightVector[i + rightOffset]);
-      dist += std::abs(lVal - rVal);
-    }
-  }
-  // Cosine
-  else if(distMetric == 3)
-  {
-    float64 r = 0;
-    float64 x = 0;
-    float64 y = 0;
-    for(usize i = 0; i < compDims; i++)
-    {
-      lVal = static_cast<float64>(leftVector[i + leftOffset]);
-      rVal = static_cast<float64>(rightVector[i + rightOffset]);
-      r += lVal * rVal;
-      x += lVal * lVal;
-      y += rVal * rVal;
-    }
-    dist = 1 - (r / (sqrt(x * y) + epsilon));
-  }
-  // Pearson
-  else if(distMetric == 4)
-  {
-    float64 r = 0;
-    float64 x = 0;
-    float64 y = 0;
-    float64 xAvg = 0;
-    float64 yAvg = 0;
-    for(usize i = 0; i < compDims; i++)
-    {
-      lVal = static_cast<float64>(leftVector[i + leftOffset]);
-      rVal = static_cast<float64>(rightVector[i + rightOffset]);
-      xAvg += lVal;
-      yAvg += rVal;
-    }
-    xAvg /= static_cast<float64>(compDims);
-    yAvg /= static_cast<float64>(compDims);
-    for(usize i = 0; i < compDims; i++)
-    {
-      lVal = static_cast<float64>(leftVector[i + leftOffset]);
-      rVal = static_cast<float64>(rightVector[i + rightOffset]);
-      r += (lVal - xAvg) * (rVal - yAvg);
-      x += (lVal - xAvg) * (lVal - xAvg);
-      y += (rVal - yAvg) * (rVal - yAvg);
-    }
-    dist = 1 - (r / (sqrt(x * y) + epsilon));
-  }
-  // Squared Pearson
-  else if(distMetric == 5)
-  {
-    float64 r = 0;
-    float64 x = 0;
-    float64 y = 0;
-    float64 xAvg = 0;
-    float64 yAvg = 0;
-    for(usize i = 0; i < compDims; i++)
-    {
-      lVal = static_cast<float64>(leftVector[i + leftOffset]);
-      rVal = static_cast<float64>(rightVector[i + rightOffset]);
-      xAvg += lVal;
-      yAvg += rVal;
-    }
-    xAvg /= static_cast<float64>(compDims);
-    yAvg /= static_cast<float64>(compDims);
-    for(usize i = 0; i < compDims; i++)
-    {
-      lVal = static_cast<float64>(leftVector[i + leftOffset]);
-      rVal = static_cast<float64>(rightVector[i + rightOffset]);
-      r += (lVal - xAvg) * (rVal - yAvg);
-      x += (lVal - xAvg) * (lVal - xAvg);
-      y += (rVal - yAvg) * (rVal - yAvg);
-    }
-    dist = 1 - ((r * r) / ((x * y) + epsilon));
-  }
-
-  // Return the correct primitive type for distance
-  return dist;
-}
-
 template <typename T>
 class KMedoidsTemplate
 {
@@ -144,7 +24,7 @@ public:
     return Pointer(static_cast<Self*>(nullptr));
   }
 
-  KMedoidsTemplate(KMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds, int32 distMetric,
+  KMedoidsTemplate(KMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds, KUtilities::DistanceMetric distMetric,
                    std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
@@ -228,7 +108,7 @@ private:
   const BoolArray& m_Mask;
   usize m_NumClusters;
   Int32Array& m_FeatureIds;
-  int32 m_DistMetric;
+  KUtilities::DistanceMetric m_DistMetric;
   std::mt19937_64::result_type m_Seed;
 
   // -----------------------------------------------------------------------------
@@ -247,7 +127,7 @@ private:
         float64 minDist = std::numeric_limits<float64>::max();
         for(int32 j = 0; j < m_NumClusters; j++)
         {
-          dist = GetDistance(m_InputArray, (dims * i), m_Medoids, (dims * (j + 1)), dims, m_DistMetric);
+          dist = KUtilities::GetDistance(m_InputArray, (dims * i), m_Medoids, (dims * (j + 1)), dims, m_DistMetric);
           if(dist < minDist)
           {
             minDist = dist;
@@ -289,7 +169,7 @@ private:
               }
               if(m_FeatureIds[k] == i + 1 && m_Mask[k])
               {
-                dist = GetDistance(m_InputArray, (dims * k), m_InputArray, (dims * j), dims, m_DistMetric);
+                dist = KUtilities::GetDistance(m_InputArray, (dims * k), m_InputArray, (dims * j), dims, m_DistMetric);
                 cost += dist;
               }
             }

@@ -48,7 +48,7 @@ TEST_CASE("ComplexCore::KMeansFilter: Valid Filter Execution","[ComplexCore][KMe
   args.insertOrAssign(KMeansFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(KMeansFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(KMeansFilter::k_FeatureIdsArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(KMeansFilter::k_FeatureAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(KMeansFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(KMeansFilter::k_MeansArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
 

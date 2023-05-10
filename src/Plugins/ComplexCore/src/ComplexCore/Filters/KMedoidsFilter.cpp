@@ -9,13 +9,13 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
+#include "complex/Utilities/KUtilities.hpp"
 
 using namespace complex;
 
@@ -65,14 +65,14 @@ Parameters KMedoidsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
   params.insert(std::make_unique<UInt64Parameter>(k_SeedValue_Key, "Seed", "The seed fed into the random generator", std::mt19937::default_seed));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Use a mask for Attribute Array to Cluster", false));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "Boolean array where true means that medoids will be determined for that index in Attribute Array to Cluster",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean}));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Use a mask", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "Boolean array where true means that medoids will be determined", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean}));
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<UInt64Parameter>(k_InitClusters_Key, "Number of Clusters", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0));
   params.insert(
-      std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(DistanceMetric::Euclidean),
+      std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(KUtilities::DistanceMetric::Euclidean),
                                          ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // sequence dependent DO NOT REORDER
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
@@ -164,7 +164,7 @@ Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Argumen
   KMedoidsInputValues inputValues;
 
   inputValues.InitClusters = filterArgs.value<uint64>(k_InitClusters_Key);
-  inputValues.DistanceMetric = filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key);
+  inputValues.DistanceMetric = static_cast<KUtilities::DistanceMetric>(filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key));
   inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   inputValues.MaskArrayPath = maskPath;
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));

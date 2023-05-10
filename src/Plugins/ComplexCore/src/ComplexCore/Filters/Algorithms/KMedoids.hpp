@@ -6,25 +6,16 @@
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Utilities/KUtilities.hpp"
 
 #include <random>
 
 namespace complex
 {
-enum COMPLEXCORE_EXPORT DistanceMetric
-{
-  Euclidean,
-  SquaredEuclidean,
-  Manhattan,
-  Cosine,
-  Pearson,
-  SquaredPearson
-};
-
 struct COMPLEXCORE_EXPORT KMedoidsInputValues
 {
   uint64 InitClusters;
-  ChoicesParameter::ValueType DistanceMetric;
+  KUtilities::DistanceMetric DistanceMetric;
   DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;

@@ -30,8 +30,11 @@ public:
   static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
   static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixName_Key = "feature_attribute_matrix_name";
+  static inline constexpr StringLiteral k_FeatureAMPath_Key = "feature_attribute_matrix_path";
   static inline constexpr StringLiteral k_MeansArrayName_Key = "means_array_name";
+  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
+
 
   /**
    * @brief Returns the name of the filter.
