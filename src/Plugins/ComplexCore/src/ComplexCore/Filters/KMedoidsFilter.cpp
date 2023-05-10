@@ -2,15 +2,27 @@
 
 #include "ComplexCore/Filters/Algorithms/KMedoids.hpp"
 
+#include "complex/Common/TypeTraits.hpp"
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
+#include "complex/Filter/Actions/CreateArrayAction.hpp"
+#include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
+#include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/DataGroupCreationParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
 using namespace complex;
+
+namespace
+{
+const std::string k_MaskName = "temp_mask";
+}
 
 namespace complex
 {
@@ -51,24 +63,29 @@ Parameters KMedoidsFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<Int32Parameter>(k_InitClusters_Key, "Number of Clusters", "", 0 #error Check default values));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true the user will be able to put in a seed for random generation", false));
+  params.insert(std::make_unique<UInt64Parameter>(k_SeedValue_Key, "Seed", "The seed fed into the random generator", std::mt19937::default_seed));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "Use a mask for Attribute Array to Cluster", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "Boolean array where true means that medoids will be determined for that index in Attribute Array to Cluster",
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean}));
+
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<UInt64Parameter>(k_InitClusters_Key, "Number of Clusters", "This will be the tuple size for Cluster Attribute Matrix and the values within", 0));
   params.insert(
-      std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"} /* Change this to the proper choices */));
+      std::make_unique<ChoicesParameter>(k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(DistanceMetric::Euclidean),
+                                         ChoicesParameter::Choices{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // sequence dependent DO NOT REORDER
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask", "", false #error Check default values));
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "", DataPath{},
-                                                          complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to find the medoids for", DataPath{}, complex::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureAttributeMatrixName_Key, "Cluster Attribute Matrix", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_MedoidsArrayName_Key, "Cluster Medoids", "", DataPath{}));
+  params.insert(std::make_unique<DataGroupCreationParameter>(k_FeatureAMPath_Key, "Cluster Attribute Matrix", "name and path of Attribute Matrix to hold Cluster Data", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "name of the ids array to be created in Cluster Attribute Matrix", "Cluster Ids"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MedoidsArrayName_Key, "Cluster Medoids Array Name", "name of the medoids array to be created in Cluster Attribute Matrix", "Medoids"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
+  params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
 
   return params;
 }
@@ -83,52 +100,45 @@ IFilter::UniquePointer KMedoidsFilter::clone() const
 IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel) const
 {
-  auto pInitClustersValue = filterArgs.value<int32>(k_InitClusters_Key);
-  auto pDistanceMetricValue = filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key);
+  auto pInitClustersValue = filterArgs.value<uint64>(k_InitClusters_Key);
   auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pSelectedArrayPathValue = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  auto pFeatureIdsArrayNameValue = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
-  auto pFeatureAttributeMatrixNameValue = filterArgs.value<DataPath>(k_FeatureAttributeMatrixName_Key);
-  auto pMedoidsArrayNameValue = filterArgs.value<DataPath>(k_MedoidsArrayName_Key);
+  auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
+  auto pFeatureAMPathValue = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
+  auto pMedoidsArrayNameValue = filterArgs.value<std::string>(k_MedoidsArrayName_Key);
 
-  // Declare the preflightResult variable that will be populated with the results
-  // of the preflight. The PreflightResult type contains the output Actions and
-  // any preflight updated values that you want to be displayed to the user, typically
-  // through a user interface (UI).
   PreflightResult preflightResult;
-
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
-
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // None found in this filter based on the filter parameters
+  auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
 
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
+  if(!pUseMaskValue)
+  {
+    DataPath tempPath = DataPath({k_MaskName});
+    {
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath);
+      resultOutputActions.value().actions.push_back(std::move(createAction));
+    }
 
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
+    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+  }
+
+  auto tupDims = std::vector<usize>{pInitClustersValue + 1};
+  {
+    auto createAction = std::make_unique<CreateAttributeMatrixAction>(pFeatureAMPathValue, tupDims);
+    resultOutputActions.value().actions.push_back(std::move(createAction));
+  }
+
+  {
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, tupDims, std::vector<usize>{1}, pFeatureAMPathValue.createChildPath(pFeatureIdsArrayNameValue));
+    resultOutputActions.value().actions.push_back(std::move(createAction));
+  }
+  {
+    auto createAction = std::make_unique<CreateArrayAction>(clusterArray->getDataType(), tupDims, clusterArray->getComponentShape(), pFeatureAMPathValue.createChildPath(pMedoidsArrayNameValue));
+    resultOutputActions.value().actions.push_back(std::move(createAction));
+  }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -138,16 +148,28 @@ IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& data
 Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                      const std::atomic_bool& shouldCancel) const
 {
+  auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  if(!filterArgs.value<bool>(k_UseMask_Key))
+  {
+    maskPath = DataPath({k_MaskName});
+    dataStructure.getDataRefAs<BoolArray>(maskPath).fill(true);
+  }
+
+  auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
+  if(!filterArgs.value<bool>(k_UseSeed_Key))
+  {
+    seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
+  }
+
   KMedoidsInputValues inputValues;
 
-  inputValues.InitClusters = filterArgs.value<int32>(k_InitClusters_Key);
+  inputValues.InitClusters = filterArgs.value<uint64>(k_InitClusters_Key);
   inputValues.DistanceMetric = filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key);
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.SelectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.FeatureIdsArrayName = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
-  inputValues.FeatureAttributeMatrixName = filterArgs.value<DataPath>(k_FeatureAttributeMatrixName_Key);
-  inputValues.MedoidsArrayName = filterArgs.value<DataPath>(k_MedoidsArrayName_Key);
+  inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  inputValues.MaskArrayPath = maskPath;
+  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  inputValues.MedoidsArrayPath = filterArgs.value<DataPath>(k_FeatureAMPath_Key).createChildPath(filterArgs.value<std::string>(k_MedoidsArrayName_Key));
+  inputValues.Seed = seed;
 
   return KMedoids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

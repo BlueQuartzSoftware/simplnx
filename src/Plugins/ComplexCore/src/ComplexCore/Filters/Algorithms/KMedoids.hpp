@@ -5,45 +5,31 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  KMedoidsInputValues inputValues;
-
-  inputValues.InitClusters = filterArgs.value<int32>(k_InitClusters_Key);
-  inputValues.DistanceMetric = filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key);
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.SelectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.FeatureIdsArrayName = filterArgs.value<DataPath>(k_FeatureIdsArrayName_Key);
-  inputValues.FeatureAttributeMatrixName = filterArgs.value<DataPath>(k_FeatureAttributeMatrixName_Key);
-  inputValues.MedoidsArrayName = filterArgs.value<DataPath>(k_MedoidsArrayName_Key);
-
-  return KMedoids(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include <random>
 
 namespace complex
 {
+enum COMPLEXCORE_EXPORT DistanceMetric
+{
+  Euclidean,
+  SquaredEuclidean,
+  Manhattan,
+  Cosine,
+  Pearson,
+  SquaredPearson
+};
 
 struct COMPLEXCORE_EXPORT KMedoidsInputValues
 {
-  int32 InitClusters;
+  uint64 InitClusters;
   ChoicesParameter::ValueType DistanceMetric;
-  bool UseMask;
-  DataPath SelectedArrayPath;
+  DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
-  DataPath FeatureIdsArrayName;
-  DataPath FeatureAttributeMatrixName;
-  DataPath MedoidsArrayName;
-
+  DataPath FeatureIdsArrayPath;
+  DataPath MedoidsArrayPath;
+  std::mt19937_64::result_type Seed;
 };
 
 /**
@@ -64,7 +50,7 @@ public:
   KMedoids& operator=(KMedoids&&) noexcept = delete;
 
   Result<> operator()();
-
+  void updateProgress(const std::string& message);
   const std::atomic_bool& getCancel();
 
 private:
