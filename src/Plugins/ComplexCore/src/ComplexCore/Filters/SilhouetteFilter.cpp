@@ -102,6 +102,12 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
   std::vector<PreflightValue> preflightUpdatedValues;
 
   auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  auto clusterIds = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
+  if(clusterArray->getNumberOfTuples() != clusterIds->getNumberOfTuples())
+  {
+    return MakePreflightErrorResult(-8976, fmt::format("The the number of tuples for {} ({}) do not match the number of tuples for {} ({})", clusterArray->getName(), clusterArray->getNumberOfTuples(),
+                                                       clusterIds->getName(), clusterIds->getNumberOfTuples()));
+  }
 
   if(!pUseMaskValue)
   {

@@ -62,8 +62,6 @@ public:
       }
     }
 
-    int32 cluster = 0;
-
     for(usize i = 0; i < numTuples; i++)
     {
       if(m_Mask[i])
@@ -72,8 +70,7 @@ public:
         {
           if(m_Mask[j])
           {
-            cluster = m_FeatureIds[j];
-            clusterDist[i][cluster] += KUtilities::GetDistance(m_InputData, (numCompDims * i), m_InputData, (numCompDims * j), numCompDims, m_DistMetric);
+            clusterDist[i][m_FeatureIds[j]] += KUtilities::GetDistance(m_InputData, (numCompDims * i), m_InputData, (numCompDims * j), numCompDims, m_DistMetric);
           }
         }
       }
@@ -94,16 +91,15 @@ public:
     {
       if(m_Mask[i])
       {
-        cluster = m_FeatureIds[i];
+        int32 cluster = m_FeatureIds[i];
         inClusterDist[i] = clusterDist[i][cluster];
 
-        float64 dist = 0.0;
         float64 minDist = std::numeric_limits<float64>::max();
         for(usize j = 1; j < totalClusters; j++)
         {
           if(cluster != j)
           {
-            dist = clusterDist[i][j];
+            float64 dist = clusterDist[i][j];
             if(dist < minDist)
             {
               minDist = dist;
@@ -147,7 +143,7 @@ Silhouette::Silhouette(DataStructure& dataStructure, const IFilter::MessageHandl
 Silhouette::~Silhouette() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void Silhouette::updateProgress(const std::string& message)
+void Silhouette:: updateProgress(const std::string& message)
 {
   m_MessageHandler(IFilter::Message::Type::Info, message);
 }
@@ -162,9 +158,9 @@ const std::atomic_bool& Silhouette::getCancel()
 Result<> Silhouette::operator()()
 {
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  usize numTuples = featureIds.getNumberOfTuples();
   std::unordered_set<int32> uniqueIds;
 
+  usize numTuples = featureIds.getNumberOfTuples();
   for(usize i = 0; i < numTuples; i++)
   {
     uniqueIds.insert(featureIds[i]);
