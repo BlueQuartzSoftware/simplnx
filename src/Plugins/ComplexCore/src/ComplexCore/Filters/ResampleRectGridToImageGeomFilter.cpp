@@ -124,7 +124,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   {
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPathValue, dims, std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<float32>{1.0f, 1.0f, 1.0f},
                                                                              pImageGeomCellAttributeMatrixNameValue);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
   // create the IArrays for copying over to the re-sampled image geometry
@@ -163,18 +163,18 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
     {
       const auto* srcDataArray = dataStructure.getDataAs<IDataArray>(path);
       auto createArrayAction = std::make_unique<CreateArrayAction>(srcDataArray->getDataType(), dims, srcDataArray->getComponentShape(), destPath);
-      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::NeighborListArray)
     {
       const auto* srcDataArray = dataStructure.getDataAs<INeighborList>(path);
       auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArray->getDataType(), totalPoints, destPath);
-      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::StringArray)
     {
       auto createArrayAction = std::make_unique<CreateStringArrayAction>(dims, destPath);
-      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else
     {

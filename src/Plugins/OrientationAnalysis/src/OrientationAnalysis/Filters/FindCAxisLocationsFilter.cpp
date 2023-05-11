@@ -92,7 +92,7 @@ IFilter::PreflightResult FindCAxisLocationsFilter::preflightImpl(const DataStruc
     const DataPath pCAxisLocationsPathValue = pQuatsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_CAxisLocationsArrayName_Key));
     const std::vector<usize> tupleShape = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue).getTupleShape();
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3}, pCAxisLocationsPathValue);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   resultOutputActions.warnings().push_back(
