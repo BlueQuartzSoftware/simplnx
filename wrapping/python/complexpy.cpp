@@ -593,7 +593,11 @@ public:
     m_Parameters = m_Object.attr("parameters")().cast<Parameters>();
   }
 
-  ~PyFilter() noexcept = default;
+  ~PyFilter() noexcept
+  {
+    py::gil_scoped_acquire gil;
+    m_Object = {};
+  }
 
   PyFilter(const PyFilter&) = delete;
   PyFilter(PyFilter&&) noexcept = delete;
