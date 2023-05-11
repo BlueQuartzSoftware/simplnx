@@ -22,5 +22,6 @@ target_compile_options(complexpy
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
-option(COMPLEX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON)
+include(CMakeDependentOption)
+cmake_dependent_option(COMPLEX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON "COMPLEX_BUILD_PYTHON" OFF)
 configure_file(ComplexPython.hpp.in ${COMPLEX_GENERATED_HEADER_DIR}/ComplexPython.hpp)
