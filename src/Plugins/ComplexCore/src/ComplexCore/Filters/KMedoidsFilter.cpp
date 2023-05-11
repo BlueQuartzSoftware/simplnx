@@ -79,8 +79,9 @@ Parameters KMedoidsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedArrayPath_Key, "Attribute Array to Cluster", "The array to find the medoids for", DataPath{}, complex::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "name of the ids array to be created in Attribute Array to Cluster's parent group",
+                                                          "Cluster Ids"));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_FeatureAMPath_Key, "Cluster Attribute Matrix", "name and path of Attribute Matrix to hold Cluster Data", DataPath{}));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Cluster Ids Array Name", "name of the ids array to be created in Cluster Attribute Matrix", "Cluster Ids"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_MedoidsArrayName_Key, "Cluster Medoids Array Name", "name of the medoids array to be created in Cluster Attribute Matrix", "Medoids"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -113,6 +114,15 @@ IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& data
   std::vector<PreflightValue> preflightUpdatedValues;
 
   auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  if(clusterArray == nullptr)
+  {
+    return MakePreflightErrorResult(-7584, "Array to Cluster MUST be a valid DataPath.");
+  }
+
+  {
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.getParent().createChildPath(pFeatureIdsArrayNameValue));
+    resultOutputActions.value().actions.push_back(std::move(createAction));
+  }
 
   if(!pUseMaskValue)
   {
@@ -128,11 +138,6 @@ IFilter::PreflightResult KMedoidsFilter::preflightImpl(const DataStructure& data
   auto tupDims = std::vector<usize>{pInitClustersValue + 1};
   {
     auto createAction = std::make_unique<CreateAttributeMatrixAction>(pFeatureAMPathValue, tupDims);
-    resultOutputActions.value().actions.push_back(std::move(createAction));
-  }
-
-  {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, tupDims, std::vector<usize>{1}, pFeatureAMPathValue.createChildPath(pFeatureIdsArrayNameValue));
     resultOutputActions.value().actions.push_back(std::move(createAction));
   }
   {
@@ -165,11 +170,14 @@ Result<> KMedoidsFilter::executeImpl(DataStructure& dataStructure, const Argumen
 
   inputValues.InitClusters = filterArgs.value<uint64>(k_InitClusters_Key);
   inputValues.DistanceMetric = static_cast<KUtilities::DistanceMetric>(filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key));
-  inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   inputValues.MaskArrayPath = maskPath;
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.MedoidsArrayPath = filterArgs.value<DataPath>(k_FeatureAMPath_Key).createChildPath(filterArgs.value<std::string>(k_MedoidsArrayName_Key));
   inputValues.Seed = seed;
+
+  inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  auto fIdsPath = inputValues.ClusteringArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
+  dataStructure.getDataAs<Int32Array>(fIdsPath)->fill(0);
+  inputValues.FeatureIdsArrayPath = fIdsPath;
 
   return KMedoids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

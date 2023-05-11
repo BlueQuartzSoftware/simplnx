@@ -76,9 +76,8 @@ public:
     findClusters(numTuples, numCompDims);
 
     std::vector<usize> optClusterIdxs(clusterIdxs);
-    std::vector<float64> costs;
 
-    costs = optimizeClusters(numTuples, numCompDims, clusterIdxs);
+    std::vector<float64> costs = optimizeClusters(numTuples, numCompDims, clusterIdxs);
 
     bool update = optClusterIdxs == clusterIdxs ? false : true;
     usize iteration = 1;
@@ -114,8 +113,6 @@ private:
   // -----------------------------------------------------------------------------
   void findClusters(usize tuples, int32 dims)
   {
-    float64 dist = 0.0;
-
     for(usize i = 0; i < tuples; i++)
     {
       if(m_Filter->getCancel())
@@ -127,7 +124,7 @@ private:
         float64 minDist = std::numeric_limits<float64>::max();
         for(int32 j = 0; j < m_NumClusters; j++)
         {
-          dist = KUtilities::GetDistance(m_InputArray, (dims * i), m_Medoids, (dims * (j + 1)), dims, m_DistMetric);
+          float64 dist = KUtilities::GetDistance(m_InputArray, (dims * i), m_Medoids, (dims * (j + 1)), dims, m_DistMetric);
           if(dist < minDist)
           {
             minDist = dist;
@@ -141,7 +138,6 @@ private:
   // -----------------------------------------------------------------------------
   std::vector<float64> optimizeClusters(usize tuples, int32 dims, std::vector<usize>& clusterIdxs)
   {
-    float64 dist = 0.0;
     std::vector<float64> minCosts(m_NumClusters, std::numeric_limits<float64>::max());
 
     for(usize i = 0; i < m_NumClusters; i++)
@@ -158,9 +154,9 @@ private:
         }
         if(m_Mask[j])
         {
-          float64 cost = 0.0;
           if(m_FeatureIds[j] == i + 1)
           {
+            float64 cost = 0.0;
             for(usize k = 0; k < tuples; k++)
             {
               if(m_Filter->getCancel())
@@ -169,8 +165,7 @@ private:
               }
               if(m_FeatureIds[k] == i + 1 && m_Mask[k])
               {
-                dist = KUtilities::GetDistance(m_InputArray, (dims * k), m_InputArray, (dims * j), dims, m_DistMetric);
-                cost += dist;
+                cost += KUtilities::GetDistance(m_InputArray, (dims * k), m_InputArray, (dims * j), dims, m_DistMetric);
               }
             }
 

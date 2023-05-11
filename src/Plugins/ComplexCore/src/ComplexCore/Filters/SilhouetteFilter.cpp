@@ -74,6 +74,7 @@ Parameters SilhouetteFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Objects"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_SilhouetteArrayPath_Key, "Silhouette", "", DataPath{}));
+
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 

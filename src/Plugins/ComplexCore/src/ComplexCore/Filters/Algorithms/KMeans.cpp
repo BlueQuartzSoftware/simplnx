@@ -131,8 +131,6 @@ private:
   // -----------------------------------------------------------------------------
   void findClusters(usize tuples, int32 dims)
   {
-    float64 dist = 0.0;
-
     for(usize i = 0; i < tuples; i++)
     {
       if(m_Filter->getCancel())
@@ -144,7 +142,7 @@ private:
         float64 minDist = std::numeric_limits<float64>::max();
         for(int32 j = 0; j < m_NumClusters; j++)
         {
-          dist = KUtilities::GetDistance(m_InputArray, (dims * i), m_Means, (dims * (j + 1)), dims, m_DistMetric);
+          float64 dist = KUtilities::GetDistance(m_InputArray, (dims * i), m_Means, (dims * (j + 1)), dims, m_DistMetric);
           if(dist < minDist)
           {
             minDist = dist;
@@ -158,8 +156,6 @@ private:
   // -----------------------------------------------------------------------------
   void findMeans(usize tuples, int32 dims)
   {
-    float64 value = 0.0;
-    int32_t feature = 0;
     std::vector<usize> counts(m_NumClusters + 1, 0);
 
     for(usize i = 0; i <= m_NumClusters; i++)
@@ -174,9 +170,8 @@ private:
     {
       for(usize j = 0; j < tuples; j++)
       {
-        value = static_cast<float64>(m_InputArray[dims * j + i]);
-        feature = m_FeatureIds[j];
-        m_Means[dims * feature + i] += value;
+        int32 feature = m_FeatureIds[j];
+        m_Means[dims * feature + i] += static_cast<float64>(m_InputArray[dims * j + i]);
         counts[feature] += 1;
       }
       for(usize j = 0; j <= m_NumClusters; j++)
