@@ -42,6 +42,7 @@ auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDa
     }
 
     dist = std::sqrt(dist);
+    break;
   }
   case SquaredEuclidean: {
     for(usize i = 0; i < compDims; i++)
@@ -50,6 +51,7 @@ auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDa
       rVal = static_cast<float64>(rightVector[i + rightOffset]);
       dist += (lVal - rVal) * (lVal - rVal);
     }
+    break;
   }
   case Manhattan: {
     for(usize i = 0; i < compDims; i++)
@@ -58,6 +60,7 @@ auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDa
       rVal = static_cast<float64>(rightVector[i + rightOffset]);
       dist += std::abs(lVal - rVal);
     }
+    break;
   }
   case Cosine: {
     float64 r = 0;
@@ -72,6 +75,7 @@ auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDa
       y += rVal * rVal;
     }
     dist = 1 - (r / (sqrt(x * y) + epsilon));
+    break;
   }
   case Pearson: {
     float64 r = 0;
@@ -97,6 +101,7 @@ auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDa
       y += (rVal - yAvg) * (rVal - yAvg);
     }
     dist = 1 - (r / (sqrt(x * y) + epsilon));
+    break;
   }
   case SquaredPearson: {
     float64 r = 0;
@@ -122,6 +127,7 @@ auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDa
       y += (rVal - yAvg) * (rVal - yAvg);
     }
     dist = 1 - ((r * r) / ((x * y) + epsilon));
+    break;
   }
   }
 

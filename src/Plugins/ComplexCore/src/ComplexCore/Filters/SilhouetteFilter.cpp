@@ -114,7 +114,7 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
   }
 
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue);
+    auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, clusterArray->getTupleShape(), std::vector<usize>{1}, pSilhouetteArrayPathValue);
     resultOutputActions.value().actions.push_back(std::move(createAction));
   }
 

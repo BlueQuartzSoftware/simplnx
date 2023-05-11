@@ -48,5 +48,4 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
-
 } // namespace complex
