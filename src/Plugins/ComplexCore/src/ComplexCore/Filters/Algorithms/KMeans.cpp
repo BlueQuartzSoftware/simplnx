@@ -36,7 +36,7 @@ public:
   , m_Seed(seed)
   {
   }
-  virtual ~KMeansTemplate() = default;
+  ~KMeansTemplate() = default;
 
   KMeansTemplate(const KMeansTemplate&) = delete; // Copy Constructor Not Implemented
   void operator=(const KMeansTemplate&) = delete; // Move assignment Not Implemented

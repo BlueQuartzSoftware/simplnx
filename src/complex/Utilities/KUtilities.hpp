@@ -33,102 +33,96 @@ auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDa
 
   switch(distMetric)
   {
-  case Euclidean:
+  case Euclidean: {
+    for(usize i = 0; i < compDims; i++)
     {
-      for(usize i = 0; i < compDims; i++)
-      {
-        lVal = static_cast<float64>(leftVector[i + leftOffset]);
-        rVal = static_cast<float64>(rightVector[i + rightOffset]);
-        dist += (lVal - rVal) * (lVal - rVal);
-      }
+      lVal = static_cast<float64>(leftVector[i + leftOffset]);
+      rVal = static_cast<float64>(rightVector[i + rightOffset]);
+      dist += (lVal - rVal) * (lVal - rVal);
+    }
 
-      dist = std::sqrt(dist);
-    }
-    case SquaredEuclidean:
+    dist = std::sqrt(dist);
+  }
+  case SquaredEuclidean: {
+    for(usize i = 0; i < compDims; i++)
     {
-      for(usize i = 0; i < compDims; i++)
-      {
-        lVal = static_cast<float64>(leftVector[i + leftOffset]);
-        rVal = static_cast<float64>(rightVector[i + rightOffset]);
-        dist += (lVal - rVal) * (lVal - rVal);
-      }
+      lVal = static_cast<float64>(leftVector[i + leftOffset]);
+      rVal = static_cast<float64>(rightVector[i + rightOffset]);
+      dist += (lVal - rVal) * (lVal - rVal);
     }
-    case Manhattan:
+  }
+  case Manhattan: {
+    for(usize i = 0; i < compDims; i++)
     {
-      for(usize i = 0; i < compDims; i++)
-      {
-        lVal = static_cast<float64>(leftVector[i + leftOffset]);
-        rVal = static_cast<float64>(rightVector[i + rightOffset]);
-        dist += std::abs(lVal - rVal);
-      }
+      lVal = static_cast<float64>(leftVector[i + leftOffset]);
+      rVal = static_cast<float64>(rightVector[i + rightOffset]);
+      dist += std::abs(lVal - rVal);
     }
-    case Cosine:
+  }
+  case Cosine: {
+    float64 r = 0;
+    float64 x = 0;
+    float64 y = 0;
+    for(usize i = 0; i < compDims; i++)
     {
-      float64 r = 0;
-      float64 x = 0;
-      float64 y = 0;
-      for(usize i = 0; i < compDims; i++)
-      {
-        lVal = static_cast<float64>(leftVector[i + leftOffset]);
-        rVal = static_cast<float64>(rightVector[i + rightOffset]);
-        r += lVal * rVal;
-        x += lVal * lVal;
-        y += rVal * rVal;
-      }
-      dist = 1 - (r / (sqrt(x * y) + epsilon));
+      lVal = static_cast<float64>(leftVector[i + leftOffset]);
+      rVal = static_cast<float64>(rightVector[i + rightOffset]);
+      r += lVal * rVal;
+      x += lVal * lVal;
+      y += rVal * rVal;
     }
-    case Pearson:
+    dist = 1 - (r / (sqrt(x * y) + epsilon));
+  }
+  case Pearson: {
+    float64 r = 0;
+    float64 x = 0;
+    float64 y = 0;
+    float64 xAvg = 0;
+    float64 yAvg = 0;
+    for(usize i = 0; i < compDims; i++)
     {
-      float64 r = 0;
-      float64 x = 0;
-      float64 y = 0;
-      float64 xAvg = 0;
-      float64 yAvg = 0;
-      for(usize i = 0; i < compDims; i++)
-      {
-        lVal = static_cast<float64>(leftVector[i + leftOffset]);
-        rVal = static_cast<float64>(rightVector[i + rightOffset]);
-        xAvg += lVal;
-        yAvg += rVal;
-      }
-      xAvg /= static_cast<float64>(compDims);
-      yAvg /= static_cast<float64>(compDims);
-      for(usize i = 0; i < compDims; i++)
-      {
-        lVal = static_cast<float64>(leftVector[i + leftOffset]);
-        rVal = static_cast<float64>(rightVector[i + rightOffset]);
-        r += (lVal - xAvg) * (rVal - yAvg);
-        x += (lVal - xAvg) * (lVal - xAvg);
-        y += (rVal - yAvg) * (rVal - yAvg);
-      }
-      dist = 1 - (r / (sqrt(x * y) + epsilon));
+      lVal = static_cast<float64>(leftVector[i + leftOffset]);
+      rVal = static_cast<float64>(rightVector[i + rightOffset]);
+      xAvg += lVal;
+      yAvg += rVal;
     }
-    case SquaredPearson:
+    xAvg /= static_cast<float64>(compDims);
+    yAvg /= static_cast<float64>(compDims);
+    for(usize i = 0; i < compDims; i++)
     {
-      float64 r = 0;
-      float64 x = 0;
-      float64 y = 0;
-      float64 xAvg = 0;
-      float64 yAvg = 0;
-      for(usize i = 0; i < compDims; i++)
-      {
-        lVal = static_cast<float64>(leftVector[i + leftOffset]);
-        rVal = static_cast<float64>(rightVector[i + rightOffset]);
-        xAvg += lVal;
-        yAvg += rVal;
-      }
-      xAvg /= static_cast<float64>(compDims);
-      yAvg /= static_cast<float64>(compDims);
-      for(usize i = 0; i < compDims; i++)
-      {
-        lVal = static_cast<float64>(leftVector[i + leftOffset]);
-        rVal = static_cast<float64>(rightVector[i + rightOffset]);
-        r += (lVal - xAvg) * (rVal - yAvg);
-        x += (lVal - xAvg) * (lVal - xAvg);
-        y += (rVal - yAvg) * (rVal - yAvg);
-      }
-      dist = 1 - ((r * r) / ((x * y) + epsilon));
+      lVal = static_cast<float64>(leftVector[i + leftOffset]);
+      rVal = static_cast<float64>(rightVector[i + rightOffset]);
+      r += (lVal - xAvg) * (rVal - yAvg);
+      x += (lVal - xAvg) * (lVal - xAvg);
+      y += (rVal - yAvg) * (rVal - yAvg);
     }
+    dist = 1 - (r / (sqrt(x * y) + epsilon));
+  }
+  case SquaredPearson: {
+    float64 r = 0;
+    float64 x = 0;
+    float64 y = 0;
+    float64 xAvg = 0;
+    float64 yAvg = 0;
+    for(usize i = 0; i < compDims; i++)
+    {
+      lVal = static_cast<float64>(leftVector[i + leftOffset]);
+      rVal = static_cast<float64>(rightVector[i + rightOffset]);
+      xAvg += lVal;
+      yAvg += rVal;
+    }
+    xAvg /= static_cast<float64>(compDims);
+    yAvg /= static_cast<float64>(compDims);
+    for(usize i = 0; i < compDims; i++)
+    {
+      lVal = static_cast<float64>(leftVector[i + leftOffset]);
+      rVal = static_cast<float64>(rightVector[i + rightOffset]);
+      r += (lVal - xAvg) * (rVal - yAvg);
+      x += (lVal - xAvg) * (lVal - xAvg);
+      y += (rVal - yAvg) * (rVal - yAvg);
+    }
+    dist = 1 - ((r * r) / ((x * y) + epsilon));
+  }
   }
 
   // Return the correct primitive type for distance

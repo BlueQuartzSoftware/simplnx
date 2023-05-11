@@ -5,39 +5,20 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  SilhouetteInputValues inputValues;
-
-  inputValues.DistanceMetric = filterArgs.value<ChoicesParameter::ValueType>(k_DistanceMetric_Key);
-  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.SelectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.SilhouetteArrayPath = filterArgs.value<DataPath>(k_SilhouetteArrayPath_Key);
-
-  return Silhouette(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Utilities/KUtilities.hpp"
 
 namespace complex
 {
-
 struct COMPLEXCORE_EXPORT SilhouetteInputValues
 {
-  ChoicesParameter::ValueType DistanceMetric;
-  bool UseMask;
-  DataPath SelectedArrayPath;
+  KUtilities::DistanceMetric DistanceMetric;
+  DataPath ClusteringArrayPath;
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath SilhouetteArrayPath;
-
 };
 
 /**
@@ -58,7 +39,7 @@ public:
   Silhouette& operator=(Silhouette&&) noexcept = delete;
 
   Result<> operator()();
-
+  void updateProgress(const std::string& message);
   const std::atomic_bool& getCancel();
 
 private:

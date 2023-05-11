@@ -24,8 +24,8 @@ public:
     return Pointer(static_cast<Self*>(nullptr));
   }
 
-  KMedoidsTemplate(KMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds, KUtilities::DistanceMetric distMetric,
-                   std::mt19937_64::result_type seed)
+  KMedoidsTemplate(KMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
+                   KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
   , m_Medoids(dynamic_cast<DataArrayT&>(medoidsIDataArray))
@@ -36,7 +36,7 @@ public:
   , m_Seed(seed)
   {
   }
-  virtual ~KMedoidsTemplate() = default;
+  ~KMedoidsTemplate() = default;
 
   KMedoidsTemplate(const KMedoidsTemplate&) = delete; // Copy Constructor Not Implemented
   void operator=(const KMedoidsTemplate&) = delete;   // Move assignment Not Implemented

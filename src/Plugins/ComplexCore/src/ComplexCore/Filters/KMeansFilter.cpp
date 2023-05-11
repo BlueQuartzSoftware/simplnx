@@ -107,7 +107,6 @@ IFilter::PreflightResult KMeansFilter::preflightImpl(const DataStructure& dataSt
   auto pFeatureAMPathValue = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
   auto pMeansArrayNameValue = filterArgs.value<std::string>(k_MeansArrayName_Key);
 
-
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;

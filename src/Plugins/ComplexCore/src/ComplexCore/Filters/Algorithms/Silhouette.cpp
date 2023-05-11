@@ -1,9 +1,138 @@
 #include "Silhouette.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
+#include "complex/Utilities/KUtilities.hpp"
+
+#include <unordered_set>
 
 using namespace complex;
+
+namespace
+{
+template <typename T>
+class SilhouetteTemplate
+{
+public:
+  using Self = SilhouetteTemplate;
+  using Pointer = std::shared_ptr<Self>;
+  using ConstPointer = std::shared_ptr<const Self>;
+  using WeakPointer = std::weak_ptr<Self>;
+  using ConstWeakPointer = std::weak_ptr<const Self>;
+
+  static Pointer NullPointer()
+  {
+    return Pointer(static_cast<Self*>(nullptr));
+  }
+
+  SilhouetteTemplate(const IDataArray& inputIDataArray, Float64Array& outputDataArray, const BoolArray& maskDataArray, usize numClusters, const Int32Array& featureIds,
+                     KUtilities::DistanceMetric distMetric)
+  : m_InputData(dynamic_cast<const DataArrayT&>(inputIDataArray))
+  , m_OutputData(outputDataArray)
+  , m_Mask(maskDataArray)
+  , m_NumClusters(numClusters)
+  , m_FeatureIds(featureIds)
+  , m_DistMetric(distMetric)
+  {
+  }
+  ~SilhouetteTemplate() = default;
+
+public:
+  SilhouetteTemplate(const SilhouetteTemplate&) = delete;            // Copy Constructor Not Implemented
+  SilhouetteTemplate(SilhouetteTemplate&&) = delete;                 // Move Constructor Not Implemented
+  SilhouetteTemplate& operator=(const SilhouetteTemplate&) = delete; // Copy Assignment Not Implemented
+  SilhouetteTemplate& operator=(SilhouetteTemplate&&) = delete;      // Move Assignment Not Implemented
+
+  // -----------------------------------------------------------------------------
+  void operator()()
+  {
+    usize numTuples = m_InputData.getNumberOfTuples();
+    usize numCompDims = m_InputData.getNumberOfComponents();
+    usize totalClusters = m_NumClusters + 1;
+    std::vector<float64> inClusterDist(numTuples, 0.0);
+    std::vector<float64> outClusterMinDist(numTuples, 0.0);
+    std::vector<float64> numTuplesPerFeature(totalClusters, 0.0);
+    std::vector<std::vector<float64>> clusterDist(numTuples, std::vector<float64>(totalClusters, 0.0));
+
+    for(usize i = 0; i < numTuples; i++)
+    {
+      if(m_Mask[i])
+      {
+        numTuplesPerFeature[m_FeatureIds[i]]++;
+      }
+    }
+
+    int32 cluster = 0;
+
+    for(usize i = 0; i < numTuples; i++)
+    {
+      if(m_Mask[i])
+      {
+        for(usize j = 0; j < numTuples; j++)
+        {
+          if(m_Mask[j])
+          {
+            cluster = m_FeatureIds[j];
+            clusterDist[i][cluster] += KUtilities::GetDistance(m_InputData, (numCompDims * i), m_InputData, (numCompDims * j), numCompDims, m_DistMetric);
+          }
+        }
+      }
+    }
+
+    for(usize i = 0; i < numTuples; i++)
+    {
+      if(m_Mask[i])
+      {
+        for(usize j = 1; j < totalClusters; j++)
+        {
+          clusterDist[i][j] /= numTuplesPerFeature[j];
+        }
+      }
+    }
+
+    for(usize i = 0; i < numTuples; i++)
+    {
+      if(m_Mask[i])
+      {
+        cluster = m_FeatureIds[i];
+        inClusterDist[i] = clusterDist[i][cluster];
+
+        float64 dist = 0.0;
+        float64 minDist = std::numeric_limits<float64>::max();
+        for(usize j = 1; j < totalClusters; j++)
+        {
+          if(cluster != j)
+          {
+            dist = clusterDist[i][j];
+            if(dist < minDist)
+            {
+              minDist = dist;
+              outClusterMinDist[i] = dist;
+            }
+          }
+        }
+      }
+    }
+
+    for(usize i = 0; i < numTuples; i++)
+    {
+      if(m_Mask[i])
+      {
+        m_OutputData[i] = (outClusterMinDist[i] - inClusterDist[i]) / (std::max(outClusterMinDist[i], inClusterDist[i]));
+      }
+    }
+  }
+
+private:
+  using DataArrayT = DataArray<T>;
+  const DataArrayT& m_InputData;
+  Float64Array& m_OutputData;
+  const Int32Array& m_FeatureIds;
+  const BoolArray& m_Mask;
+  usize m_NumClusters;
+  KUtilities::DistanceMetric m_DistMetric;
+};
+} // namespace
 
 // -----------------------------------------------------------------------------
 Silhouette::Silhouette(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SilhouetteInputValues* inputValues)
@@ -18,6 +147,12 @@ Silhouette::Silhouette(DataStructure& dataStructure, const IFilter::MessageHandl
 Silhouette::~Silhouette() noexcept = default;
 
 // -----------------------------------------------------------------------------
+void Silhouette::updateProgress(const std::string& message)
+{
+  m_MessageHandler(IFilter::Message::Type::Info, message);
+}
+
+// -----------------------------------------------------------------------------
 const std::atomic_bool& Silhouette::getCancel()
 {
   return m_ShouldCancel;
@@ -26,23 +161,17 @@ const std::atomic_bool& Silhouette::getCancel()
 // -----------------------------------------------------------------------------
 Result<> Silhouette::operator()()
 {
-  /**
-  * This section of the code should contain the actual algorithmic codes that
-  * will accomplish the goal of the file.
-  *
-  * If you can parallelize the code there are a number of examples on how to do that.
-  *    GenerateIPFColors is one example
-  *
-  * If you need to determine what kind of array you have (Int32Array, Float32Array, etc)
-  * look to the ExecuteDataFunction() in complex/Utilities/FilterUtilities.hpp template 
-  * function to help with that code.
-  *   An Example algorithm class is `CombineAttributeArrays` and `RemoveFlaggedVertices`
-  * 
-  * There are other utility classes that can help alleviate the amount of code that needs
-  * to be written.
-  *
-  * REMOVE THIS COMMENT BLOCK WHEN YOU ARE FINISHED WITH THE FILTER_HUMAN_NAME
-  */
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  usize numTuples = featureIds.getNumberOfTuples();
+  std::unordered_set<int32> uniqueIds;
 
+  for(usize i = 0; i < numTuples; i++)
+  {
+    uniqueIds.insert(featureIds[i]);
+  }
+
+  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray, m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SilhouetteArrayPath),
+                                                             m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath), uniqueIds.size(), featureIds, m_InputValues->DistanceMetric);
   return {};
 }
