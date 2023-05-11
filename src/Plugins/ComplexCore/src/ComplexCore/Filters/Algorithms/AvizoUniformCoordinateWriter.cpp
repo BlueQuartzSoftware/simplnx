@@ -57,6 +57,8 @@ Result<> AvizoUniformCoordinateWriter::operator()()
     return result;
   }
 
+  fclose(outputFile);
+
   return {};
 }
 
@@ -88,7 +90,8 @@ Result<> AvizoUniformCoordinateWriter::generateHeader(FILE* outputFile)
   fprintf(outputFile, "         Author \"DREAM.3D ComplexCore Version 7.0.0\",\n");
 
   const std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-  fprintf(outputFile, "         DateTime \"%s\"\n", std::ctime(&currentTime));
+  const std::string timeString = std::ctime(&currentTime);
+  fprintf(outputFile, "         DateTime \"%s\"\n", timeString.substr(0, timeString.length() - 1).c_str());
   fprintf(outputFile, "         FeatureIds Path \"%s\"\n", m_InputValues->FeatureIdsArrayPath.toString().c_str());
   fprintf(outputFile, "     }\n");
 
@@ -132,7 +135,7 @@ Result<> AvizoUniformCoordinateWriter::writeData(FILE* outputFile)
     int count = 0;
     for(size_t i = 0; i < totalPoints; ++i)
     {
-      auto debug = fprintf(outputFile, "%d", featureIds[i]);
+      fprintf(outputFile, "%d", featureIds[i]);
       if(count < 20)
       {
         fprintf(outputFile, " ");
