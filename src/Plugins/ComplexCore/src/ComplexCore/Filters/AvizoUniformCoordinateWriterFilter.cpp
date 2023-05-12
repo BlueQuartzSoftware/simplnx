@@ -61,7 +61,7 @@ Parameters AvizoUniformCoordinateWriterFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<StringParameter>(k_Units_Key, "Units", "", "microns"));
+  params.insert(std::make_unique<StringParameter>(k_Units_Key, "Units", "The units of the data", "microns"));
 
   return params;
 }
@@ -92,7 +92,6 @@ IFilter::PreflightResult AvizoUniformCoordinateWriterFilter::preflightImpl(const
 Result<> AvizoUniformCoordinateWriterFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                          const std::atomic_bool& shouldCancel) const
 {
-
   AvizoUniformCoordinateWriterInputValues inputValues;
 
   inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);

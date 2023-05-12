@@ -15,36 +15,6 @@ namespace fs = std::filesystem;
 using namespace complex;
 using namespace complex::Constants;
 
-namespace
-{
-const DataPath k_FeatureIdsPath({k_SmallIN100, k_EbsdScanData, k_FeatureIds});
-
-void CompareAMFiles(std::ifstream& computedFile, std::ifstream& exemplarFile)
-{
-  std::vector<std::string> computedLines;
-  std::vector<std::string> exemplarLines;
-  for(std::string line; std::getline(computedFile, line);)
-  {
-    computedLines.push_back(line);
-  }
-  for(std::string line; std::getline(exemplarFile, line);)
-  {
-    exemplarLines.push_back(line);
-  }
-
-  REQUIRE(computedLines.size() == exemplarLines.size());
-  for(size_t i = 0; i < computedLines.size(); ++i)
-  {
-    if(i == 6 || i == 7) // skip the author & DateTime lines
-    {
-      continue;
-    }
-
-    REQUIRE(computedLines[i] == exemplarLines[i]);
-  }
-}
-} // namespace
-
 TEST_CASE("ComplexCore::AvizoUniformCoordinateWriterFilter: Valid Filter Execution", "[ComplexCore][AvizoUniformCoordinateWriterFilter]")
 {
   // Read Exemplar DREAM3D File Filter
@@ -64,7 +34,7 @@ TEST_CASE("ComplexCore::AvizoUniformCoordinateWriterFilter: Valid Filter Executi
   args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedOutputPath));
   args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_WriteBinaryFile_Key, std::make_any<bool>(false));
   args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_GeometryPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100})));
-  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_SmallIN100, k_EbsdScanData, k_FeatureIds})));
   args.insertOrAssign(AvizoUniformCoordinateWriterFilter::k_Units_Key, std::make_any<StringParameter::ValueType>("microns"));
 
   // Preflight the filter and check result
@@ -84,10 +54,11 @@ TEST_CASE("ComplexCore::AvizoUniformCoordinateWriterFilter: Valid Filter Executi
   executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
+  std::vector<size_t> linesToSkip{6, 7}; // skip the author & DateTime lines
   std::ifstream computedFile(computedOutputPath);
   std::ifstream exemplarFile(exemplarOutputPath);
-  CompareAMFiles(computedFile, exemplarFile);
-  std::ifstream computedBinaryFile(computedBinaryOutputPath);
-  std::ifstream exemplarBinaryFile(exemplarBinaryOutputPath);
-  CompareAMFiles(computedBinaryFile, exemplarBinaryFile);
+  UnitTest::CompareAsciiFiles(computedFile, exemplarFile, linesToSkip);
+  std::ifstream computedBinaryFile(computedBinaryOutputPath, std::ios::binary);
+  std::ifstream exemplarBinaryFile(exemplarBinaryOutputPath, std::ios::binary);
+  UnitTest::CompareAsciiFiles(computedBinaryFile, exemplarBinaryFile, linesToSkip);
 }

@@ -41,8 +41,8 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  Result<> generateHeader(FILE* outputFile);
-  Result<> writeData(FILE* outputFile);
+  Result<> generateHeader(FILE* outputFile) const;
+  Result<> writeData(FILE* outputFile) const;
 
 private:
   DataStructure& m_DataStructure;

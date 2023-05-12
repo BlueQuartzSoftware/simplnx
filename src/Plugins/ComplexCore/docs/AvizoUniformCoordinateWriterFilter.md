@@ -43,7 +43,7 @@ This filter writes out a native Avizo Uniform Coordinate data file. Values shoul
 
 ## Required Geometry 
 
-Image / Rectilinear Grid
+Image 
 
 
 ## Required Objects 

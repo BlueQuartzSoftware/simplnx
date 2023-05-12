@@ -63,7 +63,7 @@ Result<> AvizoUniformCoordinateWriter::operator()()
 }
 
 // -----------------------------------------------------------------------------
-Result<> AvizoUniformCoordinateWriter::generateHeader(FILE* outputFile)
+Result<> AvizoUniformCoordinateWriter::generateHeader(FILE* outputFile) const
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
 
@@ -91,7 +91,7 @@ Result<> AvizoUniformCoordinateWriter::generateHeader(FILE* outputFile)
 
   const std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   const std::string timeString = std::ctime(&currentTime);
-  fprintf(outputFile, "         DateTime \"%s\"\n", timeString.substr(0, timeString.length() - 1).c_str());
+  fprintf(outputFile, "         DateTime \"%s\"\n", timeString.substr(0, timeString.length() - 1).c_str()); // remove the \n character from the time string
   fprintf(outputFile, "         FeatureIds Path \"%s\"\n", m_InputValues->FeatureIdsArrayPath.toString().c_str());
   fprintf(outputFile, "     }\n");
 
@@ -118,7 +118,7 @@ Result<> AvizoUniformCoordinateWriter::generateHeader(FILE* outputFile)
 }
 
 // -----------------------------------------------------------------------------
-Result<> AvizoUniformCoordinateWriter::writeData(FILE* outputFile)
+Result<> AvizoUniformCoordinateWriter::writeData(FILE* outputFile) const
 {
   fprintf(outputFile, "@1\n");
 
