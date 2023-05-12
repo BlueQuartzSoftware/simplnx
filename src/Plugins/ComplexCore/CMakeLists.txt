@@ -16,6 +16,7 @@ set(FilterList
   ApplyTransformationToGeometryFilter
   ApproximatePointCloudHull
   ArrayCalculatorFilter
+  AvizoRectilinearCoordinateWriterFilter
   AvizoUniformCoordinateWriterFilter
   CalculateArrayHistogramFilter
   CalculateFeatureSizesFilter
@@ -123,6 +124,7 @@ set(AlgorithmList
   AppendImageGeometryZSlice
   ApplyTransformationToGeometry
   ArrayCalculator
+  AvizoRectilinearCoordinateWriter
   AvizoUniformCoordinateWriter
   CalculateArrayHistogram
   CombineAttributeArrays
