@@ -100,6 +100,8 @@
 #include "ComplexCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
 #include "ComplexCore/Filters/ResampleRectGridToImageGeomFilter.hpp"
 #include "ComplexCore/Filters/CombineStlFilesFilter.hpp"
+#include "ComplexCore/Filters/AvizoUniformCoordinateWriterFilter.hpp"
+#include "ComplexCore/Filters/AvizoRectilinearCoordinateWriterFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -209,6 +211,8 @@ namespace complex
     {complex::Uuid::FromString("cbaf9e68-5ded-560c-9440-509289100ea8").value(), complex::FilterTraits<NearestPointFuseRegularGridsFilter>::uuid}, // NearestPointFuseRegularGrids
     {complex::Uuid::FromString("77befd69-4536-5856-9f81-02996d038f73").value(), complex::FilterTraits<ResampleRectGridToImageGeomFilter>::uuid}, // ResampleRectGridToImageGeom
     {complex::Uuid::FromString("71d46128-1d2d-58fd-9924-1714695768c3").value(), complex::FilterTraits<CombineStlFilesFilter>::uuid}, // CombineStlFiles
+    {complex::Uuid::FromString("339f1349-9236-5023-9a56-c82fb8eafd12").value(), complex::FilterTraits<AvizoUniformCoordinateWriterFilter>::uuid}, // AvizoUniformCoordinateWriter
+    {complex::Uuid::FromString("2861f4b4-8d50-5e69-9575-68c9d35f1256").value(), complex::FilterTraits<AvizoRectilinearCoordinateWriterFilter>::uuid}, // AvizoRectilinearCoordinateWriter
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

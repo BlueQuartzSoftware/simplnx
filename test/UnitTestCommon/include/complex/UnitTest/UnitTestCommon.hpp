@@ -934,6 +934,31 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
   }
 }
 
+inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exemplarFile, const std::vector<size_t>& lineIndicesToSkip)
+{
+  std::vector<std::string> computedLines;
+  std::vector<std::string> exemplarLines;
+  for(std::string line; std::getline(computedFile, line);)
+  {
+    computedLines.push_back(line);
+  }
+  for(std::string line; std::getline(exemplarFile, line);)
+  {
+    exemplarLines.push_back(line);
+  }
+
+  REQUIRE(computedLines.size() == exemplarLines.size());
+  for(size_t i = 0; i < computedLines.size(); ++i)
+  {
+    if(std::find(begin(lineIndicesToSkip), end(lineIndicesToSkip), i) != std::end(lineIndicesToSkip))
+    {
+      continue;
+    }
+
+    REQUIRE(computedLines[i] == exemplarLines[i]);
+  }
+}
+
 /**
  * Here's the DataStructure we will be working with:
  *
