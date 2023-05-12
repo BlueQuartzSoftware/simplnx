@@ -18,11 +18,6 @@
 namespace fs = std::filesystem;
 using namespace complex;
 
-namespace
-{
-const std::string k_FaceNormals = "FaceNormals";
-}
-
 namespace complex
 {
 
