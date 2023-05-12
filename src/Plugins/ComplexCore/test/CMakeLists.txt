@@ -106,6 +106,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
+  VtkRectilinearGridWriterTest.cpp
   WriteASCIIDataTest.cpp
   WriteBinaryDataTest.cpp
   WriteStlFileTest.cpp
