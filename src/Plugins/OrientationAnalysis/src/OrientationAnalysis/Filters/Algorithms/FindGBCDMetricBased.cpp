@@ -222,7 +222,6 @@ public:
       }
     }
 
-    std::cout << "Selecting Triangles: " << start << "    " << end << "    Unique Triangles Selected: " << uniqueTri.size() << std::endl;
   }
 
   void operator()(const Range& range) const
@@ -449,8 +448,8 @@ Result<> FindGBCDMetricBased::operator()()
   std::vector<float64> samplePtsY(0);
   std::vector<float64> samplePtsZ(0);
 
-  float64 off = 2.0f / static_cast<float64>(numSamplePtsWholeSphere);
-
+  float64 off = 2.0 / static_cast<float64>(numSamplePtsWholeSphere);
+  const float64 k_Const1 = Constants::k_PiD * (3.0 - std::sqrt(5.0));
   for(int32 ptIdxWholeSph = 0; ptIdxWholeSph < numSamplePtsWholeSphere; ptIdxWholeSph++)
   {
     if(getCancel())
@@ -459,10 +458,10 @@ Result<> FindGBCDMetricBased::operator()()
     }
 
     float64 y = (static_cast<float64>(ptIdxWholeSph) * off) - 1.0 + (0.5 * off);
-    float64 r = sqrtf(fmaxf(1.0 - y * y, 0.0));
-    float64 phi = static_cast<float64>(ptIdxWholeSph) * 2.3999632; // 2.3999632f = pi * (3 - sqrt(5))
+    float64 r = std::sqrt(std::fmax(1.0 - y * y, 0.0));
+    float64 phi = static_cast<float64>(ptIdxWholeSph) * k_Const1;
 
-    float64 z = sinf(phi) * r;
+    float64 z = std::sin(phi) * r;
 
     if(z > 0.0)
     {
@@ -524,7 +523,6 @@ Result<> FindGBCDMetricBased::operator()()
                                                        crystalStructures, eulerAngles, phases, faceLabels, faceNormals, faceAreas));
   }
 
-  std::cout << "SelectedTriangles.size(): " << selectedTriangles.size() << std::endl;
   // ------------------------  find the number of distinct boundaries ------------------------------
   int32 numDistinctGBs = 0;
   usize numFaceFeatures = featureFaceLabels.getNumberOfTuples();
@@ -585,11 +583,6 @@ Result<> FindGBCDMetricBased::operator()()
     dataAlg.execute(GBCDMetricBased::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, planeResolutionSq, totalFaceArea, numDistinctGBs,
                                                        ballVolume, gFixedT));
   }
-  distributionValues.push_back(0.0);
-  errorValues.push_back(0.0);
-  samplePtsX.push_back(0.0);
-  samplePtsY.push_back(0.0);
-  samplePtsZ.push_back(0.0);
 
   hid_t fid = H5Support::H5Utilities::createFile(fmt::format("/tmp/{}_7_0_find_gbcd_metric_based.h5", FILE_PREFIX));
   H5Support::H5Lite::writeVectorDataset(fid, "7_distributionValues", {static_cast<hsize_t>(distributionValues.size())}, distributionValues);
@@ -608,13 +601,14 @@ Result<> FindGBCDMetricBased::operator()()
   H5Support::H5Utilities::closeFile(fid);
 
   // ------------------------------------------- writing the output --------------------------------
+  std::cout << "File: " << distributionOutput.string() << std::endl;
+  std::cout << "File: " << errorOutput.string() << std::endl;
 
   std::ofstream distributionOutStream(distributionOutput, std::ios_base::out);
   if(!distributionOutStream.is_open())
   {
     return MakeErrorResult(-7237, fmt::format("Error creating distribution output file {}", distributionOutput.string()));
   }
-  // FILE* fDist = fopen(distributionOutput.c_str(), "w");
 
   std::ofstream errorOutStream(errorOutput, std::ios_base::out);
   if(!errorOutStream.is_open())
@@ -622,10 +616,8 @@ Result<> FindGBCDMetricBased::operator()()
     return MakeErrorResult(-7238, fmt::format("Error creating distribution errors output file {}", errorOutput.string()));
   }
 
-  std::string outputString = fmt::format("{:1.5E} {:1.5E} {:1.5E} {:1.5E}\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1],
+  std::string outputString = fmt::format("{:1.8E} {:1.8E} {:1.8E} {:1.8E}\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1],
                                          m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]);
-  //  fprintf(fDist, "%1.5E %1.5E %1.5E %1.5E\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2],
-  //          m_InputValues->MisorientationRotation[3]);
   distributionOutStream << outputString;
   errorOutStream << outputString;
 
@@ -634,16 +626,15 @@ Result<> FindGBCDMetricBased::operator()()
     float64 zenith = std::acos(samplePtsZ.at(ptIdx));
     float64 azimuth = std::atan2(samplePtsY.at(ptIdx), samplePtsX.at(ptIdx));
 
-    auto zenithDeg = Constants::k_180OverPiF * zenith;
-    auto azimuthDeg = Constants::k_180OverPiF * azimuth;
+    float64 zenithDeg = Constants::k_180OverPiD * zenith;
+    float64 azimuthDeg = Constants::k_180OverPiD * azimuth;
 
-    outputString = fmt::format("{:1.5E} {:1.5E} {:1.5E}\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
+    outputString = fmt::format("{:1.8E} {:1.8E} {:1.8E}\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
     distributionOutStream << outputString;
-    //  fprintf(fDist, "%1.5E %1.5E %1.5E\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
 
     if(!m_InputValues->SaveRelativeErr)
     {
-      outputString = fmt::format("{:1.5E} {:1.5E} {:1.5E}\n", azimuthDeg, 90.0 - zenithDeg, errorValues[ptIdx]);
+      outputString = fmt::format("{:1.8E} {:1.8E} {:1.8E}\n", azimuthDeg, 90.0 - zenithDeg, errorValues[ptIdx]);
       errorOutStream << outputString;
     }
     else
@@ -653,11 +644,10 @@ Result<> FindGBCDMetricBased::operator()()
       {
         saneErr = fmin(100.0, 100.0 * errorValues[ptIdx] / distributionValues[ptIdx]);
       }
-      outputString = fmt::format("{:1.5E} {:1.5E} {:1.5E}\n", azimuthDeg, 90.0 - zenithDeg, saneErr);
+      outputString = fmt::format("{:1.8E} {:1.8E} {:1.8E}\n", azimuthDeg, 90.0 - zenithDeg, saneErr);
       errorOutStream << outputString;
     }
   }
-  // fclose(fDist);
   distributionOutStream.close();
   errorOutStream.close();
 
