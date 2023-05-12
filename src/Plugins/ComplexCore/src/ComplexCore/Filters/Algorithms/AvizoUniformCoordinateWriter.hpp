@@ -1,35 +1,20 @@
 #pragma once
 
 #include "ComplexCore/ComplexCore_export.hpp"
-
-#include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/DataStructure.hpp"
-#include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
+#include "ComplexCore/utils/AvizoWriter.hpp"
 
 namespace complex
 {
-
-struct COMPLEXCORE_EXPORT AvizoUniformCoordinateWriterInputValues
-{
-  FileSystemPathParameter::ValueType OutputFile;
-  bool WriteBinaryFile;
-  DataPath GeometryPath;
-  DataPath FeatureIdsArrayPath;
-  StringParameter::ValueType Units;
-};
-
 /**
  * @class AvizoUniformCoordinateWriter
  * @brief This filter writes out a native Avizo Uniform Coordinate data file.
  */
 
-class COMPLEXCORE_EXPORT AvizoUniformCoordinateWriter
+class COMPLEXCORE_EXPORT AvizoUniformCoordinateWriter : public AvizoWriter
 {
 public:
-  AvizoUniformCoordinateWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AvizoUniformCoordinateWriterInputValues* inputValues);
-  ~AvizoUniformCoordinateWriter() noexcept;
+  AvizoUniformCoordinateWriter(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AvizoWriterInputValues* inputValues);
+  ~AvizoUniformCoordinateWriter() noexcept override;
 
   AvizoUniformCoordinateWriter(const AvizoUniformCoordinateWriter&) = delete;
   AvizoUniformCoordinateWriter(AvizoUniformCoordinateWriter&&) noexcept = delete;
@@ -38,17 +23,9 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
-
 protected:
-  Result<> generateHeader(FILE* outputFile) const;
-  Result<> writeData(FILE* outputFile) const;
-
-private:
-  DataStructure& m_DataStructure;
-  const AvizoUniformCoordinateWriterInputValues* m_InputValues = nullptr;
-  const std::atomic_bool& m_ShouldCancel;
-  const IFilter::MessageHandler& m_MessageHandler;
+  Result<> generateHeader(FILE* outputFile) const override;
+  Result<> writeData(FILE* outputFile) const override;
 };
 
 } // namespace complex
