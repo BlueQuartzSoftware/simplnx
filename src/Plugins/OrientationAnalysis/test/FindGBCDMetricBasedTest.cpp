@@ -43,26 +43,23 @@ const DataPath k_ComputedErrorPath({"NX_errors"});
 
 TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Execution", "[OrientationAnalysis][FindGBCDMetricBasedFilter]")
 {
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
+ const std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = Application::Instance()->getFilterList();
+  const auto* filterListPtr = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_find_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);
 
-  fs::path exemplarDistOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbcd_distribution_1.dat", unit_test::k_TestFilesDir));
-  fs::path exemplarErrorsOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbcd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
-  //  fs::path computedDistOutput(fmt::format("{}/computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
-  //  fs::path computedErrorsOutput(fmt::format("{}/computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
-
-  fs::path computedDistOutput("/tmp/mac_computed_gbcd_distribution_1.dat");
-  fs::path computedErrorsOutput("/tmp/mac_computed_gbcd_distribution_errors_1.dat");
+  const fs::path exemplarDistOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbcd_distribution_1.dat", unit_test::k_TestFilesDir));
+  const fs::path exemplarErrorsOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbcd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
+  const fs::path computedDistOutput(fmt::format("{}/7_0_computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
+  const fs::path computedErrorsOutput(fmt::format("{}/7_0_computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
 
   // Run the FindGBCDMetricBased filter
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
-    FindGBCDMetricBasedFilter filter;
+    const FindGBCDMetricBasedFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
@@ -102,7 +99,7 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
     static constexpr StringLiteral k_NSkipLinesKey = "n_skip_lines";
     static constexpr StringLiteral k_DelimiterChoiceKey = "delimiter_choice";
     static constexpr StringLiteral k_DataArrayKey = "output_data_array";
-    auto filter = filterList->createFilter(k_ImportTextFilterHandle);
+    auto filter = filterListPtr->createFilter(k_ImportTextFilterHandle);
     REQUIRE(nullptr != filter);
     // exemplar distribution
     {
@@ -173,11 +170,11 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: InValid Filter Execut
   auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_find_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);
 
-  fs::path computedDistOutput(fmt::format("{}/computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
-  fs::path computedErrorsOutput(fmt::format("{}/computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
+  const fs::path computedDistOutput(fmt::format("{}/computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
+  const fs::path computedErrorsOutput(fmt::format("{}/computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindGBCDMetricBasedFilter filter;
+  const FindGBCDMetricBasedFilter filter;
   Arguments args;
 
   // Create default Parameters for the filter.

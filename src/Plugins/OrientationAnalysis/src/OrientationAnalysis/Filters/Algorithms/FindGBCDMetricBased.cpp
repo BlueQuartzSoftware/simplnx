@@ -518,7 +518,7 @@ Result<> FindGBCDMetricBased::operator()()
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + triChunkSize);
-    dataAlg.setParallelizationEnabled(false);
+    dataAlg.setParallelizationEnabled(true);
     dataAlg.execute(GBCDMetricBased::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, triIncluded, misResolution, m_InputValues->PhaseOfInterest, gFixedT,
                                                        crystalStructures, eulerAngles, phases, faceLabels, faceNormals, faceAreas));
   }
@@ -579,7 +579,7 @@ Result<> FindGBCDMetricBased::operator()()
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + pointsChunkSize);
-    dataAlg.setParallelizationEnabled(false);
+    dataAlg.setParallelizationEnabled(true);
     dataAlg.execute(GBCDMetricBased::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, planeResolutionSq, totalFaceArea, numDistinctGBs,
                                                        ballVolume, gFixedT));
   }
