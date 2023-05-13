@@ -13,28 +13,15 @@
 
 #include <Eigen/Dense>
 
-#include <H5Support/H5Lite.h>
-#include <H5Support/H5Utilities.h>
-
 #ifdef COMPLEX_ENABLE_MULTICORE
 #include <tbb/concurrent_vector.h>
 #endif
-
-#ifdef __APPLE__
-#define FILE_PREFIX "macOS"
-#elif defined(_WIN32_)
-#define FILE_PREFIX "win32"
-#else
-#define FILE_PREFIX "Linux"
-#endif
-
-#include <cstdio>
 
 using namespace complex;
 using namespace complex::OrientationUtilities;
 namespace fs = std::filesystem;
 using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
-using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
+using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
 namespace
 {
@@ -50,7 +37,7 @@ namespace GBCDMetricBased
 struct TriAreaAndNormals
 {
   TriAreaAndNormals(float64 triArea, float64 n1x, float64 n1y, float64 n1z, float64 n2x, float64 n2y, float64 n2z)
-  : area(triArea)
+  : Area(triArea)
   , normalGrain1X(n1x)
   , normalGrain1Y(n1y)
   , normalGrain1Z(n1z)
@@ -61,7 +48,7 @@ struct TriAreaAndNormals
   }
   TriAreaAndNormals() = default;
 
-  float64 area = 0.0;
+  float64 Area = 0.0;
   float64 normalGrain1X = 0.0;
   float64 normalGrain1Y = 0.0;
   float64 normalGrain1Z = 0.0;
@@ -169,8 +156,8 @@ public:
         g2ea[whichEa] = m_Euler[3 * feature2 + whichEa];
       }
 
-      auto oMatrix1 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g1ea[0], g1ea[1], g1ea[2], 3.0f));
-      auto oMatrix2 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g2ea[0], g2ea[1], g2ea[2], 3.0f));
+      auto oMatrix1 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g1ea[0], g1ea[1], g1ea[2]));
+      auto oMatrix2 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g2ea[0], g2ea[1], g2ea[2]));
 
       for(int j = 0; j < m_NSym; j++)
       {
@@ -221,7 +208,6 @@ public:
         }
       }
     }
-
   }
 
   void operator()(const Range& range) const
@@ -244,7 +230,7 @@ private:
   int32 m_PhaseOfInterest;
   const Matrix3dR& m_GFixedT;
 
-  LaueOpsContainer m_OrientationOps;
+  LaueOpsContainerType m_OrientationOps;
   uint32 m_Crystal;
   int32 m_NSym;
 
@@ -316,7 +302,7 @@ public:
 
           if(distSq < m_PlaneResolutionSq)
           {
-            m_DistributionValues[ptIdx] += selectedTriangle.area;
+            m_DistributionValues[ptIdx] += selectedTriangle.Area;
           }
         }
       }
@@ -410,7 +396,7 @@ Result<> FindGBCDMetricBased::operator()()
 
   misResolution *= Constants::k_PiOver180F;
   planeResolution *= Constants::k_PiOver180F;
-  float64 planeResolutionSq = planeResolution * planeResolution;
+  const float64 planeResolutionSq = planeResolution * planeResolution;
 
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
@@ -422,14 +408,14 @@ Result<> FindGBCDMetricBased::operator()()
   auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesArrayPath);
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
+  const IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
 
   // ------------------- before computing the distribution, we must find normalization factors -----
   float64 ballVolume = k_BallVolumesM3M[m_InputValues->ChosenLimitDists];
   {
-    std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
+    std::vector<LaueOps::Pointer> ops = LaueOps::GetAllOrientationOps();
     auto crystalStruct = static_cast<int32>(crystalStructures[m_InputValues->PhaseOfInterest]);
-    int32 nSym = m_OrientationOps[crystalStruct]->getNumSymOps();
+    const int32 nSym = ops[crystalStruct]->getNumSymOps();
 
     if(crystalStruct != 1)
     {
@@ -443,13 +429,13 @@ Result<> FindGBCDMetricBased::operator()()
   m_MessageHandler(IFilter::Message::Type::Info, "Generating sampling points");
 
   // generate "Golden Section Spiral", see http://www.softimageblog.com/archives/115
-  int32 numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts; // here we generate points on the whole sphere
+  const int32 numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts; // here we generate points on the whole sphere
   std::vector<float64> samplePtsX(0);
   std::vector<float64> samplePtsY(0);
   std::vector<float64> samplePtsZ(0);
 
-  float64 off = 2.0 / static_cast<float64>(numSamplePtsWholeSphere);
-  const float64 k_Const1 = Constants::k_PiD * (3.0 - std::sqrt(5.0));
+  const float64 off = 2.0 / static_cast<float64>(numSamplePtsWholeSphere);
+  const float64 kConst1 = Constants::k_PiD * (3.0 - std::sqrt(5.0));
   for(int32 ptIdxWholeSph = 0; ptIdxWholeSph < numSamplePtsWholeSphere; ptIdxWholeSph++)
   {
     if(getCancel())
@@ -457,11 +443,11 @@ Result<> FindGBCDMetricBased::operator()()
       return {};
     }
 
-    float64 y = (static_cast<float64>(ptIdxWholeSph) * off) - 1.0 + (0.5 * off);
-    float64 r = std::sqrt(std::fmax(1.0 - y * y, 0.0));
-    float64 phi = static_cast<float64>(ptIdxWholeSph) * k_Const1;
+    const float64 y = (static_cast<float64>(ptIdxWholeSph) * off) - 1.0 + (0.5 * off);
+    const float64 r = std::sqrt(std::fmax(1.0 - y * y, 0.0));
+    const float64 phi = static_cast<float64>(ptIdxWholeSph) * kConst1;
 
-    float64 z = std::sin(phi) * r;
+    const float64 z = std::sin(phi) * r;
 
     if(z > 0.0)
     {
@@ -484,9 +470,9 @@ Result<> FindGBCDMetricBased::operator()()
   Eigen::Vector3d gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
   gFixedAxis.normalize();
   auto oMatrix = OrientationTransformation::ax2om<OrientationD, OrientationD>(OrientationD(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle));
-  Matrix3dR gFixedT = OrientationMatrixToGMatrixTranspose(oMatrix);
+  const Matrix3dR gFixedT = OrientationMatrixToGMatrixTranspose(oMatrix);
 
-  usize numMeshTriangles = faceAreas.getNumberOfTuples();
+  const usize numMeshTriangles = faceAreas.getNumberOfTuples();
 
 // ---------  find triangles (and equivalent crystallographic parameters) with +- the fixed mis orientation ---------
 #ifdef COMPLEX_ENABLE_MULTICORE
@@ -525,12 +511,12 @@ Result<> FindGBCDMetricBased::operator()()
 
   // ------------------------  find the number of distinct boundaries ------------------------------
   int32 numDistinctGBs = 0;
-  usize numFaceFeatures = featureFaceLabels.getNumberOfTuples();
+  const usize numFaceFeatures = featureFaceLabels.getNumberOfTuples();
 
   for(usize featureFaceIdx = 0; featureFaceIdx < numFaceFeatures; featureFaceIdx++)
   {
-    int32 feature1 = featureFaceLabels[2 * featureFaceIdx];
-    int32 feature2 = featureFaceLabels[2 * featureFaceIdx + 1];
+    const int32 feature1 = featureFaceLabels[2 * featureFaceIdx];
+    const int32 feature2 = featureFaceLabels[2 * featureFaceIdx + 1];
 
     if(feature1 < 1 || feature2 < 1)
     {
@@ -584,25 +570,7 @@ Result<> FindGBCDMetricBased::operator()()
                                                        ballVolume, gFixedT));
   }
 
-  hid_t fid = H5Support::H5Utilities::createFile(fmt::format("/tmp/{}_7_0_find_gbcd_metric_based.h5", FILE_PREFIX));
-  H5Support::H5Lite::writeVectorDataset(fid, "7_distributionValues", {static_cast<hsize_t>(distributionValues.size())}, distributionValues);
-  H5Support::H5Lite::writeVectorDataset(fid, "7_errorValues", {static_cast<hsize_t>(errorValues.size())}, errorValues);
-  H5Support::H5Lite::writeVectorDataset(fid, "7_samplePtsX", {static_cast<hsize_t>(samplePtsX.size())}, samplePtsX);
-  H5Support::H5Lite::writeVectorDataset(fid, "7_samplePtsY", {static_cast<hsize_t>(samplePtsY.size())}, samplePtsY);
-  H5Support::H5Lite::writeVectorDataset(fid, "7_samplePtsZ", {static_cast<hsize_t>(samplePtsZ.size())}, samplePtsZ);
-
-  std::vector<double> selectedTriAreas(selectedTriangles.size());
-  for(size_t i = 0; i < selectedTriangles.size(); i++)
-  {
-    selectedTriAreas[i] = selectedTriangles[i].area;
-  }
-  H5Support::H5Lite::writeVectorDataset(fid, "7_triAreas", {static_cast<hsize_t>(selectedTriAreas.size())}, selectedTriAreas);
-
-  H5Support::H5Utilities::closeFile(fid);
-
   // ------------------------------------------- writing the output --------------------------------
-  std::cout << "File: " << distributionOutput.string() << std::endl;
-  std::cout << "File: " << errorOutput.string() << std::endl;
 
   std::ofstream distributionOutStream(distributionOutput, std::ios_base::out);
   if(!distributionOutStream.is_open())
@@ -616,18 +584,18 @@ Result<> FindGBCDMetricBased::operator()()
     return MakeErrorResult(-7238, fmt::format("Error creating distribution errors output file {}", errorOutput.string()));
   }
 
-  std::string outputString = fmt::format("{:1.8E} {:1.8E} {:1.8E} {:1.8E}\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1],
-                                         m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]);
+  std::string outputString = fmt::format("{:.1F} {:.1F} {:.1F} {:.1F}\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2],
+                                         m_InputValues->MisorientationRotation[3]);
   distributionOutStream << outputString;
   errorOutStream << outputString;
 
   for(usize ptIdx = 0; ptIdx < samplePtsX.size(); ptIdx++)
   {
-    float64 zenith = std::acos(samplePtsZ.at(ptIdx));
-    float64 azimuth = std::atan2(samplePtsY.at(ptIdx), samplePtsX.at(ptIdx));
+    const float64 zenith = std::acos(samplePtsZ.at(ptIdx));
+    const float64 azimuth = std::atan2(samplePtsY.at(ptIdx), samplePtsX.at(ptIdx));
 
-    float64 zenithDeg = Constants::k_180OverPiD * zenith;
-    float64 azimuthDeg = Constants::k_180OverPiD * azimuth;
+    const float64 zenithDeg = Constants::k_180OverPiD * zenith;
+    const float64 azimuthDeg = Constants::k_180OverPiD * azimuth;
 
     outputString = fmt::format("{:1.8E} {:1.8E} {:1.8E}\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
     distributionOutStream << outputString;

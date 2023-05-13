@@ -43,7 +43,7 @@ const DataPath k_ComputedErrorPath({"NX_errors"});
 
 TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Execution", "[OrientationAnalysis][FindGBCDMetricBasedFilter]")
 {
- const std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
+  const std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   const auto* filterListPtr = Application::Instance()->getFilterList();
 
@@ -53,8 +53,8 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
 
   const fs::path exemplarDistOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbcd_distribution_1.dat", unit_test::k_TestFilesDir));
   const fs::path exemplarErrorsOutput(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_gbcd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
-  const fs::path computedDistOutput(fmt::format("{}/7_0_computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
-  const fs::path computedErrorsOutput(fmt::format("{}/7_0_computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
+  const fs::path computedDistOutput(fmt::format("{}/6_6_find_gbcd_metric_based/7_0_computed_gbcd_distribution_1.dat", unit_test::k_TestFilesDir));
+  const fs::path computedErrorsOutput(fmt::format("{}/6_6_find_gbcd_metric_based/7_0_computed_gbcd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
 
   // Run the FindGBCDMetricBased filter
   {
@@ -64,13 +64,13 @@ TEST_CASE("OrientationAnalysis::FindGBCDMetricBasedFilter: Valid Filter Executio
 
     // Create default Parameters for the filter.
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
-    args.insertOrAssign(FindGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1, 17.9f}));
-    args.insertOrAssign(FindGBCDMetricBasedFilter::k_ChosenLimitDists_Key, std::make_any<ChoicesParameter::ValueType>(2));
+    args.insertOrAssign(FindGBCDMetricBasedFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0f, 1.0f, 1.0f, 60.0f}));
+    args.insertOrAssign(FindGBCDMetricBasedFilter::k_ChosenLimitDists_Key, std::make_any<ChoicesParameter::ValueType>(0));
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
-    args.insertOrAssign(FindGBCDMetricBasedFilter::k_ExcludeTripleLines_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindGBCDMetricBasedFilter::k_ExcludeTripleLines_Key, std::make_any<bool>(false));
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_ErrOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
-    args.insertOrAssign(FindGBCDMetricBasedFilter::k_SaveRelativeErr_Key, std::make_any<bool>(true));
+    args.insertOrAssign(FindGBCDMetricBasedFilter::k_SaveRelativeErr_Key, std::make_any<bool>(false));
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleDataContainerPath));
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(k_NodeTypesPath));
     args.insertOrAssign(FindGBCDMetricBasedFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));

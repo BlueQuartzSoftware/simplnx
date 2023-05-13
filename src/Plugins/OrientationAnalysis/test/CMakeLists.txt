@@ -126,7 +126,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_align_sections_misorientation.tar.gz SHA512 2343654a8bcb344fcc613b6715c1e0b2c780fedbdf06cc8e5306b23f9d7908d5eef8faff7e3f0dd6f7ac734a1c6e2b376832bed38548288cd5e9e0af1b5602a8)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_ebsd_segment_features.tar.gz SHA512 acbb493a0668e0115ac49d4fedbbf7600759b9a66deb5d1004c2749a61d2bad2fcc60344bf72b2aeda5c8c098f458949dd1f8d58cb21682fa1393dfb7d0a1b84)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_gbcd_metric_based.tar.gz SHA512 946e54cfb8d97dc6d2c1a79f15011287de149dc3f42f1fb1fd1c9d691a6cbf625068082e0fc5498bc31e41b58c6441ed03e22624ce44b10a54859d2dd507e64d)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_gbcd_metric_based.tar.gz SHA512 e4db3edf577ca994f830bff5073552da1947993a39ff5bf0a7d2059b0dec9addcc097d7b8bb3c20e6c00dd432300753002dfd9725d7b291fbd3a19368df83421)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_stats_test.tar.gz SHA512 cb1d1c004ab5a3cb29cc10f7b6c291dd5819e57e303242b8162cd0b268dea24b1d3e5e3811ec4f5ee216179b6eb6b81c76ee7d37b7c49e83c6ab336147b4b14e)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME PoleFigure_Exemplars.tar.gz SHA512 7c90c69020a4fd4de10da81c1bc87499f5aededca57f3fc1aae3c60aad344cab1bdad2927d957a8d5848aca599028a9ade532dabc784f099bce2de39f61060e9)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_Ang_Files.tar.gz SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b)
@@ -252,28 +252,27 @@ math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(04) Small IN100 GBCD.d3dpipeline" 
                   TEST_INDEX "${test_index}"
-                  DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d" 
-                                    "Data/Output/SurfaceMesh/SmallIN100_MeshStats.xdmf" 
-                                    "Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph"
+                  DELETE_FILE_LIST "Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph"
                                     "Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat"
                   )     
 
+math(EXPR test_index "${test_index} + 1")
+add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
+                  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(05) Small IN100 GBCD Metric.d3dpipeline"
+                  TEST_INDEX "${test_index}"
+                  DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
+                                    "Data/Output/SurfaceMesh/SmallIN100_MeshStats.xdmf"
+                                    "Data/Output/SurfaceMesh/7_0_small_in100_distribution_1.dat"
+                                    "Data/Output/SurfaceMesh/7_0_small_in100_distribution_errors_1.dat"
+                                    "Data/Output/SurfaceMesh/SmallIN100_GBCD_Metric.dream3d"
+                  )
+
 # These should be relative to the 
 set(PREBUILT_PIPELINE_NAMES
-  # THIS GROUP MUST GO FIRST because the .h5ebsd file is needed for some of the examples below
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(08) Small IN100 Full Reconstruction.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(01) Small IN100 Morphological Statistics.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(05) Small IN100 Crystallographic Statistics.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(01) Small IN100 Quick Mesh.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(02) Small IN100 Smooth Mesh.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(03) Small IN100 Mesh Statistics.d3dpipeline"
-  # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(04) Small IN100 GBCD.d3dpipeline"
-
   # Example or other test pipelines
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/AlignSectionsMutualInformation.d3dpipeline"  # This example depends on the SmallIN100.h5ebsd file
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/CI_Histogram.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EnembleInfoReader.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EnsembleInfoReader.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadAng.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadCTF.d3dpipeline"
 )
