@@ -13,7 +13,7 @@ namespace complex
 struct ORIENTATIONANALYSIS_EXPORT FindGBPDMetricBasedInputValues
 {
   int32 PhaseOfInterest;
-  float32 LimitDist;
+  float64 LimitDist;
   int32 NumSamplPts;
   bool ExcludeTripleLines;
   FileSystemPathParameter::ValueType DistOutputFile;
@@ -51,8 +51,8 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  static void AppendSamplePtsFixedZenith(std::vector<float32>& xVec, std::vector<float32>& yVec, std::vector<float32>& zVec, float64 theta, float64 minPhi, float64 maxPhi, float64 step);
-  static void AppendSamplePtsFixedAzimuth(std::vector<float32>& xVec, std::vector<float32>& yVec, std::vector<float32>& zVec, float64 phi, float64 minTheta, float64 maxTheta, float64 step);
+  static void AppendSamplePtsFixedZenith(std::vector<float64>& xVec, std::vector<float64>& yVec, std::vector<float64>& zVec, float64 theta, float64 minPhi, float64 maxPhi, float64 step);
+  static void AppendSamplePtsFixedAzimuth(std::vector<float64>& xVec, std::vector<float64>& yVec, std::vector<float64>& zVec, float64 phi, float64 minTheta, float64 maxTheta, float64 step);
 
 private:
   DataStructure& m_DataStructure;

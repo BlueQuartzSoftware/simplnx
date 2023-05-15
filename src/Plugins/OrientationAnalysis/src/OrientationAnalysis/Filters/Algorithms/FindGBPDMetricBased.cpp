@@ -15,13 +15,15 @@
 #include <tbb/concurrent_vector.h>
 #endif
 
+#include <cmath>
+
 using namespace complex;
 using namespace complex::OrientationUtilities;
 namespace fs = std::filesystem;
 using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
-using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
+using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
-namespace GBPDMetricBased
+namespace gbpd_metric_based
 {
 /**
  * @brief The TriAreaAndNormals class defines a container that stores the area of a given triangle
@@ -30,29 +32,29 @@ namespace GBPDMetricBased
 class TriAreaAndNormals
 {
 public:
-  TriAreaAndNormals(float64 triArea, float32 n1x, float32 n1y, float32 n1z, float32 n2x, float32 n2y, float32 n2z)
-  : area(triArea)
-  , normalGrain1X(n1x)
-  , normalGrain1Y(n1y)
-  , normalGrain1Z(n1z)
-  , normalGrain2X(n2x)
-  , normalGrain2Y(n2y)
-  , normalGrain2Z(n2z)
+  TriAreaAndNormals(float64 triArea, float64 n1x, float64 n1y, float64 n1z, float64 n2x, float64 n2y, float64 n2z)
+  : Area(triArea)
+  , NormalGrain1X(n1x)
+  , NormalGrain1Y(n1y)
+  , NormalGrain1Z(n1z)
+  , NormalGrain2X(n2x)
+  , NormalGrain2Y(n2y)
+  , NormalGrain2Z(n2z)
   {
   }
   TriAreaAndNormals() = default;
 
-  float64 area = 0.0;
-  float32 normalGrain1X = 0.0;
-  float32 normalGrain1Y = 0.0;
-  float32 normalGrain1Z = 0.0;
-  float32 normalGrain2X = 0.0;
-  float32 normalGrain2Y = 0.0;
-  float32 normalGrain2Z = 0.0;
+  float64 Area = 0.0;
+  float64 NormalGrain1X = 0.0;
+  float64 NormalGrain1Y = 0.0;
+  float64 NormalGrain1Z = 0.0;
+  float64 NormalGrain2X = 0.0;
+  float64 NormalGrain2Y = 0.0;
+  float64 NormalGrain2Z = 0.0;
 
   bool operator<(const TriAreaAndNormals& other) const
   {
-    return area < other.area;
+    return Area < other.Area;
   }
 };
 
@@ -127,9 +129,9 @@ public:
         }
       }
 
-      normalLab[0] = static_cast<float32>(m_FaceNormals[3 * triIdx]);
-      normalLab[1] = static_cast<float32>(m_FaceNormals[3 * triIdx + 1]);
-      normalLab[2] = static_cast<float32>(m_FaceNormals[3 * triIdx + 2]);
+      normalLab[0] = static_cast<float64>(m_FaceNormals[3 * triIdx]);
+      normalLab[1] = static_cast<float64>(m_FaceNormals[3 * triIdx + 1]);
+      normalLab[2] = static_cast<float64>(m_FaceNormals[3 * triIdx + 2]);
 
       for(int32 whichEa = 0; whichEa < 3; whichEa++)
       {
@@ -163,7 +165,7 @@ private:
   std::vector<TriAreaAndNormals>& m_SelectedTriangles;
 #endif
   int32 m_PhaseOfInterest;
-  LaueOpsContainer m_OrientationOps;
+  LaueOpsContainerType m_OrientationOps;
   uint32 m_Crystal;
   int32 m_NSym;
   const Float32Array& m_EulerAngles;
@@ -180,14 +182,14 @@ private:
 class ProbeDistribution
 {
 public:
-  ProbeDistribution(std::vector<float64>& distributionValues, std::vector<float64>& errorValues, const std::vector<float32>& samplePtsX, const std::vector<float32>& samplePtsY,
-                    const std::vector<float32>& samplePtsZ,
+  ProbeDistribution(std::vector<float64>& distributionValues, std::vector<float64>& errorValues, const std::vector<float64>& samplePtsX, const std::vector<float64>& samplePtsY,
+                    const std::vector<float64>& samplePtsZ,
 #ifdef COMPLEX_ENABLE_MULTICORE
                     const tbb::concurrent_vector<TriAreaAndNormals>& selectedTriangles,
 #else
                     const std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    float32 limitDist, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, int32 crystal)
+                    float64 limitDist, float64 totalFaceArea, int32 numDistinctGBs, float64 ballVolume, int32 crystal)
   : m_DistributionValues(distributionValues)
   , m_ErrorValues(errorValues)
   , m_SamplePtsX(samplePtsX)
@@ -215,42 +217,42 @@ public:
     for(usize ptIdx = start; ptIdx < end; ptIdx++)
     {
       float64 c = 0.0;
-      const float32 probeNormal[3] = {m_SamplePtsX[ptIdx], m_SamplePtsY[ptIdx], m_SamplePtsZ[ptIdx]};
+      const float64 probeNormal[3] = {m_SamplePtsX[ptIdx], m_SamplePtsY[ptIdx], m_SamplePtsZ[ptIdx]};
 
       for(const auto& selectedTriangle : m_SelectedTriangles)
       {
-        Eigen::Vector3d normal1 = {selectedTriangle.normalGrain1X, selectedTriangle.normalGrain1Y, selectedTriangle.normalGrain1Z};
-        Eigen::Vector3d normal2 = {selectedTriangle.normalGrain2X, selectedTriangle.normalGrain2Y, selectedTriangle.normalGrain2Z};
+        const Eigen::Vector3d normal1 = {selectedTriangle.NormalGrain1X, selectedTriangle.NormalGrain1Y, selectedTriangle.NormalGrain1Z};
+        const Eigen::Vector3d normal2 = {selectedTriangle.NormalGrain2X, selectedTriangle.NormalGrain2Y, selectedTriangle.NormalGrain2Z};
 
         for(int32 j = 0; j < m_NSym; j++)
         {
-          Matrix3dR sym = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
+          const Matrix3dR sym = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
 
           Eigen::Vector3d symNormal1 = sym * normal1;
           Eigen::Vector3d symNormal2 = sym * normal2;
 
           for(int32 inversion = 0; inversion <= 1; inversion++)
           {
-            float32 sign = 1.0f;
+            float64 sign = 1.0f;
             if(inversion == 1)
             {
               sign = -1.0f;
             }
 
-            const float32 gamma1 = acosf(sign * (probeNormal[0] * symNormal1[0] + probeNormal[1] * symNormal1[1] + probeNormal[2] * symNormal1[2]));
-            const float32 gamma2 = acosf(sign * (probeNormal[0] * symNormal2[0] + probeNormal[1] * symNormal2[1] + probeNormal[2] * symNormal2[2]));
+            const float64 gamma1 = std::acos(sign * (probeNormal[0] * symNormal1[0] + probeNormal[1] * symNormal1[1] + probeNormal[2] * symNormal1[2]));
+            const float64 gamma2 = std::acos(sign * (probeNormal[0] * symNormal2[0] + probeNormal[1] * symNormal2[1] + probeNormal[2] * symNormal2[2]));
 
             if(gamma1 < m_LimitDist)
             {
               // Kahan summation algorithm
-              const float64 y = selectedTriangle.area - c;
+              const float64 y = selectedTriangle.Area - c;
               const float64 t = m_DistributionValues[ptIdx] + y;
               c = (t - m_DistributionValues[ptIdx]) - y;
               m_DistributionValues[ptIdx] = t;
             }
             if(gamma2 < m_LimitDist)
             {
-              const float64 y = selectedTriangle.area - c;
+              const float64 y = selectedTriangle.Area - c;
               const float64 t = m_DistributionValues[ptIdx] + y;
               c = (t - m_DistributionValues[ptIdx]) - y;
               m_DistributionValues[ptIdx] = t;
@@ -272,24 +274,24 @@ public:
 private:
   std::vector<float64>& m_DistributionValues;
   std::vector<float64>& m_ErrorValues;
-  std::vector<float32> m_SamplePtsX;
-  std::vector<float32> m_SamplePtsY;
-  std::vector<float32> m_SamplePtsZ;
+  std::vector<float64> m_SamplePtsX;
+  std::vector<float64> m_SamplePtsY;
+  std::vector<float64> m_SamplePtsZ;
 #ifdef COMPLEX_ENABLE_MULTICORE
   const tbb::concurrent_vector<TriAreaAndNormals>& m_SelectedTriangles;
 #else
   const std::vector<TriAreaAndNormals>& m_SelectedTriangles;
 #endif
-  float32 m_LimitDist;
+  float64 m_LimitDist;
   float64 m_TotalFaceArea;
   int32 m_NumDistinctGBs;
   float64 m_BallVolume;
-  LaueOpsContainer m_OrientationOps;
+  LaueOpsContainerType m_OrientationOps;
   uint32 m_Crystal;
   int32 m_NSym;
 };
 
-} // namespace GBPDMetricBased
+} // namespace gbpd_metric_based
 
 // -----------------------------------------------------------------------------
 FindGBPDMetricBased::FindGBPDMetricBased(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindGBPDMetricBasedInputValues* inputValues)
@@ -322,9 +324,9 @@ Result<> FindGBPDMetricBased::operator()()
   auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesArrayPath);
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
+  const IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
 
-  const float32 limitDist = m_InputValues->LimitDist * Constants::k_PiOver180F;
+  const float64 limitDist = m_InputValues->LimitDist * Constants::k_PiOver180D;
 
   if(crystalStructures[m_InputValues->PhaseOfInterest] > 10)
   {
@@ -365,33 +367,35 @@ Result<> FindGBPDMetricBased::operator()()
   std::ofstream distributionOutStream(distributionOutput, std::ios_base::out);
   if(!distributionOutStream.is_open())
   {
-    return MakeErrorResult(-8326, fmt::format("Error creating distribution output file {}", distributionOutput.string()));
+    return MakeErrorResult(-8326, fmt::format("Error creating GBPD distribution output file {}", distributionOutput.string()));
   }
 
   std::ofstream errorOutStream(errorOutput, std::ios_base::out);
   if(!errorOutStream.is_open())
   {
-    return MakeErrorResult(-8327, fmt::format("Error creating distribution errors output file {}", errorOutput.string()));
+    return MakeErrorResult(-8327, fmt::format("Error creating GBPD distribution errors output file {}", errorOutput.string()));
   }
 
   // ------------------- before computing the distribution, we must find normalization factors -----
-  std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<LaueOps::Pointer> mOrientationOps = LaueOps::GetAllOrientationOps();
   auto crystal = static_cast<int32>(crystalStructures[m_InputValues->PhaseOfInterest]);
-  int32 nSym = m_OrientationOps[crystal]->getNumSymOps();
-  auto ballVolume = static_cast<float64>(nSym) * 2.0 * (1.0 - cos(limitDist));
+  const int32 nSym = mOrientationOps[crystal]->getNumSymOps();
+  auto ballVolume = static_cast<float64>(nSym) * 2.0 * (1.0 - std::cos(limitDist));
 
   // ------------------------------ generation of sampling points ----------------------------------
   m_MessageHandler(IFilter::Message::Type::Info, "Generating sampling points");
 
   // generate "Golden Section Spiral", see http://www.softimageblog.com/archives/115
-  int numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts; // here we generate points on the whole sphere
-  std::vector<float32> samplePtsXHemisphere(0);
-  std::vector<float32> samplePtsYHemisphere(0);
-  std::vector<float32> samplePtsZHemisphere(0);
-  std::vector<float32> samplePtsX(0);
-  std::vector<float32> samplePtsY(0);
-  std::vector<float32> samplePtsZ(0);
-  auto off = 2.0f / static_cast<float32>(numSamplePtsWholeSphere);
+  const int numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts; // here we generate points on the whole sphere
+  std::vector<float64> samplePtsXHemisphere(0);
+  std::vector<float64> samplePtsYHemisphere(0);
+  std::vector<float64> samplePtsZHemisphere(0);
+  std::vector<float64> samplePtsX(0);
+  std::vector<float64> samplePtsY(0);
+  std::vector<float64> samplePtsZ(0);
+
+  const float64 off = 2.0 / static_cast<float64>(numSamplePtsWholeSphere);
+  const float64 kConst1 = Constants::k_PiD * (3.0 - std::sqrt(5.0));
   for(int32 ptIdxWholeSphere = 0; ptIdxWholeSphere < numSamplePtsWholeSphere; ptIdxWholeSphere++)
   {
     if(getCancel())
@@ -399,13 +403,15 @@ Result<> FindGBPDMetricBased::operator()()
       return {};
     }
 
-    float32 y = (static_cast<float32>(ptIdxWholeSphere) * off) - 1.0f + (0.5f * off);
-    float32 r = sqrtf(fmaxf(1.0f - y * y, 0.0));
-    float32 phi = static_cast<float32>(ptIdxWholeSphere) * 2.3999632f; // 2.3999632f = pi * (3 - sqrt(5))
+    const float64 y = (static_cast<float64>(ptIdxWholeSphere) * off) - 1.0 + (0.5 * off);
+    const float64 r = std::sqrt(std::fmax(1.0 - y * y, 0.0));
+    const float64 phi = static_cast<float64>(ptIdxWholeSphere) * kConst1;
 
-    if(float32 z = sinf(phi) * r; z >= 0.0)
+    const double z = std::sin(phi) * r;
+
+    if(z >= 0.0)
     {
-      samplePtsXHemisphere.push_back(cosf(phi) * r);
+      samplePtsXHemisphere.push_back(std::cos(phi) * r);
       samplePtsYHemisphere.push_back(y);
       samplePtsZHemisphere.push_back(z);
     }
@@ -419,13 +425,13 @@ Result<> FindGBPDMetricBased::operator()()
       return {};
     }
 
-    float32 x = samplePtsXHemisphere[ptIdxHemisphere];
-    float32 y = samplePtsYHemisphere[ptIdxHemisphere];
-    float32 z = samplePtsZHemisphere[ptIdxHemisphere];
+    const float64 x = samplePtsXHemisphere[ptIdxHemisphere];
+    const float64 y = samplePtsYHemisphere[ptIdxHemisphere];
+    const float64 z = samplePtsZHemisphere[ptIdxHemisphere];
 
     if(crystal == 0) // 6/mmm
     {
-      if(x < 0.0 || y < 0.0 || y > x * Constants::k_1OverRoot3F)
+      if(x < 0.0 || y < 0.0 || y > x * Constants::k_1OverRoot3D)
       {
         continue;
       }
@@ -439,7 +445,7 @@ Result<> FindGBPDMetricBased::operator()()
     }
     if(crystal == 2 || crystal == 10) // 6/m || -3m
     {
-      if(x < 0.0 || y < 0.0 || y > x * Constants::k_Sqrt3F)
+      if(x < 0.0 || y < 0.0 || y > x * Constants::k_Sqrt3D)
       {
         continue;
       }
@@ -475,7 +481,7 @@ Result<> FindGBPDMetricBased::operator()()
     }
     if(crystal == 9) // -3
     {
-      if(y < 0.0 || x < -y * Constants::k_1OverRoot3F)
+      if(y < 0.0 || x < -y * Constants::k_1OverRoot3D)
       {
         continue;
       }
@@ -496,19 +502,19 @@ Result<> FindGBPDMetricBased::operator()()
   if(crystal == 1) // m-3m
   {
     AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 45.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 45.0 * Constants::k_PiOver180D, 0.0, acos(Constants::k_1OverRoot3D), limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 45.0 * Constants::k_PiOver180D, 0.0, std::acos(Constants::k_1OverRoot3D), limitDist);
 
     for(float64 phi = 0; phi <= 45.0 * Constants::k_PiOver180D; phi += limitDist)
     {
-      float64 cosPhi = cos(phi);
-      float64 sinPhi = sin(phi);
-      float64 atan1OverCosPhi = atan(1.0 / cosPhi);
-      float64 sinAtan1OverCosPhi = sin(atan1OverCosPhi);
-      float64 cosAtan1OverCosPhi = cos(atan1OverCosPhi);
+      const float64 cosPhi = std::cos(phi);
+      const float64 sinPhi = std::sin(phi);
+      const float64 atan1OverCosPhi = std::atan(1.0 / cosPhi);
+      const float64 sinAtan1OverCosPhi = std::sin(atan1OverCosPhi);
+      float64 cosAtan1OverCosPhi = std::cos(atan1OverCosPhi);
 
-      samplePtsX.push_back(static_cast<float32>(sinAtan1OverCosPhi * cosPhi));
-      samplePtsY.push_back(static_cast<float32>(sinAtan1OverCosPhi * sinPhi));
-      samplePtsZ.push_back(static_cast<float32>(cosAtan1OverCosPhi));
+      samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
+      samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
+      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
     }
   }
   if(crystal == 2 || crystal == 10) // 6/m ||  -3m
@@ -523,19 +529,19 @@ Result<> FindGBPDMetricBased::operator()()
     AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 45.0 * Constants::k_PiOver180D, limitDist);
     for(float64 phi = 0; phi <= 45.0 * Constants::k_PiOver180D; phi += limitDist)
     {
-      float64 cosPhi = cos(phi);
-      float64 sinPhi = sin(phi);
-      float64 atan1OverCosPhi = atan(1.0 / cosPhi);
-      float64 sinAtan1OverCosPhi = sin(atan1OverCosPhi);
-      float64 cosAtan1OverCosPhi = cos(atan1OverCosPhi);
+      const float64 cosPhi = std::cos(phi);
+      const float64 sinPhi = std::sin(phi);
+      const float64 atan1OverCosPhi = std::atan(1.0 / cosPhi);
+      const float64 sinAtan1OverCosPhi = std::sin(atan1OverCosPhi);
+      float64 cosAtan1OverCosPhi = std::cos(atan1OverCosPhi);
 
-      samplePtsX.push_back(static_cast<float32>(sinAtan1OverCosPhi * cosPhi));
-      samplePtsY.push_back(static_cast<float32>(sinAtan1OverCosPhi * sinPhi));
-      samplePtsZ.push_back(static_cast<float32>(cosAtan1OverCosPhi));
+      samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
+      samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
+      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
 
-      samplePtsX.push_back(static_cast<float32>(sinAtan1OverCosPhi * sinPhi));
-      samplePtsY.push_back(static_cast<float32>(sinAtan1OverCosPhi * cosPhi));
-      samplePtsZ.push_back(static_cast<float32>(cosAtan1OverCosPhi));
+      samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
+      samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
+      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
     }
   }
   if(crystal == 4) // -1
@@ -567,10 +573,10 @@ Result<> FindGBPDMetricBased::operator()()
   }
 
   // ---------  find triangles corresponding to Phase of Interests, and their normals in crystal reference frames ---------
-  usize numMeshTriangles = faceAreas.getNumberOfTuples();
+  const usize numMeshTriangles = faceAreas.getNumberOfTuples();
 
 #ifdef COMPLEX_ENABLE_MULTICORE
-  tbb::concurrent_vector<GBPDMetricBased::TriAreaAndNormals> selectedTriangles(0);
+  tbb::concurrent_vector<gbpd_metric_based::TriAreaAndNormals> selectedTriangles(0);
 #else
   std::vector<GBPDMetricBased::TriAreaAndNormals> selectedTriangles(0);
 #endif
@@ -595,18 +601,18 @@ Result<> FindGBPDMetricBased::operator()()
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + triChunkSize);
-    dataAlg.execute(GBPDMetricBased::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, m_InputValues->PhaseOfInterest, crystalStructures, eulerAngles,
-                                                       phases, faceLabels, faceNormals, faceAreas));
+    dataAlg.execute(gbpd_metric_based::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, m_InputValues->PhaseOfInterest, crystalStructures, eulerAngles,
+                                                         phases, faceLabels, faceNormals, faceAreas));
   }
 
   // ------------------------  find the number of distinct boundaries ------------------------------
   int32 numDistinctGBs = 0;
-  usize numFaceFeatures = featureFaceLabels.getNumberOfTuples();
+  const usize numFaceFeatures = featureFaceLabels.getNumberOfTuples();
 
   for(usize featureFaceIdx = 0; featureFaceIdx < numFaceFeatures; featureFaceIdx++)
   {
-    int32 feature1 = featureFaceLabels[2 * featureFaceIdx];
-    int32 feature2 = featureFaceLabels[2 * featureFaceIdx + 1];
+    const int32 feature1 = featureFaceLabels[2 * featureFaceIdx];
+    const int32 feature2 = featureFaceLabels[2 * featureFaceIdx + 1];
 
     if(feature1 < 1 || feature2 < 1)
     {
@@ -628,7 +634,7 @@ Result<> FindGBPDMetricBased::operator()()
   float64 totalFaceArea = 0.0;
   for(const auto& selectedTri : selectedTriangles)
   {
-    totalFaceArea += selectedTri.area;
+    totalFaceArea += selectedTri.Area;
   }
 
   std::vector<float64> distributionValues(samplePtsX.size(), 0.0);
@@ -646,7 +652,7 @@ Result<> FindGBPDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0 * static_cast<float32>(i) / static_cast<float32>(samplePtsX.size()))));
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;
@@ -655,7 +661,7 @@ Result<> FindGBPDMetricBased::operator()()
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + pointsChunkSize);
     dataAlg.execute(
-        GBPDMetricBased::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, limitDist, totalFaceArea, numDistinctGBs, ballVolume, crystal));
+        gbpd_metric_based::ProbeDistribution(distributionValues, errorValues, samplePtsX, samplePtsY, samplePtsZ, selectedTriangles, limitDist, totalFaceArea, numDistinctGBs, ballVolume, crystal));
   }
 
   // ------------------------------------------- writing the output --------------------------------
@@ -665,13 +671,13 @@ Result<> FindGBPDMetricBased::operator()()
 
   for(usize ptIdx = 0; ptIdx < samplePtsX.size(); ptIdx++)
   {
-    Eigen::Vector3d point = {samplePtsX.at(ptIdx), samplePtsY.at(ptIdx), samplePtsZ.at(ptIdx)};
+    const Eigen::Vector3d point = {samplePtsX.at(ptIdx), samplePtsY.at(ptIdx), samplePtsZ.at(ptIdx)};
     Matrix3dR sym;
     sym.fill(0.0);
 
     for(int32 j = 0; j < nSym; j++)
     {
-      sym = EbsdLibMatrixToEigenMatrix(m_OrientationOps[crystal]->getMatSymOpD(j));
+      sym = EbsdLibMatrixToEigenMatrix(mOrientationOps[crystal]->getMatSymOpD(j));
       Eigen::Vector3d symPoint = {0.0, 0.0, 0.0};
       symPoint = sym * point;
 
@@ -682,28 +688,28 @@ Result<> FindGBPDMetricBased::operator()()
         symPoint[2] = -symPoint[2];
       }
 
-      float32 zenith = acosf(symPoint[2]);
-      float32 azimuth = atan2f(symPoint[1], symPoint[0]);
+      const float64 zenith = std::acos(symPoint[2]);
+      const float64 azimuth = std::atan2(symPoint[1], symPoint[0]);
 
-      float32 zenithDeg = Constants::k_180OverPiF * zenith;
-      float32 azimuthDeg = Constants::k_180OverPiF * azimuth;
+      const float64 zenithDeg = Constants::k_180OverPiD * zenith;
+      const float64 azimuthDeg = Constants::k_180OverPiD * azimuth;
 
-      outputString = fmt::format("{:.2f} {:.2f} {:.4f}\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
+      outputString = fmt::format("{:.8E} {:.8E} {:.8E}\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
       distributionOutStream << outputString;
 
       if(!m_InputValues->SaveRelativeErr)
       {
-        outputString = fmt::format("{:.2f} {:.2f} {:.4f}\n", azimuthDeg, 90.0 - zenithDeg, errorValues[ptIdx]);
+        outputString = fmt::format("{:.8E} {:.8E} {:.8E}\n", azimuthDeg, 90.0 - zenithDeg, errorValues[ptIdx]);
         errorOutStream << outputString;
       }
       else
       {
-        double saneErr = 100.0;
+        float64 saneErr = 100.0;
         if(distributionValues[ptIdx] > 1e-10)
         {
-          saneErr = fmin(100.0, 100.0 * errorValues[ptIdx] / distributionValues[ptIdx]);
+          saneErr = std::fmin(100.0, 100.0 * errorValues[ptIdx] / distributionValues[ptIdx]);
         }
-        outputString = fmt::format("{:.2f} {:.2f} {:.2f}\n", azimuthDeg, 90.0 - zenithDeg, saneErr);
+        outputString = fmt::format("{:.8E} {:.8E} {:.8E}\n", azimuthDeg, 90.0 - zenithDeg, saneErr);
         errorOutStream << outputString;
       }
     }
@@ -715,29 +721,29 @@ Result<> FindGBPDMetricBased::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void FindGBPDMetricBased::AppendSamplePtsFixedZenith(std::vector<float32>& xVec, std::vector<float32>& yVec, std::vector<float32>& zVec, float64 theta, float64 minPhi, float64 maxPhi, float64 step)
+void FindGBPDMetricBased::AppendSamplePtsFixedZenith(std::vector<float64>& xVec, std::vector<float64>& yVec, std::vector<float64>& zVec, float64 theta, float64 minPhi, float64 maxPhi, float64 step)
 {
   for(float64 phi = minPhi; phi <= maxPhi; phi += step)
   {
-    xVec.push_back(sinf(static_cast<float32>(theta)) * cosf(static_cast<float32>(phi)));
-    yVec.push_back(sinf(static_cast<float32>(theta)) * sinf(static_cast<float32>(phi)));
-    zVec.push_back(cosf(static_cast<float32>(theta)));
+    xVec.push_back(std::sin(theta) * std::cos(phi));
+    yVec.push_back(std::sin(theta) * std::sin(phi));
+    zVec.push_back(std::cos(theta));
   }
-  xVec.push_back(sinf(static_cast<float32>(theta)) * cosf(static_cast<float32>(maxPhi)));
-  yVec.push_back(sinf(static_cast<float32>(theta)) * sinf(static_cast<float32>(maxPhi)));
-  zVec.push_back(cosf(static_cast<float32>(theta)));
+  xVec.push_back(std::sin(theta) * std::cos(maxPhi));
+  yVec.push_back(std::sin(theta) * std::sin(maxPhi));
+  zVec.push_back(std::cos(theta));
 }
 
 // -----------------------------------------------------------------------------
-void FindGBPDMetricBased::AppendSamplePtsFixedAzimuth(std::vector<float32>& xVec, std::vector<float32>& yVec, std::vector<float32>& zVec, float64 phi, float64 minTheta, float64 maxTheta, float64 step)
+void FindGBPDMetricBased::AppendSamplePtsFixedAzimuth(std::vector<float64>& xVec, std::vector<float64>& yVec, std::vector<float64>& zVec, float64 phi, float64 minTheta, float64 maxTheta, float64 step)
 {
-  for(float64 theta = minTheta; theta <= maxTheta; theta += step)
+  for(double theta = minTheta; theta <= maxTheta; theta += step)
   {
-    xVec.push_back(sinf(static_cast<float32>(theta)) * cosf(static_cast<float32>(phi)));
-    yVec.push_back(sinf(static_cast<float32>(theta)) * sinf(static_cast<float32>(phi)));
-    zVec.push_back(cosf(static_cast<float32>(theta)));
+    xVec.push_back(std::sin(theta) * std::cos(phi));
+    yVec.push_back(std::sin(theta) * std::sin(phi));
+    zVec.push_back(std::cos(theta));
   }
-  xVec.push_back(sinf(static_cast<float32>(maxTheta)) * cosf(static_cast<float32>(phi)));
-  yVec.push_back(sinf(static_cast<float32>(maxTheta)) * sinf(static_cast<float32>(phi)));
-  zVec.push_back(cosf(static_cast<float32>(maxTheta)));
+  xVec.push_back(std::sin(maxTheta) * std::cos(phi));
+  yVec.push_back(std::sin(maxTheta) * std::sin(phi));
+  zVec.push_back(std::cos(maxTheta));
 }

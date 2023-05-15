@@ -575,13 +575,13 @@ Result<> FindGBCDMetricBased::operator()()
   std::ofstream distributionOutStream(distributionOutput, std::ios_base::out);
   if(!distributionOutStream.is_open())
   {
-    return MakeErrorResult(-7237, fmt::format("Error creating distribution output file {}", distributionOutput.string()));
+    return MakeErrorResult(-7237, fmt::format("Error creating GBCD Metric distribution output file {}", distributionOutput.string()));
   }
 
   std::ofstream errorOutStream(errorOutput, std::ios_base::out);
   if(!errorOutStream.is_open())
   {
-    return MakeErrorResult(-7238, fmt::format("Error creating distribution errors output file {}", errorOutput.string()));
+    return MakeErrorResult(-7238, fmt::format("Error creating GBCD Metric distribution errors output file {}", errorOutput.string()));
   }
 
   std::string outputString = fmt::format("{:.1F} {:.1F} {:.1F} {:.1F}\n", m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2],
