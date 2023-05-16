@@ -1,6 +1,6 @@
 {
   "isDisabled": false,
-  "name": "EnembleInfoReader.d3dpipeline",
+  "name": "EnsembleInfoReader.d3dpipeline",
   "pinnedParams": [],
   "pipeline": [
     {

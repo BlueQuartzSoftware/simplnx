@@ -46,6 +46,8 @@ set(FilterList
   FindFeatureReferenceCAxisMisorientationsFilter
   FindFeatureReferenceMisorientationsFilter
   FindGBCDFilter
+  FindGBCDMetricBasedFilter
+  FindGBPDMetricBasedFilter
   FindKernelAvgMisorientationsFilter
   FindMisorientationsFilter
   FindSchmidsFilter
@@ -78,8 +80,6 @@ set(STUB_FILTERS
   FindBoundaryStrengths
   FindDistsToCharactGBs
 
-  FindGBCDMetricBased
-  FindGBPDMetricBased
   FindKernelAvgMisorientations
   FindMisorientations
   FindSchmids
@@ -179,6 +179,8 @@ set(filter_algorithms
   FindFeatureReferenceCAxisMisorientations
   FindFeatureReferenceMisorientations
   FindGBCD
+  FindGBCDMetricBased
+  FindGBPDMetricBased
   FindKernelAvgMisorientations
   FindMisorientations
   FindSchmids
