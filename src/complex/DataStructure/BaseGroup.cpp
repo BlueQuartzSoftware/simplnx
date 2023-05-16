@@ -104,6 +104,10 @@ bool BaseGroup::canInsert(const DataObject* obj) const
   {
     return false;
   }
+  if(const auto* objGroup = dynamic_cast<const BaseGroup*>(obj); objGroup != nullptr && objGroup->isParentOf(this))
+  {
+    return false;
+  }
   return true;
 }
 

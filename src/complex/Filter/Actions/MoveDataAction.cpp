@@ -15,6 +15,7 @@ constexpr int32 k_MissingParentObjectCode = -6403;
 constexpr int32 k_FailedAddParentCode = -6404;
 constexpr int32 k_FailedRemoveParentCode = -6405;
 constexpr int32 k_FailedFindOldParentCode = -6406;
+constexpr int32 k_RecursiveParentCode = -6407;
 } // namespace
 
 namespace complex
@@ -34,6 +35,11 @@ Result<> MoveDataAction::apply(DataStructure& dataStructure, Mode mode) const
   if(dataObject == nullptr)
   {
     return MakeErrorResult(k_MissingDataObjectCode, fmt::format("{}Could not find DataObject at '{}'", prefix, m_Path.toString()));
+  }
+
+  if(m_Path == m_NewParentPath)
+  {
+    return MakeErrorResult(k_RecursiveParentCode, fmt::format("{}Cannot move data object at path '{}' into itself.", prefix, m_Path.toString()));
   }
 
   auto parentIds = dataObject->getParentIds();

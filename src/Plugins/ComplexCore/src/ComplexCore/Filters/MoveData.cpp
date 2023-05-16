@@ -2,7 +2,8 @@
 
 #include "complex/DataStructure/BaseGroup.hpp"
 #include "complex/Filter/Actions/MoveDataAction.hpp"
-#include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/MultiPathSelectionParameter.hpp"
 
 namespace complex
 {
@@ -49,8 +50,9 @@ Parameters MoveData::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_Data_Key, "Data to Move", "The complete path to the data object to be moved", DataPath()));
-  params.insert(std::make_unique<DataPathSelectionParameter>(k_NewParent_Key, "New Parent", "The complete path to the parent data object to which the data will be moved", DataPath()));
+  params.insert(std::make_unique<MultiPathSelectionParameter>(k_Data_Key, "Data to Move", "The complete paths to the data object(s) to be moved", MultiPathSelectionParameter::ValueType{}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_NewParent_Key, "New Parent", "The complete path to the parent data object to which the data will be moved", DataPath(),
+                                                              BaseGroup::GetAllGroupTypes()));
   return params;
 }
 
@@ -63,21 +65,19 @@ IFilter::UniquePointer MoveData::clone() const
 //------------------------------------------------------------------------------
 IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
-  auto dataPath = args.value<DataPath>(k_Data_Key);
+  auto dataPaths = args.value<MultiPathSelectionParameter::ValueType>(k_Data_Key);
   auto newParentPath = args.value<DataPath>(k_NewParent_Key);
 
-  const auto* parentPathGroup = data.getDataAs<BaseGroup>(newParentPath);
-  if(parentPathGroup == nullptr)
+  Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
+
+  for(const auto& dataPath : dataPaths)
   {
-    std::string ss = fmt::format("New parent path {} is not of the correct type.  Must select an attribute matrix, data group, or geometry as the new parent", newParentPath.toString());
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-6540, ss}})};
+    auto moveDataAction = std::make_unique<MoveDataAction>(dataPath, newParentPath);
+    resultOutputActions.value().actions.push_back(std::move(moveDataAction));
   }
 
-  auto moveDataAction = std::make_unique<MoveDataAction>(dataPath, newParentPath);
-
-  OutputActions actions;
-  actions.actions.push_back(std::move(moveDataAction));
-  return {std::move(actions)};
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
