@@ -211,8 +211,18 @@ const Metadata& DataObject::getMetadata() const
 bool DataObject::hasParent(const DataPath& parentPath) const
 {
   const auto dataPaths = getDataPaths();
-  const auto originalCellDataPathIt =
-      std::find_if(dataPaths.begin(), dataPaths.end(), [parentPath](const DataPath& path) { return StringUtilities::contains(path.toString(), parentPath.toString()); });
+  const auto originalCellDataPathIt = std::find_if(dataPaths.begin(), dataPaths.end(), [parentPath](const DataPath& path) {
+    DataPath pathAncestor = path.getParent();
+    while(!pathAncestor.empty())
+    {
+      if(parentPath == pathAncestor)
+      {
+        return true;
+      }
+      pathAncestor = pathAncestor.getParent();
+    }
+    return false;
+  });
   return originalCellDataPathIt != dataPaths.end();
 }
 
