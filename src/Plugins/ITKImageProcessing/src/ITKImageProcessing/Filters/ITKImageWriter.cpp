@@ -365,7 +365,7 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
           cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, newImageGeom, slice, dims.getY(), indexOffset);
+      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getY(), indexOffset);
       if(result.invalid())
       {
         return result;
@@ -389,7 +389,7 @@ Result<> ITKImageWriter::executeImpl(DataStructure& dataStructure, const Argumen
           cxITKImageWriter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, newImageGeom, slice, dims.getX(), indexOffset);
+      Result<> result = cxITKImageWriter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getX(), indexOffset);
       if(result.invalid())
       {
         return result;
