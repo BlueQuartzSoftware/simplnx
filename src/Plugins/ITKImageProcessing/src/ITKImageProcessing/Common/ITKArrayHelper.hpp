@@ -30,6 +30,26 @@ namespace complex
 {
 namespace ITK
 {
+struct ImageGeomData
+{
+  SizeVec3 dims{};
+  FloatVec3 origin{};
+  FloatVec3 spacing{};
+
+  ImageGeomData() = default;
+
+  ImageGeomData(SizeVec3 inputDims, FloatVec3 inputOrigin, FloatVec3 inputSpacing)
+  : dims(std::move(inputDims))
+  , origin(std::move(inputOrigin))
+  , spacing(std::move(inputSpacing))
+  {
+  }
+
+  ImageGeomData(const ImageGeom& imageGeom)
+  : ImageGeomData(imageGeom.getDimensions(), imageGeom.getOrigin(), imageGeom.getSpacing())
+  {
+  }
+};
 
 inline const std::set<DataType>& GetScalarPixelAllowedTypes()
 {
@@ -230,7 +250,7 @@ std::vector<usize> GetComponentDimensions()
 }
 
 template <class PixelT, uint32 Dimensions>
-typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeom& imageGeom)
+typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeomData& imageGeom)
 {
   using T = ITK::UnderlyingType_t<PixelT>;
 
@@ -241,9 +261,9 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<
 
   using FilterType = itk::ImportImageFilter<PixelT, Dimensions>;
 
-  SizeVec3 geomDims = imageGeom.getDimensions();
-  FloatVec3 geomOrigin = imageGeom.getOrigin();
-  FloatVec3 geomSpacing = imageGeom.getSpacing();
+  SizeVec3 geomDims = imageGeom.dims;
+  FloatVec3 geomOrigin = imageGeom.origin;
+  FloatVec3 geomSpacing = imageGeom.spacing;
 
   typename FilterType::SizeType imageSize{};
   typename FilterType::OriginType imageOrigin{};
@@ -274,6 +294,12 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<
   importFilter->Update();
 
   return importFilter->GetOutput();
+}
+
+template <class PixelT, uint32 Dimensions>
+typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeom& imageGeom)
+{
+  return WrapDataStoreInImage<PixelT, Dimensions>(dataStore, ImageGeomData(imageGeom));
 }
 
 template <class PixelT, uint32 Dimension>
@@ -428,9 +454,9 @@ Result<ResultT> ArraySwitchFuncComponentImpl(usize nComp, int32 errorCode, ArgsT
 }
 
 template <class InputT, class OutputT, class ComponentOptionsT, class ResultT, template <class, class, uint32> class FunctorT, class... ArgsT>
-Result<ResultT> ArraySwitchFuncDimsImpl(const IDataStore& dataStore, const ImageGeom& imageGeom, int32 errorCode, ArgsT&&... args)
+Result<ResultT> ArraySwitchFuncDimsImpl(const IDataStore& dataStore, const ImageGeomData& imageGeom, int32 errorCode, ArgsT&&... args)
 {
-  auto tDims = imageGeom.getDimensions();
+  auto tDims = imageGeom.dims;
   auto cDims = dataStore.getComponentShape();
 
   usize nComp = cDims[0];
@@ -567,7 +593,7 @@ using DefaultOutput_t = std::void_t<T>;
 } // namespace detail
 
 template <template <class, class, uint32> class FunctorT, class ArrayOptionsT, class ResultT = void, template <class> class OutputT = detail::DefaultOutput_t, class... ArgsT>
-Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeom& imageGeom, int32 errorCode, ArgsT&&... args)
+Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeomData& imageGeom, int32 errorCode, ArgsT&&... args)
 {
   DataType type = dataStore.getDataType();
 
@@ -646,6 +672,12 @@ Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeom& im
   }
 
   return MakeErrorResult<ResultT>(-1000, "Invalid DataType while attempting to execute");
+}
+
+template <template <class, class, uint32> class FunctorT, class ArrayOptionsT, class ResultT = void, template <class> class OutputT = detail::DefaultOutput_t, class... ArgsT>
+Result<ResultT> ArraySwitchFunc(const IDataStore& dataStore, const ImageGeom& imageGeom, int32 errorCode, ArgsT&&... args)
+{
+  return ArraySwitchFunc<FunctorT, ArrayOptionsT, ResultT, OutputT>(dataStore, ImageGeomData(imageGeom), errorCode, args...);
 }
 
 template <class ArrayOptionsT, template <class> class OutputT = detail::DefaultOutput_t>
