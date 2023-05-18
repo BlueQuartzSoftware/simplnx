@@ -14,16 +14,6 @@ template <typename T>
 class KMedoidsTemplate
 {
 public:
-  using Self = KMedoidsTemplate;
-  using Pointer = std::shared_ptr<Self>;
-  using ConstPointer = std::shared_ptr<const Self>;
-  using WeakPointer = std::weak_ptr<Self>;
-  using ConstWeakPointer = std::weak_ptr<const Self>;
-  static Pointer NullPointer()
-  {
-    return Pointer(static_cast<Self*>(nullptr));
-  }
-
   KMedoidsTemplate(KMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
                    KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
@@ -47,14 +37,12 @@ public:
     usize numTuples = m_InputArray.getNumberOfTuples();
     int32 numCompDims = m_InputArray.getNumberOfComponents();
 
-    usize rangeMin = 0;
-    usize rangeMax = numTuples - 1;
     std::mt19937_64 gen(m_Seed);
-    std::uniform_int_distribution<usize> dist(rangeMin, rangeMax);
+    std::uniform_int_distribution<usize> dist(0, numTuples - 1);
 
     std::vector<usize> clusterIdxs(m_NumClusters);
-    usize clusterChoices = 0;
 
+    usize clusterChoices = 0;
     while(clusterChoices < m_NumClusters)
     {
       usize index = dist(gen);
@@ -93,7 +81,6 @@ public:
       update = optClusterIdxs == clusterIdxs ? false : true;
 
       float64 sum = std::accumulate(std::begin(costs), std::end(costs), 0.0);
-
       m_Filter->updateProgress(fmt::format("Clustering Data || Iteration {} || Total Cost: {}", iteration, sum));
       iteration++;
     }

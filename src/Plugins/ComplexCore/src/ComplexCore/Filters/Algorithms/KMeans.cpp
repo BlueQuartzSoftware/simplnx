@@ -14,16 +14,6 @@ template <typename T>
 class KMeansTemplate
 {
 public:
-  using Self = KMeansTemplate;
-  using Pointer = std::shared_ptr<Self>;
-  using ConstPointer = std::shared_ptr<const Self>;
-  using WeakPointer = std::weak_ptr<Self>;
-  using ConstWeakPointer = std::weak_ptr<const Self>;
-  static Pointer NullPointer()
-  {
-    return Pointer(static_cast<Self*>(nullptr));
-  }
-
   KMeansTemplate(KMeans* filter, const IDataArray& inputIDataArray, IDataArray& meansIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
                  KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
@@ -47,17 +37,18 @@ public:
     usize numTuples = m_InputArray.getNumberOfTuples();
     int32 numCompDims = m_InputArray.getNumberOfComponents();
 
-    usize rangeMin = 0;
-    usize rangeMax = numTuples - 1;
-    std::mt19937_64 gen(m_Seed);
-    std::uniform_int_distribution<usize> dist(rangeMin, rangeMax);
+    const usize rangeMax = numTuples - 1;
+    std::random_device randDev;
+    std::mt19937_64 gen(randDev());
+    gen.seed(m_Seed);
+    std::uniform_real_distribution<double> dist(0.0F, 1.0F);
 
     std::vector<usize> clusterIdxs(m_NumClusters);
-    usize clusterChoices = 0;
 
+    usize clusterChoices = 0;
     while(clusterChoices < m_NumClusters)
     {
-      usize index = dist(gen);
+      usize index = std::floor(dist(gen) * static_cast<float64>(rangeMax));
       if(m_Mask[index])
       {
         clusterIdxs[clusterChoices] = index;
@@ -73,11 +64,10 @@ public:
       }
     }
 
-    usize updateCheck = 0;
     std::vector<float64> oldMeans(m_NumClusters);
     std::vector<float64> differences(m_NumClusters);
     usize iteration = 1;
-
+    usize updateCheck = 0;
     while(updateCheck != m_NumClusters)
     {
       if(m_Filter->getCancel())
@@ -104,7 +94,6 @@ public:
       }
 
       float64 sum = std::accumulate(std::begin(differences), std::end(differences), 0.0);
-
       m_Filter->updateProgress(fmt::format("Clustering Data || Iteration {} || Total Mean Shift: {}", iteration, sum));
       iteration++;
     }
