@@ -112,11 +112,11 @@
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": {
           "type": "STRING",
-          "value": "x64-osx-dynamic"
+          "value": "x64-osx-v11"
         },
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
-          "value": "x64-osx-dynamic"
+          "value": "x64-osx-v11"
         }
       }
     },
