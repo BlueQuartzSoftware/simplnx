@@ -6,6 +6,7 @@
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
@@ -48,9 +49,12 @@ Parameters SharedFeatureFaceFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatures_Key, "Randomize Face IDs", "Specifies if feature IDs should be randomized. Can be helpful when visualizing the faces.", false));
+
+  params.insertSeparator(Parameters::Separator{"Required Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
-  params.insertSeparator(Parameters::Separator{"Required Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{complex::DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Created Face Data Arrays"});
@@ -153,6 +157,7 @@ Result<> SharedFeatureFaceFilter::executeImpl(DataStructure& dataStructure, cons
 
   auto featureFaceLabelsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureFaceLabelsArrayName_Key);
   inputValues.FeatureFaceLabelsArrayPath = inputValues.GrainBoundaryAttributeMatrixPath.createChildPath(featureFaceLabelsArrayName);
+  inputValues.ShouldRandomizeFeatureIds = filterArgs.value<bool>(k_RandomizeFeatures_Key);
 
   return SharedFeatureFace(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
