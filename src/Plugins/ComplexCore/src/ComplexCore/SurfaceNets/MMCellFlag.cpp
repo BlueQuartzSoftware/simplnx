@@ -5,6 +5,7 @@
 // Sarah Frisken, Brigham and Women's Hospital, Boston MA USA
 
 #include "MMCellFlag.h"
+
 #include <type_traits>
 
 MMCellFlag::MMCellFlag()
@@ -15,7 +16,7 @@ MMCellFlag::~MMCellFlag()
 {
 }
 
-void MMCellFlag::set(unsigned short cellLabels[8])
+void MMCellFlag::set(int32_t cellLabels[8])
 {
   // By default the cell has no vertex and no face or edge crossings
   m_bitFlag = 0;
@@ -266,10 +267,10 @@ bool MMCellFlag::isEdgeCrossing(Edge edge)
   }
 }
 
-unsigned int MMCellFlag::faceCrossingTypeAsBits(unsigned short c0, unsigned short c1, unsigned short c2, unsigned short c3)
+unsigned int MMCellFlag::faceCrossingTypeAsBits(int32_t c0, int32_t c1, int32_t c2, int32_t c3)
 {
   int numUniqueTypes = 0;
-  unsigned short uniqueTypes[4];
+  int32_t uniqueTypes[4];
   uniqueTypes[numUniqueTypes++] = c0;
   if(c1 != uniqueTypes[0])
     uniqueTypes[numUniqueTypes++] = c1;

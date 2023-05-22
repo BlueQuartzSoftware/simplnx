@@ -48,6 +48,7 @@
 #ifndef MM_SURFACE_NET_H
 #define MM_SURFACE_NET_H
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -56,7 +57,7 @@ class MMCellMap;
 class MMSurfaceNet
 {
 public:
-  MMSurfaceNet(unsigned short* labels, int arraySize[3], float voxelSize[3]);
+  MMSurfaceNet(int32_t* labels, int arraySize[3], float voxelSize[3]);
   ~MMSurfaceNet();
 
   // Surface smoothing (relaxation)
@@ -75,7 +76,7 @@ public:
   // Label used internally. Not available as a material index.
   enum ReservedLabel
   {
-    Pading = 65535
+    Padding = std::numeric_limits<int32_t>::max()
   };
 
   MMCellMap* getCellMap() const

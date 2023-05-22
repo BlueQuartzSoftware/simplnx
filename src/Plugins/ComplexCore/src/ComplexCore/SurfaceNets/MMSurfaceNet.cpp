@@ -15,7 +15,7 @@
 #include "MMGeometryOBJ.h"
 #include "MMSurfaceNet.h"
 
-MMSurfaceNet::MMSurfaceNet(unsigned short* labels, int arraySize[3], float voxelSize[3])
+MMSurfaceNet::MMSurfaceNet(int32_t* labels, int arraySize[3], float voxelSize[3])
 : m_cellMap(nullptr)
 {
   if(m_cellMap != NULL)
@@ -53,7 +53,7 @@ std::vector<int> MMSurfaceNet::labels()
     for(int idxVtx = 0; idxVtx < m_cellMap->numVertices(); idxVtx++)
     {
       int vertexIndices[4];
-      unsigned short quadLabels[2];
+      int32_t quadLabels[2];
 
       // Back-bottom edge
       if(m_cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices, quadLabels) == true)
@@ -77,7 +77,7 @@ std::vector<int> MMSurfaceNet::labels()
       }
     }
     // Removed the reserved padding index
-    labelSet.erase(ReservedLabel::Pading);
+    labelSet.erase(ReservedLabel::Padding);
     labels.assign(labelSet.begin(), labelSet.end());
   }
 

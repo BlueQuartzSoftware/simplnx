@@ -6,12 +6,13 @@
 
 #include <cstdlib>
 #include <exception>
+#include <iostream>
 
 #include "MMCellMap.h"
 #include "MMSurfaceNet.h"
 
 // Basic cell map containing material labels
-MMCellMap::MMCellMap(unsigned short* labels, int arraySize[3], float voxelSize[3])
+MMCellMap::MMCellMap(int32_t* labels, int arraySize[3], float voxelSize[3])
 : m_cellArray(NULL)
 , m_numVertices(0)
 , m_vertices(NULL)
@@ -37,8 +38,8 @@ MMCellMap::MMCellMap(unsigned short* labels, int arraySize[3], float voxelSize[3
   // Initialize interior cell contents. Each cell stores the label of it's bottom, left, back
   // corner.
   Cell* pCell = m_cellArray;
-  unsigned short* pLabel = labels;
-  unsigned short padLabel = (unsigned short)MMSurfaceNet::ReservedLabel::Pading;
+  int32_t* pLabel = labels;
+  int32_t padLabel = (int32_t)MMSurfaceNet::ReservedLabel::Padding;
   for(int k = 0; k < m_arraySize[2]; k++)
   {
     for(int j = 0; j < m_arraySize[1]; j++)
@@ -207,7 +208,7 @@ MMCellFlag::VertexType MMCellMap::vertexType(int vertexIndex)
 // [x0, y0, z0, x1, y1 ...] in clockwise order and the quad face labels are inserted
 // into quadLabels as [labelTopFaceOfQuad, labelBottomFaceOfQuad]. If there is no edge
 // crossing, quadCorners and quadLabels will not be set.
-bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], unsigned short quadLabels[2])
+bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2])
 {
   int cellIndex[3];
   getVertexCellIndex(vertexIndex, cellIndex);
@@ -228,7 +229,7 @@ bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, float quadCo
 // and the quad face labels are inserted into quadLabels as [labelTopFaceOfQuad,
 // labelBottomFaceOfQuad]. If there is no edge crossing, quadCorners and quadLabels
 // will not be set.
-bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], unsigned short quadLabels[2])
+bool MMCellMap::getEdgeQuad(int vertexIndex, MMCellFlag::Edge edge, int quadVtxIndices[4], int32_t quadLabels[2])
 {
   int cellIndex[3];
   getVertexCellIndex(vertexIndex, cellIndex);
@@ -249,7 +250,7 @@ void MMCellMap::getVertexPosition(int vertexIndex, float position[3])
   getVertexPosition(m_vertices[vertexIndex].cellIndex, position);
 }
 
-void MMCellMap::initCell(Cell* cell, unsigned short label)
+void MMCellMap::initCell(Cell* cell, int32_t label)
 {
   cell->label = label;
   cell->flag.clear();
@@ -271,7 +272,7 @@ void MMCellMap::setCellVertices()
       for(int i = 0; i < m_arraySize[0] - 1; i++)
       {
         Cell* pCell = getCell(i, j, k);
-        unsigned short cellLabels[8];
+        int32_t cellLabels[8];
         getCellLabels(pCell, cellLabels);
         pCell->flag.set(cellLabels);
         if(pCell->flag.vertexType() != MMCellFlag::VertexType::NoVertex)
@@ -318,7 +319,7 @@ void MMCellMap::setCellVertices()
 }
 
 // The caller is responsible for bounds checking to allow for optimal performance.
-void MMCellMap::getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, unsigned short quadLabels[2])
+void MMCellMap::getEdgeLabels(int cellIndex[3], MMCellFlag::Edge edge, int32_t quadLabels[2])
 {
   Cell* pCell = getCell(cellIndex);
   Cell* pCellFirstLabel;
@@ -496,7 +497,7 @@ int MMCellMap::cellArrayIndex(int i, int j, int k)
 {
   return (i + m_arraySize[0] * j + m_arraySize[0] * m_arraySize[1] * k);
 }
-void MMCellMap::getCellLabels(Cell* pCell, unsigned short labels[8])
+void MMCellMap::getCellLabels(Cell* pCell, int32_t labels[8])
 {
   // Labels of cell's 8 corner vertices. This ordering is used when computing cell
   // flags.
