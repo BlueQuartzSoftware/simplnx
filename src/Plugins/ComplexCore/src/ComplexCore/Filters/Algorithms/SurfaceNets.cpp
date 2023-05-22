@@ -182,12 +182,13 @@ Result<> SurfaceNets::operator()()
 
   auto gridDimensions = imageGeom.getDimensions();
   auto voxelSize = imageGeom.getSpacing();
+  auto origin = imageGeom.getOrigin();
+
   IntVec3 arraySize(static_cast<int32>(gridDimensions[0]), static_cast<int32>(gridDimensions[1]), static_cast<int32>(gridDimensions[2]));
 
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& featureIdDataStore = featureIds.getIDataStoreRefAs<Int32DataStore>();
 
-  using LabelType = uint16;
+  using LabelType = int32;
   std::vector<LabelType> labels(featureIds.getNumberOfTuples());
   for(size_t idx = 0; idx < featureIds.getNumberOfTuples(); idx++)
   {
@@ -235,10 +236,13 @@ Result<> SurfaceNets::operator()()
   for(int32 vertIndex = 0; vertIndex < nodeCount; vertIndex++)
   {
     cellMap->getVertexPosition(vertIndex, position.data());
+    // Relocated the vertex correctly based on the origin of the ImageGeometry
+    position = position + origin - Point3Df(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[1]);
+
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
     cellMap->getVertexCellIndex(vertIndex, vertCellIndex.data());
-
-    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<uint8>(cellMap->getCell(vertCellIndex.data())->flag.numJunctions());
+    MMCellMap::Cell* currentCellPtr = cellMap->getCell(vertCellIndex.data());
+    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<uint8>(currentCellPtr->flag.numJunctions());
 
     //    MMCellMap::Cell* pCell = cellMap->getCell(vertIndex);
     //
@@ -256,14 +260,35 @@ Result<> SurfaceNets::operator()()
     std::array<LabelType, 2> quadLabels = {0, 0};
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::BackBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
+      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
+      {
+        for(auto& vertIndex : vertexIndices)
+        {
+          nodeTypes[static_cast<usize>(vertIndex)] += 10;
+        }
+      }
       triangleCount += 2;
     }
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBottomEdge, vertexIndices.data(), quadLabels.data()))
     {
+      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
+      {
+        for(auto& vertIndex : vertexIndices)
+        {
+          nodeTypes[static_cast<usize>(vertIndex)] += 10;
+        }
+      }
       triangleCount += 2;
     }
     if(cellMap->getEdgeQuad(idxVtx, MMCellFlag::Edge::LeftBackEdge, vertexIndices.data(), quadLabels.data()))
     {
+      if(quadLabels[0] == MMSurfaceNet::Padding || quadLabels[1] == MMSurfaceNet::Padding)
+      {
+        for(auto& vertIndex : vertexIndices)
+        {
+          nodeTypes[static_cast<usize>(vertIndex)] += 10;
+        }
+      }
       triangleCount += 2;
     }
   }
@@ -300,6 +325,14 @@ Result<> SurfaceNets::operator()()
       }
 
       isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
+      if(quadLabels[0] == MMSurfaceNet::Padding)
+      {
+        quadLabels[0] = 0;
+      }
+      if(quadLabels[1] == MMSurfaceNet::Padding)
+      {
+        quadLabels[1] = 0;
+      }
 
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs.data());
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
@@ -331,7 +364,14 @@ Result<> SurfaceNets::operator()()
       }
 
       isQuadFrontFacing = (quadLabels[0] < quadLabels[1]); ///
-
+      if(quadLabels[0] == MMSurfaceNet::Padding)
+      {
+        quadLabels[0] = 0;
+      }
+      if(quadLabels[1] == MMSurfaceNet::Padding)
+      {
+        quadLabels[1] = 0;
+      }
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs.data());
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};
@@ -362,7 +402,14 @@ Result<> SurfaceNets::operator()()
       }
 
       isQuadFrontFacing = (quadLabels[0] < quadLabels[1]);
-
+      if(quadLabels[0] == MMSurfaceNet::Padding)
+      {
+        quadLabels[0] = 0;
+      }
+      if(quadLabels[1] == MMSurfaceNet::Padding)
+      {
+        quadLabels[1] = 0;
+      }
       getQuadTriangleIDs(vData, isQuadFrontFacing, triangleVtxIDs.data());
       t1 = {static_cast<usize>(triangleVtxIDs[0]), static_cast<usize>(triangleVtxIDs[1]), static_cast<usize>(triangleVtxIDs[2])};
       t2 = {static_cast<usize>(triangleVtxIDs[3]), static_cast<usize>(triangleVtxIDs[4]), static_cast<usize>(triangleVtxIDs[5])};

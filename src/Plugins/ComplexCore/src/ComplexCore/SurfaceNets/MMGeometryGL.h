@@ -58,10 +58,10 @@ private:
   unsigned int* m_indices;
   std::map<int, float> m_labelToTexCoord;
 
-  void makeGLQuad(float* positions, unsigned short tissueLabels[2], float* quadVerts, unsigned int* quadIndices, int idxOffset);
+  void makeGLQuad(float* positions, int32_t tissueLabels[2], float* quadVerts, unsigned int* quadIndices, int idxOffset);
   void computeQuadNormal(float* positions, float* normal);
 
-  /*	static void makeGLQuad(float* positions, unsigned short tissueLabels[2], float* quadVerts,
+  /*	static void makeGLQuad(float* positions, int32_t tissueLabels[2], float* quadVerts,
     unsigned int* quadIndices, int idxOffset);
   static void computeQuadNormal(float* positions, float* normal);*/
 };

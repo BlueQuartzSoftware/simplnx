@@ -8,6 +8,8 @@
 #ifndef MM_CELL_FLAG_H
 #define MM_CELL_FLAG_H
 
+#include <cstdint>
+
 class MMCellFlag
 {
 public:
@@ -67,7 +69,7 @@ public:
   // bottom-to-top (i.e., left-back-bottom vertex first and right-front-top vertex
   // last). Clearing the cell flag encodes types NoVertex, NoFaceCrossing, and no
   // edge or face crossings.
-  void set(unsigned short cellLabels[8]);
+  void set(int32_t cellLabels[8]);
 
   void clear()
   {
@@ -119,7 +121,7 @@ private:
   unsigned char m_numJunctions = 0;
 
   // Determine face crossing type from the face's vertex labels
-  unsigned int faceCrossingTypeAsBits(unsigned short c0, unsigned short c1, unsigned short c2, unsigned short c3);
+  unsigned int faceCrossingTypeAsBits(int32_t c0, int32_t c1, int32_t c2, int32_t c3);
 };
 
 // For iterating over cell faces
