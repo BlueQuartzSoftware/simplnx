@@ -55,10 +55,10 @@ Parameters VtkRectilinearGridWriterFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "The output vtk file in which the geometry data is written", fs::path("Data/Output/RectilinearGrid.vtk"),
                                                           FileSystemPathParameter::ExtensionsType{".vtk"}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<BoolParameter>(k_WriteBinaryFile_Key, "Write Binary File", "Whether or not to write the vtk file in binary", false));
-  params.insert(std::make_unique<BoolParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The path to the image geometry in which to write out to the vtk file", false));
-  params.insert(std::make_unique<MultiArraySelectionParameter>(
-      k_SelectedDataArrayPaths_Key, "Cell Data Arrays to Write", "The paths to the cell data arrays to write out with the geometry", MultiArraySelectionParameter::ValueType{},
-      MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray, IArray::ArrayType::NeighborListArray, IArray::ArrayType::StringArray}, GetAllDataTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The path to the image geometry in which to write out to the vtk file", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Cell Data Arrays to Write", "The paths to the cell data arrays to write out with the geometry",
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
 
   return params;
 }
@@ -93,7 +93,7 @@ IFilter::PreflightResult VtkRectilinearGridWriterFilter::preflightImpl(const Dat
         -2071, "One or more of the selected cell data arrays have mismatching numbers of tuples. Make sure that all of the selected arrays come from the same cell level attribute matrix.");
   }
 
-  usize numTuples = dataStructure.getDataRefAs<IArray>(pSelectedDataArrayPathsValue[0]).getNumberOfTuples();
+  usize numTuples = dataStructure.getDataRefAs<IDataArray>(pSelectedDataArrayPathsValue[0]).getNumberOfTuples();
   usize numCells = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPathValue).getNumberOfCells();
   if(numCells != numTuples)
   {
