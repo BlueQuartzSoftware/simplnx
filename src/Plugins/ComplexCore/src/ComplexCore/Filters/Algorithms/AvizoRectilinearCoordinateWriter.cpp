@@ -1,5 +1,6 @@
 #include "AvizoRectilinearCoordinateWriter.hpp"
 
+#include "complex/Common/Bit.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
@@ -29,11 +30,14 @@ Result<> AvizoRectilinearCoordinateWriter::generateHeader(FILE* outputFile) cons
 
   if(m_InputValues->WriteBinaryFile)
   {
-#ifdef CMP_WORDS_BIGENDIAN
-    fprintf(outputFile, "# AmiraMesh BINARY 2.1\n");
-#else
-    fprintf(outputFile, "# AmiraMesh BINARY-LITTLE-ENDIAN 2.1\n");
-#endif
+    if constexpr(endian::big == endian::native)
+    {
+      fprintf(outputFile, "# AmiraMesh BINARY 2.1\n");
+    }
+    else
+    {
+      fprintf(outputFile, "# AmiraMesh BINARY-LITTLE-ENDIAN 2.1\n");
+    }
   }
   else
   {
