@@ -315,7 +315,7 @@ Result<> VtkRectilinearGridWriter::writeCoords(FILE* outputFile, const std::stri
       d = idx * step + min;
       if constexpr(endian::little == endian::native)
       {
-        complex::byteswap(d);
+        d = complex::byteswap(d);
       }
       data[idx] = d;
     }

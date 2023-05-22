@@ -177,6 +177,8 @@ const DataPath k_FeatureIdsArrayPath = k_CellAttributeMatrix.createChildPath(k_F
 const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_Confidence_Index);
 const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_Image_Quality);
 const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
+const DataPath k_FitArrayPath = k_CellAttributeMatrix.createChildPath(k_Fit);
+const DataPath k_SEMSignalArrayPath = k_CellAttributeMatrix.createChildPath(k_SEMSignal);
 
 // Cell Ensemble Data DataPaths
 const DataPath k_CellEnsembleAttributeMatrixPath = k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix);
