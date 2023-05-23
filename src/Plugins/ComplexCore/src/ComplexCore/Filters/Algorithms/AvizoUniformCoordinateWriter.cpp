@@ -31,11 +31,14 @@ Result<> AvizoUniformCoordinateWriter::generateHeader(FILE* outputFile) const
 
   if(m_InputValues->WriteBinaryFile)
   {
-#ifdef CMP_WORDS_BIGENDIAN
-    fprintf(outputFile, "# AmiraMesh BINARY 2.1\n");
-#else
-    fprintf(outputFile, "# AmiraMesh BINARY-LITTLE-ENDIAN 2.1\n");
-#endif
+    if constexpr(endian::big == endian::native)
+    {
+      fprintf(outputFile, "# AmiraMesh BINARY 2.1\n");
+    }
+    else
+    {
+      fprintf(outputFile, "# AmiraMesh BINARY-LITTLE-ENDIAN 2.1\n");
+    }
   }
   else
   {
