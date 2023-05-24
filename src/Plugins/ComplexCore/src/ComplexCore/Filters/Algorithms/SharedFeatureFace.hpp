@@ -18,6 +18,7 @@ struct COMPLEXCORE_EXPORT SharedFeatureFaceInputValues
   DataPath GrainBoundaryAttributeMatrixPath;
   DataPath FeatureFaceLabelsArrayPath;
   DataPath FeatureFaceNumTrianglesArrayPath;
+  bool ShouldRandomizeFeatureIds;
 };
 
 /**
