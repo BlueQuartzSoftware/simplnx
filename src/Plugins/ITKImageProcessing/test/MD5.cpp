@@ -5,7 +5,7 @@ for bzflag (http://www.bzflag.org)
   based on:
 
   md5.h and md5.c
-  reference implemantion of RFC 1321
+  reference implementation of RFC 1321
 
   Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
 rights reserved.
@@ -34,7 +34,10 @@ documentation and/or software.
 #include "MD5.hpp"
 
 /* system implementation headers */
+#include <array>
 #include <cstdio>
+#include <iomanip>
+#include <sstream>
 
 // Constants for MD5Transform routine.
 #define S11 7
@@ -343,12 +346,16 @@ std::string MD5::hexdigest() const
   if(!finalized)
     return "";
 
-  char buf[33];
-  for(int i = 0; i < 16; i++)
-    sprintf(buf + i * 2, "%02x", digest[i]);
-  buf[32] = 0;
+  std::ostringstream oss;
 
-  return std::string(buf);
+  oss << std::hex << std::setfill('0');
+
+  for(const auto& byte : digest)
+  {
+    oss << std::setw(2) << static_cast<int>(byte);
+  }
+
+  return oss.str();
 }
 
 //////////////////////////////
