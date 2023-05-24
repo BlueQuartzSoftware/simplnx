@@ -26,7 +26,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "triangle_geometry_path";
   static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
-
+  static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
   static inline constexpr StringLiteral k_FeatureFaceIdsArrayName_Key = "feature_face_ids_array_name";
   static inline constexpr StringLiteral k_GrainBoundaryAttributeMatrixName_Key = "grain_boundary_attribute_matrix_name";
   static inline constexpr StringLiteral k_FeatureNumTrianglesArrayName_Key = "feature_num_triangles_array_name";

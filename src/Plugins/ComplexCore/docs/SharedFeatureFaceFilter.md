@@ -11,17 +11,31 @@ This **Filter** assigns a unique Id to each **Triangle** in a **Triangle Geometr
 boundary_ on which that **Triangle** resides. For example, if there were only two **Features** that shared one boundary,
 then the **Triangles** on that boundary would be labeled with a single unique Id. This procedure creates _unique groups_
 of **Triangles**, which themselves are a set of **Features**. Thus, this **Filter** also creates a **Feature Attribute
-Matrix** for this new set of **Features**, and creates **Attribute Arrays** for their Ids and number of **Triangles**.
+Matrix** for this new set of **Features**, and creates **Attribute Arrays** for their Ids and number of **Triangles**. This
+process can be considered a **segmentation** where each unique id is the shared boundary between two features. 
+
+Because the algorithm is essentially segmenting the triangles based on the unique combination of face labels, the filter will
+also generate a Feature level Attribute Matrix and place two additional *DataArrays* into that feature attribute matrix
+that store the following information: 
+    
+1. The number of triangles in each unique boundary
+2. The pair of Face Label values that made up the unique boundary.
+
+### Generated Feature Boundaries _with_ Randomization
+
+![Example Surface Mesh Coloring By Feature Face Id](Images/SharedFeaturFace_1.png)
+
+### Generated Feature Boundaries _without_ Randomization
+
+![Example Surface Mesh Coloring By Feature Face Id](Images/SharedFeaturFace_2.png)
 
 ---------------
 
-![Example Surface Mesh Coloring By Feature Face Id](Images/featureFaceIds.png)
+## Parameters ##
 
----------------
-
-## Parameters
-
-None
+| Name                     | Type    | Description                                                                         |
+|--------------------------|---------|-------------------------------------------------------------------------------------|
+| Randomize Feature Values | boolean | Should the final 'FeatureFaceId' Array be randomized. This can aid in visualization |
 
 ## Required Geometry
 
@@ -43,6 +57,8 @@ Triangle
 | **Feature Attribute Array** | NumTriangles    | int32_t      | (1)                  | Number of **Triangles** in each **Feature**                                          |
 
 ## Example Pipelines
+
+"(03) Small IN100 Mesh Statistics.d3dpipeline"
 
 ## License & Copyright
 

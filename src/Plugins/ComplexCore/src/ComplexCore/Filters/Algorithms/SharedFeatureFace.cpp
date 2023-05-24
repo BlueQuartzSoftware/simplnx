@@ -7,6 +7,7 @@
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <map>
+#include <random>
 #include <vector>
 
 using namespace complex;
@@ -60,6 +61,62 @@ private:
   std::map<uint64, int32>& m_FaceSizeMap;
   const std::atomic_bool& m_ShouldCancel;
 };
+
+using SeedGenerator = std::mt19937_64;
+using Int64Distribution = std::uniform_int_distribution<int64>;
+// -----------------------------------------------------------------------------
+SeedGenerator initializeVoxelSeedGenerator(Int64Distribution& distribution, const int64 rangeMin, const int64 rangeMax)
+{
+  auto seed = static_cast<SeedGenerator::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
+  SeedGenerator generator;
+  generator.seed(seed);
+  distribution = std::uniform_int_distribution<int64>(rangeMin, rangeMax);
+
+  return generator;
+}
+
+// -----------------------------------------------------------------------------
+void RandomizeFaceIds(complex::Int32Array& featureIds, uint64 totalFeatures, Int64Distribution& distribution)
+{
+  // Generate an even distribution of numbers between the min and max range
+  const int64 rangeMin = 1;
+  const int64 rangeMax = totalFeatures - 1;
+  auto generator = initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+
+  DataStructure tmpStructure;
+  auto rndNumbers = Int64Array::CreateWithStore<DataStore<int64>>(tmpStructure, std::string("_INTERNAL_USE_ONLY_NewFeatureIds"), std::vector<usize>{totalFeatures}, std::vector<usize>{1});
+  auto rndStore = rndNumbers->getDataStore();
+
+  for(int64 i = 0; i < totalFeatures; ++i)
+  {
+    rndStore->setValue(i, i);
+  }
+
+  int64 r = 0;
+  int64 temp = 0;
+
+  //--- Shuffle elements by randomly exchanging each with one other.
+  for(int64 i = 1; i < totalFeatures; i++)
+  {
+    r = distribution(generator); // Random remaining position.
+    if(r >= totalFeatures)
+    {
+      continue;
+    }
+    temp = rndStore->getValue(i);
+    rndStore->setValue(i, rndStore->getValue(r));
+    rndStore->setValue(r, temp);
+  }
+
+  // Now adjust all the Grain Id values for each Voxel
+  auto featureIdsStore = featureIds.getDataStore();
+  uint64 totalPoints = featureIds.getNumberOfTuples();
+  for(int64 i = 0; i < totalPoints; ++i)
+  {
+    featureIdsStore->setValue(i, rndStore->getValue(featureIdsStore->getValue(i)));
+  }
+}
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -154,5 +211,13 @@ Result<> SharedFeatureFace::operator()()
   dataAlg.setRange(0, index);
   dataAlg.execute(SharedFeatureFaceImpl(faceLabelVector, surfaceMeshFeatureFaceLabels, surfaceMeshFeatureFaceNumTriangles, faceSizeMap, m_ShouldCancel));
 
+  if(m_InputValues->ShouldRandomizeFeatureIds)
+  {
+    const int64 rangeMin = 0;
+    const int64 rangeMax = static_cast<int64>(surfaceMeshFeatureFaceNumTriangles.getNumberOfTuples() - 1);
+    Int64Distribution distribution;
+    initializeVoxelSeedGenerator(distribution, rangeMin, rangeMax);
+    ::RandomizeFaceIds(surfaceMeshFeatureFaceIds, index, distribution);
+  }
   return {};
 }
