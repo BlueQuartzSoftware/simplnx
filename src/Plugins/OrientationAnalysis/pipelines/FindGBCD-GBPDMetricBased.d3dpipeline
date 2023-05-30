@@ -1103,12 +1103,12 @@
                               "args": {
                                 "face_data_group_name": "FaceData",
                                 "face_feature_attribute_matrix_name": "Face Feature Data",
-                                "face_labels_array_name": "TriangleDataContainer/FaceData/FaceLabels",
+                                "face_labels_array_name": "FaceLabels",
                                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
                                 "fix_problem_voxels": false,
                                 "generate_triple_lines": false,
                                 "grid_geometry_data_path": "DataContainer",
-                                "node_types_array_name": "TriangleDataContainer/VertexData/NodeType",
+                                "node_types_array_name": "NodeType",
                                 "selected_data_array_paths": [],
                                 "triangle_geometry_name": "TriangleDataContainer",
                                 "vertex_data_group_name": "VertexData"

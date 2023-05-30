@@ -12,7 +12,7 @@
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/DataPathSelectionParameter.hpp"
+#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 
 using namespace complex;
@@ -62,8 +62,8 @@ Parameters QuickSurfaceMeshFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Cell Data"});
 
-  params.insert(
-      std::make_unique<DataPathSelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "The complete path to the Array specifying which Feature each Cell belongs to", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
@@ -77,15 +77,13 @@ Parameters QuickSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Created Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NodeTypesArrayName_Key, "NodeType", "The complete path to the Array specifying the type of node in the Triangle Geometry",
-                                                         DataPath({"TriangleDataContainer", INodeGeometry0D::k_VertexDataName, "NodeTypes"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NodeTypesArrayName_Key, "NodeType", "The complete path to the Array specifying the type of node in the Triangle Geometry", "NodeTypes"));
 
   params.insertSeparator(Parameters::Separator{"Created Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataGroupName_Key, "Face Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created", INodeGeometry2D::k_FaceDataName));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
-                                                         "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry",
-                                                         DataPath({"TriangleDataContainer", INodeGeometry2D::k_FaceDataName, "FaceLabels"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
+                                                          "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry", "FaceLabels"));
   params.insertSeparator(Parameters::Separator{"Created Face Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceFeatureAttributeMatrixName_Key, "Face Feature Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Feature Data will be stored.", INodeGeometry1D::k_FaceFeatureAttributeMatrix));
@@ -109,26 +107,16 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   auto pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryName_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
-  auto pNodeTypesDataPath = filterArgs.value<DataPath>(k_NodeTypesArrayName_Key);
+  auto pNodeTypesName = filterArgs.value<std::string>(k_NodeTypesArrayName_Key);
   auto pFaceGroupDataName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
-  auto pFaceLabelsDataPath = filterArgs.value<DataPath>(k_FaceLabelsArrayName_Key);
+  auto pFaceLabelsName = filterArgs.value<std::string>(k_FaceLabelsArrayName_Key);
 
   DataPath pVertexGroupDataPath = pTriangleGeometryPath.createChildPath(pVertexGroupDataName);
   DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
 
   PreflightResult preflightResult;
-
   complex::Result<OutputActions> resultOutputActions;
-
   std::vector<PreflightValue> preflightUpdatedValues;
-
-  // DataPath geometryDataPath = pParentDataGroupPath.createChildPath(pTriangleGeometryPath);
-
-  // Assign the outputAction to the Result<OutputActions>::actions vector via a push_back
-  // Assuming this filter did make some structural changes to the DataStructure then store
-  // the outputAction into the resultOutputActions object via a std::move().
-  // NOTE: That using std::move() means that you can *NOT* use the outputAction variable
-  // past this point, we are going to scope each section so that we don't accidentally introduce bugs
 
   const auto* gridGeom = dataStructure.getDataAs<IGridGeometry>(pGridGeomDataPath);
   if(gridGeom == nullptr)
@@ -145,12 +133,14 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   }
   // Create the face NodesType DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int8, std::vector<usize>{1}, std::vector<usize>{1}, pNodeTypesDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int8, std::vector<usize>{1}, std::vector<usize>{1},
+                                                                 pTriangleGeometryPath.createChildPath(pVertexGroupDataName).createChildPath(pNodeTypesName));
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
   // Create the face Labels DataArray action and store it
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2}, pFaceLabelsDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2},
+                                                                 pTriangleGeometryPath.createChildPath(pFaceGroupDataName).createChildPath(pFaceLabelsName));
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
@@ -168,11 +158,6 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     resultOutputActions.value().actions.push_back(std::move(createFeatureGroupAction));
   }
 
-  // Store the preflight updated value(s) into the preflightUpdatedValues vector using
-  // the appropriate methods.
-  // None found based on the filter parameters
-
-  // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -189,9 +174,9 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
   inputs.pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   inputs.pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryName_Key);
   inputs.pVertexGroupDataPath = inputs.pTriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_VertexDataGroupName_Key));
-  inputs.pNodeTypesDataPath = filterArgs.value<DataPath>(k_NodeTypesArrayName_Key);
+  inputs.pNodeTypesDataPath = inputs.pVertexGroupDataPath.createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key));
   inputs.pFaceGroupDataPath = inputs.pTriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_FaceDataGroupName_Key));
-  inputs.pFaceLabelsDataPath = filterArgs.value<DataPath>(k_FaceLabelsArrayName_Key);
+  inputs.pFaceLabelsDataPath = inputs.pFaceGroupDataPath.createChildPath(filterArgs.value<std::string>(k_FaceLabelsArrayName_Key));
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
   for(const auto& selectedDataPath : inputs.pSelectedDataArrayPaths)
@@ -201,9 +186,6 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
   }
   inputs.pCreatedDataArrayPaths = createdDataPaths;
 
-  /****************************************************************************
-   * Write your algorithm implementation in this function
-   ***************************************************************************/
   return complex::QuickSurfaceMesh(dataStructure, &inputs, shouldCancel, messageHandler)();
 }
 } // namespace complex
