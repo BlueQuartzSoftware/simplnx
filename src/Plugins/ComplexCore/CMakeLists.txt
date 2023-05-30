@@ -108,6 +108,7 @@ set(FilterList
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
+  VtkRectilinearGridWriterFilter
   WriteASCIIDataFilter
   WriteBinaryDataFilter
   WriteStlFileFilter
@@ -172,6 +173,7 @@ set(AlgorithmList
   StlFileReader
   TriangleCentroid
   TupleTransfer
+  VtkRectilinearGridWriter
   WriteStlFile
 )
 
