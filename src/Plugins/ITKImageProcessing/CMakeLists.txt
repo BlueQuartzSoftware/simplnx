@@ -64,78 +64,79 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # These are all the filters in the plugin. All filters should be kept in the
 # ITKImageProcessing/src/ITKImageProcessing/Filters/ directory.
 set(FilterList
-  ITKImageReader
-  ITKImageWriter
-  ITKImportImageStack
+    ITKImageReader
+    ITKImageWriter
+    ITKImportImageStack
 
-  ITKAbsImage
-  ITKAcosImage
-  ITKAsinImage
-  ITKAtanImage
+    ITKAbsImage
+    ITKAcosImage
+    ITKAdaptiveHistogramEqualizationImage
+    ITKAsinImage
+    ITKAtanImage
     ITKBinaryContourImage
+    ITKBinaryDilateImage
+    ITKBinaryErodeImage
     ITKBinaryMorphologicalClosingImage
+    ITKBinaryMorphologicalOpeningImage
+    ITKBinaryOpeningByReconstructionImage
+    ITKBinaryProjectionImage
+    ITKBinaryThinningImage
+    ITKBinaryThresholdImage
+    ITKBlackTopHatImage
     ITKClosingByReconstructionImage
     ITKCosImage
+    ITKDilateObjectMorphologyImage
+    ITKErodeObjectMorphologyImage
+    ITKExpImage
+    ITKExpNegativeImage
+    ITKGradientMagnitudeImage
+    ITKGrayscaleDilateImage
+    ITKGrayscaleErodeImage
     ITKGrayscaleFillholeImage
+    ITKGrayscaleGrindPeakImage
+    ITKGrayscaleMorphologicalClosingImage
+    ITKGrayscaleMorphologicalOpeningImage
+    ITKHConvexImage
+    ITKHMaximaImage
+    ITKHMinimaImage
+    ITKIntensityWindowingImage
     ITKInvertIntensityImage
+    ITKLabelContourImage
     ITKLog10Image
     ITKLogImage
+    ITKMaskImage
+    ITKMedianImage
+    ITKMorphologicalGradientImage
     ITKMorphologicalWatershedImage
+    ITKNormalizeImage
+    ITKNotImage
     ITKOpeningByReconstructionImage
+    ITKOtsuMultipleThresholdsImage
+    ITKRelabelComponentImage
+    ITKSigmoidImage
+    ITKSignedMaurerDistanceMapImage
     ITKSinImage
     ITKSqrtImage
+    ITKSquareImage
     ITKTanImage
-    ITKBinaryThresholdImage
-    ITKGradientMagnitudeImage
-    ITKNormalizeImage
-    ITKOtsuMultipleThresholdsImage
-    ITKSignedMaurerDistanceMapImage
-    ITKAdaptiveHistogramEqualizationImage
-    ITKMedianImage
-    ITKMaskImage
+    ITKThresholdImage
+    ITKValuedRegionalMaximaImage
+    ITKValuedRegionalMinimaImage
+    ITKWhiteTopHatImage
 
+    #----------------------------------
     # ITKBilateralImage
     # ITKBinaryClosingByReconstructionImage
-    # ITKBinaryDilateImage
-    # ITKBinaryErodeImage
-    # ITKBinaryMorphologicalOpeningImage
-    # ITKBinaryOpeningByReconstructionImage
-    # ITKBinaryProjectionImage
-    # ITKBinaryThinningImage
     # ITKBinomialBlurImage
-    # ITKBlackTopHatImage
-    # ITKDilateObjectMorphologyImage
-    # ITKErodeObjectMorphologyImage
-    # ITKExpImage
-    # ITKExpNegativeImage
-    # ITKGrayscaleDilateImage
-    # ITKGrayscaleErodeImage
-    # ITKGrayscaleGrindPeakImage
-    # ITKGrayscaleMorphologicalClosingImage
-    # ITKGrayscaleMorphologicalOpeningImage
-    # ITKHConvexImage
-    # ITKHMaximaImage
-    # ITKHMinimaImage
-    # ITKIntensityWindowingImage
-    # ITKLabelContourImage
     # ITKLaplacianSharpeningImage
     # ITKMaximumProjectionImage
     # ITKMedianProjectionImage
     # ITKMinimumProjectionImage
-    # ITKMorphologicalGradientImage
     # ITKMultiScaleHessianBasedObjectnessImage
-    # ITKNotImage
-    # ITKRelabelComponentImage
     # ITKSaltAndPepperNoiseImage
     # ITKShiftScaleImage
     # ITKShotNoiseImage
-    # ITKSigmoidImage
     # ITKSpeckleNoiseImage
-    # ITKSquareImage
-    # ITKThresholdImage
-    # ITKValuedRegionalMaximaImage
-    # ITKValuedRegionalMinimaImage
-    # ITKWhiteTopHatImage
 
     # -----------------------------------------------------------------------------
     # These filters have a fixed output type
