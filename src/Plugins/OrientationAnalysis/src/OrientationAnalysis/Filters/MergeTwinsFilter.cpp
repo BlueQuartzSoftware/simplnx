@@ -53,7 +53,7 @@ Parameters MergeTwinsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseNonContiguousNeighbors_Key, "Use Non-Contiguous Neighbors",
                                                                  "Whether to use a list of non-contiguous or contiguous neighbors for each feature when merging", false));

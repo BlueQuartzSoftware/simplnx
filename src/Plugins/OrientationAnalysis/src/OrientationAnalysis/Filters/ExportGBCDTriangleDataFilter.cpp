@@ -51,7 +51,7 @@ Parameters ExportGBCDTriangleDataFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "The output GBCD triangle file path", "", FileSystemPathParameter::ExtensionsType{".ph"},
                                                           FileSystemPathParameter::PathType::OutputFile));
   params.insertSeparator(Parameters::Separator{"Required Face Data"});

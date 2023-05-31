@@ -49,7 +49,7 @@ Parameters FindSchmidsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_LoadingDirection_Key, "Loading Direction", "The loading axis for the sample", std::vector<float32>({1.0F, 1.0F, 1.0F}),
                                                          std::vector<std::string>({"X", "Y", "Z"})));
