@@ -60,7 +60,7 @@ Parameters GenerateIPFColorsFilter::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ReferenceDir_Key, "Reference Direction", "The reference axis with respect to compute the IPF colors", std::vector<float32>{0.0F, 0.0F, 1.0F},
                                                          std::vector<std::string>(3)));
 

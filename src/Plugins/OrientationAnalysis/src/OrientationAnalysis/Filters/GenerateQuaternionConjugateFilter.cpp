@@ -55,7 +55,7 @@ std::vector<std::string> GenerateQuaternionConjugateFilter::defaultTags() const
 Parameters GenerateQuaternionConjugateFilter::parameters() const
 {
   Parameters params;
-  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_DeleteOriginalData_Key, "Delete Original Data", "", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
