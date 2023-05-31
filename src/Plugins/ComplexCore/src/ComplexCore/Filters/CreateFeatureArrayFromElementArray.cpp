@@ -4,8 +4,9 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Utilities/DataObjectUtilities.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
@@ -114,8 +115,12 @@ Parameters CreateFeatureArrayFromElementArray::parameters() const
       std::make_unique<ArraySelectionParameter>(k_SelectedCellArrayPath_Key, "Element Data to Copy to Feature Data", "Element Data to Copy to Feature Data", DataPath{}, complex::GetAllDataTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insertSeparator(Parameters::Separator{"Required Cell Feature Data"});
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix",
+                                                              "The path to the cell feature attribute matrix where the converted output feature array will be stored",
+                                                              DataPath({"DataContainer", "CellFeatureData"}), DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedArrayName_Key, "Created Feature Attribute Array", "The path to the copied AttributeArray", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CreatedArrayName_Key, "Created Feature Attribute Array", "The path to the copied AttributeArray", ""));
 
   return params;
 }
@@ -132,7 +137,8 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
 {
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
+  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  auto pCreatedArrayNameValue = filterArgs.value<std::string>(k_CreatedArrayName_Key);
 
   const auto& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
   const IDataStore& selectedCellArrayStore = selectedCellArray.getIDataStoreRef();
@@ -143,9 +149,8 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
   // Get the target Attribute Matrix that the output array will be stored with
   // the proper tuple shape
   std::vector<usize> amTupleShape = {1ULL};
-  DataPath amPath = pCreatedArrayNameValue.getParent();
   // First try getting the amPath as an AttributeMatrix
-  auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(amPath);
+  auto* featureAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
   if(featureAttributeMatrixPtr != nullptr)
   {
     amTupleShape = featureAttributeMatrixPtr->getShape();
@@ -153,7 +158,8 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArray::preflightImpl(const
 
   {
     DataType dataType = selectedCellArray.getDataType();
-    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, amTupleShape, selectedCellArrayStore.getComponentShape(), pCreatedArrayNameValue);
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(dataType, amTupleShape, selectedCellArrayStore.getComponentShape(), pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue));
     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
@@ -166,11 +172,13 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
 {
   auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto pCreatedArrayNameValue = filterArgs.value<DataPath>(k_CreatedArrayName_Key);
+  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  auto pCreatedArrayNameValue = filterArgs.value<std::string>(k_CreatedArrayName_Key);
 
+  const DataPath createdArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue);
   const IDataArray& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  auto& createdArray = dataStructure.getDataRefAs<IDataArray>(pCreatedArrayNameValue);
+  auto& createdArray = dataStructure.getDataRefAs<IDataArray>(createdArrayPath);
 
   // Resize the created array to the proper size
   usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
@@ -179,6 +187,6 @@ Result<> CreateFeatureArrayFromElementArray::executeImpl(DataStructure& dataStru
   auto& createdArrayStore = createdArray.getIDataStoreRefAs<IDataStore>();
   createdArrayStore.resizeTuples(std::vector<usize>{maxValue + 1});
 
-  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, pCreatedArrayNameValue, shouldCancel);
+  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray.getDataType(), dataStructure, pSelectedCellArrayPathValue, pFeatureIdsArrayPathValue, createdArrayPath, shouldCancel);
 }
 } // namespace complex
