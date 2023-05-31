@@ -885,8 +885,8 @@
                                                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
                                                 "num_cells_array_path": "DataContainer/CellFeatureData/NumElements",
                                                 "selected_image_geometry": "DataContainer",
-                                                "sphericity_array_name": "DataContainer/CellFeatureData/Sphericity",
-                                                "surface_area_volume_ratio_array_name": "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"
+                                                "sphericity_array_name": "Sphericity",
+                                                "surface_area_volume_ratio_array_name": "SurfaceAreaVolumeRatio"
                                               },
                                               "comments": "",
                                               "filter": {
