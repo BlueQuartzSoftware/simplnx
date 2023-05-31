@@ -55,7 +55,7 @@ Parameters RodriguesConvertorFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_DeleteOriginalData_Key, "Delete Original Data", "", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
