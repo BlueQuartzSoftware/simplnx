@@ -21,6 +21,7 @@ None
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Cell Attribute Array** | Phases | int32 | (1) | Specifies to which **Ensemble** each **Cell** belongs |
+| **Attribute Matrix** | CellEnsembleData | Ensemble AttributeMatrix | N/A | The path to the cell ensemble **Attribute Matrix** |
 
 ## Created Objects ##
 
