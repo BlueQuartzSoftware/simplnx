@@ -234,7 +234,7 @@
           "TriangleDataContainer/Face Data/FaceLabels-0",
           "TriangleDataContainer/Face Data/FaceLabels-1"
         ],
-        "stacked_data_array_name": "TriangleDataContainer/Face Data/Face Labels"
+        "stacked_data_array_name": "Face Labels"
       },
       "comments": "",
       "filter": {
