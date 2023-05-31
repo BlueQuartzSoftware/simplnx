@@ -10,61 +10,26 @@
 using namespace complex;
 using namespace complex::Constants;
 
-TEST_CASE("ComplexCore::FindNeighborListStatistics: Instantiate Filter", "[FindNeighborListStatistics]")
-{
-  FindNeighborListStatistics filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  DataPath inputArrayPath;
-  DataPath lengthOutputPath;
-  DataPath minimumOutputPath;
-  DataPath maximumOutputPath;
-  DataPath meanOutputPath;
-  DataPath medianOutputPath;
-  DataPath stdDevOutputPath;
-  DataPath summationOutputPath;
-
-  args.insertOrAssign(FindNeighborListStatistics::k_FindLength_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMinimum_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMaximum_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMean_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindMedian_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindStandardDeviation_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(false));
-
-  args.insertOrAssign(FindNeighborListStatistics::k_InputArray_Key, std::make_any<DataPath>(inputArrayPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Length_Key, std::make_any<DataPath>(lengthOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Minimum_Key, std::make_any<DataPath>(minimumOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Maximum_Key, std::make_any<DataPath>(maximumOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Mean_Key, std::make_any<DataPath>(meanOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Median_Key, std::make_any<DataPath>(medianOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviation_Key, std::make_any<DataPath>(stdDevOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<DataPath>(summationOutputPath));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.invalid());
-}
-
 TEST_CASE("ComplexCore::FindNeighborListStatistics: Test Algorithm", "[FindNeighborListStatistics]")
 {
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
-  DataGroup* statsGroup = DataGroup::Create(dataStructure, "Statistics", topLevelGroup->getId());
-  DataPath statsDataPath({"TestData", "Statistics"});
+  DataPath statsDataPath({"TestData"});
   DataPath inputArrayPath({"TestData", "Neighbor List"});
-  DataPath lengthOutputPath = statsDataPath.createChildPath("Length");
-  DataPath minimumOutputPath = statsDataPath.createChildPath("Minimum");
-  DataPath maximumOutputPath = statsDataPath.createChildPath("Maximum");
-  DataPath meanOutputPath = statsDataPath.createChildPath("Mean");
-  DataPath medianOutputPath = statsDataPath.createChildPath("Median");
-  DataPath stdDevOutputPath = statsDataPath.createChildPath("Standard Deviation");
-  DataPath summationOutputPath = statsDataPath.createChildPath("Summation");
+  std::string length = "Length";
+  std::string minimum = "Minimum";
+  std::string maximum = "Maximum";
+  std::string mean = "Mean";
+  std::string median = "Median";
+  std::string stdDev = "Standard Deviation";
+  std::string summation = "Summation";
+  DataPath lengthOutputPath = statsDataPath.createChildPath(length);
+  DataPath minimumOutputPath = statsDataPath.createChildPath(minimum);
+  DataPath maximumOutputPath = statsDataPath.createChildPath(maximum);
+  DataPath meanOutputPath = statsDataPath.createChildPath(mean);
+  DataPath medianOutputPath = statsDataPath.createChildPath(median);
+  DataPath stdDevOutputPath = statsDataPath.createChildPath(stdDev);
+  DataPath summationOutputPath = statsDataPath.createChildPath(summation);
 
   usize numTuples = 3;
   auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", numTuples, topLevelGroup->getId());
@@ -88,13 +53,13 @@ TEST_CASE("ComplexCore::FindNeighborListStatistics: Test Algorithm", "[FindNeigh
   args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
 
   args.insertOrAssign(FindNeighborListStatistics::k_InputArray_Key, std::make_any<DataPath>(inputArrayPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Length_Key, std::make_any<DataPath>(lengthOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Minimum_Key, std::make_any<DataPath>(minimumOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Maximum_Key, std::make_any<DataPath>(maximumOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Mean_Key, std::make_any<DataPath>(meanOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Median_Key, std::make_any<DataPath>(medianOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviation_Key, std::make_any<DataPath>(stdDevOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<DataPath>(summationOutputPath));
+  args.insertOrAssign(FindNeighborListStatistics::k_Length_Key, std::make_any<std::string>(length));
+  args.insertOrAssign(FindNeighborListStatistics::k_Minimum_Key, std::make_any<std::string>(minimum));
+  args.insertOrAssign(FindNeighborListStatistics::k_Maximum_Key, std::make_any<std::string>(maximum));
+  args.insertOrAssign(FindNeighborListStatistics::k_Mean_Key, std::make_any<std::string>(mean));
+  args.insertOrAssign(FindNeighborListStatistics::k_Median_Key, std::make_any<std::string>(median));
+  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviation_Key, std::make_any<std::string>(stdDev));
+  args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<std::string>(summation));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -181,16 +146,22 @@ TEST_CASE("ComplexCore::FindNeighborListStatistics: Invalid Input Array", "[Find
 {
   DataStructure dataStructure;
   DataGroup* topLevelGroup = DataGroup::Create(dataStructure, "TestData");
-  DataGroup* statsGroup = DataGroup::Create(dataStructure, "Statistics", topLevelGroup->getId());
-  DataPath statsDataPath({"TestData", "Statistics"});
+  DataPath statsDataPath({"TestData"});
   DataPath inputArrayPath({"TestData", "Data Array"});
-  DataPath lengthOutputPath = statsDataPath.createChildPath("Length");
-  DataPath minimumOutputPath = statsDataPath.createChildPath("Minimum");
-  DataPath maximumOutputPath = statsDataPath.createChildPath("Maximum");
-  DataPath meanOutputPath = statsDataPath.createChildPath("Mean");
-  DataPath medianOutputPath = statsDataPath.createChildPath("Median");
-  DataPath stdDevOutputPath = statsDataPath.createChildPath("Standard Deviation");
-  DataPath summationOutputPath = statsDataPath.createChildPath("Summation");
+  std::string length = "Length";
+  std::string minimum = "Minimum";
+  std::string maximum = "Maximum";
+  std::string mean = "Mean";
+  std::string median = "Median";
+  std::string stdDev = "Standard Deviation";
+  std::string summation = "Summation";
+  DataPath lengthOutputPath = statsDataPath.createChildPath(length);
+  DataPath minimumOutputPath = statsDataPath.createChildPath(minimum);
+  DataPath maximumOutputPath = statsDataPath.createChildPath(maximum);
+  DataPath meanOutputPath = statsDataPath.createChildPath(mean);
+  DataPath medianOutputPath = statsDataPath.createChildPath(median);
+  DataPath stdDevOutputPath = statsDataPath.createChildPath(stdDev);
+  DataPath summationOutputPath = statsDataPath.createChildPath(summation);
 
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{0}, std::vector<usize>{3}, 0.0f);
   auto* dataArray = DataArray<float32>::Create(dataStructure, "Data Array", std::move(dataStore), topLevelGroup->getId());
@@ -208,13 +179,13 @@ TEST_CASE("ComplexCore::FindNeighborListStatistics: Invalid Input Array", "[Find
   args.insertOrAssign(FindNeighborListStatistics::k_FindSummation_Key, std::make_any<bool>(true));
 
   args.insertOrAssign(FindNeighborListStatistics::k_InputArray_Key, std::make_any<DataPath>(inputArrayPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Length_Key, std::make_any<DataPath>(lengthOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Minimum_Key, std::make_any<DataPath>(minimumOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Maximum_Key, std::make_any<DataPath>(maximumOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Mean_Key, std::make_any<DataPath>(meanOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Median_Key, std::make_any<DataPath>(medianOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviation_Key, std::make_any<DataPath>(stdDevOutputPath));
-  args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<DataPath>(summationOutputPath));
+  args.insertOrAssign(FindNeighborListStatistics::k_Length_Key, std::make_any<std::string>(length));
+  args.insertOrAssign(FindNeighborListStatistics::k_Minimum_Key, std::make_any<std::string>(minimum));
+  args.insertOrAssign(FindNeighborListStatistics::k_Maximum_Key, std::make_any<std::string>(maximum));
+  args.insertOrAssign(FindNeighborListStatistics::k_Mean_Key, std::make_any<std::string>(mean));
+  args.insertOrAssign(FindNeighborListStatistics::k_Median_Key, std::make_any<std::string>(median));
+  args.insertOrAssign(FindNeighborListStatistics::k_StandardDeviation_Key, std::make_any<std::string>(stdDev));
+  args.insertOrAssign(FindNeighborListStatistics::k_Summation_Key, std::make_any<std::string>(summation));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
