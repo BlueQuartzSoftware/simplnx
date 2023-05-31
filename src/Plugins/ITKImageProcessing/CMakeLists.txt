@@ -72,166 +72,146 @@ set(FilterList
   ITKAcosImage
   ITKAsinImage
   ITKAtanImage
+    ITKBinaryContourImage
+    ITKBinaryMorphologicalClosingImage
+    ITKClosingByReconstructionImage
+    ITKCosImage
+    ITKGrayscaleFillholeImage
+    ITKInvertIntensityImage
+    ITKLog10Image
+    ITKLogImage
+    ITKMorphologicalWatershedImage
+    ITKOpeningByReconstructionImage
+    ITKSinImage
+    ITKSqrtImage
+    ITKTanImage
+    ITKBinaryThresholdImage
+    ITKGradientMagnitudeImage
+    ITKNormalizeImage
+    ITKOtsuMultipleThresholdsImage
+    ITKSignedMaurerDistanceMapImage
+    ITKAdaptiveHistogramEqualizationImage
+    ITKMedianImage
+    ITKMaskImage
 
-  # ITKBilateralImage
-  # ITKBinaryClosingByReconstructionImage
-  ITKBinaryContourImage
+    # ITKBilateralImage
+    # ITKBinaryClosingByReconstructionImage
+    # ITKBinaryDilateImage
+    # ITKBinaryErodeImage
+    # ITKBinaryMorphologicalOpeningImage
+    # ITKBinaryOpeningByReconstructionImage
+    # ITKBinaryProjectionImage
+    # ITKBinaryThinningImage
+    # ITKBinomialBlurImage
+    # ITKBlackTopHatImage
+    # ITKDilateObjectMorphologyImage
+    # ITKErodeObjectMorphologyImage
+    # ITKExpImage
+    # ITKExpNegativeImage
+    # ITKGrayscaleDilateImage
+    # ITKGrayscaleErodeImage
+    # ITKGrayscaleGrindPeakImage
+    # ITKGrayscaleMorphologicalClosingImage
+    # ITKGrayscaleMorphologicalOpeningImage
+    # ITKHConvexImage
+    # ITKHMaximaImage
+    # ITKHMinimaImage
+    # ITKIntensityWindowingImage
+    # ITKLabelContourImage
+    # ITKLaplacianSharpeningImage
+    # ITKMaximumProjectionImage
+    # ITKMedianProjectionImage
+    # ITKMinimumProjectionImage
+    # ITKMorphologicalGradientImage
+    # ITKMultiScaleHessianBasedObjectnessImage
+    # ITKNotImage
+    # ITKRelabelComponentImage
+    # ITKSaltAndPepperNoiseImage
+    # ITKShiftScaleImage
+    # ITKShotNoiseImage
+    # ITKSigmoidImage
+    # ITKSpeckleNoiseImage
+    # ITKSquareImage
+    # ITKThresholdImage
+    # ITKValuedRegionalMaximaImage
+    # ITKValuedRegionalMinimaImage
+    # ITKWhiteTopHatImage
 
-  # ITKBinaryDilateImage
-  # ITKBinaryErodeImage
-  ITKBinaryMorphologicalClosingImage
-  # ITKBinaryMorphologicalOpeningImage
-  # ITKBinaryOpeningByReconstructionImage
-  # ITKBinaryProjectionImage
-  # ITKBinaryThinningImage
-  # ITKBinomialBlurImage
-  # ITKBlackTopHatImage
-  ITKClosingByReconstructionImage
-  ITKCosImage
+    # -----------------------------------------------------------------------------
+    # These filters have a fixed output type
+    # -----------------------------------------------------------------------------
+    # ITKApproximateSignedDistanceMapImage
+    # ITKMinMaxCurvatureFlowImage
+    # ITKGradientAnisotropicDiffusionImage
+    # ITKCurvatureAnisotropicDiffusionImage
+    # ITKBoundedReciprocalImage
+    # ITKConnectedComponentImage
+    # ITKCurvatureFlowImage
+    # ITKDanielssonDistanceMapImage
+    # ITKDoubleThresholdImage
+    # ITKGradientMagnitudeRecursiveGaussianImage
+    # ITKIsoContourDistanceImage
+    # ITKLaplacianRecursiveGaussianImage
+    # ITKMeanProjectionImage
+    # ITKNormalizeToConstantImage
+    # ITKRegionalMaximaImage
+    # ITKRegionalMinimaImage
+    # ITKStandardDeviationProjectionImage
+    # ITKSumProjectionImage
+    # ITKThresholdMaximumConnectedComponentsImage
+    # ITKZeroCrossingImage
+    # ITKMorphologicalWatershedFromMarkersImage
+    # ITKSignedDanielssonDistanceMapImage
+    # ITKSmoothingRecursiveGaussianImage
 
-  # ITKDilateObjectMorphologyImage
-  # ITKErodeObjectMorphologyImage
-  # ITKExpImage
-  # ITKExpNegativeImage
-  # ITKGrayscaleDilateImage
-  # ITKGrayscaleErodeImage
-  ITKGrayscaleFillholeImage
+    # -----------------------------------------------------------------------------
+    # There are parameters from the old version that do not appear in the JSON when generating.
+    # -----------------------------------------------------------------------------
+    # ITKRescaleIntensityImage
+    # ITKBoxMeanImage
+    # ITKDiscreteGaussianImage
 
-  # ITKGrayscaleGrindPeakImage
-  # ITKGrayscaleMorphologicalClosingImage
-  # ITKGrayscaleMorphologicalOpeningImage
-  # ITKHConvexImage
-  # ITKHMaximaImage
-  # ITKHMinimaImage
-  # ITKIntensityWindowingImage
-  ITKInvertIntensityImage
+    # -----------------------------------------------------------------------------
+    # These filters are custom written filters by BQ and do not conform to the
+    # standard ITK filter wrapping. These Filters are not even compiling
+    # -----------------------------------------------------------------------------
+    #  IlluminationCorrection # MISSING 1 or more Parameter Implementations
+    #  ImportAxioVisionV4Montage
+    #  AxioVisionV4ToTileConfiguration
+    #  ImportZenInfoMontage
+    #  ApplyDewarpParameters # MISSING 1 or more Parameter Implementations
+    #  CalcDewarpParameters # MISSING 1 or more Parameter Implementations
+    #  ImportVectorImageStack # MISSING 1 or more Parameter Implementations
+    #  ITKRefineTileCoordinates # MISSING 1 or more Parameter Implementations
+    #  ITKImportFijiMontage
+    #  ITKImportRoboMetMontage
+    #  ITKPCMTileRegistration
+    #  ITKProxTVImage
+    #  ITKStitchMontage # MISSING 1 or more Parameter Implementations
+    #  ITKRGBToLuminanceImage # Multiple Different Return types so auto has issues with that
 
-  # ITKLabelContourImage
-  # ITKLaplacianSharpeningImage
-  ITKLog10Image
-  ITKLogImage
+    # -----------------------------------------------------------------------------
+    # These filters have a fixed output type
+    # -----------------------------------------------------------------------------
+    #  ITKVectorConnectedComponentImage # Vector Input, uint32_t output
 
-  # ITKMaximumProjectionImage
-  # ITKMedianProjectionImage
-  # ITKMinimumProjectionImage
-  # ITKMorphologicalGradientImage
-  ITKMorphologicalWatershedImage
-  # ITKMultiScaleHessianBasedObjectnessImage
-  # ITKNotImage
-  ITKOpeningByReconstructionImage
+    # -----------------------------------------------------------------------------
+    # These filters use the itk::InPlaceDream3DDataToImageFilter filter
+    # -----------------------------------------------------------------------------
+    #  ITKPatchBasedDenoisingImage # itk::InPlaceDream3DDataToImageFilter
+    #  ITKFFTNormalizedCorrelationImage # itk::InPlaceDream3DDataToImageFilter
+    #  ITKHistogramMatchingImage # itk::InPlaceDream3DDataToImageFilter
 
-  # ITKRelabelComponentImage
-  # ITKSaltAndPepperNoiseImage
-  # ITKShiftScaleImage
-  # ITKShotNoiseImage
-  # ITKSigmoidImage
-  ITKSinImage
-
-  # ITKSpeckleNoiseImage
-  ITKSqrtImage
-
-  # ITKSquareImage
-  ITKTanImage
-
-  # ITKThresholdImage
-  # ITKValuedRegionalMaximaImage
-  # ITKValuedRegionalMinimaImage
-  # ITKWhiteTopHatImage
-
-  # -----------------------------------------------------------------------------
-  # These filters have a fixed output type
-  # -----------------------------------------------------------------------------
-  # ITKApproximateSignedDistanceMapImage
-  # ITKMinMaxCurvatureFlowImage
-  # ITKGradientAnisotropicDiffusionImage
-  # ITKCurvatureAnisotropicDiffusionImage
-  ITKBinaryThresholdImage
-
-  # ITKBoundedReciprocalImage
-  # ITKConnectedComponentImage
-  # ITKCurvatureFlowImage
-  # ITKDanielssonDistanceMapImage
-  # ITKDoubleThresholdImage
-  ITKGradientMagnitudeImage
-
-  # ITKGradientMagnitudeRecursiveGaussianImage
-  # ITKIsoContourDistanceImage
-  # ITKLaplacianRecursiveGaussianImage
-  # ITKMeanProjectionImage
-  ITKNormalizeImage
-
-  # ITKNormalizeToConstantImage
-  ITKOtsuMultipleThresholdsImage
-
-  # ITKRegionalMaximaImage
-  # ITKRegionalMinimaImage
-  # ITKStandardDeviationProjectionImage
-  # ITKSumProjectionImage
-  # ITKThresholdMaximumConnectedComponentsImage
-  # ITKZeroCrossingImage
-  # ITKMorphologicalWatershedFromMarkersImage
-  # ITKSignedDanielssonDistanceMapImage
-  ITKSignedMaurerDistanceMapImage
-
-  # ITKSmoothingRecursiveGaussianImage
-
-  # -----------------------------------------------------------------------------
-  # There are parameters from the old version that do not appear in the JSON when generating.
-  # -----------------------------------------------------------------------------
-  # ITKRescaleIntensityImage
-  # ITKBoxMeanImage
-  ITKAdaptiveHistogramEqualizationImage
-  ITKMedianImage
-
-  # ITKDiscreteGaussianImage
-  ITKMaskImage
+    # -----------------------------------------------------------------------------
+    # These filters use the Dream3DArraySwitchOutputComponentMacro macro
+    # -----------------------------------------------------------------------------
+    #  ITKCastImage # Dream3DArraySwitchOutputComponentMacro
+    #  ITKVectorRescaleIntensityImage # Dream3DArraySwitchOutputComponentMacro
 )
 
 # -----------------------------------------------------------------------------
 # These are filters that need to be compiled but not exposed to a user
 # -----------------------------------------------------------------------------
-set(STUB_FILTERS
-)
-
-set(Filters_Disabled
-
-  # -----------------------------------------------------------------------------
-  # These filters are custom written filters by BQ and do not conform to the
-  # standard ITK filter wrapping. These Filters are not even compiling
-  # -----------------------------------------------------------------------------
-  IlluminationCorrection # MISSING 1 or more Parameter Implementations
-  ImportAxioVisionV4Montage
-  AxioVisionV4ToTileConfiguration
-  ImportZenInfoMontage
-  ApplyDewarpParameters # MISSING 1 or more Parameter Implementations
-  CalcDewarpParameters # MISSING 1 or more Parameter Implementations
-  ImportVectorImageStack # MISSING 1 or more Parameter Implementations
-  ITKRefineTileCoordinates # MISSING 1 or more Parameter Implementations
-  ITKImportFijiMontage
-  ITKImportRoboMetMontage
-  ITKPCMTileRegistration
-  ITKProxTVImage
-  ITKStitchMontage # MISSING 1 or more Parameter Implementations
-  ITKRGBToLuminanceImage # Multiple Different Return types so auto has issues with that
-
-  # -----------------------------------------------------------------------------
-  # These filters have a fixed output type
-  # -----------------------------------------------------------------------------
-  ITKVectorConnectedComponentImage # Vector Input, uint32_t output
-
-  # -----------------------------------------------------------------------------
-  # These filters use the itk::InPlaceDream3DDataToImageFilter filter
-  # -----------------------------------------------------------------------------
-  ITKPatchBasedDenoisingImage # itk::InPlaceDream3DDataToImageFilter
-  ITKFFTNormalizedCorrelationImage # itk::InPlaceDream3DDataToImageFilter
-  ITKHistogramMatchingImage # itk::InPlaceDream3DDataToImageFilter
-
-  # -----------------------------------------------------------------------------
-  # These filters use the Dream3DArraySwitchOutputComponentMacro macro
-  # -----------------------------------------------------------------------------
-  ITKCastImage # Dream3DArraySwitchOutputComponentMacro
-  ITKVectorRescaleIntensityImage # Dream3DArraySwitchOutputComponentMacro
-)
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
@@ -271,20 +251,6 @@ if(WIN32)
   target_compile_definitions(${PLUGIN_NAME} PUBLIC "_SILENCE_CXX17_RESULT_OF_DEPRECATION_WARNING")
   set_target_properties(${PLUGIN_NAME} PROPERTIES LINK_FLAGS_DEBUG "/INCREMENTAL:NO")
 endif()
-
-# ------------------------------------------------------------------------------
-# Include filters that need to be compiled but not available to the general user
-# These are typically auto-generated sources that need to be compiled to ensure
-# the stubs are following the latest API changes
-# ------------------------------------------------------------------------------
-foreach(file_name ${STUB_FILTERS})
-  list(APPEND hidden_filter_HDRS
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.hpp"
-  )
-  list(APPEND hidden_filter_SRCS
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/${file_name}.cpp"
-  )
-endforeach()
 
 target_sources(${PLUGIN_NAME}
   PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
