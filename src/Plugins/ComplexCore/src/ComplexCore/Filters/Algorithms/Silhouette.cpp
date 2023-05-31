@@ -143,7 +143,7 @@ Silhouette::Silhouette(DataStructure& dataStructure, const IFilter::MessageHandl
 Silhouette::~Silhouette() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void Silhouette:: updateProgress(const std::string& message)
+void Silhouette::updateProgress(const std::string& message)
 {
   m_MessageHandler(IFilter::Message::Type::Info, message);
 }

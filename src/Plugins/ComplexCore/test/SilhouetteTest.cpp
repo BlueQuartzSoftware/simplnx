@@ -1,16 +1,16 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
 
-#include "ComplexCore/Filters/SilhouetteFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/SilhouetteFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::SilhouetteFilter: Valid Filter Execution","[ComplexCore][SilhouetteFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::SilhouetteFilter: Valid Filter Execution", "[ComplexCore][SilhouetteFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   SilhouetteFilter filter;
@@ -25,7 +25,6 @@ TEST_CASE("ComplexCore::SilhouetteFilter: Valid Filter Execution","[ComplexCore]
   args.insertOrAssign(SilhouetteFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(SilhouetteFilter::k_SilhouetteArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
-
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
   REQUIRE(preflightResult.outputActions.valid());
@@ -35,7 +34,7 @@ TEST_CASE("ComplexCore::SilhouetteFilter: Valid Filter Execution","[ComplexCore]
   REQUIRE(executeResult.result.valid());
 }
 
-//TEST_CASE("ComplexCore::SilhouetteFilter: InValid Filter Execution")
+// TEST_CASE("ComplexCore::SilhouetteFilter: InValid Filter Execution")
 //{
 //
-//}
+// }
