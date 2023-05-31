@@ -36,13 +36,6 @@ Result<> ComputeFeatureRect::operator()()
 {
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto& corners = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FeatureRectArrayPath);
-
-  if(corners.getNumberOfTuples() == 0)
-  {
-    usize maxElement = static_cast<usize>(*std::max_element(featureIds.begin(), featureIds.end()));
-    corners.resizeTuples(std::vector<usize>{maxElement + 1});
-  }
-
   auto& cornersDataStore = corners.getIDataStoreRefAs<UInt32DataStore>();
 
   // Create corners array, which stores pixel coordinates for the top-left and bottom-right coordinates of each feature object
@@ -63,9 +56,9 @@ Result<> ComputeFeatureRect::operator()()
    */
   std::reverse(imageDims.rbegin(), imageDims.rend());
 
-  usize xDim = imageDims[0];
-  usize yDim = imageDims[1];
-  usize zDim = imageDims[2];
+  const usize xDim = imageDims[0];
+  const usize yDim = imageDims[1];
+  const usize zDim = imageDims[2];
 
   usize index = 0;
   // Store the coordinates in the corners array
@@ -82,7 +75,7 @@ Result<> ComputeFeatureRect::operator()()
       {
         index = IndexFromCoord(imageDims, x, y, z); // Index into featureIds array
 
-        int32 featureId = featureIds[index];
+        const int32 featureId = featureIds[index];
         if(featureId == 0)
         {
           continue;
@@ -90,13 +83,13 @@ Result<> ComputeFeatureRect::operator()()
 
         if(featureId >= corners.getNumberOfTuples())
         {
-          DataPath parentPath = m_InputValues->FeatureRectArrayPath.getParent();
+          const DataPath parentPath = m_InputValues->FeatureRectArrayPath.getParent();
           return MakeErrorResult(-31000, fmt::format("The parent data object '{}' of output array '{}' has a smaller tuple count than the maximum feature id in '{}'", parentPath.getTargetName(),
                                                      corners.getName(), featureIds.getName()));
         }
 
-        uint32 indices[3] = {x, y, z}; // Sequence dependent DO NOT REORDER
-        int32 featureShift = featureId * 6;
+        const uint32 indices[3] = {x, y, z}; // Sequence dependent DO NOT REORDER
+        const int32 featureShift = featureId * 6;
         for(uint8 l = 0; l < 6; l++) // unsigned is faster with modulo
         {
           if(l > 2)
