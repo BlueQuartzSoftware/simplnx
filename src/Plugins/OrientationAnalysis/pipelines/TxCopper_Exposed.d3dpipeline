@@ -101,7 +101,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "Cugrid_after 2nd_15kv_2kx_2/EBSD Scan Data/Mask"
+        "created_data_path": "Mask"
       },
       "comments": "",
       "filter": {

@@ -55,7 +55,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "ImageDataContainer/Cell Data/Mask"
+        "created_data_path": "Mask"
       },
       "comments": "",
       "filter": {
@@ -161,7 +161,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "TriangleDataContainer/Face Data/FaceLabels-0 Mask"
+        "created_data_path": "FaceLabels-0 Mask"
       },
       "comments": "",
       "filter": {
@@ -187,7 +187,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "TriangleDataContainer/Face Data/FaceLabels-1 Mask"
+        "created_data_path": "FaceLabels-1 Mask"
       },
       "comments": "",
       "filter": {
