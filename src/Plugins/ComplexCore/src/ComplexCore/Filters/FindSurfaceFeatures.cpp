@@ -5,9 +5,10 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
@@ -234,10 +235,13 @@ Parameters FindSurfaceFeatures::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Feature Ids", "Specifies to which Feature each cell belongs", DataPath({"CellData", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insertSeparator(Parameters::Separator{"Input Cell Feature Data"});
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Cell Feature Attribute Matrix",
+                                                              "The path to the cell feature attribute matrix associated with the input feature ids array", DataPath{},
+                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
   params.insertSeparator(Parameters::Separator{"Created  Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceFeaturesArrayPath_Key, "Surface Features",
-                                                         "The path to the created surface features array. Flag of 1 if Feature touches an outer surface or of 0 if it does not",
-                                                         DataPath({"CellFeatureData", "SurfaceFeatures"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceFeaturesArrayPath_Key, "Surface Features",
+                                                          "The created surface features array. Flag of 1 if Feature touches an outer surface or of 0 if it does not", "SurfaceFeatures"));
 
   return params;
 }
@@ -253,7 +257,8 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
                                                             const std::atomic_bool& shouldCancel) const
 {
   auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
-  auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
+  auto pCellFeaturesAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  auto pSurfaceFeaturesArrayNameValue = filterArgs.value<std::string>(k_SurfaceFeaturesArrayPath_Key);
 
   const auto& featureGeometry = dataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
   usize geometryDimensionality = featureGeometry.getDimensionality();
@@ -266,12 +271,13 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
   std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<usize> tupleDims = std::vector<usize>{1};
-  if(const auto& surfaceFeaturesParent = dataStructure.getDataAs<AttributeMatrix>(pSurfaceFeaturesArrayPathValue.getParent()); surfaceFeaturesParent != nullptr)
+  if(const auto& surfaceFeaturesParent = dataStructure.getDataAs<AttributeMatrix>(pCellFeaturesAttributeMatrixPathValue); surfaceFeaturesParent != nullptr)
   {
     tupleDims = surfaceFeaturesParent->getShape();
   }
 
-  auto createSurfaceFeaturesAction = std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, pSurfaceFeaturesArrayPathValue);
+  auto createSurfaceFeaturesAction =
+      std::make_unique<CreateArrayAction>(DataType::boolean, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue));
   resultOutputActions.value().actions.push_back(std::move(createSurfaceFeaturesAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -281,10 +287,11 @@ IFilter::PreflightResult FindSurfaceFeatures::preflightImpl(const DataStructure&
 Result<> FindSurfaceFeatures::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                           const std::atomic_bool& shouldCancel) const
 {
+  const auto pMarkFeature0NeighborsValue = filterArgs.value<bool>(k_MarkFeature0Neighbors);
   const auto pFeatureGeometryPathValue = filterArgs.value<DataPath>(k_FeatureGeometryPath_Key);
   const auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  const auto pSurfaceFeaturesArrayPathValue = filterArgs.value<DataPath>(k_SurfaceFeaturesArrayPath_Key);
-  const auto pMarkFeature0NeighborsValue = filterArgs.value<bool>(k_MarkFeature0Neighbors);
+  const auto pCellFeaturesAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
+  const auto pSurfaceFeaturesArrayPathValue = pCellFeaturesAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_SurfaceFeaturesArrayPath_Key));
 
   // Resize the surface features array to the proper size
   const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
