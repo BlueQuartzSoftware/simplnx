@@ -187,10 +187,10 @@ TEST_CASE("ComplexCore::GenerateColorTableFilter: Valid filter execution")
   }
 
   args.insertOrAssign(GenerateColorTableFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
-  args.insertOrAssign(GenerateColorTableFilter::k_RgbArrayPath_Key, std::make_any<DataPath>(DataPath{{"CI_RGB"}}));
+  args.insertOrAssign(GenerateColorTableFilter::k_RgbArrayPath_Key, std::make_any<std::string>("CI_RGB"));
 
   IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Validate Results
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}}));
