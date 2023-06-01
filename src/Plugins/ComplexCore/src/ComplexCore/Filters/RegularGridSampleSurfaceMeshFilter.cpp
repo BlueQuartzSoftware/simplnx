@@ -104,15 +104,10 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
   {
     auto createDataGroupAction =
-        std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pImageGeomPathValue.getTargetName());
+        std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue);
     resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
   }
-  DataPath cellAMPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);
-  {
-    auto createDataGroupAction = std::make_unique<CreateAttributeMatrixAction>(cellAMPath, tupleDims);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
-  }
-  DataPath featIdsPath = cellAMPath.createChildPath(pFeatureIdsArrayNameValue);
+  DataPath featIdsPath = pImageGeomPathValue.createChildPath(pCellAMNameValue).createChildPath(pFeatureIdsArrayNameValue);
   {
     auto createDataGroupAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, featIdsPath);
     resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
@@ -150,7 +145,7 @@ Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStru
 {
   RegularGridSampleSurfaceMeshInputValues inputValues;
 
-  inputValues.Dimensions = filterArgs.value<VectorInt32Parameter::ValueType>(k_Dimensions_Key);
+  inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
   inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);

@@ -16,7 +16,7 @@ namespace complex
 {
 struct COMPLEXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
 {
-  VectorInt32Parameter::ValueType Dimensions;
+  VectorUInt64Parameter::ValueType Dimensions;
   VectorFloat32Parameter::ValueType Spacing;
   VectorFloat32Parameter::ValueType Origin;
   DataPath TriangleGeometryPath;
