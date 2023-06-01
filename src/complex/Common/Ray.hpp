@@ -133,12 +133,18 @@ public:
    */
   PointType getEndPoint() const
   {
+    const auto sin1 = std::sin(m_Angle[0]);
+    const auto sin2 = std::sin(m_Angle[1]);
+    const auto sin3 = std::sin(m_Angle[2]);
+
+    const auto cos1 = std::cos(m_Angle[0]);
+    const auto cos2 = std::cos(m_Angle[1]);
+    const auto cos3 = std::cos(m_Angle[2]);
+
     // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
-    Vec3<T> localXRotationVec((-std::sin(m_Angle[0]) * std::cos(m_Angle[1]) * std::sin(m_Angle[2])) + (std::cos(m_Angle[0]) * std::cos(m_Angle[2])),
-                              (std::cos(m_Angle[0]) * std::cos(m_Angle[1]) * std::sin(m_Angle[2])) + (std::sin(m_Angle[0]) * std::cos(m_Angle[2])), std::sin(m_Angle[1]) * std::sin(m_Angle[2]));
-    Vec3<T> localYRotationVec((-std::sin(m_Angle[0]) * std::cos(m_Angle[1]) * std::cos(m_Angle[2])) - (std::cos(m_Angle[0]) * std::cos(m_Angle[2])),
-                              (std::cos(m_Angle[0]) * std::cos(m_Angle[1]) * std::cos(m_Angle[2])) - (std::sin(m_Angle[0]) * std::sin(m_Angle[2])), std::sin(m_Angle[1]) * std::cos(m_Angle[2]));
-    Vec3<T> localZRotationVec((std::sin(m_Angle[0]) * std::sin(m_Angle[1])), -std::cos(m_Angle[0]) * std::sin(m_Angle[1]), std::cos(m_Angle[1]));
+    Vec3<T> localXRotationVec((-sin1 * cos2 * sin3) + (cos1 * cos3), (cos1 * cos2 * sin3) + (sin1 * cos3), sin2 * sin3);
+    Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * cos3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
+    Vec3<T> localZRotationVec((sin1 * sin2), -cos1 * sin2, cos2);
 
     return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
   }

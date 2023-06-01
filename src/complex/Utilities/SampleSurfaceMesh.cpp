@@ -6,7 +6,6 @@
 #include "complex/Utilities/Math/GeometryMath.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "complex/Utilities/ParallelDataAlgorithm.hpp"
-#include "complex/Utilities/ParallelTaskAlgorithm.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <chrono>
@@ -104,7 +103,7 @@ public:
   }
   virtual ~SampleSurfaceMeshImplByPoints() = default;
 
-  void checkPoints() const
+  void checkPoints(usize start, usize end) const
   {
     usize iter = m_FeatureId;
 
@@ -114,7 +113,7 @@ public:
 
     usize pointsVisited = 0;
     // check points in vertex array to see if they are in the bounding box of the feature
-    for(usize i = 0; i < m_Points.size(); i++)
+    for(usize i = start; i < end; i++)
     {
       Point3Df point = m_Points[i];
       if(m_PolyIds[i] == 0)
@@ -140,9 +139,9 @@ public:
     }
   }
 
-  void operator()() const
+  void operator()(const Range& range) const
   {
-    checkPoints();
+    checkPoints(range.min(), range.max());
   }
 
 private:
@@ -287,12 +286,12 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   }
   else
   {
-    ParallelTaskAlgorithm taskRunner;
     for(int32 featureId = 0; featureId < numFeatures; featureId++)
     {
-      taskRunner.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel));
+      ParallelDataAlgorithm dataAlg;
+      dataAlg.setRange(0, points.size());
+      dataAlg.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel));
     }
-    taskRunner.wait();
   }
 
   updateProgress("Complete");
