@@ -93,6 +93,8 @@
 #include <complex/Parameters/NumericTypeParameter.hpp>
 #include <complex/Parameters/StringParameter.hpp>
 #include <complex/Parameters/VectorParameter.hpp>
+#include <complex/Pipeline/AbstractPipelineNode.hpp>
+#include <complex/Pipeline/Pipeline.hpp>
 #include <complex/Pipeline/PipelineFilter.hpp>
 
 #include <fmt/ranges.h>
@@ -942,7 +944,8 @@ PYBIND11_MODULE(complex, mod)
   dataPath.def("__repr__", [](const DataPath& self) { return fmt::format("DataPath('{}')", self.toString("/")); });
   dataPath.def("__str__", [](const DataPath& self) { return fmt::format("DataPath('{}')", self.toString("/")); });
 
-  py::class_<PipelineFilter> pipelineFilter(mod, "PipelineFilter");
+  py::class_<AbstractPipelineNode, std::shared_ptr<AbstractPipelineNode>> abstractPipelineNode(mod, "AbstractPipelineNode");
+  py::class_<PipelineFilter, AbstractPipelineNode, std::shared_ptr<PipelineFilter>> pipelineFilter(mod, "PipelineFilter");
 
   py::class_<IParameter> parameter(mod, "IParameter");
 
@@ -1313,6 +1316,30 @@ PYBIND11_MODULE(complex, mod)
         return result;
       },
       "data_structure"_a, "Executes the filter");
+
+  py::class_<Pipeline, AbstractPipelineNode, std::shared_ptr<Pipeline>> pipeline(mod, "Pipeline");
+  pipeline.def(py::init<const std::string&>(), "name"_a = std::string("Untitled Pipeline"));
+  pipeline.def_static(
+      "from_file",
+      [](const std::filesystem::path& path) {
+        Result<Pipeline> pipelineResult = Pipeline::FromFile(path);
+        if(pipelineResult.invalid())
+        {
+          throw std::runtime_error(fmt::format("Errors={}", pipelineResult.errors()));
+        }
+        return pipelineResult.value();
+      },
+      "path"_a);
+  pipeline.def("execute", [](Pipeline& self, DataStructure& dataStructure) { return self.execute(dataStructure, false); });
+  pipeline.def(
+      "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
+  pipeline.def("__len__", &Pipeline::size);
+  pipeline.def(
+      "__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
+
+  pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getFilter()->parameters(), self.getArguments()); });
+  pipelineFilter.def(
+      "get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
 
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
