@@ -1,0 +1,103 @@
+#include "${FILTER_NAME}.hpp"
+
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/Common/sitkCommon.hpp"
+
+${PARAMETER_INCLUDES}
+
+${ITK_FILTER_INCLUDE}
+
+using namespace complex;
+
+namespace cx${FILTER_NAME}
+{
+using ArrayOptionsType = ${ARRAY_OPTIONS};
+${OUTPUT_TYPEDEF}
+${ITK_FILTER_STRUCT}
+} // namespace cx${FILTER_NAME}
+
+namespace complex
+{
+//------------------------------------------------------------------------------
+std::string ${FILTER_NAME}::name() const
+{
+  return FilterTraits<${FILTER_NAME}>::name;
+}
+
+//------------------------------------------------------------------------------
+std::string ${FILTER_NAME}::className() const
+{
+  return FilterTraits<${FILTER_NAME}>::className;
+}
+
+//------------------------------------------------------------------------------
+Uuid ${FILTER_NAME}::uuid() const
+{
+  return FilterTraits<${FILTER_NAME}>::uuid;
+}
+
+//------------------------------------------------------------------------------
+std::string ${FILTER_NAME}::humanName() const
+{
+  return "${FILTER_HUMAN_NAME}";
+}
+
+//------------------------------------------------------------------------------
+std::vector<std::string> ${FILTER_NAME}::defaultTags() const
+{
+  return {${DEFAULT_TAGS}};
+}
+
+//------------------------------------------------------------------------------
+Parameters ${FILTER_NAME}::parameters() const
+{
+  Parameters params;
+${PARAMETER_DEFS}
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, ${INPUT_ARRAY_TYPES}));
+
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+
+  return params;
+}
+
+//------------------------------------------------------------------------------
+IFilter::UniquePointer ${FILTER_NAME}::clone() const
+{
+  return std::make_unique<${FILTER_NAME}>();
+}
+
+//------------------------------------------------------------------------------
+IFilter::PreflightResult ${FILTER_NAME}::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel) const
+{
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);${PREFLIGHT_DEFS}
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+
+  Result<OutputActions> resultOutputActions = ${DATA_CHECK_DECL};
+
+  return {std::move(resultOutputActions)};
+}
+
+//------------------------------------------------------------------------------
+Result<> ${FILTER_NAME}::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel) const
+{
+  auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
+  auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
+
+  ${PREFLIGHT_DEFS}
+
+  ${ITK_FUNCTOR_DECL}
+
+${LINK_OUTPUT_ARRAY} 
+  
+  return ${EXECUTE_DECL};
+}
+} // namespace complex
