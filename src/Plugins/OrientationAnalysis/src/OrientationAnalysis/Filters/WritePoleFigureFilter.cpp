@@ -170,39 +170,43 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   }
 
   complex::Result<OutputActions> resultOutputActions;
-  if(pSaveAsImageGeometry)
+
+  // Roughly calculate the output dimensions of the ImageGeometry. This may change
+  // in small amounts due to the XCharWidth not being calculated.
+  float32 fontPtSize = pImageSizeValue / 16.0f;
+  float32 margins = pImageSizeValue / 32.0f;
+
+  float32 xCharWidth = GetXCharWidth(pImageSizeValue, fontPtSize);
+
+  int32 pageWidth = 0;
+  int32 pageHeight = margins + fontPtSize;
+  // Each Pole Figure gets its own Square mini canvas to draw into.
+  float32 subCanvasWidth = margins + pImageSizeValue + xCharWidth + margins;
+  float32 subCanvasHeight = margins + fontPtSize + pImageSizeValue + fontPtSize * 2 + margins * 2;
+  if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == WritePoleFigure::LayoutType::Horizontal)
   {
-    // Roughly calculate the output dimensions of the ImageGeometry. This may change
-    // in small amounts due to the XCharWidth not being calculated.
-    float32 fontPtSize = pImageSizeValue / 16.0f;
-    float32 margins = pImageSizeValue / 32.0f;
+    pageWidth = subCanvasWidth * 4;
+    pageHeight = pageHeight + subCanvasHeight;
+  }
+  else if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == WritePoleFigure::LayoutType::Vertical)
+  {
+    pageWidth = subCanvasWidth;
+    pageHeight = pageHeight + subCanvasHeight * 4.0f;
+  }
+  else if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == complex::WritePoleFigure::LayoutType::Square)
+  {
+    pageWidth = subCanvasWidth * 2.0f;
+    pageHeight = pageHeight + subCanvasHeight * 2.0f;
+  }
+  const std::vector<size_t> dims = {static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1ULL};
+  auto createImageGeometryAction =
+      std::make_unique<CreateImageGeometryAction>(pOutputImageGeometryPath, dims, std::vector<float>{0.0f, 0.0f, 0.0f}, std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
+  resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
 
-    float32 xCharWidth = GetXCharWidth(pImageSizeValue, fontPtSize);
-
-    int32 pageWidth = 0;
-    int32 pageHeight = margins + fontPtSize;
-    // Each Pole Figure gets its own Square mini canvas to draw into.
-    float32 subCanvasWidth = margins + pImageSizeValue + xCharWidth + margins;
-    float32 subCanvasHeight = margins + fontPtSize + pImageSizeValue + fontPtSize * 2 + margins * 2;
-    if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == WritePoleFigure::LayoutType::Horizontal)
-    {
-      pageWidth = subCanvasWidth * 4;
-      pageHeight = pageHeight + subCanvasHeight;
-    }
-    else if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == WritePoleFigure::LayoutType::Vertical)
-    {
-      pageWidth = subCanvasWidth;
-      pageHeight = pageHeight + subCanvasHeight * 4.0f;
-    }
-    else if(static_cast<WritePoleFigure::LayoutType>(pImageLayoutValue) == complex::WritePoleFigure::LayoutType::Square)
-    {
-      pageWidth = subCanvasWidth * 2.0f;
-      pageHeight = pageHeight + subCanvasHeight * 2.0f;
-    }
-    const std::vector<size_t> dims = {static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1ULL};
-    auto createImageGeometryAction =
-        std::make_unique<CreateImageGeometryAction>(pOutputImageGeometryPath, dims, std::vector<float>{0.0f, 0.0f, 0.0f}, std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
-    resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+  if(!pSaveAsImageGeometry)
+  {
+    // After the execute function has been done, delete the original image geometry
+    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(pOutputImageGeometryPath));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;

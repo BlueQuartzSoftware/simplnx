@@ -159,8 +159,11 @@ Result<> GenerateIPFColors::operator()()
 
   MatrixMath::Normalize3x1(normRefDir[0], normRefDir[1], normRefDir[2]);
 
-  const complex::IDataArray* goodVoxelsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->goodVoxelsArrayPath);
-
+  complex::IDataArray* goodVoxelsArray = nullptr;
+  if(m_InputValues->useGoodVoxels)
+  {
+    goodVoxelsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->goodVoxelsArrayPath);
+  }
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, totalPoints);
