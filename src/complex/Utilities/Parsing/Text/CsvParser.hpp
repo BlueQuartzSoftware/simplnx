@@ -3,6 +3,7 @@
 #include "complex/Common/Result.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Utilities/DataArrayUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 #include "complex/complex_export.hpp"
 
@@ -167,6 +168,76 @@ Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHea
       {
         return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Read error while parsing file: {}", filename.string()));
       }
+    }
+  }
+
+  return {};
+}
+
+/**
+ * @brief Reads a Text file that contains numeric values into a single DataArray<T> using an intermediate string token and checks for valid conversion to the templated type T.
+ * @tparam T Final Target type of the value being read
+ * @param filename The input path to the text file
+ * @param data The Target DataArray<T>
+ * @param skipHeaderLines Number of "header lines" that should be skipped before parsing begins
+ * @param delimiter The delimiter to use: Comma, Space, Tab
+ * @return Result<> with any errors or warnings that were encountered.
+ */
+template <typename T>
+Result<> ReadFile(const fs::path& filename, DataArray<T>& data, uint64_t skipHeaderLines, char delimiter)
+{
+  int32_t err = k_RBR_NO_ERROR;
+  if(!fs::exists(filename))
+  {
+    return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
+  }
+
+  std::ifstream in(filename.c_str(), std::ios_base::in | std::ios_base::binary);
+  if(!in.is_open())
+  {
+    return MakeErrorResult(k_RBR_FILE_NOT_OPEN, fmt::format("Could not open file for reading: {}", filename.string()));
+  }
+
+  in.imbue(std::locale(std::locale(), new complex::CsvParser::DelimiterType(delimiter)));
+
+  std::array<char, k_BufferSize> buf = {};
+  char* buffer = buf.data();
+
+  // Skip some header bytes by just reading those bytes into the pointer knowing that the next
+  // thing we are going to do it over write those bytes with the real data that we are after.
+  for(int i = 0; i < skipHeaderLines; i++)
+  {
+    buf.fill(0x00);                                               // Splat Null Chars across the line
+    err = complex::CsvParser::ReadLine(in, buffer, k_BufferSize); // Read Line 1 - VTK Version Info
+    if(err < 0)
+    {
+      return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
+    }
+  }
+
+  size_t numTuples = data.getNumberOfTuples();
+  int scalarNumComp = data.getNumberOfComponents();
+
+  size_t totalSize = numTuples * static_cast<size_t>(scalarNumComp);
+
+  std::string value;
+  for(size_t i = 0; i < totalSize; ++i)
+  {
+    in >> value;
+    Result<T> parseResult = ConvertTo<T>::convert(value);
+    if(parseResult.invalid())
+    {
+      return ConvertResult(std::move(parseResult));
+    }
+    data[i] = parseResult.value();
+    err = CheckErrorBits(&in);
+    if(err == k_RBR_READ_EOF && i < totalSize - 1)
+    {
+      return MakeErrorResult(k_RBR_READ_EOF, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
+    }
+    if(err == k_RBR_READ_ERROR)
+    {
+      return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Read error while parsing file: {}", filename.string()));
     }
   }
 

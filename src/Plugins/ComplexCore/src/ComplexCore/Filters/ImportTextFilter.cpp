@@ -155,43 +155,43 @@ Result<> ImportTextFilter::executeImpl(DataStructure& data, const Arguments& arg
   {
   case NumericType::int8: {
     auto dataArray = complex::ArrayFromPath<int8>(data, path);
-    return CsvParser::ReadFile<int8_t, int32_t>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<int8_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::uint8: {
     auto dataArray = complex::ArrayFromPath<uint8>(data, path);
-    return CsvParser::ReadFile<uint8_t, uint32_t>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<uint8_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::int16: {
     auto dataArray = complex::ArrayFromPath<int16>(data, path);
-    return CsvParser::ReadFile<int16_t, int16_t>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<int16_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::uint16: {
     auto dataArray = complex::ArrayFromPath<uint16>(data, path);
-    return CsvParser::ReadFile<uint16_t, uint16_t>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<uint16_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::int32: {
     auto dataArray = complex::ArrayFromPath<int32>(data, path);
-    return CsvParser::ReadFile<int32_t, int32_t>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<int32_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::uint32: {
     auto dataArray = complex::ArrayFromPath<uint32>(data, path);
-    return CsvParser::ReadFile<uint32_t, uint32_t>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<uint32_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::int64: {
     auto dataArray = complex::ArrayFromPath<int64>(data, path);
-    return CsvParser::ReadFile<int64_t, int64_t>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<int64_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::uint64: {
     auto dataArray = complex::ArrayFromPath<uint64>(data, path);
-    return CsvParser::ReadFile<uint64_t, uint64_t>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<uint64_t>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::float32: {
     auto dataArray = complex::ArrayFromPath<float32>(data, path);
-    return CsvParser::ReadFile<float, float>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<float>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   case NumericType::float64: {
     auto dataArray = complex::ArrayFromPath<float64>(data, path);
-    return CsvParser::ReadFile<double, double>(inputFilePath, *dataArray, skipLines, delimiter);
+    return CsvParser::ReadFile<double>(inputFilePath, *dataArray, skipLines, delimiter);
   }
   default:
     return MakeErrorResult(-1001, fmt::format("ImportTextFilter: Parameter NumericType which has a value of '{}' does not match any in complex.", to_underlying(numericType)));
