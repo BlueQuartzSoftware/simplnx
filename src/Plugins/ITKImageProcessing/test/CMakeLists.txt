@@ -5,6 +5,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     ITKImageWriterTest.cpp
     ITKImportImageStackTest.cpp
     ITKDiscreteGaussianImageTest.cpp
+    ITKRescaleIntensityImageTest.cpp
     )
 if(NOT ITKImageProcessing_LeanAndMean)
     set(${PLUGIN_NAME}UnitTest_SRCS

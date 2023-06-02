@@ -73,7 +73,7 @@ set(FilterList
 
     ITKDiscreteGaussianImage
     ITKMedianImage
-
+    ITKRescaleIntensityImage
     )
 
 # ------------------------------------------------------------------------------
@@ -137,7 +137,10 @@ if(NOT ITKImageProcessing_LeanAndMean)
     ITKValuedRegionalMinimaImage
     ITKWhiteTopHatImage
 
-    #----------------------------------
+      # -----------------------------------------------------------------------------
+      # These filters only work on Scalar inputs
+      # The unit test for these filters use RGB images. 
+      # -----------------------------------------------------------------------------
     # ITKBilateralImage
     # ITKBinaryClosingByReconstructionImage
     # ITKBinomialBlurImage
@@ -150,6 +153,7 @@ if(NOT ITKImageProcessing_LeanAndMean)
     # ITKShiftScaleImage
     # ITKShotNoiseImage
     # ITKSpeckleNoiseImage
+      # ITKBoxMeanImage
 
     # -----------------------------------------------------------------------------
     # These filters have a fixed output type
@@ -181,8 +185,8 @@ if(NOT ITKImageProcessing_LeanAndMean)
     # -----------------------------------------------------------------------------
     # There are parameters from the old version that do not appear in the JSON when generating.
     # -----------------------------------------------------------------------------
-    # ITKRescaleIntensityImage
-    # ITKBoxMeanImage
+    #
+    #
 
     # -----------------------------------------------------------------------------
     # These filters are custom written filters by BQ and do not conform to the

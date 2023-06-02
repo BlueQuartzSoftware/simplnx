@@ -1068,6 +1068,7 @@ def main(input_args: Optional[List[str]] = None) -> None:
     ]
 
     filters_completed: List[str] = [
+        'RescaleIntensityImage'
         'DiscreteGaussianImage',
         'BinaryDilateImage',
         'BinaryErodeImage',

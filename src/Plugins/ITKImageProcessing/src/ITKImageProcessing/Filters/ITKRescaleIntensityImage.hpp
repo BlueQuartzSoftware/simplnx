@@ -8,54 +8,47 @@
 namespace complex
 {
 /**
- * @class ITKDiscreteGaussianImage
- * @brief Blurs an image by separable convolution with discrete gaussian kernels. This filter performs Gaussian blurring by separable convolution of an image and a discrete Gaussian operator (kernel).
+ * @class ITKRescaleIntensityImage
+ * @brief Applies a linear transformation to the intensity levels of the input Image .
  *
- * The Gaussian operator used here was described by Tony Lindeberg (Discrete Scale-Space Theory and the Scale-Space Primal Sketch. Dissertation. Royal Institute of Technology, Stockholm, Sweden. May
- * 1991.) The Gaussian kernel used here was designed so that smoothing and derivative operations commute after discretization.
+ * RescaleIntensityImageFilter applies pixel-wise a linear transformation to the intensity values of input image pixels. The linear transformation is defined by the user in terms of the minimum and
+ * maximum values that the output image should have.
  *
- * The variance or standard deviation (sigma) will be evaluated as pixel units if SetUseImageSpacing is off (false) or as physical units if SetUseImageSpacing is on (true, default). The variance can
- * be set independently in each dimension.
+ * The following equation gives the mapping of the intensity values
  *
- * When the Gaussian kernel is small, this filter tends to run faster than itk::RecursiveGaussianImageFilter .
- *
- * @see GaussianOperator
+ * \par
+ *  \f[ outputPixel = ( inputPixel - inputMin) \cdot \frac{(outputMax - outputMin )}{(inputMax - inputMin)} + outputMin \f]
  *
  *
- * @see Image
+ * All computations are performed in the precision of the input pixel's RealType. Before assigning the computed value to the output pixel.
  *
+ * NOTE: In this filter the minimum and maximum values of the input image are computed internally using the MinimumMaximumImageCalculator . Users are not supposed to set those values in this filter.
+ * If you need a filter where you can set the minimum and maximum values of the input, please use the IntensityWindowingImageFilter . If you want a filter that can use a user-defined linear
+ * transformation for the intensity, then please use the ShiftScaleImageFilter .
  *
- * @see Neighborhood
+ * @see IntensityWindowingImageFilter
  *
- *
- * @see NeighborhoodOperator
- *
- *
- * @see RecursiveGaussianImageFilter
- *
- * ITK Module: ITKSmoothing
- * ITK Group: Smoothing
+ * ITK Module: ITKImageIntensity
+ * ITK Group: ImageIntensity
  */
-class ITKIMAGEPROCESSING_EXPORT ITKDiscreteGaussianImage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKRescaleIntensityImage : public IFilter
 {
 public:
-  ITKDiscreteGaussianImage() = default;
-  ~ITKDiscreteGaussianImage() noexcept override = default;
+  ITKRescaleIntensityImage() = default;
+  ~ITKRescaleIntensityImage() noexcept override = default;
 
-  ITKDiscreteGaussianImage(const ITKDiscreteGaussianImage&) = delete;
-  ITKDiscreteGaussianImage(ITKDiscreteGaussianImage&&) noexcept = delete;
+  ITKRescaleIntensityImage(const ITKRescaleIntensityImage&) = delete;
+  ITKRescaleIntensityImage(ITKRescaleIntensityImage&&) noexcept = delete;
 
-  ITKDiscreteGaussianImage& operator=(const ITKDiscreteGaussianImage&) = delete;
-  ITKDiscreteGaussianImage& operator=(ITKDiscreteGaussianImage&&) noexcept = delete;
+  ITKRescaleIntensityImage& operator=(const ITKRescaleIntensityImage&) = delete;
+  ITKRescaleIntensityImage& operator=(ITKRescaleIntensityImage&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
   static inline constexpr StringLiteral k_SelectedImageDataPath_Key = "input_image_data_path";
   static inline constexpr StringLiteral k_OutputImageDataPath_Key = "output_image_data_path";
-  static inline constexpr StringLiteral k_Variance_Key = "variance";
-  static inline constexpr StringLiteral k_MaximumKernelWidth_Key = "maximum_kernel_width";
-  static inline constexpr StringLiteral k_MaximumError_Key = "maximum_error";
-  static inline constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
+  static inline constexpr StringLiteral k_OutputMinimum_Key = "output_minimum";
+  static inline constexpr StringLiteral k_OutputMaximum_Key = "output_maximum";
 
   /**
    * @brief Returns the name of the filter.
@@ -126,4 +119,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKDiscreteGaussianImage, "025edc1a-986d-4005-92d1-545dfdc13abd");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKRescaleIntensityImage, "f08ea34d-9ad8-456c-a81b-9b3790b29379");

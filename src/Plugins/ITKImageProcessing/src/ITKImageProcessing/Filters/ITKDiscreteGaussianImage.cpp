@@ -3,7 +3,6 @@
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 #include "ITKImageProcessing/Common/sitkCommon.hpp"
 
-
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
@@ -22,7 +21,7 @@ using ArrayOptionsType = ITK::ScalarPixelIdTypeList;
 struct ITKDiscreteGaussianImageFunctor
 {
   using VarianceInputArrayType = std::vector<float64>;
-  VarianceInputArrayType variance = std::vector<double>(3,1.0);
+  VarianceInputArrayType variance = std::vector<double>(3, 1.0);
   uint32 maximumKernelWidth = 32u;
   using MaximumErrorInputArrayType = std::vector<float64>;
   MaximumErrorInputArrayType maximumError = std::vector<double>(3, 0.01);
@@ -79,19 +78,27 @@ Parameters ITKDiscreteGaussianImage::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_Variance_Key, "Variance", "", std::vector<double>(3,1.0), std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat64Parameter>(k_Variance_Key, "Variance", "", std::vector<double>(3, 1.0), std::vector<std::string>{"X", "Y", "Z"}));
 
-  params.insert(std::make_unique<UInt32Parameter>(k_MaximumKernelWidth_Key, "MaximumKernelWidth", "Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels.", 32u));
+  params.insert(std::make_unique<UInt32Parameter>(k_MaximumKernelWidth_Key, "MaximumKernelWidth",
+                                                  "Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels.", 32u));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_MaximumError_Key, "MaximumError", "", std::vector<double>(3, 0.01), std::vector<std::string>{"X", "Y", "Z"}));
 
-  params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing", "Set/Get whether or not the filter will use the spacing of the input image in its calculations. Use On to take the image spacing information into account and to specify the Gaussian variance in real world units; use Off to ignore the image spacing and to specify the Gaussian variance in voxel units. Default is On.", true));
+  params.insert(
+      std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing",
+                                      "Set/Get whether or not the filter will use the spacing of the input image in its calculations. Use On to take the image spacing information into account and to "
+                                      "specify the Gaussian variance in real world units; use Off to ignore the image spacing and to specify the Gaussian variance in voxel units. Default is On.",
+                                      true));
 
   params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, complex::ITK::GetScalarPixelAllowedTypes()));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
+                                                          complex::ITK::GetScalarPixelAllowedTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -104,7 +111,7 @@ IFilter::UniquePointer ITKDiscreteGaussianImage::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKDiscreteGaussianImage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                                 const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
@@ -124,14 +131,13 @@ IFilter::PreflightResult ITKDiscreteGaussianImage::preflightImpl(const DataStruc
 
 //------------------------------------------------------------------------------
 Result<> ITKDiscreteGaussianImage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                               const std::atomic_bool& shouldCancel) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
   const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
-  
   auto variance = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Variance_Key);
 
   auto maximumKernelWidth = filterArgs.value<uint32>(k_MaximumKernelWidth_Key);
@@ -142,8 +148,8 @@ Result<> ITKDiscreteGaussianImage::executeImpl(DataStructure& dataStructure, con
   const cxITKDiscreteGaussianImage::ITKDiscreteGaussianImageFunctor itkFunctor = {variance, maximumKernelWidth, maximumError, useImageSpacing};
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath); 
-  
+  imageGeom.getLinkedGeometryData().addCellData(outputArrayPath);
+
   return ITK::Execute<cxITKDiscreteGaussianImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, itkFunctor, shouldCancel);
 }
 } // namespace complex
