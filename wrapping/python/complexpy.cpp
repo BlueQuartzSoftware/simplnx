@@ -484,11 +484,11 @@ auto BindFilter(py::handle scope, const Internals& internals)
     py::options options;
     options.disable_function_signatures();
 
-    std::string sig = MakePythonSignature<FilterT>("execute2", internals);
-    std::string docString = fmt::format("{}\n\nExecutes the filter\n", sig);
+    std::string executeSig = MakePythonSignature<FilterT>("execute", internals);
+    std::string executeDocString = fmt::format("{}\n\nExecutes the filter\n", executeSig);
 
     filter.def_static(
-        "execute2",
+        "execute",
         [&internals](DataStructure& dataStructure, const py::kwargs& kwargs) {
           FilterT filter;
 
@@ -507,7 +507,32 @@ auto BindFilter(py::handle scope, const Internals& internals)
           IFilter::ExecuteResult result = filter.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
           return result;
         },
-        "data_structure"_a, docString.c_str());
+        "data_structure"_a, executeDocString.c_str());
+
+    // std::string preflightSig = MakePythonSignature<FilterT>("preflight", internals);
+    // std::string preflightDocString = fmt::format("{}\n\nExecutes the filter\n", sig);
+
+    // filter.def_static(
+    //     "preflight",
+    //     [&internals](DataStructure& dataStructure, const py::kwargs& kwargs) {
+    //       FilterT filter;
+
+    //      Parameters parameters = filter.parameters();
+
+    //      for(auto item : kwargs)
+    //      {
+    //        auto name = item.first.cast<std::string>();
+    //        if(!parameters.contains(name))
+    //        {
+    //          throw py::type_error(fmt::format("execute2() got an unexpected keyword argument '{}'", name));
+    //        }
+    //      }
+
+    //      Arguments convertedArgs = ConvertDictToArgs(internals, filter.parameters(), kwargs);
+    //      IFilter::PreflightResult result = filter.preflight(dataStructure, convertedArgs, CreatePyMessageHandler());
+    //      return result;
+    //    },
+    //    "data_structure"_a, preflightDocString.c_str());
   }
 
   return filter;
@@ -1274,13 +1299,13 @@ PYBIND11_MODULE(complex, mod)
   filter.def("name", &IFilter::name);
   filter.def("uuid", &IFilter::uuid);
   filter.def("human_name", &IFilter::humanName);
-  filter.def("preflight", [internals](const IFilter& self, DataStructure& dataStructure, const py::kwargs& kwargs) {
+  filter.def("preflight2", [internals](const IFilter& self, DataStructure& dataStructure, const py::kwargs& kwargs) {
     Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
     IFilter::PreflightResult result = self.preflight(dataStructure, convertedArgs, CreatePyMessageHandler());
     return result;
   });
   filter.def(
-      "execute",
+      "execute2",
       [internals](const IFilter& self, DataStructure& dataStructure, const py::kwargs& kwargs) {
         Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
         IFilter::ExecuteResult result = self.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
