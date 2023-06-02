@@ -1093,7 +1093,7 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
   arrayThresholdset.setArrayThresholds(thresholds);
 
   args.insertOrAssign(k_ArrayThresholds_Key, std::make_any<ArrayThresholdsParameter::ValueType>(arrayThresholdset));
-  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<std::string>(Constants::k_Mask));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
