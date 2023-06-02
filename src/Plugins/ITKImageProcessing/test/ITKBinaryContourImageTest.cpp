@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKBinaryContourImageFilter(default)", "[ITKImageProcessing][ITKBinaryContourImage][default]")
+TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(default)", "[ITKImageProcessing][ITKBinaryContourImage][default]")
 {
   DataStructure dataStructure;
   ITKBinaryContourImage filter;
@@ -49,7 +49,7 @@ TEST_CASE("ITKBinaryContourImageFilter(default)", "[ITKImageProcessing][ITKBinar
   REQUIRE(md5Hash == "3921141f21fcb41e6d4af197e48ffbb5");
 }
 
-TEST_CASE("ITKBinaryContourImageFilter(custom)", "[ITKImageProcessing][ITKBinaryContourImage][custom]")
+TEST_CASE("ITKImageProcessing::ITKBinaryContourImageFilter(custom)", "[ITKImageProcessing][ITKBinaryContourImage][custom]")
 {
   DataStructure dataStructure;
   ITKBinaryContourImage filter;

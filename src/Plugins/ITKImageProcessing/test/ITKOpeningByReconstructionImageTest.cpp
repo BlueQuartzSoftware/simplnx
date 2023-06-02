@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKOpeningByReconstructionImageFilter(OpeningByReconstruction)", "[ITKImageProcessing][ITKOpeningByReconstructionImage][OpeningByReconstruction]")
+TEST_CASE("ITKImageProcessing::ITKOpeningByReconstructionImageFilter(OpeningByReconstruction)", "[ITKImageProcessing][ITKOpeningByReconstructionImage][OpeningByReconstruction]")
 {
   DataStructure dataStructure;
   ITKOpeningByReconstructionImage filter;

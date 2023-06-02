@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 
 using namespace complex;
 
-TEST_CASE("ITKMorphologicalWatershedImageFilter(defaults)", "[ITKImageProcessing][ITKMorphologicalWatershedImage][defaults]")
+TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(defaults)", "[ITKImageProcessing][ITKMorphologicalWatershedImage][defaults]")
 {
   DataStructure dataStructure;
   ITKMorphologicalWatershedImage filter;
@@ -46,7 +46,7 @@ TEST_CASE("ITKMorphologicalWatershedImageFilter(defaults)", "[ITKImageProcessing
   REQUIRE(md5Hash == "406079d7904d4e9ab0b5f29f7a3a1ea8");
 }
 
-TEST_CASE("ITKMorphologicalWatershedImageFilter(level_1)", "[ITKImageProcessing][ITKMorphologicalWatershedImage][level_1]")
+TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedImageFilter(level_1)", "[ITKImageProcessing][ITKMorphologicalWatershedImage][level_1]")
 {
   DataStructure dataStructure;
   ITKMorphologicalWatershedImage filter;

@@ -71,7 +71,7 @@ DataPath ConvertColorToGrayScale(DataStructure& dataStructure, const DataPath& i
 
 } // namespace ITKImageProcessingUnitTest
 
-TEST_CASE("ITKAdaptiveHistogramEqualizationImageFilter(defaults)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImage][defaults]")
+TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(defaults)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImage][defaults]")
 {
   ITKImageProcessingUnitTest::InitApplicationAndPlugins();
 
@@ -121,7 +121,7 @@ TEST_CASE("ITKAdaptiveHistogramEqualizationImageFilter(defaults)", "[ITKImagePro
   }
 }
 
-TEST_CASE("ITKAdaptiveHistogramEqualizationImageFilter(histo)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImage][histo]")
+TEST_CASE("ITKImageProcessing::ITKAdaptiveHistogramEqualizationImageFilter(histo)", "[ITKImageProcessing][ITKAdaptiveHistogramEqualizationImage][histo]")
 {
   ITKImageProcessingUnitTest::InitApplicationAndPlugins();
 
