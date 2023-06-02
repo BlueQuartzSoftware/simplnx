@@ -644,22 +644,40 @@ public:
 protected:
   PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
   {
-    py::gil_scoped_acquire gil;
-    Parameters params = parameters();
-    auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
-    auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-    auto result = m_Object.attr("preflight_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), messageHandler, shouldCancelProxy).cast<PreflightResult>();
-    return result;
+    try
+    {
+      py::gil_scoped_acquire gil;
+      Parameters params = parameters();
+      auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
+      auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
+      auto result = m_Object.attr("preflight_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), messageHandler, shouldCancelProxy).cast<PreflightResult>();
+      return result;
+    } catch(const py::error_already_set& pyException)
+    {
+      return {MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
+    } catch(const std::exception& exception)
+    {
+      return {MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
+    }
   }
 
   Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
   {
-    py::gil_scoped_acquire gil;
-    Parameters params = parameters();
-    auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
-    auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
-    auto result = m_Object.attr("execute_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), /* pipelineNode,*/ messageHandler, shouldCancelProxy).cast<Result<>>();
-    return result;
+    try
+    {
+      py::gil_scoped_acquire gil;
+      Parameters params = parameters();
+      auto shouldCancelProxy = std::make_shared<AtomicBoolProxy>(shouldCancel);
+      auto guard = MakeAtomicBoolProxyGuard(shouldCancelProxy);
+      auto result = m_Object.attr("execute_impl")(data, ConvertArgsToDict(Internals::Instance(), params, args), /* pipelineNode,*/ messageHandler, shouldCancelProxy).cast<Result<>>();
+      return result;
+    } catch(const py::error_already_set& pyException)
+    {
+      return {MakeErrorResult(-42002, fmt::format("Python exception: {}", pyException.what()))};
+    } catch(const std::exception& exception)
+    {
+      return {MakeErrorResult(-42003, fmt::format("C++ exception: {}", exception.what()))};
+    }
   }
 
 private:
