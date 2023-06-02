@@ -110,4 +110,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKSigmoidImage, "e6675be7-e98d-5e0f-a088-ba15cc301038");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKSigmoidImage, "cb9ec2b6-80d9-42e6-807b-d908bea6daea");

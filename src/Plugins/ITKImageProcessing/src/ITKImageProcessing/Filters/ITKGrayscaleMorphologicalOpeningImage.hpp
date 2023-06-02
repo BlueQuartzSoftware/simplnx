@@ -109,4 +109,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKGrayscaleMorphologicalOpeningImage, "c88ac42b-9477-5088-9ec0-862af1e0bb56");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKGrayscaleMorphologicalOpeningImage, "54433e92-fb7d-40f4-95bf-eb3db76d5caa");

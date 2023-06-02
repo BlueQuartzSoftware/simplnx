@@ -104,9 +104,9 @@ IFilter::PreflightResult ITKLabelContourImage::preflightImpl(const DataStructure
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
   auto backgroundValue = filterArgs.value<float64>(k_BackgroundValue_Key);
-  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   Result<OutputActions> resultOutputActions = ITK::DataCheck<cxITKLabelContourImage::ArrayOptionsType>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
 

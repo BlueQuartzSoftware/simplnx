@@ -1,12 +1,11 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Filters/ITKGrayscaleFillholeImage.hpp"
-
-#include "complex/Parameters/BoolParameter.hpp"
-
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
+#include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -20,27 +19,27 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleFillholeImageFilter(GrayscaleFillhole
   DataStructure dataStructure;
   ITKGrayscaleFillholeImage filter;
 
-  DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
   Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
-  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
+  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
   args.insertOrAssign(ITKGrayscaleFillholeImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKGrayscaleFillholeImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKGrayscaleFillholeImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+  args.insertOrAssign(ITKGrayscaleFillholeImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
+  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "e2c49e979bd4c64f0efff67b196b1950");
 }
 
@@ -49,26 +48,26 @@ TEST_CASE("ITKImageProcessing::ITKGrayscaleFillholeImageFilter(GrayscaleFillhole
   DataStructure dataStructure;
   ITKGrayscaleFillholeImage filter;
 
-  DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
-  DataPath inputDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_InputDataPath);
-  DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
-  DataPath outputDataPath = cellDataPath.createChildPath(ITKTestBase::k_OutputDataPath);
+  const DataPath inputGeometryPath({ITKTestBase::k_ImageGeometryPath});
+  const DataPath cellDataPath = inputGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataPath);
+  const DataPath inputDataPath = cellDataPath.createChildPath(ITKTestBase::k_InputDataPath);
+  const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Slice-Short.png";
   Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, cellDataPath, inputDataPath);
-  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult);
+  COMPLEX_RESULT_REQUIRE_VALID(imageReadResult)
 
   Arguments args;
   args.insertOrAssign(ITKGrayscaleFillholeImage::k_SelectedImageGeomPath_Key, std::make_any<DataPath>(inputGeometryPath));
   args.insertOrAssign(ITKGrayscaleFillholeImage::k_SelectedImageDataPath_Key, std::make_any<DataPath>(inputDataPath));
-  args.insertOrAssign(ITKGrayscaleFillholeImage::k_OutputImageDataPath_Key, std::make_any<DataPath>(outputDataPath));
+  args.insertOrAssign(ITKGrayscaleFillholeImage::k_OutputImageDataPath_Key, std::make_any<DataObjectNameParameter::ValueType>(outputArrayName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, outputDataPath);
+  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, cellDataPath.createChildPath(outputArrayName));
   REQUIRE(md5Hash == "e3cd61348a7824d191e83632bf92baae");
 }
