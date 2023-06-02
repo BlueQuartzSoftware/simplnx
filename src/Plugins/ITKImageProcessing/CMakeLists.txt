@@ -63,11 +63,25 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # ------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
 # ITKImageProcessing/src/ITKImageProcessing/Filters/ directory.
+option(ITKImageProcessing_LeanAndMean "Only compile the Reader and Writers, All other filters are disabled" OFF)
+
+
 set(FilterList
     ITKImageReader
     ITKImageWriter
     ITKImportImageStack
 
+    ITKDiscreteGaussianImage
+    ITKMedianImage
+
+    )
+
+# ------------------------------------------------------------------------------
+# These are all extra filters that are built if we have enabled all the filters
+#
+if(NOT ITKImageProcessing_LeanAndMean)
+  set(FilterList
+      ${FilterList}
     ITKAbsImage
     ITKAcosImage
     ITKAdaptiveHistogramEqualizationImage
@@ -105,7 +119,6 @@ set(FilterList
     ITKLog10Image
     ITKLogImage
     ITKMaskImage
-    ITKMedianImage
     ITKMorphologicalGradientImage
     ITKMorphologicalWatershedImage
     ITKNormalizeImage
@@ -170,7 +183,6 @@ set(FilterList
     # -----------------------------------------------------------------------------
     # ITKRescaleIntensityImage
     # ITKBoxMeanImage
-    # ITKDiscreteGaussianImage
 
     # -----------------------------------------------------------------------------
     # These filters are custom written filters by BQ and do not conform to the
@@ -209,6 +221,7 @@ set(FilterList
     #  ITKCastImage # Dream3DArraySwitchOutputComponentMacro
     #  ITKVectorRescaleIntensityImage # Dream3DArraySwitchOutputComponentMacro
 )
+endif()
 
 # -----------------------------------------------------------------------------
 # These are filters that need to be compiled but not exposed to a user

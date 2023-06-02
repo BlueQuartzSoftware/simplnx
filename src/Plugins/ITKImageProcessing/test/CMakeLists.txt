@@ -4,6 +4,11 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     ITKImageReaderTest.cpp
     ITKImageWriterTest.cpp
     ITKImportImageStackTest.cpp
+    ITKDiscreteGaussianImageTest.cpp
+    )
+if(NOT ITKImageProcessing_LeanAndMean)
+    set(${PLUGIN_NAME}UnitTest_SRCS
+        ${${PLUGIN_NAME}UnitTest_SRCS}
 
     ITKAbsImageTest.cpp
     ITKAcosImageTest.cpp
@@ -60,8 +65,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
     ITKValuedRegionalMaximaImageTest.cpp
     ITKValuedRegionalMinimaImageTest.cpp
     ITKWhiteTopHatImageTest.cpp
-
 )
+endif ()
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ""

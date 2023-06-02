@@ -593,22 +593,56 @@ class RadiusTypeParameter(Parameter):
         return code + '}'
 
     def get_itk_functor_member_str(self, prop: PropertyData) -> str:
-        code = f'using InputRadiusType = std::vector<{prop.type}>;\n'
-        return code + f'  InputRadiusType {make_first_letter_lowercase(prop.name)} = {prop.default};'
+        code = f'using {prop.name}InputRadiusType = std::vector<{prop.type}>;\n'
+        return code + f'  {prop.name}InputRadiusType {make_first_letter_lowercase(prop.name)} = {prop.default};'
 
     def get_itk_functor_body_str(self, prop: PropertyData) -> str:
+        
         code = f'// Set the {prop.name} Filter Property\n'
-        code +=  '    using RadiusType = typename FilterT::RadiusType;\n'
-        code +=  '    auto convertedRadius = ITK::CastVec3ToITK<RadiusType, typename RadiusType::SizeValueType>(radius, RadiusType::Dimension);\n'
-        code +=  '    filter->SetRadius(convertedRadius);'
+        code += f'    {{\n'
+        code +=  '      using RadiusType = typename FilterType::RadiusType;\n'
+        code +=  '      auto convertedRadius = ITK::CastVec3ToITK<RadiusType, typename RadiusType::SizeValueType>(radius, RadiusType::Dimension);\n'
+        code +=  '      filter->SetRadius(convertedRadius);\n'
+        code +=  '    }\n'
         return code
+
+
+class ArrayTypeParameter(Parameter):
+    def get_type(self) -> str:
+        return 'VectorFloat64Parameter::ValueType'
+
+    def get_include_str(self) -> str:
+        return '#include "complex/Parameters/VectorParameter.hpp"'
+
+    def get_parameter_def_str(self, prop: PropertyData) -> str:
+        return f'  params.insert(std::make_unique<VectorFloat64Parameter>(k_{prop.name}_Key, "{prop.name}", "{prop.detaileddescriptionSet}", {prop.default}, std::vector<std::string>{{"X", "Y", "Z"}}));\n'
+
+    def get_preflight_def(self, prop: PropertyData) -> str:
+        return f'auto {make_first_letter_lowercase(prop.name)} = filterArgs.value<VectorFloat64Parameter::ValueType>(k_{prop.name}_Key);\n'
+
+    def get_test_value_str(self, setting: SettingsData) -> str:
+        code = 'VectorFloat64Parameter::ValueType{'
+        for item in setting.value:
+            code += f'{item},'
+        if len(setting.value) == 2:
+            code += '0'
+        return code + '}'
+
+    def get_itk_functor_member_str(self, prop: PropertyData) -> str:
+        code = f'using {prop.name}InputArrayType = std::vector<{prop.type}>;\n'
+        return code + f'  {prop.name}InputArrayType {make_first_letter_lowercase(prop.name)} = {prop.default};'
+
+    def get_itk_functor_body_str(self, prop: PropertyData) -> str:
+        code = f'filter->Set{prop.name}({make_first_letter_lowercase(prop.name)}.data()); // Set the {prop.name} Filter Property'
+        return code
+
 
 PARAM_TYPES: Dict[str, Parameter] = {
     'KernelEnum': KernelEnumParameter(),
     'PixelIDValueEnum': KernelRadiusParameter(),
     'typename FilterType::NoiseModelType': NoiseModelTypeParameter(),
     'typename FilterType::RadiusType': RadiusTypeParameter(),
-    'typename FilterType::ArrayType': RadiusTypeParameter(),
+    'typename FilterType::ArrayType': ArrayTypeParameter(),
     'typename FilterType::SigmaArrayType': RadiusTypeParameter(),
     'bool': BasicParameter('BoolParameter', 'BoolParameter'),
     'uint8': NumberParameter('UInt8Parameter'),
@@ -955,7 +989,7 @@ def main(input_args: Optional[List[str]] = None) -> None:
         source_template = Template(source_template_file.read())
 
     filters_to_process: List[str] = [
-
+        
     ]
 
     filters_to_skip: List[str] = [
@@ -1034,6 +1068,7 @@ def main(input_args: Optional[List[str]] = None) -> None:
     ]
 
     filters_completed: List[str] = [
+        'DiscreteGaussianImage',
         'BinaryDilateImage',
         'BinaryErodeImage',
         'BinaryMorphologicalOpeningImage',

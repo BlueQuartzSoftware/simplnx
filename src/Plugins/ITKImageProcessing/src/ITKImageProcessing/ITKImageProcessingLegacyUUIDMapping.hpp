@@ -63,6 +63,7 @@
 #include "ITKImageProcessing/Filters/ITKValuedRegionalMaximaImage.hpp"
 #include "ITKImageProcessing/Filters/ITKValuedRegionalMinimaImage.hpp"
 #include "ITKImageProcessing/Filters/ITKWhiteTopHatImage.hpp"
+#include "ITKImageProcessing/Filters/ITKDiscreteGaussianImage.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -70,6 +71,7 @@ namespace complex
   static const std::map<complex::Uuid, complex::Uuid> k_SIMPL_to_ITKImageProcessing
   {
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID}, // dream3d-class-name
+    {complex::Uuid::FromString("53df5340-f632-598f-8a9b-802296b3a95c").value(), complex::FilterTraits<ITKDiscreteGaussianImage>::uuid}, // ITKDiscreteGaussianImage
     {complex::Uuid::FromString("09f45c29-1cfb-566c-b3ae-d832b4f95905").value(), complex::FilterTraits<ITKAbsImage>::uuid}, // ITKAbsImage
     {complex::Uuid::FromString("b09ec654-87a5-5dfa-9949-aa69f1fbfdd1").value(), complex::FilterTraits<ITKAcosImage>::uuid}, // ITKAcosImage
     {complex::Uuid::FromString("2d5a7599-5e01-5489-a107-23b704d2b5eb").value(), complex::FilterTraits<ITKAdaptiveHistogramEqualizationImage>::uuid}, // ITKAdaptiveHistogramEqualizationImage
