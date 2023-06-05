@@ -1,9 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
@@ -60,7 +58,7 @@ TEST_CASE("OrientationAnalysis::GenerateQuaternionConjugateFilter", "[Orientatio
 
     // Create default Parameters for the filter.
     args.insertOrAssign(GenerateQuaternionConjugateFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({k_QuatName})));
-    args.insertOrAssign(GenerateQuaternionConjugateFilter::k_OutputDataArrayPath_Key, std::make_any<DataPath>(DataPath({k_ConvertedName})));
+    args.insertOrAssign(GenerateQuaternionConjugateFilter::k_OutputDataArrayPath_Key, std::make_any<std::string>(k_ConvertedName));
     args.insertOrAssign(GenerateQuaternionConjugateFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
 
     // Preflight the filter and check result

@@ -4,8 +4,8 @@
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
 namespace fs = std::filesystem;
@@ -131,7 +131,7 @@ Parameters RobustAutomaticThreshold::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_GradientMagnitudePath, "Gradient Magnitude Data", "The complete path to the Array specifying the gradient magnitude of the Input Array",
                                                           DataPath(), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ArrayCreationPath, "Mask", "Created mask based on Input Array and Gradient Magnitude", DataPath()));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ArrayCreationPath, "Mask", "Created mask based on Input Array and Gradient Magnitude", "mask"));
 
   return params;
 }
@@ -146,7 +146,9 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
 {
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath);
-  auto createdMaskPath = args.value<DataPath>(k_ArrayCreationPath);
+  auto createdMaskName = args.value<std::string>(k_ArrayCreationPath);
+
+  const DataPath createdMaskPath = inputArrayPath.getParent().createChildPath(createdMaskName);
 
   std::vector<DataPath> dataPaths;
 
@@ -162,7 +164,6 @@ IFilter::PreflightResult RobustAutomaticThreshold::preflightImpl(const DataStruc
   const DataObject* dataObject = dataStructure.getData(gradientArrayPath);
   if(dynamic_cast<const Float32Array*>(dataObject) == nullptr)
   {
-    dataObject->getTypeName();
     return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType,
                                            fmt::format("Gradient Data Array must be of type Float. The object at path '{}' is '{}'", gradientArrayPath.toString(), dataObject->getTypeName()))};
   }
@@ -189,11 +190,11 @@ Result<> RobustAutomaticThreshold::executeImpl(DataStructure& data, const Argume
 {
   auto inputArrayPath = args.value<DataPath>(k_InputArrayPath);
   auto gradientArrayPath = args.value<DataPath>(k_GradientMagnitudePath);
-  auto createdMaskPath = args.value<DataPath>(k_ArrayCreationPath);
+  auto createdMaskName = args.value<std::string>(k_ArrayCreationPath);
 
   const auto& inputArray = data.getDataRefAs<IDataArray>(inputArrayPath);
   const auto& gradientArray = data.getDataRefAs<Float32Array>(gradientArrayPath);
-  auto& maskArray = data.getDataRefAs<BoolArray>(createdMaskPath);
+  auto& maskArray = data.getDataRefAs<BoolArray>(inputArrayPath.getParent().createChildPath(createdMaskName));
 
   FindThreshold(inputArray, gradientArray, maskArray);
 

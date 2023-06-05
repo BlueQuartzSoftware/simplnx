@@ -42,6 +42,7 @@ N/A
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|-------------|---------|-----|
 | **FeatureIds** | FeatureIdsArrayName | int32_t | (1) | |
+| **Feature Attribute Matrix** | N/A | Feature AttributeMatrix | N/A | The path to the cell feature **Attribute Matrix** |
 
 ## Created Objects ##
 

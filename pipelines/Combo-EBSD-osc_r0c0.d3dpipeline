@@ -98,7 +98,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "DataContainer/CellData/Mask"
+        "created_data_path": "Mask"
       },
       "comments": "",
       "filter": {
@@ -229,7 +229,7 @@
     },
     {
       "args": {
-        "rgb_array_path": "DataContainer/CellData/Feature Ids (Color)",
+        "rgb_array_path": "Feature Ids (Color)",
         "selected_data_array_path": "DataContainer/CellData/FeatureIds",
         "selected_preset": {
           "ColorSpace": "RGB",
@@ -290,7 +290,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "DataContainer/CellData/Mask Inverse"
+        "created_data_path": "Mask Inverse"
       },
       "comments": "",
       "filter": {

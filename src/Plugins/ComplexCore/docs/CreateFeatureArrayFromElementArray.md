@@ -24,6 +24,7 @@ Not Applicable
 |------|------|----------------------|-------------|
 | Element Array DataPath | Any | Any | **Element** data to copy to **Feature** data |
 | Element Array DataPath | int32_t | (1) | Specifies to which **Feature** each **Element** belongs |
+| Cell Feature **Attribute Matrix** | Cell Feauture | N/A | The path to the cell feature **Attribute Matrix** |
 
 
 ## Created Objects ##

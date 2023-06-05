@@ -19,6 +19,8 @@ namespace
 {
 const std::string k_SurfaceAreaVolumeRationArrayName("SurfaceAreaVolumeRatio");
 const std::string k_SphericityArrayName("Sphericity");
+const std::string k_SurfaceAreaVolumeRationArrayNameNX("SurfaceAreaVolumeRatioNX");
+const std::string k_SphericityArrayNameNX("SphericityNX");
 } // namespace
 
 TEST_CASE("ComplexCore::FindSurfaceAreaToVolume", "[ComplexCore][FindSurfaceAreaToVolume]")
@@ -42,8 +44,8 @@ TEST_CASE("ComplexCore::FindSurfaceAreaToVolume", "[ComplexCore][FindSurfaceArea
     args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_NumCellsArrayPath_Key, std::make_any<DataPath>(k_NumElementsArrayPath));
     args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(k_SelectedGeometryPath));
     args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_CalculateSphericity_Key, std::make_any<bool>(true));
-    args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SurfaceAreaVolumeRatioArrayName_Key, std::make_any<DataPath>({k_SurfaceAreaVolumeRationArrayName}));
-    args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SphericityArrayName_Key, std::make_any<DataPath>({k_SphericityArrayName}));
+    args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SurfaceAreaVolumeRatioArrayName_Key, std::make_any<std::string>(k_SurfaceAreaVolumeRationArrayNameNX));
+    args.insertOrAssign(FindSurfaceAreaToVolumeFilter::k_SphericityArrayName_Key, std::make_any<std::string>(k_SphericityArrayNameNX));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -56,15 +58,12 @@ TEST_CASE("ComplexCore::FindSurfaceAreaToVolume", "[ComplexCore][FindSurfaceArea
 
   // Compare the output arrays with those precalculated from the file
   {
-    std::vector<std::string> comparisonNames = {k_SurfaceAreaVolumeRationArrayName, k_SphericityArrayName};
-    for(const auto& comparisonName : comparisonNames)
-    {
-      const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, comparisonName});
-      const DataPath calculatedPath({comparisonName});
-      const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-      const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-      UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
-    }
+    DataPath exemplarPath({k_DataContainer, k_CellFeatureData, k_SurfaceAreaVolumeRationArrayName});
+    DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_SurfaceAreaVolumeRationArrayNameNX});
+    CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(exemplarPath), dataStructure.getDataRefAs<IDataArray>(calculatedPath));
+    exemplarPath = DataPath({k_DataContainer, k_CellFeatureData, k_SphericityArrayName});
+    calculatedPath = DataPath({k_DataContainer, k_CellFeatureData, k_SphericityArrayNameNX});
+    CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(exemplarPath), dataStructure.getDataRefAs<IDataArray>(calculatedPath));
   }
 
 // Write the DataStructure out to the file system

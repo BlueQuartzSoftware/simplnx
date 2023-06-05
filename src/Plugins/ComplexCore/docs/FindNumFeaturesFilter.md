@@ -22,6 +22,7 @@ Not Applicable
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
 | **Feature Attribute Array** | Phases | int32 | (1) | Specifies to which **Ensemble** each **Feature** belongs |
+| **Attribute Matrix** | EnsembleData | Ensemble AttributeMatrix | N/A | The path to the ensemble **Attribute Matrix** |
 
 ## Created Objects ##
 

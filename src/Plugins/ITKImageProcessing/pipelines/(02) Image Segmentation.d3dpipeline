@@ -55,7 +55,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "ImageDataContainer/Cell Data/Mask"
+        "created_data_path": "Mask"
       },
       "comments": "",
       "filter": {

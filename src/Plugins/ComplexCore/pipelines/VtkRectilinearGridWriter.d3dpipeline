@@ -100,7 +100,7 @@
                   "type": "collection",
                   "union": 0
                 },
-                "created_data_path": "DataContainer/CellData/Mask"
+                "created_data_path": "Mask"
               },
               "comments": "",
               "filter": {

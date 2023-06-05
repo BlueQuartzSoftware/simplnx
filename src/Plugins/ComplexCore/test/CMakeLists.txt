@@ -75,11 +75,13 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ImportCSVDataTest.cpp
   ImportBinaryCTNorthstarTest.cpp
   ImportHDF5DatasetTest.cpp
+  ImportTextTest.cpp
   ImportVolumeGraphicsFileTest.cpp
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
   LaplacianSmoothingFilterTest.cpp
+  MultiThresholdObjectsTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
   MoveDataTest.cpp

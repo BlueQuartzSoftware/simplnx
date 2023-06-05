@@ -4,8 +4,9 @@
 
 #include "complex/DataStructure/Geometry/IGridGeometry.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataGroupSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
 
@@ -49,8 +50,11 @@ Parameters ComputeFeatureRectFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "The feature ids array used to calculate the feature rect", DataPath{{"FeatureIds"}},
                                                           ArraySelectionParameter::AllowedTypes{complex::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<DataGroupSelectionParameter>(k_FeatureDataAttributeMatrixPath_Key, "Feature Data Attribute Matrix",
+                                                              "The path to the feature data attribute matrix associated with the input feature ids array", DataPath{},
+                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::AttributeMatrix}));
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeatureRectArrayPath_Key, "Feature Rect", "The feature rect calculated from the feature ids", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureRectArrayPath_Key, "Feature Rect", "The feature rect calculated from the feature ids", "FeatureRect"));
 
   return params;
 }
@@ -66,22 +70,13 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
                                                                  const std::atomic_bool& shouldCancel) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  auto pFeatureRectArrayPathValue = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
+  auto pFeatureDataAttributeMatrixPathValue = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
+  auto pFeatureRectArrayNameValue = filterArgs.value<std::string>(k_FeatureRectArrayPath_Key);
 
-  DataPath parentPath = pFeatureRectArrayPathValue.getParent();
+  DataPath featureRectArrayPath = pFeatureDataAttributeMatrixPathValue.createChildPath(pFeatureRectArrayNameValue);
 
-  std::vector<usize> tDims = {0};
-  if(dataStructure.getDataAs<AttributeMatrix>(parentPath) != nullptr)
-  {
-    const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(parentPath);
-    tDims = attrMatrix.getShape();
-  }
-  else if(dataStructure.getDataAs<IGridGeometry>(parentPath) != nullptr)
-  {
-    const auto& geom = dataStructure.getDataRefAs<IGridGeometry>(parentPath);
-    tDims = geom.getDimensions().toContainer<std::vector<usize>>();
-    std::reverse(tDims.rbegin(), tDims.rend());
-  }
+  const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pFeatureDataAttributeMatrixPathValue);
+  std::vector<usize> tDims = attrMatrix.getShape();
 
   /*
    * This output Feature Rect array assumes that the original dataset has dimensions that are no larger than uint32.
@@ -94,12 +89,12 @@ IFilter::PreflightResult ComputeFeatureRectFilter::preflightImpl(const DataStruc
     {
       return {MakeErrorResult<OutputActions>(
           -2000, fmt::format("Data Object at '{}': Dimension {} has a value of {}, which is larger than the maximum uint32 value ({}).  Please contact BlueQuartz Software for further information.",
-                             pFeatureRectArrayPathValue.toString(), i + 1, dim, std::numeric_limits<uint32>::max()))};
+                             featureRectArrayPath.toString(), i + 1, dim, std::numeric_limits<uint32>::max()))};
     }
   }
 
   complex::Result<OutputActions> resultOutputActions;
-  auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, tDims, std::vector<usize>{6}, pFeatureRectArrayPathValue);
+  auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, tDims, std::vector<usize>{6}, featureRectArrayPath);
   resultOutputActions.value().actions.push_back(std::move(createArrayAction));
 
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -114,7 +109,8 @@ Result<> ComputeFeatureRectFilter::executeImpl(DataStructure& dataStructure, con
   ComputeFeatureRectInputValues inputValues;
 
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.FeatureRectArrayPath = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
+  inputValues.FeatureDataAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureDataAttributeMatrixPath_Key);
+  inputValues.FeatureRectArrayPath = inputValues.FeatureDataAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_FeatureRectArrayPath_Key));
 
   return ComputeFeatureRect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

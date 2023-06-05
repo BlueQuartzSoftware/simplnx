@@ -19,6 +19,8 @@ const std::string k_Volumes("Volumes");
 const std::string k_EquivalentDiameters("EquivalentDiameters");
 const std::string k_Neighborhoods("Neighborhoods");
 const std::string k_NeighborhoodList("NeighborhoodList");
+const std::string k_NeighborhoodsNX("NeighborhoodsNX");
+const std::string k_NeighborhoodListNX("NeighborhoodListNX");
 } // namespace
 
 TEST_CASE("ComplexCore::FindNeighborhoods", "[ComplexCore][FindNeighborhoods]")
@@ -39,9 +41,8 @@ TEST_CASE("ComplexCore::FindNeighborhoods", "[ComplexCore][FindNeighborhoods]")
     args.insert(FindNeighborhoodsFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataAM.createChildPath(k_EquivalentDiameters)));
     args.insert(FindNeighborhoodsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataAM.createChildPath(k_Phases)));
     args.insert(FindNeighborhoodsFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataAM.createChildPath(k_Centroids)));
-    // Make the output arrays at the top level of the data structure, out and away from the exemplar arrays
-    args.insert(FindNeighborhoodsFilter::k_NeighborhoodsArrayName_Key, std::make_any<DataPath>({k_Neighborhoods}));
-    args.insert(FindNeighborhoodsFilter::k_NeighborhoodListArrayName_Key, std::make_any<DataPath>({k_NeighborhoodList}));
+    args.insert(FindNeighborhoodsFilter::k_NeighborhoodsArrayName_Key, std::make_any<std::string>(k_NeighborhoodsNX));
+    args.insert(FindNeighborhoodsFilter::k_NeighborhoodListArrayName_Key, std::make_any<std::string>(k_NeighborhoodListNX));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -55,14 +56,14 @@ TEST_CASE("ComplexCore::FindNeighborhoods", "[ComplexCore][FindNeighborhoods]")
   // Compare the k_Neighborhoods output array with those precalculated from the file
   {
     const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, k_Neighborhoods});
-    const DataPath calculatedPath({k_Neighborhoods});
+    const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_NeighborhoodsNX});
     UnitTest::CompareArrays<int32>(dataStructure, exemplarPath, calculatedPath);
   }
 
   // Compare the k_NeighborhoodList output neighborlist with those precalculated from the file
   {
     const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, k_NeighborhoodList});
-    const DataPath calculatedPath({k_NeighborhoodList});
+    const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_NeighborhoodListNX});
     UnitTest::CompareNeighborLists<int32>(dataStructure, exemplarPath, calculatedPath);
   }
 

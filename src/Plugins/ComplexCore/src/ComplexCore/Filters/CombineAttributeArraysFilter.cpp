@@ -5,8 +5,8 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/MultiArraySelectionParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
@@ -64,8 +64,8 @@ Parameters CombineAttributeArraysFilter::parameters() const
                                                                MultiArraySelectionParameter::AllowedDataTypes{}));
 
   params.insertSeparator(Parameters::Separator{"Created Output Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_StackedDataArrayName_Key, "Created Data Array", "This is the DataPath to the created output array of the combined attribute arrays.",
-                                                         DataPath({"Combined DataArray"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_StackedDataArrayName_Key, "Created Data Array", "This is the name of the created output array of the combined attribute arrays.",
+                                                          "Combined DataArray"));
 
   return params;
 }
@@ -83,7 +83,7 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   // auto normalizeDataValue = filterArgs.value<bool>(k_NormalizeData_Key);
   auto moveValuesValue = filterArgs.value<bool>(k_MoveValues_Key);
   auto selectedDataArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  auto stackedDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_StackedDataArrayName_Key);
+  auto stackedDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key);
 
   PreflightResult preflightResult;
 
@@ -119,7 +119,8 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   {
     const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedDataArrayPathsValue[0]);
     auto tupleShape = dataArray->getTupleShape();
-    auto action = std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, stackedDataArrayPath);
+    auto action =
+        std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].getParent().createChildPath(stackedDataArrayName));
     resultOutputActions.value().actions.push_back(std::move(action));
   }
 
@@ -147,7 +148,7 @@ Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure,
   inputValues.NormalizeData = filterArgs.value<bool>(k_NormalizeData_Key);
   inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  inputValues.StackedDataArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_StackedDataArrayName_Key);
+  inputValues.StackedDataArrayPath = inputValues.SelectedDataArrayPaths[0].getParent().createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key));
 
   return CombineAttributeArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

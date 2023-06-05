@@ -83,7 +83,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "fw-ar-IF1-aptr12-corr/Cell Data/ThresholdArray"
+        "created_data_path": "ThresholdArray"
       },
       "comments": "",
       "filter": {

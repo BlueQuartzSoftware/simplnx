@@ -98,7 +98,7 @@
           "[Image Geometry]/CellData/Phi",
           "[Image Geometry]/CellData/phi2"
         ],
-        "stacked_data_array_name": "[Image Geometry]/CellData/Eulers"
+        "stacked_data_array_name": "Eulers"
       },
       "comments": "",
       "filter": {

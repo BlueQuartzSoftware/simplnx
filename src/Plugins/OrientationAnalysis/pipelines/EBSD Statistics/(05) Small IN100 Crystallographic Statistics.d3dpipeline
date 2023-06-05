@@ -145,7 +145,7 @@
                           "type": "collection",
                           "union": 0
                         },
-                        "created_data_path": "DataContainer/CellData/Mask"
+                        "created_data_path": "Mask"
                       },
                       "comments": "",
                       "filter": {
@@ -591,8 +591,8 @@
                 "equivalent_diameters_array_path": "DataContainer/CellFeatureData/EquivalentDiameters",
                 "feature_phases_array_path": "DataContainer/CellFeatureData/Phases",
                 "multiples_of_average": 1.0,
-                "neighborhood_list_array_name": "DataContainer/CellFeatureData/NeighborhoodList",
-                "neighborhoods_array_name": "DataContainer/CellFeatureData/Neighborhoods",
+                "neighborhood_list_array_name": "NeighborhoodList",
+                "neighborhoods_array_name": "Neighborhoods",
                 "selected_image_geometry_path": "DataContainer"
               },
               "comments": "",
@@ -629,8 +629,8 @@
                 "feature_ids_path": "DataContainer/CellData/FeatureIds",
                 "num_cells_array_path": "DataContainer/CellFeatureData/NumElements",
                 "selected_image_geometry": "DataContainer",
-                "sphericity_array_name": "DataContainer/CellFeatureData/Sphericity",
-                "surface_area_volume_ratio_array_name": "DataContainer/CellFeatureData/SurfaceAreaVolumeRatio"
+                "sphericity_array_name": "Sphericity",
+                "surface_area_volume_ratio_array_name": "SurfaceAreaVolumeRatio"
               },
               "comments": "",
               "filter": {

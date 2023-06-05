@@ -14,16 +14,15 @@ namespace
 const std::string k_VolumeFractions("Volume Fractions");
 const std::string k_VolumeFractionsNX("Volume Fractions NX");
 
-const DataPath k_CellPhasesPath({Constants::k_DataContainer, Constants::k_CellData, Constants::k_Phases});
 const DataPath k_IncorrectCellPhasesPath({Constants::k_DataContainer, Constants::k_FeatureData, Constants::k_Phases});
 
-const DataPath k_VolumeFractionsPath({Constants::k_DataContainer, Constants::k_CellEnsembleData, k_VolumeFractions});
-const DataPath k_VolumeFractionsPathNX({Constants::k_DataContainer, Constants::k_CellEnsembleData, k_VolumeFractionsNX});
+const DataPath k_VolumeFractionsPath = Constants::k_CellEnsembleAttributeMatrixPath.createChildPath(k_VolumeFractions);
+const DataPath k_VolumeFractionsPathNX = Constants::k_CellEnsembleAttributeMatrixPath.createChildPath(k_VolumeFractionsNX);
 
 const fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/6_6_volume_fraction_feature_count.dream3d", unit_test::k_TestFilesDir));
 } // namespace
 
-TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[ComplexCore]")
+TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[ComplexCore::FindVolFractionsFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindVolFractionsFilter filter;
@@ -32,8 +31,9 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[Compl
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_CellPhasesPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<DataPath>(k_VolumeFractionsPathNX));
+  args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
+  args.insertOrAssign(FindVolFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -53,7 +53,7 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[Compl
   }
 }
 
-TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[ComplexCore]")
+TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[ComplexCore::FindVolFractionsFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindVolFractionsFilter filter;
@@ -64,7 +64,8 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[Com
 
   // Create default Parameters for the filter.
   args.insertOrAssign(FindVolFractionsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_IncorrectCellPhasesPath));
-  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<DataPath>(k_VolumeFractionsPathNX));
+  args.insertOrAssign(FindVolFractionsFilter::k_CellEnsembleAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellEnsembleAttributeMatrixPath));
+  args.insertOrAssign(FindVolFractionsFilter::k_VolFractionsArrayPath_Key, std::make_any<std::string>(k_VolumeFractionsNX));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

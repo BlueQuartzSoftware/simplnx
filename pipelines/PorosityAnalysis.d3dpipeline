@@ -55,7 +55,7 @@
           "type": "collection",
           "union": 0
         },
-        "created_data_path": "RoboMet.3D Image Stack/Optical Data/Mask"
+        "created_data_path": "Mask"
       },
       "comments": "",
       "filter": {
