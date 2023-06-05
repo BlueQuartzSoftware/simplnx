@@ -19,10 +19,6 @@ using namespace complex::Constants;
 using namespace complex::UnitTest;
 TEST_CASE("ComplexCore::FillBadData", "[Core][FillBadData]")
 {
-  std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
-  app->loadPlugins(unit_test::k_BuildDir.view(), true);
-  auto* filterList = Application::Instance()->getFilterList();
-
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_fill_bad_data/6_6_exemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);

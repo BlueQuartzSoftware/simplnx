@@ -91,6 +91,7 @@ set(FilterList
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
   RawBinaryReaderFilter
+  RegularGridSampleSurfaceMeshFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedVertices
   RemoveMinimumSizeFeaturesFilter
@@ -108,6 +109,7 @@ set(FilterList
   TriangleCentroidFilter
   TriangleDihedralAngleFilter
   TriangleNormalFilter
+  UncertainRegularGridSampleSurfaceMeshFilter
   VtkRectilinearGridWriterFilter
   WriteASCIIDataFilter
   WriteBinaryDataFilter
@@ -163,6 +165,7 @@ set(AlgorithmList
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   RawBinaryReader
+  RegularGridSampleSurfaceMesh
   RemoveFlaggedFeatures
   ReplaceElementAttributesWithNeighborValues
   ResampleImageGeom
@@ -173,6 +176,7 @@ set(AlgorithmList
   StlFileReader
   TriangleCentroid
   TupleTransfer
+  UncertainRegularGridSampleSurfaceMesh
   VtkRectilinearGridWriter
   WriteStlFile
 )

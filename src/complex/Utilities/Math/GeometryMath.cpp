@@ -23,11 +23,6 @@ float32 complex::GeometryMath::AngleBetweenVectors(const complex::ZXZEuler& a, c
   return std::acos(cosAng);
 }
 
-Ray<float32> complex::GeometryMath::GenerateRandomRay(float32 length)
-{
-  throw std::runtime_error("");
-}
-
 BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfVertices(INodeGeometry0D& geom)
 {
   FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
@@ -59,7 +54,7 @@ BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfVertices(INodeGeometry0D&
   return {ll, ur}; // should be valid
 }
 
-BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFace(TriangleGeom& faces, int32 faceId)
+BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFace(const TriangleGeom& faces, int32 faceId)
 {
   std::array<Point3Df, 3> points;
   faces.getFaceCoordinates(faceId, points);
@@ -119,7 +114,52 @@ BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFace(TriangleGeom& faces,
   return {ll, ur};
 }
 
-BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfRotatedFace(TriangleGeom* faces, int32 faceId, float32 g[3][3])
+BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfFaces(const TriangleGeom& faces, const std::vector<int32>& faceIds)
+{
+  Point3Df ll(0, 0, 0);
+  Point3Df ur(0, 0, 0);
+
+  if(faceIds.empty())
+  {
+    return {ll, ur};
+  }
+
+  for(const auto& id : faceIds)
+  {
+    auto bounds = FindBoundingBoxOfFace(faces, id);
+    Point3Df min = bounds.getMinPoint();
+    Point3Df max = bounds.getMaxPoint();
+
+    if(min[0] < ll[0])
+    {
+      ll[0] = min[0];
+    }
+    if(min[1] < ll[1])
+    {
+      ll[1] = min[1];
+    }
+    if(min[2] < ll[2])
+    {
+      ll[2] = min[2];
+    }
+    if(max[0] > ur[0])
+    {
+      ur[0] = max[0];
+    }
+    if(max[1] > ur[1])
+    {
+      ur[1] = max[1];
+    }
+    if(max[2] > ur[2])
+    {
+      ur[2] = max[2];
+    }
+  }
+
+  return {ll, ur};
+}
+
+BoundingBox3Df complex::GeometryMath::FindBoundingBoxOfRotatedFace(TriangleGeom& faces, int32 faceId, float32 g[3][3])
 {
   throw std::runtime_error("");
 }

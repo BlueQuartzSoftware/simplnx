@@ -13,7 +13,8 @@ namespace complex
  * @brief The Ray class describes a ray or line segment in 3D space. Using
  * the origin and angle values, points can be found at any specified length or
  * the endpoint can be found at the current length. Rays are primarily used to
- * simplify and better describe values used in GeometryMath.
+ * simplify and better describe values used in GeometryMath. The rays initial alignment
+ * is assumed to be with the Y-axis.
  */
 template <typename T>
 class Ray
@@ -127,11 +128,25 @@ public:
 
   /**
    * @brief Returns the end point determined by the origin point, Euler angle, and length.
+   * Based on the assumption the point is initially aligned with the global axis' and the that this vector specifically aligned with the local y-axis.
    * @return PointType
    */
   PointType getEndPoint() const
   {
-    throw std::runtime_error("");
+    const auto sin1 = std::sin(m_Angle[0]);
+    const auto sin2 = std::sin(m_Angle[1]);
+    const auto sin3 = std::sin(m_Angle[2]);
+
+    const auto cos1 = std::cos(m_Angle[0]);
+    const auto cos2 = std::cos(m_Angle[1]);
+    const auto cos3 = std::cos(m_Angle[2]);
+
+    // Reference: https://ntrs.nasa.gov/api/citations/19770019231/downloads/19770019231.pdf Page:23
+    Vec3<T> localXRotationVec((-sin1 * cos2 * sin3) + (cos1 * cos3), (cos1 * cos2 * sin3) + (sin1 * cos3), sin2 * sin3);
+    Vec3<T> localYRotationVec((-sin1 * cos2 * cos3) - (cos1 * cos3), (cos1 * cos2 * cos3) - (sin1 * sin3), sin2 * cos3);
+    Vec3<T> localZRotationVec((sin1 * sin2), -cos1 * sin2, cos2);
+
+    return m_Origin + (localXRotationVec * m_Length) + (localYRotationVec * m_Length) + (localZRotationVec * m_Length);
   }
 
   /**
