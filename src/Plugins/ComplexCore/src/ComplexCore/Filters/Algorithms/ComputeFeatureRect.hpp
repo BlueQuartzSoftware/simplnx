@@ -12,6 +12,7 @@ namespace complex
 struct COMPLEXCORE_EXPORT ComputeFeatureRectInputValues
 {
   DataPath FeatureIdsArrayPath;
+  DataPath FeatureDataAttributeMatrixPath;
   DataPath FeatureRectArrayPath;
 };
 

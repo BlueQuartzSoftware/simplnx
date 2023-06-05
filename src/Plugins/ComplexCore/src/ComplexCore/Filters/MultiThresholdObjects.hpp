@@ -20,6 +20,9 @@ public:
   MultiThresholdObjects& operator=(const MultiThresholdObjects&) = delete;
   MultiThresholdObjects& operator=(MultiThresholdObjects&&) noexcept = delete;
 
+  static inline constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
+  static inline constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
+
   /**
    * @brief
    * @return std::string

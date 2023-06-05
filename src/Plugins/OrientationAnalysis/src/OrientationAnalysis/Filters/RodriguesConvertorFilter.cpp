@@ -6,10 +6,9 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Filter/Actions/EmptyAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 
 using namespace complex;
 namespace
@@ -62,7 +61,7 @@ Parameters RodriguesConvertorFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_RodriguesDataArrayPath_Key, "", "Specifies the Rodrigues data to convert", DataPath({"CellData", "rodrigues"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputDataArrayPath_Key, "Converted Rodrigues Data Array", "", DataPath({"rodrigues [Converted]"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_OutputDataArrayPath_Key, "Converted Rodrigues Data Array", "", "rodrigues [Converted]"));
 
   return params;
 }
@@ -77,19 +76,10 @@ IFilter::UniquePointer RodriguesConvertorFilter::clone() const
 IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel) const
 {
-
   auto pRodriguesDataArrayPathValue = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
-  auto pOutputDataArrayPathValue = filterArgs.value<DataPath>(k_OutputDataArrayPath_Key);
+  auto pOutputDataArrayPathValue = pRodriguesDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayPath_Key));
 
-  // If your filter is making structural changes to the DataStructure then the filter
-  // is going to create OutputActions subclasses that need to be returned. This will
-  // store those actions.
   complex::Result<OutputActions> resultOutputActions;
-
-  // If your filter is going to pass back some `preflight updated values` then this is where you
-  // would create the code to store those values in the appropriate object. Note that we
-  // in line creating the pair (NOT a std::pair<>) of Key:Value that will get stored in
-  // the std::vector<PreflightValue> object.
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Validate the Rodrigues array
@@ -122,7 +112,7 @@ Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, con
   RodriguesConvertorInputValues inputValues;
 
   inputValues.RodriguesDataArrayPath = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
-  inputValues.OutputDataArrayPath = filterArgs.value<DataPath>(k_OutputDataArrayPath_Key);
+  inputValues.OutputDataArrayPath = inputValues.RodriguesDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_OutputDataArrayPath_Key));
   inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return RodriguesConvertor(dataStructure, messageHandler, shouldCancel, &inputValues)();

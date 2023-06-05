@@ -7,8 +7,8 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -65,8 +65,8 @@ Parameters FindVertexToTriangleDistancesFilter::parameters() const
       std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "The triangle geometry's normals array", DataPath{}, std::set<DataType>{DataType::float64}));
 
   params.insertSeparator(Parameters::Separator{"Created Output Arrays"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_DistancesArrayPath_Key, "Distances Array", "The array to store distance between vertex and triangle", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_ClosestTriangleIdArrayPath_Key, "Closest Triangle Ids Array", "The array to store the ID of the closest triangle", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_DistancesArrayPath_Key, "Distances Array", "The array to store distance between vertex and triangle", ""));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_ClosestTriangleIdArrayPath_Key, "Closest Triangle Ids Array", "The array to store the ID of the closest triangle", ""));
 
   return params;
 }
@@ -84,8 +84,8 @@ IFilter::PreflightResult FindVertexToTriangleDistancesFilter::preflightImpl(cons
   auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_VertexDataContainer_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleDataContainer_Key);
   auto pTriangleNormalsArrayDataPath = filterArgs.value<DataPath>(k_TriangleNormalsArrayPath_Key);
-  auto pDistancesDataPath = filterArgs.value<DataPath>(k_DistancesArrayPath_Key);
-  auto pClosestTriangleIdDataPath = filterArgs.value<DataPath>(k_ClosestTriangleIdArrayPath_Key);
+  auto pDistancesDataName = filterArgs.value<std::string>(k_DistancesArrayPath_Key);
+  auto pClosestTriangleIdDataName = filterArgs.value<std::string>(k_ClosestTriangleIdArrayPath_Key);
 
   PreflightResult preflightResult;
 
@@ -105,12 +105,14 @@ IFilter::PreflightResult FindVertexToTriangleDistancesFilter::preflightImpl(cons
     return {MakeErrorResult<OutputActions>(-4531, fmt::format("The DataPath {} is not a valid TriangleGeometry.", pTriangleGeometryDataPath.toString()))};
   }
 
-  auto createDistancesArrayAction =
-      std::make_unique<CreateArrayAction>(complex::DataType::float32, std::vector<usize>{vertexGeomPtr->getNumberOfVertices()}, std::vector<usize>{1}, pDistancesDataPath);
+  const DataPath vertexDataPath = pVertexGeometryDataPath.createChildPath(vertexGeomPtr->getVertexAttributeMatrix()->getName());
+
+  auto createDistancesArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, std::vector<usize>{vertexGeomPtr->getNumberOfVertices()}, std::vector<usize>{1},
+                                                                        vertexDataPath.createChildPath(pDistancesDataName));
   resultOutputActions.value().actions.push_back(std::move(createDistancesArrayAction));
 
-  auto createClosestTriangleIdArrayAction =
-      std::make_unique<CreateArrayAction>(complex::DataType::int64, std::vector<usize>{vertexGeomPtr->getNumberOfVertices()}, std::vector<usize>{1}, pClosestTriangleIdDataPath);
+  auto createClosestTriangleIdArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int64, std::vector<usize>{vertexGeomPtr->getNumberOfVertices()}, std::vector<usize>{1},
+                                                                                vertexDataPath.createChildPath(pClosestTriangleIdDataName));
   resultOutputActions.value().actions.push_back(std::move(createClosestTriangleIdArrayAction));
 
   // Create temp array then deferred delete
@@ -136,8 +138,10 @@ Result<> FindVertexToTriangleDistancesFilter::executeImpl(DataStructure& dataStr
   inputValues.TriangleDataContainer = filterArgs.value<DataPath>(k_TriangleDataContainer_Key);
   inputValues.TriangleNormalsArrayPath = filterArgs.value<DataPath>(k_TriangleNormalsArrayPath_Key);
 
-  inputValues.DistancesArrayPath = filterArgs.value<DataPath>(k_DistancesArrayPath_Key);
-  inputValues.ClosestTriangleIdArrayPath = filterArgs.value<DataPath>(k_ClosestTriangleIdArrayPath_Key);
+  auto vertexGeom = dataStructure.getDataRefAs<VertexGeom>(inputValues.VertexDataContainer);
+  const DataPath vertexDataPath = inputValues.VertexDataContainer.createChildPath(vertexGeom.getVertexAttributeMatrix()->getName());
+  inputValues.DistancesArrayPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_DistancesArrayPath_Key));
+  inputValues.ClosestTriangleIdArrayPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_ClosestTriangleIdArrayPath_Key));
 
   inputValues.TriBoundsDataPath = DataPath({::k_TriangleBounds});
 

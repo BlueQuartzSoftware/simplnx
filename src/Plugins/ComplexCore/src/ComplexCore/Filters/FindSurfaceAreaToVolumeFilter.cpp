@@ -2,12 +2,13 @@
 
 #include "ComplexCore/Filters/Algorithms/FindSurfaceAreaToVolume.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 
 using namespace complex;
@@ -63,9 +64,9 @@ Parameters FindSurfaceAreaToVolumeFilter::parameters() const
       k_NumCellsArrayPath_Key, "Number of Cells", "Number of Cells that are owned by the Feature. This value does not place any distinction between Cells that may be of a different size",
       DataPath({"CellFeatureData", "NumElements"}), ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SurfaceAreaVolumeRatioArrayName_Key, "Surface Area to Volume Ratio",
-                                                         "Ratio of surface area to volume for each Feature. The units are inverse length", DataPath({"CellFeatureData", "SurfaceAreaVolumeRatio"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_SphericityArrayName_Key, "Sphericity Array Name", "The sphericity of each feature", DataPath({"CellFeatureData", "Sphericity"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceAreaVolumeRatioArrayName_Key, "Surface Area to Volume Ratio",
+                                                          "Ratio of surface area to volume for each Feature. The units are inverse length", "SurfaceAreaVolumeRatio"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_SphericityArrayName_Key, "Sphericity Array Name", "The sphericity of each feature", "Sphericity"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_CalculateSphericity_Key, k_SphericityArrayName_Key, true);
 
@@ -94,19 +95,26 @@ IFilter::PreflightResult FindSurfaceAreaToVolumeFilter::preflightImpl(const Data
   const auto* featureDataArray = dataStructure.getDataAs<Int32Array>(pNumCellsArrayPathValue);
   if(nullptr == featureDataArray)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pNumCellsArrayPathValue.toString())}})};
+    return MakePreflightErrorResult(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pNumCellsArrayPathValue.toString()));
   }
-  IDataStore::ShapeType tupleShape = featureDataArray->getIDataStore()->getTupleShape();
+  const auto* cellFeatureData = dataStructure.getDataAs<AttributeMatrix>(pNumCellsArrayPathValue.getParent());
+  if(cellFeatureData == nullptr)
+  {
+    return MakePreflightErrorResult(-12802, fmt::format("The selected number of cells array {} is not located in an attribute matrix. Make sure you have selected the number of cells array "
+                                                        "located in the cell feature attribute matrix of the selected geometry",
+                                                        pNumCellsArrayPathValue.toString()));
+  }
+  IDataStore::ShapeType tupleShape = cellFeatureData->getShape();
   // Create the SurfaceAreaVolumeRatio
   {
-    auto arrayPath = filterArgs.value<DataPath>(k_SurfaceAreaVolumeRatioArrayName_Key);
+    auto arrayPath = pNumCellsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, arrayPath);
     resultOutputActions.value().actions.push_back(std::move(action));
   }
   // Create the SphericityArray
   if(pCalculateSphericityValue)
   {
-    auto arrayPath = filterArgs.value<DataPath>(k_SphericityArrayName_Key);
+    auto arrayPath = pNumCellsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_SphericityArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, arrayPath);
     resultOutputActions.value().actions.push_back(std::move(action));
   }
@@ -125,9 +133,9 @@ Result<> FindSurfaceAreaToVolumeFilter::executeImpl(DataStructure& dataStructure
 
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.NumCellsArrayPath = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
-  inputValues.SurfaceAreaVolumeRatioArrayName = filterArgs.value<DataPath>(k_SurfaceAreaVolumeRatioArrayName_Key);
+  inputValues.SurfaceAreaVolumeRatioArrayName = inputValues.NumCellsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
   inputValues.CalculateSphericity = filterArgs.value<bool>(k_CalculateSphericity_Key);
-  inputValues.SphericityArrayName = filterArgs.value<DataPath>(k_SphericityArrayName_Key);
+  inputValues.SphericityArrayName = inputValues.NumCellsArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_SphericityArrayName_Key));
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   return FindSurfaceAreaToVolume(dataStructure, messageHandler, shouldCancel, &inputValues)();

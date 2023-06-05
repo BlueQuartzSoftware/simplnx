@@ -149,7 +149,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   auto pFunctionality = filterArgs.value<ChoicesParameter::ValueType>(k_Functionality_Key);
   if(pFunctionality != to_underlying(Functionality::Remove))
   {
-    DataPath tempPath({k_boundsName});
+    DataPath tempPath = pFlaggedFeaturesArrayPathValue.getParent().createChildPath(k_boundsName);
     auto action = std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{featureIds->getNumberOfTuples()}, std::vector<usize>{featureIds->getNumberOfComponents() * 6}, tempPath);
 
     // After the execute function has been done, delete the temp array
@@ -172,7 +172,7 @@ Result<> RemoveFlaggedFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometry_Key);
   inputValues.CreatedImageGeometryPrefix = filterArgs.value<std::string>(k_CreatedImageGeometryPrefix_Key);
-  inputValues.TempBoundsPath = DataPath({k_boundsName});
+  inputValues.TempBoundsPath = inputValues.FlaggedFeaturesArrayPath.getParent().createChildPath(k_boundsName);
 
   return RemoveFlaggedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

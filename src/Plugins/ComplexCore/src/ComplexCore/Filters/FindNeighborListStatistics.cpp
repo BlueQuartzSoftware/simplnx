@@ -4,8 +4,8 @@
 #include "complex/DataStructure/INeighborList.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Utilities/Math/StatisticsCalculations.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
@@ -167,47 +167,48 @@ OutputActions FindNeighborListStatistics::createCompatibleArrays(const DataStruc
   auto* inputArray = data.getDataAs<INeighborList>(inputArrayPath);
   std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
   DataType dataType = inputArray->getDataType();
+  const DataPath outputGroupPath = inputArrayPath.getParent();
 
   OutputActions actions;
   if(findLength)
   {
-    auto arrayPath = args.value<DataPath>(k_Length_Key);
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Length_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findMin)
   {
-    auto arrayPath = args.value<DataPath>(k_Minimum_Key);
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Minimum_Key));
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findMax)
   {
-    auto arrayPath = args.value<DataPath>(k_Maximum_Key);
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Maximum_Key));
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findMean)
   {
-    auto arrayPath = args.value<DataPath>(k_Mean_Key);
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Mean_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findMedian)
   {
-    auto arrayPath = args.value<DataPath>(k_Median_Key);
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Median_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findStdDeviation)
   {
-    auto arrayPath = args.value<DataPath>(k_StandardDeviation_Key);
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviation_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
   if(findSummation)
   {
-    auto arrayPath = args.value<DataPath>(k_Summation_Key);
+    auto arrayPath = outputGroupPath.createChildPath(args.value<std::string>(k_Summation_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, arrayPath);
     actions.actions.push_back(std::move(action));
   }
@@ -265,14 +266,13 @@ Parameters FindNeighborListStatistics::parameters() const
       std::make_unique<NeighborListSelectionParameter>(k_InputArray_Key, "NeighborList to Compute Statistics", "Input Data Array to compute statistics", DataPath(), complex::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Length_Key, "Length", "Path to create the Length array during calculations", DataPath({"Length"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Minimum_Key, "Minimum", "Path to create the Minimum array during calculations", DataPath({"Minimum"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Maximum_Key, "Maximum", "Path to create the Maximum array during calculations", DataPath({"Maximum"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Mean_Key, "Mean", "Path to create the Mean array during calculations", DataPath({"Mean"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Median_Key, "Median", "Path to create the Median array during calculations", DataPath({"Median"})));
-  params.insert(
-      std::make_unique<ArrayCreationParameter>(k_StandardDeviation_Key, "Standard Deviation", "Path to create the Standard Deviation array during calculations", DataPath({"StandardDeviation"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_Summation_Key, "Summation", "Path to create the Summation array during calculations", DataPath({"Summation"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_Length_Key, "Length", "Path to create the Length array during calculations", "Length"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_Minimum_Key, "Minimum", "Path to create the Minimum array during calculations", "Minimum"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_Maximum_Key, "Maximum", "Path to create the Maximum array during calculations", "Maximum"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_Mean_Key, "Mean", "Path to create the Mean array during calculations", "Mean"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_Median_Key, "Median", "Path to create the Median array during calculations", "Median"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_StandardDeviation_Key, "Standard Deviation", "Path to create the Standard Deviation array during calculations", "StandardDeviation"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_Summation_Key, "Summation", "Path to create the Summation array during calculations", "Summation"));
   return params;
 }
 
@@ -335,42 +335,43 @@ Result<> FindNeighborListStatistics::executeImpl(DataStructure& data, const Argu
 
   auto inputArrayPath = args.value<DataPath>(k_InputArray_Key);
   auto& inputArray = data.getDataRefAs<INeighborList>(inputArrayPath);
+  const DataPath outputGroupPath = inputArrayPath.getParent();
 
   std::vector<IDataArray*> arrays(7, nullptr);
 
   if(findLength)
   {
-    auto lengthPath = args.value<DataPath>(k_Length_Key);
+    auto lengthPath = outputGroupPath.createChildPath(args.value<std::string>(k_Length_Key));
     arrays[0] = data.getDataAs<IDataArray>(lengthPath);
   }
   if(findMin)
   {
-    auto minPath = args.value<DataPath>(k_Minimum_Key);
+    auto minPath = outputGroupPath.createChildPath(args.value<std::string>(k_Minimum_Key));
     arrays[1] = data.getDataAs<IDataArray>(minPath);
   }
   if(findMax)
   {
-    auto maxPath = args.value<DataPath>(k_Maximum_Key);
+    auto maxPath = outputGroupPath.createChildPath(args.value<std::string>(k_Maximum_Key));
     arrays[2] = data.getDataAs<IDataArray>(maxPath);
   }
   if(findMean)
   {
-    auto meanPath = args.value<DataPath>(k_Mean_Key);
+    auto meanPath = outputGroupPath.createChildPath(args.value<std::string>(k_Mean_Key));
     arrays[3] = data.getDataAs<IDataArray>(meanPath);
   }
   if(findMedian)
   {
-    auto medianPath = args.value<DataPath>(k_Median_Key);
+    auto medianPath = outputGroupPath.createChildPath(args.value<std::string>(k_Median_Key));
     arrays[4] = data.getDataAs<IDataArray>(medianPath);
   }
   if(findStdDeviation)
   {
-    auto stdDeviationPath = args.value<DataPath>(k_StandardDeviation_Key);
+    auto stdDeviationPath = outputGroupPath.createChildPath(args.value<std::string>(k_StandardDeviation_Key));
     arrays[5] = data.getDataAs<IDataArray>(stdDeviationPath);
   }
   if(findSummation)
   {
-    auto summationPath = args.value<DataPath>(k_Summation_Key);
+    auto summationPath = outputGroupPath.createChildPath(args.value<std::string>(k_Summation_Key));
     arrays[6] = data.getDataAs<IDataArray>(summationPath);
   }
 

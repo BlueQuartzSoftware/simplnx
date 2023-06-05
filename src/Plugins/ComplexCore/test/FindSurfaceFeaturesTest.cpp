@@ -13,13 +13,15 @@ using namespace complex;
 
 namespace
 {
+const std::string k_SurfaceFeatures("Surface Features");
+
 const DataPath k_FeatureGeometryPath({"Feature Geometry"});
-const DataPath k_FeatureIDsPath({"Feature IDs"});
-const DataPath k_SurfaceFeaturesExemplaryPath({"Surface Features Exemplary"});
-const DataPath k_SurfaceFeaturesArrayPath({"Surface Features"});
+const DataPath k_FeatureIDsPath = k_FeatureGeometryPath.createChildPath(ImageGeom::k_CellDataName).createChildPath("Feature IDs");
+const DataPath k_CellFeatureAMPath = k_FeatureGeometryPath.createChildPath(Constants::k_CellFeatureData);
+const DataPath k_SurfaceFeaturesExemplaryPath = k_CellFeatureAMPath.createChildPath("Surface Features Exemplary");
+const DataPath k_SurfaceFeaturesArrayPath = k_CellFeatureAMPath.createChildPath(k_SurfaceFeatures);
 const std::string k_FeatureIds2DFileName = "FindSurfaceFeaturesTest/FeatureIds_2D.raw";
 const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTest/SurfaceFeatures2D.raw";
-const std::string k_SurfaceFeatures("SurfaceFeatures");
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
@@ -31,9 +33,8 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   CreateImageGeometry cigFilter;
   cigArgs.insertOrAssign(CreateImageGeometry::k_GeometryDataPath_Key, std::make_any<DataPath>(k_FeatureGeometryPath));
   cigArgs.insertOrAssign(CreateImageGeometry::k_Dimensions_Key, geometryDims);
-
   auto result = cigFilter.execute(dataStructure, cigArgs);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  COMPLEX_RESULT_REQUIRE_VALID(result.result)
 
   RawBinaryReaderFilter rbrFilter;
   Arguments rbrArgs;
@@ -44,12 +45,19 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
 
   result = rbrFilter.execute(dataStructure, rbrArgs);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  COMPLEX_RESULT_REQUIRE_VALID(result.result)
 
   // Change Feature 470 to 0
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath));
   Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath);
   std::replace(featureIds.begin(), featureIds.end(), 470, 0);
+
+  // Create the cell feature attribute matrix
+  usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.begin(), featureIds.end()));
+  usize maxValue = featureIds[featureIdsMaxIdx];
+  auto imageGeomId = dataStructure.getId(k_FeatureGeometryPath);
+  REQUIRE(imageGeomId.has_value());
+  AttributeMatrix::Create(dataStructure, Constants::k_CellFeatureData, std::vector<usize>{maxValue + 1}, imageGeomId.value());
 
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_InputFile_Key, fs::path(unit_test::k_TestFilesDir.str()).append(exemplaryFileName));
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_ScalarType_Key, NumericType::int8);
@@ -57,21 +65,22 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
   rbrArgs.insertOrAssign(RawBinaryReaderFilter::k_CreatedAttributeArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesExemplaryPath));
 
   result = rbrFilter.execute(dataStructure, rbrArgs);
-  COMPLEX_RESULT_REQUIRE_VALID(result.result);
+  COMPLEX_RESULT_REQUIRE_VALID(result.result)
 
   // Create default Parameters for the filter.
   Arguments args;
   args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(k_FeatureGeometryPath));
   args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIDsPath));
-  args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(k_SurfaceFeaturesArrayPath));
+  args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeatureAMPath));
+  args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<std::string>(k_SurfaceFeaturesArrayPath.getTargetName()));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(k_SurfaceFeaturesArrayPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_SurfaceFeaturesExemplaryPath));
@@ -99,34 +108,31 @@ TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[Co
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1/6_5_test_data_1.dream3d", complex::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
-  DataPath smallIn100Group({complex::Constants::k_DataContainer});
-  DataPath cellDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData);
-  DataPath cellPhasesPath = cellDataPath.createChildPath(complex::Constants::k_Phases);
-  DataPath featureIdsPath = cellDataPath.createChildPath(complex::Constants::k_FeatureIds);
-  DataPath featurePhasesPath({complex::Constants::k_Phases});
-  DataPath computedSurfaceFeaturesPath({k_SurfaceFeatures});
+  const std::string k_SurfaceFeaturesExemplar("SurfaceFeatures");
+  DataPath computedSurfaceFeaturesPath = Constants::k_CellFeatureDataPath.createChildPath(k_SurfaceFeatures);
 
   {
     FindSurfaceFeatures filter;
     Arguments args;
 
-    args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
-    args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<DataPath>(computedSurfaceFeaturesPath));
+    args.insertOrAssign(FindSurfaceFeatures::k_FeatureGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Constants::k_FeatureIdsArrayPath));
+    args.insertOrAssign(FindSurfaceFeatures::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Constants::k_CellFeatureDataPath));
+    args.insertOrAssign(FindSurfaceFeatures::k_SurfaceFeaturesArrayPath_Key, std::make_any<std::string>(k_SurfaceFeatures));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(computedSurfaceFeaturesPath));
 
-    DataPath exemplaryDataPath = smallIn100Group.createChildPath("CellFeatureData").createChildPath(k_SurfaceFeatures);
+    DataPath exemplaryDataPath = Constants::k_CellFeatureDataPath.createChildPath(k_SurfaceFeaturesExemplar);
     const DataArray<bool>& featureArrayExemplary = dataStructure.getDataRefAs<DataArray<bool>>(exemplaryDataPath);
 
     const DataArray<bool>& createdFeatureArray = dataStructure.getDataRefAs<DataArray<bool>>(computedSurfaceFeaturesPath);

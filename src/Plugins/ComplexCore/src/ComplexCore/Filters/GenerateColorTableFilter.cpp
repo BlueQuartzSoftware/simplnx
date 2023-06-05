@@ -5,8 +5,8 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GenerateColorTableParameter.hpp"
 
 using namespace complex;
@@ -56,8 +56,8 @@ Parameters GenerateColorTableFilter::parameters() const
                                                           "The complete path to the data array from which to create the rgb array by applying the selected preset color scheme", DataPath{},
                                                           complex::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator({"Created Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(
-      k_RgbArrayPath_Key, "Output RGB Array", "The rgb array created by normalizing each element of the input array and converting to a color based on the selected preset color scheme", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(
+      k_RgbArrayPath_Key, "Output RGB Array", "The rgb array created by normalizing each element of the input array and converting to a color based on the selected preset color scheme", ""));
 
   return params;
 }
@@ -74,7 +74,7 @@ IFilter::PreflightResult GenerateColorTableFilter::preflightImpl(const DataStruc
 {
   auto pSelectedPresetValue = filterArgs.value<nlohmann::json>(k_SelectedPreset_Key);
   auto pSelectedDataArrayPathValue = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-  auto pRgbArrayPathValue = filterArgs.value<DataPath>(k_RgbArrayPath_Key);
+  auto pRgbArrayPathValue = pSelectedDataArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
 
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -94,7 +94,7 @@ Result<> GenerateColorTableFilter::executeImpl(DataStructure& dataStructure, con
 
   inputValues.SelectedPreset = filterArgs.value<nlohmann::json>(k_SelectedPreset_Key);
   inputValues.SelectedDataArrayPath = filterArgs.value<DataPath>(k_SelectedDataArrayPath_Key);
-  inputValues.RgbArrayPath = filterArgs.value<DataPath>(k_RgbArrayPath_Key);
+  inputValues.RgbArrayPath = inputValues.SelectedDataArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_RgbArrayPath_Key));
 
   return GenerateColorTable(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

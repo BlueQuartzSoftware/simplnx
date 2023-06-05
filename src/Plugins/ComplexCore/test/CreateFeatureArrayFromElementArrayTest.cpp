@@ -22,9 +22,8 @@ void testElementArray(const DataPath& cellDataPath)
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({complex::Constants::k_DataContainer});
 
-  DataPath featureDataGroupPath = smallIn100Group.createChildPath(k_Computed_CellData);
   {
-    DataGroup* computedFeatureData = DataGroup::Create(dataStructure, k_Computed_CellData, dataStructure.getId(smallIn100Group));
+    auto* computedFeatureData = AttributeMatrix::Create(dataStructure, k_Computed_CellData, std::vector<usize>{81}, dataStructure.getId(smallIn100Group));
   }
 
   DataPath featureIdsDataPath = smallIn100Group.createChildPath(complex::Constants::k_CellData).createChildPath(k_FeatureIDs);
@@ -38,7 +37,8 @@ void testElementArray(const DataPath& cellDataPath)
     // Create default Parameters for the filter.
     args.insertOrAssign(CreateFeatureArrayFromElementArray::k_SelectedCellArrayPath_Key, std::make_any<DataPath>(cellDataPath));
     args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
-    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<DataPath>(computedFeatureArrayPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(computedFeatureGroupPath));
+    args.insertOrAssign(CreateFeatureArrayFromElementArray::k_CreatedArrayName_Key, std::make_any<std::string>(cellDataPath.getTargetName()));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

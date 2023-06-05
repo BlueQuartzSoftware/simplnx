@@ -2,11 +2,12 @@
 
 #include "Algorithms/FindNeighborhoods.hpp"
 
+#include "complex/DataStructure/AttributeMatrix.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateNeighborListAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
@@ -68,12 +69,12 @@ Parameters FindNeighborhoodsFilter::parameters() const
                                                           DataPath({"CellFeatureData", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods",
-                                                         "Number of Features that have their centroid within the user specified multiple of equivalent sphere diameters from each Feature",
-                                                         DataPath({"CellFeatureData", "Neighborhoods"})));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_NeighborhoodListArrayName_Key, "NeighborhoodList",
-                                                         "List of the Features whose centroids are within the user specified multiple of equivalent sphere diameter from each Feature",
-                                                         DataPath({"CellFeatureData", "NeighborhoodList"})));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodsArrayName_Key, "Neighborhoods",
+                                                          "Number of Features that have their centroid within the user specified multiple of equivalent sphere diameters from each Feature",
+                                                          "Neighborhoods"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborhoodListArrayName_Key, "NeighborhoodList",
+                                                          "List of the Features whose centroids are within the user specified multiple of equivalent sphere diameter from each Feature",
+                                                          "NeighborhoodList"));
 
   return params;
 }
@@ -92,29 +93,39 @@ IFilter::PreflightResult FindNeighborhoodsFilter::preflightImpl(const DataStruct
   auto pEquivalentDiametersArrayPathValue = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pCentroidsArrayPathValue = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  auto pNeighborhoodsArrayNameValue = filterArgs.value<DataPath>(k_NeighborhoodsArrayName_Key);
-  auto pNeighborhoodListArrayNameValue = filterArgs.value<DataPath>(k_NeighborhoodListArrayName_Key);
+  auto pNeighborhoodsArrayNameValue = filterArgs.value<std::string>(k_NeighborhoodsArrayName_Key);
+  auto pNeighborhoodListArrayNameValue = filterArgs.value<std::string>(k_NeighborhoodListArrayName_Key);
 
   PreflightResult preflightResult;
 
   complex::Result<OutputActions> resultOutputActions;
 
   // Get the Feature Phases Array and get its TupleShape
-  const auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);
-  if(nullptr == featurePhases)
+  if(!dataStructure.validateNumberOfTuples({pEquivalentDiametersArrayPathValue, pFeaturePhasesArrayPathValue, pCentroidsArrayPathValue}))
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{-12801, "Feature Phases Data Array is not of the correct type"}})};
+    return MakePreflightErrorResult(-5730, fmt::format("One or more of the selected input feature data arrays (equivalent diameters, phases, and centroids) has mismatching tuples. Make sure you "
+                                                       "select the input arrays from the cell feature attribute matrix."));
+  }
+  const auto* cellFeatureData = dataStructure.getDataAs<AttributeMatrix>(pFeaturePhasesArrayPathValue.getParent());
+  if(cellFeatureData == nullptr)
+  {
+    return MakePreflightErrorResult(
+        -5731,
+        fmt::format(
+            "The selected input feature data arrays (equivalent diameters, phases, and centroids) are not located in an attribute matrix. Make sure you have selected the input arrays located in the "
+            "cell feature attribute matrix of the selected geometry"));
   }
 
-  IDataStore::ShapeType tupleShape = featurePhases->getIDataStore()->getTupleShape();
   // Create the Neighborhoods Array in the Feature Attribute Matrix
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{1ULL}, pNeighborhoodsArrayNameValue);
+    auto action = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatureData->getShape(), std::vector<usize>{1ULL},
+                                                      pFeaturePhasesArrayPathValue.getParent().createChildPath(pNeighborhoodsArrayNameValue));
     resultOutputActions.value().actions.push_back(std::move(action));
   }
   // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, featurePhases->getNumberOfTuples(), pNeighborhoodListArrayNameValue);
+    auto action =
+        std::make_unique<CreateNeighborListAction>(DataType::int32, cellFeatureData->getNumTuples(), pFeaturePhasesArrayPathValue.getParent().createChildPath(pNeighborhoodListArrayNameValue));
     resultOutputActions.value().actions.push_back(std::move(action));
   }
 
@@ -134,8 +145,8 @@ Result<> FindNeighborhoodsFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.EquivalentDiametersArrayPath = filterArgs.value<DataPath>(k_EquivalentDiametersArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.CentroidsArrayPath = filterArgs.value<DataPath>(k_CentroidsArrayPath_Key);
-  inputValues.NeighborhoodsArrayName = filterArgs.value<DataPath>(k_NeighborhoodsArrayName_Key);
-  inputValues.NeighborhoodListArrayName = filterArgs.value<DataPath>(k_NeighborhoodListArrayName_Key);
+  inputValues.NeighborhoodsArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NeighborhoodsArrayName_Key));
+  inputValues.NeighborhoodListArrayName = inputValues.FeaturePhasesArrayPath.getParent().createChildPath(filterArgs.value<std::string>(k_NeighborhoodListArrayName_Key));
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   return FindNeighborhoods(dataStructure, messageHandler, shouldCancel, &inputValues)();

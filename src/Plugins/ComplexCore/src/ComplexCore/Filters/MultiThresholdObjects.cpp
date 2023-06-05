@@ -2,8 +2,8 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Utilities/ArrayThreshold.hpp"
 #include "complex/Utilities/FilterUtilities.hpp"
 
@@ -11,9 +11,6 @@ namespace complex
 {
 namespace
 {
-constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
-constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
-
 constexpr int64 k_PathNotFoundError = -178;
 
 class ThresholdFilterHelper
@@ -309,7 +306,7 @@ Parameters MultiThresholdObjects::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(
       std::make_unique<ArrayThresholdsParameter>(k_ArrayThresholds_Key, "Data Thresholds", "DataArray thresholds to mask", ArrayThresholdSet{}, ArrayThresholdsParameter::AllowedComponentShapes{{1}}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedDataPath_Key, "Mask Array", "DataPath to the created Mask Array", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CreatedDataPath_Key, "Mask Array", "DataPath to the created Mask Array", "Mask"));
   return params;
 }
 
@@ -323,13 +320,13 @@ IFilter::UniquePointer MultiThresholdObjects::clone() const
 IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholds_Key);
-  auto maskArrayPath = args.value<DataPath>(k_CreatedDataPath_Key);
+  auto maskArrayName = args.value<std::string>(k_CreatedDataPath_Key);
 
   auto thresholdPaths = thresholdsObject.getRequiredPaths();
   // If the paths are empty just return now.
   if(thresholdPaths.empty())
   {
-    return {};
+    return MakePreflightErrorResult(-4000, "No data arrays were found for calculating threshold");
   }
 
   for(const auto& path : thresholdPaths)
@@ -348,7 +345,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     if(currentDataArray != nullptr && currentDataArray->getNumberOfComponents() != 1)
     {
       auto errorMessage = fmt::format("Data Array is not a Scalar Data Array. Data Arrays must only have a single component. '{}:{}'", dataPath.toString(), currentDataArray->getNumberOfComponents());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4000, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-4001, errorMessage}})};
     }
   }
 
@@ -364,12 +361,13 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     {
       auto errorMessage =
           fmt::format("Data Arrays do not have same equal number of tuples. '{}:{}' and '{}'", firstDataPath.toString(), numTuples, dataPath.toString(), currentDataArray->getNumberOfTuples());
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4001, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-4002, errorMessage}})};
     }
   }
 
   // Create the output boolean array
-  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, maskArrayPath, dataArray->getDataFormat());
+  auto action = std::make_unique<CreateArrayAction>(DataType::boolean, dataArray->getIDataStore()->getTupleShape(), std::vector<usize>{1}, firstDataPath.getParent().createChildPath(maskArrayName),
+                                                    dataArray->getDataFormat());
 
   OutputActions actions;
   actions.actions.push_back(std::move(action));
@@ -382,10 +380,10 @@ Result<> MultiThresholdObjects::executeImpl(DataStructure& dataStructure, const 
                                             const std::atomic_bool& shouldCancel) const
 {
   auto thresholdsObject = args.value<ArrayThresholdSet>(k_ArrayThresholds_Key);
-  auto maskArrayPath = args.value<DataPath>(k_CreatedDataPath_Key);
+  auto maskArrayName = args.value<std::string>(k_CreatedDataPath_Key);
 
   bool firstValueFound = false;
-
+  DataPath maskArrayPath = (*thresholdsObject.getRequiredPaths().begin()).getParent().createChildPath(maskArrayName);
   int32_t err = 0;
   ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
   for(const std::shared_ptr<IArrayThreshold>& threshold : thresholdSet)
