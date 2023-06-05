@@ -57,6 +57,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindFeatureCentroidsFilterTest.cpp
   FindFeatureClusteringTest.cpp
   FindFeaturePhasesFilterTest.cpp
+  FindFeaturePhasesBinaryTest.cpp
   FindLargestCrossSectionsTest.cpp
   FindNeighborhoodsTest.cpp
   FindNeighborListStatisticsTest.cpp
