@@ -81,6 +81,11 @@ public:
 
   ~BoundingBox() = default;
 
+  BoundingBox(const BoundingBox& boundingBox) = default;
+  BoundingBox(BoundingBox&& boundingBox) noexcept = default;
+  BoundingBox& operator=(const BoundingBox& boundingBox) = default;
+  BoundingBox& operator=(BoundingBox&& boundingBox) noexcept = default;
+
   /**
    * @brief Returns the Min point
    * @return
@@ -149,20 +154,6 @@ public:
     }
     return valid;
   }
-
-  /**
-   * @brief Copy assignment operator
-   * @param rhs
-   * @return BoundingBox&
-   */
-  BoundingBox& operator=(const BoundingBox& rhs) = default;
-
-  /**
-   * @brief Move assignment operator
-   * @param rhs
-   * @return BoundingBox&
-   */
-  BoundingBox& operator=(BoundingBox&& rhs) noexcept = default;
 
   /**
    * @brief Equality operator

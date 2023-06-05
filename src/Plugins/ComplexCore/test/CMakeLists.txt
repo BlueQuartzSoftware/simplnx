@@ -91,6 +91,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
   RawBinaryReaderTest.cpp
+  RegularGridSampleSurfaceMeshTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedVerticesTest.cpp
   RemoveMinimumSizeFeaturesTest.cpp
@@ -108,6 +109,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   TriangleCentroidTest.cpp
   TriangleDihedralAngleFilterTest.cpp
   TriangleNormalFilterTest.cpp
+  UncertainRegularGridSampleSurfaceMeshTest.cpp
   VtkRectilinearGridWriterTest.cpp
   WriteASCIIDataTest.cpp
   WriteBinaryDataTest.cpp
@@ -194,6 +196,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_avizo_writers.tar.gz SHA512 f776eb5c86e06bde0fb1ee76dbdf95e4fd1457697033b2c639cac376db3ba0b05410ed4074fb10a47dd26ef79c78a02b5bb77c04cfe1299e8a33d8b3bff09749)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_vtk_rectilinear_grid_writer.tar.gz SHA512 a9ebe208ac5ab6d0df4f416130e54ac5642f7f57b43a025d093b7bc1c8e680c69501fc32c079e38ed4ba4197d07352124fe317e11f3c517311ae83867aca0c44 )
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d.tar.gz SHA512 6dd8a3412532bdc7481f7781c7087b4477c6a1efbe6b214f997dad30c53c59714a751be522f084b98065fe75100c74df901bb8af2f512ef47344d8f7941575cf )
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_sample_surface_mesh.tar.gz SHA512 b1eec1127d125303a4757a482a7fd4b6c0e42241f01f8afabec9a15dc1ffa6d732afc11b4623aaf81c7a9e53de59423ef4bbc470710c31fe9a5c61916bdf544e)
 
 endif()
 
