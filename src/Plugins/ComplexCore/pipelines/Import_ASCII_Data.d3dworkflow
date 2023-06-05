@@ -56,20 +56,28 @@
   ],
   "workflowParams": [
     {
-      "filterNum": 0,
-      "paramNum": 1
+      "filterIndex": 0,
+      "filterUuid": "c4320659-1a84-461d-939e-c7c10229a504",
+      "paramUuid": "bff2d4ac-04a6-5251-b188-4f83f7865074",
+      "paramName": "geometry_data_path"
     },
     {
-      "filterNum": 1,
-      "paramNum": 0
+      "filterIndex": 1,
+      "filterUuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4",
+      "paramUuid": "f9a93f3d-21ef-43a1-a958-e57cbf3b2909",
+      "paramName": "input_file"
     },
     {
-      "filterNum": 1,
-      "paramNum": 1
+      "filterIndex": 1,
+      "filterUuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4",
+      "paramUuid": "a8ff9dbd-45e7-4ed6-8537-12dd53069bce",
+      "paramName": "scalar_type"
     },
     {
-      "filterNum": 1,
-      "paramNum": 2
+      "filterIndex": 1,
+      "filterUuid": "25f7df3e-ca3e-4634-adda-732c0e56efd4",
+      "paramUuid": "36d91b23-5500-4ed4-bdf3-d680f54ee5d1",
+      "paramName": "n_comp"
     }
   ]
 }

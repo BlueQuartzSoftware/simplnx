@@ -3,12 +3,16 @@
   "name": "ReplaceElementAttributesWithNeighbor.d3dpipeline",
   "pinnedParams": [
     {
-      "filterNum": 5,
-      "paramNum": 1
+      "filterIndex": 5,
+      "filterUuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2",
+      "paramUuid": "17309744-c4e8-4d1e-807e-e7012387f1ec",
+      "paramName": "min_voxel"
     },
     {
-      "filterNum": 5,
-      "paramNum": 2
+      "filterIndex": 5,
+      "filterUuid": "e6476737-4aa7-48ba-a702-3dfab82c96e2",
+      "paramUuid": "17309744-c4e8-4d1e-807e-e7012387f1ec",
+      "paramName": "max_voxel"
     }
   ],
   "pipeline": [
