@@ -485,9 +485,7 @@ char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
 template <typename T>
 char RayIntersectsTriangle(const Ray<T>& ray, const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2)
 {
-  char code = '?';
-
-  code = RayIntersectsPlane(ray, p0, p1, p2);
+  char code = RayIntersectsPlane(ray, p0, p1, p2);
 
   if(code == '0')
   {
@@ -531,7 +529,6 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
                          const complex::BoundingBox3D<T>& bounds, T radius)
 {
   usize iter = 0, crossings = 0;
-  char code = '?';
 
   //* If query point is outside bounding box, finished. */
   if(!IsPointInBox(point, bounds))
@@ -543,7 +540,7 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
   std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
   std::mt19937_64::result_type seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   generator.seed(seed);
-  std::uniform_real_distribution<T> distribution(0.0, Constants::k_PiD);
+  std::uniform_real_distribution<T> distribution(0.0, 1.0);
 
   usize numFaces = faceIds.size();
   while(iter++ < numFaces)
@@ -551,9 +548,14 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
     crossings = 0;
 
     std::array<T, 3> eulerAngles;
-    eulerAngles[0] = (2 * distribution(generator)) - Constants::k_PiD;
-    eulerAngles[1] = distribution(generator);
-    eulerAngles[2] = (2 * distribution(generator)) - Constants::k_PiD;
+    float rand1 = distribution(generator);
+    float rand2 = distribution(generator);
+
+    eulerAngles[2] = (2.0f * rand1) - 1.0f;
+    float t = Constants::k_2PiF * rand2;
+    float w = std::sqrt(1.0f - (eulerAngles[2] * eulerAngles[2]));
+    eulerAngles[0] = w * std::cos(t);
+    eulerAngles[1] = w * std::sin(t);
 
     // Generate and add ray to point to find other end
     Ray<T> ray(point, ZXZEuler(eulerAngles.data()), radius);
@@ -561,6 +563,7 @@ char IsPointInPolyhedron(const complex::TriangleGeom& faces, const std::vector<i
     bool doNextCheck = false;
     for(usize face = 0; face < numFaces; face++)
     {
+      char code = '?';
       if(!DoesRayIntersectBox(ray, faceBBs[faceIds[face]]))
       {
         code = '0';
