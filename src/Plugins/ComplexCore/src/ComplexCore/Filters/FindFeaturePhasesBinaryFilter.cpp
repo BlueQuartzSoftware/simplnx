@@ -3,8 +3,9 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Utilities/DataArrayUtilities.hpp"
 
 using namespace complex;
@@ -48,15 +49,16 @@ Parameters FindFeaturePhasesBinaryFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Required Input Data Objects"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "Data Array that specifies to which Feature each Cell belongs", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "Data Array that specifies if the Cell is to be counted in the algorithm", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellDataAMPath_Key, "Cell Data Attribute Matrix",
+                                                                    "The Cell Data Attribute Matrix within the Image Geometry where the Binary Phases Array will be created", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Created Cell Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "", DataPath{}));
-
-  params.insertSeparator(Parameters::Separator{"Created Ensemble Data Objects"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellEnsembleAttributeMatrixName_Key, "Cell Ensemble Attribute Matrix", "", DataPath{}));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeaturePhasesArrayName_Key, "Binary Feature Phases Array Name", "Created Data Array name to specify to which Ensemble each Feature belongs",
+                                                          "Binary Phases Array"));
 
   return params;
 }
@@ -71,16 +73,17 @@ IFilter::UniquePointer FindFeaturePhasesBinaryFilter::clone() const
 IFilter::PreflightResult FindFeaturePhasesBinaryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                       const std::atomic_bool& shouldCancel) const
 {
-  auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixName_Key);
+  auto pCellDataAMPathValue = filterArgs.value<DataPath>(k_CellDataAMPath_Key);
+  auto pFeaturePhasesArrayNameValue = filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  auto cellDataAM = dataStructure.getDataAs<AttributeMatrix>(pCellDataAMPathValue);
   {
-     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{NUM_TUPLES_VALUE}, NUM_COMPONENTS, pFeaturePhasesArrayPathValue);
-     resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, cellDataAM->getShape(), std::vector<usize>{1}, pCellDataAMPathValue.createChildPath(pFeaturePhasesArrayNameValue));
+    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
@@ -92,9 +95,9 @@ Result<> FindFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure
                                                     const std::atomic_bool& shouldCancel) const
 {
   auto featureIdsArray = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key));
-  auto featurePhasesArray = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key));
+  auto featurePhasesArray = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_CellDataAMPath_Key).createChildPath(k_FeaturePhasesArrayName_Key));
 
-  std::unique_ptr<MaskCompare> goodVoxelsMask = nullptr;
+  std::unique_ptr<MaskCompare> goodVoxelsMask;
   try
   {
     goodVoxelsMask = InstantiateMaskCompare(dataStructure, filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key));

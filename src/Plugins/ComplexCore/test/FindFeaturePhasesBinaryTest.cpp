@@ -5,24 +5,30 @@
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::FindFeaturePhasesBinaryFilter: Valid Filter Execution", "[ComplexCore][FindFeaturePhasesBinaryFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
+{
+const std::string k_BinaryFeaturePhasesName = "BinaryFeaturePhases";
+}
+
+TEST_CASE("ComplexCore::FindFeaturePhasesBinaryFilter: Valid Filter Execution", "[ComplexCore][FindFeaturePhasesBinaryFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindFeaturePhasesBinaryFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
   args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_CellDataAMPath_Key, std::make_any<DataPath>(DataPath{}));
+
+  args.insertOrAssign(FindFeaturePhasesBinaryFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_BinaryFeaturePhasesName));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
