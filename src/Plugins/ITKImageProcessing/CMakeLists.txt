@@ -70,10 +70,7 @@ set(FilterList
     ITKImageReader
     ITKImageWriter
     ITKImportImageStack
-
-    ITKDiscreteGaussianImage
     ITKMedianImage
-    ITKRescaleIntensityImage
     )
 
 # ------------------------------------------------------------------------------
@@ -88,54 +85,25 @@ if(NOT ITKImageProcessing_LeanAndMean)
     ITKAsinImage
     ITKAtanImage
     ITKBinaryContourImage
-    ITKBinaryDilateImage
-    ITKBinaryErodeImage
     ITKBinaryMorphologicalClosingImage
-    ITKBinaryMorphologicalOpeningImage
-    ITKBinaryOpeningByReconstructionImage
-    ITKBinaryProjectionImage
-    ITKBinaryThinningImage
     ITKBinaryThresholdImage
-    ITKBlackTopHatImage
     ITKClosingByReconstructionImage
     ITKCosImage
-    ITKDilateObjectMorphologyImage
-    ITKErodeObjectMorphologyImage
-    ITKExpImage
-    ITKExpNegativeImage
     ITKGradientMagnitudeImage
-    ITKGrayscaleDilateImage
-    ITKGrayscaleErodeImage
     ITKGrayscaleFillholeImage
-    ITKGrayscaleGrindPeakImage
-    ITKGrayscaleMorphologicalClosingImage
-    ITKGrayscaleMorphologicalOpeningImage
-    ITKHConvexImage
-    ITKHMaximaImage
-    ITKHMinimaImage
-    ITKIntensityWindowingImage
     ITKInvertIntensityImage
-    ITKLabelContourImage
     ITKLog10Image
     ITKLogImage
     ITKMaskImage
-    ITKMorphologicalGradientImage
     ITKMorphologicalWatershedImage
     ITKNormalizeImage
-    ITKNotImage
     ITKOpeningByReconstructionImage
     ITKOtsuMultipleThresholdsImage
-    ITKRelabelComponentImage
-    ITKSigmoidImage
     ITKSignedMaurerDistanceMapImage
     ITKSinImage
     ITKSqrtImage
-    ITKSquareImage
     ITKTanImage
-    ITKThresholdImage
-    ITKValuedRegionalMaximaImage
-    ITKValuedRegionalMinimaImage
-    ITKWhiteTopHatImage
+
 
       # -----------------------------------------------------------------------------
       # These filters only work on Scalar inputs
