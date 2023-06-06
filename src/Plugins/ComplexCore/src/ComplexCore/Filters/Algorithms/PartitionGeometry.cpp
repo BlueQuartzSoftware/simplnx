@@ -168,24 +168,25 @@ Result<> PartitionGeometry::operator()()
 {
   auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
 
-  DataPath psGeometryPath;
-  if(partitioningMode == PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme)
+  DataPath partitionGridGeomPath;
+  if(partitioningMode == PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
   {
-    psGeometryPath = m_InputValues->ExistingPartitioningSchemePath;
+    partitionGridGeomPath = m_InputValues->ExistingPartitionGridPath;
   }
   else
   {
-    psGeometryPath = m_InputValues->PSGeometryPath;
-    const DataPath psPartitionIdsPath = m_InputValues->PSGeometryPath.createChildPath(m_InputValues->PSGeometryAMName).createChildPath(m_InputValues->PSGeometryDataArrayName);
-    auto& psPartitionIds = m_DataStructure.getDataRefAs<Int32Array>({psPartitionIdsPath});
+    partitionGridGeomPath = m_InputValues->PartitionGridGeomPath;
+    const DataPath partitionGridFeatureIdsPath =
+        m_InputValues->PartitionGridGeomPath.createChildPath(m_InputValues->PartitionGridCellAMName).createChildPath(m_InputValues->PartitionGridFeatureIDsArrayName);
+    auto& partitionGridFeatureIds = m_DataStructure.getDataRefAs<Int32Array>({partitionGridFeatureIdsPath});
 
-    for(usize i = 0; i < psPartitionIds.getNumberOfTuples(); i++)
+    for(usize i = 0; i < partitionGridFeatureIds.getNumberOfTuples(); i++)
     {
-      psPartitionIds[i] = static_cast<int32>(i) + m_InputValues->StartingPartitionID;
+      partitionGridFeatureIds[i] = static_cast<int32>(i) + m_InputValues->StartingFeatureID;
     }
   }
 
-  const ImageGeom& psImageGeom = m_DataStructure.getDataRefAs<ImageGeom>({psGeometryPath});
+  const ImageGeom& partitionGridGeom = m_DataStructure.getDataRefAs<ImageGeom>({partitionGridGeomPath});
 
   std::optional<BoolArray> vertexMask = {};
   if(m_InputValues->UseVertexMask)
@@ -193,21 +194,21 @@ Result<> PartitionGeometry::operator()()
     vertexMask = m_DataStructure.getDataRefAs<BoolArray>({m_InputValues->VertexMaskPath});
   }
 
-  const DataPath partitionIdsPath = m_InputValues->AttributeMatrixPath.createChildPath(m_InputValues->PartitionIdsArrayName);
+  const DataPath partitionIdsPath = m_InputValues->InputGeomCellAMPath.createChildPath(m_InputValues->PartitionIdsArrayName);
   auto& partitionIds = m_DataStructure.getDataRefAs<Int32Array>({partitionIdsPath});
 
-  const IGeometry& iGeom = m_DataStructure.getDataRefAs<IGeometry>({m_InputValues->GeometryToPartition});
+  const IGeometry& iGeomToPartition = m_DataStructure.getDataRefAs<IGeometry>({m_InputValues->InputGeometryToPartition});
   Result<> result;
-  switch(iGeom.getGeomType())
+  switch(iGeomToPartition.getGeomType())
   {
   case IGeometry::Type::Image: {
-    const ImageGeom& geometry = m_DataStructure.getDataRefAs<ImageGeom>({m_InputValues->GeometryToPartition});
-    result = partitionCellBasedGeometry(geometry, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue);
+    const ImageGeom& inputGeomToPartition = m_DataStructure.getDataRefAs<ImageGeom>({m_InputValues->InputGeometryToPartition});
+    result = partitionCellBasedGeometry(inputGeomToPartition, partitionIds, partitionGridGeom, m_InputValues->OutOfBoundsFeatureID);
     break;
   }
   case IGeometry::Type::RectGrid: {
-    const RectGridGeom& geometry = m_DataStructure.getDataRefAs<RectGridGeom>({m_InputValues->GeometryToPartition});
-    result = partitionCellBasedGeometry(geometry, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue);
+    const RectGridGeom& inputGeomToPartition = m_DataStructure.getDataRefAs<RectGridGeom>({m_InputValues->InputGeometryToPartition});
+    result = partitionCellBasedGeometry(inputGeomToPartition, partitionIds, partitionGridGeom, m_InputValues->OutOfBoundsFeatureID);
     break;
   }
   case IGeometry::Type::Vertex:
@@ -216,9 +217,9 @@ Result<> PartitionGeometry::operator()()
   case IGeometry::Type::Quad:
   case IGeometry::Type::Tetrahedral:
   case IGeometry::Type::Hexahedral: {
-    const INodeGeometry0D& geometry = m_DataStructure.getDataRefAs<INodeGeometry0D>({m_InputValues->GeometryToPartition});
-    const IGeometry::SharedVertexList* vertexList = geometry.getVertices();
-    result = partitionNodeBasedGeometry(*vertexList, partitionIds, psImageGeom, m_InputValues->OutOfBoundsValue, vertexMask);
+    const INodeGeometry0D& inputGeomToPartition = m_DataStructure.getDataRefAs<INodeGeometry0D>({m_InputValues->InputGeometryToPartition});
+    const IGeometry::SharedVertexList* vertexList = inputGeomToPartition.getVertices();
+    result = partitionNodeBasedGeometry(*vertexList, partitionIds, partitionGridGeom, m_InputValues->OutOfBoundsFeatureID, vertexMask);
     break;
   }
   default: {
@@ -243,7 +244,7 @@ Result<> PartitionGeometry::partitionCellBasedGeometry(const IGridGeometry& inpu
 
   ParallelData3DAlgorithm dataAlg;
   dataAlg.setRange(dims[0], dims[1], dims[2]);
-  dataAlg.execute(PartitionCellBasedGeometryImpl(inputGeometry, partitionIds, psImageGeom, m_InputValues->StartingPartitionID, outOfBoundsValue, m_ShouldCancel));
+  dataAlg.execute(PartitionCellBasedGeometryImpl(inputGeometry, partitionIds, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, m_ShouldCancel));
 
   return {};
 }
@@ -257,7 +258,7 @@ Result<> PartitionGeometry::partitionNodeBasedGeometry(const IGeometry::SharedVe
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, vertexList.getNumberOfTuples());
-  dataAlg.execute(PartitionNodeBasedGeometryImpl(vertexList, partitionIds, psImageGeom, m_InputValues->StartingPartitionID, outOfBoundsValue, maskArrayOpt, m_ShouldCancel));
+  dataAlg.execute(PartitionNodeBasedGeometryImpl(vertexList, partitionIds, psImageGeom, m_InputValues->StartingFeatureID, outOfBoundsValue, maskArrayOpt, m_ShouldCancel));
 
   return {};
 }
