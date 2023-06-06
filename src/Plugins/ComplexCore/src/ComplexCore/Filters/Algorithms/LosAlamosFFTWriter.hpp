@@ -10,19 +10,6 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  LosAlamosFFTWriterInputValues inputValues;
-
-  inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-
-  return LosAlamosFFTWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 
@@ -32,7 +19,7 @@ struct COMPLEXCORE_EXPORT LosAlamosFFTWriterInputValues
   DataPath FeatureIdsArrayPath;
   DataPath CellEulerAnglesArrayPath;
   DataPath CellPhasesArrayPath;
-
+  DataPath ImageGeomPath;
 };
 
 /**
