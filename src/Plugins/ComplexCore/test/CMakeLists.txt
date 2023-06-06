@@ -83,6 +83,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
   LaplacianSmoothingFilterTest.cpp
+  LosAlamosFFTWriterTest.cpp
   MultiThresholdObjectsTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp

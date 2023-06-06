@@ -84,6 +84,7 @@ set(FilterList
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
   LaplacianSmoothingFilter
+  LosAlamosFFTWriterFilter
   MapPointCloudToRegularGridFilter
   MinNeighbors
   MoveData
@@ -163,6 +164,7 @@ set(AlgorithmList
   ImportVolumeGraphicsFile
   ImportBinaryCTNorthstar
   LaplacianSmoothing
+  LosAlamosFFTWriter
   NearestPointFuseRegularGrids
   PartitionGeometry
   PointSampleTriangleGeometry
