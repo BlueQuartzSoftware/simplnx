@@ -80,21 +80,27 @@ BoundingBox3Df INodeGeometry0D::getBoundingBox() const
     return {ll, ur}; // will be invalid
   }
 
-  auto& vertexListStore = vertexList.getIDataStoreRefAs<const DataStore<float32>>();
-
-  for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
+  try
   {
-    float x = vertexListStore.getComponentValue(tuple, 0);
-    ll[0] = (x < ll[0]) ? x : ll[0];
-    ur[0] = (x > ur[0]) ? x : ur[0];
+    auto& vertexListStore = vertexList.getIDataStoreRefAs<const DataStore<float32>>();
 
-    float y = vertexListStore.getComponentValue(tuple, 1);
-    ll[1] = (y < ll[1]) ? y : ll[1];
-    ur[1] = (y > ur[1]) ? y : ur[1];
+    for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
+    {
+      float x = vertexListStore.getComponentValue(tuple, 0);
+      ll[0] = (x < ll[0]) ? x : ll[0];
+      ur[0] = (x > ur[0]) ? x : ur[0];
 
-    float z = vertexListStore.getComponentValue(tuple, 2);
-    ll[2] = (z < ll[2]) ? z : ll[2];
-    ur[2] = (z > ur[2]) ? z : ur[2];
+      float y = vertexListStore.getComponentValue(tuple, 1);
+      ll[1] = (y < ll[1]) ? y : ll[1];
+      ur[1] = (y > ur[1]) ? y : ur[1];
+
+      float z = vertexListStore.getComponentValue(tuple, 2);
+      ll[2] = (z < ll[2]) ? z : ll[2];
+      ur[2] = (z > ur[2]) ? z : ur[2];
+    }
+  } catch(std::bad_cast ex)
+  {
+    return {ll, ur}; // will be invalid
   }
 
   return {ll, ur}; // should be valid

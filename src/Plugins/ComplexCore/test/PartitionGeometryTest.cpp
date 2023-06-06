@@ -57,10 +57,10 @@ Arguments createBasicPartitionGeometryArguments(const DataPath& inputGeometryPat
 {
   Arguments args;
   args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::Basic));
-  args.insert(PartitionGeometryFilter::k_NumberOfPartitionsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
-  args.insert(PartitionGeometryFilter::k_AttributeMatrixPath_Key, attrMatrixPath);
+  args.insert(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
+  args.insert(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, attrMatrixPath);
   args.insert(PartitionGeometryFilter::k_PartitionIdsArrayName_Key, partitionIdsArrayName);
-  args.insert(PartitionGeometryFilter::k_GeometryToPartition_Key, inputGeometryPath);
+  args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
 
   if(maskArrayPath.has_value())
   {
@@ -77,12 +77,12 @@ Arguments createAdvancedPartitionGeometryArguments(const DataPath& inputGeometry
 {
   Arguments args;
   args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::Advanced));
-  args.insert(PartitionGeometryFilter::k_NumberOfPartitionsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
-  args.insert(PartitionGeometryFilter::k_PartitioningSchemeOrigin_Key, std::vector<float>{partitioningSchemeOrigin.getX(), partitioningSchemeOrigin.getY(), partitioningSchemeOrigin.getZ()});
-  args.insert(PartitionGeometryFilter::k_LengthPerPartition_Key, std::vector<float>{lengthPerPartition.getX(), lengthPerPartition.getY(), lengthPerPartition.getZ()});
-  args.insert(PartitionGeometryFilter::k_AttributeMatrixPath_Key, attrMatrixPath);
+  args.insert(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
+  args.insert(PartitionGeometryFilter::k_PartitionGridOrigin_Key, std::vector<float>{partitioningSchemeOrigin.getX(), partitioningSchemeOrigin.getY(), partitioningSchemeOrigin.getZ()});
+  args.insert(PartitionGeometryFilter::k_CellLength_Key, std::vector<float>{lengthPerPartition.getX(), lengthPerPartition.getY(), lengthPerPartition.getZ()});
+  args.insert(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, attrMatrixPath);
   args.insert(PartitionGeometryFilter::k_PartitionIdsArrayName_Key, partitionIdsArrayName);
-  args.insert(PartitionGeometryFilter::k_GeometryToPartition_Key, inputGeometryPath);
+  args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
   return args;
 }
 
@@ -92,12 +92,12 @@ Arguments createBoundingBoxPartitionGeometryArguments(const DataPath& inputGeome
 {
   Arguments args;
   args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::BoundingBox));
-  args.insert(PartitionGeometryFilter::k_NumberOfPartitionsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
-  args.insert(PartitionGeometryFilter::k_LowerLeftCoord_Key, std::vector<float>{lowerLeftCoord.getX(), lowerLeftCoord.getY(), lowerLeftCoord.getZ()});
-  args.insert(PartitionGeometryFilter::k_UpperRightCoord_Key, std::vector<float>{upperRightCoord.getX(), upperRightCoord.getY(), upperRightCoord.getZ()});
-  args.insert(PartitionGeometryFilter::k_AttributeMatrixPath_Key, attrMatrixPath);
+  args.insert(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key, std::vector<int32>{numOfPartitionsPerAxis.getX(), numOfPartitionsPerAxis.getY(), numOfPartitionsPerAxis.getZ()});
+  args.insert(PartitionGeometryFilter::k_MinGridCoord_Key, std::vector<float>{lowerLeftCoord.getX(), lowerLeftCoord.getY(), lowerLeftCoord.getZ()});
+  args.insert(PartitionGeometryFilter::k_MaxGridCoord_Key, std::vector<float>{upperRightCoord.getX(), upperRightCoord.getY(), upperRightCoord.getZ()});
+  args.insert(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, attrMatrixPath);
   args.insert(PartitionGeometryFilter::k_PartitionIdsArrayName_Key, partitionIdsArrayName);
-  args.insert(PartitionGeometryFilter::k_GeometryToPartition_Key, inputGeometryPath);
+  args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
 
   return args;
 }
@@ -106,11 +106,11 @@ Arguments createBoundingBoxPartitionGeometryArguments(const DataPath& inputGeome
 Arguments createExistingPartitioningSchemeGeometryArguments(const DataPath& inputGeometryPath, const DataPath& attrMatrixPath, const std::string& partitionIdsArrayName, const DataPath& existingPSPath)
 {
   Arguments args;
-  args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::ExistingPartitioningScheme));
-  args.insert(PartitionGeometryFilter::k_AttributeMatrixPath_Key, attrMatrixPath);
+  args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid));
+  args.insert(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key, attrMatrixPath);
   args.insert(PartitionGeometryFilter::k_PartitionIdsArrayName_Key, partitionIdsArrayName);
-  args.insert(PartitionGeometryFilter::k_ExistingPartitioningSchemePath_Key, existingPSPath);
-  args.insert(PartitionGeometryFilter::k_GeometryToPartition_Key, inputGeometryPath);
+  args.insert(PartitionGeometryFilter::k_ExistingPartitionGridPath_Key, existingPSPath);
+  args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
   return args;
 }
 } // namespace
@@ -547,7 +547,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
   executeResult = filter.execute(dataStructure, partitionGeometryArgs);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const auto attrMatrixPath = partitionGeometryArgs.value<DataPath>(PartitionGeometryFilter::k_AttributeMatrixPath_Key);
+  const auto attrMatrixPath = partitionGeometryArgs.value<DataPath>(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key);
 
   const Int32Array& partitionIds = dataStructure.getDataRefAs<Int32Array>(attrMatrixPath.createChildPath(partitionIdsArrayName));
   const Int32Array& exemplaryPartitionIds = dataStructure.getDataRefAs<Int32Array>(attrMatrixPath.createChildPath(exemplaryArrayName));

@@ -16,20 +16,20 @@ namespace complex
 struct COMPLEXCORE_EXPORT PartitionGeometryInputValues
 {
   ChoicesParameter::ValueType PartitioningMode;
-  int32 StartingPartitionID;
-  int32 OutOfBoundsValue;
-  VectorInt32Parameter::ValueType NumberOfPartitionsPerAxis;
-  VectorFloat32Parameter::ValueType PartitioningSchemeOrigin;
-  VectorFloat32Parameter::ValueType LengthPerPartition;
-  VectorFloat32Parameter::ValueType LowerLeftCoord;
-  VectorFloat32Parameter::ValueType UpperRightCoord;
-  DataPath AttributeMatrixPath;
-  DataPath PSGeometryPath;
-  std::string PSGeometryAMName;
-  std::string PSGeometryDataArrayName;
-  DataPath GeometryToPartition;
+  int32 StartingFeatureID;
+  int32 OutOfBoundsFeatureID;
+  VectorInt32Parameter::ValueType NumberOfCellsPerAxis;
+  VectorFloat32Parameter::ValueType PartitionGridOrigin;
+  VectorFloat32Parameter::ValueType CellLength;
+  VectorFloat32Parameter::ValueType MinGridCoord;
+  VectorFloat32Parameter::ValueType MaxGridCoord;
+  DataPath InputGeomCellAMPath;
+  DataPath PartitionGridGeomPath;
+  std::string PartitionGridCellAMName;
+  std::string PartitionGridFeatureIDsArrayName;
+  DataPath InputGeometryToPartition;
   std::string PartitionIdsArrayName;
-  DataPath ExistingPartitioningSchemePath;
+  DataPath ExistingPartitionGridPath;
   bool UseVertexMask;
   DataPath VertexMaskPath;
   std::string FeatureAttrMatrixName;
