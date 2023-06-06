@@ -20,21 +20,20 @@
  * and report errors.
  */
 
-
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include "ComplexCore/Filters/LosAlamosFFTWriterFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/LosAlamosFFTWriterFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: Valid Filter Execution","[ComplexCore][LosAlamosFFTWriterFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: Valid Filter Execution", "[ComplexCore][LosAlamosFFTWriterFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   LosAlamosFFTWriterFilter filter;
@@ -47,7 +46,6 @@ TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: Valid Filter Execution","[Comp
   args.insertOrAssign(LosAlamosFFTWriterFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(LosAlamosFFTWriterFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
 
-
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
   REQUIRE(preflightResult.outputActions.valid());
@@ -57,7 +55,7 @@ TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: Valid Filter Execution","[Comp
   REQUIRE(executeResult.result.valid());
 }
 
-//TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: InValid Filter Execution")
+// TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: InValid Filter Execution")
 //{
 //
-//}
+// }
