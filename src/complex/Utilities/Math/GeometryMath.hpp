@@ -269,10 +269,10 @@ bool IsPointInTriangle3D(const complex::Point3D<T>& p0, const complex::Point3D<T
  * @param p1
  * @param p2
  * @param point
- * @return bool
+ * @return char
  */
 template <typename T>
-bool IsPointInTriangle(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
+char IsPointInTriangle(const complex::Point3D<T>& p0, const complex::Point3D<T>& p1, const complex::Point3D<T>& p2, const complex::Point3D<T>& point)
 {
   T area0 = FindTriangleArea(point, p0, p1);
   T area1 = FindTriangleArea(point, p1, p2);
