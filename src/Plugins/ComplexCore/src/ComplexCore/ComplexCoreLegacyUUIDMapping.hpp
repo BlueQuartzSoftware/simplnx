@@ -108,6 +108,7 @@
 #include "ComplexCore/Filters/UncertainRegularGridSampleSurfaceMeshFilter.hpp"
 #include "ComplexCore/Filters/FindBoundaryElementFractionsFilter.hpp"
 #include "ComplexCore/Filters/ReverseTriangleWindingFilter.hpp"
+#include "ComplexCore/Filters/LosAlamosFFTWriterFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -225,6 +226,7 @@ namespace complex
     {complex::Uuid::FromString("75cfeb9b-cd4b-5a20-a344-4170b39bbfaf").value(), complex::FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid}, // UncertainRegularGridSampleSurfaceMesh
     {complex::Uuid::FromString("6357243e-41a6-52c4-be2d-2f6894c39fcc").value(), complex::FilterTraits<FindBoundaryElementFractionsFilter>::uuid}, // FindBoundaryElementFractions
     {complex::Uuid::FromString("9b9fb9e1-074d-54b6-a6ce-0be21ab4496d").value(), complex::FilterTraits<ReverseTriangleWindingFilter>::uuid}, // ReverseTriangleWinding
+    {complex::Uuid::FromString("158ebe9e-f772-57e2-ac1b-71ff213cf890").value(), complex::FilterTraits<LosAlamosFFTWriterFilter>::uuid}, // LosAlamosFFTWriter
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
