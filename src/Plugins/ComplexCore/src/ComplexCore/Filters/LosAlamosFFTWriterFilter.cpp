@@ -63,8 +63,10 @@ Parameters LosAlamosFFTWriterFilter::parameters() const
    */
 
   // Create the parameter descriptors that are needed for this filter
-  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
-  params.insertSeparator(Parameters::Separator{"Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insert(std::make_unique<FileSystemPathParameter>(k_OutputFile_Key, "Output File", "", fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
+
+  params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Feature Ids", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Phases", "", DataPath{}, complex::GetAllDataTypes() /* This will allow ANY data type. Adjust as necessary for your filter*/));
@@ -84,6 +86,17 @@ IFilter::PreflightResult LosAlamosFFTWriterFilter::preflightImpl(const DataStruc
   /****************************************************************************
    * Write any preflight sanity checking codes in this function
    ***************************************************************************/
+
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+//  QFileInfo fi(getOutputFile());
+//  QDir parentPath(fi.path());
+//  if(!parentPath.mkpath("."))
+//  {
+//    QString ss = QObject::tr("Error creating parent path '%1'").arg(parentPath.absolutePath());
+//    setErrorCondition(-1, ss);
+//    return -1;
+//  }
 
   /**
    * These are the values that were gathered from the UI or the pipeline file or
