@@ -6,6 +6,8 @@ IO (Output)
 
 ## Description
 
+This **Filter** will create the directories along the path to the file if possible.
+
 This **Filter** writes out **CellData** from an **Image Geometry** to a file that is appropriate to use as an input into Ricardo Lebensohn's FFT 3D simulation codes<sup>[1]</sup>.
 
 The format of the file is an ASCII text file with the following space delimited information:

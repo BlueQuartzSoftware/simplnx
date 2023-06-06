@@ -3,6 +3,7 @@
 #include "complex/Common/Constants.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <fstream>
 
@@ -38,6 +39,14 @@ Result<> LosAlamosFFTWriter::operator()()
   /**
    * Header print function was unimplemented in original filter so it was omitted here and condensed to just the writeFile() function
    */
+
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  Result<> createDirectoriesResult = complex::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  if(createDirectoriesResult.invalid())
+  {
+    return createDirectoriesResult;
+  }
 
   std::ofstream file = std::ofstream(m_InputValues->OutputFile, std::ios_base::out);
   if(file.is_open())
