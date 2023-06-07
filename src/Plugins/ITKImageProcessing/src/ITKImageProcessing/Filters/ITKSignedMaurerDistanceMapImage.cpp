@@ -5,6 +5,7 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
@@ -76,21 +77,22 @@ Parameters ITKSignedMaurerDistanceMapImage::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Filter Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<BoolParameter>(k_InsideIsPositive_Key, "InsideIsPositive",
                                                 "Set if the inside represents positive values in the signed distance map. By convention ON pixels are treated as inside pixels.", false));
   params.insert(std::make_unique<BoolParameter>(k_SquaredDistance_Key, "SquaredDistance", "Set if the distance should be squared.", true));
   params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "UseImageSpacing", "Set if image spacing should be used in computing distances", false));
   params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "BackgroundValue", "Set the background value which defines the object. Usually this value is = 0.", 0.0));
 
-  params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
                                                           complex::ITK::GetIntegerScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -107,7 +109,8 @@ IFilter::PreflightResult ITKSignedMaurerDistanceMapImage::preflightImpl(const Da
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
   auto insideIsPositive = filterArgs.value<bool>(k_InsideIsPositive_Key);
   auto squaredDistance = filterArgs.value<bool>(k_SquaredDistance_Key);
   auto useImageSpacing = filterArgs.value<bool>(k_UseImageSpacing_Key);
@@ -125,7 +128,8 @@ Result<> ITKSignedMaurerDistanceMapImage::executeImpl(DataStructure& dataStructu
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   auto insideIsPositive = filterArgs.value<bool>(k_InsideIsPositive_Key);
   auto squaredDistance = filterArgs.value<bool>(k_SquaredDistance_Key);

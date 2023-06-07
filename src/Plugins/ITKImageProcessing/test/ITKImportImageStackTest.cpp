@@ -1,15 +1,12 @@
 #include <catch2/catch.hpp>
 
 #include "ITKImageProcessing/Filters/ITKImportImageStack.hpp"
+#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
+#include "ITKTestBase.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
-
-#include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
-
-#include "ITKTestBase.hpp"
-
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -154,6 +151,6 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStack: CompareImage", "[ITKImagePro
   const auto* imageData = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
   REQUIRE(imageData != nullptr);
 
-  std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
+  const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
   REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
 }

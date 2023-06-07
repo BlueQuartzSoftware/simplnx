@@ -5,6 +5,7 @@
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -77,7 +78,7 @@ Parameters ITKAdaptiveHistogramEqualizationImage::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Filter Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Radius_Key, "Radius", "Radius Dimensions XYZ", std::vector<float>(3, 5.0F), std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(std::make_unique<Float32Parameter>(k_Alpha_Key, "Alpha",
@@ -85,14 +86,15 @@ Parameters ITKAdaptiveHistogramEqualizationImage::parameters() const
   params.insert(std::make_unique<Float32Parameter>(
       k_Beta_Key, "Beta", "Set/Get the value of beta. If beta = 1 (and alpha = 1), then the output image matches the input image. As beta approaches 0, the filter behaves as an unsharp mask.", 0.3f));
 
-  params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
                                                           complex::ITK::GetScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -109,7 +111,8 @@ IFilter::PreflightResult ITKAdaptiveHistogramEqualizationImage::preflightImpl(co
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
   auto radius = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Radius_Key);
 
   auto alpha = filterArgs.value<float32>(k_Alpha_Key);
@@ -126,7 +129,8 @@ Result<> ITKAdaptiveHistogramEqualizationImage::executeImpl(DataStructure& dataS
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   auto radius = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Radius_Key);
 
