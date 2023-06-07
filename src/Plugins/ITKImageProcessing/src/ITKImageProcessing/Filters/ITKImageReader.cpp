@@ -4,14 +4,12 @@
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
@@ -68,62 +66,27 @@ struct ReadImageIntoArrayFunctor
 template <class T, usize Dimension, class FunctorT, class... ArgsT>
 Result<> ReadImageByPixelType(const itk::ImageIOBase& imageIO, ArgsT&&... args)
 {
-  itk::IOPixelEnum pixel = imageIO.GetPixelType();
+  const uint32 numComponents = imageIO.GetNumberOfComponents();
 
-  switch(pixel)
+  switch(numComponents)
   {
-  case itk::IOPixelEnum::SCALAR:
-    return FunctorT().template operator()<T, Dimension>(std::forward<ArgsT>(args)...);
-  case itk::IOPixelEnum::RGBA: {
-    return FunctorT().template operator()<itk::RGBAPixel<T>, Dimension>(std::forward<ArgsT>(args)...);
+  case 1: {
+    return FunctorT().template operator()<itk::Vector<T, 1>, Dimension>(std::forward<ArgsT>(args)...);
   }
-  case itk::IOPixelEnum::RGB: {
-    return FunctorT().template operator()<itk::RGBPixel<T>, Dimension>(std::forward<ArgsT>(args)...);
+  case 2: {
+    return FunctorT().template operator()<itk::Vector<T, 2>, Dimension>(std::forward<ArgsT>(args)...);
   }
-  case itk::IOPixelEnum::VECTOR: {
-    uint32 numComponents = imageIO.GetNumberOfComponents();
-    switch(numComponents)
-    {
-    case 2: {
-      return FunctorT().template operator()<itk::Vector<T, 2>, Dimension>(std::forward<ArgsT>(args)...);
-    }
-    case 3: {
-      return FunctorT().template operator()<itk::Vector<T, 3>, Dimension>(std::forward<ArgsT>(args)...);
-    }
-    case 36: {
-      return FunctorT().template operator()<itk::Vector<T, 36>, Dimension>(std::forward<ArgsT>(args)...);
-    }
-    default: {
-      return MakeErrorResult(-4, fmt::format("Unsupported number of components: {}", numComponents));
-    }
-    }
+  case 3: {
+    return FunctorT().template operator()<itk::Vector<T, 3>, Dimension>(std::forward<ArgsT>(args)...);
   }
-  case itk::IOPixelEnum::UNKNOWNPIXELTYPE: {
-    [[fallthrough]];
+  case 4: {
+    return FunctorT().template operator()<itk::Vector<T, 4>, Dimension>(std::forward<ArgsT>(args)...);
   }
-  case itk::IOPixelEnum::POINT: {
-    [[fallthrough]];
-  }
-  case itk::IOPixelEnum::COVARIANTVECTOR: {
-    [[fallthrough]];
-  }
-  case itk::IOPixelEnum::SYMMETRICSECONDRANKTENSOR: {
-    [[fallthrough]];
-  }
-  case itk::IOPixelEnum::DIFFUSIONTENSOR3D: {
-    [[fallthrough]];
-  }
-  case itk::IOPixelEnum::COMPLEX: {
-    [[fallthrough]];
-  }
-  case itk::IOPixelEnum::FIXEDARRAY: {
-    [[fallthrough]];
-  }
-  case itk::IOPixelEnum::MATRIX: {
-    [[fallthrough]];
+  case 36: {
+    return FunctorT().template operator()<itk::Vector<T, 36>, Dimension>(std::forward<ArgsT>(args)...);
   }
   default: {
-    return MakeErrorResult(-4, fmt::format("Unsupported pixel type: {}", itk::ImageIOBase::GetPixelTypeAsString(pixel)));
+    return MakeErrorResult(-4, fmt::format("Unsupported number of components: {} in image file. 1,2,3,4,36 are the only supported number of components", numComponents));
   }
   }
 }
