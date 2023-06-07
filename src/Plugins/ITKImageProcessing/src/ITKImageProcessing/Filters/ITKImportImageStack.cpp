@@ -8,16 +8,12 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeneratedFileListParameter.hpp"
-#include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Utilities/FilterUtilities.hpp"
 
 #include <itkImageFileReader.h>
 #include <itkImageIOBase.h>
@@ -63,8 +59,8 @@ const FilterHandle k_RotateSampleRefFrameFilterHandle(k_RotateSampleRefFrameFilt
 // Make sure we can instantiate the RotateSampleRefFrame Filter
 std::unique_ptr<IFilter> CreateRotateSampleRefFrameFilter()
 {
-  auto* filterList = Application::Instance()->getFilterList();
-  auto filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
+  auto* filterListPtr = Application::Instance()->getFilterList();
+  auto filter = filterListPtr->createFilter(k_RotateSampleRefFrameFilterHandle);
   return filter;
 }
 
@@ -79,7 +75,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   SizeVec3 dims = imageGeom.getDimensions();
-  usize tuplesPerSlice = dims[0] * dims[1];
+  const usize tuplesPerSlice = dims[0] * dims[1];
 
   auto& outputData = dataStructure.getDataRefAs<DataArray<T>>(imageDataPath);
   auto& outputDataStore = outputData.getDataStoreRef();
@@ -99,7 +95,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     {
       // Create a sub-filter to read each image, although for preflight we are going to read the first image in the
       // list and hope the rest are correct.
-      ITKImageReader imageReader;
+      const ITKImageReader imageReader;
 
       Arguments args;
       args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageGeomPath));
@@ -173,7 +169,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     }
 
     // Compute the Tuple Index we are at:
-    usize tupleIndex = (slice * dims[0] * dims[1]);
+    const usize tupleIndex = (slice * dims[0] * dims[1]);
     // get the current Slice data...
     const auto& tempData = importedDataStructure.getDataRefAs<DataArray<T>>(imageDataPath);
     const auto& tempDataStore = tempData.getDataStoreRef();
@@ -296,7 +292,7 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   imageReaderArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataPath));
   imageReaderArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(files.at(0)));
 
-  ITKImageReader imageReader;
+  const ITKImageReader imageReader;
   PreflightResult imageReaderResult = imageReader.preflight(dataStructure, imageReaderArgs, messageHandler);
   if(imageReaderResult.outputActions.invalid())
   {
@@ -305,31 +301,31 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
 
   // The first output actions should be the geometry creation
   // A better solution might be to extract the preflight code into a common function for both filters
-  const IDataAction* action0 = imageReaderResult.outputActions.value().actions.at(0).get();
-  const auto* createImageGeomAction = dynamic_cast<const CreateImageGeometryAction*>(action0);
-  if(createImageGeomAction == nullptr)
+  const IDataAction* action0Ptr = imageReaderResult.outputActions.value().actions.at(0).get();
+  const auto* createImageGeomActionPtr = dynamic_cast<const CreateImageGeometryAction*>(action0Ptr);
+  if(createImageGeomActionPtr == nullptr)
   {
     throw std::runtime_error("ITKImportImageStack: Expected CreateImageGeometryAction at index 0");
   }
 
   // The second action should be the array creation
-  const IDataAction* action1 = imageReaderResult.outputActions.value().actions.at(1).get();
-  const auto* createArrayAction = dynamic_cast<const CreateArrayAction*>(action1);
-  if(createArrayAction == nullptr)
+  const IDataAction* action1Ptr = imageReaderResult.outputActions.value().actions.at(1).get();
+  const auto* createArrayActionPtr = dynamic_cast<const CreateArrayAction*>(action1Ptr);
+  if(createArrayActionPtr == nullptr)
   {
     throw std::runtime_error("ITKImportImageStack: Expected CreateArrayAction at index 1");
   }
 
   // X Y Z
-  auto dims = createImageGeomAction->dims();
+  auto dims = createImageGeomActionPtr->dims();
   dims.back() = files.size();
 
   // Z Y X
-  std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
+  const std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
 
   OutputActions outputActions;
   outputActions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing), cellDataName));
-  outputActions.actions.push_back(std::make_unique<CreateArrayAction>(createArrayAction->type(), arrayDims, createArrayAction->componentDims(), imageDataPath));
+  outputActions.actions.push_back(std::make_unique<CreateArrayAction>(createArrayActionPtr->type(), arrayDims, createArrayActionPtr->componentDims(), imageDataPath));
 
   return {std::move(outputActions)};
 }
@@ -352,11 +348,11 @@ Result<> ITKImportImageStack::executeImpl(DataStructure& dataStructure, const Ar
 
   const std::string& firstFile = files.at(0);
 
-  itk::ImageIOBase::Pointer imageIO = itk::ImageIOFactory::CreateImageIO(firstFile.c_str(), itk::ImageIOFactory::IOFileModeEnum::ReadMode);
+  const itk::ImageIOBase::Pointer imageIO = itk::ImageIOFactory::CreateImageIO(firstFile.c_str(), itk::ImageIOFactory::IOFileModeEnum::ReadMode);
   imageIO->SetFileName(firstFile.c_str());
   imageIO->ReadImageInformation();
 
-  itk::ImageIOBase::IOComponentEnum component = imageIO->GetComponentType();
+  const itk::ImageIOBase::IOComponentEnum component = imageIO->GetComponentType();
 
   std::optional<NumericType> numericType = ITK::ConvertIOComponentToNumericType(component);
   if(!numericType.has_value())
