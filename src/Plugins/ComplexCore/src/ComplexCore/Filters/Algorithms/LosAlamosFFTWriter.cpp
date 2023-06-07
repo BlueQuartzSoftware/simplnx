@@ -56,9 +56,9 @@ Result<> LosAlamosFFTWriter::operator()()
 
   SizeVec3 dims = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeomPath)->getDimensions();
 
-  auto cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  auto cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
+  auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
   float phi1 = 0.0f, phi = 0.0f, phi2 = 0.0f;
 
