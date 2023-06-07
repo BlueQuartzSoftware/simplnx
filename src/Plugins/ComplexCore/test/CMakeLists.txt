@@ -52,6 +52,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindArrayStatisticsTest.cpp
   FindBiasedFeaturesTest.cpp
   FindBoundaryCellsTest.cpp
+  FindBoundaryElementFractionsTest.cpp
   FindDifferencesMapTest.cpp
   FindEuclideanDistMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
