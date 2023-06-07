@@ -1,61 +1,77 @@
-/**
- * This file is auto generated from the original ComplexCore/LosAlamosFFTWriterFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[LosAlamosFFTWriterFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
 #include <catch2/catch.hpp>
 
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
-
-#include <filesystem>
-namespace fs = std::filesystem;
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/LosAlamosFFTWriterFilter.hpp"
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
 using namespace complex;
 
-TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: Valid Filter Execution", "[ComplexCore][LosAlamosFFTWriterFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  LosAlamosFFTWriterFilter filter;
-  DataStructure ds;
-  Arguments args;
+const fs::path exemplarFilePath = fs::path(fmt::format("{}/bin_feature_phases/LosAlamosFFTExemplar.txt", unit_test::k_TestFilesDir));
+const fs::path writtenFilePath = fs::path(fmt::format("{}/bin_feature_phases/LosAlamosFFT.txt", unit_test::k_BinaryTestOutputDir));
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(LosAlamosFFTWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(LosAlamosFFTWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(LosAlamosFFTWriterFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(LosAlamosFFTWriterFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+std::vector<char> readIn(fs::path filePath)
+{
+  std::ifstream file(filePath.string(), std::ios_base::binary);
 
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  if(file)
+  {
+    // get file size
+    file.seekg(0, std::ios::end);
+    std::streampos length = file.tellg();
+    file.seekg(0, std::ios::beg);
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+    // read whole file into a vector
+    std::vector<char> contents(length); // act as a buffer
+    file.read(contents.data(), length);
+
+    // build string from psuedo-buffer
+    return contents;
+  }
+  return {};
 }
 
-// TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: InValid Filter Execution")
-//{
-//
-// }
+void CompareResults() // compare hash of both file strings
+{
+  REQUIRE(fs::exists(writtenFilePath));
+  REQUIRE(fs::exists(exemplarFilePath));
+  REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
+}
+}
+
+TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: Valid Filter Execution", "[ComplexCore][LosAlamosFFTWriterFilter]")
+{
+  // Utilize the 6.6 Binary Feature Phases test file to conserve space
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/bin_feature_phases/6_6_find_feature_phases_binary.dream3d", unit_test::k_TestFilesDir)));
+
+  {
+    // Instantiate the filter and an Arguments Object
+    LosAlamosFFTWriterFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(LosAlamosFFTWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(writtenFilePath));
+
+    args.insertOrAssign(LosAlamosFFTWriterFilter::k_ImageGeomPath, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100})));
+    args.insertOrAssign(LosAlamosFFTWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
+    args.insertOrAssign(LosAlamosFFTWriterFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
+    args.insertOrAssign(LosAlamosFFTWriterFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "BinaryPhases"})));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  ::CompareResults();
+}
