@@ -44,6 +44,7 @@
 #include "ComplexCore/Filters/FindEuclideanDistMapFilter.hpp"
 #include "ComplexCore/Filters/FindFeatureCentroidsFilter.hpp"
 #include "ComplexCore/Filters/FindFeaturePhasesFilter.hpp"
+#include "ComplexCore/Filters/FindFeaturePhasesBinaryFilter.hpp"
 #include "ComplexCore/Filters/FindNeighborhoodsFilter.hpp"
 #include "ComplexCore/Filters/FindNeighborListStatistics.hpp"
 #include "ComplexCore/Filters/FindNeighbors.hpp"
@@ -146,6 +147,7 @@ namespace complex
     {complex::Uuid::FromString("933e4b2d-dd61-51c3-98be-00548ba783a3").value(), complex::FilterTraits<FindEuclideanDistMapFilter>::uuid}, // FindEuclideanDistMap
     {complex::Uuid::FromString("6f8ca36f-2995-5bd3-8672-6b0b80d5b2ca").value(), complex::FilterTraits<FindFeatureCentroidsFilter>::uuid}, // FindFeatureCentroids
     {complex::Uuid::FromString("6334ce16-cea5-5643-83b5-9573805873fa").value(), complex::FilterTraits<FindFeaturePhasesFilter>::uuid}, // FindFeaturePhases
+    {complex::Uuid::FromString("64d20c7b-697c-5ff1-9d1d-8a27b071f363").value(), complex::FilterTraits<FindFeaturePhasesBinaryFilter>::uuid}, // FindFeaturePhasesBinary
     {complex::Uuid::FromString("697ed3de-db33-5dd1-a64b-04fb71e7d63e").value(), complex::FilterTraits<FindNeighborhoodsFilter>::uuid}, // FindNeighborhoods
     {complex::Uuid::FromString("73ee33b6-7622-5004-8b88-4d145514fb6a").value(), complex::FilterTraits<FindNeighborListStatistics>::uuid}, // FindNeighborListStatistics
     {complex::Uuid::FromString("97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac").value(), complex::FilterTraits<FindNeighbors>::uuid}, // FindNeighbors
