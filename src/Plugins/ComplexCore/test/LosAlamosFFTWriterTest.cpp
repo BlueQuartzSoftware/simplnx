@@ -14,8 +14,8 @@ using namespace complex;
 
 namespace
 {
-const fs::path exemplarFilePath = fs::path(fmt::format("{}/bin_feature_phases/LosAlamosFFTExemplar.txt", unit_test::k_TestFilesDir));
-const fs::path writtenFilePath = fs::path(fmt::format("{}/bin_feature_phases/LosAlamosFFT.txt", unit_test::k_BinaryTestOutputDir));
+const fs::path exemplarFilePath = fs::path(fmt::format("{}/LosAlamosFFTExemplar.txt", unit_test::k_TestFilesDir));
+const fs::path writtenFilePath = fs::path(fmt::format("{}/LosAlamosFFT.txt", unit_test::k_BinaryTestOutputDir));
 
 std::vector<char> readIn(fs::path filePath)
 {
@@ -44,7 +44,7 @@ void CompareResults() // compare hash of both file strings
   REQUIRE(fs::exists(exemplarFilePath));
   REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
 }
-}
+} // namespace
 
 TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: Valid Filter Execution", "[ComplexCore][LosAlamosFFTWriterFilter]")
 {
