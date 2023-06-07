@@ -58,6 +58,7 @@ set(FilterList
   FindFeatureCentroidsFilter
   FindFeatureClusteringFilter
   FindFeaturePhasesFilter
+  FindFeaturePhasesBinaryFilter
   FindLargestCrossSectionsFilter
   FindNeighborhoodsFilter
   FindNeighborListStatistics
