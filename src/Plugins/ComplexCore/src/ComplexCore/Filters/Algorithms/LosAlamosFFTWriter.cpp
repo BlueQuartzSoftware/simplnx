@@ -49,7 +49,7 @@ Result<> LosAlamosFFTWriter::operator()()
   }
 
   std::ofstream file = std::ofstream(m_InputValues->OutputFile, std::ios_base::out);
-  if(file.is_open())
+  if(!file.is_open())
   {
     return MakeErrorResult(-73450, fmt::format("Error creating and opening output file at path: {}", m_InputValues->OutputFile.string()));
   }
