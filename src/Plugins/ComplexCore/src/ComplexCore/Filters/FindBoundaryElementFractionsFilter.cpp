@@ -102,23 +102,23 @@ Result<> FindBoundaryElementFractionsFilter::executeImpl(DataStructure& dataStru
       dataStructure.getDataRefAs<Int8Array>(filterArgs.value<DataPath>(k_FeatureDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_BoundaryCellFractionsArrayName_Key)));
 
   usize totalPoints = featureIds.getNumberOfTuples();
-  usize numfeatures = boundaryCellFractions.getNumberOfTuples();
+  usize numFeatures = boundaryCellFractions.getNumberOfTuples();
 
-  std::vector<float32> surfvoxcounts(numfeatures, 0);
-  std::vector<float32> voxcounts(numfeatures, 0);
+  std::vector<float32> surfVoxCounts(numFeatures, 0);
+  std::vector<float32> voxCounts(numFeatures, 0);
 
   for(usize j = 0; j < totalPoints; j++)
   {
     int32 gnum = featureIds[j];
-    voxcounts[gnum]++;
+    voxCounts[gnum]++;
     if(boundaryCells[j] > 0)
     {
-      surfvoxcounts[gnum]++;
+      surfVoxCounts[gnum]++;
     }
   }
-  for(usize i = 1; i < numfeatures; i++)
+  for(usize i = 1; i < numFeatures; i++)
   {
-    boundaryCellFractions[i] = surfvoxcounts[i] / voxcounts[i];
+    boundaryCellFractions[i] = surfVoxCounts[i] / voxCounts[i];
   }
   return {};
 }
