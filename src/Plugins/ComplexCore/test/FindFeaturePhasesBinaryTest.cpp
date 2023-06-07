@@ -12,7 +12,7 @@ namespace
 const std::string k_BinaryFeaturePhasesName = "BinaryFeaturePhases";
 
 const DataPath k_ExemplarArray = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "BinaryPhases"});
-const DataPath k_GenereatedArray = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_BinaryFeaturePhasesName});
+const DataPath k_GeneratedArray = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, k_BinaryFeaturePhasesName});
 } // namespace
 
 TEST_CASE("ComplexCore::FindFeaturePhasesBinaryFilter: Valid Filter Execution", "[ComplexCore][FindFeaturePhasesBinaryFilter]")
@@ -40,5 +40,5 @@ TEST_CASE("ComplexCore::FindFeaturePhasesBinaryFilter: Valid Filter Execution", 
     REQUIRE(executeResult.result.valid());
   }
 
-  UnitTest::CompareArrays<int32>(dataStructure, k_ExemplarArray, k_GenereatedArray);
+  UnitTest::CompareArrays<int32>(dataStructure, k_ExemplarArray, k_GeneratedArray);
 }

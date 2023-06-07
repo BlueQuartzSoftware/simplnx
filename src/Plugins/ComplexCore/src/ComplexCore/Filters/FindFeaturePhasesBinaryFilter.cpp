@@ -95,7 +95,7 @@ Result<> FindFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure
                                                     const std::atomic_bool& shouldCancel) const
 {
   auto featureIdsArray = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key));
-  auto featurePhasesArray = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_CellDataAMPath_Key).createChildPath(k_FeaturePhasesArrayName_Key));
+  auto featurePhasesArray = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_CellDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key)));
 
   std::unique_ptr<MaskCompare> goodVoxelsMask;
   try
