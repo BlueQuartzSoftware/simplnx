@@ -6,6 +6,7 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/NumberParameter.hpp"
 
@@ -75,7 +76,7 @@ Parameters ITKMorphologicalWatershedImage::parameters() const
 {
   Parameters params;
 
-  params.insertSeparator(Parameters::Separator{"Filter Parameters"});
+  params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<Float64Parameter>(k_Level_Key, "Level", "", 0.0));
   params.insert(std::make_unique<BoolParameter>(k_MarkWatershedLine_Key, "MarkWatershedLine",
                                                 "Whether the watershed pixel must be marked or not. Set it to false do not only avoid writing watershed pixels, it also decrease algorithm complexity.",
@@ -84,14 +85,15 @@ Parameters ITKMorphologicalWatershedImage::parameters() const
       k_FullyConnected_Key, "FullyConnected",
       "Whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. For objects that are 1 pixel wide, use FullyConnectedOn.", false));
 
-  params.insertSeparator(Parameters::Separator{"Input Data Structure Items"});
+  params.insertSeparator(Parameters::Separator{"Required Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SelectedImageDataPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{},
                                                           complex::ITK::GetScalarPixelAllowedTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Created Data Structure Items"});
-  params.insert(std::make_unique<ArrayCreationParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", DataPath{}));
+  params.insertSeparator(Parameters::Separator{"Created Cell Data"});
+  params.insert(
+      std::make_unique<DataObjectNameParameter>(k_OutputImageDataPath_Key, "Output Image Data Array", "The result of the processing will be stored in this Data Array.", "Output Image Data"));
 
   return params;
 }
@@ -108,7 +110,8 @@ IFilter::PreflightResult ITKMorphologicalWatershedImage::preflightImpl(const Dat
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
   auto level = filterArgs.value<float64>(k_Level_Key);
   auto markWatershedLine = filterArgs.value<bool>(k_MarkWatershedLine_Key);
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
@@ -125,7 +128,8 @@ Result<> ITKMorphologicalWatershedImage::executeImpl(DataStructure& dataStructur
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_SelectedImageDataPath_Key);
-  auto outputArrayPath = filterArgs.value<DataPath>(k_OutputImageDataPath_Key);
+  auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageDataPath_Key);
+  const DataPath outputArrayPath = selectedInputArray.getParent().createChildPath(outputArrayName);
 
   auto level = filterArgs.value<float64>(k_Level_Key);
   auto markWatershedLine = filterArgs.value<bool>(k_MarkWatershedLine_Key);

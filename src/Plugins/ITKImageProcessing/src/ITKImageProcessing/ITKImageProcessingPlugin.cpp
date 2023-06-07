@@ -27,7 +27,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("115b0d10-ab97-5a18-88
 } // namespace
 
 ITKImageProcessingPlugin::ITKImageProcessingPlugin()
-: AbstractPlugin(k_ID, "ITKImageProcessing", "<<--Description was not read-->>", "BlueQuartz Software")
+: AbstractPlugin(k_ID, "ITKImageProcessing", "Filters that wrap the ITK Software library. ITK is located at https://github.com/InsightSoftwareConsortium/ITK", "BlueQuartz Software")
 {
   std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
   for(const auto& filterFunc : filterFuncs)
@@ -65,7 +65,7 @@ std::map<complex::Uuid, complex::Uuid> ITKImageProcessingPlugin::getSimplToCompl
 
 std::vector<std::string> ITKImageProcessingPlugin::GetList2DSupportedFileExtensions()
 {
-  return {".png", ".tif", ".jpg", ".jpeg", ".bmp"};
+  return {".png", ".tif", ".jpg", ".jpeg", ".bmp", ".mha"};
 }
 
 COMPLEX_DEF_PLUGIN(ITKImageProcessingPlugin)

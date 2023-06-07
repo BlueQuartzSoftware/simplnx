@@ -127,10 +127,10 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
     args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XYPlane));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
     const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
     SizeVec3 imageDims = imageGeom->getDimensions();
@@ -156,10 +156,10 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
     args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_XZPlane));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
     const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
     SizeVec3 imageDims = imageGeom->getDimensions();
@@ -185,10 +185,10 @@ TEST_CASE("ITKImageProcessing::ITKImageWriter: Write Stack", "[ITKImageProcessin
     args.insertOrAssign(ITKImageWriter::k_Plane_Key, std::make_any<uint64>(ITKImageWriter::k_YZPlane));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
     auto executeResult = filter.execute(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
     const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
     SizeVec3 imageDims = imageGeom->getDimensions();

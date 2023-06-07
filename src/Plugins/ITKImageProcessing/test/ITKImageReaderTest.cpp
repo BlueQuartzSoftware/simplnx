@@ -6,7 +6,6 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataStore.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -29,10 +28,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReader: Read PNG", "[ITKImageProcessing][
   args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   auto executeResult = filter.execute(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(imagePath);
   REQUIRE(imageGeom != nullptr);
