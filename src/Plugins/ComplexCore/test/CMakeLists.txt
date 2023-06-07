@@ -208,7 +208,6 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
 
 endif()
 
-
 # -----------------------------------------------------------------------------
 # Include any example pipelines into the unit testing
 # -----------------------------------------------------------------------------
