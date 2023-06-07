@@ -26,7 +26,8 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
   static inline constexpr StringLiteral k_BoundaryCellsArrayPath_Key = "boundary_cells_array_path";
-  static inline constexpr StringLiteral k_BoundaryCellFractionsArrayPath_Key = "boundary_cell_fractions_array_path";
+  static inline constexpr StringLiteral k_FeatureDataAMPath_Key = "feature_data_attribute_matrix_path";
+  static inline constexpr StringLiteral k_BoundaryCellFractionsArrayName_Key = "boundary_cell_fractions_array_name";
 
   /**
    * @brief Returns the name of the filter.

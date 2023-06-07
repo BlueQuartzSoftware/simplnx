@@ -20,18 +20,17 @@
  * and report errors.
  */
 
-
 #include <catch2/catch.hpp>
 
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 
-#include "ComplexCore/Filters/FindBoundaryElementFractionsFilter.hpp"
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/FindBoundaryElementFractionsFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("ComplexCore::FindBoundaryElementFractionsFilter: Valid Filter Execution","[ComplexCore][FindBoundaryElementFractionsFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("ComplexCore::FindBoundaryElementFractionsFilter: Valid Filter Execution", "[ComplexCore][FindBoundaryElementFractionsFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundaryElementFractionsFilter filter;
@@ -41,8 +40,7 @@ TEST_CASE("ComplexCore::FindBoundaryElementFractionsFilter: Valid Filter Executi
   // Create default Parameters for the filter.
   args.insertOrAssign(FindBoundaryElementFractionsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FindBoundaryElementFractionsFilter::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindBoundaryElementFractionsFilter::k_BoundaryCellFractionsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-
+  args.insertOrAssign(FindBoundaryElementFractionsFilter::k_BoundaryCellFractionsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(ds, args);
@@ -53,7 +51,7 @@ TEST_CASE("ComplexCore::FindBoundaryElementFractionsFilter: Valid Filter Executi
   REQUIRE(executeResult.result.valid());
 }
 
-//TEST_CASE("ComplexCore::FindBoundaryElementFractionsFilter: InValid Filter Execution")
+// TEST_CASE("ComplexCore::FindBoundaryElementFractionsFilter: InValid Filter Execution")
 //{
 //
-//}
+// }
