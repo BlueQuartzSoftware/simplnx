@@ -99,7 +99,7 @@ Result<> FindBoundaryElementFractionsFilter::executeImpl(DataStructure& dataStru
   auto& featureIds = dataStructure.getDataRefAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key));
   auto& boundaryCells = dataStructure.getDataRefAs<Int8Array>(filterArgs.value<DataPath>(k_BoundaryCellsArrayPath_Key));
   auto& boundaryCellFractions =
-      dataStructure.getDataRefAs<Int8Array>(filterArgs.value<DataPath>(k_FeatureDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_BoundaryCellFractionsArrayName_Key)));
+      dataStructure.getDataRefAs<Float32Array>(filterArgs.value<DataPath>(k_FeatureDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_BoundaryCellFractionsArrayName_Key)));
 
   usize totalPoints = featureIds.getNumberOfTuples();
   usize numFeatures = boundaryCellFractions.getNumberOfTuples();
