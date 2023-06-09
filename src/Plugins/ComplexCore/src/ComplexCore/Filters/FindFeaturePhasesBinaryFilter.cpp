@@ -83,7 +83,7 @@ IFilter::PreflightResult FindFeaturePhasesBinaryFilter::preflightImpl(const Data
   auto cellDataAM = dataStructure.getDataAs<AttributeMatrix>(pCellDataAMPathValue);
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, cellDataAM->getShape(), std::vector<usize>{1}, pCellDataAMPathValue.createChildPath(pFeaturePhasesArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
