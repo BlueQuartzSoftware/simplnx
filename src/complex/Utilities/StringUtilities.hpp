@@ -177,7 +177,6 @@ inline std::vector<std::string> split(std::string_view str, nonstd::span<const c
     if(first != second)
     {
       std::string substr = {first, second};
-      substr = trimmed(substr);
       if(!substr.empty() || !consecutiveDelimiters)
       {
         tokens.push_back(substr);

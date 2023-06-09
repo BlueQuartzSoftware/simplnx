@@ -53,6 +53,7 @@ set(FilterList
   FindArrayStatisticsFilter
   FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
+  FindBoundaryElementFractionsFilter
   FindDifferencesMap
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
