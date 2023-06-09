@@ -784,9 +784,13 @@ void Internals::loadPythonPlugin(py::module_& mod)
 
 void Internals::reloadPythonPlugins()
 {
+  FilterList* filterList = m_App->getFilterList();
   for(auto&& [id, plugin] : m_PythonPlugins)
   {
+    filterList->removePlugin(id);
     plugin->reload();
+    auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
+    filterList->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
   }
 }
 
@@ -1455,4 +1459,20 @@ PYBIND11_MODULE(complex, mod)
     std::vector<std::shared_ptr<AbstractPlugin>> abstractPlugins(plugins.cbegin(), plugins.cend());
     return abstractPlugins;
   });
+
+  mod.def("get_python_filter_ids", [internals]() {
+    auto plugins = internals->getPythonPlugins();
+    std::vector<Uuid> ids;
+    for(const auto& plugin : plugins)
+    {
+      auto handles = plugin->getFilterHandles();
+      for(const auto& handle : handles)
+      {
+        ids.push_back(handle.getFilterId());
+      }
+    }
+    return ids;
+  });
+
+  mod.def("reload_python_plugins", [internals]() { internals->reloadPythonPlugins(); });
 }
