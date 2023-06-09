@@ -52,6 +52,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindArrayStatisticsTest.cpp
   FindBiasedFeaturesTest.cpp
   FindBoundaryCellsTest.cpp
+  FindBoundaryElementFractionsTest.cpp
   FindDifferencesMapTest.cpp
   FindEuclideanDistMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
@@ -199,6 +200,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME Small_IN100_dream3d.tar.gz SHA512 6dd8a3412532bdc7481f7781c7087b4477c6a1efbe6b214f997dad30c53c59714a751be522f084b98065fe75100c74df901bb8af2f512ef47344d8f7941575cf )
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_sample_surface_mesh.tar.gz SHA512 b1eec1127d125303a4757a482a7fd4b6c0e42241f01f8afabec9a15dc1ffa6d732afc11b4623aaf81c7a9e53de59423ef4bbc470710c31fe9a5c61916bdf544e)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME bin_feature_phases.tar.gz SHA512 e43805c5a69d08ce6d657f8fa3fb9fec7d174f2329412fa62ba95ac6d82f1983ed2c5a641d81651ba86e6eeb5d20602b6e131f34094160305c4bf03cfbd06be1)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_feature_boundary_element_fractions.tar.gz SHA512 b267b902c87030f7508882e77d3f4483a9d4e351da78061b1b845b0301529a3532ac60934748eec1b4f8e900778af78244133b24607509b80c5cd49bc5f07a49)
 
 endif()
 
