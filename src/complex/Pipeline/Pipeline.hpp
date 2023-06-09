@@ -398,6 +398,13 @@ public:
   bool contains(IFilter* filter) const;
 
   /**
+   * @brief Returns true if the pipeline contains a filter with the given uuid.
+   * @param id
+   * @return bool
+   */
+  bool contains(const Uuid& id) const;
+
+  /**
    * @brief Inserts the specified pipeline node to the front of the pipeline
    * segment.
    * @param node

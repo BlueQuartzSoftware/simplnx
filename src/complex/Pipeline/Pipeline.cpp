@@ -544,6 +544,34 @@ bool Pipeline::contains(IFilter* filter) const
   return false;
 }
 
+bool Pipeline::contains(const Uuid& id) const
+{
+  for(const auto& node : *this)
+  {
+    NodeType nodeType = node->getType();
+    switch(nodeType)
+    {
+    case NodeType::Filter: {
+      const auto& filterNode = dynamic_cast<const PipelineFilter&>(*node);
+      if(id == filterNode.getFilter()->uuid())
+      {
+        return true;
+      }
+      break;
+    }
+    case NodeType::Pipeline: {
+      const auto& pipeline = dynamic_cast<const Pipeline&>(*node);
+      if(pipeline.contains(id))
+      {
+        return true;
+      }
+      break;
+    }
+    }
+  }
+  return false;
+}
+
 bool Pipeline::push_front(std::shared_ptr<AbstractPipelineNode> node)
 {
   return insertAt(begin(), std::move(node));
