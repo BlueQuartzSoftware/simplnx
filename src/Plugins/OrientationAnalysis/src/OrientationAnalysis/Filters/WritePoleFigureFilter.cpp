@@ -201,7 +201,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   const std::vector<size_t> dims = {static_cast<usize>(pageWidth), static_cast<usize>(pageHeight), 1ULL};
   auto createImageGeometryAction =
       std::make_unique<CreateImageGeometryAction>(pOutputImageGeometryPath, dims, std::vector<float>{0.0f, 0.0f, 0.0f}, std::vector<float>{1.0f, 1.0f, 1.0f}, write_pole_figure::k_ImageAttrMatName);
-  resultOutputActions.value().actions.push_back(std::move(createImageGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
   if(!pSaveAsImageGeometry)
   {

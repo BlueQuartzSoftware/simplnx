@@ -104,12 +104,12 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
   {
     auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pCellAMNameValue);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   DataPath featIdsPath = pImageGeomPathValue.createChildPath(pCellAMNameValue).createChildPath(pFeatureIdsArrayNameValue);
   {
     auto createDataGroupAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, featIdsPath);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;
