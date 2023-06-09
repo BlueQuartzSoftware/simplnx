@@ -33,7 +33,7 @@ using namespace complex;
 
 namespace
 {
-
+const std::string K_UNKNOWN_PRECOMPUTED_MATRIX_STR = "Precomputed transformation matrix unknown during preflight.";
 }
 
 namespace complex
@@ -147,6 +147,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
   // Reset the final Transformation Matrix to all Zeros before we fill it with what the user has entered.
   ImageRotationUtilities::Matrix4fR transformationMatrix;
+  std::string transformationMatrixDesc;
   transformationMatrix.setIdentity();
 
   switch(pTransformationMatrixTypeValue)
@@ -154,6 +155,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   case k_NoTransformIdx: // No-Op
   {
     resultOutputActions.warnings().push_back(Warning{82001, "No transformation has been selected, so this filter will perform no operations"});
+    transformationMatrixDesc = "No transformation matrix selected.";
   }
   case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
   {
@@ -162,7 +164,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     {
       return {MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
     }
-    preflightUpdatedValues.push_back({"Precomputed transformation matrix will be used.", ""});
+    transformationMatrixDesc = K_UNKNOWN_PRECOMPUTED_MATRIX_STR;
     break;
   }
   case k_ManualTransformationMatrixIdx: // Manual transformation matrix
@@ -178,35 +180,36 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       return {MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
     }
     transformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(tableData);
+    transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
     break;
   }
   case k_RotationIdx: // Rotation via axis-angle
   {
     auto pRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
     transformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
+    transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
     break;
   }
   case k_TranslationIdx: // Translation
   {
     auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
     transformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(pTranslationValue);
+    transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
     break;
   }
   case k_ScaleIdx: // Scale
   {
     auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
     transformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
-
+    transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
     break;
   }
   default: {
     return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
   }
   }
-  if(pTransformationMatrixTypeValue != k_PrecomputedTransformationMatrixIdx)
-  {
-    preflightUpdatedValues.push_back({"Generated Transformation Matrix", ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix)});
-  }
+
+  preflightUpdatedValues.push_back({"Generated Transformation Matrix", transformationMatrixDesc});
 
   // if ImageGeom was selected to be transformed: This should work because if we didn't pass
   // the earlier test, we should not have gotten to here.
@@ -336,8 +339,16 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
         preflightUpdatedValues.push_back(
             {"Input Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(), srcImageGeomPtr->getOrigin())});
-        preflightUpdatedValues.push_back(
-            {"Transformed Image Geometry Info", complex::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin)});
+
+        if(pTransformationMatrixTypeValue == k_PrecomputedTransformationMatrixIdx)
+        {
+          preflightUpdatedValues.push_back({"Transformed Image Geometry Info", K_UNKNOWN_PRECOMPUTED_MATRIX_STR});
+        }
+        else
+        {
+          preflightUpdatedValues.push_back({"Transformed Image Geometry Info",
+                                            complex::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin)});
+        }
       }
 
       // copy over the rest of the data from the src Image Geometry into the Target Image Geometry
