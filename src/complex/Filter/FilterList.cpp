@@ -133,3 +133,22 @@ std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
   }
   return plugins;
 }
+
+void FilterList::removePlugin(const Uuid& pluginId)
+{
+  if(m_PluginMap.count(pluginId) == 0)
+  {
+    return;
+  }
+
+  const auto& plugin = m_PluginMap.at(pluginId);
+
+  auto handlesToRemove = plugin->getPlugin()->getFilterHandles();
+
+  for(const auto& handle : handlesToRemove)
+  {
+    m_FilterHandles.erase(handle);
+  }
+
+  m_PluginMap.erase(pluginId);
+}

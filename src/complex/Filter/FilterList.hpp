@@ -138,6 +138,13 @@ public:
   bool addPlugin(const std::string& path);
 
   /**
+   * @brief Removes the plugin with the given uuid.
+   * Warning: Do not remove plugins unless necessary.
+   * @param pluginId
+   */
+  void removePlugin(const Uuid& pluginId);
+
+  /**
    * @brief Returns a set of pointers to loaded plugins.
    * @return std::unordered_set<AbstractPlugin*>
    */
