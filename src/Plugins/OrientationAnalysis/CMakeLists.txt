@@ -175,6 +175,7 @@ set(filter_algorithms
   ExportGBCDTriangleData
   FindAvgCAxes
   FindAvgOrientations
+  FindBoundaryStrengths
   FindCAxisLocations
   FindFeatureNeighborCAxisMisalignments
   FindFeatureReferenceCAxisMisorientations
