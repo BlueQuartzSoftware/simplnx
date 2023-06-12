@@ -24,7 +24,7 @@ public:
   ReverseTriangleWindingFilter& operator=(ReverseTriangleWindingFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriGeomPath_Key = "surface_data_container_name";
+  static inline constexpr StringLiteral k_TriGeomPath_Key = "triangle_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

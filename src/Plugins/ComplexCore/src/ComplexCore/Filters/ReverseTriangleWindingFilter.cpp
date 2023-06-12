@@ -16,7 +16,7 @@ namespace
 class ReverseWindingImpl
 {
 public:
-  ReverseWindingImpl(TriangleGeom::SharedFaceList& triangles)
+  explicit ReverseWindingImpl(TriangleGeom::SharedFaceList& triangles)
   : m_Triangles(triangles)
   {
   }
@@ -36,10 +36,6 @@ public:
     }
   }
 
-  /**
-   * @brief operator () This is called from the TBB stye of code
-   * @param range The range to compute the values
-   */
   void operator()(const Range& range) const
   {
     generate(range.min(), range.max());
@@ -104,8 +100,6 @@ IFilter::UniquePointer ReverseTriangleWindingFilter::clone() const
 IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel) const
 {
-  // auto pSurfaceDataContainerNameValue = filterArgs.value<DataPath>(k_TriGeomPath_Key);
-
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
