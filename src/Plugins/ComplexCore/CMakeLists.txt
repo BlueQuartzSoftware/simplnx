@@ -101,6 +101,7 @@ set(FilterList
   ReplaceElementAttributesWithNeighborValuesFilter
   ResampleImageGeomFilter
   ResampleRectGridToImageGeomFilter
+  ReverseTriangleWindingFilter
   RobustAutomaticThreshold
   RotateSampleRefFrameFilter
   ScalarSegmentFeaturesFilter
