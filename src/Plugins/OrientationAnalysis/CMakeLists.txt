@@ -41,6 +41,7 @@ set(FilterList
   ExportGBCDTriangleDataFilter
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
+  FindBoundaryStrengthsFilter
   FindCAxisLocationsFilter
   FindFeatureNeighborCAxisMisalignmentsFilter
   FindFeatureReferenceCAxisMisorientationsFilter

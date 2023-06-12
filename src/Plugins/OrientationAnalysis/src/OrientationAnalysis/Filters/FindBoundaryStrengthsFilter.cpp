@@ -8,6 +8,8 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 
+#include "EbsdLib/Core/Quaternion.hpp"
+
 using namespace complex;
 
 namespace complex

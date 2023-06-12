@@ -27,16 +27,16 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 
-#include "OrientationAnalysis/Filters/FindBoundaryStrengthsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "OrientationAnalysis/Filters/FindBoundaryStrengthsFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindBoundaryStrengthsFilter: Valid Filter Execution","[OrientationAnalysis][FindBoundaryStrengthsFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::FindBoundaryStrengthsFilter: Valid Filter Execution", "[OrientationAnalysis][FindBoundaryStrengthsFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundaryStrengthsFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -52,11 +52,11 @@ TEST_CASE("OrientationAnalysis::FindBoundaryStrengthsFilter: Valid Filter Execut
 
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
 
