@@ -104,7 +104,7 @@ IFilter::UniquePointer ReverseTriangleWindingFilter::clone() const
 IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel) const
 {
- // auto pSurfaceDataContainerNameValue = filterArgs.value<DataPath>(k_TriGeomPath_Key);
+  // auto pSurfaceDataContainerNameValue = filterArgs.value<DataPath>(k_TriGeomPath_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
