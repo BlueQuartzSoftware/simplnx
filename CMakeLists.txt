@@ -8,7 +8,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
 include(CMakeDependentOption)
 cmake_dependent_option(COMPLEX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON "COMPLEX_BUILD_PYTHON" OFF)
-configure_file(${COMPLEX_SOURCE_DIR}/wrapping/python/ComplexPython.hpp.in ${COMPLEX_GENERATED_HEADER_DIR}/ComplexPython.hpp)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
 
 # --------------------------------------------------------------------------------------------------
@@ -697,6 +696,13 @@ foreach(param ${CoreParameters})
     "${COMPLEX_SOURCE_DIR}/Parameters/${param}.cpp"
   )
 endforeach()
+
+set(COMPLEX_GENERATED_PYTHON_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/ComplexPython.hpp)
+configure_file(${COMPLEX_SOURCE_DIR}/wrapping/python/ComplexPython.hpp.in ${COMPLEX_GENERATED_PYTHON_HEADER})
+
+list(APPEND COMPLEX_GENERATED_HEADERS
+  ${COMPLEX_GENERATED_PYTHON_HEADER}
+)
 
 set(COMPLEX_ALL_HDRS
   ${COMPLEX_HDRS}
