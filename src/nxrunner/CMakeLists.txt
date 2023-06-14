@@ -1,7 +1,8 @@
 project(nxrunner
   VERSION 0.1.0
   DESCRIPTION "nxrunner"
-  LANGUAGES CXX)
+  LANGUAGES CXX
+)
 
 set(CLI_HDRS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/CliObserver.hpp
@@ -16,13 +17,13 @@ add_executable(nxrunner)
 
 set_target_properties(nxrunner
   PROPERTIES
-  DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
+    DEBUG_POSTFIX "${COMPLEX_DEBUG_POSTFIX}"
 )
 
 target_sources(nxrunner
   PRIVATE
-  ${CLI_HDRS}
-  ${CLI_SRCS}
+    ${CLI_HDRS}
+    ${CLI_SRCS}
 )
 
 target_link_libraries(nxrunner PRIVATE complex::complex)
@@ -60,7 +61,8 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
   set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
   set_target_properties(nxrunner
     PROPERTIES
-    INSTALL_RPATH \$ORIGIN/../lib)
+    INSTALL_RPATH \$ORIGIN/../lib
+  )
   target_link_options(nxrunner PUBLIC "-Wl,--disable-new-dtags")
   target_compile_options(nxrunner PUBLIC "-no-pie")
 endif()
