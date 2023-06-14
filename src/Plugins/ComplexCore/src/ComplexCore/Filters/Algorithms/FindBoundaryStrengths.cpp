@@ -9,11 +9,6 @@
 
 using namespace complex;
 
-namespace
-{
-
-}
-
 // -----------------------------------------------------------------------------
 FindBoundaryStrengths::FindBoundaryStrengths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                              FindBoundaryStrengthsInputValues* inputValues)
@@ -39,18 +34,18 @@ Result<> FindBoundaryStrengths::operator()()
   auto orientationOps = LaueOps::GetAllOrientationOps();
 
   auto& surfaceMeshFaceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
-  auto& avgQuats = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->AvgQuatsArrayPath);
+  auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
   auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
-  auto& mPrimes = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshmPrimesArrayName);
-  auto& f1s = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshF1sArrayName);
-  auto& f1spts = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshF1sptsArrayName);
-  auto& f7s = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshF7sArrayName);
+  auto& mPrimes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceMeshmPrimesArrayName);
+  auto& f1s = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceMeshF1sArrayName);
+  auto& f1spts = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceMeshF1sptsArrayName);
+  auto& f7s = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->SurfaceMeshF7sArrayName);
 
   usize numTriangles = surfaceMeshFaceLabels.getNumberOfTuples();
 
-  float64 mPrime_1 = 0.0f, mPrime_2 = 0.0f, F1_1 = 0.0f, F1_2 = 0.0f, F1spt_1 = 0.0f, F1spt_2 = 0.0f, F7_1 = 0.0f, F7_2 = 0.0f;
+  float32 mPrime_1 = 0.0f, mPrime_2 = 0.0f, F1_1 = 0.0f, F1_2 = 0.0f, F1spt_1 = 0.0f, F1spt_2 = 0.0f, F7_1 = 0.0f, F7_2 = 0.0f;
   int32 gname1 = 0, gname2 = 0;
 
   float64 LD[3] = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
