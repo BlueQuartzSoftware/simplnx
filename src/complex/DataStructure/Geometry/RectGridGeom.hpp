@@ -136,6 +136,42 @@ public:
    */
   const Float32Array* getZBounds() const;
 
+  /**
+   * @brief
+   * @return Float32Array*
+   */
+  Float32Array& getXBoundsRef();
+
+  /**
+   * @brief
+   * @return Float32Array*
+   */
+  Float32Array& getYBoundsRef();
+
+  /**
+   * @brief
+   * @return Float32Array*
+   */
+  Float32Array& getZBoundsRef();
+
+  /**
+   * @brief
+   * @return const Float32Array*
+   */
+  const Float32Array& getXBoundsRef() const;
+
+  /**
+   * @brief
+   * @return const Float32Array*
+   */
+  const Float32Array& getYBoundsRef() const;
+
+  /**
+   * @brief
+   * @return const Float32Array*
+   */
+  const Float32Array& getZBoundsRef() const;
+
   OptionalId getXBoundsId() const;
   OptionalId getYBoundsId() const;
   OptionalId getZBoundsId() const;
