@@ -566,6 +566,16 @@ std::string MakePythonSignature(std::string_view funcName, const Internals& inte
   return signature;
 }
 
+void PyPrintMessage(const IFilter::Message& message)
+{
+  py::print(fmt::format("{}", message.message));
+}
+
+IFilter::MessageHandler CreatePyMessageHandler()
+{
+  return IFilter::MessageHandler{&PyPrintMessage};
+}
+
 template <class FilterT>
 auto BindFilter(py::handle scope, const Internals& internals)
 {
@@ -628,16 +638,6 @@ auto BindFilter(py::handle scope, const Internals& internals)
   }
 
   return filter;
-}
-
-void PyPrintMessage(const IFilter::Message& message)
-{
-  py::print(fmt::format("{}", message.message));
-}
-
-IFilter::MessageHandler CreatePyMessageHandler()
-{
-  return IFilter::MessageHandler{&PyPrintMessage};
 }
 
 template <class FilterT>
