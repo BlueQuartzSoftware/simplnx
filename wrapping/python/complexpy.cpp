@@ -123,8 +123,14 @@
 #include <complex/DataStructure/DataGroup.hpp>
 #include <complex/DataStructure/DataStore.hpp>
 #include <complex/DataStructure/DataStructure.hpp>
+#include <complex/DataStructure/Geometry/EdgeGeom.hpp>
+#include <complex/DataStructure/Geometry/HexahedralGeom.hpp>
 #include <complex/DataStructure/Geometry/IGeometry.hpp>
 #include <complex/DataStructure/Geometry/ImageGeom.hpp>
+#include <complex/DataStructure/Geometry/QuadGeom.hpp>
+#include <complex/DataStructure/Geometry/RectGridGeom.hpp>
+#include <complex/DataStructure/Geometry/TetrahedralGeom.hpp>
+#include <complex/DataStructure/Geometry/TriangleGeom.hpp>
 #include <complex/DataStructure/Geometry/VertexGeom.hpp>
 #include <complex/Filter/Actions/CopyArrayInstanceAction.hpp>
 #include <complex/Filter/Actions/CopyDataObjectAction.hpp>
@@ -1204,6 +1210,8 @@ PYBIND11_MODULE(complex, mod)
 
   py::class_<BaseGroup, DataObject, std::shared_ptr<BaseGroup>> baseGroup(mod, "BaseGroup");
   baseGroup.def("contains", py::overload_cast<const std::string&>(&BaseGroup::contains, py::const_));
+  baseGroup.def("__getitem__", py::overload_cast<const std::string&>(&BaseGroup::at), py::return_value_policy::reference_internal);
+  baseGroup.def("__len__", &BaseGroup::getSize);
 
   auto baseGroupType = py::enum_<BaseGroup::GroupType>(baseGroup, "GroupType");
   baseGroupType.value("BaseGroup", BaseGroup::GroupType::BaseGroup);
@@ -1244,8 +1252,28 @@ PYBIND11_MODULE(complex, mod)
   iGridGeometry.def_property_readonly("num_z_cells", &IGridGeometry::getNumZCells);
 
   py::class_<ImageGeom, IGridGeometry, std::shared_ptr<ImageGeom>> imageGeom(mod, "ImageGeom");
+  imageGeom.def_property_readonly("spacing", [](const ImageGeom& self) { return self.getSpacing().toTuple(); });
+  imageGeom.def_property_readonly("origin", [](const ImageGeom& self) { return self.getOrigin().toTuple(); });
+
+  py::class_<RectGridGeom, IGridGeometry, std::shared_ptr<RectGridGeom>> rectGridGeom(mod, "RectGridGeom");
+
+  py::class_<INodeGeometry0D, IGeometry, std::shared_ptr<INodeGeometry0D>> iNodeGeometry0D(mod, "INodeGeometry0D");
+  py::class_<VertexGeom, INodeGeometry0D, std::shared_ptr<VertexGeom>> vertexGeom(mod, "VertexGeom");
+
+  py::class_<INodeGeometry1D, INodeGeometry0D, std::shared_ptr<INodeGeometry1D>> iNodeGeometry1D(mod, "INodeGeometry1D");
+  py::class_<EdgeGeom, INodeGeometry1D, std::shared_ptr<EdgeGeom>> edgeGeom(mod, "EdgeGeom");
+
+  py::class_<INodeGeometry2D, INodeGeometry1D, std::shared_ptr<INodeGeometry2D>> iNodeGeometry2D(mod, "INodeGeometry2D");
+  py::class_<TriangleGeom, INodeGeometry2D, std::shared_ptr<TriangleGeom>> triangleGeom(mod, "TriangleGeom");
+  py::class_<QuadGeom, INodeGeometry2D, std::shared_ptr<QuadGeom>> quadGeom(mod, "QuadGeom");
+
+  py::class_<INodeGeometry3D, INodeGeometry2D, std::shared_ptr<INodeGeometry3D>> iNodeGeometry3D(mod, "INodeGeometry3D");
+  py::class_<TetrahedralGeom, INodeGeometry3D, std::shared_ptr<TetrahedralGeom>> tetrahedralGeom(mod, "TetrahedralGeom");
+  py::class_<HexahedralGeom, INodeGeometry3D, std::shared_ptr<HexahedralGeom>> hexahedralGeom(mod, "HexahedralGeom");
 
   py::class_<DataGroup, BaseGroup, std::shared_ptr<DataGroup>> dataGroup(mod, "DataGroup");
+
+  py::class_<AttributeMatrix, BaseGroup, std::shared_ptr<AttributeMatrix>> attributeMatrix(mod, "AttributeMatrix");
 
   py::class_<IArray, DataObject, std::shared_ptr<IArray>> iArray(mod, "IArray");
   iArray.def_property_readonly("tuple_shape", &IArray::getTupleShape);
@@ -1258,7 +1286,7 @@ PYBIND11_MODULE(complex, mod)
   iArrayArrayType.value("Any", IArray::ArrayType::Any);
 
   py::class_<IDataArray, IArray, std::shared_ptr<IDataArray>> iDataArray(mod, "IDataArray");
-  iDataArray.def_property_readonly("store", py::overload_cast<>(&IDataArray::getIDataStore, py::const_));
+  iDataArray.def_property_readonly("store", py::overload_cast<>(&IDataArray::getIDataStore));
   iDataArray.def_property_readonly("tdims", &IDataArray::getTupleShape);
   iDataArray.def_property_readonly("cdims", &IDataArray::getComponentShape);
 
@@ -1273,6 +1301,22 @@ PYBIND11_MODULE(complex, mod)
   auto dataArrayFloat32 = COMPLEX_PY_BIND_DATA_ARRAY(mod, Float32Array);
   auto dataArrayFloat64 = COMPLEX_PY_BIND_DATA_ARRAY(mod, Float64Array);
   auto dataArrayBool = COMPLEX_PY_BIND_DATA_ARRAY(mod, BoolArray);
+
+  rectGridGeom.def_property_readonly("x_bounds", py::overload_cast<>(&RectGridGeom::getXBoundsRef), py::return_value_policy::reference_internal);
+  rectGridGeom.def_property_readonly("y_bounds", py::overload_cast<>(&RectGridGeom::getYBoundsRef), py::return_value_policy::reference_internal);
+  rectGridGeom.def_property_readonly("z_bounds", py::overload_cast<>(&RectGridGeom::getZBoundsRef), py::return_value_policy::reference_internal);
+
+  iNodeGeometry0D.def_property_readonly("vertices", py::overload_cast<>(&INodeGeometry0D::getVerticesRef), py::return_value_policy::reference_internal);
+  iNodeGeometry0D.def_property_readonly("vertex_data", py::overload_cast<>(&INodeGeometry0D::getVertexAttributeMatrixRef), py::return_value_policy::reference_internal);
+
+  iNodeGeometry1D.def_property_readonly("edges", py::overload_cast<>(&INodeGeometry1D::getEdgesRef), py::return_value_policy::reference_internal);
+  iNodeGeometry1D.def_property_readonly("edge_data", py::overload_cast<>(&INodeGeometry1D::getEdgeAttributeMatrixRef), py::return_value_policy::reference_internal);
+
+  iNodeGeometry2D.def_property_readonly("faces", py::overload_cast<>(&INodeGeometry2D::getFacesRef), py::return_value_policy::reference_internal);
+  iNodeGeometry2D.def_property_readonly("face_data", py::overload_cast<>(&INodeGeometry2D::getFaceAttributeMatrixRef), py::return_value_policy::reference_internal);
+
+  iNodeGeometry3D.def_property_readonly("polyhedra", py::overload_cast<>(&INodeGeometry3D::getPolyhedraRef), py::return_value_policy::reference_internal);
+  iNodeGeometry3D.def_property_readonly("polyhedra_data", py::overload_cast<>(&INodeGeometry3D::getPolyhedraAttributeMatrixRef), py::return_value_policy::reference_internal);
 
   auto iDataAction = py::class_<IDataAction>(mod, "IDataAction");
 
