@@ -54,6 +54,7 @@ set(FilterList
   FindBiasedFeaturesFilter
   FindBoundaryCellsFilter
   FindBoundaryElementFractionsFilter
+  FindBoundaryStrengthsFilter
   FindDifferencesMap
   FindEuclideanDistMapFilter
   FindFeatureCentroidsFilter
@@ -150,6 +151,7 @@ set(AlgorithmList
   FindArrayStatistics
   FindBiasedFeatures
   FindBoundaryCells
+  FindBoundaryStrengths
   FindEuclideanDistMap
   FindFeatureCentroids
   FindFeatureClustering

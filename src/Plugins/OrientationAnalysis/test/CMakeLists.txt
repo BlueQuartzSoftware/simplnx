@@ -21,7 +21,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ExportGBCDTriangleDataTest.cpp
   FindAvgCAxesTest.cpp
   FindAvgOrientationsTest.cpp
-  FindBoundaryStrengthsTest.cpp
   FindCAxisLocationsTest.cpp
   FindFeatureNeighborCAxisMisalignmentsTest.cpp
   FindFeatureReferenceCAxisMisorientationsTest.cpp
