@@ -170,10 +170,6 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   return results;
 }
 
-  /**
- * @brief Returns a copy of the action.
- * @return
- */
 IDataAction::UniquePointer CreateRectGridGeometryAction::clone() const
 {
   auto action = std::unique_ptr<CreateRectGridGeometryAction>(new CreateRectGridGeometryAction());
