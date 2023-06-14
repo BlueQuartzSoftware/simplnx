@@ -2,8 +2,6 @@ find_package(pybind11 2.10.0 CONFIG REQUIRED)
 
 pybind11_add_module(complexpy complexpy.cpp)
 
-set(COMPLEX_PYTHON_MODULE "complex")
-
 # we want the CMake target name to be "complexpy", but the Python module to be "complex"
 set_target_properties(complexpy
   PROPERTIES
