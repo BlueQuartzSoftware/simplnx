@@ -6,6 +6,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 # Is this a commercial or Free build
 # --------------------------------------------------------------------------------------------------
 option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
+include(CMakeDependentOption)
+cmake_dependent_option(COMPLEX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON "COMPLEX_BUILD_PYTHON" OFF)
+configure_file(${COMPLEX_SOURCE_DIR}/wrapping/python/ComplexPython.hpp.in ${COMPLEX_GENERATED_HEADER_DIR}/ComplexPython.hpp)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
 
 # --------------------------------------------------------------------------------------------------
