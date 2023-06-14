@@ -66,7 +66,6 @@
 #include "OrientationAnalysis/Filters/FindFeatureNeighborCAxisMisalignmentsFilter.hpp"
 #include "OrientationAnalysis/Filters/FindGBCDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/Filters/FindGBPDMetricBasedFilter.hpp"
-#include "OrientationAnalysis/Filters/FindBoundaryStrengthsFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -142,7 +141,6 @@ namespace complex
     {complex::Uuid::FromString("cdd50b83-ea09-5499-b008-4b253cf4c246").value(), complex::FilterTraits<FindFeatureNeighborCAxisMisalignmentsFilter>::uuid}, // FindFeatureNeighborCAxisMisalignments
     {complex::Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value(), complex::FilterTraits<FindGBCDMetricBasedFilter>::uuid}, // FindGBCDMetricBased
     {complex::Uuid::FromString("00d20627-5b88-56ba-ac7a-fc2a4b337903").value(), complex::FilterTraits<FindGBPDMetricBasedFilter>::uuid}, // FindGBPDMetricBased
-    {complex::Uuid::FromString("8071facb-8905-5699-b345-105ae4ac33ff").value(), complex::FilterTraits<FindBoundaryStrengthsFilter>::uuid}, // FindBoundaryStrengths
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

@@ -48,7 +48,7 @@ Parameters FindBoundaryStrengthsFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Loading_Key, "Loading Direction (XYZ)", "", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat64Parameter>(k_Loading_Key, "Loading Direction (XYZ)", "", std::vector<float64>{0.0, 0.0, 0.0}, std::vector<std::string>{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
@@ -83,7 +83,7 @@ IFilter::UniquePointer FindBoundaryStrengthsFilter::clone() const
 IFilter::PreflightResult FindBoundaryStrengthsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel) const
 {
-  auto pLoadingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Loading_Key);
+  auto pLoadingValue = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Loading_Key);
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
@@ -107,7 +107,7 @@ Result<> FindBoundaryStrengthsFilter::executeImpl(DataStructure& dataStructure, 
 {
   FindBoundaryStrengthsInputValues inputValues;
 
-  inputValues.Loading = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Loading_Key);
+  inputValues.Loading = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Loading_Key);
   inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);

@@ -2,8 +2,10 @@
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataGroup.hpp"
+#include "complex/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/Core/Quaternion.hpp"
+#include "EbsdLib/LaueOps/LaueOps.h"
 
 using namespace complex;
 
@@ -34,37 +36,45 @@ const std::atomic_bool& FindBoundaryStrengths::getCancel()
 // -----------------------------------------------------------------------------
 Result<> FindBoundaryStrengths::operator()()
 {
-  size_t numTriangles = m_SurfaceMeshFaceLabelsPtr.lock()->getNumberOfTuples();
+  auto orientationOps = LaueOps::GetAllOrientationOps();
 
-  double mPrime_1 = 0.0f, mPrime_2 = 0.0f, F1_1 = 0.0f, F1_2 = 0.0f, F1spt_1 = 0.0f, F1spt_2 = 0.0f, F7_1 = 0.0f, F7_2 = 0.0f;
-  int32_t gname1 = 0, gname2 = 0;
+  auto& surfaceMeshFaceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
+  auto& avgQuats = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->AvgQuatsArrayPath);
+  auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CrystalStructuresArrayPath);
 
-  double LD[3] = {0.0f, 0.0f, 0.0f};
+  auto& mPrimes = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshmPrimesArrayName);
+  auto& f1s = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshF1sArrayName);
+  auto& f1spts = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshF1sptsArrayName);
+  auto& f7s = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshF7sArrayName);
 
-  LD[0] = m_Loading[0];
-  LD[1] = m_Loading[1];
-  LD[2] = m_Loading[2];
+  usize numTriangles = surfaceMeshFaceLabels.getNumberOfTuples();
+
+  float64 mPrime_1 = 0.0f, mPrime_2 = 0.0f, F1_1 = 0.0f, F1_2 = 0.0f, F1spt_1 = 0.0f, F1spt_2 = 0.0f, F7_1 = 0.0f, F7_2 = 0.0f;
+  int32 gname1 = 0, gname2 = 0;
+
+  float64 LD[3] = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
   MatrixMath::Normalize3x1(LD);
 
-  for(size_t i = 0; i < numTriangles; i++)
+  for(usize i = 0; i < numTriangles; i++)
   {
-    gname1 = m_SurfaceMeshFaceLabels[i * 2];
-    gname2 = m_SurfaceMeshFaceLabels[i * 2 + 1];
+    gname1 = surfaceMeshFaceLabels[i * 2];
+    gname2 = surfaceMeshFaceLabels[i * 2 + 1];
     if(gname1 > 0 && gname2 > 0)
     {
-      QuatD q1(m_AvgQuats[gname1 * 4], m_AvgQuats[gname1 * 4 + 1], m_AvgQuats[gname1 * 4 + 2], m_AvgQuats[gname1 * 4 + 3]);
-      QuatD q2(m_AvgQuats[gname2 * 4], m_AvgQuats[gname2 * 4 + 1], m_AvgQuats[gname2 * 4 + 2], m_AvgQuats[gname2 * 4 + 3]);
+      QuatD q1(avgQuats[gname1 * 4], avgQuats[gname1 * 4 + 1], avgQuats[gname1 * 4 + 2], avgQuats[gname1 * 4 + 3]);
+      QuatD q2(avgQuats[gname2 * 4], avgQuats[gname2 * 4 + 1], avgQuats[gname2 * 4 + 2], avgQuats[gname2 * 4 + 3]);
 
-      if(m_CrystalStructures[m_FeaturePhases[gname1]] == m_CrystalStructures[m_FeaturePhases[gname2]] && m_FeaturePhases[gname1] > 0)
+      if(crystalStructures[featurePhases[gname1]] == crystalStructures[featurePhases[gname2]] && featurePhases[gname1] > 0)
       {
-        mPrime_1 = m_OrientationOps[m_CrystalStructures[m_FeaturePhases[gname1]]]->getmPrime(q1, q2, LD);
-        mPrime_2 = m_OrientationOps[m_CrystalStructures[m_FeaturePhases[gname1]]]->getmPrime(q2, q1, LD);
-        F1_1 = m_OrientationOps[m_CrystalStructures[m_FeaturePhases[gname1]]]->getF1(q1, q2, LD, true);
-        F1_2 = m_OrientationOps[m_CrystalStructures[m_FeaturePhases[gname1]]]->getF1(q2, q1, LD, true);
-        F1spt_1 = m_OrientationOps[m_CrystalStructures[m_FeaturePhases[gname1]]]->getF1spt(q1, q2, LD, true);
-        F1spt_2 = m_OrientationOps[m_CrystalStructures[m_FeaturePhases[gname1]]]->getF1spt(q2, q1, LD, true);
-        F7_1 = m_OrientationOps[m_CrystalStructures[m_FeaturePhases[gname1]]]->getF7(q1, q2, LD, true);
-        F7_2 = m_OrientationOps[m_CrystalStructures[m_FeaturePhases[gname1]]]->getF7(q2, q1, LD, true);
+        mPrime_1 = orientationOps[crystalStructures[featurePhases[gname1]]]->getmPrime(q1, q2, LD);
+        mPrime_2 = orientationOps[crystalStructures[featurePhases[gname1]]]->getmPrime(q2, q1, LD);
+        F1_1 = orientationOps[crystalStructures[featurePhases[gname1]]]->getF1(q1, q2, LD, true);
+        F1_2 = orientationOps[crystalStructures[featurePhases[gname1]]]->getF1(q2, q1, LD, true);
+        F1spt_1 = orientationOps[crystalStructures[featurePhases[gname1]]]->getF1spt(q1, q2, LD, true);
+        F1spt_2 = orientationOps[crystalStructures[featurePhases[gname1]]]->getF1spt(q2, q1, LD, true);
+        F7_1 = orientationOps[crystalStructures[featurePhases[gname1]]]->getF7(q1, q2, LD, true);
+        F7_2 = orientationOps[crystalStructures[featurePhases[gname1]]]->getF7(q2, q1, LD, true);
       }
       else
       {
@@ -90,14 +100,14 @@ Result<> FindBoundaryStrengths::operator()()
       F7_2 = 0.0f;
     }
 
-    m_SurfaceMeshmPrimes[2 * i] = mPrime_1;
-    m_SurfaceMeshmPrimes[2 * i + 1] = mPrime_2;
-    m_SurfaceMeshF1s[2 * i] = F1_1;
-    m_SurfaceMeshF1s[2 * i + 1] = F1_2;
-    m_SurfaceMeshF1spts[2 * i] = F1spt_1;
-    m_SurfaceMeshF1spts[2 * i + 1] = F1spt_2;
-    m_SurfaceMeshF7s[2 * i] = F7_1;
-    m_SurfaceMeshF7s[2 * i + 1] = F7_2;
+    mPrimes[2 * i] = mPrime_1;
+    mPrimes[2 * i + 1] = mPrime_2;
+    f1s[2 * i] = F1_1;
+    f1s[2 * i + 1] = F1_2;
+    f1spts[2 * i] = F1spt_1;
+    f1spts[2 * i + 1] = F1spt_2;
+    f7s[2 * i] = F7_1;
+    f7s[2 * i + 1] = F7_2;
   }
 
   return {};

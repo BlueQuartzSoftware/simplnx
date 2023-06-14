@@ -14,7 +14,7 @@ namespace complex
 
 struct COMPLEXCORE_EXPORT FindBoundaryStrengthsInputValues
 {
-  VectorFloat32Parameter::ValueType Loading;
+  VectorFloat64Parameter::ValueType Loading;
   DataPath SurfaceMeshFaceLabelsArrayPath;
   DataPath AvgQuatsArrayPath;
   DataPath FeaturePhasesArrayPath;
