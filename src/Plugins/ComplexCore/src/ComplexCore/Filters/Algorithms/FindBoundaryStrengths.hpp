@@ -1,24 +1,18 @@
 #pragma once
 
-#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ArrayCreationParameter.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 
 namespace complex
 {
 
-struct ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengthsInputValues
+struct COMPLEXCORE_EXPORT FindBoundaryStrengthsInputValues
 {
   VectorFloat32Parameter::ValueType Loading;
   DataPath SurfaceMeshFaceLabelsArrayPath;
@@ -29,7 +23,6 @@ struct ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengthsInputValues
   DataPath SurfaceMeshF1sptsArrayName;
   DataPath SurfaceMeshF7sArrayName;
   DataPath SurfaceMeshmPrimesArrayName;
-
 };
 
 /**
@@ -38,7 +31,7 @@ struct ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengthsInputValues
  * where a bool mask array specifies.
  */
 
-class ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengths
+class COMPLEXCORE_EXPORT FindBoundaryStrengths
 {
 public:
   FindBoundaryStrengths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindBoundaryStrengthsInputValues* inputValues);

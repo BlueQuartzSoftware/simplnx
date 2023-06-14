@@ -2,12 +2,12 @@
 
 #include "complex/Parameters/VectorParameter.hpp"
 
-#include "OrientationAnalysis/Filters/FindBoundaryStrengthsFilter.hpp"
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/FindBoundaryStrengthsFilter.hpp"
 
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindBoundaryStrengthsFilter: Valid Filter Execution", "[OrientationAnalysis][FindBoundaryStrengthsFilter]")
+TEST_CASE("ComplexCore::FindBoundaryStrengthsFilter: Valid Filter Execution", "[OrientationAnalysis][FindBoundaryStrengthsFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindBoundaryStrengthsFilter filter;

@@ -1,6 +1,6 @@
 #include "FindBoundaryStrengthsFilter.hpp"
 
-#include "OrientationAnalysis/Filters/Algorithms/FindBoundaryStrengths.hpp"
+#include "ComplexCore/Filters/Algorithms/FindBoundaryStrengths.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"

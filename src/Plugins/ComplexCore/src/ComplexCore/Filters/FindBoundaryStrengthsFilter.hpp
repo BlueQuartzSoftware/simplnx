@@ -1,6 +1,6 @@
 #pragma once
 
-#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
+#include "ComplexCore/ComplexCore_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -11,7 +11,7 @@ namespace complex
  * @class FindBoundaryStrengthsFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengthsFilter : public IFilter
+class COMPLEXCORE_EXPORT FindBoundaryStrengthsFilter : public IFilter
 {
 public:
   FindBoundaryStrengthsFilter() = default;
@@ -96,8 +96,7 @@ protected:
    * @param messageHandler The MessageHandler object
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
-  Result<> executeImpl(DataStructure & data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-      const override;
+  Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
 };
 } // namespace complex
 
