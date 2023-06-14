@@ -5,22 +5,8 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
-
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  GenerateVectorColorsInputValues inputValues;
-
-  inputValues.UseGoodVoxels = filterArgs.value<bool>(k_UseGoodVoxels_Key);
-  inputValues.VectorsArrayPath = filterArgs.value<DataPath>(k_VectorsArrayPath_Key);
-  inputValues.GoodVoxelsArrayPath = filterArgs.value<DataPath>(k_GoodVoxelsArrayPath_Key);
-  inputValues.CellVectorColorsArrayName = filterArgs.value<DataPath>(k_CellVectorColorsArrayName_Key);
-
-  return GenerateVectorColors(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
+#include "complex/Parameters/ArraySelectionParameter.hpp"
 
 namespace complex
 {
@@ -30,8 +16,7 @@ struct COMPLEXCORE_EXPORT GenerateVectorColorsInputValues
   bool UseGoodVoxels;
   DataPath VectorsArrayPath;
   DataPath GoodVoxelsArrayPath;
-  DataPath CellVectorColorsArrayName;
-
+  DataPath CellVectorColorsArrayPath;
 };
 
 /**

@@ -71,6 +71,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindVertexToTriangleDistancesTest.cpp
   FindVolFractionsTest.cpp
   GenerateColorTableTest.cpp
+  GenerateVectorColorsTest.cpp
   IdentifySampleTest.cpp
   ImageContouringTest.cpp
   ImageGeomTest.cpp
