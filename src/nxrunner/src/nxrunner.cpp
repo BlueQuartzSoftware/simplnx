@@ -14,14 +14,14 @@
 #include <ostream>
 #include <string>
 
-#ifdef COMPLEX_EMBED_PYTHON
+#if COMPLEX_EMBED_PYTHON
 #include <pybind11/embed.h>
 #endif
 
 namespace fs = std::filesystem;
 using namespace complex;
 
-#ifdef COMPLEX_EMBED_PYTHON
+#if COMPLEX_EMBED_PYTHON
 namespace py = pybind11;
 #endif
 
@@ -387,7 +387,7 @@ Result<> SetLogFile(const Argument& argument)
   return cliOut.setLogFile(filepath);
 }
 
-#ifdef COMPLEX_EMBED_PYTHON
+#if COMPLEX_EMBED_PYTHON
 std::vector<std::string> GetPythonPluginList()
 {
   auto* var = std::getenv("COMPLEX_PYTHON_PLUGINS");
@@ -445,7 +445,7 @@ int main(int argc, char* argv[])
   complex::Application app;
   LoadApp(app);
 
-#ifdef COMPLEX_EMBED_PYTHON
+#if COMPLEX_EMBED_PYTHON
   py::scoped_interpreter guard{};
 
   try
@@ -489,7 +489,7 @@ int main(int argc, char* argv[])
       auto result = ExecutePipeline(arguments[0]);
       results.push_back(result);
     }
-#ifdef COMPLEX_EMBED_PYTHON
+#if COMPLEX_EMBED_PYTHON
     catch(const py::error_already_set& exception)
     {
       fmt::print("Python exception: {}\n", exception.what());
@@ -509,7 +509,7 @@ int main(int argc, char* argv[])
       auto result = PreflightPipeline(arguments[0]);
       results.push_back(result);
     }
-#ifdef COMPLEX_EMBED_PYTHON
+#if COMPLEX_EMBED_PYTHON
     catch(const py::error_already_set& exception)
     {
       fmt::print("Python exception: {}\n", exception.what());
