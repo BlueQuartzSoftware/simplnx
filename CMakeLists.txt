@@ -698,7 +698,7 @@ foreach(param ${CoreParameters})
 endforeach()
 
 set(COMPLEX_GENERATED_PYTHON_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/ComplexPython.hpp)
-configure_file(${COMPLEX_SOURCE_DIR}/wrapping/python/ComplexPython.hpp.in ${COMPLEX_GENERATED_PYTHON_HEADER})
+configure_file(${complex_SOURCE_DIR}/wrapping/python/ComplexPython.hpp.in ${COMPLEX_GENERATED_PYTHON_HEADER})
 
 list(APPEND COMPLEX_GENERATED_HEADERS
   ${COMPLEX_GENERATED_PYTHON_HEADER}
