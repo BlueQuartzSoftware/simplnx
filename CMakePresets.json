@@ -31,6 +31,10 @@
         },
         "COMPLEX_BUILD_PYTHON": {
           "type": "BOOL",
+          "value": "ON"
+        },
+        "COMPLEX_EMBED_PYTHON": {
+          "type": "BOOL",
           "value": "OFF"
         },
         "DREAM3D_DATA_DIR": {
