@@ -6,6 +6,7 @@ pybind11_add_module(complexpy complexpy.cpp)
 set_target_properties(complexpy
   PROPERTIES
     OUTPUT_NAME ${COMPLEX_PYTHON_MODULE}
+    ARCHIVE_OUTPUT_NAME ${COMPLEX_PYTHON_MODULE}py
     LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
 )
 
