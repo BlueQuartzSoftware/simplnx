@@ -3,6 +3,75 @@
 #include <cstring>
 #include <iostream>
 
+bool complex::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectName)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  bool isGroup = true;
+  herr_t error = -1;
+  H5O_info_t objectInfo{};
+  error = H5Oget_info_by_name(nodeId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
+  if(error < 0)
+  {
+    std::cout << "Error in method H5Oget_info_by_name()" << std::endl;
+    return false;
+  }
+  switch(objectInfo.type)
+  {
+  case H5O_TYPE_GROUP:
+    isGroup = true;
+    break;
+  case H5O_TYPE_DATASET:
+    isGroup = false;
+    break;
+  case H5O_TYPE_NAMED_DATATYPE:
+    isGroup = false;
+    break;
+  default:
+    isGroup = false;
+  }
+  return isGroup;
+}
+
+std::string complex::HDF5::Support::GetObjectPath(hid_t locationId)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  size_t nameSize = 1 + H5Iget_name(locationId, nullptr, 0);
+  std::vector<char> objectName(nameSize, 0);
+  H5Iget_name(locationId, objectName.data(), nameSize);
+  std::string objectPath(objectName.data());
+
+  if((objectPath != "/") && (objectPath.at(0) == '/'))
+  {
+    objectPath.erase(0, 1);
+  }
+
+  return objectPath;
+}
+
+hid_t complex::HDF5::Support::GetDatasetType(hid_t locationId, const std::string& datasetName)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  herr_t error = 0;
+  herr_t returnError = 0;
+  hid_t datasetId = -1;
+  /* Open the dataset. */
+  if((datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT)) < 0)
+  {
+    return -1;
+  }
+  /* Get an identifier for the datatype. */
+  hid_t typeId = H5Dget_type(datasetId);
+  H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName);
+  if(returnError < 0)
+  {
+    return static_cast<hid_t>(returnError);
+  }
+  return typeId;
+}
+
 herr_t complex::HDF5::Support::FindAttr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* opData)
 {
   /* Define a default zero value for return. This will cause the iterator to
@@ -75,6 +144,64 @@ std::string complex::HDF5::Support::HdfClassTypeAsStr(hid_t classType)
   default:
     return "OTHER";
   }
+}
+
+std::string complex::HDF5::Support::StringForHDFType(hid_t dataTypeIdentifier)
+{
+  H5SUPPORT_MUTEX_LOCK()
+
+  if(dataTypeIdentifier == H5T_STRING)
+  {
+    return "H5T_STRING";
+  }
+
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_INT8) > 0)
+  {
+    return "H5T_NATIVE_INT8";
+  }
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_UINT8) > 0)
+  {
+    return "H5T_NATIVE_UINT8";
+  }
+
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_INT16) > 0)
+  {
+    return "H5T_NATIVE_INT16";
+  }
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_UINT16) > 0)
+  {
+    return "H5T_NATIVE_UINT16";
+  }
+
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_INT32) > 0)
+  {
+    return "H5T_NATIVE_INT32";
+  }
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_UINT32) > 0)
+  {
+    return "H5T_NATIVE_UINT32";
+  }
+
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_INT64) > 0)
+  {
+    return "H5T_NATIVE_INT64";
+  }
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_UINT64) > 0)
+  {
+    return "H5T_NATIVE_UINT64";
+  }
+
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_FLOAT) > 0)
+  {
+    return "H5T_NATIVE_FLOAT";
+  }
+  if(H5Tequal(dataTypeIdentifier, H5T_NATIVE_DOUBLE) > 0)
+  {
+    return "H5T_NATIVE_DOUBLE";
+  }
+
+  std::cout << "Error: StringForHDFType - Match for numeric type not found: " << dataTypeIdentifier << std::endl;
+  return "Unknown";
 }
 
 #if 0

@@ -79,36 +79,14 @@ namespace Support
  * @param objectName The name of the object to check
  * @return True if the given hdf5 object identifier is a group
  */
-inline bool COMPLEX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName)
-{
-  H5SUPPORT_MUTEX_LOCK()
+inline bool COMPLEX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName);
 
-  bool isGroup = true;
-  herr_t error = -1;
-  H5O_info_t objectInfo{};
-  error = H5Oget_info_by_name(nodeId, objectName.c_str(), &objectInfo, H5P_DEFAULT);
-  if(error < 0)
-  {
-    std::cout << "Error in methd H5Gget_objinfo" << std::endl;
-    return false;
-  }
-  switch(objectInfo.type)
-  {
-  case H5O_TYPE_GROUP:
-    isGroup = true;
-    break;
-  case H5O_TYPE_DATASET:
-    isGroup = false;
-    break;
-  case H5O_TYPE_NAMED_DATATYPE:
-    isGroup = false;
-    break;
-  default:
-    isGroup = false;
-  }
-  return isGroup;
-}
-
+/**
+ *
+ * @param name
+ * @param opData
+ * @return
+ */
 herr_t COMPLEX_EXPORT FindAttr(hid_t /*locationId*/, const char* name, const H5A_info_t* /*info*/, void* opData);
 
 /**
@@ -291,22 +269,7 @@ hid_t COMPLEX_EXPORT getDatasetType(hid_t locationId, const std::string& dataset
  * @param objectId The HDF5 identifier of the object
  * @return  The path to the object relative to the objectId
  */
-inline std::string COMPLEX_EXPORT GetObjectPath(hid_t locationId)
-{
-  H5SUPPORT_MUTEX_LOCK()
-
-  size_t nameSize = 1 + H5Iget_name(locationId, nullptr, 0);
-  std::vector<char> objectName(nameSize, 0);
-  H5Iget_name(locationId, objectName.data(), nameSize);
-  std::string objectPath(objectName.data());
-
-  if((objectPath != "/") && (objectPath.at(0) == '/'))
-  {
-    objectPath.erase(0, 1);
-  }
-
-  return objectPath;
-}
+std::string COMPLEX_EXPORT GetObjectPath(hid_t locationId);
 
 /**
  * @brief Returns the H5T value for a given dataset.
@@ -317,27 +280,14 @@ inline std::string COMPLEX_EXPORT GetObjectPath(hid_t locationId)
  * @param datasetName Path to the dataset
  * @return
  */
-inline hid_t COMPLEX_EXPORT GetDatasetType(hid_t locationId, const std::string& datasetName)
-{
-  H5SUPPORT_MUTEX_LOCK()
+hid_t COMPLEX_EXPORT GetDatasetType(hid_t locationId, const std::string& datasetName);
 
-  herr_t error = 0;
-  herr_t returnError = 0;
-  hid_t datasetId = -1;
-  /* Open the dataset. */
-  if((datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT)) < 0)
-  {
-    return -1;
-  }
-  /* Get an identifier for the datatype. */
-  hid_t typeId = H5Dget_type(datasetId);
-  H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName);
-  if(returnError < 0)
-  {
-    return static_cast<hid_t>(returnError);
-  }
-  return typeId;
-}
+/**
+ * @brief Returns a string version of the HDF Type
+ * @param type The HDF5 Type to query
+ * @return
+ */
+std::string COMPLEX_EXPORT StringForHDFType(hid_t dataTypeIdentifier);
 
 } // namespace Support
 } // namespace complex::HDF5

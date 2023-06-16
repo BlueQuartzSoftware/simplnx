@@ -42,43 +42,43 @@ std::optional<complex::DataType> complex::HDF5::toCommonType(Type typeEnum)
 
 complex::HDF5::Type complex::HDF5::getTypeFromId(IdType typeId)
 {
-  if(H5Tequal(typeId, H5T_NATIVE_INT8))
+  if(H5Tequal(typeId, H5T_NATIVE_INT8) > 0)
   {
     return Type::int8;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_INT16))
+  if(H5Tequal(typeId, H5T_NATIVE_INT16) > 0)
   {
     return Type::int16;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_INT32))
+  if(H5Tequal(typeId, H5T_NATIVE_INT32) > 0)
   {
     return Type::int32;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_INT64))
+  if(H5Tequal(typeId, H5T_NATIVE_INT64) > 0)
   {
     return Type::int64;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_UINT8))
+  if(H5Tequal(typeId, H5T_NATIVE_UINT8) > 0)
   {
     return Type::uint8;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_UINT16))
+  if(H5Tequal(typeId, H5T_NATIVE_UINT16) > 0)
   {
     return Type::uint16;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_UINT32))
+  if(H5Tequal(typeId, H5T_NATIVE_UINT32) > 0)
   {
     return Type::uint32;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_UINT64))
+  if(H5Tequal(typeId, H5T_NATIVE_UINT64) > 0)
   {
     return Type::uint64;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_FLOAT))
+  if(H5Tequal(typeId, H5T_NATIVE_FLOAT) > 0)
   {
     return Type::float32;
   }
-  else if(H5Tequal(typeId, H5T_NATIVE_DOUBLE))
+  if(H5Tequal(typeId, H5T_NATIVE_DOUBLE) > 0)
   {
     return Type::float64;
   }
