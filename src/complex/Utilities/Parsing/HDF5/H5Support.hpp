@@ -79,7 +79,7 @@ namespace Support
  * @param objectName The name of the object to check
  * @return True if the given hdf5 object identifier is a group
  */
-inline bool COMPLEX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName);
+bool COMPLEX_EXPORT IsGroup(hid_t nodeId, const std::string& objectName);
 
 /**
  *
