@@ -97,8 +97,8 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Geometry", "The target geometry on which to perform the transformation", DataPath{},
                                                              IGeometry::GetAllGeomTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Image Geometry Parameters"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Interpolation Type", "", k_NoInterpolationIdx, k_InterpolationChoices));
+  params.insertSeparator(Parameters::Separator{"Image Geometry Resampling/Interpolation"});
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Resampling or Interpolation", "", k_NearestNeighborInterpolationIdx, k_InterpolationChoices));
 
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellAttributeMatrixPath_Key, "Cell Attribute Matrix", "The path to the Cell level data that should be interpolated", DataPath{}));
 
@@ -108,9 +108,6 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.linkParameters(k_TransformationType_Key, k_Rotation_Key, k_RotationIdx);
   params.linkParameters(k_TransformationType_Key, k_Translation_Key, k_TranslationIdx);
   params.linkParameters(k_TransformationType_Key, k_Scale_Key, k_ScaleIdx);
-
-  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, k_NearestNeighborInterpolationIdx);
-  params.linkParameters(k_InterpolationType_Key, k_CellAttributeMatrixPath_Key, k_LinearInterpolationIdx);
 
   return params;
 }
@@ -235,7 +232,6 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       selectedCellArrayNames.clear();
       for(const auto& arrayName : srcCellAttrMatrixPtr->getDataMap().getNames())
       {
-
         const DataPath dataArrayPath = pCellAttributeMatrixPath.createChildPath(arrayName);
         const StringArray* strArrayPtr = dataStructure.getDataAs<StringArray>(dataArrayPath);
         if(nullptr != strArrayPtr)
@@ -260,7 +256,6 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
               Warning{82011, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on NeighborList Arrays", dataArrayPath.toString())});
           continue;
         }
-
         selectedCellArrayNames.emplace_back(arrayName);
       }
     }

@@ -36,14 +36,12 @@ const complex::ChoicesParameter::ValueType k_RotationIdx = 3ULL;
 const complex::ChoicesParameter::ValueType k_TranslationIdx = 4ULL;
 const complex::ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
 
-const std::string k_NoInterpolation("No Interpolation");
-const std::string k_NearestNeighborInterpolation("Nearest Neighbor");
+const std::string k_NearestNeighborInterpolation("Nearest Neighbor Resampling");
 const std::string k_LinearInterpolation("Linear Interpolation");
-const complex::ChoicesParameter::Choices k_InterpolationChoices = {k_NoInterpolation, k_NearestNeighborInterpolation, k_LinearInterpolation};
+const complex::ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation};
 
-const complex::ChoicesParameter::ValueType k_NoInterpolationIdx = 0ULL;
-const complex::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 1ULL;
-const complex::ChoicesParameter::ValueType k_LinearInterpolationIdx = 2ULL;
+const complex::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
+const complex::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
 } // namespace
 
 namespace complex
