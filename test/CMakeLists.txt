@@ -27,6 +27,7 @@ add_executable(complex_test
   ArgumentsTest.cpp
   BitTest.cpp
   DataArrayTest.cpp
+  DataPathTest.cpp
   DataStructObserver.hpp
   DataStructObserver.cpp
   DataStructTest.cpp
