@@ -65,7 +65,7 @@ Result<> WriteStlFile::operator()()
   const IGeometry::MeshIndexArrayType& triangles = triangleGeom.getFacesRef();
   const IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
-  const auto& normals = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FaceNormalsPath);
+  // const auto& normals = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FaceNormalsPath);
 
   // Store all the unique Spins
   std::map<int32, int32> uniqueGrainIdToPhase;
@@ -174,9 +174,23 @@ Result<> WriteStlFile::operator()()
       vert3[1] = static_cast<float>(vertices[nId2 * 3 + 1]);
       vert3[2] = static_cast<float>(vertices[nId2 * 3 + 2]);
 
-      normal[0] = static_cast<float>(normals[t * 3]);
-      normal[1] = static_cast<float>(normals[t * 3 + 1]);
-      normal[2] = static_cast<float>(normals[t * 3 + 2]);
+      // Compute the normal
+      u[0] = vert2[0] - vert1[0];
+      u[1] = vert2[1] - vert1[1];
+      u[2] = vert2[2] - vert1[2];
+
+      w[0] = vert3[0] - vert1[0];
+      w[1] = vert3[1] - vert1[1];
+      w[2] = vert3[2] - vert1[2];
+
+      normal[0] = u[1] * w[2] - u[2] * w[1];
+      normal[1] = u[2] * w[0] - u[0] * w[2];
+      normal[2] = u[0] * w[1] - u[1] * w[0];
+
+      length = sqrtf(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+      normal[0] = normal[0] / length;
+      normal[1] = normal[1] / length;
+      normal[2] = normal[2] / length;
 
       totalWritten = fwrite(data, 1, 50, f);
       if(totalWritten != 50)

@@ -67,7 +67,6 @@ TEST_CASE("ComplexCore::WriteStlFileFilter: Valid Filter Execution", "[ComplexCo
   args.insertOrAssign(WriteStlFileFilter::k_OutputStlPrefix_Key, std::make_any<StringParameter::ValueType>("Triangle"));
   args.insertOrAssign(WriteStlFileFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName})));
   args.insertOrAssign(WriteStlFileFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName, Constants::k_Face_Data, Constants::k_FaceLabels})));
-  args.insertOrAssign(WriteStlFileFilter::k_FaceNormalsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName, Constants::k_Face_Data, Constants::k_NormalsLabels})));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);

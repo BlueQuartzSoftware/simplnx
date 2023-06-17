@@ -30,7 +30,7 @@ public:
   static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
   static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
   static inline constexpr StringLiteral k_TriangleGeomPath_Key = "triangle_geom_path";
-  static inline constexpr StringLiteral k_FaceNormalsPath_Key = "face_normals_path";
+  // static inline constexpr StringLiteral k_FaceNormalsPath_Key = "face_normals_path";
 
   /**
    * @brief Returns the name of the filter.
