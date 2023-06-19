@@ -15,7 +15,7 @@ using namespace complex;
 
 namespace
 {
-const std::string k_ExemplarDir = fmt::format("{}/write_stl_test", unit_test::k_TestFilesDir);
+const std::string k_ExemplarDir = fmt::format("{}/6_6_write_stl_test", unit_test::k_TestFilesDir);
 
 std::vector<char> readIn(fs::path filePath)
 {
@@ -57,7 +57,7 @@ TEST_CASE("ComplexCore::WriteStlFileFilter: Valid Filter Execution", "[ComplexCo
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteStlFileFilter filter;
-  auto exemplarFilePath = fs::path(fmt::format("{}/write_stl_test.dream3d", k_ExemplarDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
   Arguments args;
 
@@ -65,8 +65,8 @@ TEST_CASE("ComplexCore::WriteStlFileFilter: Valid Filter Execution", "[ComplexCo
   args.insertOrAssign(WriteStlFileFilter::k_GroupByFeature, std::make_any<bool>(false));
   args.insertOrAssign(WriteStlFileFilter::k_OutputStlDirectory_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(std::string(unit_test::k_BinaryTestOutputDir))));
   args.insertOrAssign(WriteStlFileFilter::k_OutputStlPrefix_Key, std::make_any<StringParameter::ValueType>("Triangle"));
-  args.insertOrAssign(WriteStlFileFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName})));
-  args.insertOrAssign(WriteStlFileFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({Constants::k_TriangleGeometryName, Constants::k_Face_Data, Constants::k_FaceLabels})));
+  args.insertOrAssign(WriteStlFileFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(DataPath({"TriangleDataContainer"})));
+  args.insertOrAssign(WriteStlFileFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(DataPath({"TriangleDataContainer", "FaceData", "FaceLabels"})));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
