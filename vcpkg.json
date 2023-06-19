@@ -18,7 +18,8 @@
     {
       "name": "hdf5",
       "features": [
-        "cpp"
+        "cpp",
+        "zlib"
       ]
     },
     {
