@@ -62,7 +62,7 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
 
     // Create default Parameters for the filter.
     args.insertOrAssign(FindGBPDMetricBasedFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
-    args.insertOrAssign(FindGBPDMetricBasedFilter::k_LimitDist_Key, std::make_any<float32>(7.0));
+    args.insertOrAssign(FindGBPDMetricBasedFilter::k_LimitDist_Key, std::make_any<float32>(7.0f));
     args.insertOrAssign(FindGBPDMetricBasedFilter::k_NumSamplPts_Key, std::make_any<int32>(3000));
     args.insertOrAssign(FindGBPDMetricBasedFilter::k_ExcludeTripleLines_Key, std::make_any<bool>(false));
     args.insertOrAssign(FindGBPDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
@@ -175,7 +175,7 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: InValid Filter Execut
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(FindGBPDMetricBasedFilter::k_LimitDist_Key, std::make_any<float32>(7));
+  args.insertOrAssign(FindGBPDMetricBasedFilter::k_LimitDist_Key, std::make_any<float32>(7.0f));
   args.insertOrAssign(FindGBPDMetricBasedFilter::k_ExcludeTripleLines_Key, std::make_any<bool>(true));
   args.insertOrAssign(FindGBPDMetricBasedFilter::k_DistOutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
   args.insertOrAssign(FindGBPDMetricBasedFilter::k_SaveRelativeErr_Key, std::make_any<bool>(true));
