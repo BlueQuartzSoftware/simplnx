@@ -114,6 +114,7 @@
 #include "ComplexCore/Filters/KMedoidsFilter.hpp"
 #include "ComplexCore/Filters/KMeansFilter.hpp"
 #include "ComplexCore/Filters/SilhouetteFilter.hpp"
+#include "ComplexCore/Filters/MergeColoniesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace complex
@@ -237,6 +238,7 @@ namespace complex
     {complex::Uuid::FromString("f7486aa6-3049-5be7-8511-ae772b70c90b").value(), complex::FilterTraits<KMedoidsFilter>::uuid}, // KMedoids
     {complex::Uuid::FromString("b56a04de-0ca0-509d-809f-52219fca9c98").value(), complex::FilterTraits<KMeansFilter>::uuid}, // KMeans
     {complex::Uuid::FromString("f84d4d69-9ea5-54b6-a71c-df76d76d50cf").value(), complex::FilterTraits<SilhouetteFilter>::uuid}, // Silhouette
+    {complex::Uuid::FromString("2c4a6d83-6a1b-56d8-9f65-9453b28845b9").value(), complex::FilterTraits<MergeColoniesFilter>::uuid}, // MergeColonies
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
