@@ -159,6 +159,8 @@ bool DataStructure::containsData(const DataPath& path) const
 
 Result<LinkedPath> DataStructure::makePath(const DataPath& path)
 {
+  std::vector<DataObject::IdType> createdIds;
+
   try
   {
     std::vector<DataObject::IdType> pathIds;
@@ -167,17 +169,24 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
     if(data == nullptr)
     {
       data = complex::DataGroup::Create(*this, name);
+      createdIds.push_back(data->getId());
     }
     const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
     pathIds.push_back(data->getId());
 
     for(usize i = 1; i < path.getLength(); i++)
     {
+      if(parent == nullptr)
+      {
+        return complex::MakeErrorResult<LinkedPath>(-3, "Target parent object in path is not derived from BaseGroup.");
+      }
+
       name = path[i];
       data = (*parent)[name];
       if(data == nullptr)
       {
         data = DataGroup::Create(*this, name, pathIds.back());
+        createdIds.push_back(data->getId());
       }
       pathIds.push_back(data->getId());
 
@@ -187,6 +196,11 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
     return {LinkedPath(this, pathIds)};
   } catch(const std::exception& e)
   {
+    for(const auto& id : createdIds)
+    {
+      removeData(id);
+    }
+
     return complex::MakeErrorResult<LinkedPath>(-2, "Exception thrown when attempting to create a path in the DataStructure");
   }
 }
