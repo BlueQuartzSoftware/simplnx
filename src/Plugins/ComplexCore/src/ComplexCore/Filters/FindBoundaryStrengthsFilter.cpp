@@ -101,25 +101,25 @@ IFilter::PreflightResult FindBoundaryStrengthsFilter::preflightImpl(const DataSt
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2},
                                                       pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshF1sArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2},
                                                       pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshF1sptsArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2},
                                                       pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshF7sArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabelsTupShape, std::vector<usize>{2},
                                                       pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshmPrimesArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
