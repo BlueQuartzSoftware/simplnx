@@ -95,13 +95,13 @@ IFilter::PreflightResult GenerateVectorColorsFilter::preflightImpl(const DataStr
   std::vector<usize> vectorsTupShape = dataStructure.getDataAs<Float32Array>(pVectorsArrayPathValue)->getTupleShape();
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::uint8, vectorsTupShape, std::vector<usize>{3}, pVectorsArrayPathValue.getParent().createChildPath(pCellVectorColorsArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   if(!pUseGoodVoxelsValue)
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::boolean, vectorsTupShape, std::vector<usize>{1}, k_MaskArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
