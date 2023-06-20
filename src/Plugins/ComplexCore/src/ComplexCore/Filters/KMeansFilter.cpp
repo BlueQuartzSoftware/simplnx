@@ -121,7 +121,7 @@ IFilter::PreflightResult KMeansFilter::preflightImpl(const DataStructure& dataSt
   {
     auto createAction =
         std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.getParent().createChildPath(pFeatureIdsArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(createAction));
+    resultOutputActions.value().appendAction(std::move(createAction));
   }
 
   if(!pUseMaskValue)
@@ -129,20 +129,20 @@ IFilter::PreflightResult KMeansFilter::preflightImpl(const DataStructure& dataSt
     DataPath tempPath = DataPath({k_MaskName});
     {
       auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath);
-      resultOutputActions.value().actions.push_back(std::move(createAction));
+      resultOutputActions.value().appendAction(std::move(createAction));
     }
 
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
   }
 
   auto tupDims = std::vector<usize>{pInitClustersValue + 1};
   {
     auto createAction = std::make_unique<CreateAttributeMatrixAction>(pFeatureAMPathValue, tupDims);
-    resultOutputActions.value().actions.push_back(std::move(createAction));
+    resultOutputActions.value().appendAction(std::move(createAction));
   }
   {
     auto createAction = std::make_unique<CreateArrayAction>(clusterArray->getDataType(), tupDims, clusterArray->getComponentShape(), pFeatureAMPathValue.createChildPath(pMeansArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(createAction));
+    resultOutputActions.value().appendAction(std::move(createAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

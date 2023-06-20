@@ -114,15 +114,15 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
     DataPath tempPath = DataPath({k_MaskName});
     {
       auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath);
-      resultOutputActions.value().actions.push_back(std::move(createAction));
+      resultOutputActions.value().appendAction(std::move(createAction));
     }
 
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
   }
 
   {
     auto createAction = std::make_unique<CreateArrayAction>(DataType::float64, clusterArray->getTupleShape(), std::vector<usize>{1}, pSilhouetteArrayPathValue);
-    resultOutputActions.value().actions.push_back(std::move(createAction));
+    resultOutputActions.value().appendAction(std::move(createAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

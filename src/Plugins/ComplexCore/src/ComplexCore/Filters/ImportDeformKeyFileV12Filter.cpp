@@ -132,7 +132,7 @@ IFilter::PreflightResult ImportDeformKeyFileV12Filter::preflightImpl(const DataS
   {
     auto createAction = std::make_unique<CreateQuadGeometryAction>(pQuadGeomPathValue, s_HeaderCache[m_InstanceId].cellAttrMatTupleCount, s_HeaderCache[m_InstanceId].vertexAttrMatTupleCount,
                                                                    vertexDataPath.getTargetName(), cellDataPath.getTargetName(), "SharedVertices", "SharedFaces");
-    resultOutputActions.value().actions.push_back(std::move(createAction));
+    resultOutputActions.value().appendAction(std::move(createAction));
   }
 
   for(const DataArrayMetadata& daMetadata : s_HeaderCache[m_InstanceId].dataArrays)
@@ -160,7 +160,7 @@ IFilter::PreflightResult ImportDeformKeyFileV12Filter::preflightImpl(const DataS
 
     {
       auto createAction = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{daMetadata.tupleCount}, std::vector<usize>{daMetadata.componentCount}, daMetadata.path);
-      resultOutputActions.value().actions.push_back(std::move(createAction));
+      resultOutputActions.value().appendAction(std::move(createAction));
     }
   }
 
