@@ -4,7 +4,7 @@ using namespace complex;
 
 namespace complex
 {
-Result<> OutputActions::ApplyActions(nonstd::span<const IDataAction::UniquePointer> actions, DataStructure& dataStructure, IDataAction::Mode mode)
+Result<> OutputActions::ApplyActions(nonstd::span<const AnyDataAction> actions, DataStructure& dataStructure, IDataAction::Mode mode)
 {
   std::vector<Error> errors;
   std::vector<Warning> warnings;

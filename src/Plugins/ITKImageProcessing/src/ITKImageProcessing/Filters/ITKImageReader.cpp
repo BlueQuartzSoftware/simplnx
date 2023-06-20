@@ -222,8 +222,8 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
 
     std::vector<usize> cDims = {nComponents};
 
-    actions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing), cellDataName));
-    actions.actions.push_back(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), std::move(arrayPath)));
+    actions.appendAction(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing), cellDataName));
+    actions.appendAction(std::make_unique<CreateArrayAction>(*numericType, std::move(arrayDims), std::move(cDims), std::move(arrayPath)));
 
   } catch(const itk::ExceptionObject& err)
   {

@@ -112,17 +112,17 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
   {
     auto createDataGroupAction =
         std::make_unique<CreateImageGeometryAction>(pImageGeomPathValue, tupleDims, std::vector<float32>(pOriginValue), std::vector<float32>(pSpacingValue), pImageGeomPathValue.getTargetName());
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   DataPath cellAMPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);
   {
     auto createDataGroupAction = std::make_unique<CreateAttributeMatrixAction>(cellAMPath, tupleDims);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   DataPath featIdsPath = cellAMPath.createChildPath(pFeatureIdsArrayNameValue);
   {
     auto createDataGroupAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, featIdsPath);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

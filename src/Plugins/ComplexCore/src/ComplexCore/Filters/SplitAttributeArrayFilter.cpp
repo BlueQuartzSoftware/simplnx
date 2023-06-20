@@ -114,7 +114,7 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
       }
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::number(compIndex);
       DataPath newArrayPath = pInputArrayPath.getParent().createChildPath(arrayName);
-      resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
     }
   }
   else
@@ -123,13 +123,13 @@ IFilter::PreflightResult SplitAttributeArrayFilter::preflightImpl(const DataStru
     {
       std::string arrayName = pInputArrayPath.getTargetName() + pPostfix + StringUtilities::number(i);
       DataPath newArrayPath = pInputArrayPath.getParent().createChildPath(arrayName);
-      resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputArray->getDataType(), tdims, cdims, newArrayPath));
     }
   }
 
   if(pRemoveOriginal)
   {
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(pInputArrayPath, DeleteDataAction::DeleteType::JustObject));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pInputArrayPath, DeleteDataAction::DeleteType::JustObject));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

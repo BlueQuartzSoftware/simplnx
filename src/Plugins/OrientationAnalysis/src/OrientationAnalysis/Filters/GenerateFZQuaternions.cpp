@@ -238,7 +238,7 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
 
   auto createArrayAction =
       std::make_unique<CreateArrayAction>(complex::DataType::float32, quatArray.getDataStore()->getTupleShape(), quatArray.getDataStore()->getComponentShape(), pFZQuatsArrayPathValue);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

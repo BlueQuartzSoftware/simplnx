@@ -185,6 +185,66 @@ const Float32Array* RectGridGeom::getZBounds() const
   return dynamic_cast<const Float32Array*>(getDataStructure()->getData(m_zBoundsId));
 }
 
+Float32Array& RectGridGeom::getXBoundsRef()
+{
+  Float32Array* xBounds = getXBounds();
+  if(xBounds == nullptr)
+  {
+    throw std::runtime_error("RectGridGeom::getXBoundsRef: X bounds do not exist");
+  }
+  return *xBounds;
+}
+
+Float32Array& RectGridGeom::getYBoundsRef()
+{
+  Float32Array* yBounds = getYBounds();
+  if(yBounds == nullptr)
+  {
+    throw std::runtime_error("RectGridGeom::getYBoundsRef: Y bounds do not exist");
+  }
+  return *yBounds;
+}
+
+Float32Array& RectGridGeom::getZBoundsRef()
+{
+  Float32Array* zBounds = getZBounds();
+  if(zBounds == nullptr)
+  {
+    throw std::runtime_error("RectGridGeom::getZBoundsRef: Z bounds do not exist");
+  }
+  return *zBounds;
+}
+
+const Float32Array& RectGridGeom::getXBoundsRef() const
+{
+  const Float32Array* xBounds = getXBounds();
+  if(xBounds == nullptr)
+  {
+    throw std::runtime_error("RectGridGeom::getXBoundsRef: X bounds do not exist");
+  }
+  return *xBounds;
+}
+
+const Float32Array& RectGridGeom::getYBoundsRef() const
+{
+  const Float32Array* yBounds = getYBounds();
+  if(yBounds == nullptr)
+  {
+    throw std::runtime_error("RectGridGeom::getYBoundsRef: Y bounds do not exist");
+  }
+  return *yBounds;
+}
+
+const Float32Array& RectGridGeom::getZBoundsRef() const
+{
+  const Float32Array* zBounds = getZBounds();
+  if(zBounds == nullptr)
+  {
+    throw std::runtime_error("RectGridGeom::getZBoundsRef: Z bounds do not exist");
+  }
+  return *zBounds;
+}
+
 std::shared_ptr<Float32Array> RectGridGeom::getSharedXBounds()
 {
   if(!m_xBoundsId.has_value())

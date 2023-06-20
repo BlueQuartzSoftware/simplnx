@@ -87,16 +87,16 @@ IFilter::PreflightResult CreateEnsembleInfoFilter::preflightImpl(const DataStruc
   int numPhases = pEnsembleValue.size();
   std::vector<usize> tDims(1, numPhases + 1);
   auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(pCellEnsembleAttributeMatrixNameValue, tDims);
-  outputActions.actions.push_back(std::move(createAttributeMatrixAction));
+  outputActions.appendAction(std::move(createAttributeMatrixAction));
 
   std::vector<size_t> cDims(1, 1);
   auto createCrystalStructuresAction = std::make_unique<CreateArrayAction>(DataType::uint32, tDims, cDims, pCellEnsembleAttributeMatrixNameValue.createChildPath(pCrystalStructuresArrayNameValue));
   auto createPhaseTypesAction = std::make_unique<CreateArrayAction>(DataType::uint32, tDims, cDims, pCellEnsembleAttributeMatrixNameValue.createChildPath(pPhaseTypesArrayNameValue));
   auto createPhaseNamesAction =
       std::make_unique<CreateStringArrayAction>(tDims, pCellEnsembleAttributeMatrixNameValue.createChildPath(pPhaseNamesArrayNameValue), EnsembleInfoParameter::k_DefaultPhaseName);
-  outputActions.actions.push_back(std::move(createCrystalStructuresAction));
-  outputActions.actions.push_back(std::move(createPhaseTypesAction));
-  outputActions.actions.push_back(std::move(createPhaseNamesAction));
+  outputActions.appendAction(std::move(createCrystalStructuresAction));
+  outputActions.appendAction(std::move(createPhaseTypesAction));
+  outputActions.appendAction(std::move(createPhaseNamesAction));
 
   return {std::move(outputActions)};
 }

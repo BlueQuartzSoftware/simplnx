@@ -324,8 +324,8 @@ IFilter::PreflightResult ITKImportImageStack::preflightImpl(const DataStructure&
   const std::vector<usize> arrayDims(dims.crbegin(), dims.crend());
 
   OutputActions outputActions;
-  outputActions.actions.push_back(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing), cellDataName));
-  outputActions.actions.push_back(std::make_unique<CreateArrayAction>(createArrayActionPtr->type(), arrayDims, createArrayActionPtr->componentDims(), imageDataPath));
+  outputActions.appendAction(std::make_unique<CreateImageGeometryAction>(std::move(imageGeomPath), std::move(dims), std::move(origin), std::move(spacing), cellDataName));
+  outputActions.appendAction(std::make_unique<CreateArrayAction>(createArrayActionPtr->type(), arrayDims, createArrayActionPtr->componentDims(), imageDataPath));
 
   return {std::move(outputActions)};
 }

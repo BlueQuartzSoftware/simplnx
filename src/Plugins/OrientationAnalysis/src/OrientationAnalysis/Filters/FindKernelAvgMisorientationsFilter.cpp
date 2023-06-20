@@ -100,7 +100,7 @@ IFilter::PreflightResult FindKernelAvgMisorientationsFilter::preflightImpl(const
   // Create output Kernel Average Misorientations
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, cellPhases.getIDataStore()->getTupleShape(), std::vector<usize>{1}, pKernelAverageMisorientationsArrayNameValue);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;

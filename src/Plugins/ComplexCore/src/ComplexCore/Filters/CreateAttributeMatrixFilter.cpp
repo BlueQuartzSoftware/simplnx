@@ -71,7 +71,7 @@ IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataSt
   auto action = std::make_unique<CreateAttributeMatrixAction>(dataObjectPath, tupleDims);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
 
   return {std::move(actions)};
 }

@@ -58,6 +58,11 @@ Result<> CreateNeighborListAction::apply(DataStructure& dataStructure, Mode mode
   }
 }
 
+IDataAction::UniquePointer CreateNeighborListAction::clone() const
+{
+  return std::make_unique<CreateNeighborListAction>(m_Type, m_TupleCount, getCreatedPath());
+}
+
 DataType CreateNeighborListAction::type() const
 {
   return m_Type;

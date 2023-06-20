@@ -106,7 +106,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
     {
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
       auto createArrayAction = std::make_unique<CreateArrayAction>(array->getDataType(), refAM->getShape(), array->getComponentShape(), createdArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
 
@@ -116,7 +116,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
     {
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
       auto createArrayAction = std::make_unique<CreateStringArrayAction>(refAM->getShape(), createdArrayPath);
-      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
 
@@ -127,7 +127,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   //    {
   //      DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
   //      auto createArrayAction = std::make_unique<CreateNeighborListAction>(array->getDataType(), array->getNumberOfTuples(), createdArrayPath);
-  //      resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  //      resultOutputActions.value().appendAction(std::move(createArrayAction));
   //    }
   //  }
 

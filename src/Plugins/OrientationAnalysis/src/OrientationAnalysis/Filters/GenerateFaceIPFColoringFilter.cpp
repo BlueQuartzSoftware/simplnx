@@ -113,7 +113,7 @@ IFilter::PreflightResult GenerateFaceIPFColoringFilter::preflightImpl(const Data
 
   DataPath faceIpfColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.getParent().createChildPath(pSurfaceMeshFaceIPFColorsArrayNameValue);
   auto action = std::make_unique<CreateArrayAction>(DataType::uint8, faceLabels->getTupleShape(), std::vector<usize>{6}, faceIpfColorsArrayPath);
-  resultOutputActions.value().actions.push_back(std::move(action));
+  resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

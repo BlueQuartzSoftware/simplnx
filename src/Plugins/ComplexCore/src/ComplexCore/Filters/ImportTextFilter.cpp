@@ -136,7 +136,7 @@ IFilter::PreflightResult ImportTextFilter::preflightImpl(const DataStructure& da
 
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, std::vector<usize>{nComp}, arrayPath, dataFormat);
 
-  resultOutputActions.value().actions.push_back(std::move(action));
+  resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions)};
 }

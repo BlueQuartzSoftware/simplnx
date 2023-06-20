@@ -104,7 +104,7 @@ IFilter::PreflightResult CalculateArrayHistogramFilter::preflightImpl(const Data
   if(pNewDataGroupValue)
   {
     auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pNewDataGroupNameValue);
-    resultOutputActions.value().actions.push_back(std::move(createDataGroupAction));
+    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
@@ -119,7 +119,7 @@ IFilter::PreflightResult CalculateArrayHistogramFilter::preflightImpl(const Data
       childPath = pDataGroupNameValue.createChildPath((dataArray->getName() + pHistogramSuffix));
     }
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)}, std::vector<usize>{2}, childPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

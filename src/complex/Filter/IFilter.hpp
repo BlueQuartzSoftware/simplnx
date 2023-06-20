@@ -215,5 +215,5 @@ protected:
   virtual Result<> executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const = 0;
 };
 
-using FilterCreationFunc = IFilter::UniquePointer (*)();
+using FilterCreationFunc = std::function<IFilter::UniquePointer()>;
 } // namespace complex

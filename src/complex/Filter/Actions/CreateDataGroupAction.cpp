@@ -27,6 +27,11 @@ Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode mode) c
   return {};
 }
 
+IDataAction::UniquePointer CreateDataGroupAction::clone() const
+{
+  return std::make_unique<CreateDataGroupAction>(getCreatedPath());
+}
+
 std::vector<DataPath> CreateDataGroupAction::getAllCreatedPaths() const
 {
   return {getCreatedPath()};

@@ -121,27 +121,27 @@ IFilter::PreflightResult FindShapesFilter::preflightImpl(const DataStructure& da
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {
     auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, pOmega3sArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createFeatureCentroidsAction));
+    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
   }
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {
     auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3ULL}, pAxisLengthsArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createFeatureCentroidsAction));
+    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
   }
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {
     auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3ULL}, pAxisEulerAnglesArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createFeatureCentroidsAction));
+    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
   }
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {
     auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{2ULL}, pAspectRatiosArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createFeatureCentroidsAction));
+    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
   }
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"
   {
     auto createFeatureCentroidsAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, pVolumesArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createFeatureCentroidsAction));
+    resultOutputActions.value().appendAction(std::move(createFeatureCentroidsAction));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

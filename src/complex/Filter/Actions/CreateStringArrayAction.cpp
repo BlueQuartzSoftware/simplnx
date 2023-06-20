@@ -68,6 +68,11 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
   return {};
 }
 
+IDataAction::UniquePointer CreateStringArrayAction::clone() const
+{
+  return std::make_unique<CreateStringArrayAction>(m_Dims, getCreatedPath());
+}
+
 const std::vector<usize>& CreateStringArrayAction::dims() const
 {
   return m_Dims;

@@ -108,14 +108,14 @@ IFilter::PreflightResult FindFeatureNeighborCAxisMisalignmentsFilter::preflightI
   {
     auto createArrayAction = std::make_unique<CreateNeighborListAction>(DataType::float32, featurePhases.getNumberOfTuples(),
                                                                         pFeaturePhasesArrayPathValue.getParent().createChildPath(pCAxisMisalignmentListArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   if(pFindAvgMisalsValue)
   {
     auto pAvgCAxisMisalignmentsArrayNameValue = filterArgs.value<std::string>(k_AvgCAxisMisalignmentsArrayName_Key);
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, featurePhases.getTupleShape(), std::vector<usize>{1},
                                                                  pFeaturePhasesArrayPathValue.getParent().createChildPath(pAvgCAxisMisalignmentsArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   resultOutputActions.warnings().push_back(

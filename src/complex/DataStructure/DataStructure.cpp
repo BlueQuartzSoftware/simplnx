@@ -387,16 +387,35 @@ const DataObject* DataStructure::getData(const LinkedPath& path) const
   return path.getData();
 }
 
-std::shared_ptr<DataObject> DataStructure::getSharedData(DataObject::IdType identifier) const
+std::shared_ptr<DataObject> DataStructure::getSharedData(DataObject::IdType id)
 {
-  if(m_DataObjects.find(identifier) == m_DataObjects.end())
+  if(m_DataObjects.find(id) == m_DataObjects.end())
   {
     return nullptr;
   }
-  return m_DataObjects.at(identifier).lock();
+  return m_DataObjects.at(id).lock();
 }
 
-std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path) const
+std::shared_ptr<const DataObject> DataStructure::getSharedData(DataObject::IdType id) const
+{
+  if(m_DataObjects.find(id) == m_DataObjects.end())
+  {
+    return nullptr;
+  }
+  return m_DataObjects.at(id).lock();
+}
+
+std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path)
+{
+  auto dataObject = getData(path);
+  if(dataObject == nullptr)
+  {
+    return nullptr;
+  }
+  return m_DataObjects.at(dataObject->getId()).lock();
+}
+
+std::shared_ptr<const DataObject> DataStructure::getSharedData(const DataPath& path) const
 {
   auto dataObject = getData(path);
   if(dataObject == nullptr)

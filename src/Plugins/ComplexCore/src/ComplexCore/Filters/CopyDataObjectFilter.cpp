@@ -103,7 +103,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
       }
     }
     auto action = std::make_unique<CopyDataObjectAction>(dataArrayPath, newDataPath, allCreatedPaths);
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
 
   return {std::move(actions)};

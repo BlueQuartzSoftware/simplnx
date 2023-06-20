@@ -28,8 +28,6 @@ public:
   static constexpr StringLiteral k_DefaultVerticesName = "SharedVertexList";
   static constexpr StringLiteral k_DefaultFacesName = "SharedTriList";
 
-  CreateGeometry2DAction() = delete;
-
   /**
    * @brief Constructor to create the 2D geometry and allocate a default arrays for the shared vertex & shared face lists
    * @param geometryPath The path to the created geometry
@@ -239,6 +237,25 @@ public:
   }
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override
+  {
+    auto action = std::unique_ptr<CreateGeometry2DAction>(new CreateGeometry2DAction());
+    action->m_NumFaces = m_NumFaces;
+    action->m_NumVertices = m_NumVertices;
+    action->m_VertexDataName = m_VertexDataName;
+    action->m_FaceDataName = m_FaceDataName;
+    action->m_SharedVerticesName = m_SharedVerticesName;
+    action->m_SharedFacesName = m_SharedFacesName;
+    action->m_InputVertices = m_InputVertices;
+    action->m_InputFaces = m_InputFaces;
+    action->m_ArrayHandlingType = m_ArrayHandlingType;
+    return action;
+  }
+
+  /**
    * @brief Returns the path of the ImageGeometry to be created.
    * @return
    */
@@ -298,6 +315,9 @@ public:
     }
     return createdPaths;
   }
+
+protected:
+  CreateGeometry2DAction() = default;
 
 private:
   IGeometry::MeshIndexType m_NumFaces = 1;

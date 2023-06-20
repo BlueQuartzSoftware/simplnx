@@ -137,12 +137,12 @@ IFilter::PreflightResult FindMisorientationsFilter::preflightImpl(const DataStru
   if(pFindAvgMisorsValue)
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, avgQuats->getIDataStore()->getTupleShape(), std::vector<usize>{1}, pAvgMisorientationsArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Create the NeighborList array
   auto createArrayAction = std::make_unique<CreateNeighborListAction>(complex::DataType::float32, avgQuats->getNumberOfTuples(), pMisorientationListArrayPath);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   std::vector<PreflightValue> preflightUpdatedValues;
 

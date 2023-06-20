@@ -161,9 +161,9 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     tempPathVector.back() = tempName;
     DataPath tempPath(tempPathVector);
     // Rename the current image geometry
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(srcImagePath, tempName));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(srcImagePath, tempName));
     // After the execute function has been done, delete the moved image geometry
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(tempPath));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));
 
     tempPathVector = srcImagePath.getPathVector();
     tempName = k_TempGeometryName;
@@ -185,7 +185,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     std::string cellDataName = selectedCellData->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
-    resultOutputActions.value().actions.push_back(
+    resultOutputActions.value().appendAction(
         std::make_unique<CreateImageGeometryAction>(destImagePath, geomDims, srcOrigin, CreateImageGeometryAction::OriginType{pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]}, cellDataName));
 
     // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
@@ -197,7 +197,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
       DataType dataType = srcArray.getDataType();
       IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
-      resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, dataArrayShape, std::move(componentShape), dataArrayPath));
     }
 
     // Store the preflight updated value(s) into the preflightUpdatedValues vector using
@@ -220,7 +220,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     std::string warningMsg;
     DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
     auto tDims = srcCellFeatureData->getShape();
-    resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
     for(const auto& [identifier, object] : *srcCellFeatureData)
     {
       if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
@@ -228,7 +228,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
         DataType dataType = srcArray->getDataType();
         IDataStore::ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
         DataPath dataArrayPath = destCellFeatureAmPath.createChildPath(srcArray->getName());
-        resultOutputActions.value().actions.push_back(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
+        resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
       }
       else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
       {
@@ -265,18 +265,18 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
             allCreatedPaths.push_back(DataPath::FromString(createdPathName).value());
           }
         }
-        resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
+        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, allCreatedPaths));
       }
       else
       {
-        resultOutputActions.value().actions.push_back(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
+        resultOutputActions.value().appendAction(std::make_unique<CopyDataObjectAction>(childPath, copiedChildPath, std::vector<DataPath>{copiedChildPath}));
       }
     }
   }
 
   if(pRemoveOriginalGeometry)
   {
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

@@ -2,6 +2,8 @@
 
 #include "complex/Filter/FilterHandle.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Plugin/AbstractPlugin.hpp"
+#include "complex/Plugin/PluginLoader.hpp"
 #include "complex/complex_export.hpp"
 
 #include <memory>
@@ -12,9 +14,6 @@
 
 namespace complex
 {
-class AbstractPlugin;
-class PluginLoader;
-
 /**
  * @class FilterList
  * @brief The FilterList class serves as a lookup point for finding and
@@ -88,12 +87,47 @@ public:
   AbstractPlugin* getPlugin(const FilterHandle& handle) const;
 
   /**
-   * @brief Attempts to add a plugin using the specified PluginLoader. Returns
+   * @brief
+   * @param uuid
+   * @return
+   */
+  const AbstractPlugin* getPlugin(const Uuid& uuid) const
+  {
+    auto iter = m_PluginMap.find(uuid);
+    if(iter == m_PluginMap.cend())
+    {
+      return nullptr;
+    }
+    return iter->second->getPlugin();
+  }
+
+  /**
+   * @brief
+   * @param uuid
+   * @return
+   */
+  bool containsPlugin(const Uuid& uuid)
+  {
+    return m_PluginMap.find(uuid) != m_PluginMap.cend();
+  }
+
+  /**
+   * @brief
+   * @param plugin
+   * @return
+   */
+  bool containsPlugin(const AbstractPlugin& plugin)
+  {
+    return containsPlugin(plugin.getId());
+  }
+
+  /**
+   * @brief Attempts to add a plugin using the specified IPluginLoader. Returns
    * true if the plugin was added. Returns false otherwise.
    * @param loader
    * @return bool
    */
-  bool addPlugin(const std::shared_ptr<PluginLoader>& loader);
+  bool addPlugin(const std::shared_ptr<IPluginLoader>& loader);
 
   /**
    * @brief Attempts to add the plugin at the specified filepath. Returns true
@@ -102,6 +136,13 @@ public:
    * @return bool
    */
   bool addPlugin(const std::string& path);
+
+  /**
+   * @brief Removes the plugin with the given uuid.
+   * Warning: Do not remove plugins unless necessary.
+   * @param pluginId
+   */
+  void removePlugin(const Uuid& pluginId);
 
   /**
    * @brief Returns a set of pointers to loaded plugins.
@@ -124,6 +165,6 @@ private:
   ////////////
   // Variables
   FilterContainerType m_FilterHandles;
-  std::unordered_map<FilterHandle::PluginIdType, std::shared_ptr<PluginLoader>> m_PluginMap;
+  std::unordered_map<FilterHandle::PluginIdType, std::shared_ptr<IPluginLoader>> m_PluginMap;
 };
 } // namespace complex

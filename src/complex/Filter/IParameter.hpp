@@ -3,6 +3,7 @@
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/Common/Uuid.hpp"
+#include "complex/Filter/AnyCloneable.hpp"
 #include "complex/Filter/Arguments.hpp"
 #include "complex/complex_export.hpp"
 
@@ -140,4 +141,6 @@ public:
 protected:
   IParameter() = default;
 };
+
+using AnyParameter = AnyCloneable<IParameter>;
 } // namespace complex

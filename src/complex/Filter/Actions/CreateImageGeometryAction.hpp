@@ -44,6 +44,12 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override;
+
+  /**
    * @brief Returns the path of the ImageGeometry to be created.
    * @return DataPath
    */

@@ -120,13 +120,13 @@ IFilter::PreflightResult FindNeighborhoodsFilter::preflightImpl(const DataStruct
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatureData->getShape(), std::vector<usize>{1ULL},
                                                       pFeaturePhasesArrayPathValue.getParent().createChildPath(pNeighborhoodsArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
     auto action =
         std::make_unique<CreateNeighborListAction>(DataType::int32, cellFeatureData->getNumTuples(), pFeaturePhasesArrayPathValue.getParent().createChildPath(pNeighborhoodListArrayNameValue));
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;

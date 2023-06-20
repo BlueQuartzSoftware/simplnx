@@ -109,14 +109,14 @@ IFilter::PreflightResult FindSurfaceAreaToVolumeFilter::preflightImpl(const Data
   {
     auto arrayPath = pNumCellsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, arrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the SphericityArray
   if(pCalculateSphericityValue)
   {
     auto arrayPath = pNumCellsArrayPathValue.getParent().createChildPath(filterArgs.value<std::string>(k_SphericityArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1ULL}, arrayPath);
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   std::vector<PreflightValue> preflightUpdatedValues;

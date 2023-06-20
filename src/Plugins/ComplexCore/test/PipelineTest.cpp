@@ -89,8 +89,8 @@ protected:
   PreflightResult preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override
   {
     OutputActions outputActions;
-    outputActions.actions.push_back(std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{10}, std::vector<usize>{1}, k_DeferredActionPath));
-    outputActions.deferredActions.push_back(std::make_unique<DeleteDataAction>(k_DeferredActionPath));
+    outputActions.appendAction(std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{10}, std::vector<usize>{1}, k_DeferredActionPath));
+    outputActions.appendDeferredAction(std::make_unique<DeleteDataAction>(k_DeferredActionPath));
     return {std::move(outputActions)};
   }
 

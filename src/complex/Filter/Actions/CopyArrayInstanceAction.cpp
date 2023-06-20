@@ -83,6 +83,11 @@ Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode)
   return MakeErrorResult(k_UnsupportedTypeError, fmt::format("{}The input array at DataPath '{}' was of an unsupported type", prefix, m_SelectedDataPath.toString()));
 }
 
+IDataAction::UniquePointer CopyArrayInstanceAction::clone() const
+{
+  return std::make_unique<CopyArrayInstanceAction>(m_SelectedDataPath, createdDataPath());
+}
+
 DataPath CopyArrayInstanceAction::selectedDataPath() const
 {
   return m_SelectedDataPath;

@@ -128,7 +128,7 @@ IFilter::PreflightResult FindGBCDFilter::preflightImpl(const DataStructure& data
 
   std::vector<usize> tupleShape(1, crystalStructures->getNumberOfTuples());
   auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(faceEnsembleAttributeMatrixPath, tupleShape);
-  resultOutputActions.value().actions.push_back(std::move(createAttributeMatrixAction));
+  resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
 
   if(dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue) == nullptr)
   {
@@ -154,7 +154,7 @@ IFilter::PreflightResult FindGBCDFilter::preflightImpl(const DataStructure& data
   componentShape[5] = 2;
 
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float64, tupleShape, componentShape, faceEnsembleAttributeMatrixPath.createChildPath(pGBCDArrayNameValue));
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
