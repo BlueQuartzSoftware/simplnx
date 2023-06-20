@@ -146,7 +146,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
 
   std::vector<size_t> tDims(1, 0);
   auto newCellFeatureAction = std::make_unique<CreateAttributeMatrixAction>(pNewCellFeatureAttributeMatrixNameValue, tDims);
-  resultOutputActions.value().actions.push_back(std::move(newCellFeatureAction));
+  resultOutputActions.value().appendAction(std::move(newCellFeatureAction));
 
   std::vector<DataPath> dataArrayPaths;
 
@@ -157,7 +157,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
     return {MakeErrorResult<OutputActions>(-6874602, fmt::format("Could not find feature ids array of type Int32 at path '{}' ", pFeatureIdsArrayPathValue.toString())), {}};
   }
   auto cellParentIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, featureIds->getIDataStore()->getTupleShape(), cDims, pCellParentIdsArrayNameValue);
-  resultOutputActions.value().actions.push_back(std::move(cellParentIdsAction));
+  resultOutputActions.value().appendAction(std::move(cellParentIdsAction));
 
   // Feature Data
   const Int32Array* phases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);
@@ -168,7 +168,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   dataArrayPaths.push_back(pFeaturePhasesArrayPathValue);
 
   auto featureParentIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, phases->getIDataStore()->getTupleShape(), cDims, pFeatureParentIdsArrayNameValue);
-  resultOutputActions.value().actions.push_back(std::move(featureParentIdsAction));
+  resultOutputActions.value().appendAction(std::move(featureParentIdsAction));
 
   cDims[0] = 4;
   const Float32Array* avgQuats = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
@@ -181,7 +181,7 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   // New Feature Data
   cDims[0] = 1;
   auto activeAction = std::make_unique<CreateArrayAction>(DataType::boolean, tDims, cDims, pActiveArrayNameValue);
-  resultOutputActions.value().actions.push_back(std::move(activeAction));
+  resultOutputActions.value().appendAction(std::move(activeAction));
 
   // Ensemble Data
   const UInt32Array* crystalStructures = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);

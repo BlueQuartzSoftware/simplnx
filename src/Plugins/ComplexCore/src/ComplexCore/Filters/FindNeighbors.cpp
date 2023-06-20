@@ -122,7 +122,7 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
   if(storeBoundaryCells)
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int8, tupleShape, cDims, boundaryCellsPath);
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
 
   // Feature Data:
@@ -139,23 +139,23 @@ IFilter::PreflightResult FindNeighbors::preflightImpl(const DataStructure& data,
   // Create the NumNeighbors Output Data Array in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, cDims, numNeighborsPath);
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, tupleCount, neighborListPath);
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   // And we do the same for the SharedSurfaceArea list in the Feature Attribute Matrix
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleCount, sharedSurfaceAreaPath);
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   // Create the SurfaceFeatures Output Data Array in the Feature Attribute Matrix
   if(storeSurfaceFeatures)
   {
     auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleShape, cDims, surfaceFeaturesPath);
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
 
   return {std::move(actions)};

@@ -27,8 +27,6 @@ public:
   static constexpr StringLiteral k_DefaultVerticesName = "SharedVertexList";
   static constexpr StringLiteral k_DefaultEdgesName = "SharedEdgeList";
 
-  CreateGeometry1DAction() = delete;
-
   /**
    * @brief Constructor to create the 1D geometry and allocate a default arrays for the shared vertex & shared edge lists
    * @param geometryPath The path to the created geometry
@@ -239,6 +237,25 @@ public:
   }
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override
+  {
+    auto action = std::unique_ptr<CreateGeometry1DAction>(new CreateGeometry1DAction());
+    action->m_NumEdges = m_NumEdges;
+    action->m_NumVertices = m_NumVertices;
+    action->m_VertexDataName = m_VertexDataName;
+    action->m_EdgeDataName = m_EdgeDataName;
+    action->m_SharedVerticesName = m_SharedVerticesName;
+    action->m_SharedEdgesName = m_SharedEdgesName;
+    action->m_InputVertices = m_InputVertices;
+    action->m_InputEdges = m_InputEdges;
+    action->m_ArrayHandlingType = m_ArrayHandlingType;
+    return action;
+  }
+
+  /**
    * @brief Returns the path of the ImageGeometry to be created.
    * @return
    */
@@ -298,6 +315,9 @@ public:
     }
     return createdPaths;
   }
+
+protected:
+  CreateGeometry1DAction() = default;
 
 private:
   IGeometry::MeshIndexType m_NumEdges = 1;

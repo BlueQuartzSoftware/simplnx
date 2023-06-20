@@ -105,19 +105,19 @@ IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStruct
 
     DataPath createdArrayPath = faceDataGroupPath.createChildPath(featureFaceIdsArrayName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, faceLabelDataArray->getTupleShape(), std::vector<usize>{1}, createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Create the new Feature Attribute Matrix
   DataPath grainBoundaryAttributeMatrixPath = triangleGeometryPath.createChildPath(grainBoundaryAttributeMatrixName);
-  resultOutputActions.value().actions.push_back(std::make_unique<CreateAttributeMatrixAction>(grainBoundaryAttributeMatrixPath, tDims));
+  resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(grainBoundaryAttributeMatrixPath, tDims));
 
   // Create the Feature Num Triangles Output Array
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureNumTrianglesArrayName_Key);
     DataPath createdArrayPath = grainBoundaryAttributeMatrixPath.createChildPath(createdArrayName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, tDims, std::vector<usize>{1}, createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // Create the Feature Face Labels Output Array
@@ -125,7 +125,7 @@ IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStruct
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureFaceLabelsArrayName_Key);
     DataPath createdArrayPath = grainBoundaryAttributeMatrixPath.createChildPath(createdArrayName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, tDims, std::vector<usize>{2}, createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // No preflight updated values are generated in this filter

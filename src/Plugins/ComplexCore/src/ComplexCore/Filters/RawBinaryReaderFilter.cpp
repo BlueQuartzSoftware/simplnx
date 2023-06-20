@@ -158,7 +158,7 @@ IFilter::PreflightResult RawBinaryReaderFilter::preflightImpl(const DataStructur
   {
     auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), tupleDims, std::vector<usize>{pNumberOfComponentsValue}, pCreatedAttributeArrayPathValue);
 
-    resultOutputActions.value().actions.push_back(std::move(action));
+    resultOutputActions.value().appendAction(std::move(action));
   }
 
   return {std::move(resultOutputActions)};

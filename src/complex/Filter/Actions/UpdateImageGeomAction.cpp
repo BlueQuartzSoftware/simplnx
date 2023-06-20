@@ -38,6 +38,11 @@ Result<> UpdateImageGeomAction::apply(DataStructure& dataStructure, Mode mode) c
   return {};
 }
 
+IDataAction::UniquePointer UpdateImageGeomAction::clone() const
+{
+  return std::make_unique<UpdateImageGeomAction>(m_Origin, m_Spacing, m_Path);
+}
+
 bool UpdateImageGeomAction::shouldUpdateOrigin() const
 {
   return m_Origin.has_value();

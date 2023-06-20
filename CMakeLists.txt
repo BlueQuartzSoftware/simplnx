@@ -6,6 +6,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 # Is this a commercial or Free build
 # --------------------------------------------------------------------------------------------------
 option(COMPLEX_BUILD_PYTHON "Enable building Python building" OFF)
+include(CMakeDependentOption)
+cmake_dependent_option(COMPLEX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON "COMPLEX_BUILD_PYTHON" OFF)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_BUILD_PYTHON FEATURE "python")
 
 # --------------------------------------------------------------------------------------------------
@@ -385,7 +387,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/DataStructure/StringArray.hpp
 
   ${COMPLEX_SOURCE_DIR}/Filter/AbstractParameter.hpp
-  ${COMPLEX_SOURCE_DIR}/Filter/AnyParameter.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/AnyCloneable.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Arguments.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/ConstDataParameter.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/DataParameter.hpp
@@ -695,6 +697,14 @@ foreach(param ${CoreParameters})
   )
 endforeach()
 
+set(COMPLEX_GENERATED_PYTHON_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/ComplexPython.hpp)
+set(COMPLEX_PYTHON_MODULE "complex")
+configure_file(${complex_SOURCE_DIR}/wrapping/python/ComplexPython.hpp.in ${COMPLEX_GENERATED_PYTHON_HEADER})
+
+list(APPEND COMPLEX_GENERATED_HEADERS
+  ${COMPLEX_GENERATED_PYTHON_HEADER}
+)
+
 set(COMPLEX_ALL_HDRS
   ${COMPLEX_HDRS}
   ${COMPLEX_GENERATED_HEADERS}
@@ -893,9 +903,7 @@ if(COMPLEX_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
-
 #------------------------------------------------------------------------------
 # Print Summary Information
 #------------------------------------------------------------------------------
 include(${complex_SOURCE_DIR}/cmake/Summary.cmake)
-

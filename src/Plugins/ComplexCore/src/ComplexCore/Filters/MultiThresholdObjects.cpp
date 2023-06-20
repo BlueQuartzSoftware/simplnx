@@ -370,7 +370,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
                                                     dataArray->getDataFormat());
 
   OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
 
   return {std::move(actions)};
 }

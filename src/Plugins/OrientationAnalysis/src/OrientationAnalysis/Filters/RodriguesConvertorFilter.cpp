@@ -91,14 +91,14 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
 
   {
     auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);
-    resultOutputActions.value().actions.push_back(std::move(createConvertedQuatAction));
+    resultOutputActions.value().appendAction(std::move(createConvertedQuatAction));
   }
 
   auto pRemoveOriginalArray = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   if(pRemoveOriginalArray)
   {
-    resultOutputActions.value().deferredActions.push_back(std::make_unique<DeleteDataAction>(pRodriguesDataArrayPathValue));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pRodriguesDataArrayPathValue));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

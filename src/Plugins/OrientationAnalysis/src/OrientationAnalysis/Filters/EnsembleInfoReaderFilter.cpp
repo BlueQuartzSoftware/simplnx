@@ -116,13 +116,13 @@ IFilter::PreflightResult EnsembleInfoReaderFilter::preflightImpl(const DataStruc
 
   std::vector<usize> tupleDims(1, numPhases + 1);
   auto attributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellEnsembleAttributeMatrixPath, tupleDims);
-  resultOutputActions.value().actions.push_back(std::move(attributeMatrixAction));
+  resultOutputActions.value().appendAction(std::move(attributeMatrixAction));
 
   auto crystalStructuresAction = std::make_unique<CreateArrayAction>(DataType::uint32, tupleDims, std::vector<usize>{1}, crystalStructuresPath);
-  resultOutputActions.value().actions.push_back(std::move(crystalStructuresAction));
+  resultOutputActions.value().appendAction(std::move(crystalStructuresAction));
 
   auto phaseTypesAction = std::make_unique<CreateArrayAction>(DataType::uint32, tupleDims, std::vector<usize>{1}, phaseTypesPath);
-  resultOutputActions.value().actions.push_back(std::move(phaseTypesAction));
+  resultOutputActions.value().appendAction(std::move(phaseTypesAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

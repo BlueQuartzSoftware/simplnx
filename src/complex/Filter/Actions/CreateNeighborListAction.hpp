@@ -32,6 +32,12 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override;
+
+  /**
    * @brief Returns the DataType of the DataArray to be created.
    * @return DataType
    */

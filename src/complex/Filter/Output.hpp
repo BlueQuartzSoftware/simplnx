@@ -3,6 +3,8 @@
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
+#include "complex/Filter/AnyCloneable.hpp"
+#include "complex/complex_export.hpp"
 
 #include <nonstd/span.hpp>
 
@@ -15,7 +17,7 @@ namespace complex
  * @brief IDataAction is the interface for declaratively stating what changes to be made to a DataStructure.
  * Can then be applied in preflight or execute mode to actually make those changes.
  */
-class IDataAction
+class COMPLEX_EXPORT IDataAction
 {
 public:
   using UniquePointer = std::unique_ptr<IDataAction>;
@@ -41,15 +43,23 @@ public:
    */
   virtual Result<> apply(DataStructure& dataStructure, Mode mode) const = 0;
 
+  /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  virtual UniquePointer clone() const = 0;
+
 protected:
   IDataAction() = default;
 };
+
+using AnyDataAction = AnyCloneable<IDataAction>;
 
 /**
  * @brief The IDataCreationAction class is a subclass of IDataAction used for
  * inserting a DataObject to a target DataStructure.
  */
-class IDataCreationAction : public IDataAction
+class COMPLEX_EXPORT IDataCreationAction : public IDataAction
 {
 public:
   enum class ArrayHandlingType : uint64
@@ -90,6 +100,9 @@ public:
    */
   virtual std::vector<DataPath> getAllCreatedPaths() const = 0;
 
+protected:
+  IDataCreationAction() = default;
+
 private:
   DataPath m_CreatedPath;
 };
@@ -97,12 +110,36 @@ private:
 /**
  * @brief Container for IDataActions
  */
-struct OutputActions
+struct COMPLEX_EXPORT OutputActions
 {
-  std::vector<IDataAction::UniquePointer> actions;
-  std::vector<IDataAction::UniquePointer> deferredActions;
+  std::vector<AnyDataAction> actions;
+  std::vector<AnyDataAction> deferredActions;
 
-  static Result<> ApplyActions(nonstd::span<const IDataAction::UniquePointer> actions, DataStructure& dataStructure, IDataAction::Mode mode);
+  OutputActions() = default;
+
+  ~OutputActions() noexcept = default;
+
+  OutputActions(const OutputActions&) = default;
+  OutputActions(OutputActions&&) noexcept = default;
+
+  OutputActions& operator=(const OutputActions&) = default;
+  OutputActions& operator=(OutputActions&&) noexcept = default;
+
+  template <class T>
+  void appendAction(std::unique_ptr<T> action)
+  {
+    static_assert(std::is_base_of_v<IDataAction, T>, "OutputActions::appendAction requires T to be derived from IDataAction");
+    actions.emplace_back(std::move(action));
+  }
+
+  template <class T>
+  void appendDeferredAction(std::unique_ptr<T> action)
+  {
+    static_assert(std::is_base_of_v<IDataAction, T>, "OutputActions::appendDeferredAction requires T to be derived from IDataAction");
+    deferredActions.emplace_back(std::move(action));
+  }
+
+  static Result<> ApplyActions(nonstd::span<const AnyDataAction> actions, DataStructure& dataStructure, IDataAction::Mode mode);
 
   Result<> applyRegular(DataStructure& dataStructure, IDataAction::Mode mode) const;
 

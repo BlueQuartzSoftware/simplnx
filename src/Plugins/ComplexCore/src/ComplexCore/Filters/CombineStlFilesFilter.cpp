@@ -108,10 +108,10 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
   auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleDataContainerNameValue, 1, 1, pVertexAttributeMatrixNameValue, pFaceAttributeMatrixNameValue,
                                                                                      CreateTriangleGeometryAction::k_DefaultVerticesName, CreateTriangleGeometryAction::k_DefaultFacesName);
   auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(pFaceNormalsArrayNameValue);
-  resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
 
   auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{1}, std::vector<usize>{3}, faceNormalsPath);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

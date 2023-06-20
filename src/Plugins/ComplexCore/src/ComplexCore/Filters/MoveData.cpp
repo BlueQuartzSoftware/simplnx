@@ -74,7 +74,7 @@ IFilter::PreflightResult MoveData::preflightImpl(const DataStructure& data, cons
   for(const auto& dataPath : dataPaths)
   {
     auto moveDataAction = std::make_unique<MoveDataAction>(dataPath, newParentPath);
-    resultOutputActions.value().actions.push_back(std::move(moveDataAction));
+    resultOutputActions.value().appendAction(std::move(moveDataAction));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

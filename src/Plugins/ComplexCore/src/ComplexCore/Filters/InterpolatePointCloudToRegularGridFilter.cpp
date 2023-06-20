@@ -266,7 +266,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   // Create the attribute matrix for storing the interpolated/copied arrays
   {
     auto createGroupAction = std::make_unique<CreateAttributeMatrixAction>(interpolatedGroupPath, tupleDims);
-    actions.actions.push_back(std::move(createGroupAction));
+    actions.appendAction(std::move(createGroupAction));
   }
 
   std::vector<DataPath> dataArrays = {vertexGeomPath.createChildPath(vertexGeom->getVertices()->getName()), voxelIndicesPath};
@@ -287,7 +287,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     {
       auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName());
       auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, numTuples, neighborPath);
-      actions.actions.push_back(std::move(neighborAction));
+      actions.appendAction(std::move(neighborAction));
     }
   }
 
@@ -307,7 +307,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
     {
       auto neighborPath = interpolatedGroupPath.createChildPath(targetArray->getName());
       auto neighborAction = std::make_unique<CreateNeighborListAction>(dataType, numTuples, neighborPath);
-      actions.actions.push_back(std::move(neighborAction));
+      actions.appendAction(std::move(neighborAction));
     }
   }
 
@@ -326,7 +326,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   if(storeKernelDistances)
   {
     auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, numTuples, interpolatedGroupPath.createChildPath(args.value<std::string>(k_KernelDistancesArray_Key)));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
 
   return {std::move(actions)};

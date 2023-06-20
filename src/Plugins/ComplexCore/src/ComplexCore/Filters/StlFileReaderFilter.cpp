@@ -158,10 +158,10 @@ IFilter::PreflightResult StlFileReaderFilter::preflightImpl(const DataStructure&
   auto createTriangleGeometryAction =
       std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName, sharedVertexMatrixName, sharedFaceMatrixName);
   auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(k_FaceNormals);
-  resultOutputActions.value().actions.push_back(std::move(createTriangleGeometryAction));
+  resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   // Create the face Normals DataArray action and store it
   auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float64, std::vector<usize>{static_cast<usize>(numTriangles)}, std::vector<usize>{3}, faceNormalsPath);
-  resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods. (None to store for this filter... yet)

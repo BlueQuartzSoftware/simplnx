@@ -3,6 +3,9 @@
 #include "complex/Common/Result.hpp"
 #include "complex/Core/Application.hpp"
 #include "complex/Pipeline/Pipeline.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
+
+#include "complex/ComplexPython.hpp"
 
 #include <fmt/format.h>
 
@@ -11,8 +14,16 @@
 #include <ostream>
 #include <string>
 
+#if COMPLEX_EMBED_PYTHON
+#include <pybind11/embed.h>
+#endif
+
 namespace fs = std::filesystem;
 using namespace complex;
+
+#if COMPLEX_EMBED_PYTHON
+namespace py = pybind11;
+#endif
 
 inline constexpr int k_FailedLoadingPipeline = -100;
 inline constexpr int k_FailedExecutingPipeline = -101;
@@ -376,6 +387,19 @@ Result<> SetLogFile(const Argument& argument)
   return cliOut.setLogFile(filepath);
 }
 
+#if COMPLEX_EMBED_PYTHON
+std::vector<std::string> GetPythonPluginList()
+{
+  auto* var = std::getenv("COMPLEX_PYTHON_PLUGINS");
+  if(var == nullptr)
+  {
+    return {};
+  }
+
+  return StringUtilities::split(var, ';');
+}
+#endif
+
 int main(int argc, char* argv[])
 {
 
@@ -421,22 +445,87 @@ int main(int argc, char* argv[])
   complex::Application app;
   LoadApp(app);
 
+#if COMPLEX_EMBED_PYTHON
+  py::scoped_interpreter guard{};
+
+  try
+  {
+    auto cx = py::module_::import(COMPLEX_PYTHON_MODULE);
+
+    auto pythonPlugins = GetPythonPluginList();
+
+    fmt::print("Loading Python plugins: {}\n", pythonPlugins);
+
+    for(const auto& pluginName : pythonPlugins)
+    {
+      fmt::print("Attempting to load Python plugin: '{}'\n", pluginName);
+      auto mod = py::module_::import(pluginName.c_str());
+      cx.attr("load_python_plugin")(mod);
+      auto pluginPath = mod.attr("__file__").cast<std::string>();
+      fmt::print("Successfully loaded Python plugin '{}' from '{}'\n", pluginName, pluginPath);
+    }
+  } catch(const py::error_already_set& exception)
+  {
+    fmt::print("Python exception while importing plugins: {}\n", exception.what());
+    return 1;
+  } catch(const std::exception& exception)
+  {
+    fmt::print("C++ exception while importing plugins: {}\n", exception.what());
+    return 1;
+  }
+#endif
+
   int errorCode = 0;
   // Run target operation
   switch(arguments[0].type)
   {
-  case ArgumentType::Help:
+  case ArgumentType::Help: {
     PrintResult(DisplayHelpMenu(arguments));
     return errorCode;
+  }
+  case ArgumentType::Execute: {
+    try
+    {
+      auto result = ExecutePipeline(arguments[0]);
+      results.push_back(result);
+    }
+#if COMPLEX_EMBED_PYTHON
+    catch(const py::error_already_set& exception)
+    {
+      fmt::print("Python exception: {}\n", exception.what());
+      return 1;
+    }
+#endif
+    catch(const std::exception& exception)
+    {
+      fmt::print("Exception: {}\n", exception.what());
+      return 1;
+    }
     break;
-  case ArgumentType::Execute:
-    results.push_back(ExecutePipeline(arguments[0]));
+  }
+  case ArgumentType::Preflight: {
+    try
+    {
+      auto result = PreflightPipeline(arguments[0]);
+      results.push_back(result);
+    }
+#if COMPLEX_EMBED_PYTHON
+    catch(const py::error_already_set& exception)
+    {
+      fmt::print("Python exception: {}\n", exception.what());
+      return 1;
+    }
+#endif
+    catch(const std::exception& exception)
+    {
+      fmt::print("Exception: {}\n", exception.what());
+      return 1;
+    }
     break;
-  case ArgumentType::Preflight:
-    results.push_back(PreflightPipeline(arguments[0]));
+  }
+  default: {
     break;
-  default:
-    break;
+  }
   }
 
   // Print Results and set error code

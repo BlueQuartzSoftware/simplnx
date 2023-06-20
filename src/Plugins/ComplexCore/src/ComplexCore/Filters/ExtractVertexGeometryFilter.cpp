@@ -147,21 +147,21 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
       cellAttrMatrixPathR = parentPath;
       {
         auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryPathValue, geomElementCount, parentPath.getTargetName(), pSharedVertexListNameValue);
-        resultOutputActions.value().actions.push_back(std::move(createVertexGeometryAction));
+        resultOutputActions.value().appendAction(std::move(createVertexGeometryAction));
       }
     }
 
     DataPath newDataPath = pVertexGeometryPathValue.createChildPath(parentPath.getTargetName()).createChildPath(dataArray.getName());
 
     auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), dataArray.getTupleShape(), dataArray.getComponentShape(), newDataPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
 
     if(arrayHandlingType == ArrayHandlingType::MoveArrays)
     {
       if(!pUseMaskValue)
       {
         auto deleteDataAction = std::make_unique<DeleteDataAction>(dataPath, DeleteDataAction::DeleteType::JustObject);
-        resultOutputActions.value().deferredActions.push_back(std::move(deleteDataAction));
+        resultOutputActions.value().appendDeferredAction(std::move(deleteDataAction));
       }
     }
   }

@@ -43,68 +43,68 @@ OutputActions FindArrayStatisticsFilter::createCompatibleArrays(const DataStruct
   OutputActions actions;
 
   auto amAction = std::make_unique<CreateAttributeMatrixAction>(destinationAttributeMatrixValue, tupleDims);
-  actions.actions.push_back(std::move(amAction));
+  actions.appendAction(std::move(amAction));
 
   if(findLength)
   {
     auto arrayPath = args.value<std::string>(k_LengthArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::uint64, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(findMin)
   {
     auto arrayPath = args.value<std::string>(k_MinimumArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(findMax)
   {
     auto arrayPath = args.value<std::string>(k_MaximumArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(dataType, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(findMean)
   {
     auto arrayPath = args.value<std::string>(k_MeanArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(findMedian)
   {
     auto arrayPath = args.value<std::string>(k_MedianArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(findStdDeviation)
   {
     auto arrayPath = args.value<std::string>(k_StdDeviationArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(findSummation)
   {
     auto arrayPath = args.value<std::string>(k_SummationArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(findHistogramValue)
   {
     auto arrayPath = args.value<std::string>(k_HistogramArrayName_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{numBins}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(standardizeDataValue)
   {
     auto arrayPath = args.value<std::string>(k_StandardizedArrayName_Key);
     auto action =
         std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{inputArray->getNumberOfTuples()}, std::vector<usize>{1}, inputArrayPath.getParent().createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
   if(pFindNumUniqueValuesValue)
   {
     auto arrayPath = args.value<std::string>(k_NumUniqueValues_Key);
     auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, destinationAttributeMatrixValue.createChildPath(arrayPath));
-    actions.actions.push_back(std::move(action));
+    actions.appendAction(std::move(action));
   }
 
   return std::move(actions);

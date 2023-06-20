@@ -41,7 +41,7 @@
       "dependencies": [
         {
           "name": "pybind11",
-          "version>=": "2.6.2"
+          "version>=": "2.10.0"
         }
       ]
     },

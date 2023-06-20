@@ -164,7 +164,7 @@ IFilter::PreflightResult CreateDataArray::preflightImpl(const DataStructure& dat
 
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat);
 
-  resultOutputActions.value().actions.push_back(std::move(action));
+  resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions)};
 }

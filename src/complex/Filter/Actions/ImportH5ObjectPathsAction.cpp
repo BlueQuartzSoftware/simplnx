@@ -33,7 +33,7 @@ std::vector<DataPath> getImportPaths(const DataStructure& importStructure, const
 namespace complex
 {
 ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths)
-: IDataCreationAction({})
+: IDataCreationAction(DataPath{})
 , m_H5FilePath(importFile)
 , m_Paths(paths)
 {
@@ -89,6 +89,11 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   }
 
   return {};
+}
+
+IDataAction::UniquePointer ImportH5ObjectPathsAction::clone() const
+{
+  return std::make_unique<ImportH5ObjectPathsAction>(m_H5FilePath, m_Paths);
 }
 
 std::vector<DataPath> ImportH5ObjectPathsAction::getAllCreatedPaths() const

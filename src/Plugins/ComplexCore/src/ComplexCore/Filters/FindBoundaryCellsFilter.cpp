@@ -99,7 +99,7 @@ IFilter::PreflightResult FindBoundaryCellsFilter::preflightImpl(const DataStruct
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::int8, featureIds.getTupleShape(), std::vector<usize>{1}, boundaryCellsArrayPath);
-  resultOutputActions.value().actions.push_back(std::move(action));
+  resultOutputActions.value().appendAction(std::move(action));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

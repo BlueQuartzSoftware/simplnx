@@ -54,7 +54,7 @@ IFilter::PreflightResult CreateDataGroup::preflightImpl(const DataStructure& dat
   auto action = std::make_unique<CreateDataGroupAction>(dataObjectPath);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
 
   return {std::move(actions)};
 }

@@ -75,7 +75,7 @@ IFilter::PreflightResult RenameDataObject::preflightImpl(const DataStructure& da
   auto action = std::make_unique<RenameDataAction>(dataGroupPath, newName);
 
   OutputActions actions;
-  actions.actions.push_back(std::move(action));
+  actions.appendAction(std::move(action));
   return {std::move(actions)};
 }
 

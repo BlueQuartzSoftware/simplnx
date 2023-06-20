@@ -40,6 +40,11 @@ Result<> ImportObjectAction::apply(DataStructure& dataStructure, Mode mode) cons
   return {};
 }
 
+IDataAction::UniquePointer ImportObjectAction::clone() const
+{
+  return std::make_unique<ImportObjectAction>(m_ImportData, getCreatedPath());
+}
+
 std::shared_ptr<DataObject> ImportObjectAction::getImportObject() const
 {
   return m_ImportData;

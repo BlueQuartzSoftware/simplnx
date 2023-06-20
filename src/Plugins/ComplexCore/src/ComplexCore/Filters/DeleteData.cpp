@@ -94,7 +94,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStru
     }
 
     auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
-    deleteActions.actions.push_back(std::move(action));
+    deleteActions.appendAction(std::move(action));
 
     //  break;
     //}
@@ -113,7 +113,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStru
     //  }
 
     //  auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustPath);
-    //  deleteActions.actions.push_back(std::move(action));
+    //  deleteActions.appendAction(std::move(action));
 
     //  break;
     //}
@@ -138,7 +138,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStru
     //    if(baseGroup == nullptr) // Object is the lowest level in its path
     //    {
     //      auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
-    //      deleteActions.actions.push_back(std::move(action));
+    //      deleteActions.appendAction(std::move(action));
     //      return {ConvertResultTo<OutputActions>(
     //          MakeWarningVoidResult(-61504, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
     //                                                    dataStructure.getData(dataObjectPath)->getTypeName())),
@@ -148,7 +148,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStru
     //    {
     //      // recurse action
     //      auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::IndependentChildren);
-    //      deleteActions.actions.push_back(std::move(action));
+    //      deleteActions.appendAction(std::move(action));
     //    }
     //  }
 
@@ -169,7 +169,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStru
     //  if(baseGroup == nullptr) // Object is the lowest level in its path
     //  {
     //    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::JustObject);
-    //    deleteActions.actions.push_back(std::move(action));
+    //    deleteActions.appendAction(std::move(action));
     //    return {ConvertResultTo<OutputActions>(
     //        MakeWarningVoidResult(-61505, fmt::format("The object type cannot be processed because no children exist for it. Object given is of type '{}', consider remove ",
     //                                                  dataStructure.getData(dataObjectPath)->getTypeName())),
@@ -179,7 +179,7 @@ IFilter::PreflightResult DeleteData::preflightImpl(const DataStructure& dataStru
     //  {
     //    // recurse action
     //    auto action = std::make_unique<DeleteDataAction>(dataObjectPath, DeleteDataAction::DeleteType::AllChildren);
-    //    deleteActions.actions.push_back(std::move(action));
+    //    deleteActions.appendAction(std::move(action));
     //  }
 
     //  break;

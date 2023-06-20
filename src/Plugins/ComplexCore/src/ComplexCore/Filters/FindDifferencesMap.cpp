@@ -238,7 +238,7 @@ IFilter::PreflightResult FindDifferencesMap::preflightImpl(const DataStructure& 
 
   //
   complex::Result<OutputActions> actions;
-  actions.value().actions.push_back(std::move(action));
+  actions.value().appendAction(std::move(action));
   actions.m_Warnings = warnings;
 
   return {std::move(actions)};

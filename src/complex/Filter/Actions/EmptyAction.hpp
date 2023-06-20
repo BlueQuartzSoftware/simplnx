@@ -30,5 +30,14 @@ public:
   {
     return {};
   }
+
+  /**
+   * @brief Returns a copy of the action.
+   * @return
+   */
+  UniquePointer clone() const override
+  {
+    return std::make_unique<EmptyAction>();
+  }
 };
 } // namespace complex

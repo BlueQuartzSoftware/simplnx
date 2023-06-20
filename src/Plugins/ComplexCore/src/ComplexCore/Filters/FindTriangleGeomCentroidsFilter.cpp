@@ -92,7 +92,7 @@ IFilter::PreflightResult FindTriangleGeomCentroidsFilter::preflightImpl(const Da
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CentroidsArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{3}, createdArrayPath);
-    resultOutputActions.value().actions.push_back(std::move(createArrayAction));
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // No preflight updated values are generated in this filter
