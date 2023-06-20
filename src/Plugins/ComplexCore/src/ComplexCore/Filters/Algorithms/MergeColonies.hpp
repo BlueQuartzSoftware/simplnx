@@ -19,7 +19,6 @@ struct COMPLEXCORE_EXPORT MergeColoniesInputValues
   DataPath ContiguousNeighborListArrayPath;
   float32 AxisTolerance;
   float32 AngleTolerance;
-  bool IdentifyGlobAlpha;
   DataPath FeaturePhasesArrayPath;
   DataPath AvgQuatsArrayPath;
   DataPath FeatureIdsArrayPath;

@@ -29,7 +29,6 @@ public:
   static inline constexpr StringLiteral k_ContiguousNeighborListArrayPath_Key = "contiguous_neighbor_list_array_path";
   static inline constexpr StringLiteral k_AxisTolerance_Key = "axis_tolerance";
   static inline constexpr StringLiteral k_AngleTolerance_Key = "angle_tolerance";
-  static inline constexpr StringLiteral k_IdentifyGlobAlpha_Key = "identify_glob_alpha";
   static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
   static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
   static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
