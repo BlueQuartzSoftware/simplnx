@@ -34,11 +34,11 @@ const complex::ChoicesParameter::ValueType k_RotationIdx = 3ULL;
 const complex::ChoicesParameter::ValueType k_TranslationIdx = 4ULL;
 const complex::ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
 
-const complex::ChoicesParameter::ValueType k_NoInterpolationIdx = 0ULL;
-const complex::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 1ULL;
-const complex::ChoicesParameter::ValueType k_LinearInterpolationIdx = 2ULL;
+const complex::ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
+const complex::ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
 
 const std::string k_InputGeometryName("InputData");
+const DataPath k_InputCellAttrMatrixPath(DataPath({k_InputGeometryName, "VertexData"}));
 const std::string k_RotationGeometryName("6_6_Rotation");
 const std::string k_ScaleGeometryName("6_6_Scale");
 const std::string k_TranslationGeometryName("6_6_Translation");
@@ -54,6 +54,8 @@ const std::string k_PrecomputedGeometryName66("6_6_Precomputed");
 
 const std::string k_SharedVertexListName("SharedVertexList");
 
+const int32 k_CellAttrMatrixUnusedWarning = -5555;
+
 } // namespace apply_transformation_to_geometry
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Node", "[ComplexCore][ApplyTransformationToGeometryFilter]")
@@ -66,13 +68,15 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Node", "
     Arguments args;
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_TranslationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NoInterpolationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({100.0F, 50.0F, -100.0F}));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -105,13 +109,15 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Co
     Arguments args;
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NoInterpolationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -144,13 +150,15 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Compl
     Arguments args;
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ScaleIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NoInterpolationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({0.5F, 1.5F, 10.0F}));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -185,9 +193,9 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Comp
     Arguments args;
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_ManualTransformationMatrixIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NoInterpolationIdx));
     // This should reflect the geometry across the x-axis.
     const DynamicTableParameter::ValueType dynamicTable{{{-1.0, 0, 0, 0}, {0, 1.0, 0, 0}, {0, 0, 1.0, 0}, {0, 0, 0, 1.0}}};
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ManualTransformationMatrix_Key, std::make_any<complex::DynamicTableParameter::ValueType>(dynamicTable));
@@ -195,6 +203,8 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Comp
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -229,15 +239,17 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
     Arguments args;
 
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(inputGeometryPath));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key,
                         std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_PrecomputedTransformationMatrixIdx));
-    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NoInterpolationIdx));
     const DataPath precomputedPath({apply_transformation_to_geometry::k_InputGeometryName, "Precomputed AM", "TransformationMatrix"});
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_ComputedTransformationMatrix_Key, std::make_any<DataPath>(precomputedPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
