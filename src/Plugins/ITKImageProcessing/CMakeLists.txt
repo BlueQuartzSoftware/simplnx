@@ -71,6 +71,7 @@ set(FilterList
     ITKImageWriter
     ITKImportImageStack
     ITKMedianImage
+    ITKMhaFileReader
     )
 
 # ------------------------------------------------------------------------------
