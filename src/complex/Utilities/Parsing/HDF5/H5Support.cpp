@@ -204,6 +204,30 @@ std::string complex::HDF5::Support::StringForHDFType(hid_t dataTypeIdentifier)
   return "Unknown";
 }
 
+std::string complex::HDF5::Support::GetNameFromFilterType(H5Z_filter_t id)
+{
+  switch(id)
+  {
+  case H5Z_FILTER_DEFLATE:
+    return "GZIP";
+  case H5Z_FILTER_SHUFFLE:
+    return "SHUFFLE";
+  case H5Z_FILTER_FLETCHER32:
+    return "FLETCHER32";
+  case H5Z_FILTER_SZIP:
+    return "SZIP";
+  case H5Z_FILTER_NBIT:
+    return "NBIT";
+  case H5Z_FILTER_SCALEOFFSET:
+    return "SCALE-OFFSET";
+  case H5Z_FILTER_ERROR:
+  case H5Z_FILTER_NONE:
+    return "NONE";
+  default:
+    return "UNKNOWN";
+  }
+}
+
 #if 0
 hid_t Support::getDatasetType(hid_t locationID, const std::string& datasetName)
 {
