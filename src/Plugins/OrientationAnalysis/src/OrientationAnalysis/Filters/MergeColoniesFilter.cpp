@@ -1,6 +1,6 @@
 #include "MergeColoniesFilter.hpp"
 
-#include "ComplexCore/Filters/Algorithms/MergeColonies.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/MergeColonies.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/EmptyAction.hpp"
