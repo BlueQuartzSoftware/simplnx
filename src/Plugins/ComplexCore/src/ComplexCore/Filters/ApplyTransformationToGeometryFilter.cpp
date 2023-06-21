@@ -126,6 +126,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_ManualTransformationMatrix_Key);
   auto pComputedTransformationMatrixPath = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
   auto pSelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+  auto pCellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
 
   // PreflightResult preflightResult;
 
@@ -217,7 +218,6 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     // auto pDataArraySelectionValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
 
     // For nearest neighbor we can use any data array as we are only going to copy from a hit cell, no interpolation
-    auto pCellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
     const auto* srcCellAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
     if(nullptr == srcCellAttrMatrixPtr)
     {
@@ -383,6 +383,13 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(destImagePath, srcImagePath.getTargetName()));
       }
     }
+  }
+  else
+  {
+    // An image geometry was not chosen, so throw a warning communicating to the user that the cell attribute matrix will not be used
+    auto warning = Warning{-5555, fmt::format("The Selected Geometry is not an image geometry, so the Cell Attribute Matrix {} will not be used when applying this transformation.",
+                                              pCellAttributeMatrixPath.getTargetName())};
+    resultOutputActions.warnings().push_back(warning);
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

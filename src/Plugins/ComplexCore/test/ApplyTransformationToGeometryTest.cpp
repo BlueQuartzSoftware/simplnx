@@ -73,6 +73,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Node", "
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -112,6 +113,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Co
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -151,6 +153,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Compl
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -195,6 +198,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Comp
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -238,6 +242,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
