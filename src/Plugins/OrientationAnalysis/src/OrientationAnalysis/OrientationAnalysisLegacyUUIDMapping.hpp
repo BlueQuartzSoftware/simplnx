@@ -69,6 +69,7 @@
 #include "OrientationAnalysis/Filters/FindSlipTransmissionMetricsFilter.hpp"
 #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp"
 #include "OrientationAnalysis/Filters/INLWriterFilter.hpp"
+#include "OrientationAnalysis/Filters/MergeColoniesFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -108,6 +109,7 @@ namespace complex
     {complex::Uuid::FromString("bf7036d8-25bd-540e-b6de-3a5ab0e42c5f").value(), complex::FilterTraits<FindAvgOrientationsFilter>::uuid}, // FindAvgOrientations
     {complex::Uuid::FromString("bff6be19-1219-5876-8838-1574ad29d965").value(), complex::FilterTraits<CAxisSegmentFeaturesFilter>::uuid}, // CAxisSegmentFeatures
     {complex::Uuid::FromString("c5a9a96c-7570-5279-b383-cc25ebae0046").value(), complex::FilterTraits<FindAvgCAxesFilter>::uuid}, // FindAvgCAxes
+    {complex::Uuid::FromString("2c4a6d83-6a1b-56d8-9f65-9453b28845b9").value(), complex::FilterTraits<MergeColoniesFilter>::uuid}, // MergeColonies
     {complex::Uuid::FromString("c9af506e-9ea1-5ff5-a882-fa561def5f52").value(), complex::FilterTraits<MergeTwinsFilter>::uuid}, // MergeTwins
     {complex::Uuid::FromString("d1df969c-0428-53c3-b61d-99ea2bb6da28").value(), complex::FilterTraits<ReadCtfDataFilter>::uuid}, // ReadCtfData
     {complex::Uuid::FromString("e5629880-98c4-5656-82b8-c9fe2b9744de").value(), complex::FilterTraits<ConvertOrientations>::uuid}, // ConvertOrientations

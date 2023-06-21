@@ -110,7 +110,6 @@ IFilter::PreflightResult MergeColoniesFilter::preflightImpl(const DataStructure&
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pCellParentIdsArrayNameValue = filterArgs.value<DataPath>(k_CellParentIdsArrayName_Key);
-  auto pGlobAlphaArrayNameValue = filterArgs.value<DataPath>(k_GlobAlphaArrayName_Key);
   auto pNewCellFeatureAttributeMatrixNameValue = filterArgs.value<DataPath>(k_NewCellFeatureAttributeMatrixName_Key);
   auto pFeatureParentIdsArrayNameValue = filterArgs.value<DataPath>(k_FeatureParentIdsArrayName_Key);
   auto pActiveArrayNameValue = filterArgs.value<DataPath>(k_ActiveArrayName_Key);
@@ -140,7 +139,6 @@ Result<> MergeColoniesFilter::executeImpl(DataStructure& dataStructure, const Ar
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   inputValues.CellParentIdsArrayName = filterArgs.value<DataPath>(k_CellParentIdsArrayName_Key);
-  inputValues.GlobAlphaArrayName = filterArgs.value<DataPath>(k_GlobAlphaArrayName_Key);
   inputValues.NewCellFeatureAttributeMatrixName = filterArgs.value<DataPath>(k_NewCellFeatureAttributeMatrixName_Key);
   inputValues.FeatureParentIdsArrayName = filterArgs.value<DataPath>(k_FeatureParentIdsArrayName_Key);
   inputValues.ActiveArrayName = filterArgs.value<DataPath>(k_ActiveArrayName_Key);

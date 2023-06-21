@@ -44,6 +44,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ImportH5EspritDataTest.cpp
   ImportH5OimDataTest.cpp
   INLWriterTest.cpp
+  MergeColoniesTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp

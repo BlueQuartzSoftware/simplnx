@@ -65,6 +65,7 @@ set(FilterList
   ImportH5EspritDataFilter
   ImportH5OimDataFilter
   INLWriterFilter
+  MergeColoniesFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
@@ -199,6 +200,7 @@ set(filter_algorithms
   ImportH5EspritData
   ImportH5OimData
   INLWriter
+  MergeColonies
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData

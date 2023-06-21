@@ -92,7 +92,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   LosAlamosFFTWriterTest.cpp
   MultiThresholdObjectsTest.cpp
   MapPointCloudToRegularGridTest.cpp
-  MergeColoniesTest.cpp
   MinNeighborsTest.cpp
   MoveDataTest.cpp
   NearestPointFuseRegularGridsTest.cpp

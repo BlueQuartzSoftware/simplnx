@@ -91,7 +91,6 @@ set(FilterList
   LaplacianSmoothingFilter
   LosAlamosFFTWriterFilter
   MapPointCloudToRegularGridFilter
-  MergeColoniesFilter
   MinNeighbors
   MoveData
   MultiThresholdObjects
@@ -179,7 +178,6 @@ set(AlgorithmList
   KMedoids
   LaplacianSmoothing
   LosAlamosFFTWriter
-  MergeColonies
   NearestPointFuseRegularGrids
   PartitionGeometry
   PointSampleTriangleGeometry

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/GroupFeatures.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -12,7 +13,7 @@
 namespace complex
 {
 
-struct COMPLEXCORE_EXPORT MergeColoniesInputValues
+struct ORIENTATIONANALYSIS_EXPORT MergeColoniesInputValues
 {
   bool UseNonContiguousNeighbors;
   DataPath NonContiguousNeighborListArrayPath;
@@ -25,7 +26,6 @@ struct COMPLEXCORE_EXPORT MergeColoniesInputValues
   DataPath CellPhasesArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath CellParentIdsArrayName;
-  DataPath GlobAlphaArrayName;
   DataPath NewCellFeatureAttributeMatrixName;
   DataPath FeatureParentIdsArrayName;
   DataPath ActiveArrayName;
@@ -37,7 +37,7 @@ struct COMPLEXCORE_EXPORT MergeColoniesInputValues
  * where a bool mask array specifies.
  */
 
-class COMPLEXCORE_EXPORT MergeColonies
+class ORIENTATIONANALYSIS_EXPORT MergeColonies : public GroupFeatures
 {
 public:
   MergeColonies(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MergeColoniesInputValues* inputValues);

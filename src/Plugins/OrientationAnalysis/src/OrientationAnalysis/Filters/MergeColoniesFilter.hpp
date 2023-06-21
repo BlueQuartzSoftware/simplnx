@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -11,7 +11,7 @@ namespace complex
  * @class MergeColoniesFilter
  * @brief This filter will ....
  */
-class COMPLEXCORE_EXPORT MergeColoniesFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT MergeColoniesFilter : public IFilter
 {
 public:
   MergeColoniesFilter() = default;
@@ -35,7 +35,6 @@ public:
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static inline constexpr StringLiteral k_CellParentIdsArrayName_Key = "cell_parent_ids_array_name";
-  static inline constexpr StringLiteral k_GlobAlphaArrayName_Key = "glob_alpha_array_name";
   static inline constexpr StringLiteral k_NewCellFeatureAttributeMatrixName_Key = "new_cell_feature_attribute_matrix_name";
   static inline constexpr StringLiteral k_FeatureParentIdsArrayName_Key = "feature_parent_ids_array_name";
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
