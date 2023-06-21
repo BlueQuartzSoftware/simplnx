@@ -45,7 +45,7 @@ std::string WriteStlFileFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> WriteStlFileFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export"};
+  return {"IO", "Output", "Write", "Export", "Triangles", "SurfaceMesh"};
 }
 
 //------------------------------------------------------------------------------
@@ -66,8 +66,8 @@ Parameters WriteStlFileFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The triangle normals array to be printed in the stl file", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+  //  params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The triangle normals array to be printed in the stl file", DataPath{},
+  //                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "The feature phases array to further order/index files by", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -92,7 +92,7 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
   auto pTriangleGeomPathValue = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
   auto pFeatureIdsPathValue = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
   auto pFeaturePhasesPathValue = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
-  auto pFaceNormalsPathValue = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
+  //  auto pFaceNormalsPathValue = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
 
   PreflightResult preflightResult;
   complex::Result<OutputActions> resultOutputActions;
@@ -123,10 +123,10 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
     return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
   }
 
-  if(auto* normals = dataStructure.getDataAs<Float32Array>(pFaceNormalsPathValue); normals == nullptr)
-  {
-    return MakePreflightErrorResult(-27874, fmt::format("Face Normals Array doesn't exist at: {}", pFaceNormalsPathValue.toString()));
-  }
+  //  if(auto* normals = dataStructure.getDataAs<Float32Array>(pFaceNormalsPathValue); normals == nullptr)
+  //  {
+  //    return MakePreflightErrorResult(-27874, fmt::format("Face Normals Array doesn't exist at: {}", pFaceNormalsPathValue.toString()));
+  //  }
 
   if(!exists(pOutputStlDirectoryValue))
   {
@@ -149,7 +149,7 @@ Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arg
   inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
   inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   inputValues.TriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
-  inputValues.FaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
+  // inputValues.FaceNormalsPath = filterArgs.value<DataPath>(k_FaceNormalsPath_Key);
 
   return WriteStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

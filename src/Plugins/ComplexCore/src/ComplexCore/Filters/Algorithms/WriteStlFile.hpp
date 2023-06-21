@@ -20,7 +20,7 @@ struct COMPLEXCORE_EXPORT WriteStlFileInputValues
   DataPath FeatureIdsPath;
   DataPath FeaturePhasesPath;
   DataPath TriangleGeomPath;
-  DataPath FaceNormalsPath;
+  // DataPath FaceNormalsPath;
 };
 
 /**
