@@ -387,7 +387,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   else
   {
     // An image geometry was not chosen, so throw a warning communicating to the user that the cell attribute matrix will not be used
-    auto warning = Warning{-5555, fmt::format("The Selected Geometry is not an image geometry, so the Cell Attribute Matrix {} will not be used when applying this transformation.",
+    auto warning = Warning{-5555, fmt::format("The Selected Geometry is not an image geometry, so the Attribute Matrix '{}' will not be used when applying this transformation.",
                                               pCellAttributeMatrixPath.getTargetName())};
     resultOutputActions.warnings().push_back(warning);
   }
