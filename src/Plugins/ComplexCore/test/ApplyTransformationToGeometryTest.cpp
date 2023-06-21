@@ -54,6 +54,8 @@ const std::string k_PrecomputedGeometryName66("6_6_Precomputed");
 
 const std::string k_SharedVertexListName("SharedVertexList");
 
+const int32 k_CellAttrMatrixUnusedWarning = -5555;
+
 } // namespace apply_transformation_to_geometry
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Node", "[ComplexCore][ApplyTransformationToGeometryFilter]")
@@ -74,6 +76,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Node", "
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -114,6 +117,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Co
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -154,6 +158,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Compl
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -199,6 +204,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Comp
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.warnings().size() == 1);
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -243,7 +249,8 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
     auto preflightResult = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
     REQUIRE(preflightResult.outputActions.warnings().size() == 1);
-
+    REQUIRE(preflightResult.outputActions.warnings()[0].code == apply_transformation_to_geometry::k_CellAttrMatrixUnusedWarning);
+    
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
