@@ -138,6 +138,12 @@ MergeColonies::MergeColonies(DataStructure& dataStructure, const IFilter::Messag
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 , m_OrientationOps(LaueOps::GetAllOrientationOps())
+, m_FeatureParentIds(dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureParentIdsPath))
+, m_FeaturePhases(dataStructure.getDataRefAs<Int32Array>(inputValues->FeaturePhasesPath))
+, m_AvgQuats(dataStructure.getDataRefAs<Float32Array>(inputValues->AvgQuatsPath))
+, m_CrystalStructures(dataStructure.getDataRefAs<UInt32Array>(inputValues->CrystalStructuresPath))
+, m_AxisToleranceRad(inputValues->AxisTolerance * Constants::k_PiF / 180.0f)
+, m_AngleTolerance(inputValues->AngleTolerance)
 {
 }
 
@@ -153,14 +159,6 @@ const std::atomic_bool& MergeColonies::getCancel()
 // -----------------------------------------------------------------------------
 Result<> MergeColonies::operator()()
 {
-  m_FeatureParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsPath);
-  m_FeaturePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
-  m_AvgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsPath);
-  m_CrystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresPath);
-  
-  m_AxisToleranceRad = m_InputValues->AxisTolerance * Constants::k_PiF / 180.0f;
-  m_AngleTolerance = m_InputValues->AngleTolerance;
-
   GroupFeatures::execute();
 
   auto active = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->ActivePath);
@@ -186,6 +184,10 @@ Result<> MergeColonies::operator()()
     }
   }
   numParents += 1;
+
+  m_MessageHandler({IFilter::Message::Type::Info, "Characterizing Colonies Starting"});
+  characterize_colonies();
+  m_MessageHandler({IFilter::Message::Type::Info, "Characterizing Colonies Complete"});
 
   if(m_InputValues->RandomizeParentIds)
   {
@@ -354,4 +356,11 @@ bool MergeColonies::determineGrouping(int32 referenceFeature, int32 neighborFeat
     }
   }
   return false;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MergeColonies::characterize_colonies()
+{
 }

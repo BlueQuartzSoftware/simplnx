@@ -99,11 +99,6 @@ IFilter::UniquePointer MergeColoniesFilter::clone() const
 IFilter::PreflightResult MergeColoniesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel) const
 {
-  auto pUseNonContiguousNeighborsValue = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
-  auto pNonContiguousNeighborListArrayPathValue = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
-  auto pContiguousNeighborListArrayPathValue = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
-  auto pAxisToleranceValue = filterArgs.value<float32>(k_AxisTolerance_Key);
-  auto pAngleToleranceValue = filterArgs.value<float32>(k_AngleTolerance_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -128,21 +123,24 @@ Result<> MergeColoniesFilter::executeImpl(DataStructure& dataStructure, const Ar
 {
   MergeColoniesInputValues inputValues;
 
-  inputValues.UseNonContiguousNeighbors = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
-  inputValues.NonContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
-  inputValues.ContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
   inputValues.AxisTolerance = filterArgs.value<float32>(k_AxisTolerance_Key);
   inputValues.AngleTolerance = filterArgs.value<float32>(k_AngleTolerance_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.CellParentIdsArrayName = filterArgs.value<DataPath>(k_CellParentIdsArrayName_Key);
-  inputValues.NewCellFeatureAttributeMatrixName = filterArgs.value<DataPath>(k_NewCellFeatureAttributeMatrixName_Key);
-  inputValues.FeatureParentIdsArrayName = filterArgs.value<DataPath>(k_FeatureParentIdsArrayName_Key);
-  inputValues.ActiveArrayName = filterArgs.value<DataPath>(k_ActiveArrayName_Key);
+  inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
+  inputValues.AvgQuatsPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
+  inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.CellPhasesPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.CrystalStructuresPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.CellParentIdsPath = filterArgs.value<DataPath>(k_CellParentIdsArrayName_Key);
+  inputValues.CellFeatureAMPath = filterArgs.value<DataPath>(k_NewCellFeatureAttributeMatrixName_Key);
+  inputValues.FeatureParentIdsPath = filterArgs.value<DataPath>(k_FeatureParentIdsArrayName_Key);
+  inputValues.ActivePath = filterArgs.value<DataPath>(k_ActiveArrayName_Key);
 
-  return MergeColonies(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  GroupFeaturesInputValues gpInputValues;
+
+  gpInputValues.UseNonContiguousNeighbors = filterArgs.value<bool>(k_UseNonContiguousNeighbors_Key);
+  gpInputValues.NonContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_NonContiguousNeighborListArrayPath_Key);
+  gpInputValues.ContiguousNeighborListArrayPath = filterArgs.value<DataPath>(k_ContiguousNeighborListArrayPath_Key);
+
+  return MergeColonies(dataStructure, messageHandler, shouldCancel, &inputValues, &gpInputValues)();
 }
 } // namespace complex

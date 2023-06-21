@@ -18,9 +18,6 @@ namespace complex
 {
 struct ORIENTATIONANALYSIS_EXPORT MergeColoniesInputValues
 {
-  bool UseNonContiguousNeighbors;
-  DataPath NonContiguousNLPath;
-  DataPath ContiguousNLPath;
   float32 AxisTolerance;
   float32 AngleTolerance;
   DataPath FeaturePhasesPath;
@@ -47,7 +44,8 @@ class ORIENTATIONANALYSIS_EXPORT MergeColonies : public GroupFeatures
   using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
 
 public:
-  MergeColonies(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MergeColoniesInputValues* inputValues);
+  MergeColonies(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MergeColoniesInputValues* inputValues,
+                GroupFeaturesInputValues* groupInputValues);
   ~MergeColonies() noexcept;
 
   MergeColonies(const MergeColonies&) = delete;
@@ -61,6 +59,7 @@ public:
 
   int getSeed(int32 newFid) override;
   bool determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid) override;
+  void characterize_colonies();
 
 private:
   DataStructure& m_DataStructure;
