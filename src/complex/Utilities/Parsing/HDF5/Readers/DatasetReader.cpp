@@ -317,6 +317,34 @@ std::vector<hsize_t> DatasetReader::getDimensions() const
   return dims;
 }
 
+std::string DatasetReader::getFilterName() const
+{
+  std::string filterNames;
+  const hid_t cpListId = H5Dget_create_plist(getId());
+  const int numFilters = H5Pget_nfilters(cpListId);
+  for(int j = 0; j < numFilters; ++j)
+  {
+    unsigned int flags;
+    unsigned int filterConfig;
+    size_t cdNElements = 0;
+    char name[1024];
+    H5Z_filter_t filter = H5Pget_filter2(cpListId, j, &flags, &cdNElements, nullptr, std::size(name) / sizeof(*name), name, &filterConfig);
+    std::vector<unsigned int> cdValues(cdNElements);
+    filter = H5Pget_filter2(cpListId, j, &flags, &cdNElements, cdValues.data(), std::size(name) / sizeof(*name), name, &filterConfig);
+    if(j != 0)
+    {
+      filterNames += ", ";
+    }
+    filterNames += HDF5::Support::GetNameFromFilterType(filter);
+  }
+  if(filterNames.empty())
+  {
+    filterNames = "NONE";
+  }
+  return filterNames;
+  // return name;
+}
+
 // declare readAsVector
 template COMPLEX_EXPORT std::vector<int8_t> DatasetReader::readAsVector<int8_t>() const;
 template COMPLEX_EXPORT std::vector<int16_t> DatasetReader::readAsVector<int16_t>() const;

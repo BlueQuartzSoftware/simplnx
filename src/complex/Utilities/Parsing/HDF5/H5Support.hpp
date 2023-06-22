@@ -289,5 +289,12 @@ hid_t COMPLEX_EXPORT GetDatasetType(hid_t locationId, const std::string& dataset
  */
 std::string COMPLEX_EXPORT StringForHDFType(hid_t dataTypeIdentifier);
 
+/**
+ * @brief Returns a std::string of the name of the given filter type.
+ * @param id
+ * @return std::string
+ */
+std::string COMPLEX_EXPORT GetNameFromFilterType(H5Z_filter_t id);
+
 } // namespace Support
 } // namespace complex::HDF5
