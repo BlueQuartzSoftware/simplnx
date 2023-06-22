@@ -48,7 +48,7 @@ Result<> LosAlamosFFTWriter::operator()()
     return createDirectoriesResult;
   }
 
-  std::ofstream file = std::ofstream(m_InputValues->OutputFile, std::ios_base::out);
+  std::ofstream file = std::ofstream(m_InputValues->OutputFile, std::ios_base::out | std::ios_base::binary);
   if(!file.is_open())
   {
     return MakeErrorResult(-73450, fmt::format("Error creating and opening output file at path: {}", m_InputValues->OutputFile.string()));

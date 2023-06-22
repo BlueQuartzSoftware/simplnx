@@ -42,7 +42,18 @@ void CompareResults() // compare hash of both file strings
 {
   REQUIRE(fs::exists(writtenFilePath));
   REQUIRE(fs::exists(exemplarFilePath));
-  REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
+  const std::vector<char> exemplar = readIn(exemplarFilePath);
+  const std::vector<char> data = readIn(writtenFilePath);
+  for(size_t i = 0; i < 1024; i++)
+  {
+    if(exemplar[i] != data[i])
+    {
+      std::cout << "Output difference at byte offset " << i << std::endl;
+      REQUIRE(exemplar[i] == data[i]);
+      break;
+    }
+  }
+  REQUIRE(exemplar.size() == data.size());
 }
 } // namespace
 
