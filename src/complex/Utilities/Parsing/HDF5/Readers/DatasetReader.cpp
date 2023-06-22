@@ -321,7 +321,6 @@ std::string DatasetReader::getFilterName() const
 {
   std::string filterNames;
   const hid_t cpListId = H5Dget_create_plist(getId());
-  // const hid_t apListId = H5Dget_access_plist(getId());
   const int numFilters = H5Pget_nfilters(cpListId);
   for(int j = 0; j < numFilters; ++j)
   {

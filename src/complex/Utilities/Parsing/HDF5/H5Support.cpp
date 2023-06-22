@@ -217,7 +217,7 @@ std::string complex::HDF5::Support::GetNameFromFilterType(H5Z_filter_t id)
   case H5Z_FILTER_SZIP:
     return "SZIP";
   case H5Z_FILTER_NBIT:
-    return "NBIT";
+    return "N-BIT";
   case H5Z_FILTER_SCALEOFFSET:
     return "SCALE-OFFSET";
   case H5Z_FILTER_ERROR:
