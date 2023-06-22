@@ -29,6 +29,7 @@ struct ORIENTATIONANALYSIS_EXPORT MergeColoniesInputValues
   DataPath CellFeatureAMPath;
   DataPath FeatureParentIdsPath;
   DataPath ActivePath;
+  uint64 SeedValue;
   bool RandomizeParentIds = true;
 };
 

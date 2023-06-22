@@ -195,8 +195,7 @@ Result<> MergeColonies::operator()()
     // Generate all the numbers up front
     const int32 rangeMin = 1;
     const int32 rangeMax = numParents - 1;
-    std::mt19937::result_type seed = static_cast<std::mt19937::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-    std::mt19937 generator(seed); // Standard mersenne_twister_engine seeded with milliseconds
+    std::mt19937 generator(m_InputValues->SeedValue); // Standard mersenne_twister_engine seeded
     std::uniform_int_distribution<int32> distribution(rangeMin, rangeMax);
 
     std::vector<int32> pid(numParents);
@@ -245,7 +244,8 @@ int32 MergeColonies::getSeed(int32 newFid)
 {
   usize numFeatures = m_FeaturePhases.getNumberOfTuples();
 
-  SIMPL_RANDOMNG_NEW();
+  std::mt19937 generator(m_InputValues->SeedValue); // Standard mersenne_twister_engine seeded
+  std::uniform_real_distribution<float32> distribution(0, 1);
   int32 seed = -1;
   int32 randFeature = 0;
 
@@ -253,7 +253,7 @@ int32 MergeColonies::getSeed(int32 newFid)
   usize totalFMinus1 = numFeatures - 1;
 
   usize counter = 0;
-  randFeature = int32(float32(rg.genrand_res53()) * float32(totalFMinus1));
+  randFeature = int32(distribution(generator) * float32(totalFMinus1));
   while(seed == -1 && counter < numFeatures)
   {
     if(randFeature > totalFMinus1)

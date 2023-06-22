@@ -38,6 +38,8 @@ public:
   static inline constexpr StringLiteral k_NewCellFeatureAttributeMatrixName_Key = "new_cell_feature_attribute_matrix_name";
   static inline constexpr StringLiteral k_FeatureParentIdsArrayName_Key = "feature_parent_ids_array_name";
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
+  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
 
   /**
    * @brief Returns the name of the filter.
