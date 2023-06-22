@@ -137,10 +137,12 @@ Result<> FindBoundaryStrengthsFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.SurfaceMeshF1sArrayName = filterArgs.value<DataPath>(k_SurfaceMeshF1sArrayName_Key);
-  inputValues.SurfaceMeshF1sptsArrayName = filterArgs.value<DataPath>(k_SurfaceMeshF1sptsArrayName_Key);
-  inputValues.SurfaceMeshF7sArrayName = filterArgs.value<DataPath>(k_SurfaceMeshF7sArrayName_Key);
-  inputValues.SurfaceMeshmPrimesArrayName = filterArgs.value<DataPath>(k_SurfaceMeshmPrimesArrayName_Key);
+
+  DataPath surfaceMeshParentPath = inputValues.SurfaceMeshFaceLabelsArrayPath.getParent();
+  inputValues.SurfaceMeshF1sArrayName = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF1sArrayName_Key));
+  inputValues.SurfaceMeshF1sptsArrayName = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF1sptsArrayName_Key));
+  inputValues.SurfaceMeshF7sArrayName = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshF7sArrayName_Key));
+  inputValues.SurfaceMeshmPrimesArrayName = surfaceMeshParentPath.createChildPath(filterArgs.value<std::string>(k_SurfaceMeshmPrimesArrayName_Key));
 
   return FindBoundaryStrengths(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
