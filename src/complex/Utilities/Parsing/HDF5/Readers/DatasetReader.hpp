@@ -120,6 +120,8 @@ public:
    */
   std::vector<hsize_t> getDimensions() const;
 
+  std::string getFilterName() const;
+
 protected:
   /**
    * @brief Closes the HDF5 ID and resets it to 0.
