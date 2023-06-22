@@ -67,7 +67,7 @@ Result<std::array<float32, 16>> ReadTransformMatrix(const std::string& filePath)
     std::copy(transformMatrixPtr, transformMatrixPtr + 2, arr.begin());
     arr[2] = 0;
     arr[3] = 0;
-    std::copy(transformMatrixPtr + 2, transformMatrixPtr + 4, arr.begin() + 4); // corrected line
+    std::copy(transformMatrixPtr + 2, transformMatrixPtr + 4, arr.begin() + 4);
     arr[6] = 0;
     arr[7] = 0;
     arr[8] = 0;
