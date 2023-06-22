@@ -61,6 +61,22 @@ Result<std::array<float32, 16>> ReadTransformMatrix(const std::string& filePath)
   MetaImage* metaImagePtr = metaImageIO->GetMetaImagePointer();
   const double* transformMatrixPtr = metaImagePtr->TransformMatrix();
 
+  /*
+   * The ITK API hands back the Transform Matrix as a raw pointer to the values.
+   * The actual Transform Matrix internal array has a size of 100 with only the first
+   * several slots filled with matrix values (the rest of the slots are 0's).
+   * Since it's only possible to get a raw pointer and no exact size, this code will
+   * key off of the "NDims" header value in the .mha file to determine how many values
+   * should be grabbed from the raw pointer.  So far it appears that it's 4 values (2x2)
+   * for 2D image data and 9 values (3x3) for 3D image data, but it is currently unknown
+   * whether it's possible to have >4 matrix values for 2D image data or >9 matrix values
+   * for 3D image data.  Therefore, this code is going to make the following assumptions:
+   *
+   * 1. 2D image data has a transformation matrix with 4 values
+   * 2. 3D image data has a transformation matrix with 9 values
+   *
+   * If these assumptions are violated, then unexpected behavior may occur.
+   */
   int nDims = metaImagePtr->NDims();
   if(nDims == 2)
   {
