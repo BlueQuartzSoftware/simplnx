@@ -15,11 +15,11 @@ using namespace complex;
 TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITKImageProcessing][ITKMhaFileReader]")
 {
   // Load plugins (this is needed because ITKMhaFileReader needs access to the ComplexCore plugin)
-  std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
+  const std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
   // Test reading 2D & 3D image data
-  fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest/ExemplarySmallIN100.dream3d";
+  const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest/ExemplarySmallIN100.dream3d";
   fs::path filePath;
   std::string exemplaryGeomName;
   SECTION("Test 2D Image Data")
@@ -33,24 +33,24 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
     exemplaryGeomName = "ExemplarySmallIN100";
   }
 
-  ITKMhaFileReader filter;
+  const ITKMhaFileReader filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplaryFilePath);
   Arguments args;
 
-  std::string geomName = "ImageGeom";
-  std::string amName = "CellData";
-  std::string arrName = "ImageArray";
-  std::string tMatrixName = "TransformationMatrix";
-  DataPath geomPath{{geomName}};
-  DataPath arrayPath{{geomName, amName, arrName}};
-  DataPath tMatrixPath{{geomName, tMatrixName}};
+  const std::string geomName = "ImageGeom";
+  const std::string amName = "CellData";
+  const std::string arrName = "ImageArray";
+  const std::string tMatrixName = "TransformationMatrix";
+  const DataPath geomPath{{geomName}};
+  const DataPath arrayPath{{geomName, amName, arrName}};
+  const DataPath tMatrixPath{{geomName, tMatrixName}};
 
-  std::string exemplaryAMName = "Cell Data";
-  std::string exemplaryArrName = "ImageData";
-  std::string exemplaryTMatrixName = "TransformationMatrix";
-  DataPath exemplaryGeomPath{{exemplaryGeomName}};
-  DataPath exemplaryArrayPath{{exemplaryGeomName, exemplaryAMName, exemplaryArrName}};
-  DataPath exemplaryTMatrixPath{{exemplaryGeomName, exemplaryTMatrixName}};
+  const std::string exemplaryAMName = "Cell Data";
+  const std::string exemplaryArrName = "ImageData";
+  const std::string exemplaryTMatrixName = "TransformationMatrix";
+  const DataPath exemplaryGeomPath{{exemplaryGeomName}};
+  const DataPath exemplaryArrayPath{{exemplaryGeomName, exemplaryAMName, exemplaryArrName}};
+  const DataPath exemplaryTMatrixPath{{exemplaryGeomName, exemplaryTMatrixName}};
 
   args.insertOrAssign(ITKImageReader::k_FileName_Key, filePath);
   args.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, geomPath);
@@ -58,7 +58,7 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   args.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, arrayPath);
   args.insertOrAssign(ITKMhaFileReader::k_ApplyImageTransformation, true);
   args.insertOrAssign(ITKMhaFileReader::k_SaveImageTransformationAsArray, true);
-  args.insertOrAssign(ITKMhaFileReader::k_TransformationMatrixDataArrayPath_Key, tMatrixPath);
+  args.insertOrAssign(ITKMhaFileReader::k_TransformationMatrixDataArrayPathKey, tMatrixPath);
 
   auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -66,33 +66,33 @@ TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITK
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(geomPath);
-  REQUIRE(imageGeom != nullptr);
+  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
+  REQUIRE(imageGeomPtr != nullptr);
 
-  const auto* exemplaryImageGeom = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
-  REQUIRE(exemplaryImageGeom != nullptr);
+  const auto* exemplaryImageGeomPtr = dataStructure.getDataAs<ImageGeom>(exemplaryGeomPath);
+  REQUIRE(exemplaryImageGeomPtr != nullptr);
 
-  REQUIRE(imageGeom->getDimensions() == exemplaryImageGeom->getDimensions());
-  REQUIRE(imageGeom->getOrigin() == exemplaryImageGeom->getOrigin());
-  REQUIRE(imageGeom->getSpacing() == exemplaryImageGeom->getSpacing());
+  REQUIRE(imageGeomPtr->getDimensions() == exemplaryImageGeomPtr->getDimensions());
+  REQUIRE(imageGeomPtr->getOrigin() == exemplaryImageGeomPtr->getOrigin());
+  REQUIRE(imageGeomPtr->getSpacing() == exemplaryImageGeomPtr->getSpacing());
 
-  const auto* dataArray = dataStructure.getDataAs<Float32Array>(arrayPath);
-  REQUIRE(dataArray != nullptr);
+  const auto* dataArrayPtr = dataStructure.getDataAs<Float32Array>(arrayPath);
+  REQUIRE(dataArrayPtr != nullptr);
 
-  const auto* exemplaryDataArray = dataStructure.getDataAs<Float32Array>(exemplaryArrayPath);
-  REQUIRE(exemplaryDataArray != nullptr);
+  const auto* exemplaryDataArrayPtr = dataStructure.getDataAs<Float32Array>(exemplaryArrayPath);
+  REQUIRE(exemplaryDataArrayPtr != nullptr);
 
-  REQUIRE(dataArray->getTupleShape() == exemplaryDataArray->getTupleShape());
-  REQUIRE(dataArray->getComponentShape() == exemplaryDataArray->getComponentShape());
-  REQUIRE(std::equal(dataArray->begin(), dataArray->end(), exemplaryDataArray->begin(), exemplaryDataArray->end()));
+  REQUIRE(dataArrayPtr->getTupleShape() == exemplaryDataArrayPtr->getTupleShape());
+  REQUIRE(dataArrayPtr->getComponentShape() == exemplaryDataArrayPtr->getComponentShape());
+  REQUIRE(std::equal(dataArrayPtr->begin(), dataArrayPtr->end(), exemplaryDataArrayPtr->begin(), exemplaryDataArrayPtr->end()));
 
-  const auto* tMatrix = dataStructure.getDataAs<Float32Array>(tMatrixPath);
-  REQUIRE(tMatrix != nullptr);
+  const auto* tMatrixPtr = dataStructure.getDataAs<Float32Array>(tMatrixPath);
+  REQUIRE(tMatrixPtr != nullptr);
 
-  const auto* exemplaryTMatrix = dataStructure.getDataAs<Float32Array>(exemplaryTMatrixPath);
-  REQUIRE(exemplaryTMatrix != nullptr);
+  const auto* exemplaryTMatrixPtr = dataStructure.getDataAs<Float32Array>(exemplaryTMatrixPath);
+  REQUIRE(exemplaryTMatrixPtr != nullptr);
 
-  REQUIRE(tMatrix->getTupleShape() == exemplaryTMatrix->getTupleShape());
-  REQUIRE(tMatrix->getComponentShape() == exemplaryTMatrix->getComponentShape());
-  REQUIRE(std::equal(tMatrix->begin(), tMatrix->end(), exemplaryTMatrix->begin(), exemplaryTMatrix->end()));
+  REQUIRE(tMatrixPtr->getTupleShape() == exemplaryTMatrixPtr->getTupleShape());
+  REQUIRE(tMatrixPtr->getComponentShape() == exemplaryTMatrixPtr->getComponentShape());
+  REQUIRE(std::equal(tMatrixPtr->begin(), tMatrixPtr->end(), exemplaryTMatrixPtr->begin(), exemplaryTMatrixPtr->end()));
 }
