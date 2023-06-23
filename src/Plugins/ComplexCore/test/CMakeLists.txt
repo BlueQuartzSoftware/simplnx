@@ -83,6 +83,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
   LaplacianSmoothingFilterTest.cpp
+  LosAlamosFFTWriterTest.cpp
   MultiThresholdObjectsTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MinNeighborsTest.cpp
@@ -203,9 +204,9 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME bin_feature_phases.tar.gz SHA512 e43805c5a69d08ce6d657f8fa3fb9fec7d174f2329412fa62ba95ac6d82f1983ed2c5a641d81651ba86e6eeb5d20602b6e131f34094160305c4bf03cfbd06be1)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_feature_boundary_element_fractions.tar.gz SHA512 b267b902c87030f7508882e77d3f4483a9d4e351da78061b1b845b0301529a3532ac60934748eec1b4f8e900778af78244133b24607509b80c5cd49bc5f07a49)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME reverse_triangle_winding.tar.gz SHA512 63247d7b8a0deee2fdb737527506312827331861758cd6106974d3aa1b9cb9c1d3b85d4b135e3eda27ac98e891198b4ee0498077ab231127dbb3dd8e83a5ea14)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME LosAlamosFFTExemplar.tar.gz SHA512 c4f2f6cbdaea4512ca2911cb0c3169e62449fcdb7cb99a5e64640601239a08cc09ea35f81f17b056fd38da85add95a37b244b7f844fe0abc944c1ba2f7514812)
 
 endif()
-
 
 # -----------------------------------------------------------------------------
 # Include any example pipelines into the unit testing
