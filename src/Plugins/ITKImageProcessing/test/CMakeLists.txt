@@ -26,6 +26,7 @@ if(NOT ITKImageProcessing_LeanAndMean)
     ITKLogImageTest.cpp
     ITKMaskImageTest.cpp
     ITKMedianImageTest.cpp
+    ITKMhaFileReaderTest.cpp
     ITKMorphologicalWatershedImageTest.cpp
     ITKNormalizeImageTest.cpp
     ITKOpeningByReconstructionImageTest.cpp
