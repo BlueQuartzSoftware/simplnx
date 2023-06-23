@@ -25,7 +25,7 @@ public:
   static inline constexpr StringLiteral k_TransformationMatrixDataArrayPathKey = "transformation_matrix_data_array_path";
 
   /**
-   * @brief
+   * @brief Returns the name of the filter.
    * @return
    */
   [[nodiscard]] std::string name() const override;
@@ -37,25 +37,31 @@ public:
   std::string className() const override;
 
   /**
-   * @brief
+   * @brief Returns the uuid of the filter.
    * @return
    */
   [[nodiscard]] Uuid uuid() const override;
 
   /**
-   * @brief
+   * @brief Returns the human readable name of the filter.
    * @return
    */
   [[nodiscard]] std::string humanName() const override;
 
   /**
-   * @brief
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
+
+  /**
+   * @brief Returns the parameters of the filter (i.e. its inputs)
    * @return
    */
   [[nodiscard]] Parameters parameters() const override;
 
   /**
-   * @brief
+   * @brief Returns a copy of the filter.
    * @return
    */
   [[nodiscard]] UniquePointer clone() const override;

@@ -199,6 +199,12 @@ std::string ITKMhaFileReader::humanName() const
 }
 
 //------------------------------------------------------------------------------
+std::vector<std::string> ITKMhaFileReader::defaultTags() const
+{
+  return {"io", "input", "read", "import", "image"};
+}
+
+//------------------------------------------------------------------------------
 Parameters ITKMhaFileReader::parameters() const
 {
   Parameters params;
