@@ -19,7 +19,7 @@ const std::string k_f1s = "SurfaceMeshF1s";
 const std::string k_f1spts = "SurfaceMeshF1spts";
 const std::string k_f7s = "SurfaceMeshF7s";
 const std::string k_mPrimes = "SurfaceMeshmPrimes";
-}
+} // namespace
 
 TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetricsFilter: Valid Filter Execution", "[OrientationAnalysis][FindSlipTransmissionMetricsFilter]")
 {

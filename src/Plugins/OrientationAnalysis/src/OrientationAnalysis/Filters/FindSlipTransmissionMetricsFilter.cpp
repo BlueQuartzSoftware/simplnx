@@ -4,10 +4,10 @@
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
-#include "complex/Parameters/DataObjectNameParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/NeighborListSelectionParameter.hpp"
 #include "complex/Filter/Actions/CreateNeighborListAction.hpp"
+#include "complex/Parameters/ArraySelectionParameter.hpp"
+#include "complex/Parameters/DataObjectNameParameter.hpp"
+#include "complex/Parameters/NeighborListSelectionParameter.hpp"
 
 using namespace complex;
 
@@ -96,26 +96,22 @@ IFilter::PreflightResult FindSlipTransmissionMetricsFilter::preflightImpl(const 
   usize tupShape = dataStructure.getDataAs<Int32NeighborList>(pNeighborListPathValue)->getNumberOfTuples();
 
   {
-    auto action =
-        std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF1ListNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF1ListNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action =
-        std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF1sptListNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF1sptListNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action =
-        std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF7ListNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pF7ListNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    auto action =
-        std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pmPrimeListNameValue));
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupShape, pNeighborListPathValue.getParent().createChildPath(pmPrimeListNameValue));
     resultOutputActions.value().appendAction(std::move(action));
   }
 

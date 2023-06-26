@@ -2,8 +2,8 @@
 
 #include "complex/Parameters/VectorParameter.hpp"
 
-#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysis/Filters/FindBoundaryStrengthsFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
