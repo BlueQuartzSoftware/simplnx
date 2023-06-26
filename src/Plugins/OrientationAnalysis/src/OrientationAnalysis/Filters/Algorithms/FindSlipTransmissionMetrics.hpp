@@ -14,23 +14,6 @@
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  FindSlipTransmissionMetricsInputValues inputValues;
-
-  inputValues.NeighborListArrayPath = filterArgs.value<DataPath>(k_NeighborListArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.F1ListArrayName = filterArgs.value<DataPath>(k_F1ListArrayName_Key);
-  inputValues.F1sptListArrayName = filterArgs.value<DataPath>(k_F1sptListArrayName_Key);
-  inputValues.F7ListArrayName = filterArgs.value<DataPath>(k_F7ListArrayName_Key);
-  inputValues.mPrimeListArrayName = filterArgs.value<DataPath>(k_mPrimeListArrayName_Key);
-
-  return FindSlipTransmissionMetrics(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 

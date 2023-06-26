@@ -1,64 +1,56 @@
-/**
- * This file is auto generated from the original OrientationAnalysis/FindSlipTransmissionMetricsFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[FindSlipTransmissionMetricsFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
-
 #include <catch2/catch.hpp>
-
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
 
 #include "OrientationAnalysis/Filters/FindSlipTransmissionMetricsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetricsFilter: Valid Filter Execution","[OrientationAnalysis][FindSlipTransmissionMetricsFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
 {
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  FindSlipTransmissionMetricsFilter filter;
-  DataStructure ds;
-  Arguments args;
+DataPath grainDataPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data});
+DataPath neighborListPath = grainDataPath.createChildPath("NeighborList");
+DataPath avgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_AvgQuats});
+DataPath featurePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
+DataPath crystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures});
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_F1ListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_F1sptListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_F7ListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_mPrimeListArrayName_Key, std::make_any<DataPath>(DataPath{}));
-
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
-  REQUIRE(preflightResult.outputActions.valid());
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
-  REQUIRE(executeResult.result.valid());
+const std::string k_f1s = "SurfaceMeshF1s";
+const std::string k_f1spts = "SurfaceMeshF1spts";
+const std::string k_f7s = "SurfaceMeshF7s";
+const std::string k_mPrimes = "SurfaceMeshmPrimes";
 }
 
-//TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetricsFilter: InValid Filter Execution")
-//{
-//
-//}
+TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetricsFilter: Valid Filter Execution", "[OrientationAnalysis][FindSlipTransmissionMetricsFilter]")
+{
+  DataStructure dataStructure =
+      UnitTest::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));
+  {
+    // Instantiate the filter, a DataStructure object and an Arguments Object
+    FindSlipTransmissionMetricsFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(neighborListPath));
+    args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
+    args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
+    args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+    args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_F1ListArrayName_Key, std::make_any<std::string>(k_f1s));
+    args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_F1sptListArrayName_Key, std::make_any<std::string>(k_f1spts));
+    args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_F7ListArrayName_Key, std::make_any<std::string>(k_f7s));
+    args.insertOrAssign(FindSlipTransmissionMetricsFilter::k_mPrimeListArrayName_Key, std::make_any<std::string>(k_mPrimes));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.valid());
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    REQUIRE(executeResult.result.valid());
+  }
+
+  UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("F1List"), grainDataPath.createChildPath(k_f1s));
+  UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("F1sptList"), grainDataPath.createChildPath(k_f1spts));
+  UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("F7List"), grainDataPath.createChildPath(k_f7s));
+  UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("mPrimeList"), grainDataPath.createChildPath(k_mPrimes));
+}
