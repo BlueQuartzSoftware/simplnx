@@ -45,7 +45,7 @@ std::string GenerateVectorColorsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateVectorColorsFilter::defaultTags() const
 {
-  return {"Generic", "Crystallography"};
+  return {"Generic", "Coloring"};
 }
 
 //------------------------------------------------------------------------------
@@ -54,15 +54,15 @@ Parameters GenerateVectorColorsFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
-  params.insertSeparator(Parameters::Separator{"Input Parameters"});
+  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseGoodVoxels_Key, "Apply to Good Voxels Only (Bad Voxels Will Be Black)", "Whether or not to assign colors to bad voxels or leave them black", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "Used to define Elements as good or bad ", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Required Data Objects"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_VectorsArrayPath_Key, "Vector Attribute Array", "Vectors the colors will represent", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_GoodVoxelsArrayPath_Key, "Mask", "Used to define Elements as good or bad ", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Created Element Data Object"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellVectorColorsArrayName_Key, "Vector Colors", "RGB colors", "Vector Colors Array"));

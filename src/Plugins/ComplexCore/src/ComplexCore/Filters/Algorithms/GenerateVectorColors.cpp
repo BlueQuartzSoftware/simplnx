@@ -37,7 +37,7 @@ const std::atomic_bool& GenerateVectorColors::getCancel()
 // -----------------------------------------------------------------------------
 Result<> GenerateVectorColors::operator()()
 {
-  std::unique_ptr<MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompare> maskCompare;
   try
   {
     maskCompare = InstantiateMaskCompare(m_DataStructure, m_InputValues->GoodVoxelsArrayPath);
@@ -53,7 +53,7 @@ Result<> GenerateVectorColors::operator()()
 
   usize totalPoints = vectors.getNumberOfTuples();
 
-  usize index = 0;
+  usize index;
 
   // Write the Vector Coloring Cell Data
   for(usize i = 0; i < totalPoints; i++)
@@ -72,56 +72,57 @@ Result<> GenerateVectorColors::operator()()
       dir[1] = vectors[index + 1];
       dir[2] = vectors[index + 2];
 
-      VectorMapType array(const_cast<float*>(dir));
+      VectorMapType array(dir);
       array.normalize();
 
       if(dir[2] < 0)
       {
+        // *= is not a valid operator in this case
         array = array * -1.0f;
       }
-      float trend = atan2f(dir[1], dir[0]) * (Constants::k_RadToDegF);
-      float plunge = acosf(dir[2]) * (Constants::k_RadToDegF);
-      if(trend < 0.0)
+      float trend = atan2f(array[1], array[0]) * (Constants::k_RadToDegF);
+      float plunge = acosf(array[2]) * (Constants::k_RadToDegF);
+      if(trend < 0.0f)
       {
-        trend += 360.0;
+        trend += 360.0f;
       }
-      if(trend <= 120.0)
+      if(trend <= 120.0f)
       {
-        r = 255.0 * ((120.0 - trend) / 120.0);
-        g = 255.0 * (trend / 120.0);
-        b = 0.0;
+        r = 255.0f * ((120.0f - trend) / 120.0f);
+        g = 255.0f * (trend / 120.0f);
+        b = 0.0f;
       }
-      if(trend > 120.0 && trend <= 240.0)
+      if(trend > 120.0f && trend <= 240.0f)
       {
-        trend -= 120.0;
-        r = 0.0;
-        g = 255.0 * ((120.0 - trend) / 120.0);
-        b = 255.0 * (trend / 120.0);
+        trend -= 120.0f;
+        r = 0.0f;
+        g = 255.0f * ((120.0f - trend) / 120.0f);
+        b = 255.0f * (trend / 120.0f);
       }
-      if(trend > 240.0 && trend < 360.0)
+      if(trend > 240.0f && trend < 360.0f)
       {
-        trend -= 240.0;
-        r = 255.0 * (trend / 120.0);
-        g = 0.0;
-        b = 255.0 * ((120.0 - trend) / 120.0);
+        trend -= 240.0f;
+        r = 255.0f * (trend / 120.0f);
+        g = 0.0f;
+        b = 255.0f * ((120.0f - trend) / 120.0f);
       }
-      float deltaR = 255.0 - r;
-      float deltaG = 255.0 - g;
-      float deltaB = 255.0 - b;
-      r += (deltaR * ((90.0 - plunge) / 90.0));
-      g += (deltaG * ((90.0 - plunge) / 90.0));
-      b += (deltaB * ((90.0 - plunge) / 90.0));
-      if(r > 255.0)
+      float deltaR = 255.0f - r;
+      float deltaG = 255.0f - g;
+      float deltaB = 255.0f - b;
+      r += (deltaR * ((90.0f - plunge) / 90.0f));
+      g += (deltaG * ((90.0f - plunge) / 90.0f));
+      b += (deltaB * ((90.0f - plunge) / 90.0f));
+      if(r > 255.0f)
       {
-        r = 255.0;
+        r = 255.0f;
       }
-      if(g > 255.0)
+      if(g > 255.0f)
       {
-        g = 255.0;
+        g = 255.0f;
       }
-      if(b > 255.0)
+      if(b > 255.0f)
       {
-        b = 255.0;
+        b = 255.0f;
       }
       argb = RgbColor::dRgb(r, g, b, 255);
       cellVectorColors[index] = RgbColor::dRed(argb);
