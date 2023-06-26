@@ -2,7 +2,7 @@
 
 ## Group (Subgroup) ##
 
-Generic (Crystallography)
+Generic (Coloring)
 
 ## Description ##
 
