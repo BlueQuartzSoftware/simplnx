@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
@@ -12,7 +12,7 @@
 namespace complex
 {
 
-struct COMPLEXCORE_EXPORT FindBoundaryStrengthsInputValues
+struct ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengthsInputValues
 {
   VectorFloat64Parameter::ValueType Loading;
   DataPath SurfaceMeshFaceLabelsArrayPath;
@@ -31,7 +31,7 @@ struct COMPLEXCORE_EXPORT FindBoundaryStrengthsInputValues
  * where a bool mask array specifies.
  */
 
-class COMPLEXCORE_EXPORT FindBoundaryStrengths
+class ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengths
 {
 public:
   FindBoundaryStrengths(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FindBoundaryStrengthsInputValues* inputValues);

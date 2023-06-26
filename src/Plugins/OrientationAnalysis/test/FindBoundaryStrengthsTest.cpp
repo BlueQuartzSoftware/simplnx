@@ -2,8 +2,8 @@
 
 #include "complex/Parameters/VectorParameter.hpp"
 
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/FindBoundaryStrengthsFilter.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "OrientationAnalysis/Filters/FindBoundaryStrengthsFilter.hpp"
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
@@ -23,7 +23,7 @@ const std::string k_f7s = "SurfaceMeshF7s";
 const std::string k_mPrimes = "SurfaceMeshmPrimes";
 } // namespace
 
-TEST_CASE("ComplexCore::FindBoundaryStrengthsFilter: Valid Filter Execution", "[OrientationAnalysis][FindBoundaryStrengthsFilter]")
+TEST_CASE("OrientationAnalysis::FindBoundaryStrengthsFilter: Valid Filter Execution", "[OrientationAnalysis][FindBoundaryStrengthsFilter]")
 {
   DataStructure dataStructure =
       UnitTest::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));

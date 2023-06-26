@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ComplexCore/ComplexCore_export.hpp"
+#include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
@@ -11,7 +11,7 @@ namespace complex
  * @class FindBoundaryStrengthsFilter
  * @brief This filter will ....
  */
-class COMPLEXCORE_EXPORT FindBoundaryStrengthsFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT FindBoundaryStrengthsFilter : public IFilter
 {
 public:
   FindBoundaryStrengthsFilter() = default;

@@ -53,7 +53,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FindBiasedFeaturesTest.cpp
   FindBoundaryCellsTest.cpp
   FindBoundaryElementFractionsTest.cpp
-  FindBoundaryStrengthsTest.cpp
   FindDifferencesMapTest.cpp
   FindEuclideanDistMapTest.cpp
   FindFeatureCentroidsFilterTest.cpp
@@ -205,7 +204,6 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_find_feature_boundary_element_fractions.tar.gz SHA512 b267b902c87030f7508882e77d3f4483a9d4e351da78061b1b845b0301529a3532ac60934748eec1b4f8e900778af78244133b24607509b80c5cd49bc5f07a49)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME reverse_triangle_winding.tar.gz SHA512 63247d7b8a0deee2fdb737527506312827331861758cd6106974d3aa1b9cb9c1d3b85d4b135e3eda27ac98e891198b4ee0498077ab231127dbb3dd8e83a5ea14)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME LosAlamosFFTExemplar.tar.gz SHA512 c4f2f6cbdaea4512ca2911cb0c3169e62449fcdb7cb99a5e64640601239a08cc09ea35f81f17b056fd38da85add95a37b244b7f844fe0abc944c1ba2f7514812)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME feature_boundary_neighbor_slip_transmission.tar.gz SHA512 fb4a92bdfcff1f2b167cdce2126087e76c9022deb0f0bd8a658482f88f8593bacc0e23b8056d56390f767bc1dd21912fb01a976e3cb670738f1a39d46ad9ef28)
 
 endif()
 
