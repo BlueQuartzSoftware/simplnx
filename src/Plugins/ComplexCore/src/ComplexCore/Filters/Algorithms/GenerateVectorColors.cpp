@@ -123,7 +123,7 @@ Result<> GenerateVectorColors::operator()()
       {
         b = 255.0f;
       }
-      
+
       Rgb argb = RgbColor::dRgb(static_cast<uint8>(r), static_cast<uint8>(g), static_cast<uint8>(b), 255);
       cellVectorColors[index] = RgbColor::dRed(argb);
       cellVectorColors[index + 1] = RgbColor::dGreen(argb);
