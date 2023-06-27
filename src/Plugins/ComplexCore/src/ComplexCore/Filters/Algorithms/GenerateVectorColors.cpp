@@ -54,7 +54,6 @@ Result<> GenerateVectorColors::operator()()
   usize totalPoints = vectors.getNumberOfTuples();
 
   usize index;
-
   // Write the Vector Coloring Cell Data
   for(usize i = 0; i < totalPoints; i++)
   {
@@ -63,15 +62,12 @@ Result<> GenerateVectorColors::operator()()
     cellVectorColors[index + 1] = 0;
     cellVectorColors[index + 2] = 0;
 
-    float dir[3] = {0.0f, 0.0f, 0.0f};
-    float r = 0, g = 0, b = 0;
-    Rgb argb;
     if(maskCompare->isTrue(i))
     {
+      float32 dir[3] = {0.0f, 0.0f, 0.0f};
       dir[0] = vectors[index + 0];
       dir[1] = vectors[index + 1];
       dir[2] = vectors[index + 2];
-
       VectorMapType array(dir);
       array.normalize();
 
@@ -80,12 +76,15 @@ Result<> GenerateVectorColors::operator()()
         // *= is not a valid operator in this case
         array = array * -1.0f;
       }
-      float trend = atan2f(array[1], array[0]) * (Constants::k_RadToDegF);
-      float plunge = acosf(array[2]) * (Constants::k_RadToDegF);
+
+      float32 trend = atan2f(array[1], array[0]) * (Constants::k_RadToDegF);
+      float32 plunge = acosf(array[2]) * (Constants::k_RadToDegF);
       if(trend < 0.0f)
       {
         trend += 360.0f;
       }
+
+      float32 r = 0, g = 0, b = 0;
       if(trend <= 120.0f)
       {
         r = 255.0f * ((120.0f - trend) / 120.0f);
@@ -106,9 +105,9 @@ Result<> GenerateVectorColors::operator()()
         g = 0.0f;
         b = 255.0f * ((120.0f - trend) / 120.0f);
       }
-      float deltaR = 255.0f - r;
-      float deltaG = 255.0f - g;
-      float deltaB = 255.0f - b;
+      float32 deltaR = 255.0f - r;
+      float32 deltaG = 255.0f - g;
+      float32 deltaB = 255.0f - b;
       r += (deltaR * ((90.0f - plunge) / 90.0f));
       g += (deltaG * ((90.0f - plunge) / 90.0f));
       b += (deltaB * ((90.0f - plunge) / 90.0f));
@@ -124,7 +123,8 @@ Result<> GenerateVectorColors::operator()()
       {
         b = 255.0f;
       }
-      argb = RgbColor::dRgb(r, g, b, 255);
+      
+      Rgb argb = RgbColor::dRgb(static_cast<uint8>(r), static_cast<uint8>(g), static_cast<uint8>(b), 255);
       cellVectorColors[index] = RgbColor::dRed(argb);
       cellVectorColors[index + 1] = RgbColor::dGreen(argb);
       cellVectorColors[index + 2] = RgbColor::dBlue(argb);
