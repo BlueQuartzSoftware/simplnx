@@ -36,31 +36,27 @@ Result<> FindSlipTransmissionMetrics::operator()()
   auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
-  std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
-
   usize totalFeatures = featurePhases.getNumberOfTuples();
 
-  // But since a pointer is difficult to use operators with we will now create a
-  // reference variable to the pointer with the correct variable name that allows
-  // us to use the same syntax as the "vector of vectors"
   auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborList>(m_InputValues->NeighborListArrayPath);
 
-  auto& F1Lists = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1ListArrayName);
-  auto& F1sPtLists = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1sptListArrayName);
-  auto& F7Lists = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F7ListArrayName);
-  auto& mPrimeLists = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->mPrimeListArrayName);
-
-  float32 mPrime, F1, F1sPt, F7;
-  int32 nName;
+  std::vector<std::vector<float32>> F1Lists(totalFeatures);
+  std::vector<std::vector<float32>> F1sPtLists(totalFeatures);
+  std::vector<std::vector<float32>> F7Lists(totalFeatures);
+  std::vector<std::vector<float32>> mPrimeLists(totalFeatures);
 
   float64 LD[3] = {0.0, 0.0, 1.0};
+
+  int32 nName;
+  float32 mPrime, F1, F1sPt, F7;
   for(usize i = 1; i < totalFeatures; i++)
   {
-    F1Lists[i].assign(neighborList[i].size(), 0.0f);
-    F1sPtLists[i].assign(neighborList[i].size(), 0.0f);
-    F7Lists[i].assign(neighborList[i].size(), 0.0f);
-    mPrimeLists[i].assign(neighborList[i].size(), 0.0f);
-    for(usize j = 0; j < neighborList[i].size(); j++)
+    usize listLength = neighborList[i].size();
+    F1Lists[i].assign(listLength, 0.0f);
+    F1sPtLists[i].assign(listLength, 0.0f);
+    F7Lists[i].assign(listLength, 0.0f);
+    mPrimeLists[i].assign(listLength, 0.0f);
+    for(usize j = 0; j < listLength; j++)
     {
       nName = neighborList[i][j];
       QuatD q1(avgQuats[i * 4], avgQuats[i * 4 + 1], avgQuats[i * 4 + 2], avgQuats[i * 4 + 3]);
@@ -85,6 +81,26 @@ Result<> FindSlipTransmissionMetrics::operator()()
       F1sPtLists[i][j] = F1sPt;
       F7Lists[i][j] = F7;
     }
+  }
+
+  auto& F1L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1ListArrayName);
+  auto& F1sptL = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1sptListArrayName);
+  auto& F7L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F7ListArrayName);
+  auto& mPrimeL = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->mPrimeListArrayName);
+
+  for(usize i = 1; i < totalFeatures; i++)
+  {
+    Float32NeighborList::SharedVectorType f1L(new std::vector<float32>(F1Lists[i]));
+    F1L.setList(static_cast<int32>(i), f1L);
+
+    Float32NeighborList::SharedVectorType f1sptL(new std::vector<float32>(F1sPtLists[i]));
+    F1sptL.setList(static_cast<int32>(i), f1sptL);
+
+    Float32NeighborList::SharedVectorType f7L(new std::vector<float32>(F7Lists[i]));
+    F7L.setList(static_cast<int32>(i), f7L);
+
+    Float32NeighborList::SharedVectorType primeL(new std::vector<float32>(mPrimeLists[i]));
+    mPrimeL.setList(static_cast<int32>(i), primeL);
   }
 
   return {};
