@@ -60,7 +60,7 @@ struct GenerateTripleLinesImpl
 {
   using MeshIndexType = typename IGeometry::MeshIndexType;
 
-  GenerateTripleLinesImpl(ImageGeom* imageGeom, AbstractInt32Store& featureIdsStore, VertexMap& vertexMapRef, EdgeMap& edgeMapRef)
+  GenerateTripleLinesImpl(ImageGeom* imageGeom, Int32AbstractDataStore& featureIdsStore, VertexMap& vertexMapRef, EdgeMap& edgeMapRef)
   : featureIds(featureIdsStore)
   , vertexMap(vertexMapRef)
   , edgeMap(edgeMapRef)
@@ -217,7 +217,7 @@ private:
   mutable MeshIndexType zP;
   FloatVec3 origin;
   FloatVec3 res;
-  AbstractInt32Store& featureIds;
+  Int32AbstractDataStore& featureIds;
   VertexMap& vertexMap;
   EdgeMap& edgeMap;
   mutable std::set<int32_t> uFeatures;
@@ -365,7 +365,7 @@ void QuickSurfaceMesh::getGridCoordinates(const IGridGeometry* grid, size_t x, s
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::flipProblemVoxelCase1(AbstractInt32Store& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4, MeshIndexType v5, MeshIndexType v6) const
+void QuickSurfaceMesh::flipProblemVoxelCase1(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4, MeshIndexType v5, MeshIndexType v6) const
 {
   double rangeMin = 0.0;
   double rangeMax = 1.0;
@@ -396,7 +396,7 @@ void QuickSurfaceMesh::flipProblemVoxelCase1(AbstractInt32Store& featureIds, Mes
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::flipProblemVoxelCase2(AbstractInt32Store& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4) const
+void QuickSurfaceMesh::flipProblemVoxelCase2(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3, MeshIndexType v4) const
 {
   double rangeMin = 0.0;
   double rangeMax = 1.0;
@@ -443,7 +443,7 @@ void QuickSurfaceMesh::flipProblemVoxelCase2(AbstractInt32Store& featureIds, Mes
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::flipProblemVoxelCase3(AbstractInt32Store& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3) const
+void QuickSurfaceMesh::flipProblemVoxelCase3(Int32AbstractDataStore& featureIds, MeshIndexType v1, MeshIndexType v2, MeshIndexType v3) const
 {
   double rangeMin = 0.0;
   double rangeMax = 1.0;
@@ -642,7 +642,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
   auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_Inputs->pGridGeomDataPath);
 
   Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
-  AbstractInt32Store& featureIds = featureIdsArray.getDataStoreRef();
+  Int32AbstractDataStore& featureIds = featureIdsArray.getDataStoreRef();
 
   SizeVec3 udims = grid->getDimensions();
 
@@ -1505,7 +1505,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   }
 
   Int8Array& m_NodeTypesArray = m_DataStructure.getDataRefAs<Int8Array>(m_Inputs->pNodeTypesDataPath);
-  AbstractInt8Store& m_NodeTypes = m_NodeTypesArray.getDataStoreRef();
+  Int8AbstractDataStore& m_NodeTypes = m_NodeTypesArray.getDataStoreRef();
 
   for(size_t i = 0; i < nodeCount; i++)
   {
@@ -1543,7 +1543,7 @@ void QuickSurfaceMesh::generateTripleLines()
   //
   //  AttributeMatrix* featAttrMat = sm->getAttributeMatrix(m_FeatureAttributeMatrixName);
   Int32Array& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_Inputs->pFeatureIdsArrayPath);
-  AbstractInt32Store& featureIds = featureIdsArray.getDataStoreRef();
+  Int32AbstractDataStore& featureIds = featureIdsArray.getDataStoreRef();
 
   int32_t numFeatures = 0;
   size_t numTuples = featureIdsArray.getNumberOfTuples();

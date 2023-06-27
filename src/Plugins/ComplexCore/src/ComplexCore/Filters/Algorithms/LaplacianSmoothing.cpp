@@ -35,7 +35,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   TriangleGeom& surfaceMesh = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->pTriangleGeometryDataPath);
 
   Float32Array& vertsArray = *(surfaceMesh.getVertices());
-  AbstractFloat32Store& verts = vertsArray.getDataStoreRef();
+  Float32AbstractDataStore& verts = vertsArray.getDataStoreRef();
 
   IGeometry::MeshIndexType nvert = surfaceMesh.getNumberOfVertices();
 
@@ -53,7 +53,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   }
 
   IGeometry::SharedEdgeList& uedgesArray = *(surfaceMesh.getEdges());
-  AbstractUInt64Store& uedges = uedgesArray.getDataStoreRef();
+  UInt64AbstractDataStore& uedges = uedgesArray.getDataStoreRef();
   IGeometry::MeshIndexType nedges = uedges.getNumberOfTuples();
 
   std::vector<int32_t> numConnections(nvert, 0);
@@ -158,7 +158,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 std::vector<float> LaplacianSmoothing::generateLambdaArray()
 {
   Int8Array& surfaceMeshNodeType = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->pSurfaceMeshNodeTypeArrayPath);
-  AbstractInt8Store& surfaceMeshNode = surfaceMeshNodeType.getDataStoreRef();
+  Int8AbstractDataStore& surfaceMeshNode = surfaceMeshNodeType.getDataStoreRef();
 
   size_t numNodes = surfaceMeshNodeType.getNumberOfTuples();
 
