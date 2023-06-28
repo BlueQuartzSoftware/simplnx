@@ -4,7 +4,8 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/KUtilities.hpp"
 
-#include <random>
+#include <RandLib/distributions/BasicRandGenerator.hpp>
+#include <RandLib/distributions/UniformRand.hpp>
 
 using namespace complex;
 
@@ -15,7 +16,7 @@ class KMeansTemplate
 {
 public:
   KMeansTemplate(KMeans* filter, const IDataArray& inputIDataArray, IDataArray& meansIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
-                 KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+                 KUtilities::DistanceMetric distMetric, uint64 seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
   , m_Means(dynamic_cast<DataArrayT&>(meansIDataArray))
@@ -38,17 +39,19 @@ public:
     int32 numCompDims = m_InputArray.getNumberOfComponents();
 
     const usize rangeMax = numTuples - 1;
-    std::random_device randDev;
-    std::mt19937_64 gen(randDev());
-    gen.seed(m_Seed);
-    std::uniform_real_distribution<double> dist(0.0F, 1.0F);
+
+    RandLib::UniformRand<float32, RandLib::JKissRandEngine> uDist = RandLib::UniformRand<float32, RandLib::JKissRandEngine>(0.0f, 1.0f);
+    uDist.Reseed(m_Seed);
 
     std::vector<usize> clusterIdxs(m_NumClusters);
 
+    std::vector<float32> data(m_NumClusters);
+    uDist.Sample(data);
+
     usize clusterChoices = 0;
-    while(clusterChoices < m_NumClusters)
+    for(float32 num : data)
     {
-      usize index = std::floor(dist(gen) * static_cast<float64>(rangeMax));
+      usize index = std::floor(num * static_cast<float64>(rangeMax));
       if(m_Mask[index])
       {
         clusterIdxs[clusterChoices] = index;
@@ -108,7 +111,7 @@ private:
   usize m_NumClusters;
   Int32Array& m_FeatureIds;
   KUtilities::DistanceMetric m_DistMetric;
-  std::mt19937_64::result_type m_Seed;
+  uint64 m_Seed;
 
   // -----------------------------------------------------------------------------
   template <typename K>

@@ -43,10 +43,10 @@ public:
 
     std::vector<usize> clusterIdxs(m_NumClusters);
 
-    usize clusterChoices = 0;
     std::vector<int64> data(m_NumClusters);
     uDist.Sample(data);
 
+    usize clusterChoices = 0;
     for(int64 index : data)
     {
       if(m_Mask[index])

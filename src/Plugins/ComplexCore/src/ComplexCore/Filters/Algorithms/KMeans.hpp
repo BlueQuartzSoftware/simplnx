@@ -11,8 +11,6 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/KUtilities.hpp"
 
-#include <random>
-
 namespace complex
 {
 
@@ -24,7 +22,7 @@ struct COMPLEXCORE_EXPORT KMeansInputValues
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath MeansArrayPath;
-  std::mt19937_64::result_type Seed;
+  uint64 Seed;
 };
 
 /**

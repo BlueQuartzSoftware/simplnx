@@ -17,6 +17,8 @@
 #include "complex/Parameters/NumberParameter.hpp"
 #include "complex/Utilities/KUtilities.hpp"
 
+#include <random>
+
 using namespace complex;
 
 namespace
