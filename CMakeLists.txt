@@ -200,8 +200,8 @@ target_link_libraries(complex
     nod::nod
 )
 
-target_link_libraries(complex 
-  PRIVATE 
+target_link_libraries(complex
+  PRIVATE
     RandLib::RandLib
 )
 
