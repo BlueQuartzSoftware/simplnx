@@ -26,7 +26,8 @@
         "vcpkg-cmake",
         "vcpkg-cmake-config",
         "zlib",
-        "zstd"
+        "zstd",
+        "7zip"
       ],
       "baseline": "a7f8a05a400087e5dd4b0a5e46ece1b2123dc608"
     }

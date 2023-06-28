@@ -19,13 +19,13 @@ string(REPLACE "\"" "" status "${status}")
 # Oddly, if the status comes back as "No Error", that actually means that something got downloaded
 # If the file was downloaded then we should also decompress it.
 # --------------------------------------------------------------------------------------------------
-if("${status}" STREQUAL "No error")
-  get_filename_component(archive_base_name "@ARGS_ARCHIVE_NAME@" NAME)
-  message(STATUS "[DATA EXTRACT] Decompressing @ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@")
-  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvzf "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@"
-    WORKING_DIRECTORY "@ARGS_DREAM3D_DATA_DIR@/TestFiles"
-    RESULT_VARIABLE result
-    OUTPUT_VARIABLE output
-    ERROR_VARIABLE error
-  )
-endif()
+# if("${status}" STREQUAL "No error")
+#   get_filename_component(archive_base_name "@ARGS_ARCHIVE_NAME@" NAME)
+#   message(STATUS "[DATA EXTRACT] Decompressing @ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@")
+#   execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvzf "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@"
+#     WORKING_DIRECTORY "@ARGS_DREAM3D_DATA_DIR@/TestFiles"
+#     RESULT_VARIABLE result
+#     OUTPUT_VARIABLE output
+#     ERROR_VARIABLE error
+#   )
+# endif()

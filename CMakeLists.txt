@@ -55,6 +55,9 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_ITKImageProcessing FEATURE
 option(COMPLEX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATURE "ebsd")
 
+# --------------------------------------------------------------------------------------------------
+file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
+
 project(complex
   VERSION 0.1.0
   DESCRIPTION "SIMPL Redesign"

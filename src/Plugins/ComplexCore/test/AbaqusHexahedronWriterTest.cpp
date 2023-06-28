@@ -8,6 +8,8 @@
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
+#include <cstdlib>
+
 namespace fs = std::filesystem;
 using namespace complex;
 
@@ -68,8 +70,51 @@ void CompareResults() // compare hash of both file strings
 }
 } // namespace
 
+class TestFileSentinel
+{
+public:
+  TestFileSentinel(const std::string& inputArchiveName, const std::string& expectedTopLevelOutput)
+      : m_InputArchiveName(inputArchiveName)
+  , m_ExpectedTopLevelOutput(expectedTopLevelOutput)
+  {
+  }
+  ~TestFileSentinel()
+  {
+    const std::string k_RemoveFileCommand = fmt::format(R"(cd "{}" && "{}" -E rm -rf "{}/{}")", unit_test::k_TestFilesDir, unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, m_ExpectedTopLevelOutput);
+    const int result = std::system(k_RemoveFileCommand.c_str());
+    if(result != 0)
+    {
+      std::cout << "Removing decompressed data failed. The command was:\n  " << k_RemoveFileCommand << std::endl;
+    }
+  }
+
+  int decompress()
+  {
+    const std::string k_DecompressCommand = fmt::format(R"(cd "{}" && "{}" -E tar xvzf "{}/{}")", unit_test::k_TestFilesDir, unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir,m_InputArchiveName  );
+    return  std::system(k_DecompressCommand.c_str());
+  }
+
+private:
+  const std::string m_InputArchiveName;
+  const std::string m_ExpectedTopLevelOutput;
+};
+
 TEST_CASE("ComplexCore::AbaqusHexahedronWriterFilter: Valid Filter Execution", "[ComplexCore][AbaqusHexahedronWriterFilter]")
 {
+
+  const std::string k_DataInputArchive = "6_6_find_feature_centroids.tar.gz";
+  const std::string k_ExpectedOutputTopLevel = "6_6_find_feature_centroids.dream3d";
+  TestFileSentinel testDataSentinel(k_DataInputArchive, k_ExpectedOutputTopLevel);
+  int result = testDataSentinel.decompress();
+  REQUIRE(result == 0);
+
+  const std::string k_DataInputArchive1 = "abaqus_hexahedron_writer_test.tar.gz";
+  const std::string k_ExpectedOutputTopLevel1 = "abaqus_hexahedron_writer_test";
+  TestFileSentinel testDataSentinel1(k_DataInputArchive1, k_ExpectedOutputTopLevel1);
+  result = testDataSentinel1.decompress();
+  REQUIRE(result == 0);
+
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   AbaqusHexahedronWriterFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
@@ -92,4 +137,6 @@ TEST_CASE("ComplexCore::AbaqusHexahedronWriterFilter: Valid Filter Execution", "
   REQUIRE(executeResult.result.valid());
 
   ::CompareResults();
+
+
 }

@@ -353,12 +353,14 @@ function(create_complex_plugin_unit_test)
     ${${ARGS_PLUGIN_NAME}UnitTest_SRCS}
   )
 
+  find_package(ZLIB REQUIRED)
   target_link_libraries(${UNIT_TEST_TARGET}
     PRIVATE
       complex
       ${ARGS_PLUGIN_NAME}
       Catch2::Catch2
       complex::UnitTestCommon
+      ZLIB::ZLIB
   )
 
   source_group("test" FILES  ${${ARGS_PLUGIN_NAME}UnitTest_SRCS} ${ARGS_PLUGIN_NAME}_test_main.cpp)
