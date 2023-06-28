@@ -114,14 +114,11 @@ function(download_test_data)
                 ${fetch_data_file}
                 @ONLY
   )
-  # Read the file back into a string and append it to the master file
+  # Read the file back into a string 
   file(READ "${fetch_data_file}" FETCH_FILE_CONTENTS)
-#  file(APPEND "${FETCH_FILE_PATH}" "\n\n#----------------------------------------------------------------------------
-## Download and decompress for `${ARGS_ARCHIVE_NAME}`
-##----------------------------------------------------------------------------\n"
-#  )
+  # Append the string to the master file
   file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
-
+  # Strip off the .tar.gz extension
   string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
 
   if(ARGS_COPY_DATA)
