@@ -21,12 +21,12 @@ const DataPath k_ClusterDataPath = k_QuadGeomPath.createChildPath(k_ClusterData)
 const DataPath k_ClusterDataPathNX = k_QuadGeomPath.createChildPath(k_ClusterDataNX);
 
 const std::string k_ClusterIdsName = "ClusterIds";
-const std::string k_MedoidsName = "ClusterMeans";
+const std::string k_MeansName = "CLusterMeans";
 const std::string k_ClusterIdsNameNX = k_ClusterIdsName + "NX";
-const std::string k_MeansNameNX = k_MedoidsName + "NX";
+const std::string k_MeansNameNX = k_MeansName + "NX";
 
 const DataPath k_ClusterIdsPath = k_CellPath.createChildPath(k_ClusterIdsName);
-const DataPath k_MeansPath = k_ClusterDataPath.createChildPath(k_MedoidsName);
+const DataPath k_MeansPath = k_ClusterDataPath.createChildPath(k_MeansName);
 
 const DataPath k_ClusterIdsPathNX = k_CellPath.createChildPath(k_ClusterIdsNameNX);
 const DataPath k_MeansPathNX = k_ClusterDataPathNX.createChildPath(k_MeansNameNX);
@@ -34,7 +34,7 @@ const DataPath k_MeansPathNX = k_ClusterDataPathNX.createChildPath(k_MeansNameNX
 
 TEST_CASE("ComplexCore::KMeans: Valid Filter Execution", "[ComplexCore][KMeans]")
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_k_files/6_6_means_silhouette_0.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_means_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
@@ -59,8 +59,6 @@ TEST_CASE("ComplexCore::KMeans: Valid Filter Execution", "[ComplexCore][KMeans]"
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
-
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_k_means_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 
   UnitTest::CompareArrays<int32>(dataStructure, k_ClusterIdsPath, k_ClusterIdsPathNX);
   UnitTest::CompareArrays<float32>(dataStructure, k_MeansPath, k_MeansPathNX);

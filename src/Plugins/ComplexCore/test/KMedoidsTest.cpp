@@ -31,14 +31,17 @@ const DataPath k_MedoidsPathNX = k_ClusterDataPathNX.createChildPath(k_MedoidsNa
 
 TEST_CASE("ComplexCore::KMedoidsFilter: Valid Filter Execution", "[ComplexCore][KMedoidsFilter]")
 {
-  DataStructure dataStructure;
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
+
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
     KMedoidsFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(KMedoidsFilter::k_InitClusters_Key, std::make_any<int32>(3));
+    args.insertOrAssign(KMedoidsFilter::k_UseSeed_Key, std::make_any<bool>(true));
+    args.insertOrAssign(KMedoidsFilter::k_SeedValue_Key, std::make_any<uint64>(5489)); // Default Seed
+    args.insertOrAssign(KMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(3));
     args.insertOrAssign(KMedoidsFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(KMedoidsFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(k_CellPath.createChildPath("DAMAGE")));
     args.insertOrAssign(KMedoidsFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(k_ClusterIdsNameNX));
@@ -53,4 +56,12 @@ TEST_CASE("ComplexCore::KMedoidsFilter: Valid Filter Execution", "[ComplexCore][
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
   }
+
+  UnitTest::CompareArrays<int32>(dataStructure, k_ClusterIdsPath, k_ClusterIdsPathNX);
+  UnitTest::CompareArrays<float32>(dataStructure, k_MedoidsPath, k_MedoidsPathNX);
+
+  // Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_k_medoids_0_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }
