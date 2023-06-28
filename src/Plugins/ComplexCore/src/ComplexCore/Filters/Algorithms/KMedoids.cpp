@@ -4,6 +4,9 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/KUtilities.hpp"
 
+#include <RandLib/distributions/BasicRandGenerator.hpp>
+#include <RandLib/distributions/UniformDiscreteRand.hpp>
+
 #include <random>
 
 using namespace complex;
