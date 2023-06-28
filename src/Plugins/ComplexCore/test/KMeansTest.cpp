@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
@@ -22,12 +21,12 @@ const DataPath k_ClusterDataPath = k_QuadGeomPath.createChildPath(k_ClusterData)
 const DataPath k_ClusterDataPathNX = k_QuadGeomPath.createChildPath(k_ClusterDataNX);
 
 const std::string k_ClusterIdsName = "ClusterIds";
-const std::string k_MeansName = "ClusterMeans";
+const std::string k_MedoidsName = "ClusterMeans";
 const std::string k_ClusterIdsNameNX = k_ClusterIdsName + "NX";
-const std::string k_MeansNameNX = k_MeansName + "NX";
+const std::string k_MeansNameNX = k_MedoidsName + "NX";
 
 const DataPath k_ClusterIdsPath = k_CellPath.createChildPath(k_ClusterIdsName);
-const DataPath k_MeansPath = k_ClusterDataPath.createChildPath(k_MeansName);
+const DataPath k_MeansPath = k_ClusterDataPath.createChildPath(k_MedoidsName);
 
 const DataPath k_ClusterIdsPathNX = k_CellPath.createChildPath(k_ClusterIdsNameNX);
 const DataPath k_MeansPathNX = k_ClusterDataPathNX.createChildPath(k_MeansNameNX);
