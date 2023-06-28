@@ -64,7 +64,7 @@ public:
     std::vector<uint64> length(numCurrentFeatures, 0);
     std::vector<T> min(numCurrentFeatures, std::numeric_limits<T>::max());
     std::vector<T> max(numCurrentFeatures, std::numeric_limits<T>::min());
-    std::vector<T> summation(numCurrentFeatures, 0);
+    std::vector<uint64> summation(numCurrentFeatures, 0);
     usize progressCount = 0;
 
     usize progressIncrement = numTuples / 100;
