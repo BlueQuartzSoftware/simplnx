@@ -14,6 +14,7 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -25,8 +26,12 @@ using namespace complex;
 
 namespace
 {
-
 const std::string k_TempGeometryName = ".resampled_image_geometry";
+const std::string k_SpacingMode("Spacing (0)");
+const std::string k_ScalingMode("Scaling (1)");
+const ChoicesParameter::Choices k_Choices = {k_SpacingMode, k_ScalingMode};
+const ChoicesParameter::ValueType k_SpacingModeIndex = 0;
+const ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 
 } // namespace
 
@@ -69,9 +74,18 @@ Parameters ResampleImageGeomFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
+
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ResamplingMode_Key, "Select the resampling mode", "Mode can be 'Spacing (0)' or 'Scaling (1)'", k_SpacingModeIndex, ::k_Choices));
+
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "New Spacing",
                                                          "The new spacing values (dx, dy, dz). Larger spacing will cause less voxels, smaller spacing will cause more voxels.",
                                                          std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+
+  params.insert(
+      std::make_unique<VectorFloat32Parameter>(k_Scaling_Key, "Scale Factor (percentages)",
+                                               "The scale factor values (dx, dy, dz) to scale the geometry, in percentages. Larger percentages will cause more voxels, smaller percentages "
+                                               "will cause less voxels.  A percentage of 100 in any dimension will not scale the geometry in that dimension.  Percentages must be larger than 0.",
+                                               std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
@@ -90,6 +104,8 @@ Parameters ResampleImageGeomFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometry_Key, "Created Image Geometry", "The location of the resampled geometry", DataPath()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_ResamplingMode_Key, k_Spacing_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
+  params.linkParameters(k_ResamplingMode_Key, k_Scaling_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrix_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
@@ -104,9 +120,11 @@ IFilter::UniquePointer ResampleImageGeomFilter::clone() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler&, const std::atomic_bool&) const
+IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& msgHandler, const std::atomic_bool&) const
 {
+  auto pResamplingModeValue = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  auto pScalingFactorValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
@@ -115,13 +133,29 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
 
   complex::Result<OutputActions> resultOutputActions;
-
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Validate the user supplied spacing values.
-  if(pSpacingValue[0] < 0.0F || pSpacingValue[1] < 0.0F || pSpacingValue[2] < 0.0F)
+  if(pResamplingModeValue == k_ScalingModeIndex)
   {
-    return {MakeErrorResult<OutputActions>(-11500, fmt::format("Input Spacing has a negative value. {}, {}, {}", pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
+    // The resampling mode is percentage, calculate the spacing
+    if(std::any_of(pScalingFactorValue.begin(), pScalingFactorValue.end(), [](float x) { return x <= 0.0f; }))
+    {
+      // Percentage has a non-positive value
+      return {MakeErrorResult<OutputActions>(-11500, fmt::format("Scaling Factor has a non-positive value. {}, {}, {}", pScalingFactorValue[0], pScalingFactorValue[1], pScalingFactorValue[2]))};
+    }
+
+    auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+    auto spacing = imageGeom.getSpacing();
+
+    std::transform(spacing.begin(), spacing.end(), pScalingFactorValue.begin(), pSpacingValue.begin(), [](float32 a, float32 b) { return a / (b / 100); });
+  }
+  else
+  {
+    // Validate the user supplied spacing values.
+    if(pSpacingValue[0] < 0.0F || pSpacingValue[1] < 0.0F || pSpacingValue[2] < 0.0F)
+    {
+      return {MakeErrorResult<OutputActions>(-11500, fmt::format("Input Spacing has a negative value. {}, {}, {}", pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
+    }
   }
 
   const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
@@ -289,9 +323,18 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
 {
   ResampleImageGeomInputValues inputValues;
 
-  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-
   inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
+
+  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  if(filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key) == k_ScalingModeIndex)
+  {
+    std::vector<float32> scalingFactor = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
+    auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.SelectedImageGeometryPath);
+    auto spacing = imageGeom.getSpacing();
+
+    std::transform(spacing.begin(), spacing.end(), scalingFactor.begin(), inputValues.Spacing.begin(), [](float32 a, float32 b) { return a / (b / 100); });
+  }
+
   const auto* cellDataGroup = dataStructure.getDataRefAs<ImageGeom>(inputValues.SelectedImageGeometryPath).getCellData();
   inputValues.CellDataGroupPath = inputValues.SelectedImageGeometryPath.createChildPath(cellDataGroup->getName());
 

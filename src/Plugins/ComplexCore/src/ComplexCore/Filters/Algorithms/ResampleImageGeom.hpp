@@ -5,6 +5,7 @@
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/DataStructure.hpp"
 #include "complex/Filter/IFilter.hpp"
+#include "complex/Parameters/ChoicesParameter.hpp"
 
 #include <vector>
 
