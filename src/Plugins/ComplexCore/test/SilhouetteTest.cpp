@@ -23,7 +23,7 @@ const DataPath k_MeansSilhouettePath = k_CellPath.createChildPath(k_MeansSilhoue
 
 const DataPath k_MedoidsSilhouettePathNX = k_CellPath.createChildPath(k_MedoidsSilhouetteName + "NX");
 const DataPath k_MeansSilhouettePathNX = k_CellPath.createChildPath(k_MeansSilhouetteName + "NX");
-}
+} // namespace
 
 TEST_CASE("ComplexCore::SilhouetteFilter: Medoids Test", "[ComplexCore][SilhouetteFilter]")
 {
