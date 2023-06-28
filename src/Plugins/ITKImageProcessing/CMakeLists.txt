@@ -309,9 +309,7 @@ download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
                    ARCHIVE_NAME ITKMhaFileReaderTest.tar.gz
-                   SHA512 7b44c28dad8dc70ad79f9dc6247ab2a17e3c0e08cf0400e361acaea965b0881eaa3815af21c1ec9bdba19f70c0bdd67b7c4382e527c844a20da39d6a229dc5fa
-                   INSTALL
-                   COPY_DATA)
+                   SHA512 7b44c28dad8dc70ad79f9dc6247ab2a17e3c0e08cf0400e361acaea965b0881eaa3815af21c1ec9bdba19f70c0bdd67b7c4382e527c844a20da39d6a229dc5fa)
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder
