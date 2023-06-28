@@ -1,10 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/NumberParameter.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
 #include "ComplexCore/Filters/KMedoidsFilter.hpp"
@@ -15,7 +11,7 @@ TEST_CASE("ComplexCore::KMedoidsFilter: Valid Filter Execution", "[ComplexCore][
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   KMedoidsFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -29,15 +25,10 @@ TEST_CASE("ComplexCore::KMedoidsFilter: Valid Filter Execution", "[ComplexCore][
   args.insertOrAssign(KMedoidsFilter::k_MedoidsArrayName_Key, std::make_any<DataPath>(DataPath{}));
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 }
-
-// TEST_CASE("ComplexCore::KMedoidsFilter: InValid Filter Execution")
-//{
-//
-// }
