@@ -8,8 +8,6 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Utilities/KUtilities.hpp"
 
-#include <random>
-
 namespace complex
 {
 struct COMPLEXCORE_EXPORT KMedoidsInputValues
@@ -20,7 +18,7 @@ struct COMPLEXCORE_EXPORT KMedoidsInputValues
   DataPath MaskArrayPath;
   DataPath FeatureIdsArrayPath;
   DataPath MedoidsArrayPath;
-  std::mt19937_64::result_type Seed;
+  uint64 Seed;
 };
 
 /**

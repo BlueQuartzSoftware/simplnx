@@ -7,8 +7,6 @@
 #include <RandLib/distributions/BasicRandGenerator.hpp>
 #include <RandLib/distributions/UniformDiscreteRand.hpp>
 
-#include <random>
-
 using namespace complex;
 
 namespace
@@ -18,7 +16,7 @@ class KMedoidsTemplate
 {
 public:
   KMedoidsTemplate(KMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
-                   KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
+                   KUtilities::DistanceMetric distMetric, uint64 seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
   , m_Medoids(dynamic_cast<DataArrayT&>(medoidsIDataArray))
@@ -37,18 +35,20 @@ public:
   // -----------------------------------------------------------------------------
   void operator()()
   {
-    usize numTuples = m_InputArray.getNumberOfTuples();
+    int64 numTuples = static_cast<int64>(m_InputArray.getNumberOfTuples());
     int32 numCompDims = m_InputArray.getNumberOfComponents();
 
-    std::mt19937_64 gen(m_Seed);
-    std::uniform_int_distribution<usize> dist(0, numTuples - 1);
+    RandLib::UniformDiscreteRand<int64, RandLib::JLKiss64RandEngine> uDist = RandLib::UniformDiscreteRand<int64, RandLib::JLKiss64RandEngine>(0, numTuples - 1);
+    uDist.Reseed(m_Seed);
 
     std::vector<usize> clusterIdxs(m_NumClusters);
 
     usize clusterChoices = 0;
-    while(clusterChoices < m_NumClusters)
+    std::vector<int64> data(m_NumClusters);
+    uDist.Sample(data);
+
+    for(int64 index : data)
     {
-      usize index = dist(gen);
       if(m_Mask[index])
       {
         clusterIdxs[clusterChoices] = index;
@@ -98,7 +98,7 @@ private:
   usize m_NumClusters;
   Int32Array& m_FeatureIds;
   KUtilities::DistanceMetric m_DistMetric;
-  std::mt19937_64::result_type m_Seed;
+  uint64 m_Seed;
 
   // -----------------------------------------------------------------------------
   void findClusters(usize tuples, int32 dims)
