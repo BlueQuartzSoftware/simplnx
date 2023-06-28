@@ -77,8 +77,8 @@ Result<> GenerateVectorColors::operator()()
         array = array * -1.0f;
       }
 
-      float32 trend = atan2f(array[1], array[0]) * (Constants::k_RadToDegF);
-      float32 plunge = acosf(array[2]) * (Constants::k_RadToDegF);
+      float32 trend = std::atan2(array[1], array[0]) * (Constants::k_RadToDegF);
+      float32 plunge = std::acos(array[2]) * (Constants::k_RadToDegF);
       if(trend < 0.0f)
       {
         trend += 360.0f;
