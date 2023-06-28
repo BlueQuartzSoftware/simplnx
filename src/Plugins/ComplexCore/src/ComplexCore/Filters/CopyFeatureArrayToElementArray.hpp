@@ -29,7 +29,7 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "selected_feature_array_path";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_CreatedArrayName_Key = "created_array_name";
+  static inline constexpr StringLiteral k_CreatedArraySuffix_Key = "created_array_suffix";
 
   /**
    * @brief Returns the name of the filter.
