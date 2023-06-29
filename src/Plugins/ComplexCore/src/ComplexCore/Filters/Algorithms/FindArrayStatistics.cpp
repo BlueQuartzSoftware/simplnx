@@ -64,7 +64,7 @@ public:
     std::vector<uint64> length(numCurrentFeatures, 0);
     std::vector<T> min(numCurrentFeatures, std::numeric_limits<T>::max());
     std::vector<T> max(numCurrentFeatures, std::numeric_limits<T>::min());
-    std::vector<uint64> summation(numCurrentFeatures, 0);
+    std::vector<float32> summation(numCurrentFeatures, 0);
     usize progressCount = 0;
 
     usize progressIncrement = numTuples / 100;
@@ -145,7 +145,7 @@ public:
       }
       if(m_Summation)
       {
-        m_SummationArray->initializeTuple(j, static_cast<float32>(summation[localFeatureIndex]));
+        m_SummationArray->initializeTuple(j, summation[localFeatureIndex]);
       }
 
       float32 meanValue = 0.0f;
@@ -157,7 +157,7 @@ public:
         }
         else
         {
-          meanValue = static_cast<float32>(summation[localFeatureIndex]) / static_cast<float32>(length[localFeatureIndex]);
+          meanValue = summation[localFeatureIndex] / static_cast<float32>(length[localFeatureIndex]);
         }
       }
 
@@ -330,7 +330,7 @@ public:
   virtual ~FindArrayMedianUniqueByIndexImpl() = default;
 
   FindArrayMedianUniqueByIndexImpl(const FindArrayMedianUniqueByIndexImpl&) = default;           // Copy Constructor Not Implemented
-  FindArrayMedianUniqueByIndexImpl(FindArrayMedianUniqueByIndexImpl&&) = default;                // Move Constructor Not Implemented
+  FindArrayMedianUniqueByIndexImpl(FindArrayMedianUniqueByIndexImpl&&) noexcept = default;       // Move Constructor Not Implemented
   FindArrayMedianUniqueByIndexImpl& operator=(const FindArrayMedianUniqueByIndexImpl&) = delete; // Copy Assignment Not Implemented
   FindArrayMedianUniqueByIndexImpl& operator=(FindArrayMedianUniqueByIndexImpl&&) = delete;      // Move Assignment Not Implemented
 
