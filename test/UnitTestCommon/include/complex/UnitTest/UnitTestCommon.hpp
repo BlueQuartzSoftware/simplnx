@@ -273,7 +273,6 @@ public:
    * @brief Does the actual decompression of the archive.
    * @return
    */
-
   Result<> decompress()
   {
     const std::string kDecompressCommand = fmt::format(R"(cd "{}" && "{}" -E tar xvzf "{}/{}")", m_TestFilesDir, m_CMakeExecutable, m_TestFilesDir, m_InputArchiveName);
@@ -299,6 +298,7 @@ public:
     fclose(file);
     return {};
   }
+
 #if 0
   Result<> decompress()
   {
@@ -378,7 +378,7 @@ public:
     outFile.close();
     return {};
   }
-#endif
+
 
   std::vector<std::string> splitArgumentsString(const std::string& arguments)
   {
@@ -414,6 +414,7 @@ public:
 
     return argumentList;
   }
+#endif
 
 private:
   std::string m_CMakeExecutable;

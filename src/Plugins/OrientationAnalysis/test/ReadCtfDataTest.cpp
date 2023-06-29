@@ -57,7 +57,6 @@ TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnal
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  REQUIRE(0 == 1);
 }
 
 // TEST_CASE("OrientationAnalysis::ReadCtfData: InValid filter execution")
