@@ -11,26 +11,31 @@ namespace complex
  * @class ITKImportImageStack
  * @brief This filter will ....
  */
-class ITKIMAGEPROCESSING_EXPORT ITKImportImageStack : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontage : public IFilter
 {
 public:
-  ITKImportImageStack() = default;
-  ~ITKImportImageStack() noexcept override = default;
+  ITKImportFijiMontage() = default;
+  ~ITKImportFijiMontage() noexcept override = default;
 
-  ITKImportImageStack(const ITKImportImageStack&) = delete;
-  ITKImportImageStack(ITKImportImageStack&&) noexcept = delete;
+  ITKImportFijiMontage(const ITKImportFijiMontage&) = delete;
+  ITKImportFijiMontage(ITKImportFijiMontage&&) noexcept = delete;
 
-  ITKImportImageStack& operator=(const ITKImportImageStack&) = delete;
-  ITKImportImageStack& operator=(ITKImportImageStack&&) noexcept = delete;
+  ITKImportFijiMontage& operator=(const ITKImportFijiMontage&) = delete;
+  ITKImportFijiMontage& operator=(ITKImportFijiMontage&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_info";
+  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
+  static inline constexpr StringLiteral k_MontageName_Key = "montage_name";
+  static inline constexpr StringLiteral k_ColumnMontageLimits_Key = "column_montage_limits";
+  static inline constexpr StringLiteral k_RowMontageLimits_Key = "row_montage_limits";
+  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit";
+  static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
   static inline constexpr StringLiteral k_Origin_Key = "origin";
-  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "image_geometry_path";
-  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_path";
-  static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
-  static inline constexpr StringLiteral k_ImageTransformChoice_Key = "image_transform_choice";
+  static inline constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
+  static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";
+  static inline constexpr StringLiteral k_DataContainerPath_Key = "data_container_path";
+  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "image_data_array_name";
 
   /**
    * @brief Returns the name of the filter.
@@ -98,4 +103,4 @@ protected:
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportImageStack, "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportFijiMontage, "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb");
