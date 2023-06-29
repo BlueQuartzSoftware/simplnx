@@ -35,8 +35,8 @@ const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::
 
 TEST_CASE("ComplexCore::Image Contouring Valid Execution", "[ComplexCore][ImageContouring]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "flying_edges_exemplar.tar.gz", "flying_edges_exemplar.dream3d",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "flying_edges_exemplar.tar.gz",
+                                                             "flying_edges_exemplar.dream3d");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/flying_edges_exemplar.dream3d", unit_test::k_TestFilesDir));

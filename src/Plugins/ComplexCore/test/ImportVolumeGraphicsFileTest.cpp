@@ -38,8 +38,7 @@ void writeVolTestFile()
 
 TEST_CASE("ComplexCore::ImportVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ImportVolumeGraphicsFileFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "volume_graphics_test.tar.gz", "volume_graphics_test.vgi",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "volume_graphics_test.tar.gz", "volume_graphics_test.vgi");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const ImportVolumeGraphicsFileFilter filter;

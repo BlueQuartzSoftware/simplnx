@@ -19,8 +19,7 @@ TEST_CASE("ComplexCore::AvizoRectilinearCoordinateWriterFilter: Valid Filter Exe
 {
   const std::string kDataInputArchive = "6_6_avizo_writers.tar.gz";
   const std::string kExpectedOutputTopLevel = "6_6_avizo_writers";
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                              complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_avizo_writers/6_6_avizo_writers_input.dream3d", unit_test::k_TestFilesDir));

@@ -194,8 +194,7 @@ private:
 
 TEST_CASE("ComplexCore::WriteBinaryData: Valid filter execution")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
 
   DataStructure dataStructure;
   DataStructure& dsRef = dataStructure;

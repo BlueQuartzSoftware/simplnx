@@ -207,8 +207,7 @@ private:
 
 TEST_CASE("ComplexCore::WriteASCIIData: Valid filter execution")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ascii_data_exemplars.tar.gz", "ascii_data_exemplars",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ascii_data_exemplars.tar.gz", "ascii_data_exemplars");
 
   DataStructure dataStructure;
 

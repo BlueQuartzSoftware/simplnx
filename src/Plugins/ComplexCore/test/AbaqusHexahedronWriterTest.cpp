@@ -73,10 +73,10 @@ void CompareResults() // compare hash of both file strings
 TEST_CASE("ComplexCore::AbaqusHexahedronWriterFilter: Valid Filter Execution", "[ComplexCore][AbaqusHexahedronWriterFilter]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "abaqus_hexahedron_writer_test.tar.gz",
-                                                              "abaqus_hexahedron_writer_test", complex::unit_test::k_BinaryTestOutputDir);
+                                                              "abaqus_hexahedron_writer_test");
 
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
-                                                             "6_6_find_feature_centroids.dream3d", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "6_6_find_feature_centroids.dream3d");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const AbaqusHexahedronWriterFilter filter;

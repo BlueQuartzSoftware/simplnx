@@ -25,8 +25,7 @@ const std::string k_ImagePrefix("fw-ar-IF1-aptr12-corr Discrete Pole Figure");
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
@@ -75,8 +74,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
@@ -126,8 +124,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));

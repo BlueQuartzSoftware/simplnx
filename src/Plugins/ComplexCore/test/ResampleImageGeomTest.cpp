@@ -26,7 +26,7 @@ struct CompareDataArrayFunctor
 TEST_CASE("ComplexCore::ResampleImageGeom: Invalid Parameters", "[ComplexCore][ResampleImageGeom]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
-                                                             "ResampleImageGeom_Exemplar.dream3d", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -61,7 +61,7 @@ TEST_CASE("ComplexCore::ResampleImageGeom: Invalid Parameters", "[ComplexCore][R
 TEST_CASE("ComplexCore::ResampleImageGeom: 3D In Place", "[ComplexCore][ResampleImageGeom]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
-                                                             "ResampleImageGeom_Exemplar.dream3d", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -186,7 +186,7 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 3D In Place", "[ComplexCore][Resample
 TEST_CASE("ComplexCore::ResampleImageGeom: 3D Save Geometry", "[ComplexCore][ResampleImageGeom]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
-                                                             "ResampleImageGeom_Exemplar.dream3d", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -310,7 +310,7 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 3D Save Geometry", "[ComplexCore][Res
 TEST_CASE("ComplexCore::ResampleImageGeom: 2D In Place", "[ComplexCore][ResampleImageGeom]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
-                                                             "ResampleImageGeom_Exemplar.dream3d", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -384,7 +384,7 @@ TEST_CASE("ComplexCore::ResampleImageGeom: 2D In Place", "[ComplexCore][Resample
 TEST_CASE("ComplexCore::ResampleImageGeom: 2D Save Geometry", "[ComplexCore][ResampleImageGeom]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz",
-                                                             "ResampleImageGeom_Exemplar.dream3d", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;

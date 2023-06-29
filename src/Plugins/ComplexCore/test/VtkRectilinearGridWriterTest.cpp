@@ -15,11 +15,10 @@ using namespace complex::Constants;
 
 TEST_CASE("ComplexCore::VtkRectilinearGridWriterFilter: Valid Filter Execution", "[ComplexCore][VtkRectilinearGridWriterFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
 
   const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_vtk_rectilinear_grid_writer.tar.gz",
-                                                              "6_6_vtk_rectilinear_grid_writer", complex::unit_test::k_BinaryTestOutputDir);
+                                                              "6_6_vtk_rectilinear_grid_writer");
 
   // Read input DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
@@ -69,11 +68,10 @@ TEST_CASE("ComplexCore::VtkRectilinearGridWriterFilter: Valid Filter Execution",
 
 TEST_CASE("ComplexCore::VtkRectilinearGridWriterFilter: InValid Filter Execution", "[ComplexCore][VtkRectilinearGridWriterFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
 
   const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_vtk_rectilinear_grid_writer.tar.gz",
-                                                              "6_6_vtk_rectilinear_grid_writer", complex::unit_test::k_BinaryTestOutputDir);
+                                                              "6_6_vtk_rectilinear_grid_writer");
 
   // Read input DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));

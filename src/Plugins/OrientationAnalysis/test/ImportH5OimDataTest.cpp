@@ -25,8 +25,7 @@ const std::string k_ScanName = "Scan 1";
 
 TEST_CASE("OrientationAnalysis::ImportH5OimDataFilter: Valid Filter Execution", "[OrientationAnalysis][ImportH5OimDataFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ImportH5Data/6_6_import_h5_oim_data.dream3d", unit_test::k_TestFilesDir));
@@ -81,8 +80,7 @@ TEST_CASE("OrientationAnalysis::ImportH5OimDataFilter: Valid Filter Execution", 
 
 TEST_CASE("OrientationAnalysis::ImportH5OimDataFilter: InValid Filter Execution", "[OrientationAnalysis][ImportH5OimDataFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportH5OimDataFilter filter;

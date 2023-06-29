@@ -71,8 +71,7 @@ std::map<std::string, nlohmann::json> ReadPresets()
 
 TEST_CASE("ComplexCore::GenerateColorTableFilter: Valid filter execution")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "GenerateColorTableTest.tar.gz", "GenerateColorTableTest",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "GenerateColorTableTest.tar.gz", "GenerateColorTableTest");
 
   DataStructure dataStructure;
 

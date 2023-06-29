@@ -21,11 +21,10 @@ inline const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContain
 
 TEST_CASE("ComplexCore::CombineStlFilesFilter: Valid Filter Execution", "[ComplexCore][CombineStlFilesFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_combine_stl_files.tar.gz", "6_6_combine_stl_files.dream3d",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_combine_stl_files.tar.gz",
+                                                             "6_6_combine_stl_files.dream3d");
 
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models",
-                                                              complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_combine_stl_files.dream3d", unit_test::k_TestFilesDir));

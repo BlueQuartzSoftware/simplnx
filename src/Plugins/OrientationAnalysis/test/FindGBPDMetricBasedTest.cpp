@@ -42,7 +42,7 @@ const DataPath k_ComputedErrorPath({"NX_errors"});
 TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Execution", "[OrientationAnalysis][FindGBPDMetricBasedFilter]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
-                                                             "6_6_find_gbcd_metric_based", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "6_6_find_gbcd_metric_based");
 
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
@@ -167,7 +167,7 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
 TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: InValid Filter Execution")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
-                                                             "6_6_find_gbcd_metric_based", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "6_6_find_gbcd_metric_based");
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_find_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));

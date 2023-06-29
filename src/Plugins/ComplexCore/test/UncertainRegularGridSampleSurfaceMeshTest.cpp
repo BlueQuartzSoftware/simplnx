@@ -32,8 +32,7 @@ TEST_CASE("ComplexCore::UncertainRegularGridSampleSurfaceMeshFilter: Valid Filte
    * random generation was modified to use the same generator, engine, and distribution used in standard SIMPLNX random generation
    * utilizing the standard library. It was seeded with the std::mt19937::default_seed.
    */
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_sample_surface_mesh.tar.gz", "6_6_sample_surface_mesh",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_sample_surface_mesh.tar.gz", "6_6_sample_surface_mesh");
 
   // Read Exemplar DREAM3D File Filter
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_sample_surface_mesh/6_6_grid_sample_surface_mesh.dream3d", unit_test::k_TestFilesDir));

@@ -17,8 +17,7 @@ const DataPath k_EuclideanDistances = k_CellDataAM.createChildPath("GBManhattanD
 
 TEST_CASE("ComplexCore::AddBadDataFilter: Valid Filter Execution", "[ComplexCore][AddBadDataFilter]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "add_bad_data_test.tar.gz", "add_bad_data_test",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "add_bad_data_test.tar.gz", "add_bad_data_test");
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/add_bad_data_test/6_6_add_bad_data_test.dream3d", unit_test::k_TestFilesDir)));
 

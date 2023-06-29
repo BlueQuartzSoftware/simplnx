@@ -20,7 +20,7 @@ using namespace complex::Constants;
 TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction][MergeTwinsFilter][.][UNIMPLEMENTED][!mayfail]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "neighbor_orientation_correlation.tar.gz",
-                                                             "neighbor_orientation_correlation.dream3d", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "neighbor_orientation_correlation.dream3d");
 
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);

@@ -240,14 +240,12 @@ public:
    * @param expectedTopLevelOutput The name of the decompressed folder or file. WARNING: This assumes
    * that only a single file or single directory are part of the archive. In the case of a directory, the
    * directory itself can have as many subdirectories as needed.
-   * @param logDir A directory to put output logs from the commands into.
    */
-  TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, std::string logDir)
+  TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput)
   : m_CMakeExecutable(std::move(cmakeExecutable))
   , m_TestFilesDir(std::move(testFilesDir))
   , m_InputArchiveName(std::move(inputArchiveName))
   , m_ExpectedTopLevelOutput(std::move(expectedTopLevelOutput))
-  , m_LogFile(fmt::format("{}/{}.log", logDir, m_InputArchiveName))
   {
     const auto result = decompress();
     REQUIRE(result);
@@ -272,12 +270,11 @@ public:
    * @brief Does the actual decompression of the archive.
    * @return
    */
-
   bool decompress()
   {
     reproc::options options;
     options.redirect.parent = true;
-    options.deadline = m_TimeOutValue;
+    options.deadline = reproc::milliseconds(600000);
     options.working_directory = m_TestFilesDir.c_str();
 
     std::vector<std::string> args = {m_CMakeExecutable, "-E", "tar", "xvzf", fmt::format("{}/{}", m_TestFilesDir, m_InputArchiveName)};
@@ -292,8 +289,6 @@ private:
   std::string m_TestFilesDir;
   std::string m_InputArchiveName;
   std::string m_ExpectedTopLevelOutput;
-  std::string m_LogFile;
-  reproc::milliseconds m_TimeOutValue = reproc::milliseconds(600000); // 10 Minutes to decompress the data?
 };
 
 /**

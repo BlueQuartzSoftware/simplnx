@@ -198,10 +198,8 @@ GeneratedFileListParameter::ValueType k_FileListInfo = {k_StartIndex, k_EndIndex
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100",
-                                                             complex::unit_test::k_BinaryTestOutputDir);
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar",
-                                                              complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
 
   fs::path inputPath(k_InputPath);
   REQUIRE(fs::exists(inputPath));

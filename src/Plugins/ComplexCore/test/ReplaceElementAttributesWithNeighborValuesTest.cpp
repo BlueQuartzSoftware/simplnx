@@ -23,7 +23,7 @@ TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValuesFilter
 {
 
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_replace_element_attributes_with_neighbor.tar.gz",
-                                                             "6_6_replace_element_attributes_with_neighbor", complex::unit_test::k_BinaryTestOutputDir);
+                                                             "6_6_replace_element_attributes_with_neighbor");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_replace_element_attributes_with_neighbor/6_6_replace_element_attributes_with_neighbor.dream3d", unit_test::k_DREAM3DDataDir));
