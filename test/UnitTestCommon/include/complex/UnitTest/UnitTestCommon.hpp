@@ -28,17 +28,7 @@
 #include <reproc++/run.hpp>
 
 #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
 #include <filesystem>
-
-#ifdef _WIN32
-#define POPEN _popen
-#define PCLOSE _pclose
-#else
-#define POPEN popen
-#define PCLOSE pclose
-#endif
 
 namespace fs = std::filesystem;
 using namespace complex;
