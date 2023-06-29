@@ -99,6 +99,7 @@ file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------
 # directory. The WORKING_DIRECTORY is set to the following CMake code:
 # ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>
 # -----------------------------------------------------------------------\n
+cmake_policy(SET CMP0012 NEW)\n
 cmake_policy(SET CMP0054 NEW)\n")
 
 set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
@@ -812,9 +813,12 @@ if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalys
   
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_caxis_data.tar.gz SHA512 6c3eefac62aecf3344de735c0df932dd9a2623653f39174ec72402c54e8911402ad9903ae2122bc23ff2dba8c94973b2882715908e1913973dff604b614a5293)
   add_custom_target(Copy_CAxis_Data ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/Combo-EBSD-120130.osc_r0c0.ang ${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang
-  COMMENT "Copying CAxis Data into Binary Directory"
-  DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+    COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data.tar.gz" 
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data/Combo-EBSD-120130.osc_r0c0.ang" "${DATA_DEST_DIR}/OrientationAnalysis/Combo-EBSD-120130.osc_r0c0.ang"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_caxis_data"
+    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
+    COMMENT "Copying CAxis Data into Binary Directory"
+    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
   )
   set_target_properties(Copy_CAxis_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 endif()
