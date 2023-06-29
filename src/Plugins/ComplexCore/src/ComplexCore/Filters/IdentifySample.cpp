@@ -225,21 +225,25 @@ struct IdentifySampleFunctor
 };
 } // namespace
 
+//------------------------------------------------------------------------------
 std::string IdentifySample::name() const
 {
   return FilterTraits<IdentifySample>::name;
 }
 
+//------------------------------------------------------------------------------
 std::string IdentifySample::className() const
 {
   return FilterTraits<IdentifySample>::className;
 }
 
+//------------------------------------------------------------------------------
 Uuid IdentifySample::uuid() const
 {
   return FilterTraits<IdentifySample>::uuid;
 }
 
+//------------------------------------------------------------------------------
 std::string IdentifySample::humanName() const
 {
   return "Isolate Largest Feature (Identify Sample)";
@@ -251,6 +255,7 @@ std::vector<std::string> IdentifySample::defaultTags() const
   return {"Core", "Identify Sample"};
 }
 
+//------------------------------------------------------------------------------
 Parameters IdentifySample::parameters() const
 {
   Parameters params;
@@ -265,11 +270,13 @@ Parameters IdentifySample::parameters() const
   return params;
 }
 
+//------------------------------------------------------------------------------
 IFilter::UniquePointer IdentifySample::clone() const
 {
   return std::make_unique<IdentifySample>();
 }
 
+//------------------------------------------------------------------------------
 IFilter::PreflightResult IdentifySample::preflightImpl(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   const auto imageGeomPath = args.value<DataPath>(k_ImageGeom_Key);
@@ -287,6 +294,7 @@ IFilter::PreflightResult IdentifySample::preflightImpl(const DataStructure& data
   return {std::move(outputActions), std::move(outputValues)};
 }
 
+//------------------------------------------------------------------------------
 Result<> IdentifySample::executeImpl(DataStructure& data, const Arguments& args, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const
 {
   const auto fillHoles = args.value<bool>(k_FillHoles_Key);

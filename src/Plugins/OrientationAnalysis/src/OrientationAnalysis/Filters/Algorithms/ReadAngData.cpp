@@ -14,11 +14,11 @@ using namespace complex;
 using FloatVec3Type = std::vector<float>;
 
 // -----------------------------------------------------------------------------
-ReadAngData::ReadAngData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadAngDataInputValues* inputValues)
+ReadAngData::ReadAngData(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ReadAngDataInputValues* inputValues)
 : m_DataStructure(dataStructure)
-, m_InputValues(inputValues)
+, m_MessageHandler(msgHandler)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
+, m_InputValues(inputValues)
 {
 }
 
@@ -30,16 +30,16 @@ Result<> ReadAngData::operator()()
 {
   AngReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
-  int32_t err = reader.readFile();
+  const int32_t err = reader.readFile();
   if(err < 0)
   {
-    return {MakeErrorResult<>(reader.getErrorCode(), reader.getErrorMessage())};
+    return MakeErrorResult(reader.getErrorCode(), reader.getErrorMessage());
   }
 
-  auto result = loadMaterialInfo(&reader);
+  const auto result = loadMaterialInfo(&reader);
   if(result.first < 0)
   {
-    return {MakeErrorResult<>(result.first, result.second)};
+    return MakeErrorResult(result.first, result.second);
   }
 
   copyRawEbsdData(&reader);
@@ -50,13 +50,13 @@ Result<> ReadAngData::operator()()
 // -----------------------------------------------------------------------------
 std::pair<int32, std::string> ReadAngData::loadMaterialInfo(AngReader* reader) const
 {
-  std::vector<AngPhase::Pointer> phases = reader->getPhaseVector();
+  const std::vector<AngPhase::Pointer> phases = reader->getPhaseVector();
   if(phases.empty())
   {
     return {reader->getErrorCode(), reader->getErrorMessage()};
   }
 
-  DataPath CellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
+  const DataPath CellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
 
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
 
@@ -64,7 +64,7 @@ std::pair<int32, std::string> ReadAngData::loadMaterialInfo(AngReader* reader) c
 
   auto& latticeConstants = m_DataStructure.getDataRefAs<Float32Array>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
 
-  std::string k_InvalidPhase = "Invalid Phase";
+  const std::string k_InvalidPhase = "Invalid Phase";
 
   // Initialize the zero'th element to unknowns. The other elements will
   // be filled in based on values from the data file
@@ -78,7 +78,7 @@ std::pair<int32, std::string> ReadAngData::loadMaterialInfo(AngReader* reader) c
 
   for(const AngPhase::Pointer& phase : phases)
   {
-    int32_t phaseID = phase->getPhaseIndex();
+    const int32_t phaseID = phase->getPhaseIndex();
     crystalStructures[phaseID] = phase->determineLaueGroup();
     std::string materialName = phase->getMaterialName();
     materialName = complex::StringUtilities::replace(materialName, "MaterialName", "");
@@ -98,12 +98,12 @@ std::pair<int32, std::string> ReadAngData::loadMaterialInfo(AngReader* reader) c
 // -----------------------------------------------------------------------------
 void ReadAngData::copyRawEbsdData(AngReader* reader) const
 {
-  DataPath CellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
+  const DataPath CellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
 
   std::vector<size_t> cDims = {1};
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
-  size_t totalCells = imageGeom.getNumberOfCells();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
+  const size_t totalCells = imageGeom.getNumberOfCells();
 
   // Prepare the Cell Attribute Matrix with the correct number of tuples based on the total Cells being read from the file.
   std::vector<size_t> tDims = {imageGeom.getNumXCells(), imageGeom.getNumYCells(), imageGeom.getNumZCells()};
@@ -124,9 +124,9 @@ void ReadAngData::copyRawEbsdData(AngReader* reader) const
 
   // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi1));
-    auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi));
-    auto* fComp2 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi2));
+    const auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi1));
+    const auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi));
+    const auto* fComp2 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ang::Phi2));
     cDims[0] = 3;
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::AngFile::EulerAngles));

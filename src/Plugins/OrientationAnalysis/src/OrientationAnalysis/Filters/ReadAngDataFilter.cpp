@@ -80,7 +80,6 @@ IFilter::UniquePointer ReadAngDataFilter::clone() const
 IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                           const std::atomic_bool& shouldCancel) const
 {
-
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_DataContainerName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
@@ -130,7 +129,7 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   DataPath cellAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue);
 
   AngFields angFeatures;
-  std::vector<std::string> names = angFeatures.getFilterFeatures<std::vector<std::string>>();
+  auto names = angFeatures.getFilterFeatures<std::vector<std::string>>();
   std::vector<size_t> cDims = {1ULL};
 
   for(const auto& name : names)
