@@ -23,7 +23,7 @@ enum COMPLEX_EXPORT DistanceMetric
  * getDistance do indeed contain vectors of the same component dimensions and start at the desired tuples.
  */
 template <typename leftDataType, typename rightDataType>
-auto GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDataType& rightVector, usize rightOffset, usize compDims, DistanceMetric distMetric)
+float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const rightDataType& rightVector, usize rightOffset, usize compDims, DistanceMetric distMetric)
 {
   float64 dist = 0.0;
   float64 lVal = 0.0;
