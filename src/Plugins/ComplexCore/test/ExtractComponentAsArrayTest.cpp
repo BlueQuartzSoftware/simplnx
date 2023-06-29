@@ -25,6 +25,11 @@ TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Valid filter execution", 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;
 
+  const std::string kDataInputArchive = "6_6_find_feature_centroids.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_find_feature_centroids.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   DataStructure alteredDs = UnitTest::LoadDataStructure(k_BaseDataFilePath);
   const int32 removeCompIndex = 1;
 
@@ -90,6 +95,11 @@ TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: Valid filter execution", 
 
 TEST_CASE("ComplexCore::ExtractComponentAsArrayFilter: InValid filter execution", "[ComplexCore][ExtractComponentAsArrayFilter]")
 {
+  const std::string kDataInputArchive = "6_6_find_feature_centroids.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_find_feature_centroids.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);

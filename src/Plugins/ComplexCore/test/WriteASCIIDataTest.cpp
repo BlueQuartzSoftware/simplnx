@@ -207,6 +207,11 @@ private:
 
 TEST_CASE("ComplexCore::WriteASCIIData: Valid filter execution")
 {
+  const std::string kDataInputArchive = "ascii_data_exemplars.tar.gz";
+  const std::string kExpectedOutputTopLevel = "ascii_data_exemplars";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   DataStructure dataStructure;
 
   RunASCIIDataTest<int8>(dataStructure).execute();

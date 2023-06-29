@@ -104,6 +104,11 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
 TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[ComplexCore][FindSurfaceFeatures]")
 {
+  const std::string kDataInputArchive = "6_5_test_data_1.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_5_test_data_1";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1/6_5_test_data_1.dream3d", complex::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);

@@ -17,6 +17,11 @@ using namespace complex::Constants;
 
 TEST_CASE("ComplexCore::QuickSurfaceMeshFilter", "[ComplexCore][QuickSurfaceMeshFilter]")
 {
+  const std::string kDataInputArchive = "6_5_test_data_1.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_5_test_data_1";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1/6_5_test_data_1.dream3d", complex::unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -95,12 +100,8 @@ TEST_CASE("ComplexCore::QuickSurfaceMeshFilter", "[ComplexCore][QuickSurfaceMesh
     }
   }
 
-  {
-    // Write out the DataStructure for later viewing/debugging
-    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/QuickSurfaceMeshFilterTest.dream3d", unit_test::k_BinaryTestOutputDir));
-    complex::HDF5::FileWriter fileWriter = std::move(result.value());
-
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-    COMPLEX_RESULT_REQUIRE_VALID(resultH5);
-  }
+  // Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/QuickSurfaceMeshFilterTest.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

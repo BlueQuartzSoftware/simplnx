@@ -121,13 +121,10 @@ TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm Bool", "[Conditional
 
   REQUIRE(RequireDataArrayEqualZero(*ciDataArray));
 
-  // Write out the DataStructure for later viewing/debugging
-  std::string filePath = fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryTestOutputDir);
-  // std::cout << "Writing file to: " << filePath << std::endl;
-  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(filePath);
-  complex::HDF5::FileWriter fileWriter = std::move(result.value());
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
+  // Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }
 
 TEST_CASE("ComplexCore::ConditionalSetValue: Test Algorithm UInt8", "[ConditionalSetValue]")

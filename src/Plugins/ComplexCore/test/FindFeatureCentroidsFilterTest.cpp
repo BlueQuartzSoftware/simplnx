@@ -18,6 +18,11 @@ using namespace complex::Constants;
 
 TEST_CASE("ComplexCore::FindFeatureCentroidsFilter", "[ComplexCore][FindFeatureCentroidsFilter]")
 {
+  const std::string kDataInputArchive = "6_6_stats_test.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_stats_test.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(baseDataFilePath);

@@ -21,6 +21,16 @@ inline const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContain
 
 TEST_CASE("ComplexCore::CombineStlFilesFilter: Valid Filter Execution", "[ComplexCore][CombineStlFilesFilter]")
 {
+  const std::string kDataInputArchive = "6_6_combine_stl_files.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_combine_stl_files.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
+  const std::string kDataInputArchive1 = "STL_Models.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "STL_Models";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_combine_stl_files.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

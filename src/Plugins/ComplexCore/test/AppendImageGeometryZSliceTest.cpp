@@ -29,6 +29,10 @@ const DataPath k_SmallIN100Path({k_SmallIN100});
 
 TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution", "[ComplexCore][AppendImageGeometryZSliceFilter]")
 {
+  const std::string kDataInputArchive = "Small_IN100_dream3d.tar.gz";
+  const std::string kExpectedOutputTopLevel = "Small_IN100.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
   // Read in starting/exemplar image geometry
   const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -150,6 +154,11 @@ TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: Valid Filter Execution"
 
 TEST_CASE("ComplexCore::AppendImageGeometryZSliceFilter: InValid Filter Execution", "[ComplexCore][AppendImageGeometryZSliceFilter]")
 {
+  const std::string kDataInputArchive = "ResampleImageGeom_Exemplar.tar.gz";
+  const std::string kExpectedOutputTopLevel = "ResampleImageGeom_Exemplar.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read in test image geometries
   auto geomFilePath = fs::path(fmt::format("{}/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(geomFilePath);

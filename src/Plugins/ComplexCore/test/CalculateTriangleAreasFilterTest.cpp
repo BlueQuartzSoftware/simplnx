@@ -84,19 +84,8 @@ TEST_CASE("ComplexCore::CalculateTriangleAreasFilter", "[ComplexCore][CalculateT
     REQUIRE(sumOfAreas < 7098.94);
   }
 
-  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/TriangleAreas.dream3d", unit_test::k_BinaryTestOutputDir));
-  complex::HDF5::FileWriter fileWriter = std::move(result.value());
-
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
+// Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_triangle_areas.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }
-
-// TEST_CASE("ImportExport::ReadStlFile: Valid filter execution")
-//{
-//
-//}
-
-// TEST_CASE("ImportExport::ReadStlFile: InValid filter execution")
-//{
-//
-//}

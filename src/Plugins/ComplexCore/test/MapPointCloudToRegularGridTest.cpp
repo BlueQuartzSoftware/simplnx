@@ -38,6 +38,11 @@ const DataPath k_VoxelIndicesExistingMaskComputed = k_VertexDataPath.createChild
 
 TEST_CASE("ComplexCore::MapPointCloudToRegularGridFilter: Valid Filter Execution - Manual Geometry", "[MapPointCloudToRegularGridFilter]")
 {
+  const std::string kDataInputArchive = "6_6_map_point_cloud_to_regular_grid.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_map_point_cloud_to_regular_grid";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

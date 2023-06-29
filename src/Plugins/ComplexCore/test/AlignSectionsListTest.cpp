@@ -83,8 +83,8 @@ TEST_CASE("ComplexCore::AlignSectionsListFilter: Invalid filter execution", "[Co
   AlignSectionsListFilter filter;
   Arguments args;
 
-  args.insertOrAssign(AlignSectionsListFilter::k_InputFile_Key,
-                      std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/export_files_test/write_ascii_data_exemplars/float32/0_0_exemplar_0.txt", unit_test::k_TestFilesDir))));
+  args.insertOrAssign(AlignSectionsListFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(
+                                                                    fs::path(fmt::format("{}/export_files_test/write_ascii_data_exemplars/float32/0_0_exemplar_0.txt", unit_test::k_TestFilesDir))));
   args.insertOrAssign(AlignSectionsListFilter::k_SelectedImageGeometry_Key, std::make_any<DataPath>(complex::Constants::k_DataContainerPath));
 
   SECTION("Invalid DREAM3D Alignment file format")

@@ -17,6 +17,11 @@ const DataPath k_GeneratedArray = DataPath({Constants::k_SmallIN100, Constants::
 
 TEST_CASE("ComplexCore::FindFeaturePhasesBinaryFilter: Valid Filter Execution", "[ComplexCore][FindFeaturePhasesBinaryFilter]")
 {
+  const std::string kDataInputArchive = "bin_feature_phases.tar.gz";
+  const std::string kExpectedOutputTopLevel = "bin_feature_phases.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/bin_feature_phases/6_6_find_feature_phases_binary.dream3d", unit_test::k_TestFilesDir)));
 
   {

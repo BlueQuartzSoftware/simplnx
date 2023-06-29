@@ -117,6 +117,11 @@ Arguments createExistingPartitioningSchemeGeometryArguments(const DataPath& inpu
 
 TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plugins][PartitionGeometryFilter]")
 {
+  const std::string kDataInputArchive = "PartitionGeometryTest.tar.gz";
+  const std::string kExpectedOutputTopLevel = "PartitionGeometryTest";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   Arguments partitionGeometryArgs;
   Arguments importD3DArgs;
 
@@ -566,6 +571,11 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
 
 TEST_CASE("ComplexCore::PartitionGeometryFilter: Invalid filter execution")
 {
+  const std::string kDataInputArchive = "PartitionGeometryTest.tar.gz";
+  const std::string kExpectedOutputTopLevel = "PartitionGeometryTest";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   Arguments partitionGeometryArgs;
   Arguments importD3DArgs;
 

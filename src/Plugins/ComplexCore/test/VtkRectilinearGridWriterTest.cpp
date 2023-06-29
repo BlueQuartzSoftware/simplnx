@@ -15,6 +15,16 @@ using namespace complex::Constants;
 
 TEST_CASE("ComplexCore::VtkRectilinearGridWriterFilter: Valid Filter Execution", "[ComplexCore][VtkRectilinearGridWriterFilter]")
 {
+  const std::string kDataInputArchive = "Small_IN100_dream3d.tar.gz";
+  const std::string kExpectedOutputTopLevel = "Small_IN100.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
+  const std::string kDataInputArchive1 = "6_6_vtk_rectilinear_grid_writer.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_vtk_rectilinear_grid_writer";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   // Read input DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -63,6 +73,16 @@ TEST_CASE("ComplexCore::VtkRectilinearGridWriterFilter: Valid Filter Execution",
 
 TEST_CASE("ComplexCore::VtkRectilinearGridWriterFilter: InValid Filter Execution", "[ComplexCore][VtkRectilinearGridWriterFilter]")
 {
+  const std::string kDataInputArchive = "Small_IN100_dream3d.tar.gz";
+  const std::string kExpectedOutputTopLevel = "Small_IN100.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
+  const std::string kDataInputArchive1 = "6_6_vtk_rectilinear_grid_writer.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_vtk_rectilinear_grid_writer";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   // Read input DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

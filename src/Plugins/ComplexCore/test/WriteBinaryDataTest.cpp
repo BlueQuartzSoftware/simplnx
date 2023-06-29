@@ -63,52 +63,52 @@ private:
   {
     if(std::is_same<T, int8>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int8"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int8"));
       setFillValue(-65, -63, -61);
     }
     else if(std::is_same<T, int16>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int16"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int16"));
       setFillValue(-650, -648, -646);
     }
     else if(std::is_same<T, int32>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int32"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int32"));
       setFillValue(-6500, -6498, -6496);
     }
     else if(std::is_same<T, int64>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int64"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "int64"));
       setFillValue(-65000, -64998, -64996);
     }
     else if(std::is_same<T, uint8>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint8"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint8"));
       setFillValue(65, 67, 69);
     }
     else if(std::is_same<T, uint16>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint16"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint16"));
       setFillValue(650, 652, 654);
     }
     else if(std::is_same<T, uint32>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint32"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint32"));
       setFillValue(6500, 6502, 6504);
     }
     else if(std::is_same<T, uint64>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint64"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "uint64"));
       setFillValue(65000, 65002, 65004);
     }
     else if(std::is_same<T, float32>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float32"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float32"));
       setFillValue(65.001, 67.001, 69.001);
     }
     else if(std::is_same<T, float64>::value)
     {
-      m_ExemplarsPath = fs::path(fmt::format("{}/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float64"));
+      m_ExemplarsPath = fs::path(fmt::format("{}/export_files_test/write_binary_data_exemplars/{}", unit_test::k_TestFilesDir.view(), "float64"));
       setFillValue(65.000001, 67.000001, 69.000001);
     }
   }
@@ -194,6 +194,11 @@ private:
 
 TEST_CASE("ComplexCore::WriteBinaryData: Valid filter execution")
 {
+  const std::string kDataInputArchive = "export_files_test.tar.gz";
+  const std::string kExpectedOutputTopLevel = "export_files_test";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   DataStructure dataStructure;
   DataStructure& dsRef = dataStructure;
 

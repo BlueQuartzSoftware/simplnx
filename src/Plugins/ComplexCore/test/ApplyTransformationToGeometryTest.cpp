@@ -60,6 +60,11 @@ const int32 k_CellAttrMatrixUnusedWarning = -5555;
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Node", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -101,6 +106,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Node", "
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -142,6 +152,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Co
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Node", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -185,6 +200,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Compl
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Node", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -231,6 +251,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Comp
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -279,6 +304,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
  ******************************************************************************/
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Image_Linear", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -315,6 +345,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Image_Li
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linear", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -351,6 +386,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Image_Linea
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -389,6 +429,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Image_Linear",
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -429,6 +474,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Image_Linear"
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Linear", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_linear.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -472,6 +522,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Image_Li
  ******************************************************************************/
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Image_NN", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -509,6 +564,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Image_NN
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -546,6 +606,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Image_NN", 
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -585,6 +650,11 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Scale_Image_NN", "[C
 
 TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Manual_Image_NN", "[ComplexCore][ApplyTransformationToGeometryFilter]")
 {
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({"InputData"});
@@ -638,6 +708,10 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Precomputed_Image_NN
   //    auto result = imageGeom->computeCellIndex(coordsOld, oldGeomIndices);
   //    std::cout << oldGeomIndices[0] << ", " << oldGeomIndices[1] << ", " << oldGeomIndices[2] << std::endl;
   //  }
+  const std::string kDataInputArchive1 = "6_6_apply_transformation_to_geometry.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "6_6_apply_transformation_to_geometry";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_apply_transformation_to_geometry/6_6_apply_transformation_to_geometry_nn.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);

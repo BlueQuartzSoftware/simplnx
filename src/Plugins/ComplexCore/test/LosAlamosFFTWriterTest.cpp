@@ -59,6 +59,16 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("ComplexCore::LosAlamosFFTWriterFilter: Valid Filter Execution", "[ComplexCore][LosAlamosFFTWriterFilter]")
 {
+  const std::string kDataInputArchive = "bin_feature_phases.tar.gz";
+  const std::string kExpectedOutputTopLevel = "bin_feature_phases";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
+  const std::string kDataInputArchive1 = "LosAlamosFFTExemplar.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "LosAlamosFFTExemplar.txt";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   // Utilize the 6.6 Binary Feature Phases test file to conserve space
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/bin_feature_phases/6_6_find_feature_phases_binary.dream3d", unit_test::k_TestFilesDir)));
 
