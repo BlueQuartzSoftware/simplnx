@@ -70,59 +70,17 @@ void CompareResults() // compare hash of both file strings
 }
 } // namespace
 
-/**
- * @brief This class will decompress a tar.gz file using the locally installed copy of cmake and when
- * then class goes out of scope the extracted contents will be deleted from disk.
- */
-class TestFileSentinel
-{
-public:
-  TestFileSentinel(std::string inputArchiveName, std::string expectedTopLevelOutput)
-  : m_InputArchiveName(std::move(inputArchiveName))
-  , m_ExpectedTopLevelOutput(std::move(expectedTopLevelOutput))
-  {
-    const int result = decompress();
-    REQUIRE(result == 0);
-  }
-
-  ~TestFileSentinel()
-  {
-    const std::string kRemoveFileCommand =
-        fmt::format(R"(cd "{}" && "{}" -E rm -rf "{}/{}")", unit_test::k_TestFilesDir, unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, m_ExpectedTopLevelOutput);
-    const int result = std::system(kRemoveFileCommand.c_str());
-    if(result != 0)
-    {
-      std::cout << "Removing decompressed data failed. The command was:\n  " << kRemoveFileCommand << std::endl;
-    }
-  }
-
-  TestFileSentinel(const TestFileSentinel&) = delete;            // Copy Constructor Not Implemented
-  TestFileSentinel(TestFileSentinel&&) = delete;                 // Move Constructor Not Implemented
-  TestFileSentinel& operator=(const TestFileSentinel&) = delete; // Copy Assignment Not Implemented
-  TestFileSentinel& operator=(TestFileSentinel&&) = delete;      // Move Assignment Not Implemented
-
-  int decompress()
-  {
-    const std::string kDecompressCommand =
-        fmt::format(R"(cd "{}" && "{}" -E tar xvzf "{}/{}")", unit_test::k_TestFilesDir, unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, m_InputArchiveName);
-    return std::system(kDecompressCommand.c_str());
-  }
-
-private:
-  std::string m_InputArchiveName;
-  std::string m_ExpectedTopLevelOutput;
-};
-
 TEST_CASE("ComplexCore::AbaqusHexahedronWriterFilter: Valid Filter Execution", "[ComplexCore][AbaqusHexahedronWriterFilter]")
 {
+  const std::string kDataInputArchive1 = "abaqus_hexahedron_writer_test.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "abaqus_hexahedron_writer_test";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   const std::string kDataInputArchive = "6_6_find_feature_centroids.tar.gz";
   const std::string kExpectedOutputTopLevel = "6_6_find_feature_centroids.dream3d";
-  const TestFileSentinel testDataSentinel(kDataInputArchive, kExpectedOutputTopLevel);
-
-  const std::string kDataInputArchive1 = "abaqus_hexahedron_writer_test.tar.gz";
-  const std::string kExpectedOutputTopLevel1 = "abaqus_hexahedron_writer_test";
-  const TestFileSentinel testDataSentinel1(kDataInputArchive1, kExpectedOutputTopLevel1);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const AbaqusHexahedronWriterFilter filter;

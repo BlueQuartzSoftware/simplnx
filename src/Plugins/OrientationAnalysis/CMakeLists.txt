@@ -311,10 +311,6 @@ download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
                     SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b
                    INSTALL
                    COPY_DATA)
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
-                    ARCHIVE_NAME 6_6_ImportH5Data.tar.gz 
-                    SHA512 68cf620d28a515d04040d66c4f8fa9d8d46707c65138b366b47f40d1d56a36c40e2e2cd0c9d35168b68c2cb5b2ce95650fa2a0d4e6ffce980d0dd0654908f40d
-                    )
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder
@@ -338,9 +334,16 @@ install(FILES
   COMPONENT Applications
 )
 
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
+                    ARCHIVE_NAME 6_6_ImportH5Data.tar.gz 
+                    SHA512 68cf620d28a515d04040d66c4f8fa9d8d46707c65138b366b47f40d1d56a36c40e2e2cd0c9d35168b68c2cb5b2ce95650fa2a0d4e6ffce980d0dd0654908f40d
+                    )
 add_custom_target(Copy_${PLUGIN_NAME}_H5Data ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/EdaxOIMData.h5 ${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/H5EspritReaderTest.h5 ${DATA_DEST_DIR}/${PLUGIN_NAME}/
+  COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data.tar.gz" 
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/EdaxOIMData.h5" "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/H5EspritReaderTest.h5" "${DATA_DEST_DIR}/${PLUGIN_NAME}/"
+  COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data"
+  WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
   COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
   DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
-  )
+)
 set_target_properties(Copy_${PLUGIN_NAME}_H5Data PROPERTIES FOLDER ZZ_COPY_FILES)

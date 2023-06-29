@@ -17,13 +17,21 @@
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
+
 #include <fmt/format.h>
 
+//#include <reproc++/drain.hpp>
+//#include <reproc++/reproc.hpp>
+//#include <reproc++/run.hpp>
+
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 
 namespace fs = std::filesystem;
 using namespace complex;
@@ -204,6 +212,208 @@ inline constexpr float EPSILON = 0.0001;
 
 struct make_shared_enabler : public complex::Application
 {
+};
+
+/**
+ * @brief This class will decompress a tar.gz file using the locally installed copy of cmake and when
+ * then class goes out of scope the extracted contents will be deleted from disk.
+ */
+class TestFileSentinel
+{
+public:
+  /**
+   * @brief Construct a File Sentinel object that will decompress on construction and remove the
+   * contents on destruction.
+   *
+   * This class uses the actual CMake executable to do the decompression and the removal.
+   *
+   * @param cmakeExecutable The absolute path to the cmake(.exe) executable.
+   * @param testFilesDir The directory where the archive is located
+   * @param inputArchiveName The full name of the archive. The location is assumed to be in the TestFiles directory
+   * @param expectedTopLevelOutput The name of the decompressed folder or file. WARNING: This assumes
+   * that only a single file or single directory are part of the archive. In the case of a directory, the
+   * directory itself can have as many subdirectories as needed.
+   * @param logDir A directory to put output logs from the commands into.
+   */
+  TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, std::string logDir)
+  : m_CMakeExecutable(std::move(cmakeExecutable))
+  , m_TestFilesDir(std::move(testFilesDir))
+  , m_InputArchiveName(std::move(inputArchiveName))
+  , m_ExpectedTopLevelOutput(std::move(expectedTopLevelOutput))
+  , m_LogFile(fmt::format("{}/{}.log", logDir, m_InputArchiveName))
+  {
+    const Result<> result = decompress();
+    COMPLEX_RESULT_REQUIRE_VALID(result);
+  }
+
+  ~TestFileSentinel()
+  {
+    const std::string kRemoveFileCommand = fmt::format(R"(cd "{}" && "{}" -E rm -rf "{}/{}")", m_TestFilesDir, m_CMakeExecutable, m_TestFilesDir, m_ExpectedTopLevelOutput);
+    const int result = std::system(kRemoveFileCommand.c_str());
+    if(result != 0)
+    {
+      std::cout << "Removing decompressed data failed. The command was:\n  " << kRemoveFileCommand << std::endl;
+    }
+  }
+
+  TestFileSentinel(const TestFileSentinel&) = delete;            // Copy Constructor Not Implemented
+  TestFileSentinel(TestFileSentinel&&) = delete;                 // Move Constructor Not Implemented
+  TestFileSentinel& operator=(const TestFileSentinel&) = delete; // Copy Assignment Not Implemented
+  TestFileSentinel& operator=(TestFileSentinel&&) = delete;      // Move Assignment Not Implemented
+
+  /**
+   * @brief Does the actual decompression of the archive.
+   * @return
+   */
+
+  Result<> decompress()
+  {
+    const std::string kDecompressCommand = fmt::format(R"(cd "{}" && "{}" -E tar xvzf "{}/{}")", m_TestFilesDir, m_CMakeExecutable, m_TestFilesDir, m_InputArchiveName);
+
+    char buf[BUFSIZ];
+    FILE* ptr = nullptr;
+    FILE* file = nullptr;
+
+    file = fopen(m_LogFile.c_str(), "w");
+    if(!file)
+    {
+      return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_LogFile));
+    }
+    fprintf(file, "%s\n", kDecompressCommand.c_str());
+    if((ptr = popen(kDecompressCommand.c_str(), "r")) != nullptr)
+    {
+      while(fgets(buf, BUFSIZ, ptr) != nullptr)
+      {
+        fprintf(file, "%s", buf);
+      }
+      pclose(ptr);
+    }
+    fclose(file);
+    return {};
+  }
+#if 0
+  Result<> decompress()
+  {
+
+    fs::path absPath = m_LogFile;
+    if(!absPath.is_absolute())
+    {
+      try
+      {
+        absPath = fs::absolute(absPath);
+      } catch(const std::filesystem::filesystem_error& error)
+      {
+        return MakeErrorResult(-15000, fmt::format("ExecuteProcess::operator()() threw an error when creating absolute path from '{}'. Reported error is '{}'", m_LogFile, error.what()));
+      }
+    }
+
+    // Make sure any directory path is also available as the user may have just typed
+    // in a path without actually creating the full path
+    Result<> createDirectoriesResult = complex::CreateOutputDirectories(absPath.parent_path());
+    if(createDirectoriesResult.invalid())
+    {
+      return createDirectoriesResult;
+    }
+
+    // open the log file for storing the process output
+    std::ofstream outFile;
+    outFile.open(m_LogFile, std::ios_base::out);
+    if(!outFile.is_open())
+    {
+      return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_LogFile));
+    }
+
+    // gather the command/arguments and process options
+    const std::string kDecompressCommand =
+        fmt::format(R"(cd "{}" && "{}" -E tar xvzf "{}/{}")", m_TestFilesDir, m_CMakeExecutable, m_TestFilesDir, m_InputArchiveName);
+    std::vector<std::string> arguments = splitArgumentsString(kDecompressCommand);
+    auto args = reproc::arguments(arguments);
+
+    reproc::process process;
+    reproc::stop_actions stop = {{reproc::stop::terminate, reproc::milliseconds(m_TimeOutValue)}, {reproc::stop::kill, reproc::milliseconds(m_TimeOutValue)}};
+    reproc::options options;
+    options.stop = stop;
+    std::error_code ec = process.start(args, options);
+
+    if(ec == std::errc::no_such_file_or_directory)
+    {
+      outFile.close();
+      return MakeErrorResult<>(-56410, fmt::format("Program {} not found. Make sure it's available from the PATH.", fmt::join(arguments, " ")));
+    }
+    else if(ec)
+    {
+      outFile.close();
+      return MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", fmt::join(arguments, " "), ec.value(), ec.message()));
+    }
+
+    std::string output;
+
+    reproc::sink::string sink(output);
+    ec = reproc::drain(process, sink, reproc::sink::null);
+    if(ec)
+    {
+      outFile.close();
+      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", fmt::join(arguments, " "), ec.value(), ec.message()));
+    }
+    outFile << output;
+
+    int status = 0;
+    std::tie(status, ec) = process.wait(reproc::infinite);
+    if(ec)
+    {
+      outFile.close();
+      return MakeErrorResult<>(-56414, fmt::format("An error occurred while executing process '{}'\n{} : {}", fmt::join(arguments, " "), ec.value(), ec.message()));
+    }
+
+    outFile << output;
+
+    outFile.close();
+    return {};
+  }
+#endif
+
+  std::vector<std::string> splitArgumentsString(const std::string& arguments)
+  {
+    std::vector<std::string> argumentList;
+    for(int i = 0; i < arguments.size(); i++)
+    {
+      if(arguments[i] == '\"')
+      {
+        i++;
+        int start = i;
+        int index = arguments.find_first_of("\"", start);
+        if(index == -1)
+        {
+          index = arguments.size();
+        }
+        int end = index - 1;
+        argumentList.push_back(arguments.substr(start, end - start + 1));
+        i = index;
+      }
+      else
+      {
+        int start = i;
+        int index = arguments.find_first_of(" ", start + 1);
+        if(index == -1)
+        {
+          index = arguments.size();
+        }
+        int end = index - 1;
+        argumentList.push_back(arguments.substr(start, end - start + 1));
+        i = index;
+      }
+    }
+
+    return argumentList;
+  }
+
+private:
+  std::string m_CMakeExecutable;
+  std::string m_TestFilesDir;
+  std::string m_InputArchiveName;
+  std::string m_ExpectedTopLevelOutput;
+  std::string m_LogFile;
+  int32_t m_TimeOutValue = 600000; // 10 Minutes to decompress the data?
 };
 
 /**
