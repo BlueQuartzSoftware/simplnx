@@ -34,6 +34,11 @@ TEST_CASE("ComplexCore::AlignSectionsFeatureCentroidFilter", "[Reconstruction][A
 
   const DataPath k_ExemplarShiftsPath = k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
 
+  const std::string kDataInputArchive = "6_6_align_sections_feature_centroids.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_align_sections_feature_centroids";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_align_sections_feature_centroids/6_6_align_sections_feature_centroids.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
