@@ -168,6 +168,11 @@ TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: Valid Filter Executio
 
 TEST_CASE("OrientationAnalysis::FindGBPDMetricBasedFilter: InValid Filter Execution")
 {
+  const std::string kDataInputArchive = "6_6_find_gbcd_metric_based.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_find_gbcd_metric_based";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_find_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);

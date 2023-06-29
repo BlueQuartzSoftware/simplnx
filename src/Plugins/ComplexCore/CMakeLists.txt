@@ -350,6 +350,7 @@ download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 									 SHA512 70388864301ca1ea7fce7b1666d3abf682eee68c7d8b7a9bf532df7aff11e7ea9de7dc2dc80e33f0e363cbad023b663bff97df4be362f0312d311e9d5bedf370
 									 INSTALL
 									 COPY_DATA)
+
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 									 ARCHIVE_NAME STL_Models.tar.gz
 									 SHA512 14d5bbb1dcc241a5ad9b17e7647144926f22fca9af5e426798c2ed423d8d3b5d89d8c66ce9e6854bfcdbaea7f72b69980477ab837498e3dca89b5cd2870e2cff
