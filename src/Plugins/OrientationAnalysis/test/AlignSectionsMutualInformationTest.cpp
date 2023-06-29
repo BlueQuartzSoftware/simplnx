@@ -21,6 +21,11 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: Valid filter execution")
 {
+  const std::string kDataInputArchive = "6_5_align_sections_mutual_information.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_5_align_sections_mutual_information";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // We are just going to generate a big number so that we can use that in the output
   // file path. This tests the creation of intermediate directories that the filter
   // would be responsible to create.

@@ -301,17 +301,22 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # decompressed and then copied to the build folder. Install rules are also
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES) 
+  if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
+    file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
+  endif()
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
                    ARCHIVE_NAME Porosity_Image.tar.gz
                    SHA512 950c71b4f4721f14ea532ed5830b0786f49d2855b950bdf867c335b9fb0eb5dc28727b0899d665af0a2bc56816e1e66a08a008ef06a62b71efea4a6e46bff168
                    INSTALL
                    COPY_DATA)
 
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
                    ARCHIVE_NAME ITKMhaFileReaderTest.tar.gz
                    SHA512 7b44c28dad8dc70ad79f9dc6247ab2a17e3c0e08cf0400e361acaea965b0881eaa3815af21c1ec9bdba19f70c0bdd67b7c4382e527c844a20da39d6a229dc5fa
                    INSTALL
                    COPY_DATA)
+endif()
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder

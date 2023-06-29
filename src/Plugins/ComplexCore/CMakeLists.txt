@@ -345,17 +345,22 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # decompressed and then copied to the build folder. Install rules are also
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES) 
+  if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
+    file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
+  endif()
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 									 ARCHIVE_NAME ASCIIData.tar.gz
 									 SHA512 70388864301ca1ea7fce7b1666d3abf682eee68c7d8b7a9bf532df7aff11e7ea9de7dc2dc80e33f0e363cbad023b663bff97df4be362f0312d311e9d5bedf370
 									 INSTALL
 									 COPY_DATA)
 
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 									 ARCHIVE_NAME STL_Models.tar.gz
 									 SHA512 14d5bbb1dcc241a5ad9b17e7647144926f22fca9af5e426798c2ed423d8d3b5d89d8c66ce9e6854bfcdbaea7f72b69980477ab837498e3dca89b5cd2870e2cff
 									 INSTALL
 									 COPY_DATA)
+endif()
 
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder

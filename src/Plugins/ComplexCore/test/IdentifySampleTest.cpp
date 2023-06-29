@@ -31,6 +31,4 @@ TEST_CASE("ComplexCore::IdentifySample(Instantiate)", "[ComplexCore][IdentifySam
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
-
-  REQUIRE(1 == 0);
 }

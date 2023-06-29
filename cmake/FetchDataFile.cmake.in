@@ -21,11 +21,12 @@ string(REPLACE "\"" "" status "${status}")
 # --------------------------------------------------------------------------------------------------
 if("${status}" STREQUAL "No error" AND @ARGS_COPY_DATA@)
   get_filename_component(archive_base_name "@ARGS_ARCHIVE_NAME@" NAME)
-  message(STATUS "[DATA EXTRACT] Decompressing @ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@")
+  message(STATUS "[DATA EXTRACT/COPY] Decompressing @ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@")
   execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvzf "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@"
     WORKING_DIRECTORY "@ARGS_DREAM3D_DATA_DIR@/TestFiles"
     RESULT_VARIABLE result
     OUTPUT_VARIABLE output
     ERROR_VARIABLE error
   )
+  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARCHIVE_BASE_NAME@" "@DATA_DEST_DIR@/@ARCHIVE_BASE_NAME@")
 endif()

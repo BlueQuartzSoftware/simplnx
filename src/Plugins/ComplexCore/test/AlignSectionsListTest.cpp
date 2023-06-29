@@ -29,6 +29,11 @@ TEST_CASE("ComplexCore::AlignSectionsListFilter: Valid filter execution", "[Comp
   const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
                                                               complex::unit_test::k_BinaryTestOutputDir);
 
+  const std::string kDataInputArchive2 = "align_sections.tar.gz";
+  const std::string kExpectedOutputTopLevel2 = "align_sections_misorientation.txt";
+  const complex::UnitTest::TestFileSentinel testDataSentinel2(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive2, kExpectedOutputTopLevel2,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_align_sections_misorientation.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

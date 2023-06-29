@@ -25,6 +25,11 @@ const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTes
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
+  const std::string kDataInputArchive = "FindSurfaceFeaturesTest.tar.gz";
+  const std::string kExpectedOutputTopLevel = "FindSurfaceFeaturesTest";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindSurfaceFeatures filter;
   DataStructure dataStructure;
