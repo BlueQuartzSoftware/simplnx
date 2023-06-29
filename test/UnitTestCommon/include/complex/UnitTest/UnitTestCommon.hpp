@@ -33,6 +33,13 @@
 #include <cstdio>
 #include <cstdlib>
 
+#ifdef _WIN32
+#define POPEN _popen
+#else
+#define POPEN popen
+#endif
+
+
 namespace fs = std::filesystem;
 using namespace complex;
 
@@ -280,7 +287,7 @@ public:
       return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_LogFile));
     }
     fprintf(file, "%s\n", kDecompressCommand.c_str());
-    if((ptr = popen(kDecompressCommand.c_str(), "r")) != nullptr)
+    if((ptr = POPEN(kDecompressCommand.c_str(), "r")) != nullptr)
     {
       while(fgets(buf, BUFSIZ, ptr) != nullptr)
       {
