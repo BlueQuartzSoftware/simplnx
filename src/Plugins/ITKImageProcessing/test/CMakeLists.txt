@@ -43,6 +43,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKHConvexImageTest.cpp
     ITKHMaximaImageTest.cpp
     ITKHMinimaImageTest.cpp
+    ITKImportFijiMontageTest.cpp
     ITKIntensityWindowingImageTest.cpp
     ITKInvertIntensityImageTest.cpp
     ITKLabelContourImageTest.cpp

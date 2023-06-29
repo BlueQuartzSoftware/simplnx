@@ -111,6 +111,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKHMinimaImage
     ITKIntensityWindowingImage
     ITKInvertIntensityImage
+    ITKImportFijiMontage
     ITKLabelContourImage
     ITKLog10Image
     ITKLogImage
@@ -196,7 +197,6 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     #  CalcDewarpParameters # MISSING 1 or more Parameter Implementations
     #  ImportVectorImageStack # MISSING 1 or more Parameter Implementations
     #  ITKRefineTileCoordinates # MISSING 1 or more Parameter Implementations
-    #  ITKImportFijiMontage
     #  ITKImportRoboMetMontage
     #  ITKPCMTileRegistration
     #  ITKProxTVImage
