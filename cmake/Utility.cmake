@@ -156,7 +156,7 @@ function(download_test_data)
     endif()
 
     install(DIRECTORY
-            "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data/${ARCHIVE_BASE_NAME}"
+            "${DATA_DEST_DIR}/${ARCHIVE_BASE_NAME}"
             DESTINATION Data/
             COMPONENT Applications
             )
