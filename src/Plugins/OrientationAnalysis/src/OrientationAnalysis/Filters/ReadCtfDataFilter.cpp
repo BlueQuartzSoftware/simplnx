@@ -6,7 +6,6 @@
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Filter/Actions/CreateArrayAction.hpp"
 #include "complex/Filter/Actions/CreateAttributeMatrixAction.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "complex/Filter/Actions/CreateStringArrayAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -89,8 +88,6 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
                                                           const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  //  auto pDegreesToRadiansValue = filterArgs.value<bool>(k_DegreesToRadians_Key);
-  //  auto pEdaxHexagonalAlignmentValue = filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key);
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_DataContainerName_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key);
@@ -136,7 +133,7 @@ IFilter::PreflightResult ReadCtfDataFilter::preflightImpl(const DataStructure& d
   DataPath cellAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellAttributeMatrixNameValue);
 
   CtfFields ctfFeatures;
-  std::vector<std::string> names = ctfFeatures.getFilterFeatures<std::vector<std::string>>();
+  const auto names = ctfFeatures.getFilterFeatures<std::vector<std::string>>();
   std::vector<size_t> cDims = {1ULL};
 
   for(const auto& name : names)

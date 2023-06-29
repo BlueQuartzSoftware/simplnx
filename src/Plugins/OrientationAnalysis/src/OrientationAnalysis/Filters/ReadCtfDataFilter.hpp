@@ -9,7 +9,8 @@ namespace complex
 {
 /**
  * @class ReadCtfDataFilter
- * @brief This filter will ....
+ * @brief This filter will read a single .ctf file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the
+ * intermediate .h5ebsd file.
  */
 class ORIENTATIONANALYSIS_EXPORT ReadCtfDataFilter : public IFilter
 {

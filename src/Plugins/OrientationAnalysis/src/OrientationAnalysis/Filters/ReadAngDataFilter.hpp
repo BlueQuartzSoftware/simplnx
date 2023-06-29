@@ -14,7 +14,8 @@ class ReadAngDataPrivate;
 
 /**
  * @class ReadAngDataFilter
- * @brief This filter will ....
+ * @brief This filter will read a single .ang file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the intermediate
+ * .h5ebsd file.
  */
 class ORIENTATIONANALYSIS_EXPORT ReadAngDataFilter : public IFilter
 {
