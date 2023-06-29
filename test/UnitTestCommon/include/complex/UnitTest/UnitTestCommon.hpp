@@ -35,8 +35,10 @@
 
 #ifdef _WIN32
 #define POPEN _popen
+#define PCLOSE _pclose
 #else
 #define POPEN popen
+#define PCLOSE pclose
 #endif
 
 namespace fs = std::filesystem;
@@ -292,7 +294,7 @@ public:
       {
         fprintf(file, "%s", buf);
       }
-      pclose(ptr);
+      PCLOSE(ptr);
     }
     fclose(file);
     return {};
