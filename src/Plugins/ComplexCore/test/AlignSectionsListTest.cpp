@@ -19,14 +19,10 @@ TEST_CASE("ComplexCore::AlignSectionsListFilter: Valid filter execution", "[Comp
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();
 
-  const std::string kDataInputArchive = "6_6_align_sections_misorientation.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_align_sections_misorientation";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_align_sections_misorientation.tar.gz",
+                                                             "6_6_align_sections_misorientation", complex::unit_test::k_BinaryTestOutputDir);
 
-  const std::string kDataInputArchive1 = "Small_IN100_dream3d.tar.gz";
-  const std::string kExpectedOutputTopLevel1 = "Small_IN100.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d",
                                                               complex::unit_test::k_BinaryTestOutputDir);
 
   const std::string kDataInputArchive2 = "align_sections.tar.gz";
@@ -71,14 +67,10 @@ TEST_CASE("ComplexCore::AlignSectionsListFilter: Valid filter execution", "[Comp
 
 TEST_CASE("ComplexCore::AlignSectionsListFilter: Invalid filter execution", "[ComplexCore][AlignSectionsListFilter]")
 {
-  const std::string kDataInputArchive1 = "Small_IN100_dream3d.tar.gz";
-  const std::string kExpectedOutputTopLevel1 = "Small_IN100.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d",
                                                               complex::unit_test::k_BinaryTestOutputDir);
 
-  const std::string kDataInputArchive = "export_files_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "export_files_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read the Small IN100 Data set

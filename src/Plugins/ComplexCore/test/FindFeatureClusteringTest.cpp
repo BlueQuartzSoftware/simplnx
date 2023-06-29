@@ -22,10 +22,8 @@ const std::string k_GeneratedMinMaxDistances = "NX_RDFMaxMinDistances";
 
 TEST_CASE("ComplexCore::FindFeatureClusteringFilter: Valid Filter Execution", "[ComplexCore][FindFeatureClusteringFilter]")
 {
-  const std::string kDataInputArchive = "6_6_find_feature_clustering.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_find_feature_clustering.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_feature_clustering.tar.gz",
+                                                             "6_6_find_feature_clustering.dream3d", complex::unit_test::k_BinaryTestOutputDir);
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_feature_clustering.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -65,10 +63,8 @@ TEST_CASE("ComplexCore::FindFeatureClusteringFilter: Valid Filter Execution", "[
 
 TEST_CASE("ComplexCore::FindFeatureClusteringFilter: InValid Filter Execution", "[ComplexCore][FindFeatureClusteringFilter]")
 {
-  const std::string kDataInputArchive = "6_6_find_feature_clustering.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_find_feature_clustering.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_feature_clustering.tar.gz",
+                                                             "6_6_find_feature_clustering.dream3d", complex::unit_test::k_BinaryTestOutputDir);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_feature_clustering.dream3d", unit_test::k_TestFilesDir));

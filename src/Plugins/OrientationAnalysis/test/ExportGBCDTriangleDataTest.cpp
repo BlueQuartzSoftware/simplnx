@@ -43,9 +43,7 @@ inline constexpr float32 k_EPSILON = 0.001;
 
 TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execution")
 {
-  const std::string kDataInputArchive = "6_6_Small_IN100_GBCD.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_Small_IN100_GBCD";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
@@ -197,9 +195,7 @@ TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: Valid filter execu
 
 TEST_CASE("OrientationAnalysis::ExportGBCDTriangleDataFilter: InValid filter execution")
 {
-  const std::string kDataInputArchive = "6_6_Small_IN100_GBCD.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_Small_IN100_GBCD";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Instantiate the filter and an Arguments Object

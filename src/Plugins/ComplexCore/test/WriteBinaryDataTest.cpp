@@ -194,9 +194,7 @@ private:
 
 TEST_CASE("ComplexCore::WriteBinaryData: Valid filter execution")
 {
-  const std::string kDataInputArchive = "export_files_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "export_files_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   DataStructure dataStructure;

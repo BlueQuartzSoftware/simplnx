@@ -17,9 +17,7 @@ const std::string k_Computed_CellData("Computed_CellData");
 template <typename T>
 void testElementArray(const DataPath& cellDataPath)
 {
-  const std::string kDataInputArchive = "6_5_test_data_1.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_5_test_data_1";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read the Small IN100 Data set

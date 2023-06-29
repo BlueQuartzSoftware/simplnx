@@ -88,9 +88,7 @@ TEST_CASE("ComplexCore::FeatureDataCSVWriterFilter: Test Algorithm", "[FeatureDa
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const std::string kDataInputArchive = "ascii_data_exemplars.tar.gz";
-  const std::string kExpectedOutputTopLevel = "ascii_data_exemplars";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ascii_data_exemplars.tar.gz", "ascii_data_exemplars",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   auto exemplarPath = fs::path(fmt::format("{}/ascii_data_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));

@@ -55,9 +55,7 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("ComplexCore::WriteStlFileFilter: Valid Filter Execution", "[ComplexCore][WriteStlFileFilter]")
 {
-  const std::string kDataInputArchive = "6_6_write_stl_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_write_stl_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_write_stl_test.tar.gz", "6_6_write_stl_test",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object

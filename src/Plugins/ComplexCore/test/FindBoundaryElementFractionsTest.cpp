@@ -19,10 +19,8 @@ const DataPath k_GeneratedBCFPath = k_FeatureDataAMPath.createChildPath(k_BCFNam
 
 TEST_CASE("ComplexCore::FindBoundaryElementFractionsFilter: Valid Filter Execution", "[ComplexCore][FindBoundaryElementFractionsFilter]")
 {
-  const std::string kDataInputArchive = "6_6_find_feature_boundary_element_fractions.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_find_feature_boundary_element_fractions";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_feature_boundary_element_fractions.tar.gz",
+                                                             "6_6_find_feature_boundary_element_fractions", complex::unit_test::k_BinaryTestOutputDir);
 
   DataStructure dataStructure =
       UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_boundary_element_fractions/6_6_find_feature_boundary_element_fractions.dream3d", unit_test::k_TestFilesDir)));

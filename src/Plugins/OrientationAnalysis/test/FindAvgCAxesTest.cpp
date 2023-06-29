@@ -16,9 +16,7 @@ const std::string k_AvgCAxesComputed = "NX_AvgCAxes";
 
 TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[OrientationAnalysis][FindAvgCAxesFilter]")
 {
-  const std::string kDataInputArchive = "6_6_caxis_data.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_caxis_data";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read Exemplar DREAM3D File Filter
@@ -51,9 +49,7 @@ TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Valid Filter Execution", "[O
 
 TEST_CASE("OrientationAnalysis::FindAvgCAxesFilter: Invalid Filter Execution", "[OrientationAnalysis][FindAvgCAxesFilter]")
 {
-  const std::string kDataInputArchive = "6_6_caxis_data.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_caxis_data";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_caxis_data.tar.gz", "6_6_caxis_data",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read Exemplar DREAM3D File Filter

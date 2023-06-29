@@ -32,9 +32,7 @@ TEST_CASE("ComplexCore::ErodeDilateCoordinationNumberFilter", "[ComplexCore][Ero
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
-  const std::string kDataInputArchive = "6_6_erode_dilate_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_erode_dilate_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read Exemplar DREAM3D File Filter

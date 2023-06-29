@@ -28,10 +28,8 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[Compl
   FindVolFractionsFilter filter;
   Arguments args;
 
-  const std::string kDataInputArchive = "6_6_volume_fraction_feature_count.dream3d.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_volume_fraction_feature_count.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
+                                                             "6_6_volume_fraction_feature_count.dream3d", complex::unit_test::k_BinaryTestOutputDir);
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
@@ -64,10 +62,8 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[Com
   FindVolFractionsFilter filter;
   Arguments args;
 
-  const std::string kDataInputArchive = "6_6_volume_fraction_feature_count.dream3d.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_volume_fraction_feature_count.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
+                                                             "6_6_volume_fraction_feature_count.dream3d", complex::unit_test::k_BinaryTestOutputDir);
 
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_volFractions_and_numFeatures_test.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);

@@ -31,9 +31,7 @@ const DataPath k_MaskArrayDataPath = k_EbsdScanDataDataPath.createChildPath("Mas
 TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Dilate)", "[ComplexCore][ErodeDilateMaskFilter]")
 {
 
-  const std::string kDataInputArchive = "6_6_erode_dilate_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_erode_dilate_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   const std::string k_ExemplarDataContainerName("Exemplar Mask Dilate");
@@ -74,9 +72,7 @@ TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Dilate)", "[ComplexCore][ErodeDila
 
 TEST_CASE("ComplexCore::ErodeDilateMaskFilter(Erode)", "[ComplexCore][ErodeDilateMaskFilter]")
 {
-  const std::string kDataInputArchive = "6_6_erode_dilate_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_erode_dilate_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   const std::string k_ExemplarDataContainerName("Exemplar Mask Erode");

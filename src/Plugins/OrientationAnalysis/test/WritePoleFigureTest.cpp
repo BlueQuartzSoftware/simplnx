@@ -25,9 +25,7 @@ const std::string k_ImagePrefix("fw-ar-IF1-aptr12-corr Discrete Pole Figure");
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  const std::string kDataInputArchive = "PoleFigure_Exemplars.tar.gz";
-  const std::string kExpectedOutputTopLevel = "PoleFigure_Exemplars";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read the Small IN100 Data set
@@ -77,9 +75,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  const std::string kDataInputArchive = "PoleFigure_Exemplars.tar.gz";
-  const std::string kExpectedOutputTopLevel = "PoleFigure_Exemplars";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read the Small IN100 Data set
@@ -130,9 +126,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
 
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
-  const std::string kDataInputArchive = "PoleFigure_Exemplars.tar.gz";
-  const std::string kExpectedOutputTopLevel = "PoleFigure_Exemplars";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PoleFigure_Exemplars.tar.gz", "PoleFigure_Exemplars",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read the Small IN100 Data set

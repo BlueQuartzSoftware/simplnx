@@ -29,9 +29,7 @@ using namespace FindTriangleGeomCentroidsFilterTest;
 
 TEST_CASE("ComplexCore::FindTriangleGeomCentroids", "[ComplexCore][FindTriangleGeomCentroids]")
 {
-  const std::string kDataInputArchive = "12_IN625_GBCD.tar.gz";
-  const std::string kExpectedOutputTopLevel = "12_IN625_GBCD";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read Exemplar DREAM3D File Filter

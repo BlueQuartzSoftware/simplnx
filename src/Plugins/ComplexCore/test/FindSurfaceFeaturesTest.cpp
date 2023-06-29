@@ -25,9 +25,7 @@ const std::string k_SurfaceFeatures2DExemplaryFileName = "FindSurfaceFeaturesTes
 
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, usize featureIdsSize, const std::string& exemplaryFileName)
 {
-  const std::string kDataInputArchive = "FindSurfaceFeaturesTest.tar.gz";
-  const std::string kExpectedOutputTopLevel = "FindSurfaceFeaturesTest";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz", "FindSurfaceFeaturesTest",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -109,9 +107,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
 TEST_CASE("ComplexCore::FindSurfaceFeatures: Valid filter execution in 3D", "[ComplexCore][FindSurfaceFeatures]")
 {
-  const std::string kDataInputArchive = "6_5_test_data_1.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_5_test_data_1";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read the Small IN100 Data set

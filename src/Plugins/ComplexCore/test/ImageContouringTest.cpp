@@ -35,9 +35,7 @@ const DataPath k_NewNormals = k_NewContourPath.createChildPath(INodeGeometry0D::
 
 TEST_CASE("ComplexCore::Image Contouring Valid Execution", "[ComplexCore][ImageContouring]")
 {
-  const std::string kDataInputArchive = "flying_edges_exemplar.tar.gz";
-  const std::string kExpectedOutputTopLevel = "flying_edges_exemplar.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "flying_edges_exemplar.tar.gz", "flying_edges_exemplar.dream3d",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read Exemplar DREAM3D File Filter

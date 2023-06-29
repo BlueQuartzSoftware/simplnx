@@ -25,13 +25,12 @@
 
 #include <fmt/format.h>
 
-//#include <reproc++/drain.hpp>
-//#include <reproc++/reproc.hpp>
-//#include <reproc++/run.hpp>
+#include <reproc++/run.hpp>
 
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 
 #ifdef _WIN32
 #define POPEN _popen
@@ -250,17 +249,17 @@ public:
   , m_ExpectedTopLevelOutput(std::move(expectedTopLevelOutput))
   , m_LogFile(fmt::format("{}/{}.log", logDir, m_InputArchiveName))
   {
-    const Result<> result = decompress();
-    COMPLEX_RESULT_REQUIRE_VALID(result);
+    const auto result = decompress();
+    REQUIRE(result);
   }
 
   ~TestFileSentinel()
   {
-    const std::string kRemoveFileCommand = fmt::format(R"(cd "{}" && "{}" -E rm -rf "{}/{}")", m_TestFilesDir, m_CMakeExecutable, m_TestFilesDir, m_ExpectedTopLevelOutput);
-    const int result = std::system(kRemoveFileCommand.c_str());
-    if(result != 0)
+    std::error_code errorCode;
+    std::filesystem::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
+    if(errorCode)
     {
-      std::cout << "Removing decompressed data failed. The command was:\n  " << kRemoveFileCommand << std::endl;
+      std::cout << "Removing decompressed data failed: " << errorCode.message() << std::endl;
     }
   }
 
@@ -273,148 +272,20 @@ public:
    * @brief Does the actual decompression of the archive.
    * @return
    */
-  Result<> decompress()
+
+  bool decompress()
   {
-    const std::string kDecompressCommand = fmt::format(R"(cd "{}" && "{}" -E tar xvzf "{}/{}")", m_TestFilesDir, m_CMakeExecutable, m_TestFilesDir, m_InputArchiveName);
-
-    char buf[BUFSIZ];
-    FILE* ptr = nullptr;
-    FILE* file = nullptr;
-
-    file = fopen(m_LogFile.c_str(), "w");
-    if(!file)
-    {
-      return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_LogFile));
-    }
-    fprintf(file, "%s\n", kDecompressCommand.c_str());
-    if((ptr = POPEN(kDecompressCommand.c_str(), "r")) != nullptr)
-    {
-      while(fgets(buf, BUFSIZ, ptr) != nullptr)
-      {
-        fprintf(file, "%s", buf);
-      }
-      PCLOSE(ptr);
-    }
-    fclose(file);
-    return {};
-  }
-
-#if 0
-  Result<> decompress()
-  {
-
-    fs::path absPath = m_LogFile;
-    if(!absPath.is_absolute())
-    {
-      try
-      {
-        absPath = fs::absolute(absPath);
-      } catch(const std::filesystem::filesystem_error& error)
-      {
-        return MakeErrorResult(-15000, fmt::format("ExecuteProcess::operator()() threw an error when creating absolute path from '{}'. Reported error is '{}'", m_LogFile, error.what()));
-      }
-    }
-
-    // Make sure any directory path is also available as the user may have just typed
-    // in a path without actually creating the full path
-    Result<> createDirectoriesResult = complex::CreateOutputDirectories(absPath.parent_path());
-    if(createDirectoriesResult.invalid())
-    {
-      return createDirectoriesResult;
-    }
-
-    // open the log file for storing the process output
-    std::ofstream outFile;
-    outFile.open(m_LogFile, std::ios_base::out);
-    if(!outFile.is_open())
-    {
-      return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_LogFile));
-    }
-
-    // gather the command/arguments and process options
-    const std::string kDecompressCommand =
-        fmt::format(R"(cd "{}" && "{}" -E tar xvzf "{}/{}")", m_TestFilesDir, m_CMakeExecutable, m_TestFilesDir, m_InputArchiveName);
-    std::vector<std::string> arguments = splitArgumentsString(kDecompressCommand);
-    auto args = reproc::arguments(arguments);
-
-    reproc::process process;
-    reproc::stop_actions stop = {{reproc::stop::terminate, reproc::milliseconds(m_TimeOutValue)}, {reproc::stop::kill, reproc::milliseconds(m_TimeOutValue)}};
     reproc::options options;
-    options.stop = stop;
-    std::error_code ec = process.start(args, options);
+    options.redirect.parent = true;
+    options.deadline = m_TimeOutValue;
+    options.working_directory = m_TestFilesDir.c_str();
 
-    if(ec == std::errc::no_such_file_or_directory)
-    {
-      outFile.close();
-      return MakeErrorResult<>(-56410, fmt::format("Program {} not found. Make sure it's available from the PATH.", fmt::join(arguments, " ")));
-    }
-    else if(ec)
-    {
-      outFile.close();
-      return MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", fmt::join(arguments, " "), ec.value(), ec.message()));
-    }
+    std::vector<std::string> args = {m_CMakeExecutable, "-E", "tar", "xvzf", fmt::format("{}/{}", m_TestFilesDir, m_InputArchiveName)};
 
-    std::string output;
+    auto&& [status, ec] = reproc::run(args, options);
 
-    reproc::sink::string sink(output);
-    ec = reproc::drain(process, sink, reproc::sink::null);
-    if(ec)
-    {
-      outFile.close();
-      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", fmt::join(arguments, " "), ec.value(), ec.message()));
-    }
-    outFile << output;
-
-    int status = 0;
-    std::tie(status, ec) = process.wait(reproc::infinite);
-    if(ec)
-    {
-      outFile.close();
-      return MakeErrorResult<>(-56414, fmt::format("An error occurred while executing process '{}'\n{} : {}", fmt::join(arguments, " "), ec.value(), ec.message()));
-    }
-
-    outFile << output;
-
-    outFile.close();
-    return {};
+    return !ec;
   }
-
-
-  std::vector<std::string> splitArgumentsString(const std::string& arguments)
-  {
-    std::vector<std::string> argumentList;
-    for(int i = 0; i < arguments.size(); i++)
-    {
-      if(arguments[i] == '\"')
-      {
-        i++;
-        int start = i;
-        int index = arguments.find_first_of("\"", start);
-        if(index == -1)
-        {
-          index = arguments.size();
-        }
-        int end = index - 1;
-        argumentList.push_back(arguments.substr(start, end - start + 1));
-        i = index;
-      }
-      else
-      {
-        int start = i;
-        int index = arguments.find_first_of(" ", start + 1);
-        if(index == -1)
-        {
-          index = arguments.size();
-        }
-        int end = index - 1;
-        argumentList.push_back(arguments.substr(start, end - start + 1));
-        i = index;
-      }
-    }
-
-    return argumentList;
-  }
-#endif
 
 private:
   std::string m_CMakeExecutable;
@@ -422,7 +293,7 @@ private:
   std::string m_InputArchiveName;
   std::string m_ExpectedTopLevelOutput;
   std::string m_LogFile;
-  int32_t m_TimeOutValue = 600000; // 10 Minutes to decompress the data?
+  reproc::milliseconds m_TimeOutValue = reproc::milliseconds(600000); // 10 Minutes to decompress the data?
 };
 
 /**

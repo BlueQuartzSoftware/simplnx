@@ -22,10 +22,8 @@ const std::string k_ExemplarDataContainer2("DataContainer");
 TEST_CASE("OrientationAnalysis::ReplaceElementAttributesWithNeighborValuesFilter", "[OrientationAnalysis][ReplaceElementAttributesWithNeighborValuesFilter]")
 {
 
-  const std::string kDataInputArchive = "6_6_replace_element_attributes_with_neighbor.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_replace_element_attributes_with_neighbor";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_replace_element_attributes_with_neighbor.tar.gz",
+                                                             "6_6_replace_element_attributes_with_neighbor", complex::unit_test::k_BinaryTestOutputDir);
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_replace_element_attributes_with_neighbor/6_6_replace_element_attributes_with_neighbor.dream3d", unit_test::k_DREAM3DDataDir));

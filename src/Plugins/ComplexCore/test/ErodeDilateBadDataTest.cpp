@@ -31,9 +31,7 @@ const DataPath k_FeatureIdsDataPath = k_EbsdScanDataDataPath.createChildPath("Fe
 
 TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Erode)", "[ComplexCore][ErodeDilateBadDataFilter]")
 {
-  const std::string kDataInputArchive = "6_6_erode_dilate_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_erode_dilate_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
@@ -80,9 +78,7 @@ TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Erode)", "[ComplexCore][ErodeDi
 TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Dilate)", "[ComplexCore][ErodeDilateBadDataFilter]")
 {
 
-  const std::string kDataInputArchive = "6_6_erode_dilate_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_erode_dilate_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   const std::string k_ExemplarDataContainerName("Exemplar Bad Data Dilate");

@@ -23,9 +23,7 @@ const std::string k_NeighborListArrayName("NeighborList");
 
 TEST_CASE("OrientationAnalysis::FindMisorientationsFilter", "[OrientationAnalysis][FindMisorientationsFilter]")
 {
-  const std::string kDataInputArchive = "6_6_stats_test.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_stats_test.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_stats_test.tar.gz", "6_6_stats_test.dream3d",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read the Small IN100 Data set

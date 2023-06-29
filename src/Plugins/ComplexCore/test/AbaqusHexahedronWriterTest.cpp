@@ -72,15 +72,11 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("ComplexCore::AbaqusHexahedronWriterFilter: Valid Filter Execution", "[ComplexCore][AbaqusHexahedronWriterFilter]")
 {
-  const std::string kDataInputArchive1 = "abaqus_hexahedron_writer_test.tar.gz";
-  const std::string kExpectedOutputTopLevel1 = "abaqus_hexahedron_writer_test";
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
-                                                              complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "abaqus_hexahedron_writer_test.tar.gz",
+                                                              "abaqus_hexahedron_writer_test", complex::unit_test::k_BinaryTestOutputDir);
 
-  const std::string kDataInputArchive = "6_6_find_feature_centroids.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_find_feature_centroids.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
+                                                             "6_6_find_feature_centroids.dream3d", complex::unit_test::k_BinaryTestOutputDir);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const AbaqusHexahedronWriterFilter filter;

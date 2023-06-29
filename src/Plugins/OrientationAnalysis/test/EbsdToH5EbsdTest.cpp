@@ -198,13 +198,9 @@ GeneratedFileListParameter::ValueType k_FileListInfo = {k_StartIndex, k_EndIndex
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
-  const std::string kDataInputArchive = "Small_IN100.tar.gz";
-  const std::string kExpectedOutputTopLevel = "Small_IN100";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100",
                                                              complex::unit_test::k_BinaryTestOutputDir);
-  const std::string kDataInputArchive1 = "6_5_h5ebsd_exemplar.tar.gz";
-  const std::string kExpectedOutputTopLevel1 = "6_5_h5ebsd_exemplar";
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar",
                                                               complex::unit_test::k_BinaryTestOutputDir);
 
   fs::path inputPath(k_InputPath);

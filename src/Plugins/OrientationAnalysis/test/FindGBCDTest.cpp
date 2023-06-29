@@ -24,9 +24,7 @@ inline constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
 TEST_CASE("OrientationAnalysis::FindGBCD", "[OrientationAnalysis][FindGBCD]")
 {
-  const std::string kDataInputArchive = "6_6_Small_IN100_GBCD.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_6_Small_IN100_GBCD";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD",
                                                              complex::unit_test::k_BinaryTestOutputDir);
 
   // Read the Small IN100 Data set

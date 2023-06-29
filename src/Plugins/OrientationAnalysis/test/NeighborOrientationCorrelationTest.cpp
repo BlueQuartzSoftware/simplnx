@@ -37,14 +37,10 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN100 Pipeline", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  const std::string kDataInputArchive = "neighbor_orientation_correlation.tar.gz";
-  const std::string kExpectedOutputTopLevel = "neighbor_orientation_correlation.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
-                                                             complex::unit_test::k_BinaryTestOutputDir);
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "neighbor_orientation_correlation.tar.gz",
+                                                             "neighbor_orientation_correlation.dream3d", complex::unit_test::k_BinaryTestOutputDir);
 
-  const std::string kDataInputArchive1 = "Small_IN100_dream3d.tar.gz";
-  const std::string kExpectedOutputTopLevel1 = "Small_IN100.dream3d";
-  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d",
                                                               complex::unit_test::k_BinaryTestOutputDir);
 
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();

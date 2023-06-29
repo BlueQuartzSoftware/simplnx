@@ -53,9 +53,7 @@ const std::vector<int32> k_NumberElements = {
 
 TEST_CASE("ComplexCore::MinNeighbors", "[ComplexCore][MinNeighbors]")
 {
-  const std::string kDataInputArchive = "6_5_test_data_1.tar.gz";
-  const std::string kExpectedOutputTopLevel = "6_5_test_data_1";
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_5_test_data_1.tar.gz", "6_5_test_data_1",
                                                              complex::unit_test::k_BinaryTestOutputDir);
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1/6_5_test_data_1.dream3d", complex::unit_test::k_TestFilesDir));
