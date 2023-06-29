@@ -44,6 +44,10 @@ inline constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
 
 TEST_CASE("OrientationAnalysis::GenerateIPFColors", "[OrientationAnalysis][GenerateIPFColors]")
 {
+  const std::string kDataInputArchive = "so3_cubic_high_ipf_001.tar.gz";
+  const std::string kExpectedOutputTopLevel = "so3_cubic_high_ipf_001.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
 
   DataStructure dataStructure;
   {

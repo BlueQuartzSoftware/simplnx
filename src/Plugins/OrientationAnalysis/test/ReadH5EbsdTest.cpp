@@ -14,6 +14,16 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[OrientationAnalysis][ReadH5Ebsd]")
 {
+  const std::string kDataInputArchive1 = "Small_IN100_dream3d.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "Small_IN100.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
+  const std::string kDataInputArchive = "Small_IN100_h5ebsd.tar.gz";
+  const std::string kExpectedOutputTopLevel = "Small_IN100.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();

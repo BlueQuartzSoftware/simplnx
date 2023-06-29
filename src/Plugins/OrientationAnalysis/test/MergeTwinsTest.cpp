@@ -19,6 +19,11 @@ using namespace complex::Constants;
 
 TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction][MergeTwinsFilter][.][UNIMPLEMENTED][!mayfail]")
 {
+  const std::string kDataInputArchive = "neighbor_orientation_correlation.tar.gz";
+  const std::string kExpectedOutputTopLevel = "neighbor_orientation_correlation.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();

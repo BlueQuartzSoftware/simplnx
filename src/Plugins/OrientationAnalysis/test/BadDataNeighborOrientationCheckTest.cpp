@@ -34,6 +34,16 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Small IN100 Pipeline", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
+  const std::string kDataInputArchive = "bad_data_neighbor_orientation_check.tar.gz";
+  const std::string kExpectedOutputTopLevel = "bad_data_neighbor_orientation_check.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
+  const std::string kDataInputArchive1 = "Small_IN100_dream3d.tar.gz";
+  const std::string kExpectedOutputTopLevel1 = "Small_IN100.dream3d";
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive1, kExpectedOutputTopLevel1,
+                                                              complex::unit_test::k_BinaryTestOutputDir);
+
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
   auto* filterList = Application::Instance()->getFilterList();

@@ -198,6 +198,7 @@ GeneratedFileListParameter::ValueType k_FileListInfo = {k_StartIndex, k_EndIndex
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
+
   fs::path inputPath(k_InputPath);
   REQUIRE(fs::exists(inputPath));
 

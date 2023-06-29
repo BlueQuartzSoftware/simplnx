@@ -35,6 +35,11 @@ inline constexpr int32 k_Dimension = 300;
 
 TEST_CASE("OrientationAnalysis::GenerateGBCDPoleFigureFilter", "[OrientationAnalysis][GenerateGBCDPoleFigureFilter]")
 {
+  const std::string kDataInputArchive = "6_6_Small_IN100_GBCD.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_Small_IN100_GBCD";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);

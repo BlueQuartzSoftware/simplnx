@@ -25,6 +25,11 @@ const std::string k_ScanName = "Section_435";
 
 TEST_CASE("OrientationAnalysis::ImportH5EspritDataFilter: Valid Filter Execution", "[OrientationAnalysis][ImportH5EspritDataFilter]")
 {
+  const std::string kDataInputArchive = "6_6_ImportH5Data.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_ImportH5Data";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_ImportH5Data/6_6_import_h5_esprit_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -79,6 +84,11 @@ TEST_CASE("OrientationAnalysis::ImportH5EspritDataFilter: Valid Filter Execution
 
 TEST_CASE("OrientationAnalysis::ImportH5EspritDataFilter: InValid Filter Execution", "[OrientationAnalysis][ImportH5EspritDataFilter]")
 {
+  const std::string kDataInputArchive = "6_6_ImportH5Data.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_ImportH5Data";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ImportH5EspritDataFilter filter;
   DataStructure dataStructure;

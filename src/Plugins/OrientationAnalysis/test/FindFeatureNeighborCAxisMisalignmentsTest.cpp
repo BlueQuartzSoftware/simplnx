@@ -19,6 +19,11 @@ const std::string k_AvgCAxisMisalignmentsNameComputed = "NX_AvgCAxisMisalignment
 
 TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: Valid Filter Execution", "[OrientationAnalysis][FindFeatureNeighborCAxisMisalignmentsFilter]")
 {
+  const std::string kDataInputArchive = "6_6_caxis_data.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_caxis_data";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -52,6 +57,11 @@ TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: Val
 
 TEST_CASE("OrientationAnalysis::FindFeatureNeighborCAxisMisalignmentsFilter: InValid Filter Execution")
 {
+  const std::string kDataInputArchive = "6_6_caxis_data.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_caxis_data";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

@@ -53,6 +53,8 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Valid Execution", "[OrientationAnal
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
+
+  REQUIRE(0 == 1);
 }
 
 // TEST_CASE("OrientationAnalysis::ReadAngData: InValid filter execution")

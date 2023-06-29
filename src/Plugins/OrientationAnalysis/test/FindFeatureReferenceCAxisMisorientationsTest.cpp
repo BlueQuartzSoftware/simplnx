@@ -21,6 +21,11 @@ const DataPath k_AvgCAxesPath = k_CellFeatureDataPath.createChildPath("AvgCAxes"
 
 TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientationsFilter: Valid Filter Execution", "[OrientationAnalysis][FindFeatureReferenceCAxisMisorientationsFilter]")
 {
+  const std::string kDataInputArchive = "6_6_caxis_data.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_caxis_data";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -58,6 +63,11 @@ TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientationsFilter: 
 
 TEST_CASE("OrientationAnalysis::FindFeatureReferenceCAxisMisorientationsFilter: InValid Filter Execution", "[OrientationAnalysis][FindFeatureReferenceCAxisMisorientationsFilter]")
 {
+  const std::string kDataInputArchive = "6_6_caxis_data.tar.gz";
+  const std::string kExpectedOutputTopLevel = "6_6_caxis_data";
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive, kExpectedOutputTopLevel,
+                                                             complex::unit_test::k_BinaryTestOutputDir);
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_caxis_data/6_6_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
