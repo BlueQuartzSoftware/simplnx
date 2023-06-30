@@ -1,4 +1,5 @@
 find_package(Catch2 CONFIG REQUIRED)
+find_package(reproc++ CONFIG REQUIRED)
 
 add_library(ComplexUnitTestCommon INTERFACE)
 add_library(complex::UnitTestCommon ALIAS ComplexUnitTestCommon)
@@ -12,6 +13,7 @@ target_link_libraries(ComplexUnitTestCommon
   INTERFACE
     complex
     Catch2::Catch2
+    reproc++
 )
 
 target_sources(ComplexUnitTestCommon

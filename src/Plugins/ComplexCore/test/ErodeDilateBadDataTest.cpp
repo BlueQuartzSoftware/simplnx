@@ -31,6 +31,8 @@ const DataPath k_FeatureIdsDataPath = k_EbsdScanDataDataPath.createChildPath("Fe
 
 TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Erode)", "[ComplexCore][ErodeDilateBadDataFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
+
   std::shared_ptr<make_shared_enabler> app = std::make_shared<make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
 
@@ -74,6 +76,9 @@ TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Erode)", "[ComplexCore][ErodeDi
 
 TEST_CASE("ComplexCore::ErodeDilateBadDataFilter(Dilate)", "[ComplexCore][ErodeDilateBadDataFilter]")
 {
+
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
+
   const std::string k_ExemplarDataContainerName("Exemplar Bad Data Dilate");
   const DataPath k_DilateCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
 

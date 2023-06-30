@@ -107,6 +107,9 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
 
 TEST_CASE("ComplexCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Rotate_Sample_Ref_Frame_Test.tar.gz",
+                                                             "Rotate_Sample_Ref_Frame_Test.dream3d");
+
   const DataPath k_OriginalGeomPath({"Original"});
   const DataPath k_OriginalCellArrayPath = k_OriginalGeomPath.createChildPath("CellData").createChildPath("Data");
 

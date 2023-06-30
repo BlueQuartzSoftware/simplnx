@@ -17,4 +17,5 @@ inline constexpr StringLiteral k_BinaryTestOutputDir = "@complex_BINARY_DIR@/Plu
 inline constexpr StringLiteral k_BuildDir = COMPLEX_BUILD_DIR;
 inline constexpr StringLiteral k_DREAM3DDataDir = "@DREAM3D_DATA_DIR_NORM@";
 inline constexpr StringLiteral k_TestFilesDir = "@DREAM3D_DATA_DIR_NORM@/TestFiles";
+inline constexpr StringLiteral k_CMakeExecutable = "@CMAKE_COMMAND_NORM@";
 } // namespace complex::unit_test

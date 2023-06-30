@@ -1,15 +1,16 @@
 #include <catch2/catch.hpp>
 
+#include "ComplexCore/ComplexCore_test_dirs.hpp"
+#include "ComplexCore/Filters/ImportVolumeGraphicsFileFilter.hpp"
+
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
-
-#include "ComplexCore/ComplexCore_test_dirs.hpp"
-#include "ComplexCore/Filters/ImportVolumeGraphicsFileFilter.hpp"
 
 using namespace complex;
 
@@ -37,6 +38,8 @@ void writeVolTestFile()
 
 TEST_CASE("ComplexCore::ImportVolumeGraphicsFileFilter - Valid filter execution", "[Plugins][ImportVolumeGraphicsFileFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "volume_graphics_test.tar.gz", "volume_graphics_test.vgi");
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const ImportVolumeGraphicsFileFilter filter;
   DataStructure dataStructure;

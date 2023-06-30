@@ -20,6 +20,9 @@ inline constexpr StringLiteral k_ClosestTriangleIdsNameNX("Closest Triangle Ids"
 
 TEST_CASE("ComplexCore::FindVertexToTriangleDistancesFilter", "[ComplexCore][FindVertexToTriangleDistancesFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_vertex_to_triangle_distances.tar.gz",
+                                                             "6_6_vertex_to_triangle_distances.dream3d");
+
   // Read the Small IN100 Data set
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_vertex_to_triangle_distances.dream3d", unit_test::k_TestFilesDir)));
   DataPath triangleData({Constants::k_TriangleDataContainerName});

@@ -8,6 +8,8 @@
 
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
+#include <cstdlib>
+
 namespace fs = std::filesystem;
 using namespace complex;
 
@@ -17,7 +19,7 @@ const DataPath k_FeatureIdsPath = DataPath({Constants::k_DataContainer}).createC
 
 const std::string k_ExemplarDir = fmt::format("{}/abaqus_hexahedron_writer_test", unit_test::k_TestFilesDir);
 
-std::vector<char> readIn(fs::path filePath)
+std::vector<char> readIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -25,7 +27,7 @@ std::vector<char> readIn(fs::path filePath)
   {
     // get file size
     file.seekg(0, std::ios::end);
-    std::streampos length = file.tellg();
+    const std::streampos length = file.tellg();
     file.seekg(0, std::ios::beg);
 
     // read whole file into a vector
@@ -40,29 +42,29 @@ std::vector<char> readIn(fs::path filePath)
 
 void CompareResults() // compare hash of both file strings
 {
-  fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test.inp");
+  const fs::path writtenFilePath = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test.inp");
   REQUIRE(fs::exists(writtenFilePath));
-  fs::path exemplarFilePath = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test.inp");
+  const fs::path exemplarFilePath = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test.inp");
   REQUIRE(fs::exists(exemplarFilePath));
   REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
-  fs::path writtenFilePath2 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_elems.inp");
+  const fs::path writtenFilePath2 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_elems.inp");
   REQUIRE(fs::exists(writtenFilePath2));
-  fs::path exemplarFilePath2 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_elems.inp");
+  const fs::path exemplarFilePath2 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_elems.inp");
   REQUIRE(fs::exists(exemplarFilePath2));
   REQUIRE(readIn(writtenFilePath2) == readIn(exemplarFilePath2));
-  fs::path writtenFilePath3 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_elset.inp");
+  const fs::path writtenFilePath3 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_elset.inp");
   REQUIRE(fs::exists(writtenFilePath3));
-  fs::path exemplarFilePath3 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_elset.inp");
+  const fs::path exemplarFilePath3 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_elset.inp");
   REQUIRE(fs::exists(exemplarFilePath3));
   REQUIRE(readIn(writtenFilePath3) == readIn(exemplarFilePath3));
-  fs::path writtenFilePath4 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_nodes.inp");
+  const fs::path writtenFilePath4 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_nodes.inp");
   REQUIRE(fs::exists(writtenFilePath4));
-  fs::path exemplarFilePath4 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_nodes.inp");
+  const fs::path exemplarFilePath4 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_nodes.inp");
   REQUIRE(fs::exists(exemplarFilePath4));
   REQUIRE(readIn(writtenFilePath4) == readIn(exemplarFilePath4));
-  fs::path writtenFilePath5 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_sects.inp");
+  const fs::path writtenFilePath5 = fs::path(std::string(unit_test::k_BinaryTestOutputDir) + "/6_6_Abaqus_Hexahedron_Writer_Test_sects.inp");
   REQUIRE(fs::exists(writtenFilePath5));
-  fs::path exemplarFilePath5 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_sects.inp");
+  const fs::path exemplarFilePath5 = fs::path(k_ExemplarDir + "/6_6_Abaqus_Hexahedron_Writer_Test_sects.inp");
   REQUIRE(fs::exists(exemplarFilePath5));
   REQUIRE(readIn(writtenFilePath5) == readIn(exemplarFilePath5));
 }
@@ -70,8 +72,14 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("ComplexCore::AbaqusHexahedronWriterFilter: Valid Filter Execution", "[ComplexCore][AbaqusHexahedronWriterFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "abaqus_hexahedron_writer_test.tar.gz",
+                                                              "abaqus_hexahedron_writer_test");
+
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
+                                                             "6_6_find_feature_centroids.dream3d");
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
-  AbaqusHexahedronWriterFilter filter;
+  const AbaqusHexahedronWriterFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_centroids.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
 

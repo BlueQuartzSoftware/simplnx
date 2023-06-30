@@ -55,6 +55,8 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("ComplexCore::WriteStlFileFilter: Valid Filter Execution", "[ComplexCore][WriteStlFileFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_write_stl_test.tar.gz", "6_6_write_stl_test");
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteStlFileFilter filter;
   auto exemplarFilePath = fs::path(fmt::format("{}/exemplar.dream3d", k_ExemplarDir));
