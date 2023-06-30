@@ -14,12 +14,12 @@
 #include <fstream>
 
 #ifdef _WIN32
-#include <direct.h>
-#include <objbase.h>
-#include <winioctl.h>
 #include <accctrl.h>
-#include <shlobj.h>
+#include <direct.h>
 #include <fileapi.h>
+#include <objbase.h>
+#include <shlobj.h>
+#include <winioctl.h>
 #endif
 
 namespace fs = std::filesystem;
@@ -40,8 +40,22 @@ constexpr uint64 k_SingleFile = 1;        // enum representation
 } // namespace
 
 #if _WIN32
+
+std::vector<UINT> CheckAllDrives()
+{
+  std::vector<UINT> ret;
+  for(char letter = 'A'; letter < 'Z'; letter++)
+  {
+    const UINT driveType = GetDriveTypeA(&letter);
+    ret.push_back(driveType);
+    std::cout << letter << "   " << driveType << std::endl;
+  }
+  return ret;
+}
+
 static inline bool isDriveReady(const wchar_t* path)
 {
+  std::cout << "Checking Drive: " << std::string(path, path + 2) << std::endl;
   DWORD fileSystemFlags;
   const UINT driveType = GetDriveTypeW(path);
   return (driveType != DRIVE_REMOVABLE && driveType != DRIVE_CDROM) || GetVolumeInformationW(path, nullptr, 0, nullptr, nullptr, &fileSystemFlags, nullptr, 0) == TRUE;
@@ -49,24 +63,27 @@ static inline bool isDriveReady(const wchar_t* path)
 
 std::vector<std::string> drives()
 {
-  std::vector<std::string> ret;
+  std::vector<std::string> ret(26, "");
   const UINT oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
   uint32_t driveBits = static_cast<uint32_t>(GetLogicalDrives()) & 0x3ffffff;
   std::wstring driveName(L"A:\\");
   std::string str(driveName.begin(), driveName.end());
 
+  size_t driveIndex = 0;
   while(driveBits)
   {
     if((driveBits & 1) && isDriveReady(driveName.data()))
     {
-      ret.push_back({driveName.begin(), driveName.end()});
+      ret[driveIndex] = {driveName.begin(), driveName.end()};
     }
+    driveIndex++;
     driveName[0]++;
     driveBits = driveBits >> 1;
   }
   ::SetErrorMode(oldErrorMode);
   return ret;
 }
+
 #endif
 
 // -----------------------------------------------------------------------------
@@ -283,11 +300,21 @@ TEST_CASE("ComplexCore::WriteBinaryData:Invalid Filter Execution")
   // Most Unix users don't have write privs on "/". If they do then this test fails and we fix this test
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
   std::vector<std::string> availableDrives = drives();
-  std::string invalidPath = fmt::format("{}{}", availableDrives[0], millisFromEpoch);
+  std::string invalidPath;
+  for(size_t dlIndex = 2; dlIndex < 26; dlIndex++)
+  {
+    std::cout << "Check Available Drive: " << static_cast<char>(dlIndex + 65) << std::endl;
+    if(availableDrives[dlIndex].empty())
+    {
+      invalidPath = fmt::format("{}:/{}", static_cast<char>(dlIndex + 65), millisFromEpoch);
+      break;
+    }
+  }
 #else
   std::string invalidPath = fmt::format("/{}", millisFromEpoch);
 #endif
 
+  std::cout << "InvalidPath: '" << invalidPath << "'" << std::endl;
   // Create default Parameters for the filter.
   args.insertOrAssign(WriteBinaryDataFilter::k_Endianess_Key, std::make_any<ChoicesParameter::ValueType>(0)); // uint64 0 and 1
   args.insertOrAssign(WriteBinaryDataFilter::k_OutputPath_Key, std::make_any<fs::path>(invalidPath));
