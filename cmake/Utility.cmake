@@ -110,19 +110,19 @@ function(download_test_data)
   # Create the custom CMake File for this archive file
   #----------------------------------------------------------------------------
   set(fetch_data_file "${test_files_dir}/${ARGS_ARCHIVE_NAME}.cmake")
+  set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+  # Strip off the .tar.gz extension
+  string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
+
   configure_file(${complex_SOURCE_DIR}/cmake/FetchDataFile.cmake.in
                 ${fetch_data_file}
                 @ONLY
   )
-  # Read the file back into a string and append it to the master file
+  # Read the file back into a string 
   file(READ "${fetch_data_file}" FETCH_FILE_CONTENTS)
-#  file(APPEND "${FETCH_FILE_PATH}" "\n\n#----------------------------------------------------------------------------
-## Download and decompress for `${ARGS_ARCHIVE_NAME}`
-##----------------------------------------------------------------------------\n"
-#  )
+  # Append the string to the master file
   file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
-
-  string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
+  file(REMOVE "${fetch_data_file}") # Remove the temporary file
 
   if(ARGS_COPY_DATA)
     set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
@@ -133,17 +133,30 @@ function(download_test_data)
                    )
     file(READ "${fetch_data_file}" FETCH_FILE_CONTENTS)
     file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
-
-
-#    add_custom_target(Copy_${ARGS_ARCHIVE_NAME} ALL
-#                      COMMAND ${CMAKE_COMMAND} -E copy_directory ${ARGS_DREAM3D_DATA_DIR}/TestFiles/${ARCHIVE_BASE_NAME} ${DATA_DEST_DIR}/${ARCHIVE_BASE_NAME}
-#                      COMMENT "Copying ${ARCHIVE_BASE_NAME} into Binary Directory"
-#                      DEPENDS Fetch_Remote_Data_Files)
+    file(REMOVE "${fetch_data_file}")
   endif()
 
+  #-----
+  # If we are installing the data files then we need to create a custom install
+  # rule to ensure the archive contents are actually decompressed and available. Since
+  # we are possibly making a copy into the binary directory, use that as the source
+  # location of the data. Running the unit tests might remove the decompressed data
+  # as a by product.
   if(ARGS_INSTALL)
+    # If we did NOT already copy the data, then do that now during the build
+    if(NOT ARGS_COPY_DATA)
+      set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+      configure_file(${complex_SOURCE_DIR}/cmake/CopyDataFile.cmake.in
+                    ${fetch_data_file}
+                    @ONLY
+                    )
+      file(READ "${fetch_data_file}" FETCH_FILE_CONTENTS)
+      file(APPEND "${FETCH_FILE_PATH}" "${FETCH_FILE_CONTENTS}")
+      file(REMOVE "${fetch_data_file}")
+    endif()
+
     install(DIRECTORY
-            ${DREAM3D_DATA_DIR_NORM}/TestFiles/${ARCHIVE_BASE_NAME}
+            "${DATA_DEST_DIR}/${ARCHIVE_BASE_NAME}"
             DESTINATION Data/
             COMPONENT Applications
             )

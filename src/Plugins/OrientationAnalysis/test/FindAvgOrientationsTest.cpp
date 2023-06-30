@@ -87,6 +87,8 @@ void runImportTextFilter(const std::string k_InputFileName, complex::NumericType
 
 TEST_CASE("OrientationAnalysis::FindAvgOrientations", "[OrientationAnalysis][FindAvgOrientations]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
+
   // Instantiate an "Application" instance to load plugins
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);

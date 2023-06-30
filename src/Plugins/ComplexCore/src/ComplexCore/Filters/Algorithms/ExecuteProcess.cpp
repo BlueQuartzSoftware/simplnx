@@ -82,7 +82,7 @@ Result<> ExecuteProcess::operator()()
   else if(ec)
   {
     outFile.close();
-    return MakeErrorResult<>(-56410, fmt::format("An error occured while starting process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+    return MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
   }
 
   std::string output;
@@ -93,7 +93,7 @@ Result<> ExecuteProcess::operator()()
     if(ec)
     {
       outFile.close();
-      return MakeErrorResult<>(-56413, fmt::format("An error occured while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
     }
     outFile << output;
   }

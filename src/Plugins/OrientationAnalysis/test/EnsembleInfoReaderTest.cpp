@@ -27,15 +27,6 @@ void WriteTestFile(const std::string& filePath, const std::string& groups)
   REQUIRE(ofs.good());
   ofs << groups;
   ofs.close();
-
-  // FILE* f = nullptr;
-  // f = fopen(filePath.data(), "wb");
-  // if(nullptr == f)
-  //{
-  //   REQUIRE(0 == 1);
-  // }
-  // fprintf(f, "%s", groups.data());
-  // fclose(f);
 }
 } // namespace
 

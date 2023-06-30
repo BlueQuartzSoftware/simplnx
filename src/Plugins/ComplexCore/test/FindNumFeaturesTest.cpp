@@ -29,6 +29,9 @@ TEST_CASE("ComplexCore::FindNumFeaturesFilter: Valid filter execution", "[Comple
   FindNumFeaturesFilter filter;
   Arguments args;
 
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
+                                                             "6_6_volume_fraction_feature_count.dream3d");
+
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
@@ -58,6 +61,9 @@ TEST_CASE("ComplexCore::FindNumFeaturesFilter: InValid filter execution", "[Comp
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindNumFeaturesFilter filter;
   Arguments args;
+
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
+                                                             "6_6_volume_fraction_feature_count.dream3d");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 

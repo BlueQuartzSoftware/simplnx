@@ -28,6 +28,9 @@ const DataPath k_WrongSurfaceFeaturePath({Constants::k_SmallIN100, Constants::k_
 
 TEST_CASE("ComplexCore::FindBiasedFeaturesFilter: Valid filter execution", "[FindBiasedFeaturesFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz",
+                                                             "6_6_find_biased_features.dream3d");
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_biased_features.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -77,6 +80,9 @@ TEST_CASE("ComplexCore::FindBiasedFeaturesFilter: Valid filter execution", "[Fin
 
 TEST_CASE("ComplexCore::FindBiasedFeaturesFilter: Invalid filter execution", "[FindBiasedFeaturesFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz",
+                                                             "6_6_find_biased_features.dream3d");
+
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_biased_features.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

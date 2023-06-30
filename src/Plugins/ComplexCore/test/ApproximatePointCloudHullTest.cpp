@@ -124,11 +124,7 @@ TEST_CASE("ComplexCore::ApproximatePointCloudHull: Instantiate Filter", "[Approx
   }
 
   // Write out the DataStructure
-  {
-    Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/ApproximatePointCloudHull.dream3d", unit_test::k_BinaryTestOutputDir));
-    complex::HDF5::FileWriter fileWriter = std::move(result.value());
-
-    auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-    COMPLEX_RESULT_REQUIRE_VALID(resultH5);
-  }
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/ApproximatePointCloudHull.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 }

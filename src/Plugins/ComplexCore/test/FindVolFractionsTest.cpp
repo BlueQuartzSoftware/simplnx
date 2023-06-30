@@ -28,6 +28,9 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: Valid filter execution", "[Compl
   FindVolFractionsFilter filter;
   Arguments args;
 
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
+                                                             "6_6_volume_fraction_feature_count.dream3d");
+
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
   // Create default Parameters for the filter.
@@ -58,6 +61,9 @@ TEST_CASE("ComplexCore::FindVolFractionsFilter: InValid filter execution", "[Com
   // Instantiate the filter, a DataStructure object and an Arguments Object
   FindVolFractionsFilter filter;
   Arguments args;
+
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
+                                                             "6_6_volume_fraction_feature_count.dream3d");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_volFractions_and_numFeatures_test.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);

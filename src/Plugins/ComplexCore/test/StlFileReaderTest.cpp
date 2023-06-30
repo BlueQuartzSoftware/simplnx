@@ -43,9 +43,8 @@ TEST_CASE("ComplexCore::StlFileReaderFilter", "[ComplexCore][StlFileReaderFilter
   REQUIRE(triangleGeom.getNumberOfFaces() == 92);
   REQUIRE(triangleGeom.getNumberOfVertices() == 48);
 
-  Result<complex::HDF5::FileWriter> result = complex::HDF5::FileWriter::CreateFile(fmt::format("{}/StlFileReaderTest.dream3d", unit_test::k_BinaryTestOutputDir));
-  complex::HDF5::FileWriter fileWriter = std::move(result.value());
-
-  auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
-  COMPLEX_RESULT_REQUIRE_VALID(resultH5);
+  // Write the DataStructure out to the file system
+#ifdef COMPLEX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/StlFileReaderTest.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
 }

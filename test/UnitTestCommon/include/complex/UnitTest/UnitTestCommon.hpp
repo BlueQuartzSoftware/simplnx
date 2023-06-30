@@ -17,13 +17,18 @@
 #include "complex/Parameters/ArrayThresholdsParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/GeometrySelectionParameter.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "complex/Utilities/Parsing/HDF5/Writers/FileWriter.hpp"
 
 #include <catch2/catch.hpp>
+
 #include <fmt/format.h>
 
+#include <reproc++/run.hpp>
+
 #include <algorithm>
+#include <filesystem>
 
 namespace fs = std::filesystem;
 using namespace complex;
@@ -204,6 +209,76 @@ inline constexpr float EPSILON = 0.0001;
 
 struct make_shared_enabler : public complex::Application
 {
+};
+
+/**
+ * @brief This class will decompress a tar.gz file using the locally installed copy of cmake and when
+ * then class goes out of scope the extracted contents will be deleted from disk.
+ */
+class TestFileSentinel
+{
+public:
+  /**
+   * @brief Construct a File Sentinel object that will decompress on construction and remove the
+   * contents on destruction.
+   *
+   * This class uses the actual CMake executable to do the decompression and the removal.
+   *
+   * @param cmakeExecutable The absolute path to the cmake(.exe) executable.
+   * @param testFilesDir The directory where the archive is located
+   * @param inputArchiveName The full name of the archive. The location is assumed to be in the TestFiles directory
+   * @param expectedTopLevelOutput The name of the decompressed folder or file. WARNING: This assumes
+   * that only a single file or single directory are part of the archive. In the case of a directory, the
+   * directory itself can have as many subdirectories as needed.
+   */
+  TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput)
+  : m_CMakeExecutable(std::move(cmakeExecutable))
+  , m_TestFilesDir(std::move(testFilesDir))
+  , m_InputArchiveName(std::move(inputArchiveName))
+  , m_ExpectedTopLevelOutput(std::move(expectedTopLevelOutput))
+  {
+    const auto result = decompress();
+    REQUIRE(result);
+  }
+
+  ~TestFileSentinel()
+  {
+    std::error_code errorCode;
+    std::filesystem::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
+    if(errorCode)
+    {
+      std::cout << "Removing decompressed data failed: " << errorCode.message() << std::endl;
+    }
+  }
+
+  TestFileSentinel(const TestFileSentinel&) = delete;            // Copy Constructor Not Implemented
+  TestFileSentinel(TestFileSentinel&&) = delete;                 // Move Constructor Not Implemented
+  TestFileSentinel& operator=(const TestFileSentinel&) = delete; // Copy Assignment Not Implemented
+  TestFileSentinel& operator=(TestFileSentinel&&) = delete;      // Move Assignment Not Implemented
+
+  /**
+   * @brief Does the actual decompression of the archive.
+   * @return
+   */
+  bool decompress()
+  {
+    reproc::options options;
+    options.redirect.parent = true;
+    options.deadline = reproc::milliseconds(600000);
+    options.working_directory = m_TestFilesDir.c_str();
+
+    std::vector<std::string> args = {m_CMakeExecutable, "-E", "tar", "xvzf", fmt::format("{}/{}", m_TestFilesDir, m_InputArchiveName)};
+
+    auto&& [status, ec] = reproc::run(args, options);
+
+    return !ec;
+  }
+
+private:
+  std::string m_CMakeExecutable;
+  std::string m_TestFilesDir;
+  std::string m_InputArchiveName;
+  std::string m_ExpectedTopLevelOutput;
 };
 
 /**

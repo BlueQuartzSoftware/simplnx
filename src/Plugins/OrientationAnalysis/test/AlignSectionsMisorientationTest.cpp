@@ -37,6 +37,15 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline", "[OrientationAnalysis][AlignSectionsMisorientation]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_align_sections_misorientation.tar.gz",
+                                                             "6_6_align_sections_misorientation.dream3d");
+
+  const complex::UnitTest::TestFileSentinel testDataSentinel1(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "Small_IN100_dream3d.tar.gz", "Small_IN100.dream3d");
+
+  const std::string kDataInputArchive2 = "align_sections.tar.gz";
+  const std::string kExpectedOutputTopLevel2 = "align_sections_misorientation.txt";
+  const complex::UnitTest::TestFileSentinel testDataSentinel2(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, kDataInputArchive2, kExpectedOutputTopLevel2);
+
   // We are just going to generate a big number so that we can use that in the output
   // file path. This tests the creation of intermediate directories that the filter
   // would be responsible to create.

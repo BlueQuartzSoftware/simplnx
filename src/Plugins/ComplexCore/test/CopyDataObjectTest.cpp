@@ -83,7 +83,7 @@ TEST_CASE("ComplexCore::CopyDataObjectFilter(Invalid Parameters)", "[ComplexCore
     auto result = filter.preflight(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_INVALID(result.outputActions);
   }
-  SECTION("Copy data new parent tuple mimatch")
+  SECTION("Copy data new parent tuple mismatch")
   {
     auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "TestAttributeMatrix", {10, 5, 1});
 

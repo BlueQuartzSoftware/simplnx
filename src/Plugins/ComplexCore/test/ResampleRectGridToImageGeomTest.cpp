@@ -26,6 +26,9 @@ const std::string k_StringArrayName = "StringArray";
 
 TEST_CASE("ComplexCore::ResampleRectGridToImageGeomFilter: Valid Filter Execution", "[ComplexCore][ResampleRectGridToImageGeomFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_resample_rect_grid_to_image_geom.tar.gz",
+                                                             "6_6_resample_rect_grid_to_image_geom.dream3d");
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ResampleRectGridToImageGeomFilter filter;
   DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_resample_rect_grid_to_image_geom.dream3d", unit_test::k_TestFilesDir)));
@@ -85,6 +88,8 @@ TEST_CASE("ComplexCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
 
 TEST_CASE("ComplexCore::ResampleRectGridToImageGeomFilter: InValid Filter Execution")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_resample_rect_grid_to_image_geom.tar.gz",
+                                                             "6_6_resample_rect_grid_to_image_geom.dream3d");
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ResampleRectGridToImageGeomFilter filter;
   DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_resample_rect_grid_to_image_geom.dream3d", unit_test::k_TestFilesDir)));

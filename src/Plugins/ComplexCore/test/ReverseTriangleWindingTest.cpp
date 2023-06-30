@@ -16,6 +16,8 @@ const DataPath k_TriangleGeomPath = DataPath({Constants::k_DataContainer});
 
 TEST_CASE("ComplexCore::ReverseTriangleWindingFilter: Valid Filter Execution", "[ComplexCore][ReverseTriangleWindingFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "reverse_triangle_winding.tar.gz", "reverse_triangle_winding");
+
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/reverse_triangle_winding/6_6_exemplar_triangle_winding.dream3d", unit_test::k_TestFilesDir)));
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/reverse_triangle_winding/6_6_reverse_triangle_winding.dream3d", unit_test::k_TestFilesDir)));
