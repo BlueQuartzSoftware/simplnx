@@ -114,11 +114,12 @@ jobs:
 #==================================================================================================
   - task: PublishTestResults@2
     inputs:
+      testRunner: CTest
       testResultsFormat: CTest
-      testResultsFiles: $(Build.BinariesDirectory)/Testing/*/Test.xml
-      testRunTitle: CTest_$(Agent.Name)_$(Agent.OS)
+      testResultsFiles: **/Test.xml
+      testRunTitle: $(Agent.Name)_$(Agent.OS)__ $(preset_name)_$(System.PullRequest.PullRequestNumber)
       failTaskOnFailedTests: true
-    displayName: Publish Commercial Test Results
+    displayName: Publish Test Results
 
   # - script: |
   #     cmake -S $(dream3d_source_dir) -B $(Build.BinariesDirectory)-Free -G Ninja -DDREAM3D_ENABLE_DOCUMENTATION=OFF -DDREAM3D_ENABLE_COMMERCIAL_BUILD=OFF -DCMAKE_BUILD_TYPE:STRING=$(build_type) -DDREAM3D_DATA_DIR=$(dream3d_data_dir) -C $(Agent.WorkFolder)/NX.cmake -DCOMPLEX_EXTRA_PLUGINS="Core;ITKImageProcessing;OrientationAnalysis" -DCTEST_BUILD_NAME:STRING="NX-Free-$(Agent.MachineName)-$(Agent.OS)-$(Build.SourceBranchName)_$(Build.BuildNumber)"
