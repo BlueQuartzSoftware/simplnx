@@ -274,11 +274,11 @@ endif()
 # -----------------------------------------------------------------------
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
   set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
-  add_custom_target(${PLUGIN_NAME}PipelineFolderCopy ALL
+  add_custom_target(Copy_${PLUGIN_NAME}_Pipeline_Folder ALL
                     COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
                     ${PIPELINE_DEST_DIR}
                     COMMENT "Copying Pipeline Folder into Binary Directory")
-  set_target_properties(${PLUGIN_NAME}PipelineFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
+  set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
   install(DIRECTORY
@@ -323,7 +323,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                    COMMENT "Copying ${PLUGIN_NAME}/Porosity_Image data into Binary Directory"
                    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
                  )
-              
+  set_target_properties(Copy_${PLUGIN_NAME}_Porosity_Image PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 endif()
 
 # -----------------------------------------------------------------------
@@ -337,8 +337,7 @@ if(FALSE)
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
     COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
     )
-  set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER ZZ_COPY_FILES)
-
+  set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   set(Installed_Data_Files
   )

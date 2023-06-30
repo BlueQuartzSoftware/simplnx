@@ -272,11 +272,11 @@ add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
 # -----------------------------------------------------------------------
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
   set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
-  add_custom_target(${PLUGIN_NAME}_Pipeline_Folder_Copy ALL
+  add_custom_target(Copy_${PLUGIN_NAME}_Pipeline_Folder ALL
                     COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
                     ${PIPELINE_DEST_DIR}
                     COMMENT "Copying Pipeline Folder into Binary Directory")
-  set_target_properties(${PLUGIN_NAME}_Pipeline_Folder_Copy PROPERTIES FOLDER ZZ_COPY_FILES)
+  set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
   install(DIRECTORY
@@ -316,6 +316,8 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                    COMMENT "Copying ${PLUGIN_NAME}/T12-MAI-2010 data into Binary Directory"
                    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
                  )
+  set_target_properties(Copy_${PLUGIN_NAME}_T12-MAI-2010 PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
+
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
                     ARCHIVE_NAME Textured_Copper.tar.gz 
                     SHA512 cb231a13abbc21fe2046fc0fc7be9753ea51440bce1827bd20ee225499cd38be07d67955ff8c09d15ad91c4c1934e2a0e34406a703e7e49fbe53068b29ef440e
@@ -329,6 +331,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                    COMMENT "Copying ${PLUGIN_NAME}/Textured_Copper data into Binary Directory"
                    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
                  )
+  set_target_properties(Copy_${PLUGIN_NAME}_Textured_Copper PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} 
                     ARCHIVE_NAME Small_IN100.tar.gz 
@@ -342,6 +345,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                    COMMENT "Copying ${PLUGIN_NAME}/Small_IN100 data into Binary Directory"
                    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
                  )                   
+  set_target_properties(Copy_${PLUGIN_NAME}_Small_IN100 PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 endif()
 # -----------------------------------------------------------------------
 # Create build folder copy rules and install rules for the 'data' folder
@@ -351,7 +355,7 @@ add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
   COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
   )
-set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER ZZ_COPY_FILES)
+set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
 set(Installed_Data_Files
   ${${PLUGIN_NAME}_SOURCE_DIR}/data/Ensemble.ini
