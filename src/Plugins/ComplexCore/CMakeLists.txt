@@ -354,12 +354,28 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
 									 SHA512 70388864301ca1ea7fce7b1666d3abf682eee68c7d8b7a9bf532df7aff11e7ea9de7dc2dc80e33f0e363cbad023b663bff97df4be362f0312d311e9d5bedf370
 									 INSTALL
 									 COPY_DATA)
+  add_custom_target(Copy_${PLUGIN_NAME}ASCIIData ALL
+                  COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData.tar.gz" 
+                  COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData" "${DATA_DEST_DIR}/ASCIIData"
+                  COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData"
+                  WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
+                  COMMENT "Copying ${PLUGIN_NAME}/ASCIIData data into Binary Directory"
+                  DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+                )
 
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 									 ARCHIVE_NAME STL_Models.tar.gz
 									 SHA512 14d5bbb1dcc241a5ad9b17e7647144926f22fca9af5e426798c2ed423d8d3b5d89d8c66ce9e6854bfcdbaea7f72b69980477ab837498e3dca89b5cd2870e2cff
 									 INSTALL
 									 COPY_DATA)
+  add_custom_target(Copy_${PLUGIN_NAME}_STL_Models ALL
+                  COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models.tar.gz" 
+                  COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/STL_Models" "${DATA_DEST_DIR}/STL_Models"
+                  COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models"
+                  WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
+                  COMMENT "Copying ${PLUGIN_NAME}/STL_Models data into Binary Directory"
+                  DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+                )
 endif()
 
 # -----------------------------------------------------------------------
