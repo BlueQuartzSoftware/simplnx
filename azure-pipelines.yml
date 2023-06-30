@@ -114,9 +114,9 @@ jobs:
 #==================================================================================================
   - task: PublishTestResults@2
     inputs:
-      testRunner: CTest
-      testResultsFormat: CTest
-      testResultsFiles: **/Test.xml
+      testRunner: 'CTest'
+      testResultsFormat: 'CTest'
+      testResultsFiles: '**/Test.xml'
       testRunTitle: $(Agent.Name)_$(Agent.OS)__ $(preset_name)_$(System.PullRequest.PullRequestNumber)
       failTaskOnFailedTests: true
     displayName: Publish Test Results
