@@ -1,0 +1,148 @@
+
+resources:
+  repositories:
+  - repository: complex
+    type: github
+    endpoint: BlueQuartzSoftware
+    name: BlueQuartzSoftware/complex
+
+trigger:
+  - develop
+
+jobs:
+- job:
+  strategy:
+    matrix:
+      macOS:
+        imageName: Darwin
+        preset_name: ci-macos-x64
+      Windows:
+        imageName: Windows_NT
+        preset_name: ci-windows-v143
+      Linux:
+        imageName: Linux
+        preset_name: ci-linux-x64
+
+  pool:
+    name: BlueQuartz Self Hosted
+    demands:
+      - Agent.OS -equals $(imageName)
+      - BQ.COMPLEX
+
+  workspace:
+    clean: all
+
+  timeoutInMinutes: 120
+
+  variables:
+    dream3d_source_dir: $(Build.Repository.LocalPath)
+    build_type: Release
+    model_type: Experimental
+
+  steps:
+  - checkout: self
+    submodules: true
+
+  - script: |
+      echo System.PullRequest.SourceBranch=$(System.PullRequest.SourceBranch)
+      echo System.PullRequest.PullRequestNumber=$(System.PullRequest.PullRequestNumber)
+      echo Build.SourceBranchName=$(Build.SourceBranchName)
+      echo Build.Repository.Name=$(Build.Repository.Name)
+      echo Build.Repository.Uri=$(Build.Repository.Uri)
+      echo Agent.WorkFolder=$(Agent.WorkFolder)
+      echo Agent.OS=$(Agent.OS)
+      echo Build.BuildNumber=$(Build.BuildNumber)
+      echo preset_name=$(preset_name)
+      echo Build.BinariesDirectory=$(Build.BinariesDirectory)
+    displayName: 'Dump Azure Variables'
+
+#==================================================================================================
+# All Machines Section
+#==================================================================================================
+
+  - script: |
+      cd $(dream3d_source_dir) && cmake --preset $(preset_name) -B $(Build.BinariesDirectory)
+    displayName: "[WIN64] CMake Configure"
+
+  - script: |
+      cd $(Build.BinariesDirectory)
+      cmake --build . --config Release --target ALL_BUILD
+    displayName: "[WIN64] CMake Build"
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+  - script: |
+      cd $(Build.BinariesDirectory)
+      ctest -C Release
+    displayName: "[WIN64] CTest"
+    condition: eq(variables['Agent.OS'], 'Windows_NT')
+
+  - script: |
+      cd $(Build.BinariesDirectory)
+      cmake --build $(Build.BinariesDirectory) --target $(model_type)Start --config $(build_type)
+    displayName: CDash Start
+
+  - script: |
+      cd $(Build.BinariesDirectory)
+      cmake --build $(Build.BinariesDirectory) --target $(model_type)Update --config $(build_type)
+      cd $(Build.BinariesDirectory)
+      cmake --build $(Build.BinariesDirectory) --target $(model_type)Submit --config $(build_type)
+    displayName: CDash Update
+
+  - script: |
+      cd $(Build.BinariesDirectory)
+      ctest -V -C $(build_type) -D $(model_type)Configure
+      ctest -C $(build_type) -D $(model_type)Submit
+    displayName: CDash Configure
+
+  - script: |
+      cd $(Build.BinariesDirectory)
+      ctest -V -C $(build_type) -D $(model_type)Build
+      ctest -C $(build_type) -D $(model_type)Submit
+    displayName: CDash Build
+
+  - script: |
+      cd $(Build.BinariesDirectory)
+      ctest -C $(build_type) -D $(model_type)Test --timeout 7200
+      ctest -C $(build_type) -D $(model_type)Submit
+    continueOnError: true
+    displayName: CDash Test
+
+#==================================================================================================
+# Publish Test Results
+#==================================================================================================
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: CTest
+      testResultsFiles: $(Build.BinariesDirectory)/Testing/*/Test.xml
+      testRunTitle: CTest_$(Agent.Name)_$(Agent.OS)
+      failTaskOnFailedTests: true
+    displayName: Publish Commercial Test Results
+
+  # - script: |
+  #     cmake -S $(dream3d_source_dir) -B $(Build.BinariesDirectory)-Free -G Ninja -DDREAM3D_ENABLE_DOCUMENTATION=OFF -DDREAM3D_ENABLE_COMMERCIAL_BUILD=OFF -DCMAKE_BUILD_TYPE:STRING=$(build_type) -DDREAM3D_DATA_DIR=$(dream3d_data_dir) -C $(Agent.WorkFolder)/NX.cmake -DCOMPLEX_EXTRA_PLUGINS="Core;ITKImageProcessing;OrientationAnalysis" -DCTEST_BUILD_NAME:STRING="NX-Free-$(Agent.MachineName)-$(Agent.OS)-$(Build.SourceBranchName)_$(Build.BuildNumber)"
+  #   displayName: Configure Free DREAM3D
+
+  # - script: |
+  #     cmake --build $(Build.BinariesDirectory)-Free --config $(build_type) --target all
+  #   displayName: Build Free DREAM3D
+
+  # - script: |
+  #     cd $(Build.BinariesDirectory)-Free
+  #     cpack -C $(build_type) --verbose
+  #   continueOnError: false
+  #   displayName: Packing Free DREAM3D
+
+  # - script: |
+  #     cd $(Build.BinariesDirectory)-Free
+  #     ctest -C $(build_type) -D Experimental --timeout 7200 -DCTEST_SITE:STRING=$(Agent.MachineName).bluequartz.net -Ddashboard_source_name:STRING=DREAM3D
+  #   continueOnError: true
+  #   displayName: Testing Free DREAM3D
+
+  # - task: PublishTestResults@2
+  #   inputs:
+  #     testResultsFormat: CTest
+  #     testResultsFiles: $(Build.BinariesDirectory)-Free/Testing/*/Test.xml
+  #     testRunTitle: CTest_$(Agent.Name)_$(Agent.OS)
+  #     failTaskOnFailedTests: true
+  #   displayName: Publish Free Test Results
+    

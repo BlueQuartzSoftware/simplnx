@@ -48,6 +48,14 @@
         "VCPKG_OVERLAY_TRIPLETS": {
           "type": "PATH",
           "value": "${sourceDir}/cmake/triplets"
+        },
+        "SITE": {
+          "type": "STRING",
+          "value": "$env{AGENT_NAME}.bluequartz.net"
+        },
+        "BUILDNAME": {
+          "type": "STRING",
+          "value": "COMPLEX-$env{PRESET_NAME}-$env{BUILD_BUILDNUMBER}-PR$env{SYSTEM_PULLREQUEST_PULLREQUESTNUMBER}"
         }
       }
     },
