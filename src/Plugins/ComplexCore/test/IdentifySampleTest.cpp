@@ -10,8 +10,10 @@ using namespace complex::UnitTest;
 
 TEST_CASE("ComplexCore::IdentifySample : Valid filter execution", "[ComplexCore][IdentifySample]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_identify_sample.tar.gz", "6_6_identify_sample");
+
   // Read Input/Exemplar DREAM3D File data
-  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_identify_sample.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_identify_sample/6_6_identify_sample.dream3d", unit_test::k_TestFilesDir)));
   IdentifySample filter;
   Arguments args;
   args.insert(IdentifySample::k_ImageGeom_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
@@ -43,8 +45,10 @@ TEST_CASE("ComplexCore::IdentifySample : Valid filter execution", "[ComplexCore]
 
 TEST_CASE("ComplexCore::IdentifySample : Invalid filter execution", "[ComplexCore][IdentifySample]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_identify_sample.tar.gz", "6_6_identify_sample");
+
   // Read Input/Exemplar DREAM3D File data
-  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_identify_sample.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_identify_sample/6_6_identify_sample.dream3d", unit_test::k_TestFilesDir)));
   auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellAttributeMatrix);
   const std::string k_InvalidMaskArrayName = "InvalidMaskArray";
   Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_InvalidMaskArrayName, cellDataAM.getShape(), std::vector<usize>{1}, cellDataAM.getId());

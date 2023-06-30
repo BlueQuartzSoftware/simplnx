@@ -16,6 +16,8 @@ using namespace complex::UnitTest;
 
 TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnalysis][ReadCtfData]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_read_ctf_data.tar.gz", "6_6_read_ctf_data");
+
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ctf_data/6_6_read_ctf_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
