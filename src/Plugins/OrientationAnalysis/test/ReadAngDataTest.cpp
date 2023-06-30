@@ -17,7 +17,7 @@ using namespace complex::UnitTest;
 TEST_CASE("OrientationAnalysis::ReadAngData: Valid Execution", "[OrientationAnalysis][ReadAngData]")
 {
   // Read Exemplar DREAM3D File
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ang_data.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ang_data/6_6_read_ang_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -25,7 +25,7 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Valid Execution", "[OrientationAnal
   DataStructure dataStructure;
   Arguments args;
 
-  const fs::path inputAngFile(fmt::format("{}/Data/SmallIN100/Slice_1.ang", unit_test::k_DREAM3DDataDir));
+  const fs::path inputAngFile(fmt::format("{}/6_6_read_ang_data/Slice_1.ang", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadAngDataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(inputAngFile));

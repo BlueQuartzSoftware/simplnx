@@ -14,10 +14,10 @@ using namespace complex;
 using namespace complex::Constants;
 using namespace complex::UnitTest;
 
-TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnalysis][ReadCtfData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnalysis][ReadCtfData]")
 {
   // Read Exemplar DREAM3D File
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ctf_data.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ctf_data/6_6_read_ctf_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -25,7 +25,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnal
   DataStructure dataStructure;
   Arguments args;
 
-  const fs::path inputCtfFile(fmt::format("{}/Data/Textured_Copper/Cugrid_after 2nd_15kv_2kx_2.ctf", unit_test::k_DREAM3DDataDir));
+  const fs::path inputCtfFile(fmt::format("{}/6_6_read_ctf_data/Cugrid_after 2nd_15kv_2kx_2.ctf", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadCtfDataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(inputCtfFile));
