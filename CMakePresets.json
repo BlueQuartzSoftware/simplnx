@@ -116,6 +116,40 @@
       }
     },
     {
+      "name": "azure-windows-v143",
+      "displayName": "azure-windows-v143",
+      "description": "Build configuration for Azure Actions CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v143"
+        }
+      }
+    },
+    {
+      "name": "azure-windows-v142",
+      "displayName": "azure-windows-v142",
+      "description": "Build configuration for Azure Actions CI",
+      "generator": "Ninja",
+      "inherits": "ci",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v142"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-windows-v142"
+        }
+      }
+    },
+    {
       "name": "ci-macos-x64",
       "displayName": "ci-macos-x64",
       "description": "Build configuration for GitHub Actions CI",

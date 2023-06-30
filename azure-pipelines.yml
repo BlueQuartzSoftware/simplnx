@@ -16,9 +16,12 @@ jobs:
       macOS:
         imageName: Darwin
         preset_name: ci-macos-x64
-      Windows:
+      Windows-143:
         imageName: Windows_NT
-        preset_name: ci-windows-v143
+        preset_name: azure-windows-v143
+      Windows-142:
+        imageName: Windows_NT
+        preset_name: azure-windows-v142
       Linux:
         imageName: Linux
         preset_name: ci-linux-x64
@@ -63,17 +66,17 @@ jobs:
       cd $(dream3d_source_dir) && cmake --preset $(preset_name) -B $(Build.BinariesDirectory)
     displayName: "CMake Configure"
 
-  - script: |
-      cd $(Build.BinariesDirectory)
-      cmake --build . --config Release --target ALL_BUILD
-    displayName: "[WIN64] CMake Build"
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
+  # - script: |
+  #     cd $(Build.BinariesDirectory)
+  #     cmake --build . --config Release --target ALL_BUILD
+  #   displayName: "[WIN64] CMake Build"
+  #   condition: eq(variables['Agent.OS'], 'Windows_NT')
 
-  - script: |
-      cd $(Build.BinariesDirectory)
-      ctest -C Release
-    displayName: "[WIN64] CTest"
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
+  # - script: |
+  #     cd $(Build.BinariesDirectory)
+  #     ctest -C Release
+  #   displayName: "[WIN64] CTest"
+  #   condition: eq(variables['Agent.OS'], 'Windows_NT')
 
   - script: |
       cd $(Build.BinariesDirectory)
