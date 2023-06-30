@@ -59,10 +59,9 @@ jobs:
 #==================================================================================================
 # All Machines Section
 #==================================================================================================
-
   - script: |
       cd $(dream3d_source_dir) && cmake --preset $(preset_name) -B $(Build.BinariesDirectory)
-    displayName: "[WIN64] CMake Configure"
+    displayName: "CMake Configure"
 
   - script: |
       cd $(Build.BinariesDirectory)
