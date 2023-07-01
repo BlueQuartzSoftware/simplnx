@@ -128,15 +128,15 @@ void ImageGeom::setOrigin(float32 x, float32 y, float32 z)
 
 BoundingBox<float32> ImageGeom::getBoundingBoxf() const
 {
-  std::array<float32, 6> arr{m_Origin[0], m_Origin[0] + (m_Dimensions[0] * m_Spacing[0]), m_Origin[1], m_Origin[1] + (m_Dimensions[1] * m_Spacing[1]),
-                             m_Origin[2], m_Origin[2] + (m_Dimensions[2] * m_Spacing[2])};
+  std::array<float32, 6> arr{
+      m_Origin[0], m_Origin[1], m_Origin[2], m_Origin[0] + (m_Dimensions[0] * m_Spacing[0]), m_Origin[1] + (m_Dimensions[1] * m_Spacing[1]), m_Origin[2] + (m_Dimensions[2] * m_Spacing[2])};
   return BoundingBox<float32>(arr);
 }
 
 BoundingBox<float64> ImageGeom::getBoundingBox() const
 {
-  std::array<float64, 6> arr{m_Origin[0], m_Origin[0] + (m_Dimensions[0] * m_Spacing[0]), m_Origin[1], m_Origin[1] + (m_Dimensions[1] * m_Spacing[1]),
-                             m_Origin[2], m_Origin[2] + (m_Dimensions[2] * m_Spacing[2])};
+  std::array<float64, 6> arr{
+      m_Origin[0], m_Origin[1], m_Origin[2], m_Origin[0] + (m_Dimensions[0] * m_Spacing[0]), m_Origin[1] + (m_Dimensions[1] * m_Spacing[1]), m_Origin[2] + (m_Dimensions[2] * m_Spacing[2])};
   return BoundingBox<float64>(arr);
 }
 
