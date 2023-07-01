@@ -23,6 +23,9 @@ const std::string k_mPrimes = "SurfaceMeshmPrimes";
 
 TEST_CASE("OrientationAnalysis::FindSlipTransmissionMetricsFilter: Valid Filter Execution", "[OrientationAnalysis][FindSlipTransmissionMetricsFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission.tar.gz",
+                                                             "feature_boundary_neighbor_slip_transmission");
+
   DataStructure dataStructure =
       UnitTest::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));
   {
