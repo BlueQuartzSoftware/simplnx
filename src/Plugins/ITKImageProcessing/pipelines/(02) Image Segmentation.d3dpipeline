@@ -102,9 +102,9 @@
     },
     {
       "args": {
-        "created_array_name": "EquivalentDiameters",
+        "created_array_suffix": "",
         "feature_ids_path": "ImageDataContainer/Cell Data/FeatureIds",
-        "selected_feature_array_path": "ImageDataContainer/CellFeatureData/EquivalentDiameters"
+        "selected_feature_array_path": ["ImageDataContainer/CellFeatureData/EquivalentDiameters"]
       },
       "comments": "",
       "filter": {
