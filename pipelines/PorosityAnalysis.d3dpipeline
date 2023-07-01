@@ -102,9 +102,9 @@
     },
     {
       "args": {
-        "created_array_name": "EquivalentDiameters",
+        "created_array_suffix": "",
         "feature_ids_path": "RoboMet.3D Image Stack/Optical Data/FeatureIds",
-        "selected_feature_array_path": "RoboMet.3D Image Stack/Pore Data/EquivalentDiameters"
+        "selected_feature_array_path": ["RoboMet.3D Image Stack/Pore Data/EquivalentDiameters"]
       },
       "comments": "",
       "filter": {
