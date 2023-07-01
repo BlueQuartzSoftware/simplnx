@@ -119,6 +119,11 @@ public:
     m_Filter->sendThreadSafeInfoMessage(fmt::format("Storing Results Feature/Ensemble Range [{}-{}]", start, end));
     progressIncrement = numCurrentFeatures / 100;
     progressCount = 0;
+    std::vector<float32> meanArray;
+    if(m_StdDeviation && !m_Mean)
+    {
+      meanArray.resize(numCurrentFeatures);
+    }
     for(usize j = start; j < end; j++)
     {
       if(shouldCancel)
@@ -159,6 +164,10 @@ public:
       if(m_Mean)
       {
         m_MeanArray->initializeTuple(j, meanValue);
+      }
+      else if(m_StdDeviation)
+      {
+        meanArray[localFeatureIndex] = meanValue;
       }
 
       if(m_Histogram && histDataStorePtr != nullptr)
@@ -247,7 +256,8 @@ public:
           continue;
         }
 
-        sumOfDiffs[featureId - start] += static_cast<float64>((m_Source[tupleIndex] - m_MeanArray->operator[](featureId)) * (m_Source[tupleIndex] - m_MeanArray->operator[](featureId)));
+        const float32 meanVal = m_Mean ? m_MeanArray->operator[](featureId) : meanArray[featureId - start];
+        sumOfDiffs[featureId - start] += static_cast<float64>((m_Source[tupleIndex] - meanVal) * (m_Source[tupleIndex] - meanVal));
 
         progressCount++;
         now = std::chrono::steady_clock::now();
@@ -262,7 +272,8 @@ public:
       for(usize j = 0; j < numCurrentFeatures; j++)
       {
         // Set the value into the output array
-        m_StdDevArray->operator[](j + start) = static_cast<float32>(std::sqrt(sumOfDiffs[j] / static_cast<float64>(m_LengthArray->operator[](j + start))));
+        const uint64 lengthVal = m_Length ? m_LengthArray->operator[](j + start) : length[j];
+        m_StdDevArray->operator[](j + start) = static_cast<float32>(std::sqrt(sumOfDiffs[j] / static_cast<float64>(lengthVal)));
       }
     }
 
