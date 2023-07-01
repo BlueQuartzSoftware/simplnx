@@ -316,7 +316,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                    INSTALL
                    )
   add_custom_target(Copy_${PLUGIN_NAME}_Porosity_Image ALL
-                   COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image.tar.gz" 
+                   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image.tar.gz" 
                    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image" "${DATA_DEST_DIR}/Porosity_Image"
                    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image"
                    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
