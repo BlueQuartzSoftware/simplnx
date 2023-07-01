@@ -89,13 +89,12 @@ void FindBiasedFeatures::findBoundingBoxFeatures()
     const BoundingBox3D<float32> bb = imageGeometry.getBoundingBoxf();
 
     auto min = bb.getMinPoint();
-    boundBox[0] = min.getX();
-    boundBox[1] = min.getY();
-    boundBox[2] = min.getZ();
-
     auto max = bb.getMaxPoint();
-    boundBox[3] = max.getX();
-    boundBox[4] = max.getY();
+    boundBox[0] = min.getX();
+    boundBox[1] = max.getX();
+    boundBox[2] = min.getY();
+    boundBox[3] = max.getY();
+    boundBox[4] = min.getZ();
     boundBox[5] = max.getZ();
 
     for(usize i = 1; i < size; i++)

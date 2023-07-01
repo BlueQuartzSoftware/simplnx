@@ -13,14 +13,15 @@ FloatVec6 DetermineMinMaxCoords(const ImageGeom& imageGeometry, const Matrix4fR&
   auto min = origImageGeomBox.getMinPoint();
   auto max = origImageGeomBox.getMaxPoint();
   // clang-format off
-  std::vector<FloatVec3> imageGeomCornerCoords = {{min[0], min[2], max[1]},
-                                                  {min[1], min[2], max[1]},
-                                                  {min[1], max[0], max[1]},
-                                                  {min[0], max[0], max[1]},
-                                                  {min[0], min[2], max[2]},
-                                                  {min[1], min[2], max[2]},
-                                                  {min[1], max[0], max[2]},
-                                                  {min[0], max[0], max[2]}};
+  std::vector<FloatVec3> imageGeomCornerCoords = {{min[0], min[1], min[2]},
+                                                  {min[0], min[1], max[2]},
+                                                  {min[0], max[1], min[2]},
+                                                  {min[0], max[1], max[2]},
+                                                  {max[0], min[1], min[2]},
+                                                  {max[0], min[1], max[2]},
+                                                  {max[0], max[1], min[2]},
+                                                  {max[0], max[1], max[2]}};
+
   // clang-format on
   FloatVec6 minMaxValues = {std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
                             -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max()};
