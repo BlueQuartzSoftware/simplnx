@@ -306,7 +306,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                    INSTALL
                    )
   add_custom_target(Copy_${PLUGIN_NAME}_T12-MAI-2010 ALL
-                   COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/T12-MAI-2010.tar.gz" 
+                   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/T12-MAI-2010.tar.gz" 
                    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/T12-MAI-2010" "${DATA_DEST_DIR}/T12-MAI-2010"
                    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/T12-MAI-2010"
                    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
@@ -319,7 +319,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                    INSTALL
                    )
   add_custom_target(Copy_${PLUGIN_NAME}_Textured_Copper ALL
-                   COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/Textured_Copper.tar.gz" 
+                   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/Textured_Copper.tar.gz" 
                    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/Textured_Copper" "${DATA_DEST_DIR}/Textured_Copper"
                    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/Textured_Copper"
                    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
@@ -332,7 +332,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                     SHA512 79e9f6948d4e8e06187e11216a67596fa786ffd2700e51f594ad014090383eb8bcc003e14de2e88082aa9ae512cc4fc9cee22c80066fc54f38c3ebc75267eb5b
                     INSTALL)
   add_custom_target(Copy_${PLUGIN_NAME}_Small_IN100 ALL
-                   COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/Small_IN100.tar.gz" 
+                   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/Small_IN100.tar.gz" 
                    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/Small_IN100" "${DATA_DEST_DIR}/Small_IN100"
                    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/Small_IN100"
                    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
@@ -367,7 +367,7 @@ download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
                     SHA512 68cf620d28a515d04040d66c4f8fa9d8d46707c65138b366b47f40d1d56a36c40e2e2cd0c9d35168b68c2cb5b2ce95650fa2a0d4e6ffce980d0dd0654908f40d
                     )
 add_custom_target(Copy_${PLUGIN_NAME}_H5Data ALL
-  COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data.tar.gz" 
+  COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data.tar.gz" 
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/EdaxOIMData.h5" "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data/H5EspritReaderTest.h5" "${DATA_DEST_DIR}/${PLUGIN_NAME}/"
   COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/6_6_ImportH5Data"
   WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"

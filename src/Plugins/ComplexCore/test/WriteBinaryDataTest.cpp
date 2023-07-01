@@ -37,37 +37,23 @@ constexpr int32 k_NumComponents = 16;     // used for generation
 constexpr uint64 k_EndianessElements = 2; // pull enum # of elements
 constexpr uint64 k_MultipleFiles = 0;     // enum representation
 constexpr uint64 k_SingleFile = 1;        // enum representation
-} // namespace
+
 
 #if _WIN32
-
-std::vector<UINT> CheckAllDrives()
+bool isDriveReady(const std::string& driveLetter)
 {
-  std::vector<UINT> ret;
-  for(char letter = 'A'; letter < 'Z'; letter++)
-  {
-    const UINT driveType = GetDriveTypeA(&letter);
-    ret.push_back(driveType);
-    std::cout << letter << "   " << driveType << std::endl;
-  }
-  return ret;
-}
-
-static inline bool isDriveReady(const wchar_t* path)
-{
-  std::cout << "Checking Drive: " << std::string(path, path + 2) << std::endl;
+  std::wstring driveLetterW(driveLetter.begin(), driveLetter.end());
   DWORD fileSystemFlags;
-  const UINT driveType = GetDriveTypeW(path);
-  return (driveType != DRIVE_REMOVABLE && driveType != DRIVE_CDROM) || GetVolumeInformationW(path, nullptr, 0, nullptr, nullptr, &fileSystemFlags, nullptr, 0) == TRUE;
+  const UINT driveType = GetDriveTypeW(driveLetterW.data());
+  return (driveType != DRIVE_REMOVABLE && driveType != DRIVE_CDROM) || GetVolumeInformationW(driveLetterW.data(), nullptr, 0, nullptr, nullptr, &fileSystemFlags, nullptr, 0) == TRUE;
 }
 
-std::vector<std::string> drives()
+std::vector<std::string> GetAllDriveLetters()
 {
   std::vector<std::string> ret(26, "");
   const UINT oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
   uint32_t driveBits = static_cast<uint32_t>(GetLogicalDrives()) & 0x3ffffff;
-  std::wstring driveName(L"A:\\");
-  std::string str(driveName.begin(), driveName.end());
+  std::string driveName = "A:\\";
 
   size_t driveIndex = 0;
   while(driveBits)
@@ -83,8 +69,9 @@ std::vector<std::string> drives()
   ::SetErrorMode(oldErrorMode);
   return ret;
 }
-
 #endif
+
+} // namespace
 
 // -----------------------------------------------------------------------------
 template <class T>
@@ -296,10 +283,12 @@ TEST_CASE("ComplexCore::WriteBinaryData:Invalid Filter Execution")
   WriteBinaryDataFilter filter;
   Arguments args;
 
-  // These paths are meant to fail. A: doesn't probably exist on most main stream Windows computers
-  // Most Unix users don't have write privs on "/". If they do then this test fails and we fix this test
+
+// These paths are meant to fail. A: doesn't probably exist on most main stream Windows computers
+// Most Unix users don't have write privs on "/". If they do then this test fails and we fix this test
+// For Windows, we need to find a non-existent drive, not just a drive that isn't ready.
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
-  std::vector<std::string> availableDrives = drives();
+  std::vector<std::string> availableDrives = GetAllDriveLetters();
   std::string invalidPath;
   for(size_t dlIndex = 2; dlIndex < 26; dlIndex++)
   {
