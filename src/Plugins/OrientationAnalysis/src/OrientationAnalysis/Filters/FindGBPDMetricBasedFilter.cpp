@@ -55,7 +55,7 @@ Parameters FindGBPDMetricBasedFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<Int32Parameter>(k_PhaseOfInterest_Key, "Phase of Interest",
                                                  "Index of the Ensemble for which to compute GBPD; boundaries having grains of this phase on both its sides will only be taken into account", 1));
-  params.insert(std::make_unique<Float32Parameter>(k_LimitDist_Key, "Limiting Distance [deg.]", "The max angle from within which mesh segments are selected", 7));
+  params.insert(std::make_unique<Float32Parameter>(k_LimitDist_Key, "Limiting Distance [deg.]", "The max angle from within which mesh segments are selected", 7.0f));
   params.insert(std::make_unique<Int32Parameter>(k_NumSamplPts_Key, "Number of Sampling Points (on a Hemisphere)", "The approximate number of sampling directions", 3000));
   params.insert(std::make_unique<BoolParameter>(k_ExcludeTripleLines_Key, "Exclude Triangles Directly Neighboring Triple Lines", "If checked, only interiors of Faces are included in GBCD", false));
   params.insert(std::make_unique<BoolParameter>(k_SaveRelativeErr_Key, "Save Relative Errors Instead of Their Absolute Values",

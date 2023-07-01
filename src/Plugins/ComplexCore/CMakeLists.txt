@@ -355,7 +355,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
 									 INSTALL
 									 COPY_DATA)
   add_custom_target(Copy_${PLUGIN_NAME}ASCIIData ALL
-                  COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData.tar.gz" 
+                  COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData.tar.gz" 
                   COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData" "${DATA_DEST_DIR}/ASCIIData"
                   COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData"
                   WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
@@ -369,7 +369,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
 									 INSTALL
 									 COPY_DATA)
   add_custom_target(Copy_${PLUGIN_NAME}_STL_Models ALL
-                  COMMAND ${CMAKE_COMMAND} -E tar xvzf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models.tar.gz" 
+                  COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models.tar.gz" 
                   COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/STL_Models" "${DATA_DEST_DIR}/STL_Models"
                   COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/STL_Models"
                   WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"

@@ -13,6 +13,15 @@
 #include <filesystem>
 #include <fstream>
 
+#ifdef _WIN32
+#include <accctrl.h>
+#include <direct.h>
+#include <fileapi.h>
+#include <objbase.h>
+#include <shlobj.h>
+#include <winioctl.h>
+#endif
+
 namespace fs = std::filesystem;
 using namespace complex;
 
@@ -28,6 +37,39 @@ constexpr int32 k_NumComponents = 16;     // used for generation
 constexpr uint64 k_EndianessElements = 2; // pull enum # of elements
 constexpr uint64 k_MultipleFiles = 0;     // enum representation
 constexpr uint64 k_SingleFile = 1;        // enum representation
+
+#if _WIN32
+bool isDriveReady(const std::string& driveLetter)
+{
+  std::wstring driveLetterW(driveLetter.begin(), driveLetter.end());
+  DWORD fileSystemFlags;
+  const UINT driveType = GetDriveTypeW(driveLetterW.data());
+  return (driveType != DRIVE_REMOVABLE && driveType != DRIVE_CDROM) || GetVolumeInformationW(driveLetterW.data(), nullptr, 0, nullptr, nullptr, &fileSystemFlags, nullptr, 0) == TRUE;
+}
+
+std::vector<std::string> GetAllDriveLetters()
+{
+  std::vector<std::string> ret(26, "");
+  const UINT oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+  uint32_t driveBits = static_cast<uint32_t>(GetLogicalDrives()) & 0x3ffffff;
+  std::string driveName = "A:\\";
+
+  size_t driveIndex = 0;
+  while(driveBits)
+  {
+    if((driveBits & 1) && isDriveReady(driveName.data()))
+    {
+      ret[driveIndex] = {driveName.begin(), driveName.end()};
+    }
+    driveIndex++;
+    driveName[0]++;
+    driveBits = driveBits >> 1;
+  }
+  ::SetErrorMode(oldErrorMode);
+  return ret;
+}
+#endif
+
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -211,10 +253,6 @@ TEST_CASE("ComplexCore::WriteBinaryData: Valid filter execution")
   RunBinaryTest<float64>(dsRef).execute();
 } // end of test case
 
-// For this test we are going to use the Windows path of "A:/" which historically
-// was for the floppy disk drives. I've not seen anyone use A or B for drive letters
-// is a LONG time, so I'm going to just assume that the test machines are setup
-// like a normal "modern" Windows system and start their drive lettering at "C".
 //
 // Not sure how to replicate this on unix as there is a decent probability that
 // a test bot might actually have write access to the root "/" of the Unix OS. This
@@ -244,14 +282,26 @@ TEST_CASE("ComplexCore::WriteBinaryData:Invalid Filter Execution")
   WriteBinaryDataFilter filter;
   Arguments args;
 
-  // These paths are meant to fail. A: doesn't probably exist on most main stream Windows computers
-  // Most Unix users don't have write privs on "/". If they do then this test fails and we fix this test
+// These paths are meant to fail. A: doesn't probably exist on most main stream Windows computers
+// Most Unix users don't have write privs on "/". If they do then this test fails and we fix this test
+// For Windows, we need to find a non-existent drive, not just a drive that isn't ready.
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
-  std::string invalidPath = fmt::format("A:/{}", millisFromEpoch);
+  std::vector<std::string> availableDrives = GetAllDriveLetters();
+  std::string invalidPath;
+  for(size_t dlIndex = 2; dlIndex < 26; dlIndex++)
+  {
+    std::cout << "Check Available Drive: " << static_cast<char>(dlIndex + 65) << std::endl;
+    if(availableDrives[dlIndex].empty())
+    {
+      invalidPath = fmt::format("{}:/{}", static_cast<char>(dlIndex + 65), millisFromEpoch);
+      break;
+    }
+  }
 #else
   std::string invalidPath = fmt::format("/{}", millisFromEpoch);
 #endif
 
+  std::cout << "InvalidPath: '" << invalidPath << "'" << std::endl;
   // Create default Parameters for the filter.
   args.insertOrAssign(WriteBinaryDataFilter::k_Endianess_Key, std::make_any<ChoicesParameter::ValueType>(0)); // uint64 0 and 1
   args.insertOrAssign(WriteBinaryDataFilter::k_OutputPath_Key, std::make_any<fs::path>(invalidPath));

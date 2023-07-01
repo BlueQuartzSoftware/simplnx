@@ -22,7 +22,7 @@ string(REPLACE "\"" "" status "${status}")
 if(@ARGS_COPY_DATA@)
   get_filename_component(archive_base_name "@ARGS_ARCHIVE_NAME@" NAME)
   message(STATUS "[DATA EXTRACT/COPY] Decompressing @ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@")
-  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvzf "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@"
+  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf "@ARGS_DREAM3D_DATA_DIR@/TestFiles/@ARGS_ARCHIVE_NAME@"
     WORKING_DIRECTORY "@ARGS_DREAM3D_DATA_DIR@/TestFiles"
     RESULT_VARIABLE result
     OUTPUT_VARIABLE output
