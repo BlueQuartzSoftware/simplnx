@@ -16,6 +16,7 @@ const std::string k_VecColorsNX = "Vector Colors";
 
 TEST_CASE("ComplexCore::GenerateVectorColorsFilter: Valid Filter Execution", "[ComplexCore][GenerateVectorColorsFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "generate_vector_colors.tar.gz", "generate_vector_colors");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/generate_vector_colors/6_6_generate_vector_colors.dream3d", unit_test::k_TestFilesDir)));
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
