@@ -38,7 +38,6 @@ constexpr uint64 k_EndianessElements = 2; // pull enum # of elements
 constexpr uint64 k_MultipleFiles = 0;     // enum representation
 constexpr uint64 k_SingleFile = 1;        // enum representation
 
-
 #if _WIN32
 bool isDriveReady(const std::string& driveLetter)
 {
@@ -282,7 +281,6 @@ TEST_CASE("ComplexCore::WriteBinaryData:Invalid Filter Execution")
   // Instantiate the filter and an Arguments Object
   WriteBinaryDataFilter filter;
   Arguments args;
-
 
 // These paths are meant to fail. A: doesn't probably exist on most main stream Windows computers
 // Most Unix users don't have write privs on "/". If they do then this test fails and we fix this test
