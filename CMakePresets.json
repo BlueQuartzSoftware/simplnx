@@ -129,6 +129,10 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-windows-v143"
+        },
+        "VCPKG_INSTALLED_DIR": {
+          "type": "PATH",
+          "value": "$env{AGENT_WORKFOLDER}/vcpkg-installed-v143"
         }
       }
     },
@@ -146,6 +150,10 @@
         "VCPKG_HOST_TRIPLET": {
           "type": "STRING",
           "value": "x64-windows-v142"
+        },
+        "VCPKG_INSTALLED_DIR": {
+          "type": "PATH",
+          "value": "$env{AGENT_WORKFOLDER}/vcpkg-installed-v142"
         }
       }
     },
