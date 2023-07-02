@@ -95,11 +95,10 @@ set(FETCH_FILE_PATH "${complex_BINARY_DIR}/complex_fetch_remote_files.cmake")
 set_property(GLOBAL PROPERTY FETCH_FILE_PATH "${FETCH_FILE_PATH}")
 file(WRITE ${FETCH_FILE_PATH} "# -----------------------------------------------------------------------
 # This file has the commands to download each of the test files.
-# The assumption is that the WORKING_DIRECTORY to what ever calls this command is set to the Binary
-# directory. The WORKING_DIRECTORY is set to the following CMake code:
+# The WORKING_DIRECTORY is set to the following CMake code:
 # ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>
 # -----------------------------------------------------------------------\n
-cmake_policy(SET CMP0012 NEW)\n
+cmake_policy(SET CMP0012 NEW)
 cmake_policy(SET CMP0054 NEW)\n")
 
 set(TEST_WORKING_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
@@ -111,7 +110,7 @@ if(COMPLEX_BUILD_TESTS AND COMPLEX_DOWNLOAD_TEST_FILES)
   add_custom_target(Fetch_Remote_Data_Files ALL
     COMMAND "${CMAKE_COMMAND}" -P "${FETCH_FILE_PATH}"
     COMMENT "Downloading Test Data Files"
-    WORKING_DIRECTORY "${TEST_WORKING_DIR}"
+  #  WORKING_DIRECTORY "${TEST_WORKING_DIR}"
   )
   set_target_properties(Fetch_Remote_Data_Files PROPERTIES FOLDER ZZ_FETCH_TEST_FILES)
 endif()
