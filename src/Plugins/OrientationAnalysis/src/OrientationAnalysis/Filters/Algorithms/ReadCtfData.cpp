@@ -1,6 +1,5 @@
 #include "ReadCtfData.hpp"
 
-#include "complex/Common/ComplexConstants.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
 #include "complex/DataStructure/StringArray.hpp"
@@ -35,16 +34,16 @@ Result<> ReadCtfData::operator()()
 {
   CtfReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
-  int32_t err = reader.readFile();
+  const int32_t err = reader.readFile();
   if(err < 0)
   {
-    return {MakeErrorResult<>(reader.getErrorCode(), reader.getErrorMessage())};
+    return MakeErrorResult(reader.getErrorCode(), reader.getErrorMessage());
   }
 
-  auto result = loadMaterialInfo(&reader);
+  const auto result = loadMaterialInfo(&reader);
   if(result.first < 0)
   {
-    return {MakeErrorResult<>(result.first, result.second)};
+    return MakeErrorResult(result.first, result.second);
   }
 
   copyRawEbsdData(&reader);
@@ -55,20 +54,20 @@ Result<> ReadCtfData::operator()()
 // -----------------------------------------------------------------------------
 std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(CtfReader* reader) const
 {
-  DataPath CellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
+  const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
 
-  std::vector<CtfPhase::Pointer> phases = reader->getPhaseVector();
+  const std::vector<CtfPhase::Pointer> phases = reader->getPhaseVector();
   if(phases.empty())
   {
     return {reader->getErrorCode(), reader->getErrorMessage()};
   }
 
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::CrystalStructures));
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::CrystalStructures));
 
-  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::MaterialName));
-  auto& latticeConstants = m_DataStructure.getDataRefAs<Float32Array>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::LatticeConstants));
+  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::MaterialName));
+  auto& latticeConstants = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::LatticeConstants));
 
-  std::string k_InvalidPhase = "Invalid Phase";
+  const std::string k_InvalidPhase = "Invalid Phase";
 
   // Initialize the zero'th element to unknowns. The other elements will
   // be filled in based on values from the data file
@@ -82,9 +81,9 @@ std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(CtfReader* reader) c
 
   for(const CtfPhase::Pointer& phase : phases)
   {
-    int32_t phaseID = phase->getPhaseIndex();
+    const int32_t phaseID = phase->getPhaseIndex();
     crystalStructures[phaseID] = phase->determineLaueGroup();
-    std::string materialName = phase->getMaterialName();
+    const std::string materialName = phase->getMaterialName();
     materialNames[phaseID] = materialName;
 
     std::vector<float> lattConst = phase->getLatticeConstants();
@@ -100,12 +99,12 @@ std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(CtfReader* reader) c
 // -----------------------------------------------------------------------------
 void ReadCtfData::copyRawEbsdData(CtfReader* reader) const
 {
-  DataPath CellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
-  DataPath CellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
+  const DataPath cellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
+  const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
   std::vector<size_t> cDims = {1};
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
-  size_t totalCells = imageGeom.getNumberOfCells();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
+  const size_t totalCells = imageGeom.getNumberOfCells();
 
   // Prepare the Cell Attribute Matrix with the correct number of tuples based on the total Cells being read from the file.
   std::vector<size_t> tDims = {imageGeom.getNumXCells(), imageGeom.getNumYCells(), imageGeom.getNumZCells()};
@@ -122,7 +121,7 @@ void ReadCtfData::copyRawEbsdData(CtfReader* reader) const
      * even if there is only a single phase. The next if statement converts all zeros to ones
      * if there is a single phase in the OIM data.
      */
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::Phases));
+    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::Phases));
     int* phasePtr = reinterpret_cast<int32_t*>(reader->getPointerByName(EbsdLib::Ctf::Phase));
     for(size_t i = 0; i < totalCells; i++)
     {
@@ -134,17 +133,17 @@ void ReadCtfData::copyRawEbsdData(CtfReader* reader) const
     }
   }
 
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::CrystalStructures));
-  auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::Phases));
-
   // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::Euler1));
-    auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::Euler2));
-    auto* fComp2 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::Euler3));
+    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::CrystalStructures));
+    auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::Phases));
+
+    const auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::Euler1));
+    const auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::Euler2));
+    const auto* fComp2 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::Euler3));
     cDims[0] = 3;
 
-    auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::EulerAngles));
+    auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::EulerAngles));
     for(size_t i = 0; i < totalCells; i++)
     {
       cellEulerAngles[3 * i] = fComp0[i];
@@ -167,43 +166,43 @@ void ReadCtfData::copyRawEbsdData(CtfReader* reader) const
   cDims[0] = 1;
   {
     auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(EbsdLib::Ctf::Bands));
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::Bands));
+    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::Bands));
     std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
   }
 
   {
     auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(EbsdLib::Ctf::Error));
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::Error));
+    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::Error));
     std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
   }
 
   {
     auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::MAD));
-    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::MAD));
+    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::MAD));
     std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
   }
 
   {
     auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(EbsdLib::Ctf::BC));
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::BC));
+    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::BC));
     std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
   }
 
   {
     auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(EbsdLib::Ctf::BS));
-    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::BS));
+    auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::BS));
     std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
   }
 
   {
     auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::X));
-    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::X));
+    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::X));
     std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
   }
 
   {
     auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(EbsdLib::Ctf::Y));
-    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(CellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::Y));
+    auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::Y));
     std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
   }
 }
