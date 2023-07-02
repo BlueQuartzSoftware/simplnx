@@ -1,30 +1,8 @@
-/**
- * This file is auto generated from the original OrientationAnalysis/ReadCtfData
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[ReadCtfData][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
 #include "OrientationAnalysis/Filters/ReadCtfDataFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -33,32 +11,39 @@
 namespace fs = std::filesystem;
 
 using namespace complex;
+using namespace complex::Constants;
+using namespace complex::UnitTest;
 
-TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnalysis][ReadCtfData][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnalysis][ReadCtfData]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "6_6_read_ctf_data.tar.gz", "6_6_read_ctf_data");
+
+  // Read Exemplar DREAM3D File
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ctf_data/6_6_read_ctf_data.dream3d", unit_test::k_TestFilesDir));
+  DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadCtfDataFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
+  const fs::path inputCtfFile(fmt::format("{}/6_6_read_ctf_data/Cugrid_after 2nd_15kv_2kx_2.ctf", unit_test::k_TestFilesDir));
+
   // Create default Parameters for the filter.
-  args.insertOrAssign(ReadCtfDataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Input/File/To/Read.data")));
-  args.insertOrAssign(ReadCtfDataFilter::k_DegreesToRadians_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ReadCtfDataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ReadCtfDataFilter::k_DataContainerName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ReadCtfDataFilter::k_CellAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(ReadCtfDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(ReadCtfDataFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(inputCtfFile));
+  args.insertOrAssign(ReadCtfDataFilter::k_DegreesToRadians_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ReadCtfDataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ReadCtfDataFilter::k_DataContainerName_Key, std::make_any<DataPath>(k_DataContainerPath));
+  args.insertOrAssign(ReadCtfDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellData));
+  args.insertOrAssign(ReadCtfDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
-  REQUIRE(executeResult.result.valid());
-}
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-// TEST_CASE("OrientationAnalysis::ReadCtfData: InValid filter execution")
-//{
-//
-//}
+  CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_ExemplarDataContainer);
+}
