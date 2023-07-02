@@ -41,6 +41,7 @@ set(FilterList
   ExportGBCDTriangleDataFilter
   FindAvgCAxesFilter
   FindAvgOrientationsFilter
+  FindBoundaryStrengthsFilter
   FindCAxisLocationsFilter
   FindFeatureNeighborCAxisMisalignmentsFilter
   FindFeatureReferenceCAxisMisorientationsFilter
@@ -52,6 +53,7 @@ set(FilterList
   FindMisorientationsFilter
   FindSchmidsFilter
   FindShapesFilter
+  FindSlipTransmissionMetricsFilter
   FindTriangleGeomShapesFilter
   GenerateFaceIPFColoringFilter
   GenerateFaceMisorientationColoringFilter
@@ -83,7 +85,6 @@ set(STUB_FILTERS
   FindKernelAvgMisorientations
   FindMisorientations
   FindSchmids
-  FindSlipTransmissionMetrics
   FindTwinBoundaries
   FindTwinBoundarySchmidFactors
   GenerateFaceIPFColoring
@@ -174,6 +175,7 @@ set(filter_algorithms
   ExportGBCDTriangleData
   FindAvgCAxes
   FindAvgOrientations
+  FindBoundaryStrengths
   FindCAxisLocations
   FindFeatureNeighborCAxisMisalignments
   FindFeatureReferenceCAxisMisorientations
@@ -185,6 +187,7 @@ set(filter_algorithms
   FindMisorientations
   FindSchmids
   FindShapes
+  FindSlipTransmissionMetrics
   FindTriangleGeomShapes
   GenerateFaceIPFColoring
   GenerateFaceMisorientationColoring
