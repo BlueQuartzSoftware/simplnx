@@ -31,7 +31,7 @@ void InitApplicationAndPlugins()
 {
   if(!s_PluginsLoaded)
   {
-    ITKImageProcessingUnitTest::app->loadPlugins(unit_test::k_BuildDir.view(), true);
+    Application::Instance()->loadPlugins(unit_test::k_BuildDir.view(), true);
     s_FilterList = Application::Instance()->getFilterList();
     s_PluginsLoaded = true;
   }

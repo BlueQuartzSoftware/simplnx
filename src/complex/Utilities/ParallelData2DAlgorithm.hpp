@@ -1,6 +1,7 @@
 #pragma once
 
 #include "complex/Common/Range2D.hpp"
+#include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
 #ifdef COMPLEX_ENABLE_MULTICORE
@@ -11,6 +12,7 @@
 
 #include <array>
 #include <cstddef>
+#include <optional>
 
 namespace complex
 {
@@ -68,29 +70,82 @@ public:
   void setRange(size_t minCols, size_t maxCols, size_t minRows, size_t maxRows);
 
   /**
+   * @brief Returns the optional chunk size to operate over.
+   * @return optional chunk size
+   */
+  std::optional<RangeType> getChunkSize() const;
+
+  /**
+   * @brief Sets the preferred chunk size, if any, that should be used to operating over.
+   * @param chunkSize Optional chunk size used to control how the execution algorithm picks indices to operate over.
+   */
+  void setChunkSize(std::optional<RangeType> chunkSize);
+
+  /**
    * @brief Runs the data algorithm.  Parallelization is used if appropriate.
    * @param body
    */
   template <typename Body>
   void execute(const Body& body)
   {
+    // Check if pre-existing chunk sizes should be preserved
+    if(m_ChunkSize.has_value() == false)
+    {
+      executeRange<Body>(body, m_Range);
+    }
+    else
+    {
+      // Execute over pre-existing chunks
+
+      // Get chunk size
+      const usize chunkWidth = m_ChunkSize->maxCol() - m_ChunkSize->minCol();
+      const usize chunkHeight = m_ChunkSize->maxRow() - m_ChunkSize->minRow();
+
+      // Check which chunks to operate over
+      const usize minChunkCol = m_Range.minCol() / chunkWidth;
+      const usize maxChunkCol = m_Range.maxCol() / chunkWidth;
+      const usize minChunkRow = m_Range.minRow() / chunkHeight;
+      const usize maxChunkRow = m_Range.maxRow() / chunkHeight;
+
+      for(usize chunkX = minChunkCol; chunkX <= maxChunkCol; chunkX++)
+      {
+        const usize minX = std::max(m_Range.minCol(), (chunkX - 1) * m_ChunkSize->maxCol());
+        const usize maxX = std::min(m_Range.maxCol(), chunkX * m_ChunkSize->maxCol());
+
+        for(usize chunkY = minChunkRow; chunkY <= maxChunkRow; chunkY++)
+        {
+          const usize minY = std::max(m_Range.minRow(), (chunkY - 1) * m_ChunkSize->maxRow());
+          const usize maxY = std::min(m_Range.maxRow(), chunkY * m_ChunkSize->maxRow());
+
+          const RangeType chunkRange(minX, maxX, minY, maxY);
+          executeRange<Body>(body, chunkRange);
+        }
+      }
+    }
+  }
+
+protected:
+  template <typename Body>
+  void executeRange(const Body& body, const RangeType& range)
+  {
 #ifdef COMPLEX_ENABLE_MULTICORE
     if(m_RunParallel)
     {
       tbb::auto_partitioner partitioner;
-      tbb::blocked_range2d<size_t, size_t> tbbRange(m_Range.minRow(), m_Range.maxRow(), m_Range.minCol(), m_Range.maxCol());
+      tbb::blocked_range2d<size_t, size_t> tbbRange(range.minRow(), range.maxRow(), range.minCol(), range.maxCol());
       tbb::parallel_for(tbbRange, body, partitioner);
     }
     else
 #endif
     // Run non-parallel operation
     {
-      body(m_Range);
+      body(range);
     }
   }
 
 private:
   RangeType m_Range;
+  std::optional<RangeType> m_ChunkSize;
 #ifdef COMPLEX_ENABLE_MULTICORE
   bool m_RunParallel = true;
 #else

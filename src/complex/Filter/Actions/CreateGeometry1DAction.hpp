@@ -38,7 +38,7 @@ public:
    * @param sharedEdgesName The name of the shared edge list array to be created
    */
   CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& edgeAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedEdgesName)
+                         const std::string& sharedVerticesName, const std::string& sharedEdgesName, std::string createdDataFormat = "")
   : IDataCreationAction(geometryPath)
   , m_NumEdges(numEdges)
   , m_NumVertices(numVertices)
@@ -46,6 +46,7 @@ public:
   , m_EdgeDataName(edgeAttributeMatrixName)
   , m_SharedVerticesName(sharedVerticesName)
   , m_SharedEdgesName(sharedEdgesName)
+  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -59,7 +60,7 @@ public:
    * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
    */
   CreateGeometry1DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputEdgesArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& edgeAttributeMatrixName, const ArrayHandlingType& arrayType)
+                         const std::string& edgeAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_EdgeDataName(edgeAttributeMatrixName)
@@ -68,6 +69,7 @@ public:
   , m_InputVertices(inputVerticesArrayPath)
   , m_InputEdges(inputEdgesArrayPath)
   , m_ArrayHandlingType(arrayType)
+  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -198,7 +200,7 @@ public:
       DataPath edgesPath = getCreatedPath().createChildPath(m_SharedEdgesName);
       // Create the default DataArray that will hold the EdgeList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode);
+      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", prefix, edgesPath.toString()));
@@ -209,7 +211,7 @@ public:
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
+      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
@@ -329,6 +331,7 @@ private:
   DataPath m_InputVertices;
   DataPath m_InputEdges;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
+  std::string m_CreatedDataStoreFormat;
 };
 
 using CreateEdgeGeometryAction = CreateGeometry1DAction<EdgeGeom>;

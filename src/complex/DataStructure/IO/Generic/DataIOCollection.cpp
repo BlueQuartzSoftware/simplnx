@@ -52,7 +52,7 @@ std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string&
   {
     if(ioManager->hasDataStoreCreationFnc(type))
     {
-      return ioManager->dataStoreCreationFnc(type)(dataType, tupleShape, componentShape);
+      return ioManager->dataStoreCreationFnc(type)(dataType, tupleShape, componentShape, {});
     }
   }
 

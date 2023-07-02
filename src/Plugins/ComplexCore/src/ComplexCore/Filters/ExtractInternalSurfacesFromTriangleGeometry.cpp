@@ -221,8 +221,9 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
     DataPath copyPath = internalVertexDataPath.createChildPath(data_array.getTargetName());
     auto numTuples = targetDataArray->getNumberOfTuples();
     auto components = targetDataArray->getNumberOfComponents();
+    const std::string dataStoreFormat = targetDataArray->getDataFormat();
 
-    auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath);
+    auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath, dataStoreFormat);
     actions.appendAction(std::move(action));
   }
   for(const auto& data_array : copyTrianglePaths)
@@ -238,8 +239,9 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometry::preflightI
     DataPath copyPath = internalFaceDataPath.createChildPath(data_array.getTargetName());
     auto numTuples = targetDataArray->getNumberOfTuples();
     auto components = targetDataArray->getNumberOfComponents();
+    const std::string dataStoreFormat = targetDataArray->getDataFormat();
 
-    auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath);
+    auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath, dataStoreFormat);
     actions.appendAction(std::move(action));
   }
 

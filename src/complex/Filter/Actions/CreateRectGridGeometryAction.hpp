@@ -29,7 +29,7 @@ public:
    * @param zBoundsName The name of the zBounds array to be created
    */
   CreateRectGridGeometryAction(const DataPath& path, usize xBoundsDim, usize yBoundsDim, usize zBoundsDim, const std::string& cellAttributeMatrixName, const std::string& xBoundsName,
-                               const std::string& yBoundsName, const std::string& zBoundsName);
+                               const std::string& yBoundsName, const std::string& zBoundsName, std::string createdDataFormat = "");
 
   /**
    * @brief Constructor to create the geometry using existing x, y, and z bounds arrays by either copying, moving, or referencing them
@@ -41,7 +41,7 @@ public:
    * @param arrayType Tells whether to copy, move, or reference the existing input bounds arrays
    */
   CreateRectGridGeometryAction(const DataPath& path, const DataPath& inputXBoundsPath, const DataPath& inputYBoundsPath, const DataPath& inputZBoundsPath, const std::string& cellAttributeMatrixName,
-                               const ArrayHandlingType& arrayType);
+                               const ArrayHandlingType& arrayType, std::string createdDataFormat = "");
 
   ~CreateRectGridGeometryAction() noexcept override;
 
@@ -109,6 +109,7 @@ private:
   DataPath m_InputYBounds;
   DataPath m_InputZBounds;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
+  std::string m_CreatedDataStoreFormat;
 
   Float32Array* createBoundArray(DataStructure& dataStructure, Mode mode, const std::string& arrayName, usize numTuples, std::vector<Error>& errors) const;
 };

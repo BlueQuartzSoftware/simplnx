@@ -32,11 +32,13 @@ public:
    * @param vertexAttributeMatrixName The name of the vertex AttributeMatrix to be created
    * @param sharedVertexListName The name of the shared vertex list array to be created
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName)
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName,
+                             std::string createdDataFormat = "")
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_SharedVertexListName(sharedVertexListName)
+  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -47,12 +49,14 @@ public:
    * @param vertexAttributeMatrixName The name of the vertex AttributeMatrix to be created
    * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType)
+  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
+                             std::string createdDataFormat = "")
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_SharedVertexListName(inputVerticesArrayPath.getTargetName())
   , m_InputVertices(inputVerticesArrayPath)
   , m_ArrayHandlingType(arrayType)
+  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -149,7 +153,7 @@ public:
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVertexListName);
       const std::vector<usize> componentShape = {3};
 
-      Result<> result = complex::CreateArray<float>(dataStructure, tupleShape, componentShape, vertexPath, mode);
+      Result<> result = complex::CreateArray<float>(dataStructure, tupleShape, componentShape, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return result;
@@ -244,6 +248,7 @@ private:
   std::string m_SharedVertexListName;
   DataPath m_InputVertices;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
+  std::string m_CreatedDataStoreFormat;
 };
 
 } // namespace complex

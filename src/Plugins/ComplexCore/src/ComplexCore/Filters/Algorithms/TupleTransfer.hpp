@@ -48,6 +48,7 @@ class TransferTuple : public AbstractTupleTransfer
 {
 public:
   using DataArrayType = DataArray<T>;
+  using DataStoreType = AbstractDataStore<T>;
 
   /**
    * @brief
@@ -56,16 +57,15 @@ public:
    * @param createdArrayPath The destination data path
    */
   TransferTuple(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& createdArrayPath)
+  : m_CellRef(dataStructure.template getDataRefAs<DataArrayType>(selectedDataPath).getDataStoreRef())
+  , m_FaceRef(dataStructure.template getDataRefAs<DataArrayType>(createdArrayPath).getDataStoreRef())
   {
     m_SourceDataPath = selectedDataPath;
     m_DestinationDataPath = createdArrayPath;
+
     IDataArray* cellArray = dataStructure.template getDataAs<IDataArray>(m_SourceDataPath);
-    IDataArray* faceArray = dataStructure.template getDataAs<IDataArray>(m_DestinationDataPath);
 
-    m_CellPtr = dynamic_cast<DataArrayType*>(cellArray);
-    m_FacePtr = dynamic_cast<DataArrayType*>(faceArray);
-
-    m_NumComps = m_CellPtr->getNumberOfComponents();
+    m_NumComps = cellArray->getNumberOfComponents();
   }
 
   ~TransferTuple() = default;
@@ -85,14 +85,14 @@ public:
   {
     for(size_t i = 0; i < m_NumComps; i++)
     {
-      (*m_FacePtr)[faceIndex + i] = (*m_CellPtr)[firstcIndex + i];
+      m_FaceRef[faceIndex + i] = m_CellRef[firstcIndex + i];
     }
 
     if(!forceSecondToZero)
     {
       for(size_t i = 0; i < m_NumComps; i++)
       {
-        (*m_FacePtr)[faceIndex + i + m_NumComps] = (*m_CellPtr)[secondcIndex + i];
+        m_FaceRef[faceIndex + i + m_NumComps] = m_CellRef[secondcIndex + i];
       }
     }
   }
@@ -101,13 +101,13 @@ public:
   {
     for(size_t i = 0; i < m_NumComps; i++)
     {
-      (*m_FacePtr)[faceIndex + i] = (*m_CellPtr)[firstcIndex + i];
+      m_FaceRef[faceIndex + i] = m_CellRef[firstcIndex + i];
     }
   }
 
 private:
-  DataArrayType* m_CellPtr = nullptr;
-  DataArrayType* m_FacePtr = nullptr;
+  DataStoreType& m_CellRef;
+  DataStoreType& m_FaceRef;
 };
 
 /**

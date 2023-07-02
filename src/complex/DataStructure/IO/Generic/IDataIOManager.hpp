@@ -26,7 +26,8 @@ public:
   using factory_id_type = std::string;
   using factory_ptr = std::shared_ptr<IDataFactory>;
   using factory_collection = std::map<factory_id_type, factory_ptr>;
-  using DataStoreCreateFnc = std::function<std::unique_ptr<IDataStore>(DataType, const typename IDataStore::ShapeType&, const typename IDataStore::ShapeType&)>;
+  using DataStoreCreateFnc =
+      std::function<std::unique_ptr<IDataStore>(DataType, const typename IDataStore::ShapeType&, const typename IDataStore::ShapeType&, const std::optional<IDataStore::ShapeType>&)>;
   using DataStoreCreationMap = std::map<std::string, DataStoreCreateFnc>;
 
   virtual ~IDataIOManager() noexcept;
