@@ -207,7 +207,7 @@ namespace complex
     {complex::Uuid::FromString("a8463056-3fa7-530b-847f-7f4cb78b8602").value(), complex::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid}, // RemoveFlaggedFeatures
     {complex::Uuid::FromString("e0555de5-bdc6-5bea-ba2f-aacfbec0a022").value(), complex::FilterTraits<RemoveFlaggedFeaturesFilter>::uuid}, // ExtractFlaggedFeatures
     {complex::Uuid::FromString("27a132b2-a592-519a-8cb7-38599a7f28ec").value(), complex::FilterTraits<ComputeMomentInvariants2DFilter>::uuid}, // ComputeMomentInvariants2D
-	{complex::Uuid::FromString("fcdde553-36b4-5731-bc88-fc499806cb4e").value(), complex::FilterTraits<FindVertexToTriangleDistancesFilter>::uuid}, // FindVertexToTriangleDistances
+    {complex::Uuid::FromString("fcdde553-36b4-5731-bc88-fc499806cb4e").value(), complex::FilterTraits<FindVertexToTriangleDistancesFilter>::uuid}, // FindVertexToTriangleDistances
     {complex::Uuid::FromString("c681caf4-22f2-5885-bbc9-a0476abc72eb").value(), complex::FilterTraits<ApplyTransformationToGeometryFilter>::uuid}, // ApplyTransformationToGeometry
     {complex::Uuid::FromString("6eda8dbf-dbd8-562a-ae1a-f2904157c189").value(), complex::FilterTraits<ComputeFeatureRectFilter>::uuid}, // ComputeFeatureRect
     {complex::Uuid::FromString("9f77b4a9-6416-5220-a688-115f4e14c90d").value(), complex::FilterTraits<FindLargestCrossSectionsFilter>::uuid}, // FindLargestCrossSections
