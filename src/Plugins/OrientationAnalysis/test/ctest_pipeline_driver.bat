@@ -40,6 +40,15 @@ echo EXE_SFX %EXE_SFX%
 @echo Prebuilt Pipeline Test Starting
 @echo     @test@.d3dpipeline
 
+::-----------------------------------------------------------------------------
+:: Check the input file
+::-----------------------------------------------------------------------------
+@INPUT_FILE_COMMANDS@
+
+
+::-----------------------------------------------------------------------------
+:: Execute nxrunner
+::-----------------------------------------------------------------------------
 @echo Running Executable at '@CMAKE_RUNTIME_OUTPUT_DIRECTORY@/%CONFIG_DIR%/@PIPELINE_RUNNER_NAME@%EXE_SFX%@EXE_EXT@'
 
 cd @CMAKE_RUNTIME_OUTPUT_DIRECTORY@\%CONFIG_DIR%
@@ -48,5 +57,11 @@ cd @CMAKE_RUNTIME_OUTPUT_DIRECTORY@\%CONFIG_DIR%
 IF %ERRORLEVEL% NEQ 0 EXIT 1
 
 ::-----------------------------------------------------------------------------
+:: Check the Output file
+::-----------------------------------------------------------------------------
+@OUTPUT_FILE_COMMANDS@
+
+::-----------------------------------------------------------------------------
 :: These files need to be deleted after the test has completed
+::-----------------------------------------------------------------------------
 @DELETE_FILE_COMMANDS@
