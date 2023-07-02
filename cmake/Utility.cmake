@@ -111,6 +111,7 @@ function(download_test_data)
   #----------------------------------------------------------------------------
   set(fetch_data_file "${test_files_dir}/${ARGS_ARCHIVE_NAME}.cmake")
   set(DATA_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/Data")
+  file(MAKE_DIRECTORY "${DATA_DEST_DIR}")
   # Strip off the .tar.gz extension
   string(REPLACE ".tar.gz" "" ARCHIVE_BASE_NAME "${ARGS_ARCHIVE_NAME}")
 

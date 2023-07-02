@@ -318,11 +318,11 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 # -----------------------------------------------------------------------
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
   set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
-  add_custom_target(${PLUGIN_NAME}PipelineFolderCopy ALL
+  add_custom_target(Copy_${PLUGIN_NAME}_Pipeline_Folder ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
     ${PIPELINE_DEST_DIR}
     COMMENT "Copying Pipeline Folder into Binary Directory")
-  set_target_properties(${PLUGIN_NAME}PipelineFolderCopy PROPERTIES FOLDER ZZ_COPY_FILES)
+  set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
   install(DIRECTORY
@@ -354,7 +354,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
 									 SHA512 70388864301ca1ea7fce7b1666d3abf682eee68c7d8b7a9bf532df7aff11e7ea9de7dc2dc80e33f0e363cbad023b663bff97df4be362f0312d311e9d5bedf370
 									 INSTALL
 									 COPY_DATA)
-  add_custom_target(Copy_${PLUGIN_NAME}ASCIIData ALL
+  add_custom_target(Copy_${PLUGIN_NAME}_ASCIIData ALL
                   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData.tar.gz" 
                   COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData" "${DATA_DEST_DIR}/ASCIIData"
                   COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/ASCIIData"
@@ -362,6 +362,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                   COMMENT "Copying ${PLUGIN_NAME}/ASCIIData data into Binary Directory"
                   DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
                 )
+  set_target_properties(Copy_${PLUGIN_NAME}_ASCIIData PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
 									 ARCHIVE_NAME STL_Models.tar.gz
@@ -376,6 +377,8 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
                   COMMENT "Copying ${PLUGIN_NAME}/STL_Models data into Binary Directory"
                   DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
                 )
+  set_target_properties(Copy_${PLUGIN_NAME}_STL_Models PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
+
 endif()
 
 # -----------------------------------------------------------------------
