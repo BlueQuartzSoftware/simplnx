@@ -39,7 +39,7 @@ public:
    * @param sharedFacesName The name of the shared face list array to be created
    */
   CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& faceAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedFacesName)
+                         const std::string& sharedVerticesName, const std::string& sharedFacesName, std::string createdDataFormat = "")
   : IDataCreationAction(geometryPath)
   , m_NumFaces(numFaces)
   , m_NumVertices(numVertices)
@@ -47,6 +47,7 @@ public:
   , m_FaceDataName(faceAttributeMatrixName)
   , m_SharedVerticesName(sharedVerticesName)
   , m_SharedFacesName(sharedFacesName)
+  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -60,7 +61,7 @@ public:
    * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
    */
   CreateGeometry2DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputFacesArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& faceAttributeMatrixName, const ArrayHandlingType& arrayType)
+                         const std::string& faceAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_FaceDataName(faceAttributeMatrixName)
@@ -69,6 +70,7 @@ public:
   , m_InputVertices(inputVerticesArrayPath)
   , m_InputFaces(inputFacesArrayPath)
   , m_ArrayHandlingType(arrayType)
+  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -198,7 +200,7 @@ public:
       DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
       // Create the default DataArray that will hold the FaceList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode);
+      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString()));
@@ -209,7 +211,7 @@ public:
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
+      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
@@ -329,6 +331,7 @@ private:
   DataPath m_InputVertices;
   DataPath m_InputFaces;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
+  std::string m_CreatedDataStoreFormat;
 };
 
 using CreateTriangleGeometryAction = CreateGeometry2DAction<TriangleGeom>;

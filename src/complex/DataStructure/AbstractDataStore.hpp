@@ -962,7 +962,6 @@ using Int16AbstractDataStore = AbstractDataStore<int16>;
 using Int32AbstractDataStore = AbstractDataStore<int32>;
 using Int64AbstractDataStore = AbstractDataStore<int64>;
 
-using USizeAbstractDataStore = AbstractDataStore<usize>;
 using BoolAbstractDataStore = AbstractDataStore<bool>;
 
 using Float32AbstractDataStore = AbstractDataStore<float32>;

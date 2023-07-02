@@ -125,6 +125,10 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   }
   auto numElements = gridGeom->getNumberOfCells();
 
+  // Use FeatureIds DataStore format for created DataArrays
+  const auto* featureIdsArrayPtr = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
+  const std::string dataStoreFormat = featureIdsArrayPtr->getDataFormat();
+
   // Create the Triangle Geometry action and store it
   {
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numElements, 1, pVertexGroupDataName, pFaceGroupDataName,
@@ -134,13 +138,13 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   // Create the face NodesType DataArray action and store it
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int8, std::vector<usize>{1}, std::vector<usize>{1},
-                                                                 pTriangleGeometryPath.createChildPath(pVertexGroupDataName).createChildPath(pNodeTypesName));
+                                                                 pTriangleGeometryPath.createChildPath(pVertexGroupDataName).createChildPath(pNodeTypesName), dataStoreFormat);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   // Create the face Labels DataArray action and store it
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(complex::DataType::int32, std::vector<usize>{numElements}, std::vector<usize>{2},
-                                                                 pTriangleGeometryPath.createChildPath(pFaceGroupDataName).createChildPath(pFaceLabelsName));
+                                                                 pTriangleGeometryPath.createChildPath(pFaceGroupDataName).createChildPath(pFaceLabelsName), dataStoreFormat);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

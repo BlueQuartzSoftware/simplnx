@@ -105,6 +105,8 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_MissingFeatureIds, "Could not find Feature IDs array."}})};
   }
 
+  const std::string arrayDataFormat = featureIdsArray->getDataFormat();
+
   const auto* featAttributeMatrix = data.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
   if(featAttributeMatrix == nullptr)
   {
@@ -115,9 +117,9 @@ IFilter::PreflightResult CalculateFeatureSizesFilter::preflightImpl(const DataSt
   std::vector<usize> tupleDimensions = featAttributeMatrix->getShape();
   uint64 numberOfComponents = 1;
 
-  auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath);
-  auto createEquivalentDiametersAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, equivalentDiametersPath);
-  auto createNumElementsAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDimensions, std::vector<usize>{numberOfComponents}, numElementsPath);
+  auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath, arrayDataFormat);
+  auto createEquivalentDiametersAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, equivalentDiametersPath, arrayDataFormat);
+  auto createNumElementsAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDimensions, std::vector<usize>{numberOfComponents}, numElementsPath, arrayDataFormat);
 
   OutputActions actions;
   actions.appendAction(std::move(createVolumesAction));

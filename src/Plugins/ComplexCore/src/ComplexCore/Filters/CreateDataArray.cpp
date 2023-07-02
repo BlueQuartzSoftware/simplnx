@@ -26,7 +26,7 @@ void CreateAndInitArray(DataStructure& data, const DataPath& path, const std::st
   T value = result.value();
   auto& dataArray = data.getDataRefAs<DataArray<T>>(path);
   auto& dataStore = dataArray.getDataStoreRef();
-  std::fill(dataStore.begin(), dataStore.end(), value);
+  dataStore.fill(value);
 }
 } // namespace
 

@@ -24,7 +24,8 @@ void CoreDataIOManager::addCoreFactories()
 
 void CoreDataIOManager::addDataStoreFnc()
 {
-  DataStoreCreateFnc dataStoreFnc = [](DataType numericType, const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape) {
+  DataStoreCreateFnc dataStoreFnc = [](complex::DataType numericType, const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape,
+                                       const std::optional<IDataStore::ShapeType>& chunkShape) {
     std::unique_ptr<IDataStore> dataStore = nullptr;
     switch(numericType)
     {

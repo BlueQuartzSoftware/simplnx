@@ -124,9 +124,11 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   std::vector<DataPath> dataPaths;
 
   usize numTuples = 0;
+  std::string createdArrayFormat = "";
   // Input Array
   if(const auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(inputDataPath))
   {
+    createdArrayFormat = inputDataArrayPtr->getDataFormat();
     numTuples = inputDataArrayPtr->getNumberOfTuples();
     if(inputDataArrayPtr->getNumberOfComponents() == 1)
     {
@@ -165,11 +167,11 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
 
   // Create the Cell Level FeatureIds array
-  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath);
+  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath, createdArrayFormat);
 
   // Create the Feature Attribute Matrix
   auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(cellFeaturesPath, std::vector<usize>{numTuples});
-  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{numTuples}, std::vector<usize>{1}, activeArrayPath);
+  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{numTuples}, std::vector<usize>{1}, activeArrayPath, createdArrayFormat);
 
   OutputActions actions;
   actions.appendAction(std::move(createAttributeMatrixAction));

@@ -39,7 +39,7 @@ public:
    * @param sharedCellsName The name of the shared cell list array to be created
    */
   CreateGeometry3DAction(const DataPath& geometryPath, size_t numCells, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& cellAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedCellsName)
+                         const std::string& sharedVerticesName, const std::string& sharedCellsName, std::string createdDataFormat = "")
   : IDataCreationAction(geometryPath)
   , m_NumCells(numCells)
   , m_NumVertices(numVertices)
@@ -47,6 +47,7 @@ public:
   , m_CellDataName(cellAttributeMatrixName)
   , m_SharedVerticesName(sharedVerticesName)
   , m_SharedCellsName(sharedCellsName)
+  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -60,7 +61,7 @@ public:
    * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
    */
   CreateGeometry3DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputCellsArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType)
+                         const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_CellDataName(cellAttributeMatrixName)
@@ -69,6 +70,7 @@ public:
   , m_InputVertices(inputVerticesArrayPath)
   , m_InputCells(inputCellsArrayPath)
   , m_ArrayHandlingType(arrayType)
+  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -197,7 +199,7 @@ public:
     {
       const DataPath cellsPath = getCreatedPath().createChildPath(m_SharedCellsName);
       // Create the default DataArray that will hold the CellList and Vertices.
-      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode);
+      complex::Result result = complex::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString()));
@@ -208,7 +210,7 @@ public:
       // Create the Vertex Array with a component size of 3
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
+      result = complex::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
       if(result.invalid())
       {
         return MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString()));
@@ -328,6 +330,7 @@ private:
   DataPath m_InputVertices;
   DataPath m_InputCells;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
+  std::string m_CreatedDataStoreFormat;
 };
 
 using CreateTetrahedralGeometryAction = CreateGeometry3DAction<TetrahedralGeom>;
