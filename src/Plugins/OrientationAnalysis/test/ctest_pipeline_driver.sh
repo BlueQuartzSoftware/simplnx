@@ -12,8 +12,22 @@ if [ "@CMAKE_BUILD_TYPE@" = "Debug" ]; then
     DEBUG_EXT="@PIPELINE_RUNNER_DEBUG@"
 fi
 
+#-----------------------------------------------------------------------------
+# Check the input file
+#-----------------------------------------------------------------------------
+@INPUT_FILE_COMMANDS@
+
+#-----------------------------------------------------------------------------
+# Execute nxrunner
+#-----------------------------------------------------------------------------
+echo "********* Starting @PIPELINE_RUNNER_NAME@${DEBUG_EXT}"
 cd "@CMAKE_RUNTIME_OUTPUT_DIRECTORY@"
 "./@PIPELINE_RUNNER_NAME@${DEBUG_EXT}" --execute "@ARGS_PIPELINE_PATH@"
+
+#-----------------------------------------------------------------------------
+# Check the output file
+#-----------------------------------------------------------------------------
+@OUTPUT_FILE_COMMANDS@
 
 #-----------------------------------------------------------------------------
 # These files need to be deleted after the test has completed
