@@ -67,9 +67,9 @@ float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew)
 
   const std::array<float, 3> axes = {xAngle, yAngle, zAngle};
 
-  const std::array<float, 3>::const_iterator maxElementIter = std::max_element(axes.cbegin(), axes.cend());
+  const std::array<float, 3>::const_iterator maxElementIterPtr = std::max_element(axes.cbegin(), axes.cend());
 
-  const size_t index = std::distance(axes.cbegin(), maxElementIter);
+  const size_t index = std::distance(axes.cbegin(), maxElementIterPtr);
 
   return spacing[index];
 }

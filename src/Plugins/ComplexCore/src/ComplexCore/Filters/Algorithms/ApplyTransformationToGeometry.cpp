@@ -1,7 +1,6 @@
 #include "ApplyTransformationToGeometry.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/DataStructure/DataGroup.hpp"
 #include "complex/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 #include "complex/Utilities/ParallelAlgorithmUtilities.hpp"
