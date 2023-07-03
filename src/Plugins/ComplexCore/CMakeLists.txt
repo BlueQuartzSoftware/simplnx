@@ -72,6 +72,7 @@ set(FilterList
   FindVertexToTriangleDistancesFilter
   FindVolFractionsFilter
   GenerateColorTableFilter
+  GenerateVectorColorsFilter
   ImageContouringFilter
   IdentifySample
   ImportBinaryCTNorthstarFilter
@@ -160,6 +161,7 @@ set(AlgorithmList
   FindTriangleGeomSizes
   FindVertexToTriangleDistances
   GenerateColorTable
+  GenerateVectorColors
   ImageContouring
   ImportVolumeGraphicsFile
   ImportBinaryCTNorthstar
