@@ -200,6 +200,11 @@ private:
   [[nodiscard]] Result<> setTuple(usize tuple, Float32Array& data, const std::vector<std::string>& tokens)
   {
     usize numComp = data.getNumberOfComponents();
+    if(numComp > tokens.size())
+    {
+      std::string msg = fmt::format("Error at line {}: Unable to process line because the read in token count was {} and the expected amount was {}", m_LineCount, tokens.size(), numComp);
+      return MakeErrorResult(-2023, msg);
+    }
     for(usize comp = 0; comp < numComp; comp++)
     {
       float32 value = 0.0f;
@@ -209,7 +214,7 @@ private:
       } catch(const std::exception& e)
       {
         std::string msg = fmt::format("Error at line {}: Unable to convert data array {}'s string value \"{}\" to float.  Threw standard exception with text: \"{}\"", m_LineCount, data.getName(),
-                                      tokens[comp + 1], e.what());
+                                      tokens[comp], e.what());
         return MakeErrorResult(-2008, msg);
       }
       data[tuple * numComp + comp] = value;
