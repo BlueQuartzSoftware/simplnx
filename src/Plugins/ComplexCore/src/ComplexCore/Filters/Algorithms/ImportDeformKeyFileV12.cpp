@@ -826,7 +826,7 @@ Result<> ImportDeformKeyFileV12::operator()(bool allocate)
    * have been passed in within inputValues are not valid as they have
    * not been created.
    */
-  std::ifstream inStream(m_InputValues->InputFilePath);
+  std::ifstream inStream(m_InputValues->InputFilePath, std::ios_base::binary);
   if(!inStream.is_open())
   {
     return MakeErrorResult(-2013, fmt::format("Unable to open the provided file to read at path : {}", m_InputValues->InputFilePath.string()));
