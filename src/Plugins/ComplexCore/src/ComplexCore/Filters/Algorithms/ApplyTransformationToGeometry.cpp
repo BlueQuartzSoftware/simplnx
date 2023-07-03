@@ -32,7 +32,6 @@ const std::atomic_bool& ApplyTransformationToGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 {
-
   // Pure translation for Image Geom, just return
   if(m_InputValues->TransformationSelection == k_TranslationIdx)
   {
@@ -81,9 +80,9 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
     const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
     auto origin = srcImageGeom.getOrigin().toContainer<std::vector<float32>>();
-    origin[0] += rotateArgs.xMinNew;
-    origin[1] += rotateArgs.yMinNew;
-    origin[2] += rotateArgs.zMinNew;
+    origin[0] = rotateArgs.xMinNew;
+    origin[1] = rotateArgs.yMinNew;
+    origin[2] = rotateArgs.zMinNew;
 
     std::vector<usize> const dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX), opposite of ImageGeometry dimensions
     destImageGeom.setDimensions(dims);
@@ -150,6 +149,21 @@ Result<> ApplyTransformationToGeometry::operator()()
     return MakeErrorResult(-84500, fmt::format("Keeping the original geometry is not supported."));
   }
 
+  auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
+  const bool isNodeBased = (imageGeometryPtr == nullptr);
+
+  ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::Matrix4fR::Identity();
+  ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::Matrix4fR::Identity();
+  if(isNodeBased)
+  {
+    Point3D<float32> minPoint = {0.0F, 0.0F, 0.0F};
+    auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+    auto boundingBox = nodeGeometry0D.getBoundingBox();
+    minPoint = boundingBox.getMinPoint();
+    translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
+    translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
+  }
+
   switch(m_InputValues->TransformationSelection)
   {
   case k_NoTransformIdx: // No-Op
@@ -170,6 +184,12 @@ Result<> ApplyTransformationToGeometry::operator()()
   case k_RotationIdx: // Rotation via axis-angle
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(m_InputValues->Rotation);
+    if(isNodeBased)
+    {
+      // Translate the geometry to/from the global origin
+      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
+    }
+
     break;
   }
   case k_TranslationIdx: // Translation
@@ -180,19 +200,23 @@ Result<> ApplyTransformationToGeometry::operator()()
   case k_ScaleIdx: // Scale
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(m_InputValues->Scale);
+    if(isNodeBased)
+    {
+      // Translate the geometry to/from the global origin
+      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
+    }
     break;
   }
   }
 
-  auto* geometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
-
-  if(geometryPtr != nullptr) // Function for applying Image Transformation
+  // Apply geometry transformation
+  if(isNodeBased)
   {
-    applyImageGeometryTransformation();
+    applyNodeGeometryTransformation();
   }
   else
   {
-    applyNodeGeometryTransformation();
+    applyImageGeometryTransformation();
   }
 
   return {};

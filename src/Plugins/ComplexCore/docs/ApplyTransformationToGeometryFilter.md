@@ -25,6 +25,10 @@ take place are the actual coordinates of the vertices.
 If the user selects an **Image Geometry** then the user should select one of the *Interpolation* methods and then also
 select the appropriate *Cell Attribute Matrix*.
 
+The **Scale** and **Rotation** transformation types will automatically translate the volume to (0, 0, 0), apply the scaling/rotation,
+and then translate the volume back to its original location.  If the **Manual Transformation Matrix** or **Pre-Computed Transformation
+Matrix** types are selected, then it is up to the user to make sure that those translations are included, if necessary.
+
 ## Example Transformations
 
 | Description | Example Output Image |

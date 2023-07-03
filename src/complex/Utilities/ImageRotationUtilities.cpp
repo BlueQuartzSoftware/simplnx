@@ -218,12 +218,7 @@ ImageRotationUtilities::Matrix4fR GenerateRotationTransformationMatrix(const Vec
 //------------------------------------------------------------------------------
 ImageRotationUtilities::Matrix4fR GenerateTranslationTransformationMatrix(const VectorFloat32Parameter::ValueType& pTranslationValue)
 {
-  ImageRotationUtilities::Matrix4fR transformationMatrix;
-  transformationMatrix.fill(0.0F);
-  transformationMatrix(0, 0) = 1.0f;
-  transformationMatrix(1, 1) = 1.0f;
-  transformationMatrix(2, 2) = 1.0f;
-  transformationMatrix(3, 3) = 1.0f;
+  ImageRotationUtilities::Matrix4fR transformationMatrix = ImageRotationUtilities::Matrix4fR::Identity();
   transformationMatrix(0, 3) = pTranslationValue[0];
   transformationMatrix(1, 3) = pTranslationValue[1];
   transformationMatrix(2, 3) = pTranslationValue[2];

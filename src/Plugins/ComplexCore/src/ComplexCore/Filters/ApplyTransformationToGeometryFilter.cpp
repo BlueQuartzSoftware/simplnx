@@ -148,72 +148,81 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   std::string transformationMatrixDesc;
   transformationMatrix.setIdentity();
 
-  switch(pTransformationMatrixTypeValue)
-  {
-  case k_NoTransformIdx: // No-Op
-  {
-    resultOutputActions.warnings().push_back(Warning{82001, "No transformation has been selected, so this filter will perform no operations"});
-    transformationMatrixDesc = "No transformation matrix selected.";
-  }
-  case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
-  {
-    const Float32Array* precomputedMatrixPtr = dataStructure.getDataAs<Float32Array>(pComputedTransformationMatrixPath);
-    if(nullptr == precomputedMatrixPtr)
-    {
-      return {MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
-    }
-    transformationMatrixDesc = K_UNKNOWN_PRECOMPUTED_MATRIX_STR;
-    break;
-  }
-  case k_ManualTransformationMatrixIdx: // Manual transformation matrix
-  {
-    const usize numTableRows = tableData.size();
-    const usize numTableCols = tableData[0].size();
-    if(numTableRows != 4)
-    {
-      return {MakeErrorResult<OutputActions>(-82002, "Manually entered transformation matrix must have exactly 4 rows")};
-    }
-    if(numTableCols != 4)
-    {
-      return {MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
-    }
-    transformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(tableData);
-    transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
-    break;
-  }
-  case k_RotationIdx: // Rotation via axis-angle
-  {
-    auto pRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
-    transformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
-    transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
-    break;
-  }
-  case k_TranslationIdx: // Translation
-  {
-    auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
-    transformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(pTranslationValue);
-    transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
-    break;
-  }
-  case k_ScaleIdx: // Scale
-  {
-    auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
-    transformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
-    transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
-    break;
-  }
-  default: {
-    return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
-  }
-  }
-
-  preflightUpdatedValues.push_back({"Generated Transformation Matrix", transformationMatrixDesc});
-
   // if ImageGeom was selected to be transformed: This should work because if we didn't pass
   // the earlier test, we should not have gotten to here.
   const ImageGeom* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pSelectedGeometryPathValue);
   if(imageGeomPtr != nullptr)
   {
+    switch(pTransformationMatrixTypeValue)
+    {
+    case k_NoTransformIdx: // No-Op
+    {
+      resultOutputActions.warnings().push_back(Warning{82001, "No transformation has been selected, so this filter will perform no operations"});
+      transformationMatrixDesc = "No transformation matrix selected.";
+    }
+    case k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
+    {
+      const Float32Array* precomputedMatrixPtr = dataStructure.getDataAs<Float32Array>(pComputedTransformationMatrixPath);
+      if(nullptr == precomputedMatrixPtr)
+      {
+        return {
+            MakeErrorResult<OutputActions>(-82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
+      }
+      transformationMatrixDesc = K_UNKNOWN_PRECOMPUTED_MATRIX_STR;
+      break;
+    }
+    case k_ManualTransformationMatrixIdx: // Manual transformation matrix
+    {
+      const usize numTableRows = tableData.size();
+      const usize numTableCols = tableData[0].size();
+      if(numTableRows != 4)
+      {
+        return {MakeErrorResult<OutputActions>(-82002, "Manually entered transformation matrix must have exactly 4 rows")};
+      }
+      if(numTableCols != 4)
+      {
+        return {MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
+      }
+      transformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(tableData);
+      transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
+      break;
+    }
+    case k_RotationIdx: // Rotation via axis-angle
+    {
+      auto pRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
+      auto origin = imageGeomPtr->getOrigin();
+      ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
+      transformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
+      ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
+      transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
+      transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
+      break;
+    }
+    case k_TranslationIdx: // Translation
+    {
+      auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
+      transformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(pTranslationValue);
+      transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
+      break;
+    }
+    case k_ScaleIdx: // Scale
+    {
+      auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
+      auto origin = imageGeomPtr->getOrigin();
+      ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
+      transformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
+      ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
+      transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
+      transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
+      break;
+    }
+    default: {
+      return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
+    }
+    }
+
+    preflightUpdatedValues.push_back({"Generated Transformation Matrix", transformationMatrixDesc});
+
     auto pInterpolationTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationType_Key);
     // auto pDataArraySelectionValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_DataArraySelection_Key);
 
@@ -260,25 +269,28 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       }
     }
 
-    auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(*imageGeomPtr, transformationMatrix);
-
-    // If the user is purely doing a translation then just adjust the origin and be done.
     if(pTransformationMatrixTypeValue == k_TranslationIdx)
     {
+      // If the user is purely doing a translation then just adjust the origin and be done.
       auto pTranslationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Translation_Key);
-      FloatVec3 originVec = {rotateArgs.OriginalOrigin[0] + pTranslationValue[0], rotateArgs.OriginalOrigin[1] + pTranslationValue[1], rotateArgs.OriginalOrigin[2] + pTranslationValue[2]};
+      FloatVec3 originVec = imageGeomPtr->getOrigin();
+      originVec = {originVec[0] + pTranslationValue[0], originVec[1] + pTranslationValue[1], originVec[2] + pTranslationValue[2]};
       auto spacingVec = imageGeomPtr->getSpacing();
       resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
     else if(pTransformationMatrixTypeValue == k_ScaleIdx)
     {
+      // If the user is purely doing a scaling then just adjust the spacing and be done.
       auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
-      FloatVec3 spacingVec = {rotateArgs.OriginalSpacing[0] * pScaleValue[0], rotateArgs.OriginalSpacing[1] * pScaleValue[1], rotateArgs.OriginalSpacing[2] * pScaleValue[2]};
+      FloatVec3 spacingVec = imageGeomPtr->getSpacing();
+      spacingVec = {spacingVec[0] * pScaleValue[0], spacingVec[1] * pScaleValue[1], spacingVec[2] * pScaleValue[2]};
       auto originVec = imageGeomPtr->getOrigin();
       resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(originVec, spacingVec, pSelectedGeometryPathValue));
     }
     else // We are Rotating or scaling, manual transformation or precomputed. we need to create a brand new Image Geometry
     {
+      auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(*imageGeomPtr, transformationMatrix);
+
       auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
       DataPath destImagePath = srcImagePath;         // filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
       auto pRemoveOriginalGeometry = true;           // filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
@@ -287,9 +299,9 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       const std::vector<usize> dims = {static_cast<usize>(rotateArgs.xpNew), static_cast<usize>(rotateArgs.ypNew), static_cast<usize>(rotateArgs.zpNew)};
       const std::vector<float32> spacing = {rotateArgs.xResNew, rotateArgs.yResNew, rotateArgs.zResNew};
       auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
-      origin[0] += rotateArgs.xMinNew;
-      origin[1] += rotateArgs.yMinNew;
-      origin[2] += rotateArgs.zMinNew;
+      origin[0] = rotateArgs.xMinNew;
+      origin[1] = rotateArgs.yMinNew;
+      origin[2] = rotateArgs.zMinNew;
 
       if(pRemoveOriginalGeometry)
       {
