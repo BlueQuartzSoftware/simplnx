@@ -165,7 +165,7 @@ get_target_property(PIPELINE_RUNNER_DEBUG nxrunner DEBUG_POSTFIX)
 function(add_pipeline_test)
   set(optionsArgs)
   set(oneValueArgs PLUGIN_NAME PIPELINE_PATH TEST_INDEX)
-  set(multiValueArgs DELETE_FILE_LIST)
+  set(multiValueArgs INPUT_FILE_LIST OUTPUT_FILE_LIST DELETE_FILE_LIST)
   cmake_parse_arguments(ARGS "${optionsArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(TEST_SCRIPT_FILE_EXT "sh")
@@ -195,9 +195,76 @@ function(add_pipeline_test)
     if(WIN32)
       file(TO_NATIVE_PATH ${abs_file_path} abs_file_path)
     endif()
-    set(DELETE_FILE_COMMANDS "${DELETE_FILE_COMMANDS}\necho Deleting Input file '${abs_file_path}'\n${RM_COMMAND} \"${abs_file_path}\"\n")
+    set(DELETE_FILE_COMMANDS "${DELETE_FILE_COMMANDS}echo Deleting Input file '${abs_file_path}'\n${RM_COMMAND} \"${abs_file_path}\"\n")
     FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "    [DELETES FILE]:${abs_file_path}\n")
   endforeach()
+
+#------------------------------------------------------------------------------
+# Set up the checks for the input files.
+#------------------------------------------------------------------------------
+  set(INPUT_FILE_COMMANDS "")
+  foreach ( f ${ARGS_INPUT_FILE_LIST})
+    set(abs_file_path ${DATA_DEST_DIR}${f})
+    if(WIN32)
+      file(TO_NATIVE_PATH ${abs_file_path} abs_file_path)
+    endif()
+    if(WIN32)
+    set(INPUT_FILE_COMMANDS 
+"${INPUT_FILE_COMMANDS}echo \"Checking Input file '${abs_file_path}'\"
+if exist \"${abs_file_path}\" (
+  @echo \"    Input file exists\"
+) else (
+  @echo \"    Input file does not exist\"
+  exit 1
+)
+")
+    else()
+    set(INPUT_FILE_COMMANDS 
+"${INPUT_FILE_COMMANDS}echo \"Checking Input file '${abs_file_path}'\"
+if [ -e \"${abs_file_path}\" ]
+then
+  echo \"    Input file exists\"
+else
+  echo \"    Input file does not exist\"
+  exit 1
+fi
+")
+  endif()
+    #FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "    [DELETES FILE]:${abs_file_path}\n")
+  endforeach()
+
+
+  set(OUTPUT_FILE_COMMANDS "")
+  foreach ( f ${ARGS_OUTPUT_FILE_LIST})
+    set(abs_file_path ${DATA_DEST_DIR}${f})
+    if(WIN32)
+      file(TO_NATIVE_PATH ${abs_file_path} abs_file_path)
+    endif()
+    if(WIN32)
+    set(OUTPUT_FILE_COMMANDS 
+"${OUTPUT_FILE_COMMANDS}echo \"Checking output file '${abs_file_path}'\"
+if exist \"${abs_file_path}\" (
+  @echo \"    Input file exists\"
+) else (
+  @echo \"    Input file does not exist\"
+  exit 1
+)
+")
+    else()
+    set(OUTPUT_FILE_COMMANDS 
+"${OUTPUT_FILE_COMMANDS}echo \"Checking output file '${abs_file_path}'\"
+if [ -e \"${abs_file_path}\" ]
+then
+  echo \"    Output file exists\"
+else
+  echo \"    Output file does not exist\"
+  exit 1
+fi
+")
+  endif()
+    #FILE(APPEND ${TEST_PIPELINE_LIST_FILE} "    [DELETES FILE]:${abs_file_path}\n")
+  endforeach()
+
 
   configure_file(${${PLUGIN_NAME}_SOURCE_DIR}/test/ctest_pipeline_driver.${TEST_SCRIPT_FILE_EXT} 
                 "${COMPLEX_CTEST_TEST_DRIVER}" @ONLY)
@@ -218,43 +285,56 @@ math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(08) Small IN100 Full Reconstruction.d3dpipeline" 
                   TEST_INDEX "${test_index}"
-                  #DELETE_FILE_LIST "Data/Output/Reconstruction/Small_IN100.h5ebsd"
+                  INPUT_FILE_LIST "Data/Output/Reconstruction/Small_IN100.h5ebsd"
+                  OUTPUT_FILE_LIST "Data/Output/Reconstruction/SmallIN100_Final.dream3d" "Data/Output/Reconstruction/SmallIN100_Final.xdmf"
                   )
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(01) Small IN100 Morphological Statistics.d3dpipeline" 
                   TEST_INDEX "${test_index}"
+                  INPUT_FILE_LIST "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
+                  OUTPUT_FILE_LIST "Data/Output/Statistics/SmallIN100_Morph.dream3d" "Data/Output/Statistics/SmallIN100_Morph.xdmf"
                   DELETE_FILE_LIST "Data/Output/Reconstruction/SmallIN100_Final.dream3d" "Data/Output/Reconstruction/SmallIN100_Final.xdmf")
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(05) Small IN100 Crystallographic Statistics.d3dpipeline" 
                   TEST_INDEX "${test_index}"
+                  INPUT_FILE_LIST "Data/Output/Statistics/SmallIN100_Morph.dream3d"
+                  OUTPUT_FILE_LIST "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d" "Data/Output/Statistics/SmallIN100_CrystalStats.xdmf"
                   DELETE_FILE_LIST "Data/Output/Statistics/SmallIN100_Morph.dream3d" "Data/Output/Statistics/SmallIN100_Morph.xdmf")
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(01) Small IN100 Quick Mesh.d3dpipeline" 
                   TEST_INDEX "${test_index}"
+                  INPUT_FILE_LIST "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
+                  OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Mesh.xdmf"
                   DELETE_FILE_LIST "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d" "Data/Output/Statistics/SmallIN100_CrystalStats.xdmf")     
  
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(02) Small IN100 Smooth Mesh.d3dpipeline" 
                   TEST_INDEX "${test_index}"
+                  INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
+                  OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Smoothed.xdmf"
                   DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Mesh.xdmf")                   
   
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(03) Small IN100 Mesh Statistics.d3dpipeline" 
                   TEST_INDEX "${test_index}"
+                  INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
+                  OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d" "Data/Output/SurfaceMesh/SmallIN100_MeshStats.xdmf"
                   DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Smoothed.xdmf")                 
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(04) Small IN100 GBCD.d3dpipeline" 
                   TEST_INDEX "${test_index}"
+                  INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
+                  OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_GBCD.dream3d" "Data/Output/SurfaceMesh/SmallIN100_GBCD.xdmf"
                   DELETE_FILE_LIST "Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph"
                                     "Data/Output/SmallIN100GBCD/SmallIn100GMT_1.dat"
                   )     
@@ -263,6 +343,8 @@ math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
                   PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(05) Small IN100 GBCD Metric.d3dpipeline"
                   TEST_INDEX "${test_index}"
+                  INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
+                  OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_GBCD_Metric.dream3d" "Data/Output/SurfaceMesh/SmallIN100_GBCD_Metric.xdmf"
                   DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
                                     "Data/Output/SurfaceMesh/SmallIN100_MeshStats.xdmf"
                                     "Data/Output/SurfaceMesh/7_0_small_in100_distribution_1.dat"
