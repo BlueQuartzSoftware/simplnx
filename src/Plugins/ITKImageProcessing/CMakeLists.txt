@@ -307,8 +307,8 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   endif()
   
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
-                   ARCHIVE_NAME ITKMhaFileReaderTest.tar.gz
-                   SHA512 8db2efc772ccd96f1dc4113b262c5469cfc7299dafddeb53a807d8d62a0dbc9a29493438728c44cc345d5e2d2911bd2d0af6e2be8fe0713c883143bdf6bd814f)
+                   ARCHIVE_NAME ITKMhaFileReaderTest_rev2.tar.gz
+                   SHA512 82592ffb6904389da1475e9c57f0be724d29db22ba9c942fd02d08ce3f8c73dc39a245503e584e56ca4ea7554d63cf1db5fb46e6e426768020f1ca0542822d0a)
                    
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
                    ARCHIVE_NAME Porosity_Image.tar.gz
