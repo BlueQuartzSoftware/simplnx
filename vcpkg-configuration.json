@@ -19,7 +19,6 @@
         "nlohmann-json",
         "nod",
         "pybind11",
-        "randlib",
         "reproc",
         "snappy",
         "span-lite",
@@ -29,7 +28,7 @@
         "zlib",
         "zstd"
       ],
-      "baseline": "9a5db7b5fa02b2495eb51654cbaab3c63820c779"
+      "baseline": "a7f8a05a400087e5dd4b0a5e46ece1b2123dc608"
     }
   ]
 }

@@ -33,9 +33,6 @@
     },
     {
       "name": "reproc"
-    },
-    {
-      "name": "randlib"
     }
   ],
   "features": {
