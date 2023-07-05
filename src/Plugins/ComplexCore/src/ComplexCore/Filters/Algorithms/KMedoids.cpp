@@ -4,8 +4,7 @@
 #include "complex/Utilities/FilterUtilities.hpp"
 #include "complex/Utilities/KUtilities.hpp"
 
-#include <RandLib/distributions/BasicRandGenerator.hpp>
-#include <RandLib/distributions/UniformDiscreteRand.hpp>
+#include <random>
 
 using namespace complex;
 
@@ -16,7 +15,7 @@ class KMedoidsTemplate
 {
 public:
   KMedoidsTemplate(KMedoids* filter, const IDataArray& inputIDataArray, IDataArray& medoidsIDataArray, const BoolArray& maskDataArray, usize numClusters, Int32Array& fIds,
-                   KUtilities::DistanceMetric distMetric, uint64 seed)
+                   KUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(dynamic_cast<const DataArrayT&>(inputIDataArray))
   , m_Medoids(dynamic_cast<DataArrayT&>(medoidsIDataArray))
@@ -35,20 +34,18 @@ public:
   // -----------------------------------------------------------------------------
   void operator()()
   {
-    int64 numTuples = static_cast<int64>(m_InputArray.getNumberOfTuples());
+    usize numTuples = m_InputArray.getNumberOfTuples();
     int32 numCompDims = m_InputArray.getNumberOfComponents();
 
-    RandLib::UniformDiscreteRand<int64, RandLib::JLKiss64RandEngine> uDist = RandLib::UniformDiscreteRand<int64, RandLib::JLKiss64RandEngine>(0, numTuples - 1);
-    uDist.Reseed(m_Seed);
+    std::mt19937_64 gen(m_Seed);
+    std::uniform_int_distribution<usize> dist(0, numTuples - 1);
 
     std::vector<usize> clusterIdxs(m_NumClusters);
 
-    std::vector<int64> data(m_NumClusters);
-    uDist.Sample(data);
-
     usize clusterChoices = 0;
-    for(int64 index : data)
+    while(clusterChoices < m_NumClusters)
     {
+      usize index = dist(gen);
       if(m_Mask[index])
       {
         clusterIdxs[clusterChoices] = index;
@@ -98,7 +95,7 @@ private:
   usize m_NumClusters;
   Int32Array& m_FeatureIds;
   KUtilities::DistanceMetric m_DistMetric;
-  uint64 m_Seed;
+  std::mt19937_64::result_type m_Seed;
 
   // -----------------------------------------------------------------------------
   void findClusters(usize tuples, int32 dims)
