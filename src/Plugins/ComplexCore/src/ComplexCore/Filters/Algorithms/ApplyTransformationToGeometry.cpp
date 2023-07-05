@@ -155,10 +155,9 @@ Result<> ApplyTransformationToGeometry::operator()()
   ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::Matrix4fR::Identity();
   if(isNodeBased)
   {
-    Point3D<float32> minPoint = {0.0F, 0.0F, 0.0F};
     auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
     auto boundingBox = nodeGeometry0D.getBoundingBox();
-    minPoint = boundingBox.getMinPoint();
+    Point3Df minPoint = boundingBox.getMinPoint();
     translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
     translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
   }
