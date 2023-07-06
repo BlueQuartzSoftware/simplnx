@@ -182,11 +182,11 @@ Result<> ApplyTransformationToGeometry::operator()()
   case k_RotationIdx: // Rotation via axis-angle
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(m_InputValues->Rotation);
-    if(isNodeBased)
-    {
-      // Translate the geometry to/from the global origin
-      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
-    }
+    //    if(isNodeBased)
+    //    {
+    //      // Translate the geometry to/from the global origin
+    //      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
+    //    }
 
     break;
   }
@@ -198,11 +198,11 @@ Result<> ApplyTransformationToGeometry::operator()()
   case k_ScaleIdx: // Scale
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(m_InputValues->Scale);
-    if(isNodeBased)
-    {
-      // Translate the geometry to/from the global origin
-      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
-    }
+    //    if(isNodeBased)
+    //    {
+    //      // Translate the geometry to/from the global origin
+    //      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
+    //    }
     break;
   }
   }
