@@ -178,7 +178,7 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
     {
       if(parent == nullptr)
       {
-        return complex::MakeErrorResult<LinkedPath>(-3, "Target parent object in path is not derived from BaseGroup.");
+        return complex::MakeErrorResult<LinkedPath>(-3, fmt::format("Target parent object '{}' in path '{}' is not derived from BaseGroup.", name, path.toString()));
       }
 
       name = path[i];
@@ -201,7 +201,7 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
       removeData(id);
     }
 
-    return complex::MakeErrorResult<LinkedPath>(-2, "Exception thrown when attempting to create a path in the DataStructure");
+    return complex::MakeErrorResult<LinkedPath>(-2, fmt::format("Exception thrown when attempting to create a path '{}' in the DataStructure: '{}'", path.toString(), e.what()));
   }
 }
 
