@@ -116,6 +116,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Co
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(apply_transformation_to_geometry::k_InputCellAttrMatrixPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TransformationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_RotationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F, 45.0F}));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<complex::BoolParameter::ValueType>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -308,6 +309,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Image_Li
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_InterpolationType_Key, std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_LinearInterpolationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({100.0F, 50.0F, -100.0F}));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<complex::BoolParameter::ValueType>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -517,6 +519,7 @@ TEST_CASE("ComplexCore::ApplyTransformationToGeometryFilter:Translation_Image_NN
                         std::make_any<complex::ChoicesParameter::ValueType>(apply_transformation_to_geometry::k_NearestNeighborInterpolationIdx));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_CellAttributeMatrixPath_Key, std::make_any<DataPath>(inputCellAMPath));
     args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, std::make_any<complex::VectorFloat32Parameter::ValueType>({100.0F, 50.0F, -100.0F}));
+    args.insertOrAssign(ApplyTransformationToGeometryFilter::k_TranslateGeometryToGlobalOrigin_Key, std::make_any<complex::BoolParameter::ValueType>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

@@ -15,6 +15,7 @@
 #include "complex/Filter/Actions/UpdateImageGeomAction.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/AttributeMatrixSelectionParameter.hpp"
+#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/DataGroupSelectionParameter.hpp"
 #include "complex/Parameters/DynamicTableParameter.hpp"
@@ -92,6 +93,10 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Transformation Matrix", "", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}));
 
+  params.insert(std::make_unique<BoolParameter>(k_TranslateGeometryToGlobalOrigin_Key, "Translate Geometry To Global Origin Before Transformation",
+                                                "Specifies whether to translate the geometry to (0, 0, 0), apply the transformation, and then translate the geometry back to its original origin.",
+                                                false));
+
   params.insertSeparator({"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometry_Key, "Selected Geometry", "The target geometry on which to perform the transformation", DataPath{},
                                                              IGeometry::GetAllGeomTypes()));
@@ -126,8 +131,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
   auto pComputedTransformationMatrixPath = filterArgs.value<DataPath>(k_ComputedTransformationMatrix_Key);
   auto pSelectedGeometryPathValue = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   auto pCellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
-
-  // PreflightResult preflightResult;
+  auto pTranslateGeometryToGlobalOrigin = filterArgs.value<BoolParameter::ValueType>(k_TranslateGeometryToGlobalOrigin_Key);
 
   complex::Result<OutputActions> resultOutputActions;
 
@@ -189,11 +193,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     case k_RotationIdx: // Rotation via axis-angle
     {
       auto pRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Rotation_Key);
-      auto origin = imageGeomPtr->getOrigin();
-      //      const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
       transformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
-      //      const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
-      //      transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
@@ -207,17 +207,21 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
     case k_ScaleIdx: // Scale
     {
       auto pScaleValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
-      auto origin = imageGeomPtr->getOrigin();
-      //      const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
       transformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
-      //      const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
-      //      transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
     default: {
       return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
     }
+    }
+
+    if(pTranslateGeometryToGlobalOrigin)
+    {
+      auto origin = imageGeomPtr->getOrigin();
+      const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
+      const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
+      transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
     }
 
     preflightUpdatedValues.push_back({"Generated Transformation Matrix", transformationMatrixDesc});
@@ -423,6 +427,7 @@ Result<> ApplyTransformationToGeometryFilter::executeImpl(DataStructure& dataStr
   inputValues.Scale = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scale_Key);
   inputValues.SelectedGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometry_Key);
   inputValues.CellAttributeMatrixPath = filterArgs.value<DataPath>(k_CellAttributeMatrixPath_Key);
+  inputValues.TranslateGeometryToGlobalOrigin = filterArgs.value<BoolParameter::ValueType>(k_TranslateGeometryToGlobalOrigin_Key);
   inputValues.RemoveOriginalGeometry = true;
 
   return ApplyTransformationToGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
