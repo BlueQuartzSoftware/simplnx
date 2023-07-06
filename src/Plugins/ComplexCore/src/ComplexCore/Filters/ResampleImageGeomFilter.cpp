@@ -77,7 +77,7 @@ Parameters ResampleImageGeomFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ResamplingMode_Key, "Select the resampling mode", "Mode can be 'Spacing (0)' or 'Scaling (1)'", k_SpacingModeIndex, ::k_Choices));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ResamplingMode_Key, "Resampling Mode", "Mode can be 'Spacing (0)' or 'Scaling (1)'", k_SpacingModeIndex, ::k_Choices));
 
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "New Spacing",
                                                          "The new spacing values (dx, dy, dz). Larger spacing will cause less voxels, smaller spacing will cause more voxels.",
