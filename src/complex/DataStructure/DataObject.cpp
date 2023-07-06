@@ -164,7 +164,11 @@ std::string DataObject::getName() const
 
 bool DataObject::canRename(const std::string& name) const
 {
+<<<<<<< develop
 
+=======
+  
+>>>>>>> BUG: Catch nullptr trying to rename DataObject (#643)
   if(name == getName())
   {
     return true;
