@@ -164,14 +164,15 @@ std::string DataObject::getName() const
 
 bool DataObject::canRename(const std::string& name) const
 {
-  if(!IsValidName(name))
-  {
-    return false;
-  }
-
+  
   if(name == getName())
   {
     return true;
+  }
+
+  if(!IsValidName(name))
+  {
+    return false;
   }
 
   const auto* dataStructPtr = getDataStructure();
@@ -192,11 +193,6 @@ bool DataObject::canRename(const std::string& name) const
 
 bool DataObject::rename(const std::string& name)
 {
-  if(name == m_Name)
-  {
-    return true;
-  }
-
   if(!canRename(name))
   {
     return false;
