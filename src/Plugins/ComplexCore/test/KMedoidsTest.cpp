@@ -31,7 +31,11 @@ const DataPath k_MedoidsPathNX = k_ClusterDataPathNX.createChildPath(k_MedoidsNa
 
 TEST_CASE("ComplexCore::KMedoidsFilter: Valid Filter Execution", "[ComplexCore][KMedoidsFilter]")
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
+#ifdef _WIN32
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_medoids_exemplar_windows.dream3d", unit_test::k_TestFilesDir)));
+#else
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_medoids_exemplar_unix.dream3d", unit_test::k_TestFilesDir)));
+#endif
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
