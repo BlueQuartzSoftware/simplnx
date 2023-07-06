@@ -27,6 +27,7 @@ const DataPath k_MeansSilhouettePathNX = k_CellPath.createChildPath(k_MeansSilho
 
 TEST_CASE("ComplexCore::SilhouetteFilter: Medoids Test", "[ComplexCore][SilhouetteFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_silhouette_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   {
@@ -54,6 +55,7 @@ TEST_CASE("ComplexCore::SilhouetteFilter: Medoids Test", "[ComplexCore][Silhouet
 
 TEST_CASE("ComplexCore::SilhouetteFilter: Means Test", "[ComplexCore][SilhouetteFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_silhouette_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   {
