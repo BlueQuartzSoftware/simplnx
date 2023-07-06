@@ -29,9 +29,11 @@ namespace
 const std::string k_TempGeometryName = ".resampled_image_geometry";
 const std::string k_SpacingMode("Spacing (0)");
 const std::string k_ScalingMode("Scaling (1)");
-const ChoicesParameter::Choices k_Choices = {k_SpacingMode, k_ScalingMode};
+const std::string k_ExactDimensions("Exact Dimensions (2)");
+const ChoicesParameter::Choices k_Choices = {k_SpacingMode, k_ScalingMode, k_ExactDimensions};
 const ChoicesParameter::ValueType k_SpacingModeIndex = 0;
 const ChoicesParameter::ValueType k_ScalingModeIndex = 1;
+const ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 
 } // namespace
 
@@ -83,9 +85,12 @@ Parameters ResampleImageGeomFilter::parameters() const
 
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_Scaling_Key, "Scale Factor (percentages)",
-                                               "The scale factor values (dx, dy, dz) to scale the geometry, in percentages. Larger percentages will cause more voxels, smaller percentages "
-                                               "will cause less voxels.  A percentage of 100 in any dimension will not scale the geometry in that dimension.  Percentages must be larger than 0.",
+                                               "The scale factor values (dx, dy, dz) to resample the geometry, in percentages. Larger percentages will cause more voxels, smaller percentages "
+                                               "will cause less voxels.  A percentage of 100 in any dimension will not resample the geometry in that dimension.  Percentages must be larger than 0.",
                                                std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}));
+
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactDimensions_Key, "Exact Dimensions (pixels)", "The exact dimension size values (dx, dy, dz) to resample the geometry, in pixels.",
+                                                        std::vector<uint64>{100, 100, 100}, std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
@@ -106,6 +111,7 @@ Parameters ResampleImageGeomFilter::parameters() const
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ResamplingMode_Key, k_Spacing_Key, std::make_any<ChoicesParameter::ValueType>(k_SpacingModeIndex));
   params.linkParameters(k_ResamplingMode_Key, k_Scaling_Key, std::make_any<ChoicesParameter::ValueType>(k_ScalingModeIndex));
+  params.linkParameters(k_ResamplingMode_Key, k_ExactDimensions_Key, std::make_any<ChoicesParameter::ValueType>(k_ExactDimensionsModeIndex));
   params.linkParameters(k_RenumberFeatures_Key, k_CellFeatureIdsArrayPath_Key, true);
   params.linkParameters(k_RenumberFeatures_Key, k_FeatureAttributeMatrix_Key, true);
   params.linkParameters(k_RemoveOriginalGeometry_Key, k_CreatedImageGeometry_Key, false);
@@ -125,6 +131,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   auto pResamplingModeValue = filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key);
   auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
   auto pScalingFactorValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Scaling_Key);
+  auto pExactDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactDimensions_Key);
   auto pRemoveOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometry_Key);
   auto shouldRenumberFeatures = filterArgs.value<bool>(k_RenumberFeatures_Key);
@@ -137,25 +144,42 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
 
   if(pResamplingModeValue == k_ScalingModeIndex)
   {
-    // The resampling mode is percentage, calculate the spacing
+    // The resampling mode is scaling factor, calculate the spacing
     if(std::any_of(pScalingFactorValue.begin(), pScalingFactorValue.end(), [](float x) { return x <= 0.0f; }))
     {
       // Percentage has a non-positive value
-      return {MakeErrorResult<OutputActions>(-11500, fmt::format("Scaling Factor has a non-positive value. {}, {}, {}", pScalingFactorValue[0], pScalingFactorValue[1], pScalingFactorValue[2]))};
+      const std::string errMsg = fmt::format("Scaling Factor has a non-positive value. {}, {}, {}", pScalingFactorValue[0], pScalingFactorValue[1], pScalingFactorValue[2]);
+      return {MakeErrorResult<OutputActions>(-11500, errMsg)};
     }
 
-    auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
-    auto spacing = imageGeom.getSpacing();
+    const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+    const auto spacing = imageGeom.getSpacing();
 
     std::transform(spacing.begin(), spacing.end(), pScalingFactorValue.begin(), pSpacingValue.begin(), [](float32 a, float32 b) { return a / (b / 100); });
   }
-  else
+  else if(pResamplingModeValue == k_ExactDimensionsModeIndex)
   {
-    // Validate the user supplied spacing values.
-    if(pSpacingValue[0] < 0.0F || pSpacingValue[1] < 0.0F || pSpacingValue[2] < 0.0F)
-    {
-      return {MakeErrorResult<OutputActions>(-11500, fmt::format("Input Spacing has a negative value. {}, {}, {}", pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
-    }
+    // The resampling mode is exact dimensions, calculate the spacing
+    //    if(std::any_of(pExactDimensionsValue.begin(), pExactDimensionsValue.end(), [](float x) { return x <= 0; }))
+    //    {
+    //      // Exact Dimensions has a non-positive value
+    //      const std::string errMsg = fmt::format("Exact Dimensions has a non-positive value. {}, {}, {}", pExactDimensionsValue[0], pExactDimensionsValue[1], pExactDimensionsValue[2]);
+    //      return {MakeErrorResult<OutputActions>(-11501, errMsg)};
+    //    }
+
+    const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+    const auto srcSpacing = imageGeom.getSpacing();
+    const auto srcDims = imageGeom.getDimensions();
+
+    pSpacingValue[0] = srcSpacing[0] * static_cast<float32>(srcDims[0]) / static_cast<float32>(pExactDimensionsValue[0]);
+    pSpacingValue[1] = srcSpacing[1] * static_cast<float32>(srcDims[1]) / static_cast<float32>(pExactDimensionsValue[1]);
+    pSpacingValue[2] = srcSpacing[2] * static_cast<float32>(srcDims[2]) / static_cast<float32>(pExactDimensionsValue[2]);
+  }
+  else if(pSpacingValue[0] < 0.0F || pSpacingValue[1] < 0.0F || pSpacingValue[2] < 0.0F)
+  {
+    // Spacing has a negative value
+    const std::string errMsg = fmt::format("Input Spacing has a negative value. {}, {}, {}", pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]);
+    return {MakeErrorResult<OutputActions>(-11502, errMsg)};
   }
 
   const auto* srcImageGeom = dataStructure.getDataAs<ImageGeom>(srcImagePath);
@@ -333,6 +357,17 @@ Result<> ResampleImageGeomFilter::executeImpl(DataStructure& dataStructure, cons
     auto spacing = imageGeom.getSpacing();
 
     std::transform(spacing.begin(), spacing.end(), scalingFactor.begin(), inputValues.Spacing.begin(), [](float32 a, float32 b) { return a / (b / 100); });
+  }
+  else if(filterArgs.value<ChoicesParameter::ValueType>(k_ResamplingMode_Key) == k_ExactDimensionsModeIndex)
+  {
+    std::vector<uint64> exactDimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_ExactDimensions_Key);
+    auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.SelectedImageGeometryPath);
+    auto spacing = imageGeom.getSpacing();
+    auto dims = imageGeom.getDimensions();
+
+    inputValues.Spacing[0] = spacing[0] * static_cast<float32>(dims[0]) / static_cast<float32>(exactDimensions[0]);
+    inputValues.Spacing[1] = spacing[1] * static_cast<float32>(dims[1]) / static_cast<float32>(exactDimensions[1]);
+    inputValues.Spacing[2] = spacing[2] * static_cast<float32>(dims[2]) / static_cast<float32>(exactDimensions[2]);
   }
 
   const auto* cellDataGroup = dataStructure.getDataRefAs<ImageGeom>(inputValues.SelectedImageGeometryPath).getCellData();

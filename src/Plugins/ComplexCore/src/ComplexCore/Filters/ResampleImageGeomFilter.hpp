@@ -26,7 +26,8 @@ public:
   // Parameter Keys
   static inline constexpr StringLiteral k_ResamplingMode_Key = "resampling_mode";
   static inline constexpr StringLiteral k_Spacing_Key = "spacing";
-  static inline constexpr StringLiteral k_Scaling_Key = "percentage";
+  static inline constexpr StringLiteral k_Scaling_Key = "scaling";
+  static inline constexpr StringLiteral k_ExactDimensions_Key = "exact_dimensions";
   static inline constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
   static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
   static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
