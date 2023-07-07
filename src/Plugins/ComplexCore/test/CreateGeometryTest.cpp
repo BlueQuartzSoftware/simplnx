@@ -2361,7 +2361,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     std::vector<uint64> imageDims = {40, 60, 80};
     std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
     std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
@@ -2459,7 +2459,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -2519,7 +2519,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -2572,7 +2572,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -2634,7 +2634,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -2696,7 +2696,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -2758,7 +2758,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -2820,7 +2820,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -2882,7 +2882,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(false));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_MoveArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -2945,7 +2945,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(true));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
@@ -3034,7 +3034,7 @@ TEST_CASE("ComplexCore::CreateGeometry: Valid Execution", "[ComplexCore][CreateG
     args.insertOrAssign(CreateGeometryFilter::k_GeometryName_Key, std::make_any<DataPath>(geometryPath));
     args.insertOrAssign(CreateGeometryFilter::k_WarningsAsErrors_Key, std::make_any<bool>(true));
     args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_CopyArray));
-    // Image Geometry	parameters
+    // Image Geometry parameters
     args.insertOrAssign(CreateGeometryFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>());
     args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>());
