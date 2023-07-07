@@ -129,7 +129,7 @@ struct ExecuteThresholdHelper
   void operator()(ThresholdFilterHelper<MaskType>& helper, const IDataArray& iDataArray)
   {
     const auto& dataArray = dynamic_cast<const DataArray<Type>&>(iDataArray);
-    helper.filterData<Type>(dataArray);
+    helper.template filterData<Type>(dataArray);
   }
 };
 
