@@ -59,14 +59,13 @@ void INodeGeometry1D::resizeEdgeList(usize size)
 
 usize INodeGeometry1D::getNumberOfCells() const
 {
-  auto& edges = getEdgesRef();
-  return edges.getNumberOfTuples();
+  return getNumberOfEdges();
 }
 
 usize INodeGeometry1D::getNumberOfEdges() const
 {
-  auto& edges = getEdgesRef();
-  return edges.getNumberOfTuples();
+  const auto* edgesPtr = getEdges();
+  return edgesPtr == nullptr ? 0 : edgesPtr->getNumberOfTuples();
 }
 
 void INodeGeometry1D::setEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds)

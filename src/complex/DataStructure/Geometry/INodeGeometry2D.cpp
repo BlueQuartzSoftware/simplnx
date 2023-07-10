@@ -59,8 +59,8 @@ void INodeGeometry2D::resizeFaceList(usize size)
 
 usize INodeGeometry2D::getNumberOfFaces() const
 {
-  const auto& faces = getFacesRef();
-  return faces.getNumberOfTuples();
+  const auto* facesPtr = getFaces();
+  return facesPtr == nullptr ? 0 : facesPtr->getNumberOfTuples();
 }
 
 void INodeGeometry2D::setFacePointIds(usize faceId, nonstd::span<usize> vertexIds)

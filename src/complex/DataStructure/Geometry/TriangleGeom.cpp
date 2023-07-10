@@ -159,22 +159,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
 
 usize TriangleGeom::getNumberOfCells() const
 {
-  if(!m_FaceListId.has_value())
-  {
-    return 0;
-  }
-  const DataStructure* dataStructure = getDataStructure();
-  if(dataStructure == nullptr)
-  {
-    return 0;
-  }
-
-  auto* sharedTriListPtr = dataStructure->getDataAs<MeshIndexArrayType>(m_FaceListId.value());
-  if(sharedTriListPtr == nullptr)
-  {
-    return 0;
-  }
-  return sharedTriListPtr->getNumberOfTuples();
+  return getNumberOfFaces();
 }
 
 usize TriangleGeom::getNumberOfVerticesPerFace() const
