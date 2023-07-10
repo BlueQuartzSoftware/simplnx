@@ -34,11 +34,7 @@ const DataPath k_ClusterIdsPathNX = k_CellPath.createChildPath(k_ClusterIdsNameN
 TEST_CASE("ComplexCore::KMeans: Valid Filter Execution", "[ComplexCore][KMeans]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-#ifdef _WIN32
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_means_exemplar_windows.dream3d", unit_test::k_TestFilesDir)));
-#else
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_means_exemplar_unix.dream3d", unit_test::k_TestFilesDir)));
-#endif
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_means_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter and an Arguments Object
