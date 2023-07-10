@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 
 #include "ComplexCore/ComplexCore_test_dirs.hpp"
