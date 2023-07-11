@@ -1,6 +1,9 @@
 #include "ITKImportFijiMontage.hpp"
 
+#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
@@ -18,27 +21,143 @@ using namespace complex;
 namespace
 {
 // -----------------------------------------------------------------------------
-//
+void FindTileIndices(int32 tolerance, std::vector<BoundsType>& bounds)
+{
+  std::vector<int32> xValues(bounds.size());
+  std::vector<int32> yValues(bounds.size());
+
+  for(usize i = 0; i < bounds.size(); i++)
+  {
+    xValues[i] = bounds.at(i).Origin[0];
+    yValues[i] = bounds.at(i).Origin[1];
+  }
+
+  std::map<int32, std::vector<usize>> avg_indices = MontageImportHelper::Burn(tolerance, xValues);
+  int32 index = 0;
+  for(auto& iter : avg_indices)
+  {
+    const std::vector<usize>& indices = iter.second;
+    for(const auto& i : indices)
+    {
+      bounds.at(i).Col = index;
+    }
+    index++;
+  }
+  m_ColumnCount = index;
+
+  avg_indices = MontageImportHelper::Burn(tolerance, yValues);
+  index = 0;
+  for(auto& iter : avg_indices)
+  {
+    const std::vector<usize>& indices = iter.second;
+    for(const auto& i : indices)
+    {
+      bounds.at(i).Row = index;
+    }
+    index++;
+  }
+  m_RowCount = index;
+}
+
 // -----------------------------------------------------------------------------
-void ITKImportFijiMontage::generateCache()
+std::vector<BoundsType> ParseConfigFile(const fs::path& filePath)
+{
+  std::string contents;
+
+  // Read the Source File
+  QFile source(filePath);
+  source.open(QFile::ReadOnly);
+  contents = source.readAll();
+  source.close();
+
+  QStringList list = contents.split(QRegExp("\\n"));
+  QStringListIterator sourceLines(list);
+  bool dimFound = false;
+  bool dataFound = false;
+
+  while(sourceLines.hasNext())
+  {
+    std::string line = sourceLines.next().trimmed();
+
+    if(line.startsWith("dim =")) // found the dimensions
+    {
+      dimFound = true;
+      // Should check that the value = 2
+    }
+    if(line.startsWith("# Define the image coordinates"))
+    {
+      // Found the start of the data
+      dataFound = true;
+      break;
+    }
+    if(line.startsWith("#")) // comment line
+    {
+      continue;
+    }
+  }
+
+  std::vector<BoundsType> bounds;
+  if(!dimFound || !dataFound)
+  {
+    return bounds;
+  }
+
+  // slice_12.tif; ; (471.2965233276666, -0.522608066434236)
+  while(sourceLines.hasNext())
+  {
+    std::string line = sourceLines.next().trimmed();
+    if(line.isEmpty())
+    {
+      continue;
+    }
+    QStringList tokens = line.split(";");
+    if(tokens.count() != 3)
+    {
+      continue;
+    }
+    BoundsType bound;
+    bound.Filename = tokens.at(0);
+
+    std::string coords = tokens.at(2).trimmed();
+    coords = coords.replace("(", "");
+    coords = coords.replace(")", "");
+    tokens = coords.split(",");
+    if(tokens.count() != 2)
+    {
+      continue;
+    }
+    float32 x = tokens.at(0).toFloat();
+    float32 y = tokens.at(1).toFloat();
+    bound.Origin = FloatVec3(x, y, 0.0f);
+    bound.Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
+    bounds.push_back(bound);
+  }
+
+  FindTileIndices(m_Tolerance, bounds);
+
+  return bounds;
+}
+
+// -----------------------------------------------------------------------------
+void GenerateCache(const fs::path& inputFile)
 {
   // This next function will set the FileName (Partial), Row, Col for each "bound" object
-  std::vector<BoundsType> bounds = parseConfigFile(getInputFile());
+  std::vector<BoundsType> bounds = ParseConfigFile(inputFile);
 
-  FloatVec3Type minCoord = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
-  FloatVec3Type minSpacing = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
-  std::vector<ImageGeom::Pointer> geometries;
+  FloatVec3 minCoord = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
+  FloatVec3 minSpacing = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
+  std::vector<ImageGeom> geometries;
 
   // Get the meta information from disk for each image
   for(auto& bound : bounds)
   {
     // This will update the FileName to the absolutePath
     QFileInfo fi(getInputFile());
-    QString absolutePath = fi.absolutePath() + QDir::separator() + bound.Filename;
+    std::string absolutePath = fi.absolutePath() + QDir::separator() + bound.Filename;
     bound.Filename = absolutePath;
     bound.LengthUnit = static_cast<IGeometry::LengthUnit>(getLengthUnit());
 
-    DataArrayPath dap(::k_DCName, ITKImageProcessing::Montage::k_AMName, ITKImageProcessing::Montage::k_AAName);
+    DataPath dap(::k_DCName, ITKImageProcessing::Montage::k_AMName, ITKImageProcessing::Montage::k_AAName);
     AbstractFilter::Pointer imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
     imageImportFilter->preflight();
     if(imageImportFilter->getErrorCode() < 0)
@@ -50,18 +169,18 @@ void ITKImportFijiMontage::generateCache()
     DataContainerArray::Pointer importImageDca = imageImportFilter->getDataContainerArray();
     {
       DataContainer::Pointer fromDc = importImageDca->getDataContainer(::k_DCName);
-      AttributeMatrix::Pointer fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
-      IDataArray::Pointer fromImageData = fromCellAttrMat->getAttributeArray(ITKImageProcessing::Montage::k_AAName);
+      AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
+      IDataArray fromImageData = fromCellAttrMat->getAttributeArray(ITKImageProcessing::Montage::k_AAName);
       fromImageData->setName(getImageDataArrayName());
       bound.ImageDataProxy = fromImageData;
 
       // Set the Origin based on the values from the Fiji Config File
       // Set the spacing to the default 1,1,1
-      ImageGeom::Pointer imageGeom = fromDc->getGeometryAs<ImageGeom>();
-      bound.Dims = imageGeom->getDimensions();
-      imageGeom->setSpacing(bound.Spacing);
-      imageGeom->setOrigin(bound.Origin);
-      minSpacing = imageGeom->getSpacing();
+      ImageGeom& imageGeom = fromDc->getGeometryAs<ImageGeom>();
+      bound.Dims = imageGeom.getDimensions();
+      imageGeom.setSpacing(bound.Spacing);
+      imageGeom.setOrigin(bound.Origin);
+      minSpacing = imageGeom.getSpacing();
       //
       minCoord[0] = std::min(bound.Origin[0], minCoord[0]);
       minCoord[1] = std::min(bound.Origin[1], minCoord[1]);
@@ -71,7 +190,7 @@ void ITKImportFijiMontage::generateCache()
 
     if(getConvertToGrayScale())
     {
-      DataArrayPath daPath(::k_DCName, ITKImageProcessing::Montage::k_AMName, ITKImageProcessing::Montage::k_AAName);
+      DataPath daPath(::k_DCName, ITKImageProcessing::Montage::k_AMName, ITKImageProcessing::Montage::k_AAName);
       AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, daPath, getColorWeights(), ITKImageProcessing::Montage::k_GrayScaleTempArrayName);
       grayScaleFilter->setDataContainerArray(importImageDca);
       grayScaleFilter->preflight();
@@ -83,11 +202,11 @@ void ITKImportFijiMontage::generateCache()
 
       DataContainerArray::Pointer colorToGrayDca = grayScaleFilter->getDataContainerArray();
       DataContainer::Pointer fromDc = colorToGrayDca->getDataContainer(::k_DCName);
-      AttributeMatrix::Pointer fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
+      AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
       // Remove the RGB Attribute Array so we can rename the gray scale AttributeArray
-      IDataArray::Pointer rgbImageArray = fromCellAttrMat->removeAttributeArray(ITKImageProcessing::Montage::k_AAName);
-      QString grayScaleArrayName = ITKImageProcessing::Montage::k_GrayScaleTempArrayName + ITKImageProcessing::Montage::k_AAName;
-      IDataArray::Pointer fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
+      IDataArray rgbImageArray = fromCellAttrMat->removeAttributeArray(ITKImageProcessing::Montage::k_AAName);
+      std::string grayScaleArrayName = ITKImageProcessing::Montage::k_GrayScaleTempArrayName + ITKImageProcessing::Montage::k_AAName;
+      IDataArray fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
       fromGrayScaleData->setName(getImageDataArrayName());
       bound.ImageDataProxy = fromGrayScaleData;
     }
@@ -96,12 +215,12 @@ void ITKImportFijiMontage::generateCache()
     d_ptr->m_MaxRow = std::max(bound.Row, d_ptr->m_MaxRow);
   }
 
-  QString montageInfo;
+  std::string montageInfo;
   QTextStream ss(&montageInfo);
   ss << "Tile Column(s): " << m_ColumnCount - 1 << "  Tile Row(s): " << m_RowCount - 1 << "  Image Count: " << m_ColumnCount * m_RowCount;
 
-  FloatVec3Type overrideOrigin = minCoord;
-  FloatVec3Type overrideSpacing = minSpacing;
+  FloatVec3 overrideOrigin = minCoord;
+  FloatVec3 overrideSpacing = minSpacing;
 
   // Now adjust the origin/spacing if needed
   if(getChangeOrigin() || getChangeSpacing())
@@ -115,14 +234,14 @@ void ITKImportFijiMontage::generateCache()
     {
       overrideSpacing = m_Spacing;
     }
-    FloatVec3Type delta = {minCoord[0] - overrideOrigin[0], minCoord[1] - overrideOrigin[1], minCoord[2] - overrideOrigin[2]};
+    FloatVec3 delta = {minCoord[0] - overrideOrigin[0], minCoord[1] - overrideOrigin[1], minCoord[2] - overrideOrigin[2]};
     for(size_t i = 0; i < geometries.size(); i++)
     {
-      ImageGeom::Pointer imageGeom = geometries[i];
+      ImageGeom imageGeom = geometries[i];
       BoundsType& bound = bounds.at(i);
       std::transform(bound.Origin.begin(), bound.Origin.end(), delta.begin(), bound.Origin.begin(), std::minus<>());
-      imageGeom->setOrigin(bound.Origin); // Sync up the ImageGeom with the calculated values
-      imageGeom->setSpacing(overrideSpacing);
+      imageGeom.setOrigin(bound.Origin); // Sync up the ImageGeom with the calculated values
+      imageGeom.setSpacing(overrideSpacing);
     }
   }
   ss << "\nOrigin: " << overrideOrigin[0] << ", " << overrideOrigin[1] << ", " << overrideOrigin[2];
@@ -133,17 +252,17 @@ void ITKImportFijiMontage::generateCache()
 }
 
 // -----------------------------------------------------------------------------
-void ITKImportFijiMontage::generateDataStructure()
+void GenerateDataStructure()
 {
   std::vector<BoundsType>& bounds = d_ptr->m_BoundsCache;
 
   DataContainerArray::Pointer dca = getDataContainerArray();
 
-  GridMontage::Pointer gridMontage = GridMontage::New(getMontageName(), m_RowCount, m_ColumnCount);
+  GridMontage gridMontage = GridMontage::New(getMontageName(), m_RowCount, m_ColumnCount);
 
-  int32_t rowCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_RowCount);
-  int32_t colCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_ColumnCount);
-  int charPaddingCount = std::max(rowCountPadding, colCountPadding);
+  int32 rowCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_RowCount);
+  int32 colCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_ColumnCount);
+  int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
 
   for(const auto& bound : bounds)
   {
@@ -173,23 +292,23 @@ void ITKImportFijiMontage::generateDataStructure()
     }
 
     // Create the Image Geometry
-    ImageGeom::Pointer image = ImageGeom::CreateGeometry(dcName);
-    image->setDimensions(bound.Dims);
-    image->setOrigin(bound.Origin);
-    image->setSpacing(bound.Spacing);
-    image->setUnits(bound.LengthUnit);
+    ImageGeom& image = ImageGeom::CreateGeometry(dcName);
+    image.setDimensions(bound.Dims);
+    image.setOrigin(bound.Origin);
+    image.setSpacing(bound.Spacing);
+    image.setUnits(bound.LengthUnit);
 
     dc->setGeometry(image);
 
-    GridTileIndex gridIndex = gridMontage->getTileIndex(bound.Row, bound.Col);
+    GridTileIndex& gridIndex = gridMontage.getTileIndex(bound.Row, bound.Col);
     // Set the montage's DataContainer for the current index
-    gridMontage->setDataContainer(gridIndex, dc);
+    gridMontage.setGeometry(gridIndex, dc);
 
     using StdVecSizeType = std::vector<size_t>;
     // Create the Cell Attribute Matrix into which the image data would be read
-    AttributeMatrix::Pointer cellAttrMat = AttributeMatrix::New(bound.Dims.toContainer<StdVecSizeType>(), getCellAttributeMatrixName(), AttributeMatrix::Type::Cell);
+    AttributeMatrix cellAttrMat = AttributeMatrix::New(bound.Dims.toContainer<StdVecSizeType>(), getCellAttributeMatrixName(), AttributeMatrix::Type::Cell);
     dc->addOrReplaceAttributeMatrix(cellAttrMat);
-    cellAttrMat->addOrReplaceAttributeArray(bound.ImageDataProxy);
+    cellAttrMat.addOrReplaceAttributeArray(bound.ImageDataProxy);
   }
   getDataContainerArray()->addOrReplaceMontage(gridMontage);
 }
@@ -197,16 +316,16 @@ void ITKImportFijiMontage::generateDataStructure()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ITKImportFijiMontage::readImages()
+void ReadImages()
 {
   std::vector<BoundsType>& bounds = d_ptr->m_BoundsCache;
   // Import Each Image
   DataContainerArray::Pointer dca = getDataContainerArray();
 
   //  int imageCountPadding = MetaXmlUtils::CalculatePaddingDigits(bounds.size());
-  int32_t rowCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_RowCount);
-  int32_t colCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_ColumnCount);
-  int charPaddingCount = std::max(rowCountPadding, colCountPadding);
+  int32 rowCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_RowCount);
+  int32 colCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_ColumnCount);
+  int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
 
   for(const auto& bound : bounds)
   {
@@ -235,20 +354,20 @@ void ITKImportFijiMontage::readImages()
     // The DataContainer with a name based on the ROW & COLUMN indices is already created in the preflight
     DataContainer::Pointer dc = dca->getDataContainer(dcName);
     // So is the Geometry
-    ImageGeom::Pointer image = dc->getGeometryAs<ImageGeom>();
+    ImageGeom& image = dc->getGeometryAs<ImageGeom>();
 
     image->setUnits(static_cast<IGeometry::LengthUnit>(m_LengthUnit));
 
     // Create the Image Geometry
-    SizeVec3Type dims = image->getDimensions();
-    // FloatVec3Type origin = image->getOrigin();
-    // FloatVec3Type spacing = image->getSpacing();
+    SizeVec3 dims = image->getDimensions();
+    // FloatVec3 origin = image->getOrigin();
+    // FloatVec3 spacing = image->getSpacing();
 
-    std::vector<size_t> tDims = {dims[0], dims[1], dims[2]};
+    std::vector<usize> tDims = {dims[0], dims[1], dims[2]};
     // The Cell AttributeMatrix is also already created at this point
-    AttributeMatrix::Pointer cellAttrMat = dc->getAttributeMatrix(getCellAttributeMatrixName());
+    AttributeMatrix cellAttrMat = dc->getAttributeMatrix(getCellAttributeMatrixName());
     // Instantiate the Image Import Filter to actually read the image into a data array
-    DataArrayPath dap(::k_DCName, ITKImageProcessing::Montage::k_AMName, getImageDataArrayName()); // This is just a temp path for the subfilter to use
+    DataPath dap(::k_DCName, ITKImageProcessing::Montage::k_AMName, getImageDataArrayName()); // This is just a temp path for the subfilter to use
     AbstractFilter::Pointer imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
     if(nullptr == imageImportFilter.get())
     {
@@ -264,13 +383,13 @@ void ITKImportFijiMontage::readImages()
     // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
     DataContainerArray::Pointer importImageDca = imageImportFilter->getDataContainerArray();
     DataContainer::Pointer fromDc = importImageDca->getDataContainer(::k_DCName);
-    AttributeMatrix::Pointer fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
+    AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
     // IDataArray::Pointer fromImageData = fromCellAttrMat->getAttributeArray(getImageDataArrayName());
 
     if(getConvertToGrayScale())
     {
       AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, getColorWeights(), ITKImageProcessing::Montage::k_GrayScaleTempArrayName);
-      grayScaleFilter->setDataContainerArray(importImageDca); // Use the Data COntainer array that was use for the import. It is setup and ready to go
+      grayScaleFilter->setDataContainerArray(importImageDca); // Use the Data Container array that was use for the import. It is set up and ready to go
       connect(grayScaleFilter.get(), SIGNAL(messageGenerated(const AbstractMessage::Pointer&)), this, SIGNAL(messageGenerated(const AbstractMessage::Pointer&)));
       grayScaleFilter->execute();
       if(grayScaleFilter->getErrorCode() < 0)
@@ -281,20 +400,20 @@ void ITKImportFijiMontage::readImages()
 
       DataContainerArray::Pointer c2gDca = grayScaleFilter->getDataContainerArray();
       DataContainer::Pointer c2gDc = c2gDca->getDataContainer(::k_DCName);
-      AttributeMatrix::Pointer c2gAttrMat = c2gDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
+      AttributeMatrix c2gAttrMat = c2gDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
 
       QString grayScaleArrayName = ITKImageProcessing::Montage::k_GrayScaleTempArrayName + getImageDataArrayName();
-      // IDataArray::Pointer fromGrayScaleData = fromCellAttrMat->getAttributeArray(grayScaleArrayName);
+      // IDataArray fromGrayScaleData = fromCellAttrMat->getAttributeArray(grayScaleArrayName);
 
-      IDataArray::Pointer rgbImageArray = c2gAttrMat->removeAttributeArray(ITKImageProcessing::Montage::k_AAName);
-      IDataArray::Pointer gray = c2gAttrMat->removeAttributeArray(grayScaleArrayName);
+      IDataArray rgbImageArray = c2gAttrMat->removeAttributeArray(ITKImageProcessing::Montage::k_AAName);
+      IDataArray gray = c2gAttrMat->removeAttributeArray(grayScaleArrayName);
       gray->setName(getImageDataArrayName());
       cellAttrMat->addOrReplaceAttributeArray(gray);
     }
     else
     {
       // Copy the IDataArray (which contains the image data) from the temp data container array into our persistent data structure
-      IDataArray::Pointer gray = fromCellAttrMat->removeAttributeArray(getImageDataArrayName());
+      IDataArray gray = fromCellAttrMat->removeAttributeArray(getImageDataArrayName());
       cellAttrMat->addOrReplaceAttributeArray(gray);
     }
   }
@@ -303,157 +422,39 @@ void ITKImportFijiMontage::readImages()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ITKImportFijiMontage::flushCache()
+void FlushCache()
 {
   setTimeStamp_Cache(QDateTime());
 
   d_ptr->m_InputFile_Cache = "";
-  d_ptr->m_DataContainerPath = DataArrayPath();
+  d_ptr->m_DataContainerPath = DataPath();
   d_ptr->m_CellAttributeMatrixName = "";
   d_ptr->m_ImageDataArrayName = "";
   d_ptr->m_ChangeOrigin = false;
   d_ptr->m_ChangeSpacing = false;
   d_ptr->m_ConvertToGrayScale = false;
-  d_ptr->m_Origin = FloatVec3Type(0.0f, 0.0f, 0.0f);
-  d_ptr->m_Spacing = FloatVec3Type(1.0f, 1.0f, 1.0f);
-  d_ptr->m_ColorWeights = FloatVec3Type(0.2125f, 0.7154f, 0.0721f);
+  d_ptr->m_Origin = FloatVec3(0.0f, 0.0f, 0.0f);
+  d_ptr->m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
+  d_ptr->m_ColorWeights = FloatVec3(0.2125f, 0.7154f, 0.0721f);
   d_ptr->m_MaxCol = 0;
   d_ptr->m_MaxRow = 0;
   d_ptr->m_BoundsCache.clear();
 }
 
 // -----------------------------------------------------------------------------
-QString ITKImportFijiMontage::getMontageInformation()
+QString GetMontageInformation()
 {
   QString info = d_ptr->m_MontageInformation;
   QString montageInfo;
   QTextStream ss(&montageInfo);
-  int32_t importedCols = m_MontageEnd[0] - m_MontageStart[0] + 1;
-  int32_t importedRows = m_MontageEnd[1] - m_MontageStart[1] + 1;
+  int32 importedCols = m_MontageEnd[0] - m_MontageStart[0] + 1;
+  int32 importedRows = m_MontageEnd[1] - m_MontageStart[1] + 1;
   ss << "\n"
      << "Imported Columns: " << importedCols << "  Imported Rows: " << importedRows << "  Imported Image Count: " << (importedCols * importedRows);
   info = info.replace(ITKImageProcessing::Montage::k_MontageInfoReplaceKeyword, montageInfo);
   return info;
 }
-
-// -----------------------------------------------------------------------------
-void ITKImportFijiMontage::findTileIndices(int32_t tolerance, std::vector<ITKImportFijiMontage::BoundsType>& bounds)
-{
-  std::vector<int32_t> xValues(bounds.size());
-  std::vector<int32_t> yValues(bounds.size());
-
-  for(size_t i = 0; i < bounds.size(); i++)
-  {
-    xValues[i] = bounds.at(i).Origin[0];
-    yValues[i] = bounds.at(i).Origin[1];
-  }
-
-  std::map<int32_t, std::vector<size_t>> avg_indices = MontageImportHelper::Burn(tolerance, xValues);
-  int32_t index = 0;
-  for(auto& iter : avg_indices)
-  {
-    const std::vector<size_t>& indices = iter.second;
-    for(const auto& i : indices)
-    {
-      bounds.at(i).Col = index;
-    }
-    index++;
-  }
-  m_ColumnCount = index;
-
-  avg_indices = MontageImportHelper::Burn(tolerance, yValues);
-  index = 0;
-  for(auto& iter : avg_indices)
-  {
-    const std::vector<size_t>& indices = iter.second;
-    for(const auto& i : indices)
-    {
-      bounds.at(i).Row = index;
-    }
-    index++;
-  }
-  m_RowCount = index;
-}
-
-// -----------------------------------------------------------------------------
-std::vector<ITKImportFijiMontage::BoundsType> ITKImportFijiMontage::parseConfigFile(const QString& filePath)
-{
-  QString contents;
-
-  // Read the Source File
-  QFile source(filePath);
-  source.open(QFile::ReadOnly);
-  contents = source.readAll();
-  source.close();
-
-  QStringList list = contents.split(QRegExp("\\n"));
-  QStringListIterator sourceLines(list);
-  bool dimFound = false;
-  bool dataFound = false;
-
-  while(sourceLines.hasNext())
-  {
-    QString line = sourceLines.next().trimmed();
-
-    if(line.startsWith("dim =")) // found the dimensions
-    {
-      dimFound = true;
-      // Should check that the value = 2
-    }
-    if(line.startsWith("# Define the image coordinates"))
-    {
-      // Found the start of the data
-      dataFound = true;
-      break;
-    }
-    if(line.startsWith("#")) // comment line
-    {
-      continue;
-    }
-  }
-
-  std::vector<ITKImportFijiMontage::BoundsType> bounds;
-  if(!dimFound || !dataFound)
-  {
-    return bounds;
-  }
-
-  // slice_12.tif; ; (471.2965233276666, -0.522608066434236)
-  while(sourceLines.hasNext())
-  {
-    QString line = sourceLines.next().trimmed();
-    if(line.isEmpty())
-    {
-      continue;
-    }
-    QStringList tokens = line.split(";");
-    if(tokens.count() != 3)
-    {
-      continue;
-    }
-    ITKImportFijiMontage::BoundsType bound;
-    bound.Filename = tokens.at(0);
-
-    QString coords = tokens.at(2).trimmed();
-    coords = coords.replace("(", "");
-    coords = coords.replace(")", "");
-    tokens = coords.split(",");
-    if(tokens.count() != 2)
-    {
-      continue;
-    }
-    float x = tokens.at(0).toFloat();
-    float y = tokens.at(1).toFloat();
-    bound.Origin = FloatVec3Type(x, y, 0.0f);
-    bound.Spacing = FloatVec3Type(1.0f, 1.0f, 1.0f);
-    bounds.push_back(bound);
-  }
-
-  findTileIndices(m_Tolerance, bounds);
-
-  return bounds;
-}
-}
+} // namespace
 
 namespace complex
 {

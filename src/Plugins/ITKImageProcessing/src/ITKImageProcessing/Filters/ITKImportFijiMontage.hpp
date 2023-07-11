@@ -2,11 +2,29 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "complex/Common/Array.hpp"
+#include "complex/DataStructure/Geometry/IGeometry.hpp"
 #include "complex/Filter/FilterTraits.hpp"
 #include "complex/Filter/IFilter.hpp"
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 namespace complex
 {
+
+struct BoundsType
+{
+  fs::path Filename;
+  SizeVec3 Dims;
+  FloatVec3 Origin;
+  FloatVec3 Spacing;
+  usize Row;
+  usize Col;
+  DataPath ImageDataProxy;
+  IGeometry::LengthUnit LengthUnit;
+};
+
 /**
  * @class ITKImportImageStack
  * @brief This filter will ....
