@@ -27,7 +27,6 @@ namespace
 
 namespace apply_transformation_to_geometry
 {
-const complex::ChoicesParameter::ValueType k_NoTransformIdx = 0ULL;
 const complex::ChoicesParameter::ValueType k_PrecomputedTransformationMatrixIdx = 1ULL;
 const complex::ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
 const complex::ChoicesParameter::ValueType k_RotationIdx = 3ULL;
@@ -45,7 +44,6 @@ const std::string k_TranslationGeometryName("6_6_Translation");
 const std::string k_ManualGeometryName("6_6_Manual");
 const std::string k_PrecomputedGeometryName("6_6_Precomputed");
 
-const std::string k_InputGeometryName66("InputData");
 const std::string k_RotationGeometryName66("6_6_Rotation");
 const std::string k_ScaleGeometryName66("6_6_Scale");
 const std::string k_TranslationGeometryName66("6_6_Translation");
