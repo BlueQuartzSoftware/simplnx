@@ -116,6 +116,11 @@ Result<> CombineStlFiles::operator()()
     }
   }
 
+  // Sort the Goemetries in lexigraphical order based on the name of the geometry which should
+  // match the file name. We do this because some file systems do not iterate through the directory
+  // contents in lexigraphical order (GitHub CI)
+  std::sort(stlGeometries.begin(), stlGeometries.end(), [](const auto& lhs, const auto& rhs) { return lhs->getName() < rhs->getName(); });
+
   auto& combinedGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainerName);
   auto* combinedFaceAM = combinedGeom.getFaceAttributeMatrix();
   auto& combinedFaceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->FaceNormalsArrayName);
