@@ -164,7 +164,7 @@ std::string DataObject::getName() const
 
 bool DataObject::canRename(const std::string& name) const
 {
-  
+
   if(name == getName())
   {
     return true;
