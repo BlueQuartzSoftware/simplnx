@@ -14,7 +14,7 @@ using namespace complex;
 
 TEST_CASE("ITKImageProcessing::ITKMhaFileReader: Read 2D & 3D Image Data", "[ITKImageProcessing][ITKMhaFileReader]")
 {
-  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest.tar.gz", "ITKMhaFileReaderTest");
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_rev2.tar.gz", "ITKMhaFileReaderTest");
 
   // Load plugins (this is needed because ITKMhaFileReader needs access to the ComplexCore plugin)
   const std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
