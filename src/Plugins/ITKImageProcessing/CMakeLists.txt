@@ -71,6 +71,9 @@ set(FilterList
   ITKMedianImage
   ITKMhaFileReader
   ITKRescaleIntensityImage
+  )
+    
+set(AlgorithmList
 )
 
 # ------------------------------------------------------------------------------
@@ -111,7 +114,7 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     ITKHMinimaImage
     ITKIntensityWindowingImage
     ITKInvertIntensityImage
-    ITKImportFijiMontage
+    ITKImportFijiMontageFilter
     ITKLabelContourImage
     ITKLog10Image
     ITKLogImage
@@ -221,6 +224,10 @@ if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
     #  ITKCastImage # Dream3DArraySwitchOutputComponentMacro
     #  ITKVectorRescaleIntensityImage # Dream3DArraySwitchOutputComponentMacro
   )
+
+set(AlgorithmList
+    ITKImportFijiMontage
+  )
 endif()
 
 # -----------------------------------------------------------------------------
@@ -229,6 +236,7 @@ endif()
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
   FILTER_LIST ${FilterList}
+  ALGORITHM_LIST ${AlgorithmList}
   DESCRIPTION "${PLUGIN_NAME} Plugin"
   VERSION "0.1.0"
   DOC_CHECK

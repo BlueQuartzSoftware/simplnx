@@ -12,7 +12,6 @@ namespace fs = std::filesystem;
 
 namespace complex
 {
-
 struct BoundsType
 {
   fs::path Filename;
@@ -29,17 +28,17 @@ struct BoundsType
  * @class ITKImportImageStack
  * @brief This filter will ....
  */
-class ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontage : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageFilter : public IFilter
 {
 public:
-  ITKImportFijiMontage() = default;
-  ~ITKImportFijiMontage() noexcept override = default;
+  ITKImportFijiMontageFilter();
+  ~ITKImportFijiMontageFilter() noexcept override = default;
 
-  ITKImportFijiMontage(const ITKImportFijiMontage&) = delete;
-  ITKImportFijiMontage(ITKImportFijiMontage&&) noexcept = delete;
+  ITKImportFijiMontageFilter(const ITKImportFijiMontageFilter&) = delete;
+  ITKImportFijiMontageFilter(ITKImportFijiMontageFilter&&) noexcept = delete;
 
-  ITKImportFijiMontage& operator=(const ITKImportFijiMontage&) = delete;
-  ITKImportFijiMontage& operator=(ITKImportFijiMontage&&) noexcept = delete;
+  ITKImportFijiMontageFilter& operator=(const ITKImportFijiMontageFilter&) = delete;
+  ITKImportFijiMontageFilter& operator=(ITKImportFijiMontageFilter&&) noexcept = delete;
 
   // Parameter Keys
   static inline constexpr StringLiteral k_InputFile_Key = "input_file";
@@ -118,7 +117,10 @@ protected:
    * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
    */
   Result<> executeImpl(DataStructure& data, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel) const override;
+
+private:
+  int32 m_InstanceId;
 };
 } // namespace complex
 
-COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportFijiMontage, "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb");
+COMPLEX_DEF_FILTER_TRAITS(complex, ITKImportFijiMontageFilter, "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb");

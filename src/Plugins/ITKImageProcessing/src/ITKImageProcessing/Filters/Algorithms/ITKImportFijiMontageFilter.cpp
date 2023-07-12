@@ -1,4 +1,4 @@
-#include "ITKImportFijiMontage.hpp"
+#include "ITKImportFijiMontageFilter.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
@@ -272,7 +272,7 @@ void GenerateDataStructure()
     }
 
     // Create our DataContainer Name using a Prefix and a rXXcYY format.
-    QString dcName = getDataContainerPath().getDataContainerName();
+    std::string dcName = getDataContainerPath().getDataContainerName();
     QTextStream dcNameStream(&dcName);
     dcNameStream << "r";
     dcNameStream.setFieldWidth(charPaddingCount);
@@ -314,8 +314,6 @@ void GenerateDataStructure()
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void ReadImages()
 {
   std::vector<BoundsType>& bounds = d_ptr->m_BoundsCache;
@@ -334,7 +332,7 @@ void ReadImages()
       continue;
     }
 
-    QString msg;
+    std::string msg;
     QTextStream out(&msg);
     out << "Importing " << bound.Filename;
     notifyStatusMessage(msg);
@@ -356,10 +354,10 @@ void ReadImages()
     // So is the Geometry
     ImageGeom& image = dc->getGeometryAs<ImageGeom>();
 
-    image->setUnits(static_cast<IGeometry::LengthUnit>(m_LengthUnit));
+    image.setUnits(static_cast<IGeometry::LengthUnit>(m_LengthUnit));
 
     // Create the Image Geometry
-    SizeVec3 dims = image->getDimensions();
+    SizeVec3 dims = image.getDimensions();
     // FloatVec3 origin = image->getOrigin();
     // FloatVec3 spacing = image->getSpacing();
 
@@ -420,8 +418,6 @@ void ReadImages()
 }
 
 // -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void FlushCache()
 {
   setTimeStamp_Cache(QDateTime());
@@ -456,40 +452,53 @@ QString GetMontageInformation()
 }
 } // namespace
 
+namespace
+{
+std::atomic_int32_t s_InstanceId = 0;
+std::map<int32, FileCache> s_HeaderCache;
+} // namespace
+
 namespace complex
 {
 //------------------------------------------------------------------------------
-std::string ITKImportFijiMontage::name() const
+ITKImportFijiMontageFilter::ITKImportFijiMontageFilter()
+: m_InstanceId(s_InstanceId.fetch_add(1))
 {
-  return FilterTraits<ITKImportFijiMontage>::name.str();
+  s_HeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
-std::string ITKImportFijiMontage::className() const
+std::string ITKImportFijiMontageFilter::name() const
 {
-  return FilterTraits<ITKImportFijiMontage>::className;
+  return FilterTraits<ITKImportFijiMontageFilter>::name.str();
 }
 
 //------------------------------------------------------------------------------
-Uuid ITKImportFijiMontage::uuid() const
+std::string ITKImportFijiMontageFilter::className() const
 {
-  return FilterTraits<ITKImportFijiMontage>::uuid;
+  return FilterTraits<ITKImportFijiMontageFilter>::className;
 }
 
 //------------------------------------------------------------------------------
-std::string ITKImportFijiMontage::humanName() const
+Uuid ITKImportFijiMontageFilter::uuid() const
+{
+  return FilterTraits<ITKImportFijiMontageFilter>::uuid;
+}
+
+//------------------------------------------------------------------------------
+std::string ITKImportFijiMontageFilter::humanName() const
 {
   return "ITK Import Fiji Montage";
 }
 
 //------------------------------------------------------------------------------
-std::vector<std::string> ITKImportFijiMontage::defaultTags() const
+std::vector<std::string> ITKImportFijiMontageFilter::defaultTags() const
 {
   return {"IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------
-Parameters ITKImportFijiMontage::parameters() const
+Parameters ITKImportFijiMontageFilter::parameters() const
 {
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
@@ -514,13 +523,13 @@ Parameters ITKImportFijiMontage::parameters() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ITKImportFijiMontage::clone() const
+IFilter::UniquePointer ITKImportFijiMontageFilter::clone() const
 {
-  return std::make_unique<ITKImportFijiMontage>();
+  return std::make_unique<ITKImportFijiMontageFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ITKImportFijiMontage::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
+IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                              const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
@@ -575,7 +584,7 @@ IFilter::PreflightResult ITKImportFijiMontage::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> ITKImportFijiMontage::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
+Result<> ITKImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
