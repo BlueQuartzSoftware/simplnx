@@ -221,7 +221,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
     yShifts[iter] = yShifts[iter - 1] + newYShift;
     if(m_InputValues->WriteAlignmentShifts)
     {
-      outFile << slice << "	" << slice + 1 << "	" << newXShift << "	" << newYShift << "	" << xShifts[iter] << "	" << yShifts[iter] << "\n";
+      outFile << slice << "\t" << slice + 1 << "\t" << newXShift << "\t" << newYShift << "\t" << xShifts[iter] << "\t" << yShifts[iter] << "\n";
     }
   }
 

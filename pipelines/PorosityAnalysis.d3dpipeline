@@ -206,9 +206,9 @@
     {
       "args": {
         "removed_data_path": [
-		  "RoboMet.3D Image Stack/EnsembleAttributeMatrix/CrystalStructures",
-		  "RoboMet.3D Image Stack/EnsembleAttributeMatrix/PhaseTypes"
-		]
+          "RoboMet.3D Image Stack/EnsembleAttributeMatrix/CrystalStructures",
+          "RoboMet.3D Image Stack/EnsembleAttributeMatrix/PhaseTypes"
+        ]
       },
       "comments": "",
       "filter": {

@@ -226,7 +226,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     yShifts[iter] = yShifts[iter - 1] + newyshift;
     if(m_InputValues->writeAlignmentShifts)
     {
-      outFile << slice << "	" << slice + 1 << "	" << newxshift << "	" << newyshift << "	" << xShifts[iter] << "	" << yShifts[iter] << "\n";
+      outFile << slice << "\t" << slice + 1 << "\t" << newxshift << "\t" << newyshift << "\t" << xShifts[iter] << "\t" << yShifts[iter] << "\n";
     }
   }
   if(m_InputValues->writeAlignmentShifts)

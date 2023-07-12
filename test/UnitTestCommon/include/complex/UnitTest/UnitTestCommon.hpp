@@ -1041,13 +1041,13 @@ inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exempl
 /**
  * Here's the DataStructure we will be working with:
  *
- *     A   B			Level Zero
+ *     A   B          Level Zero
  *    / \ /|\
- *   H   C | F		    Level One
+ *   H   C | F        Level One
  *  /   / \|/ \
- * N   D   E   G		Level Two
+ * N   D   E   G      Level Two
  *    / \ / \ /|\
- *   I   J   K L M	    Level Three
+ *   I   J   K L M    Level Three
  */
 inline DataStructure CreateComplexMultiLevelDataGraph()
 {
