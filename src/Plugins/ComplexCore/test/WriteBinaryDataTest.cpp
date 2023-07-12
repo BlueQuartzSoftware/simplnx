@@ -68,6 +68,23 @@ std::vector<std::string> GetAllDriveLetters()
   ::SetErrorMode(oldErrorMode);
   return ret;
 }
+
+bool IsDriveUsableForTest(const std::string& driveLetter)
+{
+  const UINT oldErrorMode = ::SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
+
+  std::wstring driveLetterW(driveLetter.begin(), driveLetter.end());
+  DWORD fileSystemFlags;
+  const UINT driveType = GetDriveTypeW(driveLetterW.data());
+  ::SetErrorMode(oldErrorMode);
+
+  if(driveType == DRIVE_CDROM)
+  {
+    return false;
+  }
+  return !GetVolumeInformationW(driveLetterW.data(), nullptr, 0, nullptr, nullptr, &fileSystemFlags, nullptr, 0);
+}
+
 #endif
 
 } // namespace
@@ -286,16 +303,18 @@ TEST_CASE("ComplexCore::WriteBinaryData:Invalid Filter Execution")
 // Most Unix users don't have write privs on "/". If they do then this test fails and we fix this test
 // For Windows, we need to find a non-existent drive, not just a drive that isn't ready.
 #if defined(WIN32) || defined(__WIN32__) || defined(_WIN32) || defined(_MSC_VER)
-  std::vector<std::string> availableDrives = GetAllDriveLetters();
+
+  std::string driveName = "C:\\";
   std::string invalidPath;
   for(size_t dlIndex = 2; dlIndex < 26; dlIndex++)
   {
     std::cout << "Check Available Drive: " << static_cast<char>(dlIndex + 65) << std::endl;
-    if(availableDrives[dlIndex].empty())
+    if(IsDriveUsableForTest(driveName.data()))
     {
       invalidPath = fmt::format("{}:/{}", static_cast<char>(dlIndex + 65), millisFromEpoch);
       break;
     }
+    driveName[0]++;
   }
 #else
   std::string invalidPath = fmt::format("/{}", millisFromEpoch);
