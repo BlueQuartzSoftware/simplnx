@@ -32,6 +32,7 @@ public:
   static inline constexpr StringLiteral k_Translation_Key = "translation";
   static inline constexpr StringLiteral k_Scale_Key = "scale";
   static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix";
+  static inline constexpr StringLiteral k_TranslateGeometryToGlobalOrigin_Key = "translate_geometry_to_global_origin";
   static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
 
   /**
