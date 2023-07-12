@@ -159,7 +159,7 @@ std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
 
 usize TriangleGeom::getNumberOfCells() const
 {
-  return getFacesRef().getNumberOfTuples();
+  return getNumberOfFaces();
 }
 
 usize TriangleGeom::getNumberOfVerticesPerFace() const

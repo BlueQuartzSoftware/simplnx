@@ -158,8 +158,7 @@ std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
 
 usize QuadGeom::getNumberOfCells() const
 {
-  auto& quads = getFacesRef();
-  return quads.getNumberOfTuples();
+  return getNumberOfFaces();
 }
 
 usize QuadGeom::getNumberOfVerticesPerFace() const
