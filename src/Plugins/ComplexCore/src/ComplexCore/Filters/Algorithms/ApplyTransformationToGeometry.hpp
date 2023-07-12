@@ -62,6 +62,7 @@ struct COMPLEXCORE_EXPORT ApplyTransformationToGeometryInputValues
 
   DataPath CellAttributeMatrixPath;
   bool RemoveOriginalGeometry;
+  bool TranslateGeometryToGlobalOrigin;
 };
 
 /**

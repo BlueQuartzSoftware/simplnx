@@ -52,15 +52,16 @@ The user may select from a variety of options for the type of transformation to 
 
 ## Parameters
 
-| Name                                        | Type        | Description                                                                                   |
-|---------------------------------------------|-------------|-----------------------------------------------------------------------------------------------|
-| Transformation Type                         | Enumeration | Type of transformation to be used. (0-5)                                                      |
-| Transformation Matrix                       | float (4x4) | Entries of the 4x4 transformation matrix, if _Manual_ is chosen for the _Transformation Type_ |
-| Rotation Axis-Angle (ijk)                   | float (4x)  | axis-angle <x,y,z> (Angle in Degrees)                                                         |
-| Translation                                 | float (3x)  | (x, y, z) translation values, if _Translation_ is chosen for the _Transformation Type_        |
-| Scale                                       | float (3x)  | (x, y, z) scale values, if _Scale_ is chosen for the _Transformation Type_                    |
-| Precomputed Transformation Matrix Data Path | DataPath    |                                                                                               |
-| Geometry to be transformed.                 | DataPath    |                                                                                               | 
+| Name                                                      | Type        | Description                                                                                                                                 |
+|-----------------------------------------------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| Transformation Type                                       | Enumeration | Type of transformation to be used. (0-5)                                                                                                    |
+| Transformation Matrix                                     | float (4x4) | Entries of the 4x4 transformation matrix, if _Manual_ is chosen for the _Transformation Type_                                               |
+| Rotation Axis-Angle (ijk)                                 | float (4x)  | axis-angle <x,y,z> (Angle in Degrees)                                                                                                       |
+| Translation                                               | float (3x)  | (x, y, z) translation values, if _Translation_ is chosen for the _Transformation Type_                                                      |
+| Scale                                                     | float (3x)  | (x, y, z) scale values, if _Scale_ is chosen for the _Transformation Type_                                                                  |
+| Translate Geometry To Global Origin Before Transformation | boolean     | If enabled, translates the geometry to (0, 0, 0), applies the transformation, and then translates the geometry back to its original origin. |
+| Precomputed Transformation Matrix Data Path               | DataPath    |                                                                                                                                             |
+| Geometry to be transformed.                               | DataPath    |                                                                                                                                             | 
 
 ### Image Geometry Transformation Options
 
