@@ -77,6 +77,7 @@ set(FilterList
   IdentifySample
   ImportBinaryCTNorthstarFilter
   ImportCSVDataFilter
+  ImportDeformKeyFileV12Filter
   ImportDREAM3DFilter
   ImportHDF5Dataset
   ImportTextFilter
@@ -84,6 +85,8 @@ set(FilterList
   InitializeData
   InterpolatePointCloudToRegularGridFilter
   IterativeClosestPointFilter
+  KMeansFilter
+  KMedoidsFilter
   LaplacianSmoothingFilter
   LosAlamosFFTWriterFilter
   MapPointCloudToRegularGridFilter
@@ -109,6 +112,7 @@ set(FilterList
   ScalarSegmentFeaturesFilter
   SetImageGeomOriginScalingFilter
   SharedFeatureFaceFilter
+  SilhouetteFilter
   SplitAttributeArrayFilter
   StlFileReaderFilter
   TriangleCentroidFilter
@@ -163,8 +167,11 @@ set(AlgorithmList
   GenerateColorTable
   GenerateVectorColors
   ImageContouring
+  ImportDeformKeyFileV12
   ImportVolumeGraphicsFile
   ImportBinaryCTNorthstar
+  KMeans
+  KMedoids
   LaplacianSmoothing
   LosAlamosFFTWriter
   NearestPointFuseRegularGrids
@@ -179,6 +186,7 @@ set(AlgorithmList
   ResampleRectGridToImageGeom
   ScalarSegmentFeatures
   SharedFeatureFace
+  Silhouette
   SplitAttributeArray
   StlFileReader
   TriangleCentroid

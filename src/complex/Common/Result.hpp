@@ -159,7 +159,7 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
   Result<T> convertedResult;
   if(fromResult.valid())
   {
-    convertedResult = {std::move(value)};
+    convertedResult = {std::forward<T>(value)};
   }
   else
   {

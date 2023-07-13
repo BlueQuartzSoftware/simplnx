@@ -8,6 +8,29 @@ namespace complex
 {
 namespace types
 {
+template <bool UseBoolean, bool UseInt8V, bool UseUInt8V, bool UseInt16V, bool UseUInt16V, bool UseInt32V, bool UseUInt32V, bool UseInt64V, bool UseUInt64V, bool UseFloat32V, bool UseFloat64V>
+struct ArrayTypeOptions
+{
+  static inline constexpr bool UsingBoolean = UseBoolean;
+  static inline constexpr bool UsingInt8 = UseInt8V;
+  static inline constexpr bool UsingUInt8 = UseUInt8V;
+  static inline constexpr bool UsingInt16 = UseInt16V;
+  static inline constexpr bool UsingUInt16 = UseUInt16V;
+  static inline constexpr bool UsingInt32 = UseInt32V;
+  static inline constexpr bool UsingUInt32 = UseUInt32V;
+  static inline constexpr bool UsingInt64 = UseInt64V;
+  static inline constexpr bool UsingUInt64 = UseUInt64V;
+  static inline constexpr bool UsingFloat32 = UseFloat32V;
+  static inline constexpr bool UsingFloat64 = UseFloat64V;
+};
+
+using ArrayUseAllTypes = ArrayTypeOptions<true, true, true, true, true, true, true, true, true, true, true>;
+using NoBooleanType = ArrayTypeOptions<false, true, true, true, true, true, true, true, true, true, true>;
+using ArrayUseIntegerTypes = ArrayTypeOptions<false, true, true, true, true, true, true, true, true, false, false>;
+using ArrayUseFloatingTypes = ArrayTypeOptions<false, false, false, false, false, false, false, false, false, true, true>;
+using ArrayUseSignedTypes = ArrayTypeOptions<false, true, false, true, false, true, false, true, false, true, true>;
+using ArrayUseUnsignedTypes = ArrayTypeOptions<false, false, true, false, true, false, true, false, true, false, false>;
+
 using int8 = std::int8_t;
 using uint8 = std::uint8_t;
 using int16 = std::int16_t;

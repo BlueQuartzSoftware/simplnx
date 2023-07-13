@@ -75,14 +75,17 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   IdentifySampleTest.cpp
   ImageContouringTest.cpp
   ImageGeomTest.cpp
-  ImportCSVDataTest.cpp
   ImportBinaryCTNorthstarTest.cpp
+  ImportCSVDataTest.cpp
+  ImportDeformKeyFileV12Test.cpp
   ImportHDF5DatasetTest.cpp
   ImportTextTest.cpp
   ImportVolumeGraphicsFileTest.cpp
   InitializeDataTest.cpp
   InterpolatePointCloudToRegularGridTest.cpp
   IterativeClosestPointTest.cpp
+  KMeansTest.cpp
+  KMedoidsTest.cpp
   LaplacianSmoothingFilterTest.cpp
   LosAlamosFFTWriterTest.cpp
   MultiThresholdObjectsTest.cpp
@@ -109,6 +112,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ScalarSegmentFeaturesFilterTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
+  SilhouetteTest.cpp
   SplitAttributeArrayTest.cpp
   StlFileReaderTest.cpp
   TriangleCentroidTest.cpp
@@ -207,6 +211,8 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME LosAlamosFFTExemplar.tar.gz SHA512 c4f2f6cbdaea4512ca2911cb0c3169e62449fcdb7cb99a5e64640601239a08cc09ea35f81f17b056fd38da85add95a37b244b7f844fe0abc944c1ba2f7514812)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_identify_sample.tar.gz SHA512 b1c35b0f070426ff5e06fb85e8688026756c079415ccb25968669dc8943056d28bf120759a639a72aa321d515cc9eb59db1abe1cb7163957ad66c9e915103611)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME generate_vector_colors.tar.gz SHA512 a30ac9ac35002f4a79b60a02a86de1661c4828c77b45d3848c6e2c37943c8874756f0e163cda99f2c0de372ff1cd9257288d5357fa3db8a539428df713325ee7)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_import_deform_12.tar.gz SHA512 21aef18e48a877a1298ae4be0a4ebbb13df4f55acd2178778bd5e1dce32791180dd4c2dd83584be833ae0eb02dc003165c394fc001cc7375d289fcd86b712486)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME k_files.tar.gz SHA512 2701d7bca711821df78bf7649f9b5928cd9febeb4f04e5c8ce8008633304128e3e9290dadfb01e15f73b281a55c6d65255ca4bd115bf04a3218c32dfd7337d7a)
 
 endif()
 
