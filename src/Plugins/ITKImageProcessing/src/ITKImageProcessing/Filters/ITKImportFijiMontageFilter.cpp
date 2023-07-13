@@ -2,10 +2,7 @@
 
 #include "Algorithms/ITKImportFijiMontage.hpp"
 
-#include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"

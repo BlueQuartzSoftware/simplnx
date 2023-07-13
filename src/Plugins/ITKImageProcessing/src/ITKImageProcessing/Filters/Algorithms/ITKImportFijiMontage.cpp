@@ -22,6 +22,84 @@ using namespace complex;
 
 namespace
 {
+namespace Montage
+{
+const std::string k_AMName = "CellAM";
+const std::string k_AAName = "ImageData";
+const std::string k_GrayScaleTempArrayName = "gray_scale_temp";
+const std::string k_MontageInfoReplaceKeyword = "@UPDATE_ROW_COLUMN@";
+
+// -----------------------------------------------------------------------------
+std::map<int32, std::vector<usize>> Burn(int32 tolerance, std::vector<int32>& input)
+{
+  int32 halfTol = tolerance / 2;
+  usize count = input.size();
+  int32 seed = input[0];
+  std::vector<bool> visited(input.size(), false);
+  std::map<int32, std::vector<usize>> avg_indices;
+
+  bool completed = false;
+  while(!completed)
+  {
+    std::vector<usize> values;
+    for(usize i = 0; i < count; i++)
+    {
+      if(input[i] < seed + halfTol && input[i] > seed - halfTol)
+      {
+        values.push_back(i);
+        visited[i] = true;
+      }
+    }
+
+    int32 avg = 0;
+    for(const auto& v : values)
+    {
+      avg = avg + input.at(v);
+    }
+    avg = avg / static_cast<int32>(values.size());
+    avg_indices[avg] = values;
+    seed = 0;
+    completed = true;
+    for(usize i = 0; i < count; i++)
+    {
+      if(!visited[i])
+      {
+        seed = input[i];
+        completed = false;
+        break;
+      }
+    }
+  }
+  return avg_indices;
+}
+
+// -----------------------------------------------------------------------------
+static int32 CalculatePaddingDigits(int32 count)
+{
+  int zeroPadding = 0;
+  if(count > 0)
+  {
+    zeroPadding++;
+  }
+  if(count > 9)
+  {
+    zeroPadding++;
+  }
+  if(count > 99)
+  {
+    zeroPadding++;
+  }
+  if(count > 999)
+  {
+    zeroPadding++;
+  }
+  if(count > 9999)
+  {
+    zeroPadding++;
+  }
+  return zeroPadding;
+}
+} // namespace Montage
 
 class IOHandler
 {
@@ -48,22 +126,13 @@ public:
   // -----------------------------------------------------------------------------
   std::vector<BoundsType> ParseConfigFile(const fs::path& filePath)
   {
-    std::string contents;
-
-    // Read the Source File
-    QFile source(filePath);
-    source.open(QFile::ReadOnly);
-    contents = source.readAll();
-    source.close();
-
-    QStringList list = contents.split(QRegExp("\\n"));
-    QStringListIterator sourceLines(list);
     bool dimFound = false;
     bool dataFound = false;
 
-    while(sourceLines.hasNext())
+    std::string line = "";
+    while(std::getline(m_InStream, line))
     {
-      std::string line = sourceLines.next().trimmed();
+      line = StringUtilities::trimmed(line);
 
       if(StringUtilities::starts_with(line, "dim =")) // found the dimensions
       {
@@ -89,9 +158,9 @@ public:
     }
 
     // slice_12.tif; ; (471.2965233276666, -0.522608066434236)
-    while(sourceLines.hasNext())
+    while(std::getline(m_InStream, line))
     {
-      std::string line = sourceLines.next().trimmed();
+      line = StringUtilities::trimmed(line);
       if(line.empty())
       {
         continue;
@@ -149,18 +218,23 @@ private:
   std::string m_CellAttributeMatrixName = "";
   std::string m_ImageDataArrayName = "";
   bool m_ConvertToGrayScale = false;
-  FloatVec3 m_ColorWeights = {};
+  FloatVec3 m_ColorWeights = FloatVec3(0.2125f, 0.7154f, 0.0721f);
   bool m_ChangeOrigin = false;
-  FloatVec3 m_Origin = {};
+  FloatVec3 m_Origin = FloatVec3(0.0f, 0.0f, 0.0f);
   bool m_ChangeSpacing = false;
-  FloatVec3 m_Spacing = {};
+  FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
 
-  QScopedPointer<ITKImportFijiMontagePrivate> const d_ptr;
   bool m_FileWasRead = false;
   int32 m_RowCount = -1;
   int32 m_ColumnCount = -1;
-  QStringList m_FilenameList;
+  std::vector<std::string> m_FilenameList;
   int32 m_Tolerance = 100;
+
+  std::string m_InputFile_Cache;
+  fs::file_time_type m_TimeStamp_Cache;
+  std::string m_MontageInformation;
+  usize m_MaxRow = 0;
+  usize m_MaxCol = 0;
 
   // -----------------------------------------------------------------------------
   void FindTileIndices(int32 tolerance, std::vector<BoundsType>& bounds)
@@ -174,7 +248,7 @@ private:
       yValues[i] = bounds[i].Origin[1];
     }
 
-    std::map<int32, std::vector<usize>> avg_indices = MontageImportHelper::Burn(tolerance, xValues);
+    std::map<int32, std::vector<usize>> avg_indices = Montage::Burn(tolerance, xValues);
     int32 index = 0;
     for(auto& iter : avg_indices)
     {
@@ -187,7 +261,7 @@ private:
     }
     m_ColumnCount = index;
 
-    avg_indices = MontageImportHelper::Burn(tolerance, yValues);
+    avg_indices = Montage::Burn(tolerance, yValues);
     index = 0;
     for(auto& iter : avg_indices)
     {
@@ -215,12 +289,12 @@ private:
     for(auto& bound : bounds)
     {
       // This will update the FileName to the absolutePath
-      QFileInfo fi(getInputFile());
+      QFileInfo fi(m_InputFile);
       std::string absolutePath = fi.absolutePath() + QDir::separator() + bound.Filename;
       bound.Filename = absolutePath;
-      bound.LengthUnit = static_cast<IGeometry::LengthUnit>(getLengthUnit());
+      bound.LengthUnit = static_cast<IGeometry::LengthUnit>(m_LengthUnit);
 
-      DataPath dap(::k_DCName, ITKImageProcessing::Montage::k_AMName, ITKImageProcessing::Montage::k_AAName);
+      DataPath dap(::k_DCName, Montage::k_AMName, Montage::k_AAName);
       AbstractFilter::Pointer imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
       imageImportFilter->preflight();
       if(imageImportFilter->getErrorCode() < 0)
@@ -232,9 +306,9 @@ private:
       DataContainerArray::Pointer importImageDca = imageImportFilter->getDataContainerArray();
       {
         DataContainer::Pointer fromDc = importImageDca->getDataContainer(::k_DCName);
-        AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
-        IDataArray fromImageData = fromCellAttrMat->getAttributeArray(ITKImageProcessing::Montage::k_AAName);
-        fromImageData->setName(getImageDataArrayName());
+        AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(Montage::k_AMName);
+        IDataArray fromImageData = fromCellAttrMat->getAttributeArray(Montage::k_AAName);
+        fromImageData->setName(m_ImageDataArrayName);
         bound.ImageDataProxy = fromImageData;
 
         // Set the Origin based on the values from the Fiji Config File
@@ -251,10 +325,10 @@ private:
         geometries.push_back(imageGeom);
       }
 
-      if(getConvertToGrayScale())
+      if(m_ConvertToGrayScale)
       {
-        DataPath daPath(::k_DCName, ITKImageProcessing::Montage::k_AMName, ITKImageProcessing::Montage::k_AAName);
-        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, daPath, getColorWeights(), ITKImageProcessing::Montage::k_GrayScaleTempArrayName);
+        DataPath daPath(::k_DCName, Montage::k_AMName, Montage::k_AAName);
+        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, daPath, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
         grayScaleFilter->setDataContainerArray(importImageDca);
         grayScaleFilter->preflight();
         if(grayScaleFilter->getErrorCode() < 0)
@@ -265,34 +339,33 @@ private:
 
         DataContainerArray::Pointer colorToGrayDca = grayScaleFilter->getDataContainerArray();
         DataContainer::Pointer fromDc = colorToGrayDca->getDataContainer(::k_DCName);
-        AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
+        AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(Montage::k_AMName);
         // Remove the RGB Attribute Array so we can rename the gray scale AttributeArray
-        IDataArray rgbImageArray = fromCellAttrMat->removeAttributeArray(ITKImageProcessing::Montage::k_AAName);
-        std::string grayScaleArrayName = ITKImageProcessing::Montage::k_GrayScaleTempArrayName + ITKImageProcessing::Montage::k_AAName;
+        IDataArray rgbImageArray = fromCellAttrMat->removeAttributeArray(Montage::k_AAName);
+        std::string grayScaleArrayName = Montage::k_GrayScaleTempArrayName + Montage::k_AAName;
         IDataArray fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
-        fromGrayScaleData->setName(getImageDataArrayName());
+        fromGrayScaleData->setName(m_ImageDataArrayName);
         bound.ImageDataProxy = fromGrayScaleData;
       }
 
-      d_ptr->m_MaxCol = std::max(bound.Col, d_ptr->m_MaxCol);
-      d_ptr->m_MaxRow = std::max(bound.Row, d_ptr->m_MaxRow);
+      m_MaxCol = std::max(bound.Col, m_MaxCol);
+      m_MaxRow = std::max(bound.Row, m_MaxRow);
     }
 
-    std::string montageInfo;
     std::stringstream ss;
-    ss << montageInfo << "Tile Column(s): " << m_ColumnCount - 1 << "  Tile Row(s): " << m_RowCount - 1 << "  Image Count: " << m_ColumnCount * m_RowCount;
+    ss << "Tile Column(s): " << m_ColumnCount - 1 << "  Tile Row(s): " << m_RowCount - 1 << "  Image Count: " << m_ColumnCount * m_RowCount;
 
     FloatVec3 overrideOrigin = minCoord;
     FloatVec3 overrideSpacing = minSpacing;
 
     // Now adjust the origin/spacing if needed
-    if(getChangeOrigin() || getChangeSpacing())
+    if(m_ChangeOrigin || m_ChangeSpacing)
     {
-      if(getChangeOrigin())
+      if(m_ChangeOrigin)
       {
         overrideOrigin = m_Origin;
       }
-      if(getChangeSpacing())
+      if(m_ChangeSpacing)
       {
         overrideSpacing = m_Spacing;
       }
@@ -308,22 +381,20 @@ private:
     }
     ss << "\nOrigin: " << overrideOrigin[0] << ", " << overrideOrigin[1] << ", " << overrideOrigin[2];
     ss << "\nSpacing: " << overrideSpacing[0] << ", " << overrideSpacing[1] << ", " << overrideSpacing[2];
-    ss << ITKImageProcessing::Montage::k_MontageInfoReplaceKeyword;
-    d_ptr->m_MontageInformation = montageInfo;
+    ss << Montage::k_MontageInfoReplaceKeyword;
+    m_MontageInformation = ss.str();
     setBoundsCache(bounds);
   }
 
   // -----------------------------------------------------------------------------
   void GenerateDataStructure()
   {
-    std::vector<BoundsType>& bounds = d_ptr->m_BoundsCache;
+    std::vector<BoundsType>& bounds = m_BoundsCache;
 
-    DataContainerArray::Pointer dca = getDataContainerArray();
+    GridMontage gridMontage = GridMontage::New(m_MontageName, m_RowCount, m_ColumnCount);
 
-    GridMontage gridMontage = GridMontage::New(getMontageName(), m_RowCount, m_ColumnCount);
-
-    int32 rowCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_RowCount);
-    int32 colCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_ColumnCount);
+    int32 rowCountPadding = Montage::CalculatePaddingDigits(m_RowCount);
+    int32 colCountPadding = Montage::CalculatePaddingDigits(m_ColumnCount);
     int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
 
     for(const auto& bound : bounds)
@@ -348,10 +419,6 @@ private:
 
       // Create the DataContainer with a name based on the ROW & COLUMN indices
       DataContainer::Pointer dc = dca->createNonPrereqDataContainer(this, dcName);
-      if(getErrorCode() < 0)
-      {
-        continue;
-      }
 
       // Create the Image Geometry
       ImageGeom& image = ImageGeom::CreateGeometry(dcName);
@@ -368,7 +435,7 @@ private:
 
       using StdVecSizeType = std::vector<size_t>;
       // Create the Cell Attribute Matrix into which the image data would be read
-      AttributeMatrix cellAttrMat = AttributeMatrix::New(bound.Dims.toContainer<StdVecSizeType>(), getCellAttributeMatrixName(), AttributeMatrix::Type::Cell);
+      AttributeMatrix cellAttrMat = AttributeMatrix::New(bound.Dims.toContainer<StdVecSizeType>(), m_CellAttributeMatrixName);
       dc->addOrReplaceAttributeMatrix(cellAttrMat);
       cellAttrMat.addOrReplaceAttributeArray(bound.ImageDataProxy);
     }
@@ -378,13 +445,10 @@ private:
   // -----------------------------------------------------------------------------
   void ReadImages()
   {
-    std::vector<BoundsType>& bounds = d_ptr->m_BoundsCache;
-    // Import Each Image
-    DataContainerArray::Pointer dca = getDataContainerArray();
+    std::vector<BoundsType>& bounds = m_BoundsCache;
 
-    //  int imageCountPadding = MetaXmlUtils::CalculatePaddingDigits(bounds.size());
-    int32 rowCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_RowCount);
-    int32 colCountPadding = MetaXmlUtils::CalculatePaddingDigits(m_ColumnCount);
+    int32 rowCountPadding = Montage::CalculatePaddingDigits(m_RowCount);
+    int32 colCountPadding = Montage::CalculatePaddingDigits(m_ColumnCount);
     int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
 
     for(const auto& bound : bounds)
@@ -398,6 +462,7 @@ private:
       QTextStream out(&msg);
       out << "Importing " << bound.Filename;
       notifyStatusMessage(msg);
+
       // Create our DataContainer Name using a Prefix and a rXXcYY format.
       QString dcName = getDataContainerPath().getDataContainerName();
       std::stringstream dcNameStream(&dcName);
@@ -412,22 +477,19 @@ private:
       dcNameStream << bound.Col;
 
       // The DataContainer with a name based on the ROW & COLUMN indices is already created in the preflight
-      DataContainer::Pointer dc = dca->getDataContainer(dcName);
       // So is the Geometry
-      ImageGeom& image = dc->getGeometryAs<ImageGeom>();
+      ImageGeom& image = m_DataStructure->getDataRefAs<ImageGeom>();
 
       image.setUnits(static_cast<IGeometry::LengthUnit>(m_LengthUnit));
 
       // Create the Image Geometry
       SizeVec3 dims = image.getDimensions();
-      // FloatVec3 origin = image->getOrigin();
-      // FloatVec3 spacing = image->getSpacing();
 
       std::vector<usize> tDims = {dims[0], dims[1], dims[2]};
       // The Cell AttributeMatrix is also already created at this point
-      AttributeMatrix cellAttrMat = dc->getAttributeMatrix(getCellAttributeMatrixName());
+      AttributeMatrix& cellAttrMat = image.getCellDataRef();
       // Instantiate the Image Import Filter to actually read the image into a data array
-      DataPath dap(::k_DCName, ITKImageProcessing::Montage::k_AMName, getImageDataArrayName()); // This is just a temp path for the subfilter to use
+      DataPath dap(::k_DCName, Montage::k_AMName, m_ImageDataArrayName); // This is just a temp path for the subfilter to use
       AbstractFilter::Pointer imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
       if(nullptr == imageImportFilter.get())
       {
@@ -442,13 +504,11 @@ private:
       }
       // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
       DataContainerArray::Pointer importImageDca = imageImportFilter->getDataContainerArray();
-      DataContainer::Pointer fromDc = importImageDca->getDataContainer(::k_DCName);
-      AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
-      // IDataArray::Pointer fromImageData = fromCellAttrMat->getAttributeArray(getImageDataArrayName());
+      AttributeMatrix fromCellAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(DataPath{Montage::k_AMName});
 
-      if(getConvertToGrayScale())
+      if(m_ConvertToGrayScale)
       {
-        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, getColorWeights(), ITKImageProcessing::Montage::k_GrayScaleTempArrayName);
+        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
         grayScaleFilter->setDataContainerArray(importImageDca); // Use the Data Container array that was use for the import. It is set up and ready to go
         connect(grayScaleFilter.get(), SIGNAL(messageGenerated(const AbstractMessage::Pointer&)), this, SIGNAL(messageGenerated(const AbstractMessage::Pointer&)));
         grayScaleFilter->execute();
@@ -460,20 +520,19 @@ private:
 
         DataContainerArray::Pointer c2gDca = grayScaleFilter->getDataContainerArray();
         DataContainer::Pointer c2gDc = c2gDca->getDataContainer(::k_DCName);
-        AttributeMatrix c2gAttrMat = c2gDc->getAttributeMatrix(ITKImageProcessing::Montage::k_AMName);
+        AttributeMatrix c2gAttrMat = c2gDc->getAttributeMatrix(Montage::k_AMName);
 
-        std::string grayScaleArrayName = ITKImageProcessing::Montage::k_GrayScaleTempArrayName + getImageDataArrayName();
-        // IDataArray fromGrayScaleData = fromCellAttrMat->getAttributeArray(grayScaleArrayName);
+        std::string grayScaleArrayName = Montage::k_GrayScaleTempArrayName + m_ImageDataArrayName;
 
-        IDataArray rgbImageArray = c2gAttrMat->removeAttributeArray(ITKImageProcessing::Montage::k_AAName);
+        IDataArray rgbImageArray = c2gAttrMat->removeAttributeArray(Montage::k_AAName);
         IDataArray gray = c2gAttrMat->removeAttributeArray(grayScaleArrayName);
-        gray->setName(getImageDataArrayName());
+        gray->setName(m_ImageDataArrayName);
         cellAttrMat->addOrReplaceAttributeArray(gray);
       }
       else
       {
         // Copy the IDataArray (which contains the image data) from the temp data container array into our persistent data structure
-        IDataArray gray = fromCellAttrMat->removeAttributeArray(getImageDataArrayName());
+        IDataArray gray = fromCellAttrMat->removeAttributeArray(m_ImageDataArrayName);
         cellAttrMat->addOrReplaceAttributeArray(gray);
       }
     }
@@ -503,13 +562,12 @@ private:
   std::string GetMontageInformation()
   {
     std::string info = m_MontageInformation;
-    std::string montageInfo;
-    QTextStream ss(&montageInfo);
+    std::stringstream ss;
     int32 importedCols = m_MontageEnd[0] - m_MontageStart[0] + 1;
     int32 importedRows = m_MontageEnd[1] - m_MontageStart[1] + 1;
     ss << "\n"
        << "Imported Columns: " << importedCols << "  Imported Rows: " << importedRows << "  Imported Image Count: " << (importedCols * importedRows);
-    info = info.replace(ITKImageProcessing::Montage::k_MontageInfoReplaceKeyword, montageInfo);
+    info = StringUtilities::replace(info, Montage::k_MontageInfoReplaceKeyword, ss.str());
     return info;
   }
 };
@@ -531,13 +589,17 @@ const std::atomic_bool& ITKImportFijiMontage::getCancel()
   return m_ShouldCancel;
 }
 
-
 // -----------------------------------------------------------------------------
 FijiCache& ITKImportFijiMontage::getCache()
 {
   return m_Cache;
 }
 
+// -----------------------------------------------------------------------------
+void ITKImportFijiMontage::sendUpdate(const std::string& message)
+{
+  m_MessageHandler({IFilter::Message::Type::Info, message});
+}
 
 // -----------------------------------------------------------------------------
 Result<> ITKImportFijiMontage::operator()()

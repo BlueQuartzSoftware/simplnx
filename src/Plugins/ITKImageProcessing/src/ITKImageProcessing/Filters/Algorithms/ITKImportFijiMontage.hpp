@@ -66,6 +66,8 @@ public:
 
   FijiCache& getCache();
 
+  void sendUpdate(const std::string& message);
+
 private:
   DataStructure& m_DataStructure;
   const ITKImportFijiMontageInputValues* m_InputValues = nullptr;
