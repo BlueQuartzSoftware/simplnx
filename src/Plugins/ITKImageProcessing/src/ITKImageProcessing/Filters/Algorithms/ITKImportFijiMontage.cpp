@@ -74,7 +74,7 @@ std::map<int32, std::vector<usize>> Burn(int32 tolerance, std::vector<int32>& in
 }
 
 // -----------------------------------------------------------------------------
-static int32 CalculatePaddingDigits(int32 count)
+int32 CalculatePaddingDigits(int32 count)
 {
   int zeroPadding = 0;
   if(count > 0)
@@ -124,12 +124,12 @@ public:
   IOHandler& operator=(IOHandler&&) noexcept = delete;
 
   // -----------------------------------------------------------------------------
-  std::vector<BoundsType> ParseConfigFile(const fs::path& filePath)
+  void ParseConfigFile(const fs::path& filePath)
   {
     bool dimFound = false;
     bool dataFound = false;
 
-    std::string line = "";
+    std::string line;
     while(std::getline(m_InStream, line))
     {
       line = StringUtilities::trimmed(line);
@@ -151,10 +151,9 @@ public:
       }
     }
 
-    std::vector<BoundsType> bounds;
     if(!dimFound || !dataFound)
     {
-      return bounds;
+      return;
     }
 
     // slice_12.tif; ; (471.2965233276666, -0.522608066434236)
@@ -185,12 +184,10 @@ public:
       float32 y = std::stof(tokens[1]);
       bound.Origin = FloatVec3(x, y, 0.0f);
       bound.Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
-      bounds.push_back(bound);
+      m_Cache.bounds.push_back(bound);
     }
 
-    FindTileIndices(m_Tolerance, bounds);
-
-    return bounds;
+    FindTileIndices(m_Tolerance);
   }
 
 private:
@@ -237,15 +234,15 @@ private:
   usize m_MaxCol = 0;
 
   // -----------------------------------------------------------------------------
-  void FindTileIndices(int32 tolerance, std::vector<BoundsType>& bounds)
+  void FindTileIndices(int32 tolerance)
   {
-    std::vector<int32> xValues(bounds.size());
-    std::vector<int32> yValues(bounds.size());
+    std::vector<int32> xValues(m_Cache.bounds.size());
+    std::vector<int32> yValues(m_Cache.bounds.size());
 
-    for(usize i = 0; i < bounds.size(); i++)
+    for(usize i = 0; i < m_Cache.bounds.size(); i++)
     {
-      xValues[i] = bounds[i].Origin[0];
-      yValues[i] = bounds[i].Origin[1];
+      xValues[i] = static_cast<int32>(m_Cache.bounds[i].Origin[0]);
+      yValues[i] = static_cast<int32>(m_Cache.bounds[i].Origin[1]);
     }
 
     std::map<int32, std::vector<usize>> avg_indices = Montage::Burn(tolerance, xValues);
@@ -255,7 +252,7 @@ private:
       const std::vector<usize>& indices = iter.second;
       for(const auto& i : indices)
       {
-        bounds.at(i).Col = index;
+        m_Cache.bounds[i].Col = index;
       }
       index++;
     }
@@ -268,7 +265,7 @@ private:
       const std::vector<usize>& indices = iter.second;
       for(const auto& i : indices)
       {
-        bounds.at(i).Row = index;
+        m_Cache.bounds[i].Row = index;
       }
       index++;
     }
@@ -279,14 +276,14 @@ private:
   void GenerateCache(const fs::path& inputFile)
   {
     // This next function will set the FileName (Partial), Row, Col for each "bound" object
-    std::vector<BoundsType> bounds = ParseConfigFile(inputFile);
+    ParseConfigFile(inputFile);
 
     FloatVec3 minCoord = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
     FloatVec3 minSpacing = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
     std::vector<ImageGeom> geometries;
 
     // Get the meta information from disk for each image
-    for(auto& bound : bounds)
+    for(auto& bound : m_Cache.bounds)
     {
       // This will update the FileName to the absolutePath
       QFileInfo fi(m_InputFile);
@@ -373,7 +370,7 @@ private:
       for(usize i = 0; i < geometries.size(); i++)
       {
         ImageGeom imageGeom = geometries[i];
-        BoundsType& bound = bounds.at(i);
+        BoundsType& bound = m_Cache.bounds.at(i);
         std::transform(bound.Origin.begin(), bound.Origin.end(), delta.begin(), bound.Origin.begin(), std::minus<>());
         imageGeom.setOrigin(bound.Origin); // Sync up the ImageGeom with the calculated values
         imageGeom.setSpacing(overrideSpacing);
@@ -383,21 +380,18 @@ private:
     ss << "\nSpacing: " << overrideSpacing[0] << ", " << overrideSpacing[1] << ", " << overrideSpacing[2];
     ss << Montage::k_MontageInfoReplaceKeyword;
     m_MontageInformation = ss.str();
-    setBoundsCache(bounds);
   }
 
   // -----------------------------------------------------------------------------
   void GenerateDataStructure()
   {
-    std::vector<BoundsType>& bounds = m_BoundsCache;
-
     GridMontage gridMontage = GridMontage::New(m_MontageName, m_RowCount, m_ColumnCount);
 
     int32 rowCountPadding = Montage::CalculatePaddingDigits(m_RowCount);
     int32 colCountPadding = Montage::CalculatePaddingDigits(m_ColumnCount);
     int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
 
-    for(const auto& bound : bounds)
+    for(const auto& bound : m_Cache.bounds)
     {
       if(bound.Row < m_MontageStart[1] || bound.Row > m_MontageEnd[1] || bound.Col < m_MontageStart[0] || bound.Col > m_MontageEnd[0])
       {
@@ -405,17 +399,10 @@ private:
       }
 
       // Create our DataContainer Name using a Prefix and a rXXcYY format.
-      std::string dcName = getDataContainerPath().getDataContainerName();
-      QTextStream dcNameStream(&dcName);
-      dcNameStream << "r";
-      dcNameStream.setFieldWidth(charPaddingCount);
-      dcNameStream.setFieldAlignment(QTextStream::AlignRight);
-      dcNameStream.setPadChar('0');
-      dcNameStream << bound.Row;
-      dcNameStream.setFieldWidth(0);
-      dcNameStream << "c";
-      dcNameStream.setFieldWidth(charPaddingCount);
-      dcNameStream << bound.Col;
+      QString dcName = getDataContainerPath().getDataContainerName();
+      std::stringstream dcNameStream(&dcName);
+      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0')<< bound.Row;
+      dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
 
       // Create the DataContainer with a name based on the ROW & COLUMN indices
       DataContainer::Pointer dc = dca->createNonPrereqDataContainer(this, dcName);
@@ -445,36 +432,24 @@ private:
   // -----------------------------------------------------------------------------
   void ReadImages()
   {
-    std::vector<BoundsType>& bounds = m_BoundsCache;
-
     int32 rowCountPadding = Montage::CalculatePaddingDigits(m_RowCount);
     int32 colCountPadding = Montage::CalculatePaddingDigits(m_ColumnCount);
     int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
 
-    for(const auto& bound : bounds)
+    for(const auto& bound : m_Cache.bounds)
     {
       if(bound.Row < m_MontageStart[1] || bound.Row > m_MontageEnd[1] || bound.Col < m_MontageStart[0] || bound.Col > m_MontageEnd[0])
       {
         continue;
       }
 
-      std::string msg;
-      QTextStream out(&msg);
-      out << "Importing " << bound.Filename;
-      notifyStatusMessage(msg);
+      m_Filter->sendUpdate(("Importing" + bound.Filename.filename().string()));
 
       // Create our DataContainer Name using a Prefix and a rXXcYY format.
       QString dcName = getDataContainerPath().getDataContainerName();
       std::stringstream dcNameStream(&dcName);
-      dcNameStream << "r";
-      dcNameStream.setFieldWidth(charPaddingCount);
-      dcNameStream.setFieldAlignment(QTextStream::AlignRight);
-      dcNameStream.setPadChar('0');
-      dcNameStream << bound.Row;
-      dcNameStream.setFieldWidth(0);
-      dcNameStream << "c";
-      dcNameStream.setFieldWidth(charPaddingCount);
-      dcNameStream << bound.Col;
+      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0')<< bound.Row;
+      dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
 
       // The DataContainer with a name based on the ROW & COLUMN indices is already created in the preflight
       // So is the Geometry
@@ -541,8 +516,6 @@ private:
   // -----------------------------------------------------------------------------
   void FlushCache()
   {
-    setTimeStamp_Cache(QDateTime());
-
     m_InputFile_Cache = "";
     m_DataContainerPath = DataPath();
     m_CellAttributeMatrixName = "";
@@ -555,7 +528,7 @@ private:
     m_ColorWeights = FloatVec3(0.2125f, 0.7154f, 0.0721f);
     m_MaxCol = 0;
     m_MaxRow = 0;
-    m_BoundsCache.clear();
+    m_Cache.flush();
   }
 
   // -----------------------------------------------------------------------------
