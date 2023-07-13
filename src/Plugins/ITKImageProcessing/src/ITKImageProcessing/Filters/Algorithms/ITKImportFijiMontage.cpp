@@ -170,8 +170,8 @@ private:
 
     for(usize i = 0; i < bounds.size(); i++)
     {
-      xValues[i] = bounds.at(i).Origin[0];
-      yValues[i] = bounds.at(i).Origin[1];
+      xValues[i] = bounds[i].Origin[0];
+      yValues[i] = bounds[i].Origin[1];
     }
 
     std::map<int32, std::vector<usize>> avg_indices = MontageImportHelper::Burn(tolerance, xValues);
@@ -279,8 +279,8 @@ private:
     }
 
     std::string montageInfo;
-    QTextStream ss(&montageInfo);
-    ss << "Tile Column(s): " << m_ColumnCount - 1 << "  Tile Row(s): " << m_RowCount - 1 << "  Image Count: " << m_ColumnCount * m_RowCount;
+    std::stringstream ss;
+    ss << montageInfo << "Tile Column(s): " << m_ColumnCount - 1 << "  Tile Row(s): " << m_RowCount - 1 << "  Image Count: " << m_ColumnCount * m_RowCount;
 
     FloatVec3 overrideOrigin = minCoord;
     FloatVec3 overrideSpacing = minSpacing;
