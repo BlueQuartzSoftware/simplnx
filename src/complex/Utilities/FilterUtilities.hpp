@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ParallelAlgorithmUtilities.hpp"
 #include "complex/Common/Result.hpp"
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
@@ -11,6 +12,88 @@ namespace fs = std::filesystem;
 
 namespace complex
 {
+template <template <class> class ClassT, class ArrayTypeOptions = ArrayUseAllTypes, class... ArgsT>
+auto RunTemplateClass(DataType dataType, ArgsT&&... args)
+{
+  if constexpr(ArrayTypeOptions::UsingBoolean)
+  {
+    if(dataType == DataType::boolean)
+    {
+      return ClassT<bool>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingInt8)
+  {
+    if(dataType == DataType::int8)
+    {
+      return ClassT<int8>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingInt16)
+  {
+    if(dataType == DataType::int16)
+    {
+      return ClassT<int16>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingInt32)
+  {
+    if(dataType == DataType::int32)
+    {
+      return ClassT<int32>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingInt64)
+  {
+    if(dataType == DataType::int64)
+    {
+      return ClassT<int64>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingUInt8)
+  {
+    if(dataType == DataType::uint8)
+    {
+      return ClassT<uint8>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingUInt16)
+  {
+    if(dataType == DataType::uint16)
+    {
+      return ClassT<uint16>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingUInt32)
+  {
+    if(dataType == DataType::uint32)
+    {
+      return ClassT<uint32>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingUInt64)
+  {
+    if(dataType == DataType::uint64)
+    {
+      return ClassT<uint64>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingFloat32)
+  {
+    if(dataType == DataType::float32)
+    {
+      return ClassT<float32>(std::forward<ArgsT>(args)...)();
+    }
+  }
+  if constexpr(ArrayTypeOptions::UsingFloat64)
+  {
+    if(dataType == DataType::float64)
+    {
+      return ClassT<float64>(std::forward<ArgsT>(args)...)();
+    }
+  }
+}
+
 template <class FuncT, class... ArgsT>
 auto ExecuteDataFunction(FuncT&& func, DataType dataType, ArgsT&&... args)
 {

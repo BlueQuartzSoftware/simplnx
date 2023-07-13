@@ -472,6 +472,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Utilities/ImageRotationUtilities.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/FlyingEdges.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.hpp
+  ${COMPLEX_SOURCE_DIR}/Utilities/KUtilities.hpp
 
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
   ${COMPLEX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
