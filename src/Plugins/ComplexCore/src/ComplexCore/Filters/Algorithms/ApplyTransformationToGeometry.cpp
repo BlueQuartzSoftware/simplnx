@@ -148,20 +148,6 @@ Result<> ApplyTransformationToGeometry::operator()()
     return MakeErrorResult(-84500, fmt::format("Keeping the original geometry is not supported."));
   }
 
-  auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
-  const bool isNodeBased = (imageGeometryPtr == nullptr);
-
-  ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::Matrix4fR::Identity();
-  ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::Matrix4fR::Identity();
-  if(isNodeBased)
-  {
-    auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
-    auto boundingBox = nodeGeometry0D.getBoundingBox();
-    Point3Df minPoint = boundingBox.getMinPoint();
-    translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
-    translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
-  }
-
   switch(m_InputValues->TransformationSelection)
   {
   case k_NoTransformIdx: // No-Op
@@ -182,12 +168,6 @@ Result<> ApplyTransformationToGeometry::operator()()
   case k_RotationIdx: // Rotation via axis-angle
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(m_InputValues->Rotation);
-    if(isNodeBased)
-    {
-      // Translate the geometry to/from the global origin
-      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
-    }
-
     break;
   }
   case k_TranslationIdx: // Translation
@@ -198,11 +178,6 @@ Result<> ApplyTransformationToGeometry::operator()()
   case k_ScaleIdx: // Scale
   {
     m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(m_InputValues->Scale);
-    if(isNodeBased)
-    {
-      // Translate the geometry to/from the global origin
-      m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
-    }
     break;
   }
   }
