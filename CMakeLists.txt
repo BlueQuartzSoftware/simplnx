@@ -242,6 +242,7 @@ set(CoreParameters
   DataGroupSelectionParameter
   DataObjectNameParameter
   DataPathSelectionParameter
+  DataTypeParameter
   DynamicTableParameter
   EnsembleInfoParameter
   FileSystemPathParameter

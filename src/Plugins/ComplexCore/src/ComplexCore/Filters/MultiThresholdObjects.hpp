@@ -22,6 +22,7 @@ public:
 
   static inline constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
   static inline constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
+  static inline constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
 
   /**
    * @brief
