@@ -76,6 +76,7 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
 
     args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -116,6 +117,7 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
 
     args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -203,4 +205,304 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution", "[ComplexCore
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
+}
+
+template <typename T>
+void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
+{
+  auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<T>>(thresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
+
+  auto& thresholdArray = (*thresholdArrayPtr);
+
+  // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
+  for(usize i = 0; i < 20; i++)
+  {
+    if(i < 10)
+    {
+      REQUIRE(thresholdArray[i] == static_cast<T>(0));
+    }
+    else
+    {
+      REQUIRE(thresholdArray[i] == static_cast<T>(1));
+    }
+  }
+}
+
+TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution, DataType", "[ComplexCore][MultiThresholdObjects]")
+{
+  DataStructure dataStructure = CreateTestDataStructure();
+
+  // Signed
+  SECTION("Int8 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int8));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<int8>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  SECTION("Int16 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int16));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<int16>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  SECTION("Int32 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int32));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<int32>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  SECTION("Int64 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int64));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<int64>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  // Unsigned
+  SECTION("UInt8 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint8));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<uint8>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  SECTION("UInt16 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint16));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<uint16>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  SECTION("UInt32 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint32));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<uint32>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  SECTION("UInt64 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint64));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<uint64>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  // Floating Point
+  SECTION("Float32 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float32));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<float32>(dataStructure, k_ThresholdArrayPath);
+  }
+
+  SECTION("Float64 Threshold")
+  {
+    MultiThresholdObjects filter;
+    Arguments args;
+
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float64));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+    checkMaskValues<float64>(dataStructure, k_ThresholdArrayPath);
+  }
 }
