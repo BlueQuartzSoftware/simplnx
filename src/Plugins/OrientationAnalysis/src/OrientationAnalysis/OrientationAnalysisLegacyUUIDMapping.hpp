@@ -67,6 +67,7 @@
 #include "OrientationAnalysis/Filters/FindGBCDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/Filters/FindGBPDMetricBasedFilter.hpp"
 #include "OrientationAnalysis/Filters/FindSlipTransmissionMetricsFilter.hpp"
+#include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 #include <map>
@@ -139,6 +140,7 @@ namespace complex
     // {complex::Uuid::FromString("e1343abe-e5ad-5eb1-a89d-c209e620e4de").value(), complex::FilterTraits<ConvertHexGridToSquareGrid>::uuid}, // ConvertHexGridToSquareGrid
     // {complex::Uuid::FromString("ec58f4fe-8e51-527e-9536-8b6f185684be").value(), complex::FilterTraits<GenerateOrientationMatrixTranspose>::uuid}, // GenerateOrientationMatrixTranspose
     {complex::Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value(), complex::FilterTraits<FindGBCDMetricBasedFilter>::uuid}, // FindGBCDMetricBased
+    {complex::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), complex::FilterTraits<WriteStatsGenOdfAngleFileFilter>::uuid}, // WriteStatsGenOdfAngleFile
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
