@@ -1,9 +1,14 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
+    ITKDiscreteGaussianImageTest.cpp
     ITKImageReaderTest.cpp
     ITKImageWriterTest.cpp
     ITKImportImageStackTest.cpp
+    ITKMedianImageTest.cpp
+    ITKMhaFileReaderTest.cpp
+    ITKRescaleIntensityImageTest.cpp
+
     )
 if(NOT ITKImageProcessing_LeanAndMean)
     set(${PLUGIN_NAME}UnitTest_SRCS
@@ -15,26 +20,54 @@ if(NOT ITKImageProcessing_LeanAndMean)
     ITKAsinImageTest.cpp
     ITKAtanImageTest.cpp
     ITKBinaryContourImageTest.cpp
+    ITKBinaryDilateImageTest.cpp
+    ITKBinaryErodeImageTest.cpp
     ITKBinaryMorphologicalClosingImageTest.cpp
+    ITKBinaryMorphologicalOpeningImageTest.cpp
+    ITKBinaryOpeningByReconstructionImageTest.cpp
+    ITKBinaryProjectionImageTest.cpp
+    ITKBinaryThinningImageTest.cpp
     ITKBinaryThresholdImageTest.cpp
+    ITKBlackTopHatImageTest.cpp
     ITKClosingByReconstructionImageTest.cpp
     ITKCosImageTest.cpp
+    ITKDilateObjectMorphologyImageTest.cpp
+    ITKErodeObjectMorphologyImageTest.cpp
+    ITKExpImageTest.cpp
+    ITKExpNegativeImageTest.cpp
     ITKGradientMagnitudeImageTest.cpp
+    ITKGrayscaleDilateImageTest.cpp
+    ITKGrayscaleErodeImageTest.cpp
     ITKGrayscaleFillholeImageTest.cpp
+    ITKGrayscaleGrindPeakImageTest.cpp
+    ITKGrayscaleMorphologicalClosingImageTest.cpp
+    ITKGrayscaleMorphologicalOpeningImageTest.cpp
+    ITKHConvexImageTest.cpp
+    ITKHMaximaImageTest.cpp
+    ITKHMinimaImageTest.cpp
+    ITKIntensityWindowingImageTest.cpp
     ITKInvertIntensityImageTest.cpp
+    ITKLabelContourImageTest.cpp
     ITKLog10ImageTest.cpp
     ITKLogImageTest.cpp
     ITKMaskImageTest.cpp
-    ITKMedianImageTest.cpp
-    ITKMhaFileReaderTest.cpp
+    ITKMorphologicalGradientImageTest.cpp
     ITKMorphologicalWatershedImageTest.cpp
     ITKNormalizeImageTest.cpp
+    ITKNotImageTest.cpp
     ITKOpeningByReconstructionImageTest.cpp
     ITKOtsuMultipleThresholdsImageTest.cpp
+    ITKRelabelComponentImageTest.cpp
+    ITKSigmoidImageTest.cpp
     ITKSignedMaurerDistanceMapImageTest.cpp
     ITKSinImageTest.cpp
     ITKSqrtImageTest.cpp
+    ITKSquareImageTest.cpp
     ITKTanImageTest.cpp
+    ITKThresholdImageTest.cpp
+    ITKValuedRegionalMaximaImageTest.cpp
+    ITKValuedRegionalMinimaImageTest.cpp
+    ITKWhiteTopHatImageTest.cpp
 )
 endif ()
 
