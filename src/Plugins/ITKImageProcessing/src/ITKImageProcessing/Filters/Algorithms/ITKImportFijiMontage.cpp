@@ -1,7 +1,6 @@
 #include "ITKImportFijiMontage.hpp"
 
 #include "complex/Common/Array.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -14,6 +13,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -24,6 +24,7 @@ namespace
 {
 namespace Montage
 {
+const std::string k_DCName = "ZenInfo";
 const std::string k_AMName = "CellAM";
 const std::string k_AAName = "ImageData";
 const std::string k_GrayScaleTempArrayName = "gray_scale_temp";
@@ -101,14 +102,15 @@ int32 CalculatePaddingDigits(int32 count)
 }
 } // namespace Montage
 
+template <bool GenerateCache = true>
 class IOHandler
 {
 public:
-  IOHandler(ITKImportFijiMontage* filter, DataStructure& dataStructure, std::ifstream& inStream, const DataPath& quadGeomPath, const DataPath& vertexAMPath, const DataPath& cellAMPath,
+  IOHandler(ITKImportFijiMontage* filter, DataStructure& dataStructure, fs::path& inFile, const DataPath& quadGeomPath, const DataPath& vertexAMPath, const DataPath& cellAMPath,
             const bool allocate)
   : m_Filter(filter)
   , m_DataStructure(dataStructure)
-  , m_InStream(inStream)
+  , m_InFile(inFile)
   , m_QuadGeomPath(quadGeomPath)
   , m_VertexAMPath(vertexAMPath)
   , m_CellAMPath(cellAMPath)
@@ -123,8 +125,66 @@ public:
   IOHandler& operator=(const IOHandler&) = delete;
   IOHandler& operator=(IOHandler&&) noexcept = delete;
 
+  [[nodiscard]] Result<> operator()()
+  {
+    m_InStream = std::ifstream(m_InFile, std::ios_base::binary);
+    if(!m_InStream.is_open())
+    {
+      return MakeErrorResult(-2013, fmt::format("Unable to open the provided file to read at path : {}", m_InFile.string()));
+    }
+
+    if(!m_Allocate)
+    {
+      FillCache();
+    }
+    else
+    {
+      ReadImages();
+    }
+  }
+
+private:
+  // member variables
+  ITKImportFijiMontage* m_Filter;
+  DataStructure& m_DataStructure;
+  fs::path& m_InFile;
+  std::ifstream m_InStream;
+  const DataPath& m_QuadGeomPath;
+  const DataPath& m_VertexAMPath;
+  const DataPath& m_CellAMPath;
+  const bool m_Allocate;
+  FijiCache& m_Cache;
+  usize m_LineCount = 0;
+  std::vector<std::string> m_UserDefinedVariables = {};
+  std::vector<DataPath> m_UserDefinedArrays = {};
+
+  std::string m_MontageName = "Zen Montage";
+  int32 m_LengthUnit = 6;
+  Vec2<int32> m_ColumnMontageLimits = {0, 0};
+  Vec2<int32> m_RowMontageLimits = {0, 0};
+  Vec2<int32> m_MontageStart = {0, 0};
+  Vec2<int32> m_MontageEnd = {0, 0};
+  DataPath m_DataContainerPath = {};
+  std::string m_CellAttributeMatrixName = "";
+  std::string m_ImageDataArrayName = "";
+  bool m_ConvertToGrayScale = false;
+  FloatVec3 m_ColorWeights = FloatVec3(0.2125f, 0.7154f, 0.0721f);
+  bool m_ChangeOrigin = false;
+  FloatVec3 m_Origin = FloatVec3(0.0f, 0.0f, 0.0f);
+  bool m_ChangeSpacing = false;
+  FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
+
+  bool m_FileWasRead = false;
+  int32 m_RowCount = -1;
+  int32 m_ColumnCount = -1;
+  std::vector<std::string> m_FilenameList;
+  int32 m_Tolerance = 100;
+
+  std::string m_InputFile_Cache;
+  fs::file_time_type m_TimeStamp_Cache;
+
   // -----------------------------------------------------------------------------
-  void ParseConfigFile(const fs::path& filePath)
+  void ParseConfigFile()
   {
     bool dimFound = false;
     bool dataFound = false;
@@ -170,7 +230,7 @@ public:
         continue;
       }
       BoundsType bound;
-      bound.Filename = tokens[0];
+      bound.Filename = fs::path(m_InFile.parent_path().string() + fs::path::preferred_separator + tokens[0]);
 
       std::string coords = StringUtilities::trimmed(tokens[2]);
       coords = StringUtilities::replace(coords, "(", "");
@@ -189,49 +249,6 @@ public:
 
     FindTileIndices(m_Tolerance);
   }
-
-private:
-  // member variables
-  ITKImportFijiMontage* m_Filter;
-  DataStructure& m_DataStructure;
-  std::ifstream& m_InStream;
-  const DataPath& m_QuadGeomPath;
-  const DataPath& m_VertexAMPath;
-  const DataPath& m_CellAMPath;
-  const bool m_Allocate;
-  FijiCache& m_Cache;
-  usize m_LineCount = 0;
-  std::vector<std::string> m_UserDefinedVariables = {};
-  std::vector<DataPath> m_UserDefinedArrays = {};
-
-  std::string m_MontageName = "Zen Montage";
-  int32 m_LengthUnit = 6;
-  std::string m_InputFile = "";
-  Vec2<int32> m_ColumnMontageLimits = {0, 0};
-  Vec2<int32> m_RowMontageLimits = {0, 0};
-  Vec2<int32> m_MontageStart = {0, 0};
-  Vec2<int32> m_MontageEnd = {0, 0};
-  DataPath m_DataContainerPath = {};
-  std::string m_CellAttributeMatrixName = "";
-  std::string m_ImageDataArrayName = "";
-  bool m_ConvertToGrayScale = false;
-  FloatVec3 m_ColorWeights = FloatVec3(0.2125f, 0.7154f, 0.0721f);
-  bool m_ChangeOrigin = false;
-  FloatVec3 m_Origin = FloatVec3(0.0f, 0.0f, 0.0f);
-  bool m_ChangeSpacing = false;
-  FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
-
-  bool m_FileWasRead = false;
-  int32 m_RowCount = -1;
-  int32 m_ColumnCount = -1;
-  std::vector<std::string> m_FilenameList;
-  int32 m_Tolerance = 100;
-
-  std::string m_InputFile_Cache;
-  fs::file_time_type m_TimeStamp_Cache;
-  std::string m_MontageInformation;
-  usize m_MaxRow = 0;
-  usize m_MaxCol = 0;
 
   // -----------------------------------------------------------------------------
   void FindTileIndices(int32 tolerance)
@@ -273,7 +290,7 @@ private:
   }
 
   // -----------------------------------------------------------------------------
-  void GenerateCache(const fs::path& inputFile)
+  void FillCache(const fs::path& inputFile)
   {
     // This next function will set the FileName (Partial), Row, Col for each "bound" object
     ParseConfigFile(inputFile);
@@ -285,13 +302,9 @@ private:
     // Get the meta information from disk for each image
     for(auto& bound : m_Cache.bounds)
     {
-      // This will update the FileName to the absolutePath
-      QFileInfo fi(m_InputFile);
-      std::string absolutePath = fi.absolutePath() + QDir::separator() + bound.Filename;
-      bound.Filename = absolutePath;
       bound.LengthUnit = static_cast<IGeometry::LengthUnit>(m_LengthUnit);
 
-      DataPath dap(::k_DCName, Montage::k_AMName, Montage::k_AAName);
+      DataPath dap({Montage::k_DCName, Montage::k_AMName, Montage::k_AAName});
       AbstractFilter::Pointer imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
       imageImportFilter->preflight();
       if(imageImportFilter->getErrorCode() < 0)
@@ -324,8 +337,7 @@ private:
 
       if(m_ConvertToGrayScale)
       {
-        DataPath daPath(::k_DCName, Montage::k_AMName, Montage::k_AAName);
-        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, daPath, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
+        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
         grayScaleFilter->setDataContainerArray(importImageDca);
         grayScaleFilter->preflight();
         if(grayScaleFilter->getErrorCode() < 0)
@@ -335,7 +347,7 @@ private:
         }
 
         DataContainerArray::Pointer colorToGrayDca = grayScaleFilter->getDataContainerArray();
-        DataContainer::Pointer fromDc = colorToGrayDca->getDataContainer(::k_DCName);
+        DataContainer::Pointer fromDc = colorToGrayDca->getDataContainer(Montage::k_DCName);
         AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(Montage::k_AMName);
         // Remove the RGB Attribute Array so we can rename the gray scale AttributeArray
         IDataArray rgbImageArray = fromCellAttrMat->removeAttributeArray(Montage::k_AAName);
@@ -345,8 +357,8 @@ private:
         bound.ImageDataProxy = fromGrayScaleData;
       }
 
-      m_MaxCol = std::max(bound.Col, m_MaxCol);
-      m_MaxRow = std::max(bound.Row, m_MaxRow);
+      m_Cache.maxCol = std::max(bound.Col, m_Cache.maxCol);
+      m_Cache.maxRow = std::max(bound.Row, m_Cache.maxRow);
     }
 
     std::stringstream ss;
@@ -379,7 +391,7 @@ private:
     ss << "\nOrigin: " << overrideOrigin[0] << ", " << overrideOrigin[1] << ", " << overrideOrigin[2];
     ss << "\nSpacing: " << overrideSpacing[0] << ", " << overrideSpacing[1] << ", " << overrideSpacing[2];
     ss << Montage::k_MontageInfoReplaceKeyword;
-    m_MontageInformation = ss.str();
+    m_Cache.montageInformation = ss.str();
   }
 
   // -----------------------------------------------------------------------------
@@ -401,7 +413,7 @@ private:
       // Create our DataContainer Name using a Prefix and a rXXcYY format.
       QString dcName = getDataContainerPath().getDataContainerName();
       std::stringstream dcNameStream(&dcName);
-      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0')<< bound.Row;
+      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
       dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
 
       // Create the DataContainer with a name based on the ROW & COLUMN indices
@@ -448,7 +460,7 @@ private:
       // Create our DataContainer Name using a Prefix and a rXXcYY format.
       QString dcName = getDataContainerPath().getDataContainerName();
       std::stringstream dcNameStream(&dcName);
-      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0')<< bound.Row;
+      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
       dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
 
       // The DataContainer with a name based on the ROW & COLUMN indices is already created in the preflight
@@ -464,7 +476,7 @@ private:
       // The Cell AttributeMatrix is also already created at this point
       AttributeMatrix& cellAttrMat = image.getCellDataRef();
       // Instantiate the Image Import Filter to actually read the image into a data array
-      DataPath dap(::k_DCName, Montage::k_AMName, m_ImageDataArrayName); // This is just a temp path for the subfilter to use
+      DataPath dap({Montage::k_DCName, Montage::k_AMName, m_ImageDataArrayName}); // This is just a temp path for the subfilter to use
       AbstractFilter::Pointer imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
       if(nullptr == imageImportFilter.get())
       {
@@ -513,46 +525,29 @@ private:
     }
   }
 
-  // -----------------------------------------------------------------------------
-  void FlushCache()
-  {
-    m_InputFile_Cache = "";
-    m_DataContainerPath = DataPath();
-    m_CellAttributeMatrixName = "";
-    m_ImageDataArrayName = "";
-    m_ChangeOrigin = false;
-    m_ChangeSpacing = false;
-    m_ConvertToGrayScale = false;
-    m_Origin = FloatVec3(0.0f, 0.0f, 0.0f);
-    m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
-    m_ColorWeights = FloatVec3(0.2125f, 0.7154f, 0.0721f);
-    m_MaxCol = 0;
-    m_MaxRow = 0;
-    m_Cache.flush();
-  }
-
-  // -----------------------------------------------------------------------------
-  std::string GetMontageInformation()
-  {
-    std::string info = m_MontageInformation;
-    std::stringstream ss;
-    int32 importedCols = m_MontageEnd[0] - m_MontageStart[0] + 1;
-    int32 importedRows = m_MontageEnd[1] - m_MontageStart[1] + 1;
-    ss << "\n"
-       << "Imported Columns: " << importedCols << "  Imported Rows: " << importedRows << "  Imported Image Count: " << (importedCols * importedRows);
-    info = StringUtilities::replace(info, Montage::k_MontageInfoReplaceKeyword, ss.str());
-    return info;
-  }
+  //  // -----------------------------------------------------------------------------
+  //  std::string GetMontageInformation()
+  //  {
+  //    std::string info = m_MontageInformation;
+  //    std::stringstream ss;
+  //    int32 importedCols = m_MontageEnd[0] - m_MontageStart[0] + 1;
+  //    int32 importedRows = m_MontageEnd[1] - m_MontageStart[1] + 1;
+  //    ss << "\n"
+  //       << "Imported Columns: " << importedCols << "  Imported Rows: " << importedRows << "  Imported Image Count: " << (importedCols * importedRows);
+  //    info = StringUtilities::replace(info, Montage::k_MontageInfoReplaceKeyword, ss.str());
+  //    return info;
+  //  }
 };
 } // namespace
 
 // -----------------------------------------------------------------------------
-ITKImportFijiMontage::ITKImportFijiMontage(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ITKImportFijiMontageInputValues* inputValues)
+ITKImportFijiMontage::ITKImportFijiMontage(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ITKImportFijiMontageInputValues* inputValues,
+                                           FijiCache& cache)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_Cache(FijiCache{})
+, m_Cache(cache)
 {
 }
 
@@ -577,4 +572,16 @@ void ITKImportFijiMontage::sendUpdate(const std::string& message)
 // -----------------------------------------------------------------------------
 Result<> ITKImportFijiMontage::operator()()
 {
+  /*
+   * IF allocate is false DO NOT TOUCH DATA STRUCTURE IN ANY WAY
+   *
+   * If allocate is false then we are here in preflight meaning we
+   * DO NOT have a working DataStructure and that the DataPaths that
+   * have been passed in within inputValues are not valid as they have
+   * not been created.
+   */
+  IOHandler handler = IOHandler(this, m_DataStructure, m_InputValues->InputFilePath, m_InputValues->QuadGeomPath, m_InputValues->VertexAMPath, m_InputValues->CellAMPath, m_InputValues->Allocate);
+
+  // Read from the file
+  return handler();
 }

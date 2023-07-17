@@ -118,6 +118,30 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  // Read from the file if the input file has changed or the input file's time stamp is out of date.
+  if(pInputFileValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFileValue))
+  {
+    ITKImportFijiMontageInputValues inputValues;
+    inputValues.Allocate = false;
+    inputValues.InputFilePath = pInputFileValue;
+
+    inputValues.QuadGeomPath = pQuadGeomPathValue;
+    inputValues.CellAMPath = cellDataPath;
+    inputValues.VertexAMPath = vertexDataPath;
+
+    // Read from the file
+    DataStructure throwaway = DataStructure();
+    ITKImportFijiMontage algorithm(throwaway, messageHandler, shouldCancel, &inputValues, s_HeaderCache[m_InstanceId]);
+    algorithm.operator()();
+
+    // Cache the results from algorithm run
+    s_HeaderCache[m_InstanceId] = algorithm.getCache();
+
+    // Update the cached variables
+    s_HeaderCache[m_InstanceId].inputFile = pInputFileValue;
+    s_HeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFileValue);
+  }
+
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
   // These variables should be updated with the latest data generated for each variable during preflight.

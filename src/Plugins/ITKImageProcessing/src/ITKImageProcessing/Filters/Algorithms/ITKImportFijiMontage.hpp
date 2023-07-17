@@ -28,21 +28,26 @@ struct ITKIMAGEPROCESSING_EXPORT FijiCache
 {
   fs::path inputFile;
   std::vector<BoundsType> bounds;
-  usize vertexAttrMatTupleCount;
-  usize cellAttrMatTupleCount;
+  usize maxCol = 0;
+  usize maxRow = 0;
+  std::string montageInformation;
   fs::file_time_type timeStamp;
 
   void flush()
   {
     inputFile.clear();
     bounds.clear();
+    maxCol = 0;
+    maxRow = 0;
+    montageInformation = "";
     timeStamp = fs::file_time_type();
   }
 };
 
 struct ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageInputValues
 {
-  bool FindHistogram;
+  bool Allocate;
+  fs::path InputFilePath;
 };
 
 /**
@@ -52,7 +57,7 @@ struct ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageInputValues
 class ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontage
 {
 public:
-  ITKImportFijiMontage(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ITKImportFijiMontageInputValues* inputValues);
+  ITKImportFijiMontage(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ITKImportFijiMontageInputValues* inputValues, FijiCache& cache);
   ~ITKImportFijiMontage() noexcept = default;
 
   ITKImportFijiMontage(const ITKImportFijiMontage&) = delete;
