@@ -225,7 +225,7 @@ Result<> OEMEbsdScanSelectionParameter::validate(const std::any& valueRef) const
   const ManufacturerType manufacturer = ReadManufacturer(value.inputFilePath.string());
   if(m_AllowedManufacturers.find(manufacturer) == m_AllowedManufacturers.end())
   {
-    errors.push_back({-20035, fmt::format("Original data source type {} is not a valid manufacturer", manufacturer)});
+    errors.push_back({-20035, fmt::format("Original data source type {} is not a valid manufacturer", fmt::underlying(manufacturer))});
     return {nonstd::make_unexpected(std::move(errors))};
   }
 

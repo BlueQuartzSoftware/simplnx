@@ -172,7 +172,7 @@ Result<> CalculateArrayHistogram::operator()()
     if(overflow > 0)
     {
       const std::string arrayName = inputData.getName();
-      CalculateArrayHistogram::updateProgress(fmt::format("{} values not categorized into bin for array {}", overflow, arrayName));
+      CalculateArrayHistogram::updateProgress(fmt::format("{} values not categorized into bin for array {}", overflow.load(), arrayName));
     }
   }
 

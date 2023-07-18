@@ -13,14 +13,12 @@ using namespace complex;
 template <>
 struct fmt::formatter<complex::DataType>
 {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx)
+  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  template <typename FormatContext>
-  auto format(const complex::DataType& value, FormatContext& ctx)
+  format_context::iterator format(const complex::DataType& value, format_context& ctx) const
   {
     return fmt::format_to(ctx.out(), "{}", complex::DataTypeToString(value));
   }

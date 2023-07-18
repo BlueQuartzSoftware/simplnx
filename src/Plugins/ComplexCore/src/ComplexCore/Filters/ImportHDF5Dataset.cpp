@@ -302,8 +302,9 @@ IFilter::PreflightResult ImportHDF5Dataset::preflightImpl(const DataStructure& d
       Result<HDF5::Type> type = datasetReader.getDataType();
       if(type.invalid())
       {
-        return {nonstd::make_unexpected(std::vector<Error>{
-            Error{-20015, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, datasetReader.getType())}})};
+        return {
+            nonstd::make_unexpected(std::vector<Error>{Error{-20015, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set",
+                                                                                 datasetPath, fmt::underlying(datasetReader.getType()))}})};
       }
       DataType dataType = complex::HDF5::toCommonType(type.value()).value();
       auto action = std::make_unique<CreateArrayAction>(dataType, tDims, cDims, dataArrayPath);
@@ -385,7 +386,8 @@ Result<> ImportHDF5Dataset::executeImpl(DataStructure& dataStructure, const Argu
       break;
     }
     default: {
-      return {MakeErrorResult(-21001, fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, type))};
+      return {MakeErrorResult(-21001,
+                              fmt::format("The selected datatset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, fmt::underlying(type)))};
     }
     }
     if(fillArrayResults.invalid())

@@ -97,7 +97,8 @@ TEST_CASE("ComplexCore::RemoveMinimumSizeFeatures: Small IN100 Pipeline", "[Comp
 
       if(type != exemplarType)
       {
-        std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray.getName(), exemplarDataArray.getName(), type, exemplarType)
+        std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray.getName(), exemplarDataArray.getName(),
+                                 fmt::underlying(type), fmt::underlying(exemplarType))
                   << std::endl;
         continue;
       }

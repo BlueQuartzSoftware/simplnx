@@ -153,7 +153,7 @@ IFilter::PreflightResult ConditionalSetValue::preflightImpl(const DataStructure&
   if(result.invalid())
   {
     return {MakeErrorResult<OutputActions>(::k_ConvertReplaceValueTypeError, fmt::format("{}({}): Function {}: Error. Cannot convert {} to the type {}.", "ReplaceValueInArrayFunctor", __FILE__,
-                                                                                         __LINE__, replaceValueString, inputDataObject.getDataObjectType()))};
+                                                                                         __LINE__, replaceValueString, fmt::underlying(inputDataObject.getDataObjectType())))};
   }
 
   result = CheckValueConvertsToArrayType(removeValueString, inputDataObject);

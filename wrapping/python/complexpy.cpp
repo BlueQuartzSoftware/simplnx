@@ -205,14 +205,12 @@ using namespace pybind11::literals;
 template <>
 struct fmt::formatter<complex::Error>
 {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx)
+  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  template <typename FormatContext>
-  auto format(const complex::Error& value, FormatContext& ctx)
+  format_context::iterator format(const complex::Error& value, format_context& ctx) const
   {
     return fmt::format_to(ctx.out(), "Error(code={}, message='{}')", value.code, value.message);
   }
@@ -221,14 +219,12 @@ struct fmt::formatter<complex::Error>
 template <>
 struct fmt::formatter<complex::Warning>
 {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx)
+  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  template <typename FormatContext>
-  auto format(const complex::Warning& value, FormatContext& ctx)
+  format_context::iterator format(const complex::Warning& value, format_context& ctx) const
   {
     return fmt::format_to(ctx.out(), "Warning(code={}, message='{}')", value.code, value.message);
   }
