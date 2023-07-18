@@ -11,6 +11,7 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
+#include "complex/Utilities/MontageUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -70,8 +71,9 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Fiji Configuration File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_ColumnMontageLimits_Key, "Montage Column Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>(2)));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_RowMontageLimits_Key, "Montage Row Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>(2)));
+  params.insert(
+      std::make_unique<VectorInt32Parameter>(k_ColumnMontageLimits_Key, "Montage Column Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>{"start", "end"}));
+  params.insert(std::make_unique<VectorInt32Parameter>(k_RowMontageLimits_Key, "Montage Row Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>{"start", "end"}));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>(3), std::vector<std::string>(3)));
@@ -99,7 +101,7 @@ IFilter::UniquePointer ITKImportFijiMontageFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel) const
+                                                                   const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pMontageNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageName_Key);
@@ -142,6 +144,48 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     s_HeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFileValue);
   }
 
+  GridMontage gridMontage = GridMontage::New(m_MontageName, m_RowCount, m_ColumnCount);
+
+  int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(s_HeaderCache[m_InstanceId].maxRow);
+  int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(s_HeaderCache[m_InstanceId].maxCol);
+  int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
+
+  for(const auto& bound : s_HeaderCache[m_InstanceId].bounds)
+  {
+    if(bound.Row < pRowMontageLimitsValue[0] || bound.Row > pRowMontageLimitsValue[1] || bound.Col < pColumnMontageLimitsValue[0] || bound.Col > pColumnMontageLimitsValue[1])
+    {
+      continue;
+    }
+
+    // Create our DataContainer Name using a Prefix and a rXXcYY format.
+    std::stringstream dcNameStream;
+    dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
+    dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
+
+    // Create the DataContainer with a name based on the ROW & COLUMN indices
+    DataContainer dc = dca->createNonPrereqDataContainer(this, dcName);
+
+    // Create the Image Geometry
+    ImageGeom& image = ImageGeom::CreateGeometry(dcName);
+    image.setDimensions(bound.Dims);
+    image.setOrigin(bound.Origin);
+    image.setSpacing(bound.Spacing);
+    image.setUnits(bound.LengthUnit);
+
+    dc->setGeometry(image);
+
+    GridTileIndex gridIndex = gridMontage.getTileIndex(bound.Row, bound.Col);
+    // Set the montage's DataContainer for the current index
+    gridMontage.setGeometry(gridIndex, dc);
+
+    using StdVecSizeType = std::vector<size_t>;
+    // Create the Cell Attribute Matrix into which the image data would be read
+    AttributeMatrix cellAttrMat = AttributeMatrix::New(bound.Dims.toContainer<StdVecSizeType>(), m_CellAttributeMatrixName);
+    dc->addOrReplaceAttributeMatrix(cellAttrMat);
+    cellAttrMat.addOrReplaceAttributeArray(bound.ImageDataProxy);
+  }
+  getDataContainerArray()->addOrReplaceMontage(gridMontage);
+
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
   // These variables should be updated with the latest data generated for each variable during preflight.
@@ -178,7 +222,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
 
 //------------------------------------------------------------------------------
 Result<> ITKImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel) const
+                                                 const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pMontageNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageName_Key);

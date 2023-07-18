@@ -14,6 +14,7 @@
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
+#include "complex/Utilities/MontageUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -22,85 +23,11 @@ using namespace complex;
 
 namespace
 {
-namespace Montage
-{
 const std::string k_DCName = "ZenInfo";
 const std::string k_AMName = "CellAM";
 const std::string k_AAName = "ImageData";
 const std::string k_GrayScaleTempArrayName = "gray_scale_temp";
 const std::string k_MontageInfoReplaceKeyword = "@UPDATE_ROW_COLUMN@";
-
-// -----------------------------------------------------------------------------
-std::map<int32, std::vector<usize>> Burn(int32 tolerance, std::vector<int32>& input)
-{
-  int32 halfTol = tolerance / 2;
-  usize count = input.size();
-  int32 seed = input[0];
-  std::vector<bool> visited(input.size(), false);
-  std::map<int32, std::vector<usize>> avg_indices;
-
-  bool completed = false;
-  while(!completed)
-  {
-    std::vector<usize> values;
-    for(usize i = 0; i < count; i++)
-    {
-      if(input[i] < seed + halfTol && input[i] > seed - halfTol)
-      {
-        values.push_back(i);
-        visited[i] = true;
-      }
-    }
-
-    int32 avg = 0;
-    for(const auto& v : values)
-    {
-      avg = avg + input.at(v);
-    }
-    avg = avg / static_cast<int32>(values.size());
-    avg_indices[avg] = values;
-    seed = 0;
-    completed = true;
-    for(usize i = 0; i < count; i++)
-    {
-      if(!visited[i])
-      {
-        seed = input[i];
-        completed = false;
-        break;
-      }
-    }
-  }
-  return avg_indices;
-}
-
-// -----------------------------------------------------------------------------
-int32 CalculatePaddingDigits(int32 count)
-{
-  int zeroPadding = 0;
-  if(count > 0)
-  {
-    zeroPadding++;
-  }
-  if(count > 9)
-  {
-    zeroPadding++;
-  }
-  if(count > 99)
-  {
-    zeroPadding++;
-  }
-  if(count > 999)
-  {
-    zeroPadding++;
-  }
-  if(count > 9999)
-  {
-    zeroPadding++;
-  }
-  return zeroPadding;
-}
-} // namespace Montage
 
 template <bool GenerateCache = true>
 class IOHandler
@@ -174,14 +101,9 @@ private:
   bool m_ChangeSpacing = false;
   FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
 
-  bool m_FileWasRead = false;
   int32 m_RowCount = -1;
   int32 m_ColumnCount = -1;
-  std::vector<std::string> m_FilenameList;
   int32 m_Tolerance = 100;
-
-  std::string m_InputFile_Cache;
-  fs::file_time_type m_TimeStamp_Cache;
 
   // -----------------------------------------------------------------------------
   void ParseConfigFile()
@@ -262,7 +184,7 @@ private:
       yValues[i] = static_cast<int32>(m_Cache.bounds[i].Origin[1]);
     }
 
-    std::map<int32, std::vector<usize>> avg_indices = Montage::Burn(tolerance, xValues);
+    std::map<int32, std::vector<usize>> avg_indices = MontageUtilities::Burn(tolerance, xValues);
     int32 index = 0;
     for(auto& iter : avg_indices)
     {
@@ -275,7 +197,7 @@ private:
     }
     m_ColumnCount = index;
 
-    avg_indices = Montage::Burn(tolerance, yValues);
+    avg_indices = MontageUtilities::Burn(tolerance, yValues);
     index = 0;
     for(auto& iter : avg_indices)
     {
@@ -304,8 +226,8 @@ private:
     {
       bound.LengthUnit = static_cast<IGeometry::LengthUnit>(m_LengthUnit);
 
-      DataPath dap({Montage::k_DCName, Montage::k_AMName, Montage::k_AAName});
-      AbstractFilter::Pointer imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
+      DataPath dap({::k_DCName, ::k_AMName, ::k_AAName});
+      IFilter imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
       imageImportFilter->preflight();
       if(imageImportFilter->getErrorCode() < 0)
       {
@@ -313,12 +235,12 @@ private:
         continue;
       }
 
-      DataContainerArray::Pointer importImageDca = imageImportFilter->getDataContainerArray();
+      DataContainerArray importImageDca = imageImportFilter->getDataContainerArray();
       {
-        DataContainer::Pointer fromDc = importImageDca->getDataContainer(::k_DCName);
-        AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(Montage::k_AMName);
-        IDataArray fromImageData = fromCellAttrMat->getAttributeArray(Montage::k_AAName);
-        fromImageData->setName(m_ImageDataArrayName);
+        DataContainer fromDc = importImageDca->getDataContainer(::k_DCName);
+        AttributeMatrix& fromCellAttrMat = fromDc->getAttributeMatrix(::k_AMName);
+        IDataArray& fromImageData = fromCellAttrMat.getAttributeArray(::k_AAName);
+        fromImageData.setName(m_ImageDataArrayName);
         bound.ImageDataProxy = fromImageData;
 
         // Set the Origin based on the values from the Fiji Config File
@@ -335,9 +257,10 @@ private:
         geometries.push_back(imageGeom);
       }
 
+      // Execute color to grayscale filter
       if(m_ConvertToGrayScale)
       {
-        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
+        IFilter grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, ::k_GrayScaleTempArrayName);
         grayScaleFilter->setDataContainerArray(importImageDca);
         grayScaleFilter->preflight();
         if(grayScaleFilter->getErrorCode() < 0)
@@ -346,14 +269,14 @@ private:
           continue;
         }
 
-        DataContainerArray::Pointer colorToGrayDca = grayScaleFilter->getDataContainerArray();
-        DataContainer::Pointer fromDc = colorToGrayDca->getDataContainer(Montage::k_DCName);
-        AttributeMatrix fromCellAttrMat = fromDc->getAttributeMatrix(Montage::k_AMName);
+        DataContainerArray colorToGrayDca = grayScaleFilter->getDataContainerArray();
+        DataContainer fromDc = colorToGrayDca->getDataContainer(::k_DCName);
+        AttributeMatrix& fromCellAttrMat = fromDc->getAttributeMatrix(::k_AMName);
         // Remove the RGB Attribute Array so we can rename the gray scale AttributeArray
-        IDataArray rgbImageArray = fromCellAttrMat->removeAttributeArray(Montage::k_AAName);
-        std::string grayScaleArrayName = Montage::k_GrayScaleTempArrayName + Montage::k_AAName;
-        IDataArray fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
-        fromGrayScaleData->setName(m_ImageDataArrayName);
+        IDataArray& rgbImageArray = fromCellAttrMat->removeAttributeArray(::k_AAName);
+        std::string grayScaleArrayName = ::k_GrayScaleTempArrayName + ::k_AAName;
+        IDataArray& fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
+        fromGrayScaleData.setName(m_ImageDataArrayName);
         bound.ImageDataProxy = fromGrayScaleData;
       }
 
@@ -390,62 +313,15 @@ private:
     }
     ss << "\nOrigin: " << overrideOrigin[0] << ", " << overrideOrigin[1] << ", " << overrideOrigin[2];
     ss << "\nSpacing: " << overrideSpacing[0] << ", " << overrideSpacing[1] << ", " << overrideSpacing[2];
-    ss << Montage::k_MontageInfoReplaceKeyword;
+    ss << ::k_MontageInfoReplaceKeyword;
     m_Cache.montageInformation = ss.str();
-  }
-
-  // -----------------------------------------------------------------------------
-  void GenerateDataStructure()
-  {
-    GridMontage gridMontage = GridMontage::New(m_MontageName, m_RowCount, m_ColumnCount);
-
-    int32 rowCountPadding = Montage::CalculatePaddingDigits(m_RowCount);
-    int32 colCountPadding = Montage::CalculatePaddingDigits(m_ColumnCount);
-    int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
-
-    for(const auto& bound : m_Cache.bounds)
-    {
-      if(bound.Row < m_MontageStart[1] || bound.Row > m_MontageEnd[1] || bound.Col < m_MontageStart[0] || bound.Col > m_MontageEnd[0])
-      {
-        continue;
-      }
-
-      // Create our DataContainer Name using a Prefix and a rXXcYY format.
-      QString dcName = getDataContainerPath().getDataContainerName();
-      std::stringstream dcNameStream(&dcName);
-      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
-      dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
-
-      // Create the DataContainer with a name based on the ROW & COLUMN indices
-      DataContainer::Pointer dc = dca->createNonPrereqDataContainer(this, dcName);
-
-      // Create the Image Geometry
-      ImageGeom& image = ImageGeom::CreateGeometry(dcName);
-      image.setDimensions(bound.Dims);
-      image.setOrigin(bound.Origin);
-      image.setSpacing(bound.Spacing);
-      image.setUnits(bound.LengthUnit);
-
-      dc->setGeometry(image);
-
-      GridTileIndex& gridIndex = gridMontage.getTileIndex(bound.Row, bound.Col);
-      // Set the montage's DataContainer for the current index
-      gridMontage.setGeometry(gridIndex, dc);
-
-      using StdVecSizeType = std::vector<size_t>;
-      // Create the Cell Attribute Matrix into which the image data would be read
-      AttributeMatrix cellAttrMat = AttributeMatrix::New(bound.Dims.toContainer<StdVecSizeType>(), m_CellAttributeMatrixName);
-      dc->addOrReplaceAttributeMatrix(cellAttrMat);
-      cellAttrMat.addOrReplaceAttributeArray(bound.ImageDataProxy);
-    }
-    getDataContainerArray()->addOrReplaceMontage(gridMontage);
   }
 
   // -----------------------------------------------------------------------------
   void ReadImages()
   {
-    int32 rowCountPadding = Montage::CalculatePaddingDigits(m_RowCount);
-    int32 colCountPadding = Montage::CalculatePaddingDigits(m_ColumnCount);
+    int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(m_RowCount);
+    int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(m_ColumnCount);
     int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
 
     for(const auto& bound : m_Cache.bounds)
@@ -458,8 +334,7 @@ private:
       m_Filter->sendUpdate(("Importing" + bound.Filename.filename().string()));
 
       // Create our DataContainer Name using a Prefix and a rXXcYY format.
-      QString dcName = getDataContainerPath().getDataContainerName();
-      std::stringstream dcNameStream(&dcName);
+      std::stringstream dcNameStream;
       dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
       dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
 
@@ -476,8 +351,10 @@ private:
       // The Cell AttributeMatrix is also already created at this point
       AttributeMatrix& cellAttrMat = image.getCellDataRef();
       // Instantiate the Image Import Filter to actually read the image into a data array
-      DataPath dap({Montage::k_DCName, Montage::k_AMName, m_ImageDataArrayName}); // This is just a temp path for the subfilter to use
-      AbstractFilter::Pointer imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
+      DataPath dap({::k_DCName, ::k_AMName, m_ImageDataArrayName}); // This is just a temp path for the subfilter to use
+
+      //execute image import filter
+      IFilter imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
       if(nullptr == imageImportFilter.get())
       {
         continue;
@@ -490,37 +367,39 @@ private:
         continue;
       }
       // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
-      DataContainerArray::Pointer importImageDca = imageImportFilter->getDataContainerArray();
-      AttributeMatrix fromCellAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(DataPath{Montage::k_AMName});
+      DataContainerArray importImageDca = imageImportFilter->getDataContainerArray();
+      AttributeMatrix fromCellAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(DataPath{::k_AMName});
 
       if(m_ConvertToGrayScale)
       {
-        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
-        grayScaleFilter->setDataContainerArray(importImageDca); // Use the Data Container array that was use for the import. It is set up and ready to go
-        connect(grayScaleFilter.get(), SIGNAL(messageGenerated(const AbstractMessage::Pointer&)), this, SIGNAL(messageGenerated(const AbstractMessage::Pointer&)));
-        grayScaleFilter->execute();
-        if(grayScaleFilter->getErrorCode() < 0)
-        {
-          setErrorCondition(grayScaleFilter->getErrorCode(), "Error Executing Color to GrayScale filter");
-          continue;
-        }
+        //Run grayscale filter and process results and messages
+        #error implement;
+//        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
+//        grayScaleFilter->setDataContainerArray(importImageDca); // Use the Data Container array that was use for the import. It is set up and ready to go
+//        connect(grayScaleFilter.get(), SIGNAL(messageGenerated(const AbstractMessage::Pointer&)), this, SIGNAL(messageGenerated(const AbstractMessage::Pointer&)));
+//        grayScaleFilter->execute();
+//        if(grayScaleFilter->getErrorCode() < 0)
+//        {
+//          setErrorCondition(grayScaleFilter->getErrorCode(), "Error Executing Color to GrayScale filter");
+//          continue;
+//        }
 
-        DataContainerArray::Pointer c2gDca = grayScaleFilter->getDataContainerArray();
-        DataContainer::Pointer c2gDc = c2gDca->getDataContainer(::k_DCName);
-        AttributeMatrix c2gAttrMat = c2gDc->getAttributeMatrix(Montage::k_AMName);
+        DataContainerArray c2gDca = grayScaleFilter->getDataContainerArray();
+        DataContainer c2gDc = c2gDca->getDataContainer(::k_DCName);
+        AttributeMatrix c2gAttrMat = c2gDc->getAttributeMatrix(::k_AMName);
 
-        std::string grayScaleArrayName = Montage::k_GrayScaleTempArrayName + m_ImageDataArrayName;
+        std::string grayScaleArrayName = ::k_GrayScaleTempArrayName + m_ImageDataArrayName;
 
-        IDataArray rgbImageArray = c2gAttrMat->removeAttributeArray(Montage::k_AAName);
-        IDataArray gray = c2gAttrMat->removeAttributeArray(grayScaleArrayName);
-        gray->setName(m_ImageDataArrayName);
-        cellAttrMat->addOrReplaceAttributeArray(gray);
+        IDataArray& rgbImageArray = c2gAttrMat->removeAttributeArray(::k_AAName);
+        IDataArray& gray = c2gAttrMat->removeAttributeArray(grayScaleArrayName);
+        gray.setName(m_ImageDataArrayName);
+        cellAttrMat.addOrReplaceAttributeArray(gray);
       }
       else
       {
         // Copy the IDataArray (which contains the image data) from the temp data container array into our persistent data structure
-        IDataArray gray = fromCellAttrMat->removeAttributeArray(m_ImageDataArrayName);
-        cellAttrMat->addOrReplaceAttributeArray(gray);
+        IDataArray& gray = fromCellAttrMat.removeAttributeArray(m_ImageDataArrayName);
+        cellAttrMat.addOrReplaceAttributeArray(gray);
       }
     }
   }
