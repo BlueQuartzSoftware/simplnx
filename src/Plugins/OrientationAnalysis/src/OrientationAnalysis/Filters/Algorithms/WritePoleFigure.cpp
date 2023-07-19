@@ -255,7 +255,7 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
 
   // Draw the Max Value
   context.begin_path();
-  const std::string maxStr = fmt::format("{:.6}", config.maxScale);
+  const std::string maxStr = fmt::format("{:#.6}", config.maxScale);
   context.set_font(fontData.data(), static_cast<int>(fontData.size()), fontPtSize);
   context.set_color(canvas_ity::fill_style, 0.0f, 0.0f, 0.0f, 1.0f);
   context.text_baseline = baselines[0];
@@ -264,7 +264,7 @@ void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t&
 
   // Draw the Min value
   context.begin_path();
-  const std::string minStr = fmt::format("{:.6}", config.minScale);
+  const std::string minStr = fmt::format("{:#.6}", config.minScale);
   context.set_font(fontData.data(), static_cast<int>(fontData.size()), fontPtSize);
   context.set_color(canvas_ity::fill_style, 0.0f, 0.0f, 0.0f, 1.0f);
   context.text_baseline = baselines[0];

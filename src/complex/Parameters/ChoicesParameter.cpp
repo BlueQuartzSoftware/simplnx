@@ -4,24 +4,19 @@
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
-namespace fmt
-{
 template <>
-struct formatter<complex::Error>
+struct fmt::formatter<complex::Error>
 {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx)
+  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  template <typename FormatContext>
-  auto format(const complex::Error& error, FormatContext& ctx)
+  format_context::iterator format(const complex::Error& error, format_context& ctx) const
   {
     return format_to(ctx.out(), "Error({}, {})", error.code, error.message);
   }
 };
-} // namespace fmt
 
 namespace complex
 {

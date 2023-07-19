@@ -222,7 +222,7 @@ IFilter::PreflightResult GenerateFZQuaternions::preflightImpl(const DataStructur
     }
     if(maskArray.getDataType() != complex::DataType::boolean && maskArray.getDataType() != complex::DataType::uint8 && maskArray.getDataType() != complex::DataType::int8)
     {
-      return {MakeErrorResult<OutputActions>(-49005, fmt::format("Mask Array is not [BOOL (10) | UINT8 (2) | INT8 (1)]: '{}'", maskArray.getDataType()))};
+      return {MakeErrorResult<OutputActions>(-49005, fmt::format("Mask Array is not [BOOL (10) | UINT8 (2) | INT8 (1)]: '{}'", fmt::underlying(maskArray.getDataType())))};
     }
 
     if(maskArray.getNumberOfTuples() != quatArray.getNumberOfTuples())
@@ -296,7 +296,7 @@ Result<> GenerateFZQuaternions::executeImpl(DataStructure& dataStructure, const 
   {
     std::string errorMessage = fmt::format("The Ensemble Phase information only references {} phase(s) but {} cell(s) had a phase value greater than {}. \
 This indicates a problem with the input cell phase data. DREAM.3D may have given INCORRECT RESULTS.",
-                                           numPhases - 1, warningCount, numPhases - 1);
+                                           numPhases - 1, warningCount.load(), numPhases - 1);
 
     return {MakeErrorResult<>(-49008, errorMessage)};
   }

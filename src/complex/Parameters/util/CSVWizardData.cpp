@@ -30,7 +30,7 @@
 
 #include "CSVWizardData.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 using namespace complex;
 
@@ -163,7 +163,7 @@ Result<CSVWizardData> CSVWizardData::ReadJson(const nlohmann::json& json)
     auto delimiterObj = delimiters[i];
     if(!delimiterObj.is_number_integer())
     {
-      return MakeErrorResult<CSVWizardData>(-106, fmt::format("CSVWizardData: Delimiter at index {} is of type {} and is not an integer.", std::to_string(i), delimiterObj.type()));
+      return MakeErrorResult<CSVWizardData>(-106, fmt::format("CSVWizardData: Delimiter at index {} is of type {} and is not an integer.", std::to_string(i), fmt::underlying(delimiterObj.type())));
     }
 
     data.delimiters.push_back(delimiterObj.get<char>());
