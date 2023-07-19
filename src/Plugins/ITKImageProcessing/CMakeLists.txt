@@ -61,7 +61,7 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # ------------------------------------------------------------------------------
 # These are all the filters in the plugin. All filters should be kept in the
 # ITKImageProcessing/src/ITKImageProcessing/Filters/ directory.
-option(ITKImageProcessing_LeanAndMean "Only compile the Reader and Writers, All other filters are disabled" OFF)
+option(ITKIMAGEPROCESSING_LEAN_AND_MEAN "Only compile the Reader and Writers, All other filters are disabled" OFF)
 
 set(FilterList
   ITKDiscreteGaussianImage
@@ -76,7 +76,7 @@ set(FilterList
 # ------------------------------------------------------------------------------
 # These are all extra filters that are built if we have enabled all the filters
 #
-if(NOT ITKImageProcessing_LeanAndMean)
+if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND FilterList
     ITKAbsImage
     ITKAcosImage
@@ -251,13 +251,22 @@ set(${PLUGIN_NAME}_Common_Srcs
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKDream3DFilterInterruption.hpp
 )
 
+set(${PLUGIN_NAME}_GENERATED_DIR ${complex_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated)
+set(${PLUGIN_NAME}_GENERATED_HEADER_DIR ${complex_BINARY_DIR}/Plugins/${ARGS_PLUGIN_NAME}/generated/ITKImageProcessing)
+
+set(${PLUGIN_NAME}_GENERATED_CONFIG_HEADER ${${PLUGIN_NAME}_GENERATED_HEADER_DIR}/ITKImageProcessingConfig.hpp)
+
+set(${PLUGIN_NAME}_GENERATED_HEADERS ${${PLUGIN_NAME}_GENERATED_CONFIG_HEADER})
+
+configure_file(${${PLUGIN_NAME}_SOURCE_DIR}/cmake/ITKImageProcessingConfig.hpp.in ${${PLUGIN_NAME}_GENERATED_CONFIG_HEADER})
+
 target_sources(${PLUGIN_NAME}
   PRIVATE
     ${${PLUGIN_NAME}_Common_Srcs}
+    ${${PLUGIN_NAME}_GENERATED_HEADERS}
 )
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${${PLUGIN_NAME}_Common_Srcs})
-
-target_include_directories(${PLUGIN_NAME} PUBLIC ${ITK_INCLUDE_DIRS})
+source_group("Generated" FILES ${${PLUGIN_NAME}_GENERATED_HEADERS})
 
 if(WIN32)
   # This removes some C++17 Deprecation Warnings inside of ITK 5.1

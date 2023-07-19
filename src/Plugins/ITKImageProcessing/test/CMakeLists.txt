@@ -10,7 +10,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ITKRescaleIntensityImageTest.cpp
 )
 
-if(NOT ITKImageProcessing_LeanAndMean)
+if(NOT ITKIMAGEPROCESSING_LEAN_AND_MEAN)
   list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
     ITKAbsImageTest.cpp
     ITKAcosImageTest.cpp
