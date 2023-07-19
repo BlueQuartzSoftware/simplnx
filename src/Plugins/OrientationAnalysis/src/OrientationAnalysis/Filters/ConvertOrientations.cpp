@@ -362,12 +362,12 @@ IFilter::PreflightResult ConvertOrientations::preflightImpl(const DataStructure&
 
   if(static_cast<int>(inputType) < 0 || inputType >= OrientationRepresentation::Type::Unknown)
   {
-    return {MakeErrorResult<OutputActions>(::k_InputRepresentationTypeError, fmt::format("Input Representation Type must be a value from 0 to 6. '{}'", inputType))};
+    return {MakeErrorResult<OutputActions>(::k_InputRepresentationTypeError, fmt::format("Input Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(inputType)))};
   }
 
   if(static_cast<int>(outputType) < 0 || outputType >= OrientationRepresentation::Type::Unknown)
   {
-    return {MakeErrorResult<OutputActions>(::k_OutputRepresentationTypeError, fmt::format("Output Representation Type must be a value from 0 to 6. '{}'", outputType))};
+    return {MakeErrorResult<OutputActions>(::k_OutputRepresentationTypeError, fmt::format("Output Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(outputType)))};
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);

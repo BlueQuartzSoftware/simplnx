@@ -301,7 +301,6 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     usize zTuples = zBounds->getNumberOfTuples();
     if(xTuples < 2 || yTuples < 2 || zTuples < 2)
     {
-      fmt::format("One of the bounds arrays has a size less than two; all sizes must be at least two\nX Bounds Size: {}\nY Bounds Size: {}\nZ Bounds Size: {}\n", xTuples, yTuples, zTuples);
       return {nonstd::make_unexpected(
           std::vector<Error>{Error{-9844, fmt::format("One of the bounds arrays has a size less than two; all sizes must be at least two\nX Bounds Size: {}\nY Bounds Size: {}\nZ Bounds Size: {}\n",
                                                       xBounds->getNumberOfTuples(), yBounds->getNumberOfTuples(), zBounds->getNumberOfTuples())}})};

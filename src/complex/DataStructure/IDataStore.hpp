@@ -3,11 +3,12 @@
 #include "complex/Common/Types.hpp"
 #include "complex/complex_export.hpp"
 
-#include <fmt/format.h>
-
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace complex
 {

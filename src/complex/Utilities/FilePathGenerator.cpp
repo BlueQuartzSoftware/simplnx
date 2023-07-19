@@ -44,7 +44,8 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
     return fileList;
   }
   int32 index = 0;
-  std::string format_string = fmt::format("{{}}/{{}}{{:0{}d}}{{}}{{}}", paddingDigits);
+  std::string paddingSpecifier = paddingDigits >= 1 ? fmt::format(":0{}d", paddingDigits) : "";
+  std::string formatString = fmt::format("{{}}/{{}}{{{}}}{{}}{{}}", paddingSpecifier);
   for(int32 i = 0; i < (end - start) + 1; i += increment)
   {
     if(order == Ordering::LowToHigh)
@@ -55,7 +56,7 @@ std::vector<std::string> GenerateFileList(int32 start, int32 end, int32 incremen
     {
       index = end - i;
     }
-    std::string filePath = fmt::format(format_string, inputPath, filePrefix, index, fileSuffix, fileExtension);
+    std::string filePath = fmt::format(fmt::runtime(formatString), inputPath, filePrefix, index, fileSuffix, fileExtension);
     fileList.push_back(filePath);
   }
 

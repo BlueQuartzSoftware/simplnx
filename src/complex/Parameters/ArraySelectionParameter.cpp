@@ -6,7 +6,7 @@
 #include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
 
@@ -15,14 +15,12 @@ using namespace complex;
 template <>
 struct fmt::formatter<complex::DataType>
 {
-  template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx)
+  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  template <typename FormatContext>
-  auto format(const complex::DataType& value, FormatContext& ctx)
+  format_context::iterator format(const complex::DataType& value, format_context& ctx) const
   {
     return fmt::format_to(ctx.out(), "{}", complex::DataTypeToString(value));
   }
@@ -204,7 +202,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
       }
 
       return MakeErrorResult(FilterParameter::Constants::k_Validate_DataLocation_Error,
-                             fmt::format("{}DataArray at path '{}' was stored at '{}', but only {} are allowed", prefix, value.toString(), storeType, m_Location));
+                             fmt::format("{}DataArray at path '{}' was stored at '{}', but only {} are allowed", prefix, value.toString(), fmt::underlying(storeType), fmt::underlying(m_Location)));
     }
   }
   return {};

@@ -228,7 +228,7 @@ Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeo
   // Make sure the data types are the same
   if(baseLineDataType != outputDataType)
   {
-    return MakeErrorResult(-14, fmt::format("DataTypes do not match. Output: {} Baseline: {}", outputDataType, baseLineDataType));
+    return MakeErrorResult(-14, fmt::format("DataTypes do not match. Output: {} Baseline: {}", fmt::underlying(outputDataType), fmt::underlying(baseLineDataType)));
   }
   // Make sure the geometry dimensions are the same
   if(baselineDims != outputDims)
