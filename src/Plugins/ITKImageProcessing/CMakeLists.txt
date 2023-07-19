@@ -1,6 +1,4 @@
-
 set(ItkComponents
-
   # ITKClassifiers
   ITKCommon
   ITKConvolution
@@ -65,23 +63,21 @@ set(${PLUGIN_NAME}_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 # ITKImageProcessing/src/ITKImageProcessing/Filters/ directory.
 option(ITKImageProcessing_LeanAndMean "Only compile the Reader and Writers, All other filters are disabled" OFF)
 
-
 set(FilterList
-    ITKDiscreteGaussianImage
-    ITKImageReader
-    ITKImageWriter
-    ITKImportImageStack
-    ITKMedianImage
-    ITKMhaFileReader
-    ITKRescaleIntensityImage
-    )
+  ITKDiscreteGaussianImage
+  ITKImageReader
+  ITKImageWriter
+  ITKImportImageStack
+  ITKMedianImage
+  ITKMhaFileReader
+  ITKRescaleIntensityImage
+)
 
 # ------------------------------------------------------------------------------
 # These are all extra filters that are built if we have enabled all the filters
 #
 if(NOT ITKImageProcessing_LeanAndMean)
-  set(FilterList
-      ${FilterList}
+  list(APPEND FilterList
     ITKAbsImage
     ITKAcosImage
     ITKAdaptiveHistogramEqualizationImage
@@ -137,10 +133,10 @@ if(NOT ITKImageProcessing_LeanAndMean)
     ITKValuedRegionalMinimaImage
     ITKWhiteTopHatImage
 
-      # -----------------------------------------------------------------------------
-      # These filters only work on Scalar inputs
-      # The unit test for these filters use RGB images. 
-      # -----------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    # These filters only work on Scalar inputs
+    # The unit test for these filters use RGB images. 
+    # -----------------------------------------------------------------------------
     # ITKBilateralImage
     # ITKBinaryClosingByReconstructionImage
     # ITKBinomialBlurImage
@@ -153,7 +149,7 @@ if(NOT ITKImageProcessing_LeanAndMean)
     # ITKShiftScaleImage
     # ITKShotNoiseImage
     # ITKSpeckleNoiseImage
-      # ITKBoxMeanImage
+    # ITKBoxMeanImage
 
     # -----------------------------------------------------------------------------
     # These filters have a fixed output type
@@ -224,7 +220,7 @@ if(NOT ITKImageProcessing_LeanAndMean)
     # -----------------------------------------------------------------------------
     #  ITKCastImage # Dream3DArraySwitchOutputComponentMacro
     #  ITKVectorRescaleIntensityImage # Dream3DArraySwitchOutputComponentMacro
-)
+  )
 endif()
 
 # -----------------------------------------------------------------------------
@@ -244,11 +240,11 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC ${ItkComponents})
 if(MSVC)
   target_compile_options(${PLUGIN_NAME}
     PUBLIC
-    /bigobj
+      /bigobj
   )
 endif()
 
-set (${PLUGIN_NAME}_Common_Srcs
+set(${PLUGIN_NAME}_Common_Srcs
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKArrayHelper.hpp
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKArrayHelper.cpp
   ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Common/ITKProgressObserver.hpp
@@ -257,10 +253,9 @@ set (${PLUGIN_NAME}_Common_Srcs
 
 target_sources(${PLUGIN_NAME}
   PRIVATE
-  ${${PLUGIN_NAME}_Common_Srcs}
+    ${${PLUGIN_NAME}_Common_Srcs}
 )
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${${PLUGIN_NAME}_Common_Srcs})
-
 
 target_include_directories(${PLUGIN_NAME} PUBLIC ${ITK_INCLUDE_DIRS})
 
@@ -271,7 +266,9 @@ if(WIN32)
 endif()
 
 target_sources(${PLUGIN_NAME}
-  PRIVATE ${hidden_filter_HDRS} ${hidden_filter_SRCS}
+  PRIVATE
+    ${hidden_filter_HDRS}
+    ${hidden_filter_SRCS}
 )
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${hidden_filter_HDRS} ${hidden_filter_SRCS})
 
@@ -293,12 +290,12 @@ AddItkCopyInstallRules(LIBS ${ItkComponents})
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
   set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
   set_target_properties( ${PLUGIN_NAME}
-          PROPERTIES
-          INSTALL_RPATH \$ORIGIN/../lib)
+    PROPERTIES
+      INSTALL_RPATH \$ORIGIN/../lib
+  )
   target_link_options(${PLUGIN_NAME} PUBLIC "-Wl,--disable-new-dtags")
   target_compile_options(${PLUGIN_NAME} PUBLIC "-no-pie")
 endif()
-
 
 # -----------------------------------------------------------------------
 # Install example pipelines
@@ -306,9 +303,10 @@ endif()
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
   set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/pipelines/${PLUGIN_NAME}")
   add_custom_target(Copy_${PLUGIN_NAME}_Pipeline_Folder ALL
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
-                    ${PIPELINE_DEST_DIR}
-                    COMMENT "Copying Pipeline Folder into Binary Directory")
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
+    ${PIPELINE_DEST_DIR}
+    COMMENT "Copying Pipeline Folder into Binary Directory"
+  )
   set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
@@ -332,28 +330,28 @@ file(TO_CMAKE_PATH "${DREAM3D_DATA_DIR}" DREAM3D_DATA_DIR_NORM)
 # decompressed and then copied to the build folder. Install rules are also
 # generated for each of the data sets.
 # -----------------------------------------------------------------------
-if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES) 
+if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
     file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
   endif()
-  
+
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
-                   ARCHIVE_NAME ITKMhaFileReaderTest_rev2.tar.gz
-                   SHA512 82592ffb6904389da1475e9c57f0be724d29db22ba9c942fd02d08ce3f8c73dc39a245503e584e56ca4ea7554d63cf1db5fb46e6e426768020f1ca0542822d0a)
-                   
+    ARCHIVE_NAME ITKMhaFileReaderTest_rev2.tar.gz
+    SHA512 82592ffb6904389da1475e9c57f0be724d29db22ba9c942fd02d08ce3f8c73dc39a245503e584e56ca4ea7554d63cf1db5fb46e6e426768020f1ca0542822d0a
+  )
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR}
-                   ARCHIVE_NAME Porosity_Image.tar.gz
-                   SHA512 950c71b4f4721f14ea532ed5830b0786f49d2855b950bdf867c335b9fb0eb5dc28727b0899d665af0a2bc56816e1e66a08a008ef06a62b71efea4a6e46bff168
-                   INSTALL
-                   )
+    ARCHIVE_NAME Porosity_Image.tar.gz
+    SHA512 950c71b4f4721f14ea532ed5830b0786f49d2855b950bdf867c335b9fb0eb5dc28727b0899d665af0a2bc56816e1e66a08a008ef06a62b71efea4a6e46bff168
+    INSTALL
+  )
   add_custom_target(Copy_${PLUGIN_NAME}_Porosity_Image ALL
-                   COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image.tar.gz" 
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image" "${DATA_DEST_DIR}/Porosity_Image"
-                   COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image"
-                   WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
-                   COMMENT "Copying ${PLUGIN_NAME}/Porosity_Image data into Binary Directory"
-                   DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
-                 )
+    COMMAND ${CMAKE_COMMAND} -E tar xzf "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image.tar.gz"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image" "${DATA_DEST_DIR}/Porosity_Image"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${DREAM3D_DATA_DIR}/TestFiles/Porosity_Image"
+    WORKING_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles"
+    COMMENT "Copying ${PLUGIN_NAME}/Porosity_Image data into Binary Directory"
+    DEPENDS Fetch_Remote_Data_Files  # Make sure all remote files are downloaded before trying this
+  )
   set_target_properties(Copy_${PLUGIN_NAME}_Porosity_Image PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 endif()
 
@@ -367,17 +365,15 @@ if(FALSE)
   add_custom_target(Copy_${PLUGIN_NAME}_Data ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${${PLUGIN_NAME}_SOURCE_DIR}/data ${DATA_DEST_DIR}/${PLUGIN_NAME}
     COMMENT "Copying ${PLUGIN_NAME} data into Binary Directory"
-    )
+  )
   set_target_properties(Copy_${PLUGIN_NAME}_Data PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
   set(Installed_Data_Files
   )
 
-  install(FILES 
+  install(FILES
     ${Installed_Data_Files}
     DESTINATION Data/${PLUGIN_NAME}
     COMPONENT Applications
   )
-
-
 endif()

@@ -1,19 +1,17 @@
 # ------------------------------------------------------------------------------
 # Define the list of unit test source files
 set(${PLUGIN_NAME}UnitTest_SRCS
-    ITKDiscreteGaussianImageTest.cpp
-    ITKImageReaderTest.cpp
-    ITKImageWriterTest.cpp
-    ITKImportImageStackTest.cpp
-    ITKMedianImageTest.cpp
-    ITKMhaFileReaderTest.cpp
-    ITKRescaleIntensityImageTest.cpp
+  ITKDiscreteGaussianImageTest.cpp
+  ITKImageReaderTest.cpp
+  ITKImageWriterTest.cpp
+  ITKImportImageStackTest.cpp
+  ITKMedianImageTest.cpp
+  ITKMhaFileReaderTest.cpp
+  ITKRescaleIntensityImageTest.cpp
+)
 
-    )
 if(NOT ITKImageProcessing_LeanAndMean)
-    set(${PLUGIN_NAME}UnitTest_SRCS
-        ${${PLUGIN_NAME}UnitTest_SRCS}
-
+  list(APPEND ${PLUGIN_NAME}UnitTest_SRCS
     ITKAbsImageTest.cpp
     ITKAcosImageTest.cpp
     ITKAdaptiveHistogramEqualizationImageTest.cpp
@@ -68,18 +66,19 @@ if(NOT ITKImageProcessing_LeanAndMean)
     ITKValuedRegionalMaximaImageTest.cpp
     ITKValuedRegionalMinimaImageTest.cpp
     ITKWhiteTopHatImageTest.cpp
-)
-endif ()
+  )
+endif()
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
   FILTER_LIST ""
 )
 
-target_sources(${PLUGIN_NAME}UnitTest PUBLIC
-  ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.hpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.cpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/test/MD5.hpp
-  ${${PLUGIN_NAME}_SOURCE_DIR}/test/MD5.cpp
+target_sources(${PLUGIN_NAME}UnitTest
+  PRIVATE
+    ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.hpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/test/ITKTestBase.cpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/test/MD5.hpp
+    ${${PLUGIN_NAME}_SOURCE_DIR}/test/MD5.cpp
 )
 
 # -----------------------------------------------------------------------------
@@ -92,8 +91,6 @@ set(PREBUILT_PIPELINE_NAMES
   # Example or other test pipelines
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(02) Image Segmentation.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/(03) Porosity Mesh Export.d3dpipeline"
-
 )
 
 create_pipeline_tests(PLUGIN_NAME ${PLUGIN_NAME} PIPELINE_LIST ${PREBUILT_PIPELINE_NAMES})
-
