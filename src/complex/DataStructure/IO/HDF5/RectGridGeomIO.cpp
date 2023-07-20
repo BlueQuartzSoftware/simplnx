@@ -95,7 +95,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
     return result;
   }
 
-  result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_ZBoundsTag);
+  result = WriteDataId(groupWriter, geometry.getZBoundsId(), IOConstants::k_ZBoundsTag);
   if(result.invalid())
   {
     return result;
