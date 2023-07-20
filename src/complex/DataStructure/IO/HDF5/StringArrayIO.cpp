@@ -5,6 +5,11 @@
 
 #include "complex/Utilities/Parsing/HDF5/Readers/GroupReader.hpp"
 
+namespace
+{
+constexpr complex::StringLiteral k_TupleDimsAttrName = "TupleDimensions";
+}
+
 namespace complex::HDF5
 {
 StringArrayIO::StringArrayIO() = default;
@@ -33,7 +38,10 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
     return {};
   }
 
-  std::vector<std::string> strings = useEmptyDataStore ? std::vector<std::string>{} : datasetReader.readAsVectorOfStrings();
+  auto tupleDimsAttribReader = datasetReader.getAttribute(k_TupleDimsAttrName);
+  uint64 numValues = tupleDimsAttribReader.readAsValue<uint64>();
+
+  std::vector<std::string> strings = useEmptyDataStore ? std::vector<std::string>(numValues) : datasetReader.readAsVectorOfStrings();
   const auto* data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, importId, std::move(strings), parentId);
 
   if(data == nullptr)
@@ -51,11 +59,23 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
 
   // writeVectorOfStrings may resize the collection
   data_type::collection_type strings = dataArray.values();
-  const auto result = datasetWriter.writeVectorOfStrings(strings);
+  auto result = datasetWriter.writeVectorOfStrings(strings);
   if(result.invalid())
   {
     return result;
   }
+
+  // Write the number of values as an attribute for quicker preflight times
+  {
+    auto tupleDimsAttribWriter = datasetWriter.createAttribute(k_TupleDimsAttrName);
+    result = tupleDimsAttribWriter.writeValue<uint64>(dataArray.size());
+    if(result.invalid())
+    {
+      std::string ss = fmt::format("Error writing DataObject attribute: {}", k_TupleDimsAttrName);
+      return MakeErrorResult(result.errors()[0].code, ss);
+    }
+  }
+
   return WriteObjectAttributes(dataStructureWriter, dataArray, datasetWriter, importable);
 }
 
