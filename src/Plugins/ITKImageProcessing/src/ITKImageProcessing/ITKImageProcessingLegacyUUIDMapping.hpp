@@ -3,7 +3,17 @@
 #include <map>
 #include <string>
 
+#include "ITKImageProcessing/ITKImageProcessingConfig.hpp"
+
+#include "ITKImageProcessing/Filters/ITKDiscreteGaussianImage.hpp"
+#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
+#include "ITKImageProcessing/Filters/ITKImageWriter.hpp"
+#include "ITKImageProcessing/Filters/ITKImportImageStack.hpp"
+#include "ITKImageProcessing/Filters/ITKMedianImage.hpp"
+#include "ITKImageProcessing/Filters/ITKRescaleIntensityImage.hpp"
+
 // clang-format off
+#ifndef ITKIMAGEPROCESSING_LEAN_AND_MEAN
 #include "ITKImageProcessing/Filters/ITKAbsImage.hpp"
 #include "ITKImageProcessing/Filters/ITKAcosImage.hpp"
 #include "ITKImageProcessing/Filters/ITKAdaptiveHistogramEqualizationImage.hpp"
@@ -14,16 +24,11 @@
 #include "ITKImageProcessing/Filters/ITKClosingByReconstructionImage.hpp"
 #include "ITKImageProcessing/Filters/ITKCosImage.hpp"
 #include "ITKImageProcessing/Filters/ITKGradientMagnitudeImage.hpp"
-//#include "ITKImageProcessing/Filters/ITKGradientMagnitudeRecursiveGaussianImage.hpp"
 #include "ITKImageProcessing/Filters/ITKGrayscaleFillholeImage.hpp"
-#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
-#include "ITKImageProcessing/Filters/ITKImageWriter.hpp"
-#include "ITKImageProcessing/Filters/ITKImportImageStack.hpp"
 #include "ITKImageProcessing/Filters/ITKInvertIntensityImage.hpp"
 #include "ITKImageProcessing/Filters/ITKLog10Image.hpp"
 #include "ITKImageProcessing/Filters/ITKLogImage.hpp"
 #include "ITKImageProcessing/Filters/ITKMaskImage.hpp"
-#include "ITKImageProcessing/Filters/ITKMedianImage.hpp"
 #include "ITKImageProcessing/Filters/ITKMorphologicalWatershedImage.hpp"
 #include "ITKImageProcessing/Filters/ITKNormalizeImage.hpp"
 #include "ITKImageProcessing/Filters/ITKOpeningByReconstructionImage.hpp"
@@ -62,15 +67,21 @@
 #include "ITKImageProcessing/Filters/ITKValuedRegionalMaximaImage.hpp"
 #include "ITKImageProcessing/Filters/ITKValuedRegionalMinimaImage.hpp"
 #include "ITKImageProcessing/Filters/ITKWhiteTopHatImage.hpp"
-#include "ITKImageProcessing/Filters/ITKDiscreteGaussianImage.hpp"
-#include "ITKImageProcessing/Filters/ITKRescaleIntensityImage.hpp"
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
+#endif
 
 namespace complex
 {
   static const std::map<complex::Uuid, complex::Uuid> k_SIMPL_to_ITKImageProcessing
   {
     // syntax std::make_pair {Dream3d UUID , Dream3dnx UUID}, // dream3d-class-name
+    {complex::Uuid::FromString("53df5340-f632-598f-8a9b-802296b3a95c").value(), complex::FilterTraits<ITKDiscreteGaussianImage>::uuid}, // ITKDiscreteGaussianImage
+    {complex::Uuid::FromString("653b7b5c-03cb-5b32-8c3e-3637745e5ff6").value(), complex::FilterTraits<ITKImageReader>::uuid}, // ITKImageReader
+    {complex::Uuid::FromString("11473711-f94d-5d96-b749-ec36a81ad338").value(), complex::FilterTraits<ITKImageWriter>::uuid}, // ITKImageWriter
+    {complex::Uuid::FromString("cf7d7497-9573-5102-bedd-38f86a6cdfd4").value(), complex::FilterTraits<ITKImportImageStack>::uuid}, // ITKImportImageStack
+    {complex::Uuid::FromString("cc27ee9a-9946-56ad-afd4-6e98b71f417d").value(), complex::FilterTraits<ITKMedianImage>::uuid}, // ITKMedianImage
+    {complex::Uuid::FromString("77bf2192-851d-5127-9add-634c1ef4f67f").value(), complex::FilterTraits<ITKRescaleIntensityImage>::uuid}, // ITKRescaleIntensityImage
+#ifndef ITKIMAGEPROCESSING_LEAN_AND_MEAN
     {complex::Uuid::FromString("09f45c29-1cfb-566c-b3ae-d832b4f95905").value(), complex::FilterTraits<ITKAbsImage>::uuid}, // ITKAbsImage
     {complex::Uuid::FromString("b09ec654-87a5-5dfa-9949-aa69f1fbfdd1").value(), complex::FilterTraits<ITKAcosImage>::uuid}, // ITKAcosImage
     {complex::Uuid::FromString("2d5a7599-5e01-5489-a107-23b704d2b5eb").value(), complex::FilterTraits<ITKAdaptiveHistogramEqualizationImage>::uuid}, // ITKAdaptiveHistogramEqualizationImage
@@ -82,14 +93,10 @@ namespace complex
     {complex::Uuid::FromString("2c2d7bf6-1e78-52e6-80aa-58b504ce0912").value(), complex::FilterTraits<ITKCosImage>::uuid}, // ITKCosImage
     {complex::Uuid::FromString("3aa99151-e722-51a0-90ba-71e93347ab09").value(), complex::FilterTraits<ITKGradientMagnitudeImage>::uuid}, // ITKGradientMagnitudeImage
     {complex::Uuid::FromString("54c8dd45-88c4-5d4b-8a39-e3cc595e1cf8").value(), complex::FilterTraits<ITKGrayscaleFillholeImage>::uuid}, // ITKGrayscaleFillholeImage
-    {complex::Uuid::FromString("653b7b5c-03cb-5b32-8c3e-3637745e5ff6").value(), complex::FilterTraits<ITKImageReader>::uuid}, // ITKImageReader
-    {complex::Uuid::FromString("11473711-f94d-5d96-b749-ec36a81ad338").value(), complex::FilterTraits<ITKImageWriter>::uuid}, // ITKImageWriter
-    {complex::Uuid::FromString("cf7d7497-9573-5102-bedd-38f86a6cdfd4").value(), complex::FilterTraits<ITKImportImageStack>::uuid}, // ITKImportImageStack
     {complex::Uuid::FromString("c6e10fa5-5462-546b-b34b-0f0ea75a7e43").value(), complex::FilterTraits<ITKInvertIntensityImage>::uuid}, // ITKInvertIntensityImage
     {complex::Uuid::FromString("dbfd1a57-2a17-572d-93a7-8fd2f8e92eb0").value(), complex::FilterTraits<ITKLog10Image>::uuid}, // ITKLog10Image
     {complex::Uuid::FromString("69aba77c-9a35-5251-a18a-e3728ddd2963").value(), complex::FilterTraits<ITKLogImage>::uuid}, // ITKLogImage
     {complex::Uuid::FromString("97102d65-9c32-576a-9177-c59d958bad10").value(), complex::FilterTraits<ITKMaskImage>::uuid}, // ITKMaskImage
-    {complex::Uuid::FromString("cc27ee9a-9946-56ad-afd4-6e98b71f417d").value(), complex::FilterTraits<ITKMedianImage>::uuid}, // ITKMedianImage
     {complex::Uuid::FromString("b2248340-a371-5899-90a2-86047950f0a2").value(), complex::FilterTraits<ITKMorphologicalWatershedImage>::uuid}, // ITKMorphologicalWatershedImage
     {complex::Uuid::FromString("5b905619-c46b-5690-b6fa-8e97cf4537b8").value(), complex::FilterTraits<ITKNormalizeImage>::uuid}, // ITKNormalizeImage
     {complex::Uuid::FromString("ca04004f-fb11-588d-9f77-d00b3ee9ad2a").value(), complex::FilterTraits<ITKOpeningByReconstructionImage>::uuid}, // ITKOpeningByReconstructionImage
@@ -128,10 +135,8 @@ namespace complex
     {complex::Uuid::FromString("10aff542-81c5-5f09-9797-c7171c40b6a0").value(), complex::FilterTraits<ITKValuedRegionalMaximaImage>::uuid}, // ITKValuedRegionalMaximaImage
     {complex::Uuid::FromString("739a0908-cb60-50f7-a484-b2157d023093").value(), complex::FilterTraits<ITKValuedRegionalMinimaImage>::uuid}, // ITKValuedRegionalMinimaImage
     {complex::Uuid::FromString("02e059f7-8055-52b4-9d48-915b67d1e39a").value(), complex::FilterTraits<ITKWhiteTopHatImage>::uuid}, // ITKWhiteTopHatImage
-    {complex::Uuid::FromString("77bf2192-851d-5127-9add-634c1ef4f67f").value(), complex::FilterTraits<ITKRescaleIntensityImage>::uuid}, // ITKRescaleIntensityImage
-    {complex::Uuid::FromString("53df5340-f632-598f-8a9b-802296b3a95c").value(), complex::FilterTraits<ITKDiscreteGaussianImage>::uuid}, // ITKDiscreteGaussianImage
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
+#endif
   };
-
 } // namespace complex
 // clang-format on
