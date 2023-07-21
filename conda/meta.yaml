@@ -1,0 +1,70 @@
+{% set name = "complex-conda" %}
+{% set version = "1.0.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  - path: ../
+    folder: complex
+  # - git_url: https://github.com/BlueQuartzSoftware/EbsdLib
+  #   git_rev: v1.0.22
+  #   folder: EbsdLib
+  - path: ../../../EbsdLib
+    folder: EbsdLib
+  # - git_url: https://github.com/BlueQuartzSoftware/H5Support
+  #   git_rev: v1.0.10
+  #   folder: H5Support
+  - path: ../../../H5Support
+    folder: H5Support
+  - git_url: https://github.com/martinmoene/expected-lite
+    git_rev: v0.5.0
+    folder: expected-lite
+  - git_url: https://github.com/fr00b0/nod
+    git_rev: v0.5.2
+    folder: nod
+  - git_url: https://github.com/martinmoene/span-lite
+    git_rev: v0.10.3
+    folder: span-lite
+  - url: https://raw.githubusercontent.com/BlueQuartzSoftware/complex-registry/9a5db7b5fa02b2495eb51654cbaab3c63820c779/ports/nod/CMakeLists.txt
+    folder: nod
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+    - cmake >=3.19
+    - ninja
+    - git
+  host:
+    - python
+    - numpy >=1.16
+    - boost_mp11
+    - eigen
+    - fmt =10
+    - hdf5 =1.12
+    - libitk =5.2
+    - libitk-devel =5.2
+    - nlohmann_json
+    - pybind11 >=2.10
+    - reproc-cpp
+    - tbb
+    - tbb-devel
+    - zlib
+  run:
+    - python
+    - numpy
+    - fmt =10
+    - hdf5 =1.12
+    - libitk =5.2
+    - reproc-cpp
+    - tbb
+    - zlib
+
+about:
+  home: http://dream3d.bluequartz.net/
+  license: BSD
+  summary: DREAM.3D consists of data analysis tools (Filters) that allow for the construction of customized workflows (Pipelines) to analyze data.
