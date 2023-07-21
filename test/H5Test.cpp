@@ -738,6 +738,24 @@ TEST_CASE("DataArray<bool> IO")
   {
     FAIL(e.what());
   }
+
+  // Read HDF5 file in preflight mode to make sure StringArrays import correctly
+  try
+  {
+    complex::HDF5::FileReader fileReader(filePathString);
+    REQUIRE(fileReader.isValid());
+
+    auto readResult = HDF5::DataStructureReader::ReadFile(fileReader, true);
+    COMPLEX_RESULT_REQUIRE_VALID(readResult);
+    DataStructure dataStructure = std::move(readResult.value());
+
+    StringArray* stringArray = dataStructure.getDataAs<StringArray>(DataPath({"StringArray"}));
+    REQUIRE(stringArray != nullptr);
+    REQUIRE(stringArray->size() == 3);
+  } catch(const std::exception& e)
+  {
+    FAIL(e.what());
+  }
 }
 
 TEST_CASE("xdmf")
