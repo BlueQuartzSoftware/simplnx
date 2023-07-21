@@ -20,3 +20,8 @@ target_compile_options(complexpy
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
+
+install(TARGETS complexpy
+  LIBRARY
+    DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+)
