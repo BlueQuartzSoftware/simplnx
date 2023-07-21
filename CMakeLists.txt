@@ -55,6 +55,8 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_ITKImageProcessing FEATURE
 option(COMPLEX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATURE "ebsd")
 
+option(COMPLEX_CONDA_BUILD "Enables conda-build specific layout" OFF)
+
 option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 
 # --------------------------------------------------------------------------------------------------
