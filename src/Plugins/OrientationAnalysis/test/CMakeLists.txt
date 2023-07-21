@@ -51,6 +51,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   RodriguesConvertorTest.cpp
   RotateEulerRefFrameTest.cpp
   WritePoleFigureTest.cpp
+  WriteStatsGenOdfAngleFileTest.cpp
 )
 set(DISABLED_TESTS
   # ConvertHexGridToSquareGridTest.cpp    # MISSING 1 or more Parameter Implementations
@@ -64,13 +65,9 @@ set(DISABLED_TESTS
   INLWriterTest.cpp
 
   # ImportEbsdMontageTest.cpp    # MISSING 1 or more Parameter Implementations
-  # ImportH5EspritDataTest.cpp    # MISSING 1 or more Parameter Implementations
-  # ImportH5OimDataTest.cpp    # MISSING 1 or more Parameter Implementations
-  # OrientationUtilityTest.cpp    # MISSING 1 or more Parameter Implementations
 
   ReplaceElementAttributesWithNeighborValuesTest.cpp
   Stereographic3DTest.cpp
-  WriteStatsGenOdfAngleFileTest.cpp
 )
 
 create_complex_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
@@ -139,6 +136,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND COMPLEX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME feature_boundary_neighbor_slip_transmission.tar.gz SHA512 fb4a92bdfcff1f2b167cdce2126087e76c9022deb0f0bd8a658482f88f8593bacc0e23b8056d56390f767bc1dd21912fb01a976e3cb670738f1a39d46ad9ef28)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_read_ang_data.tar.gz SHA512 1777431a1623e2fffdc2daad9be51a72c3bdf6a83a33893827892c98a811991e21f1cf636e036604d0bbc523d8ca0b9d655c28be3d0e89ccafc1486dfa0bd0c7)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_6_read_ctf_data.tar.gz SHA512 e7ac4706d22574396aaa5d67b2a2b4e32db5005e841d3b6dafad65c74615441c028e4cba0ce0721c8929dace495afd6ef844585e2ce6d3b092582a258befd7c2)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stats_gen_odf_angle_file.tar.gz SHA512 be3f663aae1f78e5b789200421534ed9fe293187ec3514796ac8177128b34ded18bb9a98b8e838bb283f9818ac30dc4b19ec379bdd581b1a98eb36d967cdd319)
 
 endif()
 

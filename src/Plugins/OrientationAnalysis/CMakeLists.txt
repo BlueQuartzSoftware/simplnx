@@ -71,6 +71,7 @@ set(FilterList
   RodriguesConvertorFilter
   RotateEulerRefFrameFilter
   WritePoleFigureFilter
+  WriteStatsGenOdfAngleFileFilter
 )
   
 set(STUB_FILTERS
@@ -91,9 +92,6 @@ set(STUB_FILTERS
   GenerateFaceMisorientationColoring
   GenerateOrientationMatrixTranspose
   # ImportEbsdMontage # MISSING 1 or more Parameter Implementations
-  # OrientationUtility # MISSING 1 or more Parameter Implementations  
-  #OrientationUtility # MISSING 1 or more Parameter Implementations
-  WriteStatsGenOdfAngleFile
 )
 
 create_complex_plugin(NAME ${PLUGIN_NAME}
@@ -205,6 +203,7 @@ set(filter_algorithms
   RodriguesConvertor
   RotateEulerRefFrame
   WritePoleFigure
+  WriteStatsGenOdfAngleFile
 )
 
 
