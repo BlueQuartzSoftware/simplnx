@@ -167,6 +167,7 @@
 #include <complex/Parameters/DataObjectNameParameter.hpp>
 #include <complex/Parameters/DataPathSelectionParameter.hpp>
 #include <complex/Parameters/DataStoreFormatParameter.hpp>
+#include <complex/Parameters/DataTypeParameter.hpp>
 #include <complex/Parameters/Dream3dImportParameter.hpp>
 #include <complex/Parameters/DynamicTableParameter.hpp>
 #include <complex/Parameters/EnsembleInfoParameter.hpp>
@@ -1417,6 +1418,7 @@ PYBIND11_MODULE(complex, mod)
   auto dataObjectNameParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataObjectNameParameter);
   auto dataPathSelectionParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataPathSelectionParameter);
   auto dataStoreFormatParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataStoreFormatParameter);
+  auto dataTypeParameter = COMPLEX_PY_BIND_PARAMETER(mod, DataTypeParameter);
   auto dream3dImportParameter = COMPLEX_PY_BIND_PARAMETER(mod, Dream3dImportParameter);
   auto dynamicTableParameter = COMPLEX_PY_BIND_PARAMETER(mod, DynamicTableParameter);
   auto ensembleInfoParameter = COMPLEX_PY_BIND_PARAMETER(mod, EnsembleInfoParameter);
@@ -1562,6 +1564,8 @@ PYBIND11_MODULE(complex, mod)
   BindParameterConstructor(dataPathSelectionParameter);
 
   BindParameterConstructor(dataStoreFormatParameter);
+
+  BindParameterConstructor(dataTypeParameter);
 
   BindParameterConstructor(dream3dImportParameter);
 
@@ -1737,6 +1741,7 @@ PYBIND11_MODULE(complex, mod)
   internals->addConversion<DataObjectNameParameter>();
   internals->addConversion<DataPathSelectionParameter>();
   internals->addConversion<DataStoreFormatParameter>();
+  internals->addConversion<DataTypeParameter>();
   internals->addConversion<Dream3dImportParameter>();
   internals->addConversion<DynamicTableParameter>();
   internals->addConversion<EnsembleInfoParameter>();
