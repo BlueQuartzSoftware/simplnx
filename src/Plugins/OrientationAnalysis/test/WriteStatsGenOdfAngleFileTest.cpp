@@ -84,7 +84,6 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter 
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_ConvertToDegrees_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_UseGoodVoxels_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(Constants::k_EulersArrayPath));
-  args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
   args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_GoodVoxelsArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
 
   SECTION("default weight < 1")
@@ -99,13 +98,14 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter 
 
   SECTION("input cell data arrays have mismatching tuples")
   {
-    auto* invalidPhaseArray = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Invalid_Phases_Array", std::vector<usize>{50, 50, 1}, std::vector<usize>{1});
+    auto* invalidPhaseArray = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, "Invalid_Phases_Array", std::vector<usize>{50, 50, 1}, std::vector<usize>{1});
 
     args.insertOrAssign(WriteStatsGenOdfAngleFileFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"Invalid_Phases_Array"})));
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
   auto executeResult = filter.execute(dataStructure, args);
   COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
 }
