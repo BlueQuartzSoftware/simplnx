@@ -320,12 +320,16 @@ if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
   )
   set_target_properties(Copy_${PLUGIN_NAME}_Pipeline_Folder PROPERTIES FOLDER Plugins/${PLUGIN_NAME})
 
-  set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
-  install(DIRECTORY
-          "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
-          DESTINATION "${INSTALL_DESTINATION}"
-          COMPONENT Applications
-        )
+  option(${PLUGIN_NAME}_INSTALL_PIPELINES "Enables install of ${PLUGIN_NAME} pipelines" ON)
+
+  if(${PLUGIN_NAME}_INSTALL_PIPELINES)
+    set(INSTALL_DESTINATION "pipelines/${PLUGIN_NAME}")
+    install(DIRECTORY
+      "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/"
+      DESTINATION "${INSTALL_DESTINATION}"
+      COMPONENT Applications
+    )
+  endif()
 endif()
 
 # -----------------------------------------------------------------------
