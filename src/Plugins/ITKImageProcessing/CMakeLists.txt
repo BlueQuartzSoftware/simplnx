@@ -283,8 +283,10 @@ source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLU
 
 # ------------------------------------------------------------------------------
 # Add in the unit tests for the filters included in this plugin
-enable_testing()
-add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+if(COMPLEX_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(${${PLUGIN_NAME}_SOURCE_DIR}/test)
+endif()
 
 # ------------------------------------------------------------------------------
 # Add in the install rules for ITK Libraries
