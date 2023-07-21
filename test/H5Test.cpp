@@ -10,6 +10,8 @@
 #include "complex/DataStructure/Geometry/QuadGeom.hpp"
 #include "complex/DataStructure/Geometry/TriangleGeom.hpp"
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
+#include "complex/DataStructure/IO/Generic/IOConstants.hpp"
+#include "complex/DataStructure/IO/HDF5/DataStoreIO.hpp"
 #include "complex/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "complex/DataStructure/Montage/GridMontage.hpp"
@@ -26,6 +28,8 @@
 #include "GeometryTestUtilities.hpp"
 
 #include "complex/unit_test/complex_test_dirs.hpp"
+
+#include "ChunkDataStore.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -798,4 +802,93 @@ TEST_CASE("H5 Utilities")
   REQUIRE(objectName == "Data");
   objectName = complex::HDF5::GetNameFromBuffer("/Data");
   REQUIRE(objectName == "Data");
+}
+
+template <typename T>
+ChunkDataStore<T> CreateDataStore()
+{
+  using ShapeType = typename complex::ChunkDataStore<T>::ShapeType;
+
+  const ShapeType k_ArrayShape = {10, 12, 2, 2};
+  const ShapeType k_ChunkShape = {10, 6, 2, 2};
+  const ShapeType k_TupleShape = {10, 12};
+  const ShapeType k_ComponentShape = {2, 2};
+
+  ChunkDataStore<int8> chunkedDataStore(k_TupleShape, k_ComponentShape, k_ChunkShape);
+  uint64 size = chunkedDataStore.getSize();
+  for(uint64 i = 0; i < size; i++)
+  {
+    chunkedDataStore[i] = i;
+  }
+
+  return chunkedDataStore;
+}
+
+// Write chunked dataset
+template <typename T>
+Result<> WriteFile(std::filesystem::path path)
+{
+  using ShapeType = typename complex::ChunkDataStore<T>::ShapeType;
+
+  const std::string k_DataName = "Chunked_DataStore";
+  const ShapeType k_ArrayShape = {10, 12, 2, 2};
+  const ShapeType k_ChunkShape = {10, 6, 2, 2};
+  const ShapeType k_TupleShape = {10, 12};
+  const ShapeType k_ComponentShape = {2, 2};
+
+  ChunkDataStore<int8> chunkedDataStore = CreateDataStore<T>();
+
+  // Create FileWriter
+  auto fileWriterResult = complex::HDF5::FileWriter::CreateFile(path);
+  if(fileWriterResult.invalid())
+  {
+    return ConvertResult(std::move(fileWriterResult));
+  }
+
+  complex::HDF5::FileWriter fileWriter = std::move(fileWriterResult.value());
+  auto datasetWriter = fileWriter.createDatasetWriter(k_DataName);
+
+  return complex::HDF5::DataStoreIO::WriteDataStore<T>(datasetWriter, chunkedDataStore);
+}
+
+template <typename T>
+void checkImportDataStore(const AbstractDataStore<T>& dataStore)
+{
+  uint64 size = dataStore.getSize();
+  auto baseData = CreateDataStore<T>();
+
+  for(uint64 i = 0; i < size; i++)
+  {
+    REQUIRE(dataStore[i] == baseData[i]);
+  }
+}
+
+template <typename T>
+void ReadFile(std::filesystem::path path)
+{
+  using ShapeType = typename complex::ChunkDataStore<T>::ShapeType;
+  const std::string k_DataName = "Chunked_DataStore";
+  const ShapeType k_ArrayShape = {10, 12, 2, 2};
+
+  HDF5::FileReader fileReader(path);
+  REQUIRE(fileReader.isValid());
+
+  auto datasetReader = fileReader.openDataset(k_DataName);
+  REQUIRE(datasetReader.isValid());
+
+  std::unique_ptr<DataStore<T>> dataStore = complex::HDF5::DataStoreIO::ReadDataStore<T>(datasetReader);
+  REQUIRE(dataStore != nullptr);
+
+  checkImportDataStore<T>(*dataStore.get());
+}
+
+TEST_CASE("Chunked HDF5 Data")
+{
+  using ShapeType = typename complex::ChunkDataStore<int8>::ShapeType;
+  const std::filesystem::path path(GetDataDir() / "ChunkedDataStore.h5");
+
+  Result<> result = WriteFile<int8>(path);
+  COMPLEX_RESULT_REQUIRE_VALID(result);
+
+  ReadFile<int8>(path);
 }

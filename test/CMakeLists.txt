@@ -6,7 +6,10 @@ file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}" COMPLEX_BINARY_DIR_NORM)
 #------------------------------------------------------------------------------
 include("${CMAKE_CURRENT_LIST_DIR}/DownloadTestData.cmake")
 
-set(COMPLEX_TEST_DIRS_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/unit_test/complex_test_dirs.hpp)
+set(COMPLEX_TEST_DIRS_HEADER
+  ${COMPLEX_GENERATED_HEADER_DIR}/unit_test/complex_test_dirs.hpp
+  ChunkDataStore.hpp
+)
 
 configure_file(${complex_SOURCE_DIR}/test/complex_test_dirs.hpp.in ${COMPLEX_TEST_DIRS_HEADER} @ONLY)
 
