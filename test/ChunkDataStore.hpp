@@ -41,7 +41,7 @@ public:
     if(initValue.has_value())
     {
       T value = initValue.value();
-      uint64 size = getSize();
+      uint64 size = parent_type::getSize();
       for(uint64 i = 0; i < size; i++)
       {
         setValue(i, value);
@@ -123,9 +123,9 @@ public:
    */
   const_reference at(usize index) const override
   {
-    if(index >= getSize())
+    if(index >= parent_type::getSize())
     {
-      throw std::out_of_range("Target FileCore::Array has size: " + std::to_string(getSize()));
+      throw std::out_of_range("Target FileCore::Array has size: " + std::to_string(parent_type::getSize()));
     }
     return operator[](index);
   }
@@ -355,7 +355,7 @@ protected:
   {
     const ShapeType position(std::move(FindPosition(index, shape)));
     const ShapeType chunkIndex(std::move(FindChunkId(position, chunkShape)));
-    const ShapeType chunkPosition(std::move(FindChunkPosition(position, chunkIndex, chunkShape, order)));
+    const ShapeType chunkPosition(std::move(FindChunkPosition(position, chunkIndex, chunkShape)));
     return Flatten(chunkPosition, chunkShape);
   }
 
