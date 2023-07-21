@@ -55,6 +55,8 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_ITKImageProcessing FEATURE
 option(COMPLEX_ENABLE_OrientationAnalysis "Enable the OrientationAnalysis Plugin" ON)
 enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATURE "ebsd")
 
+option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
+
 # --------------------------------------------------------------------------------------------------
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
@@ -831,7 +833,6 @@ if(TARGET ComplexCore AND TARGET ITKImageProcessing AND TARGET OrientationAnalys
   set_target_properties(Copy_CAxis_Data PROPERTIES FOLDER ZZ_COPY_FILES)
 endif()
 
-option(COMPLEX_ENABLE_INSTALL "Enables COMPLEX install rules" ON)
 if(COMPLEX_ENABLE_INSTALL)
   install(TARGETS complex
     EXPORT complexTargets
