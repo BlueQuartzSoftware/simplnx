@@ -246,7 +246,8 @@ inline bool ExtractResult(Result<> result, std::vector<Error>& errors, std::vect
  * @param second
  * @return
  */
-inline Result<> MergeResults(Result<> first, Result<> second)
+ template<typename T = void>
+inline Result<T> MergeResults(Result<T> first, Result<T> second)
 {
   usize warningsSize = first.warnings().size() + second.warnings().size();
   std::vector<Warning> warnings;
@@ -288,7 +289,7 @@ inline Result<> MergeResults(Result<> first, Result<> second)
     }
   }
 
-  Result<> result = errors.empty() ? Result<>{} : Result<>{nonstd::make_unexpected(std::move(errors))};
+  Result<T> result = errors.empty() ? Result<T>{} : Result<T>{nonstd::make_unexpected(std::move(errors))};
   result.warnings() = std::move(warnings);
   return result;
 }

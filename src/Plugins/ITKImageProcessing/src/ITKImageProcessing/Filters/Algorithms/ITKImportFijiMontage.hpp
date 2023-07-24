@@ -14,8 +14,7 @@ namespace complex
 {
 struct ITKIMAGEPROCESSING_EXPORT BoundsType
 {
-  fs::path Filename;
-  SizeVec3 Dims;
+  fs::path Filepath;
   FloatVec3 Origin;
   FloatVec3 Spacing;
   usize Row;

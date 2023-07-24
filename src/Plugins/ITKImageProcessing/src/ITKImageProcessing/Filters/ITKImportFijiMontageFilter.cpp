@@ -2,6 +2,9 @@
 
 #include "Algorithms/ITKImportFijiMontage.hpp"
 
+#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
+
+#include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -178,11 +181,53 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     // Set the montage's DataContainer for the current index
     gridMontage.setGeometry(gridIndex, dc);
 
-    using StdVecSizeType = std::vector<size_t>;
+    using StdVecSizeType = std::vector<usize>;
     // Create the Cell Attribute Matrix into which the image data would be read
     AttributeMatrix cellAttrMat = AttributeMatrix::New(bound.Dims.toContainer<StdVecSizeType>(), m_CellAttributeMatrixName);
     dc->addOrReplaceAttributeMatrix(cellAttrMat);
     cellAttrMat.addOrReplaceAttributeArray(bound.ImageDataProxy);
+
+    auto* filterListPtr = Application::Instance()->getFilterList();
+    auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
+    if(nullptr == imageImportFilter.get())
+    {
+      continue;
+    }
+
+    Arguments imageImportArgs;
+    imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
+    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent().getParent()));
+    imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent()));
+    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
+
+    auto result = imageImportFilter->preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
+    if(result.outputActions.invalid())
+    {
+      resultOutputActions = MergeResults<OutputActions>(resultOutputActions, result.outputActions);
+      continue;
+    }
+
+    if(pConvertToGrayScaleValue)
+    {
+      IFilter grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, ::k_GrayScaleTempArrayName);
+      grayScaleFilter->setDataContainerArray(importImageDca);
+      grayScaleFilter->preflight();
+      if(grayScaleFilter->getErrorCode() < 0)
+      {
+        setErrorCondition(grayScaleFilter->getErrorCode(), "Error Preflighting Color to GrayScale filter");
+        continue;
+      }
+
+      DataContainerArray colorToGrayDca = grayScaleFilter->getDataContainerArray();
+      DataContainer fromDc = colorToGrayDca->getDataContainer(::k_DCName);
+      AttributeMatrix& fromCellAttrMat = fromDc->getAttributeMatrix(::k_AMName);
+      // Remove the RGB Attribute Array, so we can rename the gray scale AttributeArray
+      IDataArray& rgbImageArray = fromCellAttrMat->removeAttributeArray(::k_AAName);
+      std::string grayScaleArrayName = ::k_GrayScaleTempArrayName + ::k_AAName;
+      IDataArray& fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
+      fromGrayScaleData.setName(m_ImageDataArrayName);
+      bound.ImageDataProxy = fromGrayScaleData;
+    }
   }
   getDataContainerArray()->addOrReplaceMontage(gridMontage);
 

@@ -1,6 +1,9 @@
 #include "ITKImportFijiMontage.hpp"
 
+#include "ITKImageProcessing/Filters/ITKImageReader.hpp"
+
 #include "complex/Common/Array.hpp"
+#include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
@@ -13,8 +16,8 @@
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Utilities/StringUtilities.hpp"
 #include "complex/Utilities/MontageUtilities.hpp"
+#include "complex/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -33,8 +36,7 @@ template <bool GenerateCache = true>
 class IOHandler
 {
 public:
-  IOHandler(ITKImportFijiMontage* filter, DataStructure& dataStructure, fs::path& inFile, const DataPath& quadGeomPath, const DataPath& vertexAMPath, const DataPath& cellAMPath,
-            const bool allocate)
+  IOHandler(ITKImportFijiMontage* filter, DataStructure& dataStructure, fs::path& inFile, const DataPath& quadGeomPath, const DataPath& vertexAMPath, const DataPath& cellAMPath, const bool allocate)
   : m_Filter(filter)
   , m_DataStructure(dataStructure)
   , m_InFile(inFile)
@@ -66,8 +68,10 @@ public:
     }
     else
     {
-      ReadImages();
+      return ReadImages();
     }
+
+    return {};
   }
 
 private:
@@ -97,7 +101,7 @@ private:
   bool m_ConvertToGrayScale = false;
   FloatVec3 m_ColorWeights = FloatVec3(0.2125f, 0.7154f, 0.0721f);
   bool m_ChangeOrigin = false;
-  FloatVec3 m_Origin = FloatVec3(0.0f, 0.0f, 0.0f);
+  Point3Df m_Origin = Point3Df(0.0f, 0.0f, 0.0f);
   bool m_ChangeSpacing = false;
   FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
 
@@ -152,7 +156,7 @@ private:
         continue;
       }
       BoundsType bound;
-      bound.Filename = fs::path(m_InFile.parent_path().string() + fs::path::preferred_separator + tokens[0]);
+      bound.Filepath = fs::path(m_InFile.parent_path().string() + fs::path::preferred_separator + tokens[0]);
 
       std::string coords = StringUtilities::trimmed(tokens[2]);
       coords = StringUtilities::replace(coords, "(", "");
@@ -164,7 +168,7 @@ private:
       }
       float32 x = std::stof(tokens[0]);
       float32 y = std::stof(tokens[1]);
-      bound.Origin = FloatVec3(x, y, 0.0f);
+      bound.Origin = Point3Df(x, y, 0.0f);
       bound.Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
       m_Cache.bounds.push_back(bound);
     }
@@ -217,67 +221,20 @@ private:
     // This next function will set the FileName (Partial), Row, Col for each "bound" object
     ParseConfigFile(inputFile);
 
-    FloatVec3 minCoord = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
-    FloatVec3 minSpacing = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
-    std::vector<ImageGeom> geometries;
+    Point3Df minCoord = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
+    Point3Df minSpacing = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
 
     // Get the meta information from disk for each image
     for(auto& bound : m_Cache.bounds)
     {
       bound.LengthUnit = static_cast<IGeometry::LengthUnit>(m_LengthUnit);
+      bound.ImageDataProxy = DataPath({::k_DCName, ::k_AMName, m_ImageDataArrayName});
 
-      DataPath dap({::k_DCName, ::k_AMName, ::k_AAName});
-      IFilter imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
-      imageImportFilter->preflight();
-      if(imageImportFilter->getErrorCode() < 0)
       {
-        setErrorCondition(imageImportFilter->getErrorCode(), "Error Preflighting Image Import Filter.");
-        continue;
-      }
-
-      DataContainerArray importImageDca = imageImportFilter->getDataContainerArray();
-      {
-        DataContainer fromDc = importImageDca->getDataContainer(::k_DCName);
-        AttributeMatrix& fromCellAttrMat = fromDc->getAttributeMatrix(::k_AMName);
-        IDataArray& fromImageData = fromCellAttrMat.getAttributeArray(::k_AAName);
-        fromImageData.setName(m_ImageDataArrayName);
-        bound.ImageDataProxy = fromImageData;
-
-        // Set the Origin based on the values from the Fiji Config File
-        // Set the spacing to the default 1,1,1
-        ImageGeom& imageGeom = fromDc->getGeometryAs<ImageGeom>();
-        bound.Dims = imageGeom.getDimensions();
-        imageGeom.setSpacing(bound.Spacing);
-        imageGeom.setOrigin(bound.Origin);
-        minSpacing = imageGeom.getSpacing();
-        //
+        minSpacing = bound.Spacing;
         minCoord[0] = std::min(bound.Origin[0], minCoord[0]);
         minCoord[1] = std::min(bound.Origin[1], minCoord[1]);
         minCoord[2] = 0.0f;
-        geometries.push_back(imageGeom);
-      }
-
-      // Execute color to grayscale filter
-      if(m_ConvertToGrayScale)
-      {
-        IFilter grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, ::k_GrayScaleTempArrayName);
-        grayScaleFilter->setDataContainerArray(importImageDca);
-        grayScaleFilter->preflight();
-        if(grayScaleFilter->getErrorCode() < 0)
-        {
-          setErrorCondition(grayScaleFilter->getErrorCode(), "Error Preflighting Color to GrayScale filter");
-          continue;
-        }
-
-        DataContainerArray colorToGrayDca = grayScaleFilter->getDataContainerArray();
-        DataContainer fromDc = colorToGrayDca->getDataContainer(::k_DCName);
-        AttributeMatrix& fromCellAttrMat = fromDc->getAttributeMatrix(::k_AMName);
-        // Remove the RGB Attribute Array so we can rename the gray scale AttributeArray
-        IDataArray& rgbImageArray = fromCellAttrMat->removeAttributeArray(::k_AAName);
-        std::string grayScaleArrayName = ::k_GrayScaleTempArrayName + ::k_AAName;
-        IDataArray& fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
-        fromGrayScaleData.setName(m_ImageDataArrayName);
-        bound.ImageDataProxy = fromGrayScaleData;
       }
 
       m_Cache.maxCol = std::max(bound.Col, m_Cache.maxCol);
@@ -287,7 +244,7 @@ private:
     std::stringstream ss;
     ss << "Tile Column(s): " << m_ColumnCount - 1 << "  Tile Row(s): " << m_RowCount - 1 << "  Image Count: " << m_ColumnCount * m_RowCount;
 
-    FloatVec3 overrideOrigin = minCoord;
+    Point3Df overrideOrigin = minCoord;
     FloatVec3 overrideSpacing = minSpacing;
 
     // Now adjust the origin/spacing if needed
@@ -301,16 +258,14 @@ private:
       {
         overrideSpacing = m_Spacing;
       }
-      FloatVec3 delta = {minCoord[0] - overrideOrigin[0], minCoord[1] - overrideOrigin[1], minCoord[2] - overrideOrigin[2]};
-      for(usize i = 0; i < geometries.size(); i++)
+      Point3Df delta = {minCoord[0] - overrideOrigin[0], minCoord[1] - overrideOrigin[1], minCoord[2] - overrideOrigin[2]};
+      for(auto& bound : m_Cache.bounds)
       {
-        ImageGeom imageGeom = geometries[i];
-        BoundsType& bound = m_Cache.bounds.at(i);
         std::transform(bound.Origin.begin(), bound.Origin.end(), delta.begin(), bound.Origin.begin(), std::minus<>());
-        imageGeom.setOrigin(bound.Origin); // Sync up the ImageGeom with the calculated values
-        imageGeom.setSpacing(overrideSpacing);
+        bound.Spacing = overrideSpacing;
       }
     }
+
     ss << "\nOrigin: " << overrideOrigin[0] << ", " << overrideOrigin[1] << ", " << overrideOrigin[2];
     ss << "\nSpacing: " << overrideSpacing[0] << ", " << overrideSpacing[1] << ", " << overrideSpacing[2];
     ss << ::k_MontageInfoReplaceKeyword;
@@ -318,8 +273,10 @@ private:
   }
 
   // -----------------------------------------------------------------------------
-  void ReadImages()
+  Result<> ReadImages()
   {
+    Result<> outputResult = {};
+
     int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(m_RowCount);
     int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(m_ColumnCount);
     int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
@@ -331,7 +288,7 @@ private:
         continue;
       }
 
-      m_Filter->sendUpdate(("Importing" + bound.Filename.filename().string()));
+      m_Filter->sendUpdate(("Importing" + bound.Filepath.filename().string()));
 
       // Create our DataContainer Name using a Prefix and a rXXcYY format.
       std::stringstream dcNameStream;
@@ -340,7 +297,7 @@ private:
 
       // The DataContainer with a name based on the ROW & COLUMN indices is already created in the preflight
       // So is the Geometry
-      ImageGeom& image = m_DataStructure->getDataRefAs<ImageGeom>();
+      auto& image = m_DataStructure.getDataRefAs<ImageGeom>(DataPath({dcNameStream.str()}));
 
       image.setUnits(static_cast<IGeometry::LengthUnit>(m_LengthUnit));
 
@@ -353,36 +310,44 @@ private:
       // Instantiate the Image Import Filter to actually read the image into a data array
       DataPath dap({::k_DCName, ::k_AMName, m_ImageDataArrayName}); // This is just a temp path for the subfilter to use
 
-      //execute image import filter
-      IFilter imageImportFilter = MontageImportHelper::CreateImageImportFilter(this, bound.Filename, dap);
+      // execute image import filter
+      auto* filterListPtr = Application::Instance()->getFilterList();
+      auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
       if(nullptr == imageImportFilter.get())
       {
         continue;
       }
+
       // This same filter was used to preflight so as long as nothing changes on disk this really should work....
-      imageImportFilter->execute();
-      if(imageImportFilter->getErrorCode() < 0)
+      Arguments imageImportArgs;
+      imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
+      imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent().getParent()));
+      imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent()));
+      imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
+
+      auto result = imageImportFilter->execute(m_DataStructure, imageImportArgs).result;
+      if(result.invalid())
       {
-        setErrorCondition(imageImportFilter->getErrorCode(), "Error Executing Image Import Filter.");
+        outputResult = MergeResults(outputResult, result);
         continue;
       }
+
       // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
       DataContainerArray importImageDca = imageImportFilter->getDataContainerArray();
       AttributeMatrix fromCellAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(DataPath{::k_AMName});
 
       if(m_ConvertToGrayScale)
       {
-        //Run grayscale filter and process results and messages
-        #error implement;
-//        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
-//        grayScaleFilter->setDataContainerArray(importImageDca); // Use the Data Container array that was use for the import. It is set up and ready to go
-//        connect(grayScaleFilter.get(), SIGNAL(messageGenerated(const AbstractMessage::Pointer&)), this, SIGNAL(messageGenerated(const AbstractMessage::Pointer&)));
-//        grayScaleFilter->execute();
-//        if(grayScaleFilter->getErrorCode() < 0)
-//        {
-//          setErrorCondition(grayScaleFilter->getErrorCode(), "Error Executing Color to GrayScale filter");
-//          continue;
-//        }
+        // Run grayscale filter and process results and messages
+        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
+        grayScaleFilter->setDataContainerArray(importImageDca); // Use the Data Container array that was use for the import. It is set up and ready to go
+        connect(grayScaleFilter.get(), SIGNAL(messageGenerated(const AbstractMessage::Pointer&)), this, SIGNAL(messageGenerated(const AbstractMessage::Pointer&)));
+        grayScaleFilter->execute();
+        if(grayScaleFilter->getErrorCode() < 0)
+        {
+          setErrorCondition(grayScaleFilter->getErrorCode(), "Error Executing Color to GrayScale filter");
+          continue;
+        }
 
         DataContainerArray c2gDca = grayScaleFilter->getDataContainerArray();
         DataContainer c2gDc = c2gDca->getDataContainer(::k_DCName);
