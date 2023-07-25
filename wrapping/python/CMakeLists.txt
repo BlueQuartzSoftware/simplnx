@@ -10,6 +10,18 @@ set_target_properties(complexpy
     LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:complex>
 )
 
+# pybind11 sets CXX_VISIBILITY_PRESET to hidden (though this may change in the future see https://github.com/pybind/pybind11/pull/4072)
+# This can cause issues when using libc++ and std::any across shared libraries
+# The hidden visibility causes some objects to have different RTTI which then results in std::bad_any_cast
+option(COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY "Controls CXX_VISIBILITY_PRESET for python modules" OFF)
+
+if(COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY)
+  set_target_properties(complexpy
+    PROPERTIES
+      CXX_VISIBILITY_PRESET default
+  )
+endif()
+
 target_link_libraries(complexpy
   PUBLIC
     complex
