@@ -112,7 +112,7 @@ cd ..
 mkdir build
 cd build
 
-cmake --preset conda-unix ../complex $CMAKE_ARGS
+cmake --preset $COMPLEX_CMAKE_PRESET ../complex $CMAKE_ARGS
 
 cmake --build . --target all
 

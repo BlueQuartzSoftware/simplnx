@@ -33,6 +33,11 @@ source:
 
 build:
   number: 0
+  script_env:
+    sel(linux):
+      COMPLEX_CMAKE_PRESET: "conda-linux"
+    sel(osx):
+      COMPLEX_CMAKE_PRESET: "conda-osx"
 
 requirements:
   build:

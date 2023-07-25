@@ -260,6 +260,20 @@
       }
     },
     {
+      "name": "conda-osx",
+      "inherits": "conda-unix",
+      "cacheVariables": {
+        "COMPLEX_PY_DISABLE_HIDDEN_VISIBILITY": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "conda-linux",
+      "inherits": "conda-unix"
+    },
+    {
       "name": "conda-win",
       "inherits": "conda",
       "cacheVariables": {
