@@ -1670,8 +1670,6 @@ PYBIND11_MODULE(complex, mod)
   });
   preflightResult.def_readwrite("output_values", &IFilter::PreflightResult::outputValues);
 
-  AnyDataAction foo;
-
   py::class_<IFilter::ExecuteResult> executeResult(filter, "ExecuteResult");
   executeResult.def(py::init<>());
   executeResult.def_property_readonly("errors", [](const IFilter::ExecuteResult& self) { return self.result.errors(); });
