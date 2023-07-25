@@ -112,28 +112,7 @@ cd ..
 mkdir build
 cd build
 
-cmake -S "$SRC_DIR/complex" -B . -G "Ninja" $CMAKE_ARGS \
-  -D CMAKE_BUILD_TYPE:STRING=Release \
-  -D CMAKE_INSTALL_PREFIX:PATH="$PREFIX" \
-  -D CMAKE_SYSTEM_PREFIX_PATH:PATH="$PREFIX" \
-  -D COMPLEX_BUILD_TESTS:BOOL=OFF \
-  -D COMPLEX_BUILD_DOCS:BOOL=OFF \
-  -D COMPLEX_BUILD_PYTHON:BOOL=ON \
-  -D COMPLEX_DOWNLOAD_TEST_FILES:BOOL=OFF \
-  -D HDF5_NO_FIND_PACKAGE_CONFIG_FILE:BOOL=ON \
-  -D span-lite_DIR:PATH="$SRC_DIR/sdk/span-lite/lib/cmake/span-lite" \
-  -D expected-lite_DIR:PATH="$SRC_DIR/sdk/expected-lite/lib/cmake/expected-lite" \
-  -D H5Support_DIR:PATH="$SRC_DIR/sdk/H5Support/share/H5Support" \
-  -D EbsdLib_DIR:PATH="$SRC_DIR/sdk/EbsdLib/share/EbsdLib" \
-  -D nod_DIR:PATH="$SRC_DIR/sdk/nod/share/nod" \
-  -D COMPLEX_CONDA_BUILD:BOOL=ON \
-  -D COMPLEX_ENABLE_INSTALL:BOOL=ON \
-  -D COMPLEX_PY_INSTALL_DIR:PATH="$SP_DIR" \
-  -D ITKIMAGEPROCESSING_LEAN_AND_MEAN:BOOL=ON \
-  -D ComplexCore_INSTALL_PIPELINES:BOOL=OFF \
-  -D ITKImageProcessing_INSTALL_PIPELINES:BOOL=OFF \
-  -D OrientationAnalysis_INSTALL_PIPELINES:BOOL=OFF \
-  -D OrientationAnalysis_INSTALL_DATA_FILES:BOOL=OFF
+cmake --preset conda-unix ../complex $CMAKE_ARGS
 
 cmake --build . --target all
 
