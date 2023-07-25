@@ -65,6 +65,10 @@ requirements:
     - tbb
     - zlib
 
+test:
+  imports:
+    - complex
+
 about:
   home: http://dream3d.bluequartz.net/
   license: BSD
