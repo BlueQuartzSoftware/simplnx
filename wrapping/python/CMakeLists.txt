@@ -33,7 +33,13 @@ target_compile_options(complexpy
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
-install(TARGETS complexpy
-  LIBRARY
-    DESTINATION ${COMPLEX_PY_INSTALL_DIR}
-)
+option(COMPLEX_PY_ENABLE_INSTALL "Enables install complexpy" OFF)
+if(COMPLEX_PY_ENABLE_INSTALL)
+  include(GNUInstallDirs)
+  set(COMPLEX_PY_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} CACHE PATH "Path to install complexpy")
+
+  install(TARGETS complexpy
+    LIBRARY
+      DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+  )
+endif()

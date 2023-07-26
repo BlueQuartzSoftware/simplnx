@@ -195,6 +195,10 @@
           "type": "BOOL",
           "value": "ON"
         },
+        "COMPLEX_PY_ENABLE_INSTALL": {
+          "type": "BOOL",
+          "value": "ON"
+        },
         "COMPLEX_PY_INSTALL_DIR": {
           "type": "PATH",
           "value": "$env{SP_DIR}"
