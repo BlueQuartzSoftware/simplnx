@@ -23,6 +23,9 @@ using namespace complex;
 
 namespace
 {
+const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
+const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
 std::atomic_int32_t s_InstanceId = 0;
 std::map<int32, FijiCache> s_HeaderCache;
 } // namespace
@@ -77,7 +80,7 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   params.insert(
       std::make_unique<VectorInt32Parameter>(k_ColumnMontageLimits_Key, "Montage Column Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>{"start", "end"}));
   params.insert(std::make_unique<VectorInt32Parameter>(k_RowMontageLimits_Key, "Montage Row Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>{"start", "end"}));
-  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "", 0, ChoicesParameter::Choices{"Option 1", "Option 2", "Option 3"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit",  "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "", false));
@@ -130,9 +133,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     inputValues.Allocate = false;
     inputValues.InputFilePath = pInputFileValue;
 
-    inputValues.QuadGeomPath = pQuadGeomPathValue;
-    inputValues.CellAMPath = cellDataPath;
-    inputValues.VertexAMPath = vertexDataPath;
+
 
     // Read from the file
     DataStructure throwaway = DataStructure();
@@ -159,6 +160,8 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     {
       continue;
     }
+
+    auto* filterListPtr = Application::Instance()->getFilterList();
 
     // Create our DataContainer Name using a Prefix and a rXXcYY format.
     std::stringstream dcNameStream;
@@ -187,7 +190,6 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     dc->addOrReplaceAttributeMatrix(cellAttrMat);
     cellAttrMat.addOrReplaceAttributeArray(bound.ImageDataProxy);
 
-    auto* filterListPtr = Application::Instance()->getFilterList();
     auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
     if(nullptr == imageImportFilter.get())
     {
@@ -209,14 +211,32 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
 
     if(pConvertToGrayScaleValue)
     {
-      IFilter grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, ::k_GrayScaleTempArrayName);
-      grayScaleFilter->setDataContainerArray(importImageDca);
-      grayScaleFilter->preflight();
-      if(grayScaleFilter->getErrorCode() < 0)
+      if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
       {
-        setErrorCondition(grayScaleFilter->getErrorCode(), "Error Preflighting Color to GrayScale filter");
+        return MakePreflightErrorResult(-18540, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
+      }
+      auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
+      if(nullptr == grayScaleFilter.get())
+      {
         continue;
       }
+
+      // This same filter was used to preflight so as long as nothing changes on disk this really should work....
+      Arguments colorToGrayscaleArgs;
+      colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
+      colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(pColorWeightsValue));
+      colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<DataPath>(dap));
+      colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
+
+      // Run grayscale filter and process results and messages
+      auto resultGray = grayScaleFilter->preflight(dataStructure, colorToGrayscaleArgs, messageHandler, shouldCancel);
+      if(resultGray.outputActions.invalid())
+      {
+        resultOutputActions = MergeResults<OutputActions>(resultOutputActions, resultGray.outputActions);
+        continue;
+      }
+
+#error push back delayed deletion of non grayscale array
 
       DataContainerArray colorToGrayDca = grayScaleFilter->getDataContainerArray();
       DataContainer fromDc = colorToGrayDca->getDataContainer(::k_DCName);
@@ -227,6 +247,17 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
       IDataArray& fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
       fromGrayScaleData.setName(m_ImageDataArrayName);
       bound.ImageDataProxy = fromGrayScaleData;
+
+      DataContainerArray c2gDca = grayScaleFilter->getDataContainerArray();
+      DataContainer c2gDc = c2gDca->getDataContainer(::k_DCName);
+      AttributeMatrix c2gAttrMat = c2gDc->getAttributeMatrix(::k_AMName);
+
+      std::string grayScaleArrayName = ::k_GrayScaleTempArrayName + m_ImageDataArrayName;
+
+      IDataArray& rgbImageArray = c2gAttrMat->removeAttributeArray(::k_AAName);
+      IDataArray& gray = c2gAttrMat->removeAttributeArray(grayScaleArrayName);
+      gray.setName(m_ImageDataArrayName);
+      cellAttrMat.addOrReplaceAttributeArray(gray);
     }
   }
   getDataContainerArray()->addOrReplaceMontage(gridMontage);

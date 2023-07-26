@@ -26,24 +26,25 @@ using namespace complex;
 
 namespace
 {
+const int32 k_Tolerance = 100;
 const std::string k_DCName = "ZenInfo";
 const std::string k_AMName = "CellAM";
 const std::string k_AAName = "ImageData";
 const std::string k_GrayScaleTempArrayName = "gray_scale_temp";
 const std::string k_MontageInfoReplaceKeyword = "@UPDATE_ROW_COLUMN@";
+const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
+const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
 
 template <bool GenerateCache = true>
 class IOHandler
 {
 public:
-  IOHandler(ITKImportFijiMontage* filter, DataStructure& dataStructure, fs::path& inFile, const DataPath& quadGeomPath, const DataPath& vertexAMPath, const DataPath& cellAMPath, const bool allocate)
+  IOHandler(ITKImportFijiMontage* filter, DataStructure& dataStructure, const ITKImportFijiMontageInputValues* inputs)
   : m_Filter(filter)
   , m_DataStructure(dataStructure)
-  , m_InFile(inFile)
-  , m_QuadGeomPath(quadGeomPath)
-  , m_VertexAMPath(vertexAMPath)
-  , m_CellAMPath(cellAMPath)
-  , m_Allocate(allocate)
+  , m_InputValues(inputs)
+  , m_Allocate(inputs->allocate)
   , m_Cache(m_Filter->getCache())
   {
   }
@@ -56,10 +57,10 @@ public:
 
   [[nodiscard]] Result<> operator()()
   {
-    m_InStream = std::ifstream(m_InFile, std::ios_base::binary);
+    m_InStream = std::ifstream(m_InputValues->inputFilePath, std::ios_base::binary);
     if(!m_InStream.is_open())
     {
-      return MakeErrorResult(-2013, fmt::format("Unable to open the provided file to read at path : {}", m_InFile.string()));
+      return MakeErrorResult(-2013, fmt::format("Unable to open the provided file to read at path : {}", m_InputValues->inputFilePath.string()));
     }
 
     if(!m_Allocate)
@@ -78,36 +79,16 @@ private:
   // member variables
   ITKImportFijiMontage* m_Filter;
   DataStructure& m_DataStructure;
-  fs::path& m_InFile;
   std::ifstream m_InStream;
-  const DataPath& m_QuadGeomPath;
-  const DataPath& m_VertexAMPath;
-  const DataPath& m_CellAMPath;
   const bool m_Allocate;
   FijiCache& m_Cache;
-  usize m_LineCount = 0;
-  std::vector<std::string> m_UserDefinedVariables = {};
-  std::vector<DataPath> m_UserDefinedArrays = {};
+  const ITKImportFijiMontageInputValues* m_InputValues;
 
-  std::string m_MontageName = "Zen Montage";
-  int32 m_LengthUnit = 6;
-  Vec2<int32> m_ColumnMontageLimits = {0, 0};
-  Vec2<int32> m_RowMontageLimits = {0, 0};
-  Vec2<int32> m_MontageStart = {0, 0};
-  Vec2<int32> m_MontageEnd = {0, 0};
-  DataPath m_DataContainerPath = {};
-  std::string m_CellAttributeMatrixName = "";
-  std::string m_ImageDataArrayName = "";
-  bool m_ConvertToGrayScale = false;
-  FloatVec3 m_ColorWeights = FloatVec3(0.2125f, 0.7154f, 0.0721f);
-  bool m_ChangeOrigin = false;
-  Point3Df m_Origin = Point3Df(0.0f, 0.0f, 0.0f);
-  bool m_ChangeSpacing = false;
-  FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
+  //  bool changeSpacing;
+  //  FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
 
-  int32 m_RowCount = -1;
-  int32 m_ColumnCount = -1;
-  int32 m_Tolerance = 100;
+    int32 m_RowCount = -1;
+    int32 m_ColumnCount = -1;
 
   // -----------------------------------------------------------------------------
   void ParseConfigFile()
@@ -156,7 +137,7 @@ private:
         continue;
       }
       BoundsType bound;
-      bound.Filepath = fs::path(m_InFile.parent_path().string() + fs::path::preferred_separator + tokens[0]);
+      bound.Filepath = fs::path(m_InputValues->inputFilePath.parent_path().string() + fs::path::preferred_separator + tokens[0]);
 
       std::string coords = StringUtilities::trimmed(tokens[2]);
       coords = StringUtilities::replace(coords, "(", "");
@@ -173,11 +154,11 @@ private:
       m_Cache.bounds.push_back(bound);
     }
 
-    FindTileIndices(m_Tolerance);
+    FindTileIndices();
   }
 
   // -----------------------------------------------------------------------------
-  void FindTileIndices(int32 tolerance)
+  void FindTileIndices()
   {
     std::vector<int32> xValues(m_Cache.bounds.size());
     std::vector<int32> yValues(m_Cache.bounds.size());
@@ -188,7 +169,7 @@ private:
       yValues[i] = static_cast<int32>(m_Cache.bounds[i].Origin[1]);
     }
 
-    std::map<int32, std::vector<usize>> avg_indices = MontageUtilities::Burn(tolerance, xValues);
+    std::map<int32, std::vector<usize>> avg_indices = MontageUtilities::Burn(k_Tolerance, xValues);
     int32 index = 0;
     for(auto& iter : avg_indices)
     {
@@ -201,7 +182,7 @@ private:
     }
     m_ColumnCount = index;
 
-    avg_indices = MontageUtilities::Burn(tolerance, yValues);
+    avg_indices = MontageUtilities::Burn(k_Tolerance, yValues);
     index = 0;
     for(auto& iter : avg_indices)
     {
@@ -216,19 +197,27 @@ private:
   }
 
   // -----------------------------------------------------------------------------
-  void FillCache(const fs::path& inputFile)
+  void FillCache()
   {
     // This next function will set the FileName (Partial), Row, Col for each "bound" object
-    ParseConfigFile(inputFile);
+    ParseConfigFile();
 
     Point3Df minCoord = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
     Point3Df minSpacing = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
 
+    int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(m_RowCount);
+    int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(m_ColumnCount);
+    int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
+
     // Get the meta information from disk for each image
     for(auto& bound : m_Cache.bounds)
     {
-      bound.LengthUnit = static_cast<IGeometry::LengthUnit>(m_LengthUnit);
-      bound.ImageDataProxy = DataPath({::k_DCName, ::k_AMName, m_ImageDataArrayName});
+      std::stringstream dcNameStream;
+      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string();
+      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
+      dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
+
+      bound.ImageDataProxy = DataPath({dcNameStream.str(), m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
 
       {
         minSpacing = bound.Spacing;
@@ -248,11 +237,11 @@ private:
     FloatVec3 overrideSpacing = minSpacing;
 
     // Now adjust the origin/spacing if needed
-    if(m_ChangeOrigin || m_ChangeSpacing)
+    if(m_InputValues->changeOrigin || m_ChangeSpacing)
     {
-      if(m_ChangeOrigin)
+      if(m_InputValues->changeOrigin)
       {
-        overrideOrigin = m_Origin;
+        overrideOrigin = m_InputValues->origin;
       }
       if(m_ChangeSpacing)
       {
@@ -277,94 +266,79 @@ private:
   {
     Result<> outputResult = {};
 
-    int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(m_RowCount);
-    int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(m_ColumnCount);
-    int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
-
     for(const auto& bound : m_Cache.bounds)
     {
-      if(bound.Row < m_MontageStart[1] || bound.Row > m_MontageEnd[1] || bound.Col < m_MontageStart[0] || bound.Col > m_MontageEnd[0])
+      if(bound.Row < m_InputValues->rowMontageLimits[0] || bound.Row > m_InputValues->rowMontageLimits[1] || bound.Col < m_InputValues->columnMontageLimits[0] ||
+         bound.Col > m_InputValues->columnMontageLimits[1])
       {
         continue;
       }
 
       m_Filter->sendUpdate(("Importing" + bound.Filepath.filename().string()));
 
-      // Create our DataContainer Name using a Prefix and a rXXcYY format.
-      std::stringstream dcNameStream;
-      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
-      dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
-
       // The DataContainer with a name based on the ROW & COLUMN indices is already created in the preflight
       // So is the Geometry
-      auto& image = m_DataStructure.getDataRefAs<ImageGeom>(DataPath({dcNameStream.str()}));
+      auto& image = m_DataStructure.getDataRefAs<ImageGeom>(bound.ImageDataProxy.getParent().getParent());
 
-      image.setUnits(static_cast<IGeometry::LengthUnit>(m_LengthUnit));
+      image.setUnits(m_InputValues->lengthUnit);
 
       // Create the Image Geometry
       SizeVec3 dims = image.getDimensions();
 
       std::vector<usize> tDims = {dims[0], dims[1], dims[2]};
-      // The Cell AttributeMatrix is also already created at this point
-      AttributeMatrix& cellAttrMat = image.getCellDataRef();
       // Instantiate the Image Import Filter to actually read the image into a data array
-      DataPath dap({::k_DCName, ::k_AMName, m_ImageDataArrayName}); // This is just a temp path for the subfilter to use
-
-      // execute image import filter
-      auto* filterListPtr = Application::Instance()->getFilterList();
-      auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
-      if(nullptr == imageImportFilter.get())
       {
-        continue;
-      }
-
-      // This same filter was used to preflight so as long as nothing changes on disk this really should work....
-      Arguments imageImportArgs;
-      imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
-      imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent().getParent()));
-      imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent()));
-      imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
-
-      auto result = imageImportFilter->execute(m_DataStructure, imageImportArgs).result;
-      if(result.invalid())
-      {
-        outputResult = MergeResults(outputResult, result);
-        continue;
-      }
-
-      // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
-      DataContainerArray importImageDca = imageImportFilter->getDataContainerArray();
-      AttributeMatrix fromCellAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(DataPath{::k_AMName});
-
-      if(m_ConvertToGrayScale)
-      {
-        // Run grayscale filter and process results and messages
-        AbstractFilter::Pointer grayScaleFilter = MontageImportHelper::CreateColorToGrayScaleFilter(this, dap, m_ColorWeights, Montage::k_GrayScaleTempArrayName);
-        grayScaleFilter->setDataContainerArray(importImageDca); // Use the Data Container array that was use for the import. It is set up and ready to go
-        connect(grayScaleFilter.get(), SIGNAL(messageGenerated(const AbstractMessage::Pointer&)), this, SIGNAL(messageGenerated(const AbstractMessage::Pointer&)));
-        grayScaleFilter->execute();
-        if(grayScaleFilter->getErrorCode() < 0)
+        // execute image import filter
+        auto* filterListPtr = Application::Instance()->getFilterList();
+        auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
+        if(nullptr == imageImportFilter.get())
         {
-          setErrorCondition(grayScaleFilter->getErrorCode(), "Error Executing Color to GrayScale filter");
           continue;
         }
 
-        DataContainerArray c2gDca = grayScaleFilter->getDataContainerArray();
-        DataContainer c2gDc = c2gDca->getDataContainer(::k_DCName);
-        AttributeMatrix c2gAttrMat = c2gDc->getAttributeMatrix(::k_AMName);
+        // This same filter was used to preflight so as long as nothing changes on disk this really should work....
+        Arguments imageImportArgs;
+        imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
+        imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent().getParent()));
+        imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent()));
+        imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
 
-        std::string grayScaleArrayName = ::k_GrayScaleTempArrayName + m_ImageDataArrayName;
-
-        IDataArray& rgbImageArray = c2gAttrMat->removeAttributeArray(::k_AAName);
-        IDataArray& gray = c2gAttrMat->removeAttributeArray(grayScaleArrayName);
-        gray.setName(m_ImageDataArrayName);
-        cellAttrMat.addOrReplaceAttributeArray(gray);
+        auto result = imageImportFilter->execute(m_DataStructure, imageImportArgs).result;
+        if(result.invalid())
+        {
+          outputResult = MergeResults(outputResult, result);
+          continue;
+        }
       }
-      else
+
+      // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
+      if(m_InputValues->convertToGrayScale)
       {
-        // Copy the IDataArray (which contains the image data) from the temp data container array into our persistent data structure
-        IDataArray& gray = fromCellAttrMat.removeAttributeArray(m_ImageDataArrayName);
-        cellAttrMat.addOrReplaceAttributeArray(gray);
+        auto* filterListPtr = Application::Instance()->getFilterList();
+        if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
+        {
+          return MakeErrorResult(-18540, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
+        }
+        auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
+        if(nullptr == grayScaleFilter.get())
+        {
+          continue;
+        }
+
+        // This same filter was used to preflight so as long as nothing changes on disk this really should work....
+        Arguments colorToGrayscaleArgs;
+        colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
+        colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(m_InputValues->colorWeights));
+        colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<DataPath>(bound.ImageDataProxy));
+        colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
+
+        // Run grayscale filter and process results and messages
+        auto result = grayScaleFilter->execute(m_DataStructure, colorToGrayscaleArgs).result;
+        if(result.invalid())
+        {
+          outputResult = MergeResults(outputResult, result);
+          continue;
+        }
       }
     }
   }
@@ -424,7 +398,7 @@ Result<> ITKImportFijiMontage::operator()()
    * have been passed in within inputValues are not valid as they have
    * not been created.
    */
-  IOHandler handler = IOHandler(this, m_DataStructure, m_InputValues->InputFilePath, m_InputValues->QuadGeomPath, m_InputValues->VertexAMPath, m_InputValues->CellAMPath, m_InputValues->Allocate);
+  IOHandler handler = IOHandler(this, m_DataStructure, m_InputValues);
 
   // Read from the file
   return handler();

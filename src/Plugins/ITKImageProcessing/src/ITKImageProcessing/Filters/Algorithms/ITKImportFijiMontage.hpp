@@ -20,7 +20,6 @@ struct ITKIMAGEPROCESSING_EXPORT BoundsType
   usize Row;
   usize Col;
   DataPath ImageDataProxy;
-  IGeometry::LengthUnit LengthUnit;
 };
 
 struct ITKIMAGEPROCESSING_EXPORT FijiCache
@@ -45,8 +44,19 @@ struct ITKIMAGEPROCESSING_EXPORT FijiCache
 
 struct ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageInputValues
 {
-  bool Allocate;
-  fs::path InputFilePath;
+  bool allocate = false;
+  bool changeOrigin;
+  bool convertToGrayScale;
+  fs::path inputFilePath;
+  IGeometry::LengthUnit lengthUnit;
+  std::vector<int32> columnMontageLimits;
+  std::vector<int32> rowMontageLimits;
+  std::vector<float32> origin;
+  std::vector<float32> colorWeights;
+  std::string montageName;
+  std::string imagePrefix;
+  std::string cellAMName;
+  std::string imageDataArrayName;
 };
 
 /**
