@@ -7,14 +7,8 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
-#include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-#include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/MontageUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -27,11 +21,6 @@ using namespace complex;
 namespace
 {
 const int32 k_Tolerance = 100;
-const std::string k_DCName = "ZenInfo";
-const std::string k_AMName = "CellAM";
-const std::string k_AAName = "ImageData";
-const std::string k_GrayScaleTempArrayName = "gray_scale_temp";
-const std::string k_MontageInfoReplaceKeyword = "@UPDATE_ROW_COLUMN@";
 const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
 const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
@@ -86,9 +75,6 @@ private:
 
   //  bool changeSpacing;
   //  FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
-
-    int32 m_RowCount = -1;
-    int32 m_ColumnCount = -1;
 
   // -----------------------------------------------------------------------------
   void ParseConfigFile()
@@ -180,7 +166,6 @@ private:
       }
       index++;
     }
-    m_ColumnCount = index;
 
     avg_indices = MontageUtilities::Burn(k_Tolerance, yValues);
     index = 0;
@@ -193,7 +178,20 @@ private:
       }
       index++;
     }
-    m_RowCount = index;
+
+    m_Cache.maxCol = 0;
+    m_Cache.maxRow = 0;
+    for(auto& bound : m_Cache.bounds)
+    {
+      if(bound.Row < m_InputValues->rowMontageLimits[0] || bound.Row > m_InputValues->rowMontageLimits[1] || bound.Col < m_InputValues->columnMontageLimits[0] ||
+         bound.Col > m_InputValues->columnMontageLimits[1])
+      {
+        continue;
+      }
+
+      m_Cache.maxCol = std::max(bound.Col, m_Cache.maxCol);
+      m_Cache.maxRow = std::max(bound.Row, m_Cache.maxRow);
+    }
   }
 
   // -----------------------------------------------------------------------------
@@ -203,15 +201,20 @@ private:
     ParseConfigFile();
 
     Point3Df minCoord = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
-    Point3Df minSpacing = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
 
-    int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(m_RowCount);
-    int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(m_ColumnCount);
+    int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(m_Cache.maxRow);
+    int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(m_Cache.maxCol);
     int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
 
     // Get the meta information from disk for each image
     for(auto& bound : m_Cache.bounds)
     {
+      if(bound.Row < m_InputValues->rowMontageLimits[0] || bound.Row > m_InputValues->rowMontageLimits[1] || bound.Col < m_InputValues->columnMontageLimits[0] ||
+         bound.Col > m_InputValues->columnMontageLimits[1])
+      {
+        continue;
+      }
+
       std::stringstream dcNameStream;
       dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string();
       dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
@@ -220,44 +223,37 @@ private:
       bound.ImageDataProxy = DataPath({dcNameStream.str(), m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
 
       {
-        minSpacing = bound.Spacing;
         minCoord[0] = std::min(bound.Origin[0], minCoord[0]);
         minCoord[1] = std::min(bound.Origin[1], minCoord[1]);
         minCoord[2] = 0.0f;
       }
-
-      m_Cache.maxCol = std::max(bound.Col, m_Cache.maxCol);
-      m_Cache.maxRow = std::max(bound.Row, m_Cache.maxRow);
     }
 
     std::stringstream ss;
-    ss << "Tile Column(s): " << m_ColumnCount - 1 << "  Tile Row(s): " << m_RowCount - 1 << "  Image Count: " << m_ColumnCount * m_RowCount;
+    ss << "Tile Column(s): " << m_Cache.maxCol + 1 << "  Tile Row(s): " << m_Cache.maxRow + 1 << "  Image Count: " << m_Cache.maxCol * m_Cache.maxRow;
 
     Point3Df overrideOrigin = minCoord;
-    FloatVec3 overrideSpacing = minSpacing;
 
     // Now adjust the origin/spacing if needed
-    if(m_InputValues->changeOrigin || m_ChangeSpacing)
+    if(m_InputValues->changeOrigin)
     {
-      if(m_InputValues->changeOrigin)
-      {
-        overrideOrigin = m_InputValues->origin;
-      }
-      if(m_ChangeSpacing)
-      {
-        overrideSpacing = m_Spacing;
-      }
+      overrideOrigin = m_InputValues->origin;
       Point3Df delta = {minCoord[0] - overrideOrigin[0], minCoord[1] - overrideOrigin[1], minCoord[2] - overrideOrigin[2]};
       for(auto& bound : m_Cache.bounds)
       {
         std::transform(bound.Origin.begin(), bound.Origin.end(), delta.begin(), bound.Origin.begin(), std::minus<>());
-        bound.Spacing = overrideSpacing;
       }
     }
 
     ss << "\nOrigin: " << overrideOrigin[0] << ", " << overrideOrigin[1] << ", " << overrideOrigin[2];
-    ss << "\nSpacing: " << overrideSpacing[0] << ", " << overrideSpacing[1] << ", " << overrideSpacing[2];
-    ss << ::k_MontageInfoReplaceKeyword;
+    ss << "\nSpacing: "
+       << "1.0"
+       << ", "
+       << "1.0"
+       << ", "
+       << "1.0";
+    ss <<  "\n"
+       << "Imported Columns: " << m_Cache.maxCol + 1 << "  Imported Rows: " << m_Cache.maxRow + 1 << "  Imported Image Count: " << (m_Cache.maxCol * m_Cache.maxRow);
     m_Cache.montageInformation = ss.str();
   }
 
@@ -279,13 +275,8 @@ private:
       // The DataContainer with a name based on the ROW & COLUMN indices is already created in the preflight
       // So is the Geometry
       auto& image = m_DataStructure.getDataRefAs<ImageGeom>(bound.ImageDataProxy.getParent().getParent());
-
       image.setUnits(m_InputValues->lengthUnit);
 
-      // Create the Image Geometry
-      SizeVec3 dims = image.getDimensions();
-
-      std::vector<usize> tDims = {dims[0], dims[1], dims[2]};
       // Instantiate the Image Import Filter to actually read the image into a data array
       {
         // execute image import filter
@@ -341,20 +332,9 @@ private:
         }
       }
     }
-  }
 
-  //  // -----------------------------------------------------------------------------
-  //  std::string GetMontageInformation()
-  //  {
-  //    std::string info = m_MontageInformation;
-  //    std::stringstream ss;
-  //    int32 importedCols = m_MontageEnd[0] - m_MontageStart[0] + 1;
-  //    int32 importedRows = m_MontageEnd[1] - m_MontageStart[1] + 1;
-  //    ss << "\n"
-  //       << "Imported Columns: " << importedCols << "  Imported Rows: " << importedRows << "  Imported Image Count: " << (importedCols * importedRows);
-  //    info = StringUtilities::replace(info, Montage::k_MontageInfoReplaceKeyword, ss.str());
-  //    return info;
-  //  }
+    return outputResult;
+  }
 };
 } // namespace
 
@@ -398,8 +378,5 @@ Result<> ITKImportFijiMontage::operator()()
    * have been passed in within inputValues are not valid as they have
    * not been created.
    */
-  IOHandler handler = IOHandler(this, m_DataStructure, m_InputValues);
-
-  // Read from the file
-  return handler();
+  return IOHandler(this, m_DataStructure, m_InputValues)();
 }

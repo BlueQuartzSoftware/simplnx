@@ -118,8 +118,8 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pConvertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
-  auto pDataContainerPathValue = filterArgs.value<DataPath>(k_DataContainerPath_Key);
-  auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
+  auto pDataContainerPathValue = filterArgs.value<StringParameter::ValueType>(k_DataContainerPath_Key);
+  auto pCellAttributeMatrixNameValue = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
   auto pImageDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
 
   PreflightResult preflightResult;
@@ -130,10 +130,20 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   if(pInputFileValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFileValue))
   {
     ITKImportFijiMontageInputValues inputValues;
-    inputValues.Allocate = false;
-    inputValues.InputFilePath = pInputFileValue;
 
-
+    inputValues.allocate = false;
+    inputValues.changeOrigin = pChangeOriginValue;
+    inputValues.convertToGrayScale = pConvertToGrayScaleValue;
+    inputValues.inputFilePath = pInputFileValue;
+    inputValues.lengthUnit = static_cast<IGeometry::LengthUnit>(pLengthUnitValue);
+    inputValues.columnMontageLimits;
+    inputValues.rowMontageLimits;
+    inputValues.origin = pOriginValue;
+    inputValues.colorWeights = pColorWeightsValue;
+    inputValues.montageName = pMontageNameValue;
+    inputValues.imagePrefix = pDataContainerPathValue;
+    inputValues.cellAMName = pCellAttributeMatrixNameValue;
+    inputValues.imageDataArrayName = pDataContainerPathValue;
 
     // Read from the file
     DataStructure throwaway = DataStructure();
@@ -146,6 +156,12 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     // Update the cached variables
     s_HeaderCache[m_InstanceId].inputFile = pInputFileValue;
     s_HeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFileValue);
+  }
+  
+  auto montage = GridMontage::Create(dataStructure, "Grid");
+  if(montage == nullptr)
+  {
+    return MakePreflightErrorResult(-1111, "Unable to create montage");
   }
 
   GridMontage gridMontage = GridMontage::New(m_MontageName, m_RowCount, m_ColumnCount);
@@ -165,6 +181,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
 
     // Create our DataContainer Name using a Prefix and a rXXcYY format.
     std::stringstream dcNameStream;
+    dcNameStream << pDataContainerPathValue << bound.Filepath.filename().string();
     dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
     dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
 
@@ -225,7 +242,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
       Arguments colorToGrayscaleArgs;
       colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
       colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(pColorWeightsValue));
-      colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<DataPath>(dap));
+      colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<DataPath>(bound.ImageDataProxy));
       colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
 
       // Run grayscale filter and process results and messages
@@ -260,7 +277,6 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
       cellAttrMat.addOrReplaceAttributeArray(gray);
     }
   }
-  getDataContainerArray()->addOrReplaceMontage(gridMontage);
 
   // If the filter needs to pass back some updated values via a key:value string:string set of values
   // you can declare and update that string here.
