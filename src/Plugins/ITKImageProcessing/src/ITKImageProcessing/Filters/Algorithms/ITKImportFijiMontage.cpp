@@ -272,11 +272,6 @@ private:
 
       m_Filter->sendUpdate(("Importing" + bound.Filepath.filename().string()));
 
-      // The DataContainer with a name based on the ROW & COLUMN indices is already created in the preflight
-      // So is the Geometry
-      auto& image = m_DataStructure.getDataRefAs<ImageGeom>(bound.ImageDataProxy.getParent().getParent());
-      image.setUnits(m_InputValues->lengthUnit);
-
       // Instantiate the Image Import Filter to actually read the image into a data array
       {
         // execute image import filter
@@ -301,6 +296,11 @@ private:
           continue;
         }
       }
+
+      auto& image = m_DataStructure.getDataRefAs<ImageGeom>(bound.ImageDataProxy.getParent().getParent());
+      image.setUnits(m_InputValues->lengthUnit);
+      image.setOrigin(bound.Origin);
+      image.setSpacing(bound.Spacing);
 
       // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
       if(m_InputValues->convertToGrayScale)

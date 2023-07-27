@@ -7,6 +7,8 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Filter/Actions/DeleteDataAction.hpp"
+#include "complex/Filter/Actions/RenameDataAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
@@ -80,7 +82,7 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   params.insert(
       std::make_unique<VectorInt32Parameter>(k_ColumnMontageLimits_Key, "Montage Column Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>{"start", "end"}));
   params.insert(std::make_unique<VectorInt32Parameter>(k_RowMontageLimits_Key, "Montage Row Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>{"start", "end"}));
-  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit",  "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
+  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "", false));
@@ -136,8 +138,8 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     inputValues.convertToGrayScale = pConvertToGrayScaleValue;
     inputValues.inputFilePath = pInputFileValue;
     inputValues.lengthUnit = static_cast<IGeometry::LengthUnit>(pLengthUnitValue);
-    inputValues.columnMontageLimits;
-    inputValues.rowMontageLimits;
+    inputValues.columnMontageLimits = pColumnMontageLimitsValue;
+    inputValues.rowMontageLimits = pRowMontageLimitsValue;
     inputValues.origin = pOriginValue;
     inputValues.colorWeights = pColorWeightsValue;
     inputValues.montageName = pMontageNameValue;
@@ -157,7 +159,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     s_HeaderCache[m_InstanceId].inputFile = pInputFileValue;
     s_HeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFileValue);
   }
-  
+
   auto montage = GridMontage::Create(dataStructure, "Grid");
   if(montage == nullptr)
   {
@@ -185,27 +187,11 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
     dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
 
-    // Create the DataContainer with a name based on the ROW & COLUMN indices
-    DataContainer dc = dca->createNonPrereqDataContainer(this, dcName);
-
-    // Create the Image Geometry
-    ImageGeom& image = ImageGeom::CreateGeometry(dcName);
-    image.setDimensions(bound.Dims);
-    image.setOrigin(bound.Origin);
-    image.setSpacing(bound.Spacing);
-    image.setUnits(bound.LengthUnit);
-
-    dc->setGeometry(image);
-
     GridTileIndex gridIndex = gridMontage.getTileIndex(bound.Row, bound.Col);
     // Set the montage's DataContainer for the current index
     gridMontage.setGeometry(gridIndex, dc);
 
-    using StdVecSizeType = std::vector<usize>;
     // Create the Cell Attribute Matrix into which the image data would be read
-    AttributeMatrix cellAttrMat = AttributeMatrix::New(bound.Dims.toContainer<StdVecSizeType>(), m_CellAttributeMatrixName);
-    dc->addOrReplaceAttributeMatrix(cellAttrMat);
-    cellAttrMat.addOrReplaceAttributeArray(bound.ImageDataProxy);
 
     auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
     if(nullptr == imageImportFilter.get())
@@ -220,9 +206,9 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
 
     auto result = imageImportFilter->preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
+    resultOutputActions = MergeResults<OutputActions>(resultOutputActions, result.outputActions);
     if(result.outputActions.invalid())
     {
-      resultOutputActions = MergeResults<OutputActions>(resultOutputActions, result.outputActions);
       continue;
     }
 
@@ -247,34 +233,23 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
 
       // Run grayscale filter and process results and messages
       auto resultGray = grayScaleFilter->preflight(dataStructure, colorToGrayscaleArgs, messageHandler, shouldCancel);
+      resultOutputActions = MergeResults<OutputActions>(resultOutputActions, resultGray.outputActions);
       if(resultGray.outputActions.invalid())
       {
-        resultOutputActions = MergeResults<OutputActions>(resultOutputActions, resultGray.outputActions);
         continue;
       }
 
-#error push back delayed deletion of non grayscale array
+      // push back delayed deletion of non-grayscale array
+      {
+        auto deleteAction = std::make_unique<DeleteDataAction>(bound.ImageDataProxy);
+        resultOutputActions.value().appendDeferredAction(std::move(deleteAction));
+      }
 
-      DataContainerArray colorToGrayDca = grayScaleFilter->getDataContainerArray();
-      DataContainer fromDc = colorToGrayDca->getDataContainer(::k_DCName);
-      AttributeMatrix& fromCellAttrMat = fromDc->getAttributeMatrix(::k_AMName);
-      // Remove the RGB Attribute Array, so we can rename the gray scale AttributeArray
-      IDataArray& rgbImageArray = fromCellAttrMat->removeAttributeArray(::k_AAName);
-      std::string grayScaleArrayName = ::k_GrayScaleTempArrayName + ::k_AAName;
-      IDataArray& fromGrayScaleData = fromCellAttrMat->removeAttributeArray(grayScaleArrayName);
-      fromGrayScaleData.setName(m_ImageDataArrayName);
-      bound.ImageDataProxy = fromGrayScaleData;
-
-      DataContainerArray c2gDca = grayScaleFilter->getDataContainerArray();
-      DataContainer c2gDc = c2gDca->getDataContainer(::k_DCName);
-      AttributeMatrix c2gAttrMat = c2gDc->getAttributeMatrix(::k_AMName);
-
-      std::string grayScaleArrayName = ::k_GrayScaleTempArrayName + m_ImageDataArrayName;
-
-      IDataArray& rgbImageArray = c2gAttrMat->removeAttributeArray(::k_AAName);
-      IDataArray& gray = c2gAttrMat->removeAttributeArray(grayScaleArrayName);
-      gray.setName(m_ImageDataArrayName);
-      cellAttrMat.addOrReplaceAttributeArray(gray);
+      // deferred array rename action
+      {
+        auto renameAction = std::make_unique<RenameDataAction>(bound.ImageDataProxy.getParent().createChildPath("gray" + bound.ImageDataProxy.getTargetName()), bound.ImageDataProxy.getTargetName());
+        resultOutputActions.value().appendDeferredAction(std::move(renameAction));
+      }
     }
   }
 
