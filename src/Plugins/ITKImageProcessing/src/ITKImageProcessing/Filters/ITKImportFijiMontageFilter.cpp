@@ -6,7 +6,9 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataPath.hpp"
+#include "complex/DataStructure/Montage/GridTileIndex.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
+#include "complex/Filter/Actions/CreateGridMontageAction.hpp"
 #include "complex/Filter/Actions/DeleteDataAction.hpp"
 #include "complex/Filter/Actions/RenameDataAction.hpp"
 #include "complex/Parameters/ArrayCreationParameter.hpp"
@@ -160,13 +162,12 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     s_HeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFileValue);
   }
 
-  auto montage = GridMontage::Create(dataStructure, "Grid");
-  if(montage == nullptr)
+  // create montage
   {
-    return MakePreflightErrorResult(-1111, "Unable to create montage");
+ #error the create action needs to be reviewed;
+    auto createAction = std::make_unique<CreateGridMontageAction>(DataPath({pMontageNameValue}), CreateGridMontageAction::DimensionType {}, CreateGridMontageAction::OriginType {}, CreateGridMontageAction::SpacingType {});
+    resultOutputActions.value().appendAction(std::move(createAction));
   }
-
-  GridMontage gridMontage = GridMontage::New(m_MontageName, m_RowCount, m_ColumnCount);
 
   int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(s_HeaderCache[m_InstanceId].maxRow);
   int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(s_HeaderCache[m_InstanceId].maxCol);
@@ -253,35 +254,10 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     }
   }
 
-  // If the filter needs to pass back some updated values via a key:value string:string set of values
-  // you can declare and update that string here.
-  // These variables should be updated with the latest data generated for each variable during preflight.
-  // These will be returned through the preflightResult variable to the
-  // user interface. You could make these member variables instead if needed.
-  std::string montageInformation;
-
-  // If this filter makes changes to the DataStructure in the form of
-  // creating/deleting/moving/renaming DataGroups, Geometries, DataArrays then you
-  // will need to use one of the `*Actions` classes located in complex/Filter/Actions
-  // to relay that information to the preflight and execute methods. This is done by
-  // creating an instance of the Action class and then storing it in the resultOutputActions variable.
-  // This is done through a `push_back()` method combined with a `std::move()`. For the
-  // newly initiated to `std::move` once that code is executed what was once inside the Action class
-  // instance variable is *no longer there*. The memory has been moved. If you try to access that
-  // variable after this line you will probably get a crash or have subtle bugs. To ensure that this
-  // does not happen we suggest using braces `{}` to scope each of the action's declaration and store
-  // so that the programmer is not tempted to use the action instance past where it should be used.
-  // You have to create your own Actions class if there isn't something specific for your filter's needs
-  // These are some proposed Actions based on the FilterParameters used. Please check them for correctness.
-  {
-    auto createDataGroupAction = std::make_unique<CreateDataGroupAction>(pDataContainerPathValue);
-    resultOutputActions.value().appendAction(std::move(createDataGroupAction));
-  }
-
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
   // These values should have been updated during the preflightImpl(...) method
-  preflightUpdatedValues.push_back({"MontageInformation", montageInformation});
+  preflightUpdatedValues.push_back({"MontageInformation", s_HeaderCache[m_InstanceId].montageInformation});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

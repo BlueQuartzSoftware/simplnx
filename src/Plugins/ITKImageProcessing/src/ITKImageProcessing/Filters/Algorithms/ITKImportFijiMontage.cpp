@@ -252,7 +252,7 @@ private:
        << "1.0"
        << ", "
        << "1.0";
-    ss <<  "\n"
+    ss << "\n"
        << "Imported Columns: " << m_Cache.maxCol + 1 << "  Imported Rows: " << m_Cache.maxRow + 1 << "  Imported Image Count: " << (m_Cache.maxCol * m_Cache.maxRow);
     m_Cache.montageInformation = ss.str();
   }

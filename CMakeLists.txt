@@ -428,6 +428,7 @@ set(COMPLEX_HDRS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.hpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.hpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.hpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.hpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.hpp
@@ -626,6 +627,7 @@ set(COMPLEX_SRCS
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/RenameDataAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/UpdateImageGeomAction.cpp
   ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateAttributeMatrixAction.cpp
+  ${COMPLEX_SOURCE_DIR}/Filter/Actions/CreateGridMontageAction.cpp
 
   ${COMPLEX_SOURCE_DIR}/Parameters/util/CSVWizardData.cpp
   ${COMPLEX_SOURCE_DIR}/Parameters/util/DynamicTableInfo.cpp
