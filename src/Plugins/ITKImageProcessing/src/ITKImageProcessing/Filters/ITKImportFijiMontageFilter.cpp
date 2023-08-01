@@ -6,15 +6,10 @@
 
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataPath.hpp"
-#include "complex/DataStructure/Montage/GridTileIndex.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Filter/Actions/CreateGridMontageAction.hpp"
-#include "complex/Filter/Actions/DeleteDataAction.hpp"
-#include "complex/Filter/Actions/RenameDataAction.hpp"
-#include "complex/Parameters/ArrayCreationParameter.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
-#include "complex/Parameters/DataGroupCreationParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/StringParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -91,10 +86,10 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "", std::vector<float32>(3), std::vector<std::string>(3)));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<StringParameter>(k_MontageName_Key, "Name of Created Montage", "", "SomeString"));
-  params.insert(std::make_unique<DataGroupCreationParameter>(k_DataContainerPath_Key, "DataContainer Prefix", "", DataPath{}));
-  params.insert(std::make_unique<ArrayCreationParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "", DataPath{}));
-  params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Image DataArray Name", "", "SomeString"));
+  params.insert(std::make_unique<StringParameter>(k_MontageName_Key, "Name of Created Montage", "", "Montage"));
+  params.insert(std::make_unique<StringParameter>(k_DataContainerPath_Key, "ImageGeom Prefix", "", "Image"));
+  params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "", "Cell AM"));
+  params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Image DataArray Name", "", "Data Array"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, true);
@@ -164,35 +159,18 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
 
   // create montage
   {
- #error the create action needs to be reviewed;
-    auto createAction = std::make_unique<CreateGridMontageAction>(DataPath({pMontageNameValue}), CreateGridMontageAction::DimensionType {}, CreateGridMontageAction::OriginType {}, CreateGridMontageAction::SpacingType {});
+    auto createAction = std::make_unique<CreateGridMontageAction>(DataPath({pMontageNameValue}), CreateGridMontageAction::DimensionType{}, CreateGridMontageAction::OriginType{},
+                                                                  CreateGridMontageAction::SpacingType{});
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
-  int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(s_HeaderCache[m_InstanceId].maxRow);
-  int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(s_HeaderCache[m_InstanceId].maxCol);
-  int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
-
+  auto* filterListPtr = Application::Instance()->getFilterList();
   for(const auto& bound : s_HeaderCache[m_InstanceId].bounds)
   {
     if(bound.Row < pRowMontageLimitsValue[0] || bound.Row > pRowMontageLimitsValue[1] || bound.Col < pColumnMontageLimitsValue[0] || bound.Col > pColumnMontageLimitsValue[1])
     {
       continue;
     }
-
-    auto* filterListPtr = Application::Instance()->getFilterList();
-
-    // Create our DataContainer Name using a Prefix and a rXXcYY format.
-    std::stringstream dcNameStream;
-    dcNameStream << pDataContainerPathValue << bound.Filepath.filename().string();
-    dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
-    dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
-
-    GridTileIndex gridIndex = gridMontage.getTileIndex(bound.Row, bound.Col);
-    // Set the montage's DataContainer for the current index
-    gridMontage.setGeometry(gridIndex, dc);
-
-    // Create the Cell Attribute Matrix into which the image data would be read
 
     auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
     if(nullptr == imageImportFilter.get())
@@ -203,7 +181,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     Arguments imageImportArgs;
     imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
     imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent().getParent()));
-    imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent()));
+    imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(bound.ImageDataProxy.getParent().getTargetName()));
     imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
 
     auto result = imageImportFilter->preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
@@ -212,46 +190,21 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     {
       continue;
     }
+  }
 
-    if(pConvertToGrayScaleValue)
+  if(pConvertToGrayScaleValue)
+  {
+    if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
     {
-      if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
-      {
-        return MakePreflightErrorResult(-18540, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
-      }
-      auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
-      if(nullptr == grayScaleFilter.get())
-      {
-        continue;
-      }
-
-      // This same filter was used to preflight so as long as nothing changes on disk this really should work....
-      Arguments colorToGrayscaleArgs;
-      colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
-      colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(pColorWeightsValue));
-      colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<DataPath>(bound.ImageDataProxy));
-      colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
-
-      // Run grayscale filter and process results and messages
-      auto resultGray = grayScaleFilter->preflight(dataStructure, colorToGrayscaleArgs, messageHandler, shouldCancel);
-      resultOutputActions = MergeResults<OutputActions>(resultOutputActions, resultGray.outputActions);
-      if(resultGray.outputActions.invalid())
-      {
-        continue;
-      }
-
-      // push back delayed deletion of non-grayscale array
-      {
-        auto deleteAction = std::make_unique<DeleteDataAction>(bound.ImageDataProxy);
-        resultOutputActions.value().appendDeferredAction(std::move(deleteAction));
-      }
-
-      // deferred array rename action
-      {
-        auto renameAction = std::make_unique<RenameDataAction>(bound.ImageDataProxy.getParent().createChildPath("gray" + bound.ImageDataProxy.getTargetName()), bound.ImageDataProxy.getTargetName());
-        resultOutputActions.value().appendDeferredAction(std::move(renameAction));
-      }
+      return MakePreflightErrorResult(-18540, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
     }
+    auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
+    if(nullptr == grayScaleFilter.get())
+    {
+      return MakePreflightErrorResult(-18541, "Unable to create grayscale filter");
+    }
+    preflightUpdatedValues.push_back(
+        {"GrayScale", fmt::format("Due to execution order grayscale conversion will occur during execution and all the ({}) arrays will be converted to grayscale", pImageDataArrayNameValue)});
   }
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
@@ -267,18 +220,23 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
 Result<> ITKImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel) const
 {
-  auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  auto pMontageNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageName_Key);
-  auto pColumnMontageLimitsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_ColumnMontageLimits_Key);
-  auto pRowMontageLimitsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_RowMontageLimits_Key);
-  auto pLengthUnitValue = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
-  auto pChangeOriginValue = filterArgs.value<bool>(k_ChangeOrigin_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  auto pConvertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
-  auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
-  auto pDataContainerPathValue = filterArgs.value<DataPath>(k_DataContainerPath_Key);
-  auto pCellAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellAttributeMatrixName_Key);
-  auto pImageDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
+  ITKImportFijiMontageInputValues inputValues;
+
+  inputValues.allocate = true;
+  inputValues.changeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
+  inputValues.convertToGrayScale = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
+  inputValues.inputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key));
+  inputValues.columnMontageLimits = filterArgs.value<VectorInt32Parameter::ValueType>(k_ColumnMontageLimits_Key);
+  inputValues.rowMontageLimits = filterArgs.value<VectorInt32Parameter::ValueType>(k_RowMontageLimits_Key);
+  inputValues.origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  inputValues.colorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
+  inputValues.montageName = filterArgs.value<StringParameter::ValueType>(k_MontageName_Key);
+  inputValues.imagePrefix = filterArgs.value<StringParameter::ValueType>(k_DataContainerPath_Key);
+  inputValues.cellAMName = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
+  inputValues.imageDataArrayName = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
+
+  ITKImportFijiMontage(dataStructure, messageHandler, shouldCancel, &inputValues, s_HeaderCache[m_InstanceId])();
 
   return {};
 }

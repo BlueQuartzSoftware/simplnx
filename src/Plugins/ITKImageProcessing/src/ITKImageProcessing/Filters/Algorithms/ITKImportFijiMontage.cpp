@@ -7,6 +7,8 @@
 #include "complex/DataStructure/DataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/Montage/GridTileIndex.hpp"
+#include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
@@ -216,11 +218,11 @@ private:
       }
 
       std::stringstream dcNameStream;
-      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string();
+      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string().substr(0, bound.Filepath.filename().string().find(bound.Filepath.extension().string()));;
       dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
       dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
 
-      bound.ImageDataProxy = DataPath({dcNameStream.str(), m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
+      bound.ImageDataProxy = DataPath({m_InputValues->montageName, dcNameStream.str(), m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
 
       {
         minCoord[0] = std::min(bound.Origin[0], minCoord[0]);
@@ -253,7 +255,7 @@ private:
        << ", "
        << "1.0";
     ss << "\n"
-       << "Imported Columns: " << m_Cache.maxCol + 1 << "  Imported Rows: " << m_Cache.maxRow + 1 << "  Imported Image Count: " << (m_Cache.maxCol * m_Cache.maxRow);
+       << "Imported Columns: " << m_Cache.maxCol + 1 << "  Imported Rows: " << m_Cache.maxRow + 1 << "  Imported Image Count: " << ((m_Cache.maxCol + 1) * (m_Cache.maxRow + 1));
     m_Cache.montageInformation = ss.str();
   }
 
@@ -286,7 +288,7 @@ private:
         Arguments imageImportArgs;
         imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
         imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent().getParent()));
-        imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent()));
+        imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(bound.ImageDataProxy.getParent().getTargetName()));
         imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
 
         auto result = imageImportFilter->execute(m_DataStructure, imageImportArgs).result;
@@ -297,10 +299,10 @@ private:
         }
       }
 
-      auto& image = m_DataStructure.getDataRefAs<ImageGeom>(bound.ImageDataProxy.getParent().getParent());
-      image.setUnits(m_InputValues->lengthUnit);
-      image.setOrigin(bound.Origin);
-      image.setSpacing(bound.Spacing);
+      auto* image = m_DataStructure.getDataAs<ImageGeom>(bound.ImageDataProxy.getParent().getParent());
+      image->setUnits(m_InputValues->lengthUnit);
+      image->setOrigin(bound.Origin);
+      image->setSpacing(bound.Spacing);
 
       // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
       if(m_InputValues->convertToGrayScale)
@@ -308,7 +310,7 @@ private:
         auto* filterListPtr = Application::Instance()->getFilterList();
         if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
         {
-          return MakeErrorResult(-18540, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
+          return MakeErrorResult(-18542, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
         }
         auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
         if(nullptr == grayScaleFilter.get())
@@ -320,7 +322,7 @@ private:
         Arguments colorToGrayscaleArgs;
         colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
         colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(m_InputValues->colorWeights));
-        colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<DataPath>(bound.ImageDataProxy));
+        colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{bound.ImageDataProxy}));
         colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
 
         // Run grayscale filter and process results and messages
@@ -330,7 +332,31 @@ private:
           outputResult = MergeResults(outputResult, result);
           continue;
         }
+
+        // deletion of non-grayscale array
+        DataObject::IdType id;
+        { // scoped for safety since this reference will be nonexistent in a moment
+          auto& oldArray = m_DataStructure.getDataRefAs<IDataArray>(bound.ImageDataProxy);
+          id = oldArray.getId();
+        }
+        m_DataStructure.removeData(id);
+
+        // rename grayscale array to reflect original
+        {
+          auto& gray = m_DataStructure.getDataRefAs<IDataArray>(bound.ImageDataProxy.getParent().createChildPath("gray" + bound.ImageDataProxy.getTargetName()));
+          if(!gray.canRename(bound.ImageDataProxy.getTargetName()))
+          {
+            return MakeErrorResult(-18543, fmt::format("Unable to rename the grayscale array to {}", bound.ImageDataProxy.getTargetName()));
+          }
+          gray.rename(bound.ImageDataProxy.getTargetName());
+        }
       }
+
+      auto& gridMontage = m_DataStructure.getDataRefAs<GridMontage>(DataPath({m_InputValues->montageName}));
+
+      GridTileIndex gridIndex = gridMontage.getTileIndex(bound.Row, bound.Col);
+      // Set the montage's DataContainer for the current index
+      gridMontage.setGeometry(&gridIndex, image);
     }
 
     return outputResult;
