@@ -1,5 +1,5 @@
-{% set name = "complex-conda" %}
-{% set version = "1.0.0" %}
+{% set name = "complex" %}
+{% set version = "0.1.0" %}
 
 package:
   name: {{ name|lower }}
@@ -32,6 +32,9 @@ source:
 
 build:
   number: 0
+  script_env:
+    - COMPLEX_CMAKE_PRESET=conda-linux # [linux]
+    - COMPLEX_CMAKE_PRESET=conda-osx # [osx]
 
 requirements:
   build:
@@ -63,6 +66,10 @@ requirements:
     - reproc-cpp
     - tbb
     - zlib
+
+test:
+  imports:
+    - complex
 
 about:
   home: http://dream3d.bluequartz.net/

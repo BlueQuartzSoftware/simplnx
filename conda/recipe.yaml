@@ -1,6 +1,6 @@
 context:
   version: "0.1.0"
-  name: complex-conda
+  name: complex
 
 package:
   name: "{{ name }}"
