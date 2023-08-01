@@ -131,7 +131,7 @@ Result<ParsersVector> createParsers(const DataTypeVector& dataTypes, const DataP
 {
   ParsersVector dataParsers(dataTypes.size());
 
-  for(usize i = 0; i < dataTypes.size(); i++)
+  for(usize i = 0; i < dataTypes.size() && i < headers.size(); i++)
   {
     std::optional<DataType> dataTypeOpt = dataTypes[i];
     if(!dataTypeOpt.has_value())
@@ -220,7 +220,7 @@ Result<> parseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
 
   StringVector tokens = StringUtilities::split(line, delimiters, consecutiveDelimiters);
 
-  if(dataParsers.size() != tokens.size())
+  if(dataParsers.size() > tokens.size())
   {
     return MakeErrorResult(to_underlying(IssueCodes::INCONSISTENT_COLS), fmt::format("Line {} has an inconsistent number of columns.\nExpecting {} but found {}\nInput line was:\n{}",
                                                                                      std::to_string(lineNumber), std::to_string(dataParsers.size()), std::to_string(tokens.size()), line));
@@ -404,7 +404,7 @@ IFilter::PreflightResult ImportCSVDataFilter::preflightImpl(const DataStructure&
   }
 
   // Create the arrays
-  for(usize i = 0; i < dataTypes.size(); i++)
+  for(usize i = 0; i < dataTypes.size() && i < headers.size(); i++)
   {
     std::optional<DataType> dataTypeOpt = dataTypes[i];
     if(!dataTypeOpt.has_value())
