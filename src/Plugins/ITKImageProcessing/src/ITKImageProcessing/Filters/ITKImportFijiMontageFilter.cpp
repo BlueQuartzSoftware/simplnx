@@ -87,7 +87,7 @@ Parameters ITKImportFijiMontageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
   params.insert(std::make_unique<StringParameter>(k_MontageName_Key, "Name of Created Montage", "", "Montage"));
-  params.insert(std::make_unique<StringParameter>(k_DataContainerPath_Key, "ImageGeom Prefix", "", "Image"));
+  params.insert(std::make_unique<StringParameter>(k_DataContainerPath_Key, "Image Geometry Prefix", "", "Image-"));
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "", "Cell AM"));
   params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Image DataArray Name", "", "Data Array"));
 
@@ -125,25 +125,25 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   complex::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
+  ITKImportFijiMontageInputValues inputValues;
+
+  inputValues.allocate = false;
+  inputValues.changeOrigin = pChangeOriginValue;
+  inputValues.convertToGrayScale = pConvertToGrayScaleValue;
+  inputValues.inputFilePath = pInputFileValue;
+  inputValues.lengthUnit = static_cast<IGeometry::LengthUnit>(pLengthUnitValue);
+  inputValues.columnMontageLimits = pColumnMontageLimitsValue;
+  inputValues.rowMontageLimits = pRowMontageLimitsValue;
+  inputValues.origin = pOriginValue;
+  inputValues.colorWeights = pColorWeightsValue;
+  inputValues.montageName = pMontageNameValue;
+  inputValues.imagePrefix = pDataContainerPathValue;
+  inputValues.cellAMName = pCellAttributeMatrixNameValue;
+  inputValues.imageDataArrayName = pImageDataArrayNameValue;
+
   // Read from the file if the input file has changed or the input file's time stamp is out of date.
-  if(pInputFileValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFileValue))
+  if(pInputFileValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFileValue) || s_HeaderCache[m_InstanceId].valuesChanged(inputValues))
   {
-    ITKImportFijiMontageInputValues inputValues;
-
-    inputValues.allocate = false;
-    inputValues.changeOrigin = pChangeOriginValue;
-    inputValues.convertToGrayScale = pConvertToGrayScaleValue;
-    inputValues.inputFilePath = pInputFileValue;
-    inputValues.lengthUnit = static_cast<IGeometry::LengthUnit>(pLengthUnitValue);
-    inputValues.columnMontageLimits = pColumnMontageLimitsValue;
-    inputValues.rowMontageLimits = pRowMontageLimitsValue;
-    inputValues.origin = pOriginValue;
-    inputValues.colorWeights = pColorWeightsValue;
-    inputValues.montageName = pMontageNameValue;
-    inputValues.imagePrefix = pDataContainerPathValue;
-    inputValues.cellAMName = pCellAttributeMatrixNameValue;
-    inputValues.imageDataArrayName = pDataContainerPathValue;
-
     // Read from the file
     DataStructure throwaway = DataStructure();
     ITKImportFijiMontage algorithm(throwaway, messageHandler, shouldCancel, &inputValues, s_HeaderCache[m_InstanceId]);
@@ -155,6 +155,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     // Update the cached variables
     s_HeaderCache[m_InstanceId].inputFile = pInputFileValue;
     s_HeaderCache[m_InstanceId].timeStamp = fs::last_write_time(pInputFileValue);
+    s_HeaderCache[m_InstanceId].inputValues = inputValues;
   }
 
   // create montage

@@ -229,7 +229,7 @@ private:
     }
 
     std::stringstream ss;
-    ss << "Tile Column(s): " << m_Cache.maxCol + 1 << "  Tile Row(s): " << m_Cache.maxRow + 1 << "  Image Count: " << m_Cache.maxCol * m_Cache.maxRow;
+    ss << "Tile Column(s): " << m_Cache.maxCol + 1 << "  Tile Row(s): " << m_Cache.maxRow + 1 << "  Image Count: " << ((m_Cache.maxCol + 1) * (m_Cache.maxRow + 1));
 
     Point3Df overrideOrigin = minCoord;
 
@@ -261,6 +261,13 @@ private:
   {
     Result<> outputResult = {};
 
+    auto* filterListPtr = Application::Instance()->getFilterList();
+    auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
+    if(nullptr == imageImportFilter.get())
+    {
+      return MakeErrorResult(-18544, "Unable to create ITKImageReader filter");
+    }
+
     for(const auto& bound : m_Cache.bounds)
     {
       if(bound.Row < m_InputValues->rowMontageLimits[0] || bound.Row > m_InputValues->rowMontageLimits[1] || bound.Col < m_InputValues->columnMontageLimits[0] ||
@@ -269,18 +276,11 @@ private:
         continue;
       }
 
-      m_Filter->sendUpdate(("Importing" + bound.Filepath.filename().string()));
+      m_Filter->sendUpdate(("Importing " + bound.Filepath.filename().string()));
 
       // Instantiate the Image Import Filter to actually read the image into a data array
       {
         // execute image import filter
-        auto* filterListPtr = Application::Instance()->getFilterList();
-        auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
-        if(nullptr == imageImportFilter.get())
-        {
-          continue;
-        }
-
         // This same filter was used to preflight so as long as nothing changes on disk this really should work....
         Arguments imageImportArgs;
         imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
@@ -304,7 +304,6 @@ private:
       // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
       if(m_InputValues->convertToGrayScale)
       {
-        auto* filterListPtr = Application::Instance()->getFilterList();
         if(!filterListPtr->containsPlugin(k_ComplexCorePluginId))
         {
           return MakeErrorResult(-18542, "ComplexCore was not instantiated in this instance, so color to grayscale is not a valid option.");
