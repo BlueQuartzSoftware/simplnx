@@ -75,9 +75,6 @@ private:
   FijiCache& m_Cache;
   const ITKImportFijiMontageInputValues* m_InputValues;
 
-  //  bool changeSpacing;
-  //  FloatVec3 m_Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
-
   // -----------------------------------------------------------------------------
   void ParseConfigFile()
   {
@@ -111,7 +108,7 @@ private:
       return;
     }
 
-    // slice_12.tif; ; (471.2965233276666, -0.522608066434236)
+    // Example line to be parsed: slice_12.tif; ; (471.2965233276666, -0.522608066434236)
     while(std::getline(m_InStream, line))
     {
       line = StringUtilities::trimmed(line);

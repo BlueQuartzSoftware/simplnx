@@ -11,6 +11,7 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IDataStore.hpp"
 #include "complex/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "complex/DataStructure/Montage/AbstractMontage.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
@@ -345,6 +346,51 @@ inline void CompareImageGeometry(const DataStructure& dataStructure, const DataP
   const auto exemplarOrigin = exemplarGeom->getOrigin();
   const auto computedOrigin = computedGeom->getOrigin();
   REQUIRE(exemplarOrigin == computedOrigin);
+}
+
+/**
+ * @brief Compares two Montages
+ * @param exemplar
+ * @param generated
+ */
+inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontage& generated)
+{
+  REQUIRE(exemplar.getTileCount() == generated.getTileCount());
+  const AbstractMontage::CollectionType exemplarGeometries = exemplar.getGeometries();
+  const AbstractMontage::CollectionType generatedGeometries = generated.getGeometries();
+  for(const auto* exGeom : exemplarGeometries)
+  {
+    std::vector<usize> usedIndicies(exemplarGeometries.size());
+    bool exists = false;
+    for(usize i = 0; i < generatedGeometries.size(); i++)
+    {
+      if(exGeom->getGeomType() == generatedGeometries[i]->getGeomType())
+      {
+        if(exGeom->getSpatialDimensionality() == generatedGeometries[i]->getSpatialDimensionality())
+        {
+          if(exGeom->getUnitDimensionality() == generatedGeometries[i]->getUnitDimensionality())
+          {
+            if(exGeom->getNumberOfCells() == generatedGeometries[i]->getNumberOfCells())
+            {
+              if(exGeom->findAllChildrenOfType<IArray>().size() == generatedGeometries[i]->findAllChildrenOfType<IArray>().size())
+              {
+                if(exGeom->getParametricCenter() == generatedGeometries[i]->getParametricCenter())
+                {
+                  if(std::find(usedIndicies.begin(), usedIndicies.end(), i) == usedIndicies.end())
+                  {
+                    usedIndicies.push_back(i);
+                    exists = true;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    REQUIRE(exists);
+  }
 }
 
 /**
