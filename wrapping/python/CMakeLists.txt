@@ -33,6 +33,20 @@ target_compile_options(complexpy
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
+option(COMPLEX_PY_GENERATE_PYI "Generate .pyi files for python bindings" OFF)
+if(COMPLEX_PY_GENERATE_PYI)
+  find_program(MYPY_STUBGEN_EXE stubgen REQUIRED)
+
+  add_custom_target(complexCreateStubFile ALL
+    COMMAND ${MYPY_STUBGEN_EXE} -m complex -o $<TARGET_FILE_DIR:complex>
+    COMMENT "complex: Generating .pyi files"
+    # BYPRODUCTS $<TARGET_FILE_DIR:complex>/complex.pyi
+    WORKING_DIRECTORY $<TARGET_FILE_DIR:complex>
+  )
+  set_property(TARGET complexCreateStubFile PROPERTY FOLDER "Python/Stub")
+  add_dependencies(complexCreateStubFile complexpy)
+endif()
+
 option(COMPLEX_PY_ENABLE_INSTALL "Enables install complexpy" OFF)
 if(COMPLEX_PY_ENABLE_INSTALL)
   include(GNUInstallDirs)

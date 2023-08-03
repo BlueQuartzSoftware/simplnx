@@ -538,7 +538,7 @@ std::vector<std::string> MakePythonParamListString(const Parameters& params, con
   paramList.reserve(params.size() + 2);
   paramList.push_back(MakePythonParamString("data_structure", GetFullPythonName<DataStructure>()));
   // Indicates that the following parameters are keyword only
-  paramList.push_back("*");
+  //paramList.push_back("*");
   for(const auto& [name, p] : params)
   {
     const auto& info = internals.at(p->uuid());
