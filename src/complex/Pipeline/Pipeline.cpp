@@ -21,6 +21,8 @@ namespace
 {
 constexpr StringLiteral k_PipelineNameKey = "name";
 constexpr StringLiteral k_PipelineItemsKey = "pipeline";
+constexpr StringLiteral k_PipelineVersionKey = "version";
+constexpr uint64 k_PipelineVersion = 1;
 } // namespace
 
 Pipeline::Pipeline(const std::string& name, FilterList* filterList)
@@ -695,6 +697,7 @@ nlohmann::json Pipeline::toJsonImpl() const
 {
   nlohmann::json jsonObject;
   jsonObject[k_PipelineNameKey] = m_Name;
+  jsonObject[k_PipelineVersionKey] = k_PipelineVersion;
 
   auto jsonArray = nlohmann::json::array();
   for(const auto& item : m_Collection)
