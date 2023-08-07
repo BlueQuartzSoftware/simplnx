@@ -74,22 +74,26 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Fiji Configuration File", "", fs::path("<default file to read goes here>"), FileSystemPathParameter::ExtensionsType{},
-                                                          FileSystemPathParameter::PathType::InputFile));
-  params.insert(
-      std::make_unique<VectorInt32Parameter>(k_ColumnMontageLimits_Key, "Montage Column Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>{"start", "end"}));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_RowMontageLimits_Key, "Montage Row Start/End [Inclusive, Zero Based]", "", std::vector<int32>(2), std::vector<std::string>{"start", "end"}));
-  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "", std::vector<float32>(3), std::vector<std::string>(3)));
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "", std::vector<float32>(3), std::vector<std::string>(3)));
+  params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Fiji Configuration File", "This is the configuration file in the same directory as all of the identified geometries",
+                                                          fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
+  params.insert(std::make_unique<VectorInt32Parameter>(k_ColumnMontageLimits_Key, "Montage Column Start/End [Inclusive, Zero Based]",
+                                                       "The starting and ending column (inclusive) that will be imported", std::vector<int32>{0, 0}, std::vector<std::string>{"start", "end"}));
+  params.insert(std::make_unique<VectorInt32Parameter>(k_RowMontageLimits_Key, "Montage Row Start/End [Inclusive, Zero Based]", "The starting and ending column (inclusive) that will be imported",
+                                                       std::vector<int32>{0, 0}, std::vector<std::string>{"start", "end"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry",
+                                                   to_underlying(IGeometry::LengthUnit::Micrometer), IGeometry::GetAllLengthUnitStrings()));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "Set the origin of the mosaic to a user defined value", false));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The new origin of the mosaic", std::vector<float32>(3), std::vector<std::string>(3)));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "The filter will show an error if the images are already in grayscale format", false));
+  params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "The luminosity values for the conversion", std::vector<float32>{0.2125f, 0.7154f, 0.0721f},
+                                                         std::vector<std::string>(3)));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<StringParameter>(k_MontageName_Key, "Name of Created Montage", "", "Montage"));
-  params.insert(std::make_unique<StringParameter>(k_DataContainerPath_Key, "Image Geometry Prefix", "", "Image-"));
-  params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "", "Cell AM"));
-  params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Image DataArray Name", "", "Data Array"));
+  params.insert(std::make_unique<StringParameter>(k_MontageName_Key, "Name of Created Montage", "Name of the overarching parent Montage", "Zen Montage"));
+  params.insert(std::make_unique<StringParameter>(k_DataContainerPath_Key, "Image Geometry Prefix", "A prefix that can be used for each Image Geometry", "Mosaic-"));
+  params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "The name of the Cell Attribute Matrix", "Tile Data"));
+  params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Image DataArray Name", "The name of the import image data", "Image"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, true);

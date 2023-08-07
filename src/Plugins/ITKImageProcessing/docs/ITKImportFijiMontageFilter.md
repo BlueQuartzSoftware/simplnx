@@ -31,15 +31,16 @@ The configuration above would result in a data structure as shown in the followi
 
 | Name             | Type | Comment |
 |------------------|------|---------|
-| Input Fiji Tile Configuration File | String | |
-| Name of Created Montage | String | Used for the montage infrastructure |
+| Input Fiji Tile Configuration File | String | The configuration file in the same directory as all of the identified geometries |
+| Name of Created Montage | String | Name of the overarching parent Montage |
 | Montage Column Start/End | Int x 2 | The starting and ending column (inclusive) that will be imported |
 | Montage Row Start/End | Int x 2 | The starting and ending column (inclusive) that will be imported |
 | Length Unit | Int | Selected from predefined list. See table below |
 | Change Origin | Bool = OFF | Set the origin of the mosaic to a user defined value |
 | Origin | Float 3 Vect | The new origin of the mosaic |
 | Convert to GrayScale | Bool | The filter will show an error if the images are already in grayscale format |
-| Color Weighting | Float 3 Vect | The luminosity values for the conversion || Data Container Prefix | String  | A prefix that can be used for each data container.  |
+| Color Weighting | Float 3 Vect | The luminosity values for the conversion |
+| Data Container Prefix | String  | A prefix that can be used for each data container.  |
 | Cell Attribute Matrix Name | String  | The name of the Cell Attribute Matrix. |
 | Image Data Array Name | String  | The name of the import image data |
 
@@ -97,18 +98,10 @@ This filter will create one data container for each image tile that is in the xm
 
 | Kind | Default Name | Type | Component Dimensions | Description |
 |------|--------------|------|----------------------|-------------|
-| **Data Container** | Data Container Name | N/A | N/A |  |
-| ImageGeometry |  | N/A | N/A |  |
-| Cell AttributeMatrix |  | N/A | N/A |  |
-| Image Data |  | N/A | N/A |  |
-
-## Authors ##
-
-**Contact Info** <dream3d@bluequartz.net>
-
-**Version** 1.0.0
-
-**License**  See the License.txt file that came with DREAM3D.
+| GridMontage | Zen Montage | N/A | N/A | Parent montage created in the datastructure |
+| Image Geometry | Mosaic- | N/A | N/A | The prefix for all created Image Geometries |
+| AttributeMatrix | Tile Data | N/A | N/A | The name of every created Attribute Matrix |
+| DataArray | Image | N/A | N/A | The name of the created DataArray in each Image Geometry |
 
 ## Example Pipelines ##
 
