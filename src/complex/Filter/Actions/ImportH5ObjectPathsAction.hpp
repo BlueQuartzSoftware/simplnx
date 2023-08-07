@@ -18,6 +18,15 @@ public:
 
   ImportH5ObjectPathsAction() = delete;
 
+  /**
+   * @brief Constructs the action
+   * @param importFile The file to import data from
+   * @param paths The vector of paths to import.
+   *
+   * <b>IMPORTANT NOTE</b>. If the std::optional<> paths argument does NOT have a value then
+   * then entire file will be imported. If it has a value, but the std::vector<> has a size of
+   * zero (0), then NOTHING will be imported.
+   */
   ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths);
 
   ~ImportH5ObjectPathsAction() noexcept override;
