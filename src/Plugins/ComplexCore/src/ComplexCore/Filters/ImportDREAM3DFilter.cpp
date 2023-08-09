@@ -78,13 +78,6 @@ IFilter::PreflightResult ImportDREAM3DFilter::preflightImpl(const DataStructure&
     return {nonstd::make_unexpected(std::vector<Error>{Error{k_FailedOpenFileReaderError, "Failed to open the HDF5 file at the specified path."}})};
   }
 
-  // Require at least one DataPath to import
-  // NX does not allow the use of this value as intended.
-  if(importData.DataPaths.has_value() && importData.DataPaths->empty())
-  {
-    importData.DataPaths = std::nullopt;
-  }
-
   OutputActions actions;
   auto action = std::make_unique<ImportH5ObjectPathsAction>(importData.FilePath, importData.DataPaths);
   actions.appendAction(std::move(action));
