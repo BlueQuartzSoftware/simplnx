@@ -113,7 +113,294 @@ Arguments createExistingPartitioningSchemeGeometryArguments(const DataPath& inpu
   args.insert(PartitionGeometryFilter::k_InputGeometryToPartition_Key, inputGeometryPath);
   return args;
 }
+
+using FileSentinelType = complex::UnitTest::TestFileSentinel;
+using SharedFileSentinelType = std::shared_ptr<FileSentinelType>;
+// This is here so that we don't have to decompress and then delete multiple times
+SharedFileSentinelType s_FileSentinel;
 } // namespace
+
+TEST_CASE("ComplexCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeometryFilter]")
+{
+  const std::string partitionIdsArrayName = "PartitioningSchemeIds";
+  const DataPath existingPSGeometryPath = {{"ExemplaryPSDataContainer"}};
+
+  std::vector<std::filesystem::path> filePaths = {k_ImageGeomTestFilePath,       k_RectGridGeomTestFilePath,    k_TriangleGeomTestFilePath,   k_TriangleGeomTestFilePath,  k_EdgeGeomTestFilePath,
+                                                  k_EdgeGeomTestFilePath,        k_VertexGeomTestFilePath,      k_VertexGeomTestFilePath,     k_QuadGeomTestFilePath,      k_QuadGeomTestFilePath,
+                                                  k_TetrahedralGeomTestFilePath, k_TetrahedralGeomTestFilePath, k_HexahedralGeomTestFilePath, k_HexahedralGeomTestFilePath};
+  std::vector<IntVec3> partitionDimensions = {{5, 5, 5},   {5, 5, 5},  {5, 4, 4},  {5, 4, 4},    {4, 4, 4},    {4, 4, 4}, {20, 10, 5},
+                                              {20, 10, 5}, {10, 5, 3}, {10, 5, 3}, {100, 45, 8}, {100, 45, 8}, {6, 7, 8}, {6, 7, 8}};
+  std::vector<std::string> amNames = {"CellData",   "CellData",   "VertexData", "VertexData", "VertexData", "VertexData", "VertexData",
+                                      "VertexData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData"};
+  std::vector<std::string> maskArrayNames = {"", "", "", "Mask", "", "Mask", "", "Mask", "", "Mask", "", "Mask", "", "Mask"};
+  std::vector<std::string> exemplaryArrayNames = {"ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds",       "ExemplaryPartitioningSchemeIds", "MaskedExemplaryPartitioningSchemeIds",
+                                                  "ExemplaryPartitioningSchemeIds", "MaskedExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "MaskedExemplaryPartitioningSchemeIds",
+                                                  "ExemplaryPartitioningSchemeIds", "MaskedExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "MaskedExemplaryPartitioningSchemeIds",
+                                                  "ExemplaryPartitioningSchemeIds", "MaskedExemplaryPartitioningSchemeIds"};
+  size_t lastIndex = 13;
+  size_t index = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+
+  SECTION("BasicPartitionArguments")
+  {
+    // Validate that we have all the arguments properly sized
+    REQUIRE(filePaths.size() > index);
+    REQUIRE(partitionDimensions.size() > index);
+    REQUIRE(amNames.size() > index);
+    REQUIRE(maskArrayNames.size() > index);
+    REQUIRE(exemplaryArrayNames.size() > index);
+
+    // First time through, decompress the test data
+    if(index == 0)
+    {
+      s_FileSentinel = std::make_shared<FileSentinelType>(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
+    }
+
+    std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
+    const IntVec3 numOfPartitionsPerAxis = partitionDimensions[index];
+    const DataPath inputGeometryPath = {{"DataContainer"}};
+    DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};
+
+    DataStructure dataStructure;
+    {
+      const ImportDREAM3DFilter importD3DFilter;
+      Arguments importD3DArgs;
+      importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{filePaths[index]});
+      // Preflight the filter and check result
+      auto executeResult = importD3DFilter.execute(dataStructure, importD3DArgs);
+      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    }
+
+    {
+      DataPath maskPath;
+      std::optional<DataPath> optMaskPath = std::nullopt;
+      if(!maskArrayNames[index].empty())
+      {
+        maskPath = DataPath({"DataContainer", amNames[index], "Mask"});
+        optMaskPath = {maskPath};
+      }
+      Arguments partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, optMaskPath);
+
+      const PartitionGeometryFilter filter;
+      // Execute the filter and check the result
+      auto executeResult = filter.execute(dataStructure, partitionGeometryArgs);
+      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+      attrMatrixPath = partitionGeometryArgs.value<DataPath>(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key);
+    }
+
+    const Int32Array& partitionIds = dataStructure.getDataRefAs<Int32Array>(attrMatrixPath.createChildPath(partitionIdsArrayName));
+    const Int32Array& exemplaryPartitionIds = dataStructure.getDataRefAs<Int32Array>(attrMatrixPath.createChildPath(exemplaryArrayNames[index]));
+
+    REQUIRE(partitionIds.getSize() == exemplaryPartitionIds.getSize());
+
+    const AbstractDataStore<int32>& partitionIdsStore = partitionIds.getDataStoreRef();
+    const AbstractDataStore<int32>& exemplaryPartitionIdsStore = exemplaryPartitionIds.getDataStoreRef();
+    for(size_t i = 0; i < partitionIds.getSize(); i++)
+    {
+      const int32_t partitionId = partitionIdsStore[i];
+      const int32_t exemplaryId = exemplaryPartitionIdsStore[i];
+      REQUIRE(partitionId == exemplaryId);
+    }
+
+    // Last time through clean up the test files
+    if(index == lastIndex)
+    {
+      s_FileSentinel = nullptr;
+    }
+  }
+}
+
+TEST_CASE("ComplexCore::PartitionGeometryFilter: Advanced", "[Plugins][PartitionGeometryFilter]")
+{
+  const std::string partitionIdsArrayName = "PartitioningSchemeIds";
+  const DataPath existingPSGeometryPath = {{"ExemplaryPSDataContainer"}};
+
+  std::vector<std::filesystem::path> filePaths = {k_ImageGeomTestFilePath,  k_RectGridGeomTestFilePath, k_TriangleGeomTestFilePath,    k_EdgeGeomTestFilePath,
+                                                  k_VertexGeomTestFilePath, k_QuadGeomTestFilePath,     k_TetrahedralGeomTestFilePath, k_HexahedralGeomTestFilePath};
+  std::vector<IntVec3> partitionDimensions = {{5, 5, 5}, {5, 5, 5}, {5, 4, 4}, {4, 4, 4}, {20, 10, 5}, {10, 5, 3}, {100, 45, 8}, {6, 7, 8}};
+  std::vector<FloatVec3> partitionOrigins = {{-10, 5, 2},
+                                             {0, 0, 0},
+                                             {-0.997462, -0.997462, -0.00001},
+                                             {-0.997462, -0.997462, -0.00001},
+                                             {-0.997462, -0.997462, -0.00001},
+                                             {-0.997462, -0.997462, -0.00001},
+                                             {-0.997462, -0.997462, -0.00001},
+                                             {0.9999989867210388, 0.9999989867210388, 1.5499989986419678}};
+  std::vector<FloatVec3> partitionSpacing = {{5, 5, 5},
+                                             {6, 6, 6},
+                                             {0.398984, 0.49873, 0.247939},
+                                             {0.49873, 0.49873, 0.247939},
+                                             {0.099746, 0.199492, 0.198351},
+                                             {0.199492, 0.398984, 0.330585333333333},
+                                             {0.0199492, 0.044331555555556, 0.12397},
+                                             {1.105000376701355, 0.2857145667076111, 0.2500002384185791}};
+  std::vector<std::string> amNames = {"CellData", "CellData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData"};
+  // std::vector<std::string> maskArrayNames = {"", "", "", "Mask", "", "Mask", "", "Mask", "", "Mask", "", "Mask", "", "Mask"};
+  std::vector<std::string> exemplaryArrayNames = {"ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds",
+                                                  "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds"};
+  size_t lastIndex = 7;
+  size_t index = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+
+  SECTION("BasicPartitionArguments")
+  {
+    // Validate that we have all the arguments properly sized
+    REQUIRE(filePaths.size() == lastIndex + 1);
+    REQUIRE(partitionDimensions.size() == lastIndex + 1);
+    REQUIRE(amNames.size() == lastIndex + 1);
+    //  REQUIRE(maskArrayNames.size() == lastIndex + 1);
+    REQUIRE(exemplaryArrayNames.size() == lastIndex + 1);
+    REQUIRE(partitionOrigins.size() == lastIndex + 1);
+    REQUIRE(partitionSpacing.size() == lastIndex + 1);
+
+    // First time through, decompress the test data
+    if(index == 0)
+    {
+      s_FileSentinel = std::make_shared<FileSentinelType>(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
+    }
+
+    std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
+    const IntVec3 numOfPartitionsPerAxis = partitionDimensions[index];
+    const DataPath inputGeometryPath = {{"DataContainer"}};
+    DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};
+
+    DataStructure dataStructure;
+    {
+      const ImportDREAM3DFilter importD3DFilter;
+      Arguments importD3DArgs;
+      importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{filePaths[index]});
+      // Execute the filter and check result
+      auto executeResult = importD3DFilter.execute(dataStructure, importD3DArgs);
+      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    }
+
+    {
+      Arguments partitionGeometryArgs =
+          createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitionOrigins[index], partitionSpacing[index]);
+
+      const PartitionGeometryFilter filter;
+      // Execute the filter and check the result
+      auto executeResult = filter.execute(dataStructure, partitionGeometryArgs);
+      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+      attrMatrixPath = partitionGeometryArgs.value<DataPath>(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key);
+    }
+
+    const Int32Array& partitionIds = dataStructure.getDataRefAs<Int32Array>(attrMatrixPath.createChildPath(partitionIdsArrayName));
+    const Int32Array& exemplaryPartitionIds = dataStructure.getDataRefAs<Int32Array>(attrMatrixPath.createChildPath(exemplaryArrayNames[index]));
+
+    REQUIRE(partitionIds.getSize() == exemplaryPartitionIds.getSize());
+
+    const AbstractDataStore<int32>& partitionIdsStore = partitionIds.getDataStoreRef();
+    const AbstractDataStore<int32>& exemplaryPartitionIdsStore = exemplaryPartitionIds.getDataStoreRef();
+    for(size_t i = 0; i < partitionIds.getSize(); i++)
+    {
+      const int32_t partitionId = partitionIdsStore[i];
+      const int32_t exemplaryId = exemplaryPartitionIdsStore[i];
+      REQUIRE(partitionId == exemplaryId);
+    }
+
+    // Last time through clean up the test files
+    if(index == lastIndex)
+    {
+      s_FileSentinel = nullptr;
+    }
+  }
+}
+
+TEST_CASE("ComplexCore::PartitionGeometryFilter: Bounding Box", "[Plugins][PartitionGeometryFilter]")
+{
+  const std::string partitionIdsArrayName = "PartitioningSchemeIds";
+  const DataPath existingPSGeometryPath = {{"ExemplaryPSDataContainer"}};
+
+  std::vector<std::filesystem::path> filePaths = {k_ImageGeomTestFilePath,  k_RectGridGeomTestFilePath, k_TriangleGeomTestFilePath,    k_EdgeGeomTestFilePath,
+                                                  k_VertexGeomTestFilePath, k_QuadGeomTestFilePath,     k_TetrahedralGeomTestFilePath, k_HexahedralGeomTestFilePath};
+  std::vector<IntVec3> partitionDimensions = {{5, 5, 5}, {5, 5, 5}, {5, 4, 4}, {4, 4, 4}, {20, 10, 5}, {10, 5, 3}, {100, 45, 8}, {6, 7, 8}};
+  std::vector<FloatVec3> lowerLeftCoords = {{-10, 5, 2},
+                                            {0, 0, 0},
+                                            {-0.997462, -0.997462, -0.00001},
+                                            {-0.997462, -0.997462, -0.00001},
+                                            {-0.997462, -0.997462, -0.00001},
+                                            {-0.997462, -0.997462, -0.00001},
+                                            {-0.997462, -0.997462, -0.00001},
+                                            {0.9999989867210388, 0.9999989867210388, 1.5499989986419678}};
+  std::vector<FloatVec3> upperRightCoords = {{15, 30, 27},
+                                             {30, 30, 30},
+                                             {0.997463, 0.997462, 0.991746},
+                                             {0.997462, 0.997462, 0.991746},
+                                             {0.997462, 0.997458, 0.991745},
+                                             {0.997462, 0.997462, 0.991746},
+                                             {0.997458, 0.99746, 0.99175},
+                                             {7.630001068115234, 3.0000009536743164, 3.5500009059906006}};
+  std::vector<std::string> amNames = {"CellData", "CellData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData"};
+  std::vector<std::string> exemplaryArrayNames = {"ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds",
+                                                  "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds"};
+  size_t lastIndex = 7;
+  size_t index = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+
+  SECTION("BasicPartitionArguments")
+  {
+    // Validate that we have all the arguments properly sized
+    REQUIRE(filePaths.size() == lastIndex + 1);
+    REQUIRE(partitionDimensions.size() == lastIndex + 1);
+    REQUIRE(amNames.size() == lastIndex + 1);
+    REQUIRE(exemplaryArrayNames.size() == lastIndex + 1);
+    REQUIRE(lowerLeftCoords.size() == lastIndex + 1);
+    REQUIRE(upperRightCoords.size() == lastIndex + 1);
+
+    // First time through, decompress the test data
+    if(index == 0)
+    {
+      s_FileSentinel = std::make_shared<FileSentinelType>(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
+    }
+
+    std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
+    const IntVec3 numOfPartitionsPerAxis = partitionDimensions[index];
+    const DataPath inputGeometryPath = {{"DataContainer"}};
+    DataPath attrMatrixPath = {{"DataContainer", amNames[index]}};
+
+    DataStructure dataStructure;
+    {
+      const ImportDREAM3DFilter importD3DFilter;
+      Arguments importD3DArgs;
+      importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{filePaths[index]});
+      // Execute the filter and check result
+      auto executeResult = importD3DFilter.execute(dataStructure, importD3DArgs);
+      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+    }
+
+    {
+      Arguments partitionGeometryArgs =
+          createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoords[index], upperRightCoords[index]);
+
+      const PartitionGeometryFilter filter;
+      // Execute the filter and check the result
+      auto executeResult = filter.execute(dataStructure, partitionGeometryArgs);
+      COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+      attrMatrixPath = partitionGeometryArgs.value<DataPath>(PartitionGeometryFilter::k_InputGeometryCellAttributeMatrixPath_Key);
+    }
+
+    const Int32Array& partitionIds = dataStructure.getDataRefAs<Int32Array>(attrMatrixPath.createChildPath(partitionIdsArrayName));
+    const Int32Array& exemplaryPartitionIds = dataStructure.getDataRefAs<Int32Array>(attrMatrixPath.createChildPath(exemplaryArrayNames[index]));
+
+    REQUIRE(partitionIds.getSize() == exemplaryPartitionIds.getSize());
+
+    const AbstractDataStore<int32>& partitionIdsStore = partitionIds.getDataStoreRef();
+    const AbstractDataStore<int32>& exemplaryPartitionIdsStore = exemplaryPartitionIds.getDataStoreRef();
+    for(size_t i = 0; i < partitionIds.getSize(); i++)
+    {
+      const int32_t partitionId = partitionIdsStore[i];
+      const int32_t exemplaryId = exemplaryPartitionIdsStore[i];
+      REQUIRE(partitionId == exemplaryId);
+    }
+
+    // Last time through clean up the test files
+    if(index == lastIndex)
+    {
+      s_FileSentinel = nullptr;
+    }
+  }
+}
 
 TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plugins][PartitionGeometryFilter]")
 {
@@ -126,40 +413,6 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
   const DataPath existingPSGeometryPath = {{"ExemplaryPSDataContainer"}};
   std::string exemplaryArrayName;
 
-  SECTION("Test Basic Image Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 5, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "CellData"}};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_ImageGeomTestFilePath});
-  }
-  SECTION("Test Advanced Image Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 5, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "CellData"}};
-    const FloatVec3 partitioningSchemeOrigin = {-10, 5, 2};
-    const FloatVec3 lengthPerPartition = {5, 5, 5};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitioningSchemeOrigin, lengthPerPartition);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_ImageGeomTestFilePath});
-  }
-  SECTION("Test Bounding Box Image Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 5, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "CellData"}};
-    const FloatVec3 lowerLeftCoord = {-10, 5, 2};
-    const FloatVec3 upperRightCoord = {15, 30, 27};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoord, upperRightCoord);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_ImageGeomTestFilePath});
-  }
   SECTION("Test Existing Partitioning Scheme Image Geometry")
   {
     const DataPath inputGeometryPath = {{"DataContainer"}};
@@ -169,40 +422,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
     importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_ImageGeomTestFilePath});
   }
-  SECTION("Test Basic Rect Grid Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 5, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "CellData"}};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_RectGridGeomTestFilePath});
-  }
-  SECTION("Test Advanced Rect Grid Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 5, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "CellData"}};
-    const FloatVec3 partitioningSchemeOrigin = {0, 0, 0};
-    const FloatVec3 lengthPerPartition = {6, 6, 6};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitioningSchemeOrigin, lengthPerPartition);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_RectGridGeomTestFilePath});
-  }
-  SECTION("Test Bounding Box Rect Grid Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 5, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "CellData"}};
-    const FloatVec3 lowerLeftCoord = {0, 0, 0};
-    const FloatVec3 upperRightCoord = {30, 30, 30};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoord, upperRightCoord);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_RectGridGeomTestFilePath});
-  }
   SECTION("Test Existing Partitioning Scheme Rect Grid Geometry")
   {
     const DataPath inputGeometryPath = {{"DataContainer"}};
@@ -212,40 +432,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
     importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_RectGridGeomTestFilePath});
   }
-  SECTION("Test Basic Triangle Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 4, 4};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TriangleGeomTestFilePath});
-  }
-  SECTION("Test Advanced Triangle Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 4, 4};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 partitioningSchemeOrigin = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 lengthPerPartition = {0.398984, 0.49873, 0.247939};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitioningSchemeOrigin, lengthPerPartition);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TriangleGeomTestFilePath});
-  }
-  SECTION("Test Bounding Box Triangle Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 4, 4};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 lowerLeftCoord = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 upperRightCoord = {0.997463, 0.997462, 0.991746};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoord, upperRightCoord);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TriangleGeomTestFilePath});
-  }
   SECTION("Test Existing Partitioning Scheme Triangle Geometry")
   {
     const DataPath inputGeometryPath = {{"DataContainer"}};
@@ -255,51 +442,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
     importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TriangleGeomTestFilePath});
   }
-  SECTION("Test Masked Triangle Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {5, 4, 4};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const DataPath maskPath = {{"DataContainer", "VertexData", "Mask"}};
-    exemplaryArrayName = "MaskedExemplaryPartitioningSchemeIds";
 
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, maskPath);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TriangleGeomTestFilePath});
-  }
-  SECTION("Test Basic Edge Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {4, 4, 4};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_EdgeGeomTestFilePath});
-  }
-  SECTION("Test Advanced Edge Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {4, 4, 4};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 partitioningSchemeOrigin = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 lengthPerPartition = {0.49873, 0.49873, 0.247939};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitioningSchemeOrigin, lengthPerPartition);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_EdgeGeomTestFilePath});
-  }
-  SECTION("Test Bounding Box Edge Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {4, 4, 4};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 lowerLeftCoord = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 upperRightCoord = {0.997462, 0.997462, 0.991746};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoord, upperRightCoord);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_EdgeGeomTestFilePath});
-  }
   SECTION("Test Existing Partitioning Scheme Edge Geometry")
   {
     const DataPath inputGeometryPath = {{"DataContainer"}};
@@ -309,51 +452,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
     importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_EdgeGeomTestFilePath});
   }
-  SECTION("Test Masked Edge Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {4, 4, 4};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const DataPath maskPath = {{"DataContainer", "VertexData", "Mask"}};
-    exemplaryArrayName = "MaskedExemplaryPartitioningSchemeIds";
 
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, maskPath);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_EdgeGeomTestFilePath});
-  }
-  SECTION("Test Basic Vertex Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {20, 10, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_VertexGeomTestFilePath});
-  }
-  SECTION("Test Advanced Vertex Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {20, 10, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 partitioningSchemeOrigin = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 lengthPerPartition = {0.099746, 0.199492, 0.198351};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitioningSchemeOrigin, lengthPerPartition);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_VertexGeomTestFilePath});
-  }
-  SECTION("Test Bounding Box Vertex Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {20, 10, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 lowerLeftCoord = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 upperRightCoord = {0.997462, 0.997458, 0.991745};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoord, upperRightCoord);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_VertexGeomTestFilePath});
-  }
   SECTION("Test Existing Partitioning Scheme Vertex Geometry")
   {
     const DataPath inputGeometryPath = {{"DataContainer"}};
@@ -363,51 +462,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
     importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_VertexGeomTestFilePath});
   }
-  SECTION("Test Masked Vertex Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {20, 10, 5};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const DataPath maskPath = {{"DataContainer", "VertexData", "Mask"}};
-    exemplaryArrayName = "MaskedExemplaryPartitioningSchemeIds";
 
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, maskPath);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_VertexGeomTestFilePath});
-  }
-  SECTION("Test Basic Quad Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {10, 5, 3};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_QuadGeomTestFilePath});
-  }
-  SECTION("Test Advanced Quad Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {10, 5, 3};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 partitioningSchemeOrigin = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 lengthPerPartition = {0.199492, 0.398984, 0.330585333333333};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitioningSchemeOrigin, lengthPerPartition);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_QuadGeomTestFilePath});
-  }
-  SECTION("Test Bounding Box Quad Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {10, 5, 3};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 lowerLeftCoord = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 upperRightCoord = {0.997462, 0.997462, 0.991746};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoord, upperRightCoord);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_QuadGeomTestFilePath});
-  }
   SECTION("Test Existing Partitioning Scheme Quad Geometry")
   {
     const DataPath inputGeometryPath = {{"DataContainer"}};
@@ -417,51 +472,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
     importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_QuadGeomTestFilePath});
   }
-  SECTION("Test Masked Quad Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {10, 5, 3};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const DataPath maskPath = {{"DataContainer", "VertexData", "Mask"}};
-    exemplaryArrayName = "MaskedExemplaryPartitioningSchemeIds";
 
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, maskPath);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_QuadGeomTestFilePath});
-  }
-  SECTION("Test Basic Tetrahedral Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {100, 45, 8};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TetrahedralGeomTestFilePath});
-  }
-  SECTION("Test Advanced Tetrahedral Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {100, 45, 8};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 partitioningSchemeOrigin = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 lengthPerPartition = {0.0199492, 0.044331555555556, 0.12397};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitioningSchemeOrigin, lengthPerPartition);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TetrahedralGeomTestFilePath});
-  }
-  SECTION("Test Bounding Box Tetrahedral Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {100, 45, 8};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 lowerLeftCoord = {-0.997462, -0.997462, -0.00001};
-    const FloatVec3 upperRightCoord = {0.997458, 0.99746, 0.99175};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoord, upperRightCoord);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TetrahedralGeomTestFilePath});
-  }
   SECTION("Test Existing Partitioning Scheme Tetrahedral Geometry")
   {
     const DataPath inputGeometryPath = {{"DataContainer"}};
@@ -471,51 +482,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
     importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TetrahedralGeomTestFilePath});
   }
-  SECTION("Test Masked Tetrahedral Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {100, 45, 8};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const DataPath maskPath = {{"DataContainer", "VertexData", "Mask"}};
-    exemplaryArrayName = "MaskedExemplaryPartitioningSchemeIds";
 
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, maskPath);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_TetrahedralGeomTestFilePath});
-  }
-  SECTION("Test Basic Hexahedral Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {6, 7, 8};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, {});
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_HexahedralGeomTestFilePath});
-  }
-  SECTION("Test Advanced Hexahedral Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {6, 7, 8};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 partitioningSchemeOrigin = {0.9999989867210388, 0.9999989867210388, 1.5499989986419678};
-    const FloatVec3 lengthPerPartition = {1.105000376701355, 0.2857145667076111, 0.2500002384185791};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createAdvancedPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, partitioningSchemeOrigin, lengthPerPartition);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_HexahedralGeomTestFilePath});
-  }
-  SECTION("Test Bounding Box Hexahedral Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {6, 7, 8};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const FloatVec3 lowerLeftCoord = {0.9999989867210388, 0.9999989867210388, 1.5499989986419678};
-    const FloatVec3 upperRightCoord = {7.630001068115234, 3.0000009536743164, 3.5500009059906006};
-    exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBoundingBoxPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, lowerLeftCoord, upperRightCoord);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_HexahedralGeomTestFilePath});
-  }
   SECTION("Test Existing Partitioning Scheme Hexahedral Geometry")
   {
     const DataPath inputGeometryPath = {{"DataContainer"}};
@@ -523,17 +490,6 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Valid filter execution", "[Plug
     exemplaryArrayName = "ExemplaryPartitioningSchemeIds";
 
     partitionGeometryArgs = createExistingPartitioningSchemeGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, existingPSGeometryPath);
-    importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_HexahedralGeomTestFilePath});
-  }
-  SECTION("Test Masked Hexahedral Geometry")
-  {
-    const IntVec3 numOfPartitionsPerAxis = {6, 7, 8};
-    const DataPath inputGeometryPath = {{"DataContainer"}};
-    const DataPath attrMatrixPath = {{"DataContainer", "VertexData"}};
-    const DataPath maskPath = {{"DataContainer", "VertexData", "Mask"}};
-    exemplaryArrayName = "MaskedExemplaryPartitioningSchemeIds";
-
-    partitionGeometryArgs = createBasicPartitionGeometryArguments(inputGeometryPath, attrMatrixPath, partitionIdsArrayName, numOfPartitionsPerAxis, maskPath);
     importD3DArgs.insert(ImportDREAM3DFilter::k_ImportFileData, Dream3dImportParameter::ImportData{k_HexahedralGeomTestFilePath});
   }
 
@@ -616,7 +572,7 @@ TEST_CASE("ComplexCore::PartitionGeometryFilter: Invalid filter execution")
   COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
   executeResult = filter.execute(dataStructure, partitionGeometryArgs);
-  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result);
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == expectedErrorCode);
 }
