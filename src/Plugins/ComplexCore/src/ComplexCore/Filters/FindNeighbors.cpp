@@ -71,10 +71,10 @@ Parameters FindNeighbors::parameters() const
       "The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6. Only created if Store Boundary Cells Array is checked",
       "BoundaryCells"));
   params.insertSeparator(Parameters::Separator{"Created Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NumNeighbors_Key, "Number of Neighbors", "Number of contiguous neighboring Features for a given Feature", "NumNeighbors2"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborList_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", "NeighborList2"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NumNeighbors_Key, "Number of Neighbors", "Number of contiguous neighboring Features for a given Feature", "NumNeighbors"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NeighborList_Key, "Neighbor List", "List of the contiguous neighboring Features for a given Feature", "NeighborList"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SharedSurfaceArea_Key, "Shared Surface Area List",
-                                                          "List of the shared surface area for each of the contiguous neighboring Features for a given Feature", "SharedSurfaceAreaList2"));
+                                                          "List of the shared surface area for each of the contiguous neighboring Features for a given Feature", "SharedSurfaceAreaList"));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceFeatures_Key, "Surface Features",
                                                           "The name of the surface features data array. Flag equal to 1 if the Feature touches an outer surface of the sample and equal to 0 if it "
                                                           "does not. Only created if Store Surface Features Array is checked",
