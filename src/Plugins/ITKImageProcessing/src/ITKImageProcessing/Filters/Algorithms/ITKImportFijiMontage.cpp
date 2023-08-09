@@ -268,6 +268,7 @@ private:
       return MakeErrorResult(-18544, "Unable to create ITKImageReader filter");
     }
 
+    auto& gridMontage = m_DataStructure.getDataRefAs<GridMontage>(DataPath({m_InputValues->montageName}));
     for(const auto& bound : m_Cache.bounds)
     {
       if(bound.Row < m_InputValues->rowMontageLimits[0] || bound.Row > m_InputValues->rowMontageLimits[1] || bound.Col < m_InputValues->columnMontageLimits[0] ||
@@ -347,8 +348,6 @@ private:
           gray.rename(bound.ImageDataProxy.getTargetName());
         }
       }
-
-      auto& gridMontage = m_DataStructure.getDataRefAs<GridMontage>(DataPath({m_InputValues->montageName}));
 
       GridTileIndex gridIndex = gridMontage.getTileIndex(bound.Row, bound.Col);
       // Set the montage's DataContainer for the current index

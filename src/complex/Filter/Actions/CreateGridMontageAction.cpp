@@ -40,7 +40,7 @@ Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode mode)
     return MakeErrorResult(-5704, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
   }
 
-  // Create the ImageGeometry
+  // Create the grid montage
   GridMontage* gridMontage = GridMontage::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath));
   if(gridMontage == nullptr)
   {
