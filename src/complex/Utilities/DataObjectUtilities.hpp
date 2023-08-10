@@ -23,11 +23,11 @@
 #include "complex/DataStructure/Geometry/VertexGeom.hpp"
 #include "complex/DataStructure/IArray.hpp"
 #include "complex/DataStructure/INeighborList.hpp"
+#include "complex/DataStructure/Montage/AbstractMontage.hpp"
+#include "complex/DataStructure/Montage/GridMontage.hpp"
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/DataStructure/StringArray.hpp"
-#include "complex/DataStructure/Montage/AbstractMontage.hpp"
-#include "complex/DataStructure/Montage/GridMontage.hpp"
 
 #include <optional>
 #include <stdexcept>

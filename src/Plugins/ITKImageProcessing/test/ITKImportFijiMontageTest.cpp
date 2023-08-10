@@ -4,8 +4,8 @@
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 
 #include "complex/DataStructure/DataArray.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
+#include "complex/Parameters/FileSystemPathParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"

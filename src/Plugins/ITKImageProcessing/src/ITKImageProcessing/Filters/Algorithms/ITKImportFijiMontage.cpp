@@ -4,9 +4,9 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/Core/Application.hpp"
-#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
@@ -146,7 +146,8 @@ private:
     for(auto& bound : m_Cache.bounds)
     {
       std::stringstream dcNameStream;
-      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string().substr(0, bound.Filepath.filename().string().find(bound.Filepath.extension().string()));;
+      dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string().substr(0, bound.Filepath.filename().string().find(bound.Filepath.extension().string()));
+      ;
       bound.ImageName = dcNameStream.str();
 
       {
@@ -169,7 +170,8 @@ private:
     }
 
     std::stringstream ss;
-    ss << "\n" << "Imported Image Count: " << m_Cache.bounds.size();
+    ss << "\n"
+       << "Imported Image Count: " << m_Cache.bounds.size();
     m_Cache.montageInformation = ss.str();
   }
 
