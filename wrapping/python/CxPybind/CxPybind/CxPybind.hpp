@@ -703,6 +703,8 @@ void Internals::reloadPythonPlugins()
 template <class T, class... Options>
 void BindParameterConstructor(py::class_<T, Options...>& object)
 {
+  using namespace pybind11::literals;
+
   object.def(py::init<const std::string&, const std::string&, const std::string&, const typename T::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
 }
 } // namespace complex::CxPybind11
