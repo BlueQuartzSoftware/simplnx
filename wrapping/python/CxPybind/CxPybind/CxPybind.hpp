@@ -14,8 +14,10 @@
 #include <complex/Common/ScopeGuard.hpp>
 #include <complex/Core/Application.hpp>
 #include <complex/Filter/Arguments.hpp>
+#include <complex/Filter/FilterTraits.hpp>
 #include <complex/Filter/IFilter.hpp>
 #include <complex/Filter/IParameter.hpp>
+#include <complex/Filter/ParameterTraits.hpp>
 #include <complex/Filter/Parameters.hpp>
 #include <complex/Plugin/AbstractPlugin.hpp>
 #include <complex/Plugin/PluginLoader.hpp>
