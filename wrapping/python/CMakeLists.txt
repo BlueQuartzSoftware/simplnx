@@ -76,7 +76,7 @@ endfunction()
 
 option(COMPLEX_PY_GENERATE_PYI "Generate .pyi files for python bindings" OFF)
 if(COMPLEX_PY_GENERATE_PYI)
-  complex_create_pyi(PYTHON_MODULE_NAME complex PYTHON_TARGET complexpy)
+  #complex_create_pyi(PYTHON_MODULE_NAME complex PYTHON_TARGET complexpy)
 endif()
 
 option(COMPLEX_PY_ENABLE_DOCS "Generate python documentation using sphinx" OFF)
@@ -107,7 +107,10 @@ if(COMPLEX_PY_ENABLE_INSTALL)
       DESTINATION ${COMPLEX_PY_INSTALL_DIR}
   )
   if(COMPLEX_PY_GENERATE_PYI)
-    install(FILES $<TARGET_FILE_DIR:complex>/complex.pyi
+    # install(FILES $<TARGET_FILE_DIR:complex>/complex.pyi
+    #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+    # )
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/complex.pyi
       DESTINATION ${COMPLEX_PY_INSTALL_DIR}
     )
   endif()
@@ -147,10 +150,13 @@ function(complex_add_python_plugin)
   endif()
 
   if(COMPLEX_PY_GENERATE_PYI)
-    complex_create_plugin_pyi(PLUGIN_NAME ${ARGS_PLUGIN_NAME})
+    # complex_create_plugin_pyi(PLUGIN_NAME ${ARGS_PLUGIN_NAME})
 
     if(COMPLEX_PY_ENABLE_INSTALL)
-      install(FILES $<TARGET_FILE_DIR:complex>/${PYTHON_MODULE_NAME}.pyi
+      # install(FILES $<TARGET_FILE_DIR:complex>/${PYTHON_MODULE_NAME}.pyi
+      #   DESTINATION ${COMPLEX_PY_INSTALL_DIR}
+      # )
+      install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${PYTHON_MODULE_NAME}.pyi
         DESTINATION ${COMPLEX_PY_INSTALL_DIR}
       )
     endif()
