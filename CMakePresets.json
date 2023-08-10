@@ -209,7 +209,7 @@
         },
         "ITKIMAGEPROCESSING_LEAN_AND_MEAN": {
           "type": "BOOL",
-          "value": "ON"
+          "value": "OFF"
         },
         "ComplexCore_INSTALL_PIPELINES": {
           "type": "BOOL",
