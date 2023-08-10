@@ -31,6 +31,7 @@ public:
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static inline constexpr StringLiteral k_MaterialNameArrayPath_Key = "material_name_array_path";
   static inline constexpr StringLiteral k_NumFeaturesArrayPath_Key = "num_features_array_path";
+  static inline constexpr StringLiteral k_ImageGeomPath_Key = "image_geom_path";
 
   /**
    * @brief Returns the name of the filter.

@@ -13,35 +13,19 @@
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 #include "complex/Parameters/ArraySelectionParameter.hpp"
 
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  INLWriterInputValues inputValues;
-
-  inputValues.OutputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.MaterialNameArrayPath = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
-  inputValues.NumFeaturesArrayPath = filterArgs.value<DataPath>(k_NumFeaturesArrayPath_Key);
-
-  return INLWriter(dataStructure, messageHandler, shouldCancel, &inputValues)();
-*/
-
 namespace complex
 {
 
 struct ORIENTATIONANALYSIS_EXPORT INLWriterInputValues
 {
   FileSystemPathParameter::ValueType OutputFile;
+  DataPath ImageGeomPath;
   DataPath FeatureIdsArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath CellEulerAnglesArrayPath;
   DataPath CrystalStructuresArrayPath;
   DataPath MaterialNameArrayPath;
   DataPath NumFeaturesArrayPath;
-
 };
 
 /**
