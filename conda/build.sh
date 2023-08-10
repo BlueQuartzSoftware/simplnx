@@ -38,6 +38,7 @@ cmake -S "../EbsdLib" -B . -G "Ninja" $CMAKE_ARGS \
   -D CMAKE_BUILD_TYPE:STRING=Release \
   -D CMAKE_INSTALL_PREFIX:PATH="$SRC_DIR/sdk/EbsdLib" \
   -D CMAKE_SYSTEM_PREFIX_PATH:PATH="$PREFIX" \
+  -D CMAKE_OSX_DEPLOYMENT_TARGET:STRING="11.0" \
   -D DREAM3D_ANACONDA:BOOL=ON \
   -D CMP_TBB_ENABLE_COPY_INSTALL:BOOL=OFF \
   -D EbsdLib_ENABLE_TESTING:BOOL=OFF \
@@ -112,7 +113,7 @@ cd ..
 mkdir build
 cd build
 
-cmake --preset $COMPLEX_CMAKE_PRESET ../complex $CMAKE_ARGS
+cmake --preset $COMPLEX_CMAKE_PRESET ../complex $CMAKE_ARGS -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING="11.00"
 
 cmake --build . --target all
 
