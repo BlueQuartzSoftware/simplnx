@@ -43,6 +43,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   GenerateQuaternionConjugateTest.cpp
   ImportH5EspritDataTest.cpp
   ImportH5OimDataTest.cpp
+  INLWriterTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
