@@ -27,7 +27,7 @@ public:
   ImportDREAM3DFilter& operator=(ImportDREAM3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImportFileData = "Import_File_Data";
+  static inline constexpr StringLiteral k_ImportFileData = "import_file_data";
 
   /**
    * @brief Returns the name of the filter class.
