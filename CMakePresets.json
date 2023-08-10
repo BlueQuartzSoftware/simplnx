@@ -203,6 +203,10 @@
           "type": "PATH",
           "value": "$env{SP_DIR}"
         },
+        "COMPLEX_PY_GENERATE_PYI": {
+          "type": "BOOL",
+          "value": "ON"
+        },
         "ITKIMAGEPROCESSING_LEAN_AND_MEAN": {
           "type": "BOOL",
           "value": "ON"
