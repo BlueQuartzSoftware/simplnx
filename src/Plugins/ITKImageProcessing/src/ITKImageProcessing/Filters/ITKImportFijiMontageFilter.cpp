@@ -7,7 +7,6 @@
 #include "complex/Core/Application.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/Filter/Actions/CreateDataGroupAction.hpp"
-#include "complex/Filter/Actions/CreateGridMontageAction.hpp"
 #include "complex/Parameters/BoolParameter.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/FileSystemPathParameter.hpp"
@@ -76,10 +75,6 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Fiji Configuration File", "This is the configuration file in the same directory as all of the identified geometries",
                                                           fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_ColumnMontageLimits_Key, "Montage Column Start/End [Inclusive, Zero Based]",
-                                                       "The starting and ending column (inclusive) that will be imported", std::vector<int32>{0, 0}, std::vector<std::string>{"start", "end"}));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_RowMontageLimits_Key, "Montage Row Start/End [Inclusive, Zero Based]", "The starting and ending column (inclusive) that will be imported",
-                                                       std::vector<int32>{0, 0}, std::vector<std::string>{"start", "end"}));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry",
                                                    to_underlying(IGeometry::LengthUnit::Micrometer), IGeometry::GetAllLengthUnitStrings()));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "Set the origin of the mosaic to a user defined value", false));
@@ -88,9 +83,10 @@ Parameters ITKImportFijiMontageFilter::parameters() const
       std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "The filter will show an error if the images are already in grayscale format", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ColorWeights_Key, "Color Weighting", "The luminosity values for the conversion", std::vector<float32>{0.2125f, 0.7154f, 0.0721f},
                                                          std::vector<std::string>(3)));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ParentDataGroup_Key, "Parent Imported Images Under a DataGroup", "Create a new DataGroup to hold the  imported images", true));
 
   params.insertSeparator(Parameters::Separator{"Created Data Objects"});
-  params.insert(std::make_unique<StringParameter>(k_MontageName_Key, "Name of Created Montage", "Name of the overarching parent Montage", "Zen Montage"));
+  params.insert(std::make_unique<StringParameter>(k_DataGroupName_Key, "Name of Created DataGroup", "Name of the overarching parent DataGroup", "Zen DataGroup"));
   params.insert(std::make_unique<StringParameter>(k_DataContainerPath_Key, "Image Geometry Prefix", "A prefix that can be used for each Image Geometry", "Mosaic-"));
   params.insert(std::make_unique<StringParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "The name of the Cell Attribute Matrix", "Tile Data"));
   params.insert(std::make_unique<StringParameter>(k_ImageDataArrayName_Key, "Image DataArray Name", "The name of the import image data", "Image"));
@@ -98,6 +94,7 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, true);
   params.linkParameters(k_ConvertToGrayScale_Key, k_ColorWeights_Key, true);
+  params.linkParameters(k_ParentDataGroup_Key, k_DataGroupName_Key, true);
 
   return params;
 }
@@ -113,10 +110,8 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
                                                                    const std::atomic_bool& shouldCancel) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  auto pMontageNameValue = filterArgs.value<StringParameter::ValueType>(k_MontageName_Key);
-  auto pColumnMontageLimitsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_ColumnMontageLimits_Key);
-  auto pRowMontageLimitsValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_RowMontageLimits_Key);
-  auto pLengthUnitValue = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
+  auto pDataGroupNameValue = filterArgs.value<StringParameter::ValueType>(k_DataGroupName_Key);
+  auto pParentDataGroupValue = filterArgs.value<bool>(k_ParentDataGroup_Key);
   auto pChangeOriginValue = filterArgs.value<bool>(k_ChangeOrigin_Key);
   auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   auto pConvertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
@@ -126,35 +121,26 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   auto pImageDataArrayNameValue = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
 
   PreflightResult preflightResult;
-  complex::Result<OutputActions> resultOutputActions;
+  complex::Result<OutputActions> resultOutputActions = {};
   std::vector<PreflightValue> preflightUpdatedValues;
 
   ITKImportFijiMontageInputValues inputValues;
 
   inputValues.allocate = false;
   inputValues.changeOrigin = pChangeOriginValue;
-  inputValues.convertToGrayScale = pConvertToGrayScaleValue;
   inputValues.inputFilePath = pInputFileValue;
-  inputValues.lengthUnit = static_cast<IGeometry::LengthUnit>(pLengthUnitValue);
-  inputValues.columnMontageLimits = pColumnMontageLimitsValue;
-  inputValues.rowMontageLimits = pRowMontageLimitsValue;
   inputValues.origin = pOriginValue;
-  inputValues.colorWeights = pColorWeightsValue;
-  inputValues.montageName = pMontageNameValue;
   inputValues.imagePrefix = pDataContainerPathValue;
-  inputValues.cellAMName = pCellAttributeMatrixNameValue;
-  inputValues.imageDataArrayName = pImageDataArrayNameValue;
 
   // Read from the file if the input file has changed or the input file's time stamp is out of date.
   if(pInputFileValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFileValue) || s_HeaderCache[m_InstanceId].valuesChanged(inputValues))
   {
+    s_HeaderCache[m_InstanceId].flush();
+
     // Read from the file
     DataStructure throwaway = DataStructure();
-    ITKImportFijiMontage algorithm(throwaway, messageHandler, shouldCancel, &inputValues, s_HeaderCache[m_InstanceId]);
+    ITKImportFijiMontage algorithm(throwaway, messageHandler, shouldCancel, &inputValues, s_HeaderCache.find(m_InstanceId)->second);
     algorithm.operator()();
-
-    // Cache the results from algorithm run
-    s_HeaderCache[m_InstanceId] = algorithm.getCache();
 
     // Update the cached variables
     s_HeaderCache[m_InstanceId].inputFile = pInputFileValue;
@@ -162,39 +148,43 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
     s_HeaderCache[m_InstanceId].inputValues = inputValues;
   }
 
-  // create montage
+  if(pParentDataGroupValue)
   {
-    auto createAction = std::make_unique<CreateGridMontageAction>(DataPath({pMontageNameValue}), CreateGridMontageAction::DimensionType{}, CreateGridMontageAction::OriginType{},
-                                                                  CreateGridMontageAction::SpacingType{});
+    auto createAction = std::make_unique<CreateDataGroupAction>(DataPath({pDataGroupNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
   auto* filterListPtr = Application::Instance()->getFilterList();
   for(const auto& bound : s_HeaderCache[m_InstanceId].bounds)
   {
-    if(bound.Row < pRowMontageLimitsValue[0] || bound.Row > pRowMontageLimitsValue[1] || bound.Col < pColumnMontageLimitsValue[0] || bound.Col > pColumnMontageLimitsValue[1])
-    {
-      continue;
-    }
-
     auto imageImportFilter = filterListPtr->createFilter(FilterTraits<ITKImageReader>::uuid);
     if(nullptr == imageImportFilter.get())
     {
       continue;
     }
 
+    DataPath imageDataProxy = {};
+    if(pParentDataGroupValue)
+    {
+      imageDataProxy = DataPath({pDataGroupNameValue, bound.ImageName, pCellAttributeMatrixNameValue, pImageDataArrayNameValue});
+    }
+    else
+    {
+      imageDataProxy = DataPath({bound.ImageName, pCellAttributeMatrixNameValue, pImageDataArrayNameValue});
+    }
+
     Arguments imageImportArgs;
     imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
-    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent().getParent()));
-    imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(bound.ImageDataProxy.getParent().getTargetName()));
-    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
+    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageDataProxy.getParent().getParent()));
+    imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
+    imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataProxy));
 
     auto result = imageImportFilter->preflight(dataStructure, imageImportArgs, messageHandler, shouldCancel);
-    resultOutputActions = MergeResults<OutputActions>(resultOutputActions, result.outputActions);
     if(result.outputActions.invalid())
     {
-      continue;
+      return result;
     }
+    resultOutputActions = MergeOutputActionResults(resultOutputActions, result.outputActions);
   }
 
   if(pConvertToGrayScaleValue)
@@ -215,7 +205,7 @@ IFilter::PreflightResult ITKImportFijiMontageFilter::preflightImpl(const DataStr
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
   // These values should have been updated during the preflightImpl(...) method
-  preflightUpdatedValues.push_back({"MontageInformation", s_HeaderCache[m_InstanceId].montageInformation});
+  preflightUpdatedValues.push_back({"Import Information", s_HeaderCache[m_InstanceId].montageInformation});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
@@ -230,18 +220,17 @@ Result<> ITKImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.allocate = true;
   inputValues.changeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   inputValues.convertToGrayScale = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
+  inputValues.parentDataGroup = filterArgs.value<bool>(k_ParentDataGroup_Key);
   inputValues.inputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key));
-  inputValues.columnMontageLimits = filterArgs.value<VectorInt32Parameter::ValueType>(k_ColumnMontageLimits_Key);
-  inputValues.rowMontageLimits = filterArgs.value<VectorInt32Parameter::ValueType>(k_RowMontageLimits_Key);
   inputValues.origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   inputValues.colorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
-  inputValues.montageName = filterArgs.value<StringParameter::ValueType>(k_MontageName_Key);
+  inputValues.DataGroupName = filterArgs.value<StringParameter::ValueType>(k_DataGroupName_Key);
   inputValues.imagePrefix = filterArgs.value<StringParameter::ValueType>(k_DataContainerPath_Key);
   inputValues.cellAMName = filterArgs.value<StringParameter::ValueType>(k_CellAttributeMatrixName_Key);
   inputValues.imageDataArrayName = filterArgs.value<StringParameter::ValueType>(k_ImageDataArrayName_Key);
 
-  ITKImportFijiMontage(dataStructure, messageHandler, shouldCancel, &inputValues, s_HeaderCache[m_InstanceId])();
+  ITKImportFijiMontage(dataStructure, messageHandler, shouldCancel, &inputValues, s_HeaderCache.find(m_InstanceId)->second)();
 
   return {};
 }

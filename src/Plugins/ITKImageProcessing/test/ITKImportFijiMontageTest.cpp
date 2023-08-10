@@ -8,6 +8,7 @@
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/UnitTest/UnitTestCommon.hpp"
+#include "complex/Utilities/DataGroupUtilities.hpp"
 
 #include <filesystem>
 
@@ -19,13 +20,13 @@ namespace
 {
 const std::string k_SmallZeissZenDir = fmt::format("{}/fiji_montage_test/small_zeiss_zen", unit_test::k_TestFilesDir);
 const fs::path k_SmallInputFile = fs::path(k_SmallZeissZenDir + fs::path::preferred_separator + "TileConfiguration.registered.txt");
-const std::string k_MontageName = "Montage";
-const DataPath k_MontagePath = {{k_MontageName}};
+const std::string k_DataGroupName = "Zen DataGroup";
+const DataPath k_DataGroupPath = {{k_DataGroupName}};
 } // namespace
 
 TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[ITKImageProcessing][ITKImportFijiMontage]")
 {
-  //const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "fiji_montage_test.tar.gz", "fiji_montage_test");
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "fiji_montage_test.tar.gz", "fiji_montage_test");
 
   std::shared_ptr<UnitTest::make_shared_enabler> app = std::make_shared<UnitTest::make_shared_enabler>();
   app->loadPlugins(unit_test::k_BuildDir.view(), true);
@@ -38,16 +39,15 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
   Arguments args;
 
   args.insertOrAssign(ITKImportFijiMontageFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_SmallInputFile));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_MontageName_Key, std::make_any<std::string>(k_MontageName));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_ColumnMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>({0,1}));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_RowMontageLimits_Key, std::make_any<VectorInt32Parameter::ValueType>({0,1}));
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_DataGroupName_Key, std::make_any<std::string>(k_DataGroupName));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(IGeometry::LengthUnit::Micrometer)));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ChangeOrigin_Key, std::make_any<bool>(false));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0f,0.0f,0.0f}));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_DataContainerPath_Key, std::make_any<std::string>(""));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>("Cell AM"));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_ImageDataArrayName_Key, std::make_any<std::string>("Data Array"));
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_ParentDataGroup_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.2125f, 0.7154f, 0.0721f}));
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_DataContainerPath_Key, std::make_any<std::string>("Mosaic-"));
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>("Tile Data"));
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_ImageDataArrayName_Key, std::make_any<std::string>("Image"));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -57,5 +57,11 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
   auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
 
-  UnitTest::CompareMontage(dataStructure.getDataRefAs<AbstractMontage>(k_MontagePath), exemplarDataStructure.getDataRefAs<AbstractMontage>(k_MontagePath));
+  std::vector<DataPath> generatedGroup = GetAllChildDataPaths(dataStructure, k_DataGroupPath, DataObject::Type::ImageGeom).value();
+  std::vector<DataPath> exemplarGroup = GetAllChildDataPaths(exemplarDataStructure, k_DataGroupPath, DataObject::Type::ImageGeom).value();
+  REQUIRE(generatedGroup.size() == exemplarGroup.size());
+  for(usize i = 0; i < generatedGroup.size(); i++)
+  {
+    UnitTest::CompareImageGeometry(exemplarDataStructure.getDataAs<ImageGeom>(exemplarGroup[i]), dataStructure.getDataAs<ImageGeom>(generatedGroup[i]));
+  }
 }

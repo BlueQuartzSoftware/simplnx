@@ -26,6 +26,8 @@
 #include "complex/DataStructure/NeighborList.hpp"
 #include "complex/DataStructure/ScalarData.hpp"
 #include "complex/DataStructure/StringArray.hpp"
+#include "complex/DataStructure/Montage/AbstractMontage.hpp"
+#include "complex/DataStructure/Montage/GridMontage.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -204,6 +206,12 @@ inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjTy
   }
   case complex::DataObject::Type::DynamicListArray: {
     return complex::DynamicListArrayConstants::k_TypeName;
+  }
+  case complex::DataObject::Type::AbstractMontage: {
+    return complex::AbstractMontage::k_TypeName;
+  }
+  case complex::DataObject::Type::GridMontage: {
+    return complex::GridMontage::k_TypeName;
   }
   case complex::DataObject::Type::Any: {
     return {"Any"};

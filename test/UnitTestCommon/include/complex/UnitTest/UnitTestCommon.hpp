@@ -349,6 +349,30 @@ inline void CompareImageGeometry(const DataStructure& dataStructure, const DataP
 }
 
 /**
+ * @brief Compares two Image Geometries
+ * @param dataStructure
+ * @param exemplaryDataPath
+ * @param computedPath
+ */
+inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom* computedGeom)
+{
+  REQUIRE(exemplarGeom != nullptr);
+  REQUIRE(computedGeom != nullptr);
+
+  const auto exemplarDims = exemplarGeom->getDimensions();
+  const auto computedDims = computedGeom->getDimensions();
+  REQUIRE(exemplarDims == computedDims);
+
+  const auto exemplarSpacing = exemplarGeom->getSpacing();
+  const auto computedSpacing = computedGeom->getSpacing();
+  REQUIRE(exemplarSpacing == computedSpacing);
+
+  const auto exemplarOrigin = exemplarGeom->getOrigin();
+  const auto computedOrigin = computedGeom->getOrigin();
+  REQUIRE(exemplarOrigin == computedOrigin);
+}
+
+/**
  * @brief Compares two Montages
  * @param exemplar
  * @param generated

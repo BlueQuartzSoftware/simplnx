@@ -241,7 +241,7 @@ inline bool ExtractResult(Result<> result, std::vector<Error>& errors, std::vect
 }
 
 /**
- * @brief Merges two Result<> into one.
+ * @brief Merges two Result<> into one. !!! Does NOT merge the Value in results !!!
  * @param first
  * @param second
  * @return

@@ -17,13 +17,13 @@ Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode mode)
   // Check for empty Geometry DataPath
   if(getCreatedPath().empty())
   {
-    return MakeErrorResult(-5701, fmt::format("{}Geometry Path cannot be empty", prefix));
+    return MakeErrorResult(-5901, fmt::format("{}Geometry Path cannot be empty", prefix));
   }
   // Check if the Geometry Path already exists
   auto* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
   if(parentObject != nullptr)
   {
-    return MakeErrorResult(-5702, fmt::format("{}DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5902, fmt::format("{}DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
   }
   DataPath parentPath = getCreatedPath().getParent();
   if(!parentPath.empty())
@@ -31,20 +31,20 @@ Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode mode)
     Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
     if(geomPath.invalid())
     {
-      return MakeErrorResult(-5703, fmt::format("{}Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
+      return MakeErrorResult(-5903, fmt::format("{}Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
     }
   }
   // Get the Parent ID
   if(!dataStructure.getId(parentPath).has_value())
   {
-    return MakeErrorResult(-5704, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
+    return MakeErrorResult(-5904, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
   }
 
   // Create the grid montage
   GridMontage* gridMontage = GridMontage::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath));
   if(gridMontage == nullptr)
   {
-    return MakeErrorResult(-5705, fmt::format("{}Failed to create GridMontage:'{}'", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5905, fmt::format("{}Failed to create GridMontage:'{}'", prefix, getCreatedPath().toString()));
   }
 
   return {};

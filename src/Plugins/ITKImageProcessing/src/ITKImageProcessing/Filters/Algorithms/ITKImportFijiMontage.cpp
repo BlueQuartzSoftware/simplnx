@@ -4,15 +4,11 @@
 
 #include "complex/Common/Array.hpp"
 #include "complex/Core/Application.hpp"
-#include "complex/DataStructure/DataArray.hpp"
+#include "complex/DataStructure/IDataArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
-#include "complex/DataStructure/Montage/GridTileIndex.hpp"
-#include "complex/DataStructure/Montage/GridMontage.hpp"
-#include "complex/Filter/Actions/CreateDataGroupAction.hpp"
 #include "complex/Parameters/ChoicesParameter.hpp"
 #include "complex/Parameters/VectorParameter.hpp"
-#include "complex/Utilities/MontageUtilities.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
 #include <filesystem>
@@ -22,7 +18,6 @@ using namespace complex;
 
 namespace
 {
-const int32 k_Tolerance = 100;
 const Uuid k_ComplexCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const Uuid k_ColorToGrayScaleFilterId = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
 const FilterHandle k_ColorToGrayScaleFilterHandle(k_ColorToGrayScaleFilterId, k_ComplexCorePluginId);
@@ -135,61 +130,7 @@ private:
       float32 x = std::stof(tokens[0]);
       float32 y = std::stof(tokens[1]);
       bound.Origin = Point3Df(x, y, 0.0f);
-      bound.Spacing = FloatVec3(1.0f, 1.0f, 1.0f);
       m_Cache.bounds.push_back(bound);
-    }
-
-    FindTileIndices();
-  }
-
-  // -----------------------------------------------------------------------------
-  void FindTileIndices()
-  {
-    std::vector<int32> xValues(m_Cache.bounds.size());
-    std::vector<int32> yValues(m_Cache.bounds.size());
-
-    for(usize i = 0; i < m_Cache.bounds.size(); i++)
-    {
-      xValues[i] = static_cast<int32>(m_Cache.bounds[i].Origin[0]);
-      yValues[i] = static_cast<int32>(m_Cache.bounds[i].Origin[1]);
-    }
-
-    std::map<int32, std::vector<usize>> avg_indices = MontageUtilities::Burn(k_Tolerance, xValues);
-    int32 index = 0;
-    for(auto& iter : avg_indices)
-    {
-      const std::vector<usize>& indices = iter.second;
-      for(const auto& i : indices)
-      {
-        m_Cache.bounds[i].Col = index;
-      }
-      index++;
-    }
-
-    avg_indices = MontageUtilities::Burn(k_Tolerance, yValues);
-    index = 0;
-    for(auto& iter : avg_indices)
-    {
-      const std::vector<usize>& indices = iter.second;
-      for(const auto& i : indices)
-      {
-        m_Cache.bounds[i].Row = index;
-      }
-      index++;
-    }
-
-    m_Cache.maxCol = 0;
-    m_Cache.maxRow = 0;
-    for(auto& bound : m_Cache.bounds)
-    {
-      if(bound.Row < m_InputValues->rowMontageLimits[0] || bound.Row > m_InputValues->rowMontageLimits[1] || bound.Col < m_InputValues->columnMontageLimits[0] ||
-         bound.Col > m_InputValues->columnMontageLimits[1])
-      {
-        continue;
-      }
-
-      m_Cache.maxCol = std::max(bound.Col, m_Cache.maxCol);
-      m_Cache.maxRow = std::max(bound.Row, m_Cache.maxRow);
     }
   }
 
@@ -201,25 +142,12 @@ private:
 
     Point3Df minCoord = {std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max()};
 
-    int32 rowCountPadding = MontageUtilities::CalculatePaddingDigits(m_Cache.maxRow);
-    int32 colCountPadding = MontageUtilities::CalculatePaddingDigits(m_Cache.maxCol);
-    int32 charPaddingCount = std::max(rowCountPadding, colCountPadding);
-
     // Get the meta information from disk for each image
     for(auto& bound : m_Cache.bounds)
     {
-      if(bound.Row < m_InputValues->rowMontageLimits[0] || bound.Row > m_InputValues->rowMontageLimits[1] || bound.Col < m_InputValues->columnMontageLimits[0] ||
-         bound.Col > m_InputValues->columnMontageLimits[1])
-      {
-        continue;
-      }
-
       std::stringstream dcNameStream;
       dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string().substr(0, bound.Filepath.filename().string().find(bound.Filepath.extension().string()));;
-      dcNameStream << "r" << std::setw(charPaddingCount) << std::right << std::setfill('0') << bound.Row;
-      dcNameStream << std::setw(1) << "c" << std::setw(charPaddingCount) << bound.Col;
-
-      bound.ImageDataProxy = DataPath({m_InputValues->montageName, dcNameStream.str(), m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
+      bound.ImageName = dcNameStream.str();
 
       {
         minCoord[0] = std::min(bound.Origin[0], minCoord[0]);
@@ -228,11 +156,7 @@ private:
       }
     }
 
-    std::stringstream ss;
-    ss << "Tile Column(s): " << m_Cache.maxCol + 1 << "  Tile Row(s): " << m_Cache.maxRow + 1 << "  Image Count: " << ((m_Cache.maxCol + 1) * (m_Cache.maxRow + 1));
-
-    Point3Df overrideOrigin = minCoord;
-
+    Point3Df overrideOrigin;
     // Now adjust the origin/spacing if needed
     if(m_InputValues->changeOrigin)
     {
@@ -244,15 +168,8 @@ private:
       }
     }
 
-    ss << "\nOrigin: " << overrideOrigin[0] << ", " << overrideOrigin[1] << ", " << overrideOrigin[2];
-    ss << "\nSpacing: "
-       << "1.0"
-       << ", "
-       << "1.0"
-       << ", "
-       << "1.0";
-    ss << "\n"
-       << "Imported Columns: " << m_Cache.maxCol + 1 << "  Imported Rows: " << m_Cache.maxRow + 1 << "  Imported Image Count: " << ((m_Cache.maxCol + 1) * (m_Cache.maxRow + 1));
+    std::stringstream ss;
+    ss << "\n" << "Imported Image Count: " << m_Cache.bounds.size();
     m_Cache.montageInformation = ss.str();
   }
 
@@ -268,16 +185,19 @@ private:
       return MakeErrorResult(-18544, "Unable to create ITKImageReader filter");
     }
 
-    auto& gridMontage = m_DataStructure.getDataRefAs<GridMontage>(DataPath({m_InputValues->montageName}));
     for(const auto& bound : m_Cache.bounds)
     {
-      if(bound.Row < m_InputValues->rowMontageLimits[0] || bound.Row > m_InputValues->rowMontageLimits[1] || bound.Col < m_InputValues->columnMontageLimits[0] ||
-         bound.Col > m_InputValues->columnMontageLimits[1])
-      {
-        continue;
-      }
-
       m_Filter->sendUpdate(("Importing " + bound.Filepath.filename().string()));
+
+      DataPath imageDataProxy = {};
+      if(m_InputValues->parentDataGroup)
+      {
+        imageDataProxy = DataPath({m_InputValues->DataGroupName, bound.ImageName, m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
+      }
+      else
+      {
+        imageDataProxy = DataPath({bound.ImageName, bound.ImageName, m_InputValues->cellAMName, m_InputValues->imageDataArrayName});
+      }
 
       // Instantiate the Image Import Filter to actually read the image into a data array
       {
@@ -285,9 +205,9 @@ private:
         // This same filter was used to preflight so as long as nothing changes on disk this really should work....
         Arguments imageImportArgs;
         imageImportArgs.insertOrAssign(ITKImageReader::k_FileName_Key, std::make_any<fs::path>(bound.Filepath));
-        imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(bound.ImageDataProxy.getParent().getParent()));
-        imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(bound.ImageDataProxy.getParent().getTargetName()));
-        imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(bound.ImageDataProxy));
+        imageImportArgs.insertOrAssign(ITKImageReader::k_ImageGeometryPath_Key, std::make_any<DataPath>(imageDataProxy.getParent().getParent()));
+        imageImportArgs.insertOrAssign(ITKImageReader::k_CellDataName_Key, std::make_any<std::string>(imageDataProxy.getParent().getTargetName()));
+        imageImportArgs.insertOrAssign(ITKImageReader::k_ImageDataArrayPath_Key, std::make_any<DataPath>(imageDataProxy));
 
         auto result = imageImportFilter->execute(m_DataStructure, imageImportArgs).result;
         if(result.invalid())
@@ -297,10 +217,10 @@ private:
         }
       }
 
-      auto* image = m_DataStructure.getDataAs<ImageGeom>(bound.ImageDataProxy.getParent().getParent());
+      auto* image = m_DataStructure.getDataAs<ImageGeom>(imageDataProxy.getParent().getParent());
       image->setUnits(m_InputValues->lengthUnit);
       image->setOrigin(bound.Origin);
-      image->setSpacing(bound.Spacing);
+      image->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
 
       // Now transfer the image data from the actual image data read from disk into our existing Attribute Matrix
       if(m_InputValues->convertToGrayScale)
@@ -319,39 +239,34 @@ private:
         Arguments colorToGrayscaleArgs;
         colorToGrayscaleArgs.insertOrAssign("conversion_algorithm", std::make_any<ChoicesParameter::ValueType>(0));
         colorToGrayscaleArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(m_InputValues->colorWeights));
-        colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{bound.ImageDataProxy}));
+        colorToGrayscaleArgs.insertOrAssign("input_data_array_vector", std::make_any<std::vector<DataPath>>(std::vector<DataPath>{imageDataProxy}));
         colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
 
         // Run grayscale filter and process results and messages
         auto result = grayScaleFilter->execute(m_DataStructure, colorToGrayscaleArgs).result;
         if(result.invalid())
         {
-          outputResult = MergeResults(outputResult, result);
-          continue;
+          return result;
         }
 
         // deletion of non-grayscale array
         DataObject::IdType id;
         { // scoped for safety since this reference will be nonexistent in a moment
-          auto& oldArray = m_DataStructure.getDataRefAs<IDataArray>(bound.ImageDataProxy);
+          auto& oldArray = m_DataStructure.getDataRefAs<IDataArray>(imageDataProxy);
           id = oldArray.getId();
         }
         m_DataStructure.removeData(id);
 
         // rename grayscale array to reflect original
         {
-          auto& gray = m_DataStructure.getDataRefAs<IDataArray>(bound.ImageDataProxy.getParent().createChildPath("gray" + bound.ImageDataProxy.getTargetName()));
-          if(!gray.canRename(bound.ImageDataProxy.getTargetName()))
+          auto& gray = m_DataStructure.getDataRefAs<IDataArray>(imageDataProxy.getParent().createChildPath("gray" + imageDataProxy.getTargetName()));
+          if(!gray.canRename(imageDataProxy.getTargetName()))
           {
-            return MakeErrorResult(-18543, fmt::format("Unable to rename the grayscale array to {}", bound.ImageDataProxy.getTargetName()));
+            return MakeErrorResult(-18543, fmt::format("Unable to rename the grayscale array to {}", imageDataProxy.getTargetName()));
           }
-          gray.rename(bound.ImageDataProxy.getTargetName());
+          gray.rename(imageDataProxy.getTargetName());
         }
       }
-
-      GridTileIndex gridIndex = gridMontage.getTileIndex(bound.Row, bound.Col);
-      // Set the montage's DataContainer for the current index
-      gridMontage.setGeometry(&gridIndex, image);
     }
 
     return outputResult;
