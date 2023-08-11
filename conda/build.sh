@@ -113,7 +113,7 @@ cd ..
 mkdir build
 cd build
 
-cmake --preset $COMPLEX_CMAKE_PRESET ../complex $CMAKE_ARGS -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING="11.00"
+cmake --preset $COMPLEX_CMAKE_PRESET ../complex $CMAKE_ARGS -D CMAKE_OSX_DEPLOYMENT_TARGET:STRING="11.0"
 
 cmake --build . --target all
 
