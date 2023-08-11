@@ -392,3 +392,36 @@ if(FALSE)
     COMPONENT Applications
   )
 endif()
+
+if(CMAKE_GENERATOR STREQUAL "Ninja")
+  set(USING_NINJA ON)
+else()
+  set(USING_NINJA OFF)
+endif()
+
+include(CMakeDependentOption)
+cmake_dependent_option(ITKImageProcessing_USE_JOB_POOL "Forces ItkImageProcessing to use a ninja job pool. For memory limited builds." OFF "USING_NINJA" OFF)
+
+if(ITKImageProcessing_USE_JOB_POOL)
+  if(NOT CMAKE_GENERATOR STREQUAL "Ninja")
+    message(FATAL_ERROR "ITKImageProcessing_USE_JOB_POOL requires Ninja as the generator.")
+  endif()
+
+  include(ProcessorCount)
+  ProcessorCount(thread_count)
+
+  # Guess job count as half the number of threads
+  math(EXPR itk_job_count "${thread_count} / 2")
+
+  set(ITKImageProcessing_JOB_POOL ${itk_job_count} CACHE STRING "Number of threads for ITKImageProcessing job pools")
+  mark_as_advanced(FORCE ITKImageProcessing_JOB_POOL)
+
+  message(STATUS "ITKImageProcessing_JOB_POOL: ${ITKImageProcessing_JOB_POOL}")
+
+  set_property(GLOBAL APPEND PROPERTY JOB_POOLS itk_pool=${ITKImageProcessing_JOB_POOL})
+
+  set_target_properties(${PLUGIN_NAME}
+    PROPERTIES
+      JOB_POOL_COMPILE itk_pool
+  )
+endif()
