@@ -207,6 +207,10 @@
           "type": "BOOL",
           "value": "ON"
         },
+        "ITKImageProcessing_USE_JOB_POOL": {
+          "type": "BOOL",
+          "value": "ON"
+        },
         "ITKIMAGEPROCESSING_LEAN_AND_MEAN": {
           "type": "BOOL",
           "value": "OFF"
