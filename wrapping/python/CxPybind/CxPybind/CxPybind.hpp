@@ -410,7 +410,7 @@ auto BindFilter(py::handle scope, const Internals& internals)
             auto name = item.first.cast<std::string>();
             if(!parameters.contains(name))
             {
-              throw py::type_error(fmt::format("execute2() got an unexpected keyword argument '{}'", name));
+              throw py::type_error(fmt::format("execute() got an unexpected keyword argument '{}'", name));
             }
           }
 
