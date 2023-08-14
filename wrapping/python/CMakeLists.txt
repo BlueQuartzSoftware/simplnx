@@ -12,6 +12,8 @@ target_link_libraries(CxPybind
 
 pybind11_add_module(complexpy complexpy.cpp)
 
+target_compile_definitions(complexpy PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)
+
 # we want the CMake target name to be "complexpy", but the Python module to be "complex"
 set_target_properties(complexpy
   PROPERTIES
@@ -131,6 +133,8 @@ function(complex_add_python_plugin)
       ${ARGS_PLUGIN_NAME}
       CxPybind
   )
+
+  target_compile_definitions(${PYTHON_MODULE_NAME} PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)
 
   target_compile_options(${PYTHON_MODULE_NAME}
     PRIVATE
