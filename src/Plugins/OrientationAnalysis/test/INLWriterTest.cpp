@@ -1,66 +1,90 @@
-/**
- * This file is auto generated from the original OrientationAnalysis/INLWriterFilter
- * runtime information. These are the steps that need to be taken to utilize this
- * unit test in the proper way.
- *
- * 1: Validate each of the default parameters that gets created.
- * 2: Inspect the actual filter to determine if the filter in its default state
- * would pass or fail BOTH the preflight() and execute() methods
- * 3: UPDATE the ```REQUIRE(result.result.valid());``` code to have the proper
- *
- * 4: Add additional unit tests to actually test each code path within the filter
- *
- * There are some example Catch2 ```TEST_CASE``` sections for your inspiration.
- *
- * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
- * allow easier parsing of the unit tests.
- *
- * When you start working on this unit test remove "[INLWriterFilter][.][UNIMPLEMENTED]"
- * from the TEST_CASE macro. This will enable this unit test to be run by default
- * and report errors.
- */
-
-
 #include <catch2/catch.hpp>
-
-#include "complex/Parameters/ArraySelectionParameter.hpp"
-#include "complex/Parameters/FileSystemPathParameter.hpp"
-
-#include <filesystem>
-namespace fs = std::filesystem;
 
 #include "OrientationAnalysis/Filters/INLWriterFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "complex/Parameters/FileSystemPathParameter.hpp"
+#include "complex/UnitTest/UnitTestCommon.hpp"
+
+#include <fstream>
+
+#include <filesystem>
+namespace fs = std::filesystem;
+
 using namespace complex;
 
-TEST_CASE("OrientationAnalysis::INLWriterFilter: Valid Filter Execution","[OrientationAnalysis][INLWriterFilter][.][UNIMPLEMENTED][!mayfail]")
+namespace
+{
+const std::string k_MaterialName = "MaterialName";
+const std::string k_NumFeatures = "NumFeatures";
+
+const fs::path k_ExemplarFilePath = fs::path(fmt::format("{}/INL_writer/INLWriterExemplar.inl", unit_test::k_TestFilesDir));
+const fs::path k_WrittenFilePath = fs::path(fmt::format("{}/INLWriter.inl", unit_test::k_BinaryTestOutputDir));
+
+std::vector<char> readIn(const fs::path& filePath)
+{
+  std::ifstream file(filePath.string(), std::ios_base::binary);
+
+  if(file)
+  {
+    // get file size
+    file.seekg(0, std::ios::end);
+    std::streampos length = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // read whole file into a vector
+    std::vector<char> contents(length); // act as a buffer
+    file.read(contents.data(), length);
+
+    // build string from pseudo-buffer
+    return contents;
+  }
+  return {};
+}
+
+void CompareResults() // compare hash of both file strings
+{
+  REQUIRE(fs::exists(k_WrittenFilePath));
+  REQUIRE(fs::exists(k_ExemplarFilePath));
+  const std::vector<char> exemplar = readIn(k_ExemplarFilePath);
+  const std::vector<char> data = readIn(k_WrittenFilePath);
+  for(usize i = 0; i < 1024; i++)
+  {
+    if(exemplar[i] != data[i])
+    {
+      std::cout << "Output difference at byte offset " << i << std::endl;
+      REQUIRE(exemplar[i] == data[i]);
+      break;
+    }
+  }
+  REQUIRE(exemplar.size() == data.size());
+}
+}
+
+TEST_CASE("OrientationAnalysis::INLWriterFilter: Valid Filter Execution","[OrientationAnalysis][INLWriterFilter]")
 {
   // Instantiate the filter, a DataStructure object and an Arguments Object
   INLWriterFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
 
   // Create default Parameters for the filter.
-  args.insertOrAssign(INLWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path("/Path/To/Output/File/To/Write.data")));
-  args.insertOrAssign(INLWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(INLWriterFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(INLWriterFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(INLWriterFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(INLWriterFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-  args.insertOrAssign(INLWriterFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(INLWriterFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_WrittenFilePath));
+  args.insertOrAssign(INLWriterFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
+  args.insertOrAssign(INLWriterFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_Phases})));
+  args.insertOrAssign(INLWriterFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
+  args.insertOrAssign(INLWriterFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures})));
+  args.insertOrAssign(INLWriterFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, ::k_MaterialName})));
+  args.insertOrAssign(INLWriterFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, ::k_NumFeatures})));
 
 
   // Preflight the filter and check result
-  auto preflightResult = filter.preflight(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
   REQUIRE(preflightResult.outputActions.valid());
 
   // Execute the filter and check the result
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.valid());
-}
 
-//TEST_CASE("OrientationAnalysis::INLWriterFilter: InValid Filter Execution")
-//{
-//
-//}
+  ::CompareResults();
+}

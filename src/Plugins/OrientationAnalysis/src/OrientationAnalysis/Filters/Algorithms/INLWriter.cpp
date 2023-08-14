@@ -94,7 +94,7 @@ Result<> INLWriter::operator()()
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
   auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  auto& numFeatures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->NumFeaturesArrayPath);
+  auto& numFeatures = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->NumFeaturesArrayPath);
   auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
 
   usize totalPoints = featureIds.getNumberOfTuples();
