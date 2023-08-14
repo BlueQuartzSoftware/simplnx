@@ -1002,7 +1002,13 @@ PYBIND11_MODULE(complex, mod)
 
   py::class_<IFilter::ExecuteResult> executeResult(filter, "ExecuteResult");
   executeResult.def(py::init<>());
-  executeResult.def_property_readonly("errors", [](const IFilter::ExecuteResult& self) { return self.result.errors(); });
+  executeResult.def_property_readonly("errors", [](const IFilter::ExecuteResult& self) {
+    if(self.result.valid())
+    {
+      return ErrorCollection{};
+    }
+    return self.result.errors();
+  });
   executeResult.def_property_readonly("warnings", [](const IFilter::ExecuteResult& self) { return self.result.warnings(); });
   executeResult.def("__bool__", [](const IFilter::ExecuteResult& self) { return self.result.valid(); });
   executeResult.def("__repr__", [](const IFilter::ExecuteResult& self) {
