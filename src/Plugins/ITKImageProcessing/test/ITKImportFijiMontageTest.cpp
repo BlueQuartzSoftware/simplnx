@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 namespace
 {
 const std::string k_SmallZeissZenDir = fmt::format("{}/fiji_montage_test/small_zeiss_zen", unit_test::k_TestFilesDir);
-const fs::path k_SmallInputFile = fs::path(k_SmallZeissZenDir + fs::path::preferred_separator + "TileConfiguration.registered.txt");
+
 const std::string k_DataGroupName = "Zen DataGroup";
 const DataPath k_DataGroupPath = {{k_DataGroupName}};
 } // namespace
@@ -38,7 +38,11 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
   DataStructure dataStructure;
   Arguments args;
 
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_SmallInputFile));
+  std::stringstream path;
+  path << k_SmallZeissZenDir << fs::path::preferred_separator << "TileConfiguration.registered.txt";
+  const fs::path smallInputFile = fs::path(path.str());
+
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(smallInputFile));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_DataGroupName_Key, std::make_any<std::string>(k_DataGroupName));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(IGeometry::LengthUnit::Micrometer)));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ChangeOrigin_Key, std::make_any<bool>(false));
