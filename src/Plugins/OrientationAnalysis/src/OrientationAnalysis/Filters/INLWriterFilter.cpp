@@ -100,22 +100,6 @@ IFilter::PreflightResult INLWriterFilter::preflightImpl(const DataStructure& dat
     return MakePreflightErrorResult(-78430, fmt::format("Array [{}] type is incorrect, must be of type StringArray.", pMaterialNameArrayPathValue.toString()));
   }
 
-  QDir dir(fi.path());
-  if(!dir.mkpath("."))
-  {
-    QString ss = QObject::tr("Error creating parent path '%1'").arg(fi.path());
-    setErrorCondition(-1, ss);
-    return -1;
-  }
-
-  FILE* f = fopen(getOutputFile().toLatin1().data(), "wb");
-  if(nullptr == f)
-  {
-    QString ss = QObject::tr("Error opening output file '%1'").arg(getOutputFile());
-    setErrorCondition(-1, ss);
-    return -1;
-  }
-
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

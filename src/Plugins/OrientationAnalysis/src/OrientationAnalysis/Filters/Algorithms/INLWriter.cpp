@@ -4,9 +4,12 @@
 #include "complex/DataStructure/StringArray.hpp"
 #include "complex/DataStructure/DataPath.hpp"
 #include "complex/DataStructure/Geometry/ImageGeom.hpp"
+#include "complex/Utilities/FilterUtilities.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/IO/TSL/AngConstants.h"
+
+#include <fstream>
 
 using namespace complex;
 
@@ -45,7 +48,6 @@ uint32 mapCrystalSymmetryToTslSymmetry(uint32 symmetry)
   default:
     return EbsdLib::CrystalStructure::UnknownCrystalStructure;
   }
-  return EbsdLib::CrystalStructure::UnknownCrystalStructure;
 }
 }
 
@@ -70,6 +72,22 @@ const std::atomic_bool& INLWriter::getCancel()
 // -----------------------------------------------------------------------------
 Result<> INLWriter::operator()()
 {
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  Result<> createDirectoriesResult = complex::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  if(createDirectoriesResult.invalid())
+  {
+    return createDirectoriesResult;
+  }
+
+  // Make sure any directory path is also available as the user may have just typed
+  // in a path without actually creating the full path
+  std::ofstream fout(m_InputValues->OutputFile,  std::ios_base::out | std::ios_base::binary);
+  if(!fout.is_open())
+  {
+    return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", m_InputValues->OutputFile.string()));
+  }
+
   auto imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
 
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
@@ -85,32 +103,27 @@ Result<> INLWriter::operator()()
   FloatVec3 res = imageGeom.getSpacing();
   FloatVec3 origin = imageGeom.getOrigin();
 
-  // Make sure any directory path is also available as the user may have just typed
-  // in a path without actually creating the full path
-  QFileInfo fi(getOutputFile());
-
   // Write the header, Each line starts with a "#" symbol
-  fprintf(f, "# File written from %s\n", OrientationAnalysis::Version::PackageComplete().toLatin1().data());
-  fprintf(f, "# DateTime: %s\n", QDateTime::currentDateTime().toString().toLatin1().data());
-  fprintf(f, "# X_STEP: %f\n", res[0]);
-  fprintf(f, "# Y_STEP: %f\n", res[1]);
-  fprintf(f, "# Z_STEP: %f\n", res[2]);
-  fprintf(f, "#\n");
-  fprintf(f, "# X_MIN: %f\n", origin[0]);
-  fprintf(f, "# Y_MIN: %f\n", origin[1]);
-  fprintf(f, "# Z_MIN: %f\n", origin[2]);
-  fprintf(f, "#\r\n");
-  fprintf(f, "# X_MAX: %f\n", origin[0] + (dims[0] * res[0]));
-  fprintf(f, "# Y_MAX: %f\n", origin[1] + (dims[1] * res[1]));
-  fprintf(f, "# Z_MAX: %f\n", origin[2] + (dims[2] * res[2]));
-  fprintf(f, "#\n");
-  fprintf(f, "# X_DIM: %llu\n", static_cast<long long unsigned int>(dims[0]));
-  fprintf(f, "# Y_DIM: %llu\n", static_cast<long long unsigned int>(dims[1]));
-  fprintf(f, "# Z_DIM: %llu\n", static_cast<long long unsigned int>(dims[2]));
-  fprintf(f, "#\n");
+//  fout << "# File written from " << OrientationAnalysis::Version::PackageComplete().toLatin1().data() << "\n";
+  fout << "# X_STEP: " << res[0] << "\n";
+  fout << "# Y_STEP: " << res[1] << "\n";
+  fout << "# Z_STEP: " << res[2] << "\n";
+  fout << "#\n";
+  fout << "# X_MIN: " << origin[0] << "\n";
+  fout << "# Y_MIN: " << origin[1] << "\n";
+  fout << "# Z_MIN: " << origin[2] << "\n";
+  fout << "#\n";
+  fout << "# X_MAX: " << origin[0] + (static_cast<float64>(dims[0]) * res[0]) << "\n";
+  fout << "# Y_MAX: " << origin[1] + (static_cast<float64>(dims[1]) * res[1]) << "\n";
+  fout << "# Z_MAX: " << origin[2] + (static_cast<float64>(dims[2]) * res[2]) << "\n";
+  fout << "#\n";
+  fout << "# X_DIM: " << static_cast<long long unsigned int>(dims[0]) << "\n";
+  fout << "# Y_DIM: " << static_cast<long long unsigned int>(dims[1]) << "\n";
+  fout << "# Z_DIM: " << static_cast<long long unsigned int>(dims[2]) << "\n";
+  fout << "#\n";
 
 #if 0
-  -------------------------------------------- -
+   -------------------------------------------- -
 #Phase_1 : MOX with 30 % Pu
 #Symmetry_1 : 43
 #Features_1 : 4
@@ -127,16 +140,16 @@ Result<> INLWriter::operator()()
   -------------------------------------------- -
 #endif
 
-  uint32 symmetry = 0;
+  uint32 symmetry;
   auto count = static_cast<int32>(materialNames.getNumberOfTuples());
   for(uint32 i = 1; i < count; ++i)
   {
-    fprintf(f, "# Phase_%d: %s\n", i, materialNames[i].c_str());
+    fout << "# Phase_" << i << ": " << materialNames[i].c_str() << "\n";
     symmetry = crystalStructures[i];
     symmetry = mapCrystalSymmetryToTslSymmetry(symmetry);
-    fprintf(f, "# Symmetry_%d: %u\n", i, symmetry);
-    fprintf(f, "# Features_%d: %d\n", i, numFeatures[i]);
-    fprintf(f, "#\n");
+    fout << "# Symmetry_" << i << ": " << symmetry << "\n";
+    fout << "# Features_" << i << ": " << numFeatures[i] << "\n";
+    fout << "#\n";
   }
 
   std::set<int32> uniqueFeatureIds;
@@ -145,17 +158,17 @@ Result<> INLWriter::operator()()
     uniqueFeatureIds.insert(featureIds[i]);
   }
   count = static_cast<int32_t>(uniqueFeatureIds.size());
-  fprintf(f, "# Num_Features: %d \n", count);
-  fprintf(f, "#\n");
+  fout << "# Num_Features: " << count << " \n";
+  fout << "#\n";
 
-  fprintf(f, "# phi1 PHI phi2 x y z FeatureId PhaseId Symmetry\n");
+  fout << "# phi1 PHI phi2 x y z FeatureId PhaseId Symmetry\n";
 
-  float32 phi1 = 0.0f, phi = 0.0f, phi2 = 0.0f;
-  float32 xPos = 0.0f, yPos = 0.0f, zPos = 0.0f;
-  int32 featureId = 0;
-  int32 phaseId = 0;
+  float32 phi1, phi, phi2;
+  float64 xPos, yPos, zPos;
+  int32 featureId;
+  int32 phaseId;
 
-  usize index = 0;
+  usize index;
   for(usize z = 0; z < dims[2]; ++z)
   {
     for(usize y = 0; y < dims[1]; ++y)
@@ -166,9 +179,9 @@ Result<> INLWriter::operator()()
         phi1 = eulerAngles[index * 3];
         phi = eulerAngles[index * 3 + 1];
         phi2 = eulerAngles[index * 3 + 2];
-        xPos = origin[0] + (x * res[0]);
-        yPos = origin[1] + (y * res[1]);
-        zPos = origin[2] + (z * res[2]);
+        xPos = origin[0] + (static_cast<float64>(x) * res[0]);
+        yPos = origin[1] + (static_cast<float64>(y) * res[1]);
+        zPos = origin[2] + (static_cast<float64>(z) * res[2]);
         featureId = featureIds[index];
         phaseId = cellPhases[index];
         symmetry = crystalStructures[phaseId];
@@ -192,12 +205,11 @@ Result<> INLWriter::operator()()
           symmetry = EbsdLib::Ang::PhaseSymmetry::UnknownSymmetry;
         }
 
-        fprintf(f, "%f %f %f %f %f %f %d %d %d\n", phi1, phi, phi2, xPos, yPos, zPos, featureId, phaseId, symmetry);
+        fout << phi1 << " " << phi << " " << phi2 << " " << xPos << " " << yPos << " " << zPos << " " << featureId << " " << phaseId << " " << symmetry << "\n";
       }
     }
   }
-
-  fclose(f);
+  fout.flush();
 
   return {};
 }
