@@ -1046,6 +1046,15 @@ PYBIND11_MODULE(complex, mod)
   pipeline.def("__len__", &Pipeline::size);
   pipeline.def(
       "__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
+  pipeline.def(
+      "insert",
+      [internals](Pipeline& self, Pipeline::index_type index, const IFilter& filter, const py::dict& args) {
+        self.insertAt(index, filter.clone(), ConvertDictToArgs(*internals, filter.parameters(), args));
+      },
+      "index"_a, "filter"_a, "args"_a = py::dict());
+  pipeline.def(
+      "append", [internals](Pipeline& self, const IFilter& filter, const py::dict& args) { self.insertAt(self.size(), filter.clone(), ConvertDictToArgs(*internals, filter.parameters(), args)); },
+      "filter"_a, "args"_a = py::dict());
 
   pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getFilter()->parameters(), self.getArguments()); });
   pipelineFilter.def(
