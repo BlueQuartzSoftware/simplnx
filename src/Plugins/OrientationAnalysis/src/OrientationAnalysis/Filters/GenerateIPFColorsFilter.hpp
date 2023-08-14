@@ -30,7 +30,7 @@ public:
   static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static inline constexpr StringLiteral k_GoodVoxelsPath_Key = "good_voxels_array_path";
   static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_CellIPFColorsArrayName_Key = "cell_ip_fcolors_array_name";
+  static inline constexpr StringLiteral k_CellIPFColorsArrayName_Key = "cell_ipf_colors_array_name";
 
   /**
    * @brief Returns the name of the filter.
