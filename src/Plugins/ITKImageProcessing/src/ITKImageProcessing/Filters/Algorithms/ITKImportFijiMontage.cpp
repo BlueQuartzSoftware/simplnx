@@ -117,7 +117,9 @@ private:
         continue;
       }
       BoundsType bound;
-      bound.Filepath = fs::path(m_InputValues->inputFilePath.parent_path().string() + fs::path::preferred_separator + tokens[0]);
+      std::stringstream path;
+      path << m_InputValues->inputFilePath.parent_path().string() << fs::path::preferred_separator << tokens[0];
+      bound.Filepath = fs::path(path.str());
 
       std::string coords = StringUtilities::trimmed(tokens[2]);
       coords = StringUtilities::replace(coords, "(", "");
@@ -147,7 +149,6 @@ private:
     {
       std::stringstream dcNameStream;
       dcNameStream << m_InputValues->imagePrefix << bound.Filepath.filename().string().substr(0, bound.Filepath.filename().string().find(bound.Filepath.extension().string()));
-      ;
       bound.ImageName = dcNameStream.str();
 
       {
