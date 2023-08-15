@@ -11,7 +11,9 @@
 #include "complex/Parameters/VectorParameter.hpp"
 #include "complex/Utilities/StringUtilities.hpp"
 
+#include <sstream>
 #include <filesystem>
+
 namespace fs = std::filesystem;
 
 using namespace complex;
