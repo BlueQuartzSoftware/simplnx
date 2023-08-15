@@ -1064,6 +1064,8 @@ PYBIND11_MODULE(complex, mod)
 
   pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
   pipelineFilter.def(
+      "set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
+  pipelineFilter.def(
       "get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
 
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
