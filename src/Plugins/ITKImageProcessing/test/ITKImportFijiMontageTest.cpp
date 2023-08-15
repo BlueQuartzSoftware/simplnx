@@ -10,8 +10,8 @@
 #include "complex/UnitTest/UnitTestCommon.hpp"
 #include "complex/Utilities/DataGroupUtilities.hpp"
 
-#include <sstream>
 #include <filesystem>
+#include <sstream>
 
 using namespace complex;
 
