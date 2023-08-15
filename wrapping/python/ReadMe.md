@@ -35,10 +35,13 @@ Create the package from the `complex` sources
 
 ### Windows/Linux:
 
+    [user@host] $ cd complex/conda
+    [user@host] $ conda build . 
 
-## Generating Sphinx Docs
+### Uploading to Anaconda.org
 
-    conda install sphinx sphix-rtd-theme
+    [user@host] $ conda login
+    [user@host] $ conda upload -c bluequartzsoftware [path/to/tar.bz]
 
 ## Using the Python Bindings
 
@@ -46,7 +49,7 @@ Create the package from the `complex` sources
 ```
 conda create -n cxpython python=3.8
 conda activate cxpython
-conda install -c http://dream3d.bluequartz.net/binaries/conda complex
+conda install -c bluequartzsoftware complex
 ```
 
 If you plan to use jupyter notebooks, then any other kernels and such will also need to be installed. VS Code does this for you.
