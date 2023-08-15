@@ -1062,7 +1062,7 @@ PYBIND11_MODULE(complex, mod)
       "append", [internals](Pipeline& self, const IFilter& filter, const py::dict& args) { self.insertAt(self.size(), filter.clone(), ConvertDictToArgs(*internals, filter.parameters(), args)); },
       "filter"_a, "args"_a = py::dict());
 
-  pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getFilter()->parameters(), self.getArguments()); });
+  pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
   pipelineFilter.def(
       "get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
 
