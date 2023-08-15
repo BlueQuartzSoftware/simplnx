@@ -87,7 +87,6 @@ IFilter::UniquePointer INLWriterFilter::clone() const
 IFilter::PreflightResult INLWriterFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel) const
 {
-  auto pOutputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key);
   auto pMaterialNameArrayPathValue = filterArgs.value<DataPath>(k_MaterialNameArrayPath_Key);
 
   PreflightResult preflightResult;
