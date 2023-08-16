@@ -308,6 +308,61 @@ auto BindCreateGeometry3DAction(py::handle scope, const char* name)
 #define COMPLEX_PY_BIND_CREATE_GEOMETRY_2D_ACTION(scope, className) BindCreateGeometry2DAction<className>(scope, #className)
 #define COMPLEX_PY_BIND_CREATE_GEOMETRY_3D_ACTION(scope, className) BindCreateGeometry3DAction<className>(scope, #className)
 
+std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineFilterResult(const PipelineFilter& filter)
+{
+  std::vector<Error> filterErrors = filter.getErrors();
+  std::vector<Warning> filterWarnings = filter.getWarnings();
+  return {std::move(filterErrors), std::move(filterWarnings)};
+}
+
+std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(const Pipeline& pipeline)
+{
+  std::vector<Error> errors;
+  std::vector<Warning> warnings;
+  for(usize index = 0; index < pipeline.size(); index++)
+  {
+    const AbstractPipelineNode* node = pipeline.at(index);
+    std::vector<Error> nodeErrors;
+    std::vector<Warning> nodeWarnings;
+    AbstractPipelineNode::NodeType nodeType = node->getType();
+    switch(nodeType)
+    {
+    case AbstractPipelineNode::NodeType::Pipeline: {
+      const auto& subPipeline = dynamic_cast<const Pipeline&>(*node);
+      std::tie(nodeErrors, nodeWarnings) = GetPipelineResult(subPipeline);
+      break;
+    }
+    case AbstractPipelineNode::NodeType::Filter: {
+      const auto& filter = dynamic_cast<const PipelineFilter&>(*node);
+      std::tie(nodeErrors, nodeWarnings) = GetPipelineFilterResult(filter);
+      break;
+    }
+    }
+    errors.insert(errors.end(), nodeErrors.begin(), nodeErrors.end());
+    warnings.insert(warnings.end(), nodeWarnings.begin(), nodeWarnings.end());
+    FaultState faultState = node->getFaultState();
+    if(faultState == FaultState::Errors)
+    {
+      break;
+    }
+  }
+
+  return {std::move(errors), std::move(warnings)};
+}
+
+Result<> ExecutePipeline(Pipeline& pipeline, DataStructure& dataStructure)
+{
+  bool success = pipeline.execute(dataStructure, false);
+  auto&& [errors, warnings] = GetPipelineResult(pipeline);
+  Result<> result;
+  if(!success)
+  {
+    result.m_Expected = nonstd::make_unexpected(std::move(errors));
+  }
+  result.m_Warnings = std::move(warnings);
+  return result;
+}
+
 PYBIND11_MODULE(complex, mod)
 {
   auto* internals = new Internals();
@@ -351,10 +406,22 @@ PYBIND11_MODULE(complex, mod)
                return result;
              }),
              "errors"_a = py::none(), "warnings"_a = py::none());
-  result.def_property(
-      "errors", [](Result<>& self) { return self.errors(); }, [](Result<>& self, std::vector<Error> errors) { self.errors() = std::move(errors); });
-  result.def_property(
-      "warnings", [](Result<>& self) { return self.warnings(); }, [](Result<>& self, std::vector<Warning> warnings) { self.warnings() = std::move(warnings); });
+  result.def_property_readonly("errors", [](Result<>& self) {
+    if(self.valid())
+    {
+      return std::vector<Error>{};
+    }
+    return self.errors();
+  });
+  result.def_property_readonly("warnings", [](Result<>& self) { return self.warnings(); });
+  result.def("__repr__", [](const Result<>& self) {
+    std::vector<Error> errors;
+    if(self.invalid())
+    {
+      errors = self.errors();
+    }
+    return fmt::format("<complex.Result(errors={}, warnings={})>", errors, self.warnings());
+  });
 
   py::enum_<NumericType> numericType(mod, "NumericType");
   numericType.value("int8", NumericType::int8);
@@ -1046,10 +1113,11 @@ PYBIND11_MODULE(complex, mod)
         return pipelineResult.value();
       },
       "path"_a);
-  pipeline.def("execute", [](Pipeline& self, DataStructure& dataStructure) { return self.execute(dataStructure, false); });
+  pipeline.def("execute", &ExecutePipeline);
   pipeline.def(
       "__getitem__", [](Pipeline& self, Pipeline::index_type index) { return self.at(index); }, py::return_value_policy::reference_internal);
   pipeline.def("__len__", &Pipeline::size);
+  pipeline.def("size", &Pipeline::size);
   pipeline.def(
       "__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
   pipeline.def(
@@ -1061,6 +1129,8 @@ PYBIND11_MODULE(complex, mod)
   pipeline.def(
       "append", [internals](Pipeline& self, const IFilter& filter, const py::dict& args) { self.insertAt(self.size(), filter.clone(), ConvertDictToArgs(*internals, filter.parameters(), args)); },
       "filter"_a, "args"_a = py::dict());
+  pipeline.def("clear", &Pipeline::clear);
+  pipeline.def("remove", &Pipeline::removeAt, "index"_a);
 
   pipelineFilter.def("get_args", [internals](PipelineFilter& self) { return ConvertArgsToDict(*internals, self.getParameters(), self.getArguments()); });
   pipelineFilter.def(
