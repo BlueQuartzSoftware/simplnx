@@ -39,6 +39,7 @@ void CompareResults() // compare hash of both file strings
   {
     throw std::runtime_error(fmt::format("{} must be stream readable!", k_WrittenFilePath.string()));
   }
+
   // //ignore versioning
   // generatedFile.ignore('\n');
 
