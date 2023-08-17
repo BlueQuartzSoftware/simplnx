@@ -118,6 +118,8 @@ complex_generate_filter_bindings(CPP_PLUGIN_NAME ComplexCore
   FILTER_LIST ${COMPLEX_CORE_FILTER_LIST}
 )
 
+set_property(TARGET complexpy PROPERTY FOLDER "Python")
+
 option(COMPLEX_PY_GENERATE_PYI "Generate .pyi files for python bindings" OFF)
 if(COMPLEX_PY_GENERATE_PYI)
   #complex_create_pyi(PYTHON_MODULE_NAME complex PYTHON_TARGET complexpy)
@@ -201,6 +203,8 @@ function(complex_add_python_plugin)
         CXX_VISIBILITY_PRESET default
     )
   endif()
+
+  set_property(TARGET ${PYTHON_MODULE_NAME} PROPERTY FOLDER "Python")
 
   if(COMPLEX_PY_GENERATE_PYI)
     # complex_create_plugin_pyi(PLUGIN_NAME ${ARGS_PLUGIN_NAME})
