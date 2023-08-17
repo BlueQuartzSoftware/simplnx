@@ -41,7 +41,7 @@ void CompareResults() // compare hash of both file strings
   }
 
   // ignore versioning
-  generatedFile.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+  generatedFile.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
   char exemplar[128];
   char generated[128];
@@ -55,16 +55,16 @@ void CompareResults() // compare hash of both file strings
     generatedFile.getline(generated, std::numeric_limits<std::streamsize>::max(), '\n');
 
     std::string cExem(exemplar);
-    std::string exem = cExem.substr(0 , cExem.find('\r'));
+    std::string exem = cExem.substr(0, cExem.find('\r'));
 
     std::string cGen(generated);
     std::string gen = cGen.substr(0, cGen.find('\n'));
     REQUIRE(exem == gen);
   }
 }
-}
+} // namespace
 
-TEST_CASE("OrientationAnalysis::INLWriterFilter: Valid Filter Execution","[OrientationAnalysis][INLWriterFilter]")
+TEST_CASE("OrientationAnalysis::INLWriterFilter: Valid Filter Execution", "[OrientationAnalysis][INLWriterFilter]")
 {
   const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
 
@@ -82,7 +82,6 @@ TEST_CASE("OrientationAnalysis::INLWriterFilter: Valid Filter Execution","[Orien
   args.insertOrAssign(INLWriterFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures})));
   args.insertOrAssign(INLWriterFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, ::k_MaterialName})));
   args.insertOrAssign(INLWriterFilter::k_NumFeaturesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, ::k_NumFeatures})));
-
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
