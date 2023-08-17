@@ -66,6 +66,8 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("OrientationAnalysis::INLWriterFilter: Valid Filter Execution","[OrientationAnalysis][INLWriterFilter]")
 {
+  const complex::UnitTest::TestFileSentinel testDataSentinel(complex::unit_test::k_CMakeExecutable, complex::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
+
   // Instantiate the filter, a DataStructure object and an Arguments Object
   INLWriterFilter filter;
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
