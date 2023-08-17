@@ -496,7 +496,7 @@ private:
   const std::atomic_bool* m_Value = nullptr;
 };
 
-auto MakeAtomicBoolProxyGuard(std::shared_ptr<AtomicBoolProxy>& proxy)
+inline auto MakeAtomicBoolProxyGuard(std::shared_ptr<AtomicBoolProxy>& proxy)
 {
   return MakeScopeGuard([&proxy]() noexcept { proxy->reset(); });
 }
