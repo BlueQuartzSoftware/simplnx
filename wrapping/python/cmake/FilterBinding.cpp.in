@@ -1,0 +1,12 @@
+#include "@PLUGIN_NAME@FilterBinding.hpp"
+
+@FILTER_INCLUDE_CODE@
+
+namespace complex::@PLUGIN_NAME@
+{
+void BindFilters(pybind11::handle scope, const complex::CxPybind::Internals& internals)
+{
+  using namespace CxPybind;
+@FILTER_BINDING_CODE@
+}
+} // namespace complex

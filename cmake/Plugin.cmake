@@ -192,6 +192,7 @@ function(create_complex_plugin)
   add_library(${ARGS_NAME} SHARED)
   add_library(complex::${ARGS_NAME} ALIAS ${ARGS_NAME})
 
+  set_property(TARGET ${ARGS_NAME} PROPERTY COMPLEX_FILTER_LIST ${ARGS_FILTER_LIST})
 
   #------------------------------------------------------------------------------
   # Add the plugin to the global list of plugins. This is needed for installation.

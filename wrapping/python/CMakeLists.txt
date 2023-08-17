@@ -45,6 +45,41 @@ target_compile_options(complexpy
     $<$<CXX_COMPILER_ID:MSVC>:/MP>
 )
 
+function(complex_generate_filter_bindings)
+  set(options)
+  set(oneValueArgs CPP_PLUGIN_NAME PYTHON_MODULE_NAME)
+  set(multiValueArgs FILTER_LIST)
+  cmake_parse_arguments(ARGS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  set(PLUGIN_NAME ${ARGS_CPP_PLUGIN_NAME})
+  set(FILTER_INCLUDE_CODE "")
+  set(FILTER_BINDING_CODE "")
+  
+  foreach(FILTER IN LISTS ARGS_FILTER_LIST)
+    string(APPEND FILTER_INCLUDE_CODE "#include <${PLUGIN_NAME}/Filters/${FILTER}.hpp>\n")
+    string(APPEND FILTER_BINDING_CODE "  BindFilter<${FILTER}>(scope, internals);\n")
+  endforeach()
+
+  set(GENERATED_PYTHON_DIR ${PROJECT_BINARY_DIR}/python/generated/${PLUGIN_NAME})
+
+  set(GENERATED_FILTER_BINDING_HPP ${GENERATED_PYTHON_DIR}/${PLUGIN_NAME}/${PLUGIN_NAME}FilterBinding.hpp)
+  set(GENERATED_FILTER_BINDING_CPP ${GENERATED_PYTHON_DIR}/${PLUGIN_NAME}/${PLUGIN_NAME}FilterBinding.cpp)
+
+  configure_file(${PROJECT_SOURCE_DIR}/wrapping/python/cmake/FilterBinding.hpp.in ${GENERATED_FILTER_BINDING_HPP} @ONLY)
+  configure_file(${PROJECT_SOURCE_DIR}/wrapping/python/cmake/FilterBinding.cpp.in ${GENERATED_FILTER_BINDING_CPP} @ONLY)
+
+  target_sources(${ARGS_PYTHON_MODULE_NAME}
+    PRIVATE
+      ${GENERATED_FILTER_BINDING_HPP}
+      ${GENERATED_FILTER_BINDING_CPP}
+  )
+
+  target_include_directories(${ARGS_PYTHON_MODULE_NAME}
+    PRIVATE
+      ${GENERATED_PYTHON_DIR}
+  )
+endfunction()
+
 function(complex_create_pyi)
   set(options)
   set(oneValueArgs PYTHON_MODULE_NAME PYTHON_TARGET)
@@ -75,6 +110,13 @@ function(complex_create_plugin_pyi)
   complex_create_pyi(PYTHON_MODULE_NAME ${PLUGIN_NAME_LOWER} PYTHON_TARGET ${PLUGIN_NAME_LOWER})
   add_dependencies(${PLUGIN_NAME_LOWER} complexpy)
 endfunction()
+
+get_property(COMPLEX_CORE_FILTER_LIST TARGET ComplexCore PROPERTY COMPLEX_FILTER_LIST)
+
+complex_generate_filter_bindings(CPP_PLUGIN_NAME ComplexCore
+  PYTHON_MODULE_NAME complexpy
+  FILTER_LIST ${COMPLEX_CORE_FILTER_LIST}
+)
 
 option(COMPLEX_PY_GENERATE_PYI "Generate .pyi files for python bindings" OFF)
 if(COMPLEX_PY_GENERATE_PYI)
@@ -127,6 +169,13 @@ function(complex_add_python_plugin)
   string(TOLOWER ${ARGS_PLUGIN_NAME} PYTHON_MODULE_NAME)
 
   pybind11_add_module(${PYTHON_MODULE_NAME} ${PYTHON_MODULE_NAME}.cpp)
+
+  get_property(FILTER_LIST TARGET ${ARGS_PLUGIN_NAME} PROPERTY COMPLEX_FILTER_LIST)
+
+  complex_generate_filter_bindings(CPP_PLUGIN_NAME ${ARGS_PLUGIN_NAME}
+    PYTHON_MODULE_NAME ${PYTHON_MODULE_NAME}
+    FILTER_LIST ${FILTER_LIST}
+  )
 
   target_link_libraries(${PYTHON_MODULE_NAME}
     PUBLIC
