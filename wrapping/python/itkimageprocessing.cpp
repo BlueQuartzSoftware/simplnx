@@ -69,7 +69,7 @@
 #endif
 
 using namespace complex;
-using namespace complex::CxPybind11;
+using namespace complex::CxPybind;
 namespace py = pybind11;
 
 PYBIND11_MODULE(itkimageprocessing, mod)

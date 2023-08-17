@@ -52,7 +52,7 @@
 #include <OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp>
 
 using namespace complex;
-using namespace complex::CxPybind11;
+using namespace complex::CxPybind;
 namespace py = pybind11;
 
 using namespace pybind11::literals;
