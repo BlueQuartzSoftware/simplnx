@@ -48,12 +48,12 @@ boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>*)
 template <class T>
 using ParamTypeListT = decltype(ExtractListFromDescr(static_cast<CastNameT<T>*>(nullptr)));
 
-std::string GetFullPythonNameFromType(py::handle type)
+inline std::string GetFullPythonNameFromType(py::handle type)
 {
   return type.attr("__module__").cast<std::string>() + "." + type.attr("__qualname__").cast<std::string>();
 }
 
-std::string GetFullPythonNameFromObject(py::handle object)
+inline std::string GetFullPythonNameFromObject(py::handle object)
 {
   py::handle type = py::type::handle_of(object);
   if(!type)
@@ -284,7 +284,7 @@ private:
   Application* m_App;
 };
 
-py::dict ConvertArgsToDict(const Internals& internals, const Parameters& parameters, const Arguments& args)
+inline py::dict ConvertArgsToDict(const Internals& internals, const Parameters& parameters, const Arguments& args)
 {
   py::dict dict;
 
@@ -304,7 +304,7 @@ py::dict ConvertArgsToDict(const Internals& internals, const Parameters& paramet
   return dict;
 }
 
-Arguments ConvertDictToArgs(const Internals& internals, const Parameters& parameters, const py::dict& dict)
+inline Arguments ConvertDictToArgs(const Internals& internals, const Parameters& parameters, const py::dict& dict)
 {
   Arguments args;
 
@@ -325,12 +325,12 @@ Arguments ConvertDictToArgs(const Internals& internals, const Parameters& parame
   return args;
 }
 
-std::string MakePythonParamString(std::string_view variableName, std::string_view typeName)
+inline std::string MakePythonParamString(std::string_view variableName, std::string_view typeName)
 {
   return fmt::format("{}: {}", variableName, typeName);
 }
 
-std::string MakePythonParamStringWithDefaulValue(std::string_view variableName, std::string_view typeName, std::string_view defaultValue)
+inline std::string MakePythonParamStringWithDefaulValue(std::string_view variableName, std::string_view typeName, std::string_view defaultValue)
 {
   return fmt::format("{}: {} = {}", variableName, typeName, defaultValue);
 }
@@ -342,7 +342,7 @@ std::string MakePythonParamString(const char* variableName)
   return MakePythonParamString(variableName, typeName);
 }
 
-std::vector<std::string> MakePythonParamListString(const Parameters& params, const Internals& internals)
+inline std::vector<std::string> MakePythonParamListString(const Parameters& params, const Internals& internals)
 {
   std::vector<std::string> paramList;
   paramList.reserve(params.size() + 2);
@@ -373,12 +373,12 @@ std::string MakePythonSignature(std::string_view funcName, const Internals& inte
   return signature;
 }
 
-void PyPrintMessage(const IFilter::Message& message)
+inline void PyPrintMessage(const IFilter::Message& message)
 {
   py::print(fmt::format("{}", message.message));
 }
 
-IFilter::MessageHandler CreatePyMessageHandler()
+inline IFilter::MessageHandler CreatePyMessageHandler()
 {
   return IFilter::MessageHandler{&PyPrintMessage};
 }
@@ -670,7 +670,7 @@ private:
   py::module_ m_PythonModule;
 };
 
-void Internals::loadPythonPlugin(py::module_& mod)
+inline void Internals::loadPythonPlugin(py::module_& mod)
 {
   auto plugin = PythonPlugin::Create(mod);
 
@@ -681,7 +681,7 @@ void Internals::loadPythonPlugin(py::module_& mod)
   m_PythonPlugins.insert({plugin->getId(), plugin});
 }
 
-void Internals::reloadPythonPlugins()
+inline void Internals::reloadPythonPlugins()
 {
   FilterList* filterList = m_App->getFilterList();
   for(auto&& [id, plugin] : m_PythonPlugins)
