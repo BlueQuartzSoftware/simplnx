@@ -67,10 +67,7 @@ set(COMPLEX_VERSION_MAJOR 0)
 set(COMPLEX_VERSION_MINOR 1)
 set(COMPLEX_VERSION_PATCH 0)
 
-# --------------------------------------------------------------------------------------------------
-# Set COMPLEX_OPTIONAL_SUFFIX using a CMake variable (-D on the command line) or from CMake-GUI
-# --------------------------------------------------------------------------------------------------
-set(COMPLEX_VERSION "${DREAM3DNX_VERSION_MAJOR}.${DREAM3DNX_VERSION_MINOR}.${DREAM3DNX_VERSION_PATCH}")
+set(COMPLEX_VERSION "${COMPLEX_VERSION_MAJOR}.${COMPLEX_VERSION_MINOR}.${COMPLEX_VERSION_PATCH}")
 
 project(complex
   VERSION ${COMPLEX_VERSION}
