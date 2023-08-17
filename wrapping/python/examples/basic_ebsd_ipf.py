@@ -166,7 +166,7 @@ else:
 #------------------------------------------------------------------------------
 # Write the DataStructure to a .dream3d file
 #------------------------------------------------------------------------------
-output_file_path = "/tmp/basic_ebsd.dream3d"
+output_file_path = "basic_ebsd_example.dream3d"
 result = cx.ExportDREAM3DFilter.execute(data_structure=data_structure, 
                                         export_file_path=output_file_path, 
                                         write_xdmf_file=True)
