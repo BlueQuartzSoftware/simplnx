@@ -40,8 +40,8 @@ void CompareResults() // compare hash of both file strings
     throw std::runtime_error(fmt::format("{} must be stream readable!", k_WrittenFilePath.string()));
   }
 
-  // //ignore versioning
-  // generatedFile.ignore('\n');
+  // ignore versioning
+  generatedFile.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
 
   char exemplar[128];
   char generated[128];

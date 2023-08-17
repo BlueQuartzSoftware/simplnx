@@ -58,8 +58,22 @@ enable_vcpkg_manifest_feature(TEST_VAR COMPLEX_ENABLE_OrientationAnalysis FEATUR
 # --------------------------------------------------------------------------------------------------
 file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
 
+# --------------------------------------------------------------------------------------------------
+# This section sets the version numbers for this build.
+# COMPLEX will use the normal semantic versioning system where the version is laid
+# out as MAJOR.MINOR.PATCH
+# --------------------------------------------------------------------------------------------------
+set(COMPLEX_VERSION_MAJOR 0)
+set(COMPLEX_VERSION_MINOR 1)
+set(COMPLEX_VERSION_PATCH 0)
+
+# --------------------------------------------------------------------------------------------------
+# Set COMPLEX_OPTIONAL_SUFFIX using a CMake variable (-D on the command line) or from CMake-GUI
+# --------------------------------------------------------------------------------------------------
+set(COMPLEX_VERSION "${DREAM3DNX_VERSION_MAJOR}.${DREAM3DNX_VERSION_MINOR}.${DREAM3DNX_VERSION_PATCH}")
+
 project(complex
-  VERSION 0.1.0
+  VERSION ${COMPLEX_VERSION}
   DESCRIPTION "SIMPL Redesign"
   HOMEPAGE_URL "https://github.com/BlueQuartzSoftware/complex"
   LANGUAGES CXX
@@ -708,6 +722,13 @@ configure_file(${complex_SOURCE_DIR}/wrapping/python/ComplexPython.hpp.in ${COMP
 
 list(APPEND COMPLEX_GENERATED_HEADERS
   ${COMPLEX_GENERATED_PYTHON_HEADER}
+)
+
+set(COMPLEX_GENERATED_VERSION_HEADER ${COMPLEX_GENERATED_HEADER_DIR}/ComplexVersion.h)
+configure_file(${complex_SOURCE_DIR}/src/complex/Core/ComplexVersion.h.in ${COMPLEX_GENERATED_VERSION_HEADER})
+
+list(APPEND COMPLEX_GENERATED_HEADERS
+  ${COMPLEX_GENERATED_VERSION_HEADER}
 )
 
 set(COMPLEX_ALL_HDRS
