@@ -21,6 +21,10 @@ public:
   MultiThresholdObjects& operator=(MultiThresholdObjects&&) noexcept = delete;
 
   static inline constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds";
+  static inline constexpr StringLiteral k_UseCustomTrueValue = "use_custom_true_value";
+  static inline constexpr StringLiteral k_UseCustomFalseValue = "use_custom_false_value";
+  static inline constexpr StringLiteral k_CustomTrueValue = "custom_true_value";
+  static inline constexpr StringLiteral k_CustomFalseValue = "custom_false_value";
   static inline constexpr StringLiteral k_CreatedDataPath_Key = "created_data_path";
   static inline constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
 

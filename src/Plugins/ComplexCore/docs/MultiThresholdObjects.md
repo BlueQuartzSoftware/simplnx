@@ -13,11 +13,17 @@ An example of this **Filter's** use would be after EBSD data is read into DREAM.
 
 For example, an integer array contains the values 1, 2, 3, 4, 5. For a comparison value of 3 and the comparison operator greater than, the boolean threshold array produced will contain *false*, *false*, *false*, *true*, *true*. For the comparison set { *Greater Than* 2 AND *Less Than* 5} OR *Equals* 1, the boolean threshold array produced will contain *true*, *false*, *true*, *true*, *false*.
 
+It is possible to set custom values for both the TRUE and FALSE values that will be output to the threshold array.  For example, if the user selects an output threshold array type of uint32, then they could set a custom FALSE value of 5 and a custom TRUE value of 20.  So then instead of outputting 0's and 1's to the threshold array, the filter would output 5's and 20's.
+
 ## Parameters ##
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name                     | Type            | Description                                                                                                    |
+|--------------------------|-----------------|----------------------------------------------------------------------------------------------------------------|
 | Data Arrays to Threshold | Comparison List | This is the set of criteria applied to the objects the selected arrays correspond to when doing the thresholding |
+| Use Custom TRUE Value    | bool            | Specifies whether to output a custom TRUE value                                                                |
+| Custom TRUE Value        | float64         | The custom TRUE value (the default value is 1)                                                                 |
+| Use Custom FALSE Value   | bool            | Specifies whether to output a custom FALSE value                                                               |
+| Custom FALSE Value       | float64         | The custom FALSE value (the default value is 0)                                                                |
 
 ## Required Geometry ##
 
