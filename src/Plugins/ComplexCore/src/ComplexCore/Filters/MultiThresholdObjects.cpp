@@ -348,20 +348,7 @@ struct CheckCustomValueInBounds
   {
     float64 minValue;
     float64 maxValue;
-
-    if constexpr(std::is_unsigned_v<T>)
-    {
-      // Unsigned Types
-      minValue = 0;
-      maxValue = static_cast<float64>(std::numeric_limits<T>::max());
-    }
-    else if constexpr(std::is_integral_v<T>)
-    {
-      // Signed Types
-      minValue = static_cast<float64>(std::numeric_limits<T>::min());
-      maxValue = static_cast<float64>(std::numeric_limits<T>::max());
-    }
-    else if constexpr(std::is_floating_point_v<T>)
+    if constexpr(std::is_floating_point_v<T>)
     {
       // Floating Point Types
       minValue = static_cast<float64>(-std::numeric_limits<T>::max());
@@ -369,9 +356,9 @@ struct CheckCustomValueInBounds
     }
     else
     {
-      // Boolean Type
-      minValue = 0;
-      maxValue = 1;
+      // Everything Else
+      minValue = static_cast<float64>(std::numeric_limits<T>::min());
+      maxValue = static_cast<float64>(std::numeric_limits<T>::max());
     }
 
     if(customValue < minValue || customValue > maxValue)
