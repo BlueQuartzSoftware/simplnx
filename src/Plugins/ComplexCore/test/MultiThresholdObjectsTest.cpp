@@ -230,6 +230,14 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution", "[ComplexCore
     args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
   }
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(executeResult.result)
 }
 
 TEMPLATE_TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[ComplexCore][MultiThresholdObjects]", int8, uint8, int16, uint16, int32, uint32, int64,
