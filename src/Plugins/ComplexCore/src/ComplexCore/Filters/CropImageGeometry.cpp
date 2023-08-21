@@ -145,12 +145,7 @@ std::string CropImageGeometry::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CropImageGeometry::defaultTags() const
 {
-  return {className(),
-      "Core",
-      "Crop Image Geometry",
-      "Image Geometry",
-      "Conversion",
-  };
+  return {className(), "Core", "Crop Image Geometry", "Image Geometry", "Conversion"};
 }
 
 //------------------------------------------------------------------------------
