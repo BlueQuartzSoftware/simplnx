@@ -483,13 +483,26 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     }
   }
 
+  if(maskArrayType == DataType::boolean)
+  {
+    if(useCustomTrueValue)
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-4003, "Cannot use custom TRUE value with a boolean Mask Type."}})};
+    }
+
+    if(useCustomFalseValue)
+    {
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-4003, "Cannot use custom FALSE value with a boolean Mask Type."}})};
+    }
+  }
+
   if(useCustomTrueValue)
   {
     Result<> result = ExecuteDataFunction(CheckCustomValueInBounds{}, maskArrayType, customTrueValue);
     if(result.invalid())
     {
       auto errorMessage = fmt::format("Custom TRUE value ({}) is outside the bounds of the chosen Mask Type ({}).", customTrueValue, DataTypeToString(maskArrayType));
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4003, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-4005, errorMessage}})};
     }
   }
 
@@ -499,7 +512,7 @@ IFilter::PreflightResult MultiThresholdObjects::preflightImpl(const DataStructur
     if(result.invalid())
     {
       auto errorMessage = fmt::format("Custom FALSE value ({}) is outside the bounds of the chosen Mask Type ({}).", customFalseValue, DataTypeToString(maskArrayType));
-      return {nonstd::make_unexpected(std::vector<Error>{Error{-4004, errorMessage}})};
+      return {nonstd::make_unexpected(std::vector<Error>{Error{-4006, errorMessage}})};
     }
   }
 
