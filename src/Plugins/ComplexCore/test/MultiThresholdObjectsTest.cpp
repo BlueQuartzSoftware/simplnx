@@ -87,8 +87,6 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
   {
     MultiThresholdObjects filter;
     Arguments args;
-    float64 trueValue = 10;
-    float64 falseValue = 5;
 
     ArrayThresholdSet thresholdSet;
     auto threshold = std::make_shared<ArrayThreshold>();
@@ -99,11 +97,7 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
 
     args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjects::k_UseCustomTrueValue, std::make_any<bool>(true));
-    args.insertOrAssign(MultiThresholdObjects::k_CustomTrueValue, std::make_any<float64>(trueValue));
-    args.insertOrAssign(MultiThresholdObjects::k_UseCustomFalseValue, std::make_any<bool>(true));
-    args.insertOrAssign(MultiThresholdObjects::k_CustomFalseValue, std::make_any<float64>(falseValue));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint8));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -113,7 +107,7 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto* thresholdArray = dataStructure.getDataAs<UInt8Array>(k_ThresholdArrayPath);
+    auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
     REQUIRE(thresholdArray != nullptr);
 
     // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
@@ -121,11 +115,11 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
     {
       if(i < 10)
       {
-        REQUIRE((*thresholdArray)[i] == falseValue);
+        REQUIRE((*thresholdArray)[i] == false);
       }
       else
       {
-        REQUIRE((*thresholdArray)[i] == trueValue);
+        REQUIRE((*thresholdArray)[i] == true);
       }
     }
   }
@@ -134,8 +128,6 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
   {
     MultiThresholdObjects filter;
     Arguments args;
-    float64 trueValue = 30;
-    float64 falseValue = 255;
 
     ArrayThresholdSet thresholdSet;
     auto threshold = std::make_shared<ArrayThreshold>();
@@ -146,11 +138,7 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
 
     args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
     args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjects::k_UseCustomTrueValue, std::make_any<bool>(true));
-    args.insertOrAssign(MultiThresholdObjects::k_CustomTrueValue, std::make_any<float64>(trueValue));
-    args.insertOrAssign(MultiThresholdObjects::k_UseCustomFalseValue, std::make_any<bool>(true));
-    args.insertOrAssign(MultiThresholdObjects::k_CustomFalseValue, std::make_any<float64>(falseValue));
-    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float32));
+    args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -160,7 +148,7 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
     auto executeResult = filter.execute(dataStructure, args);
     COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    auto* thresholdArray = dataStructure.getDataAs<Float32Array>(k_ThresholdArrayPath);
+    auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
     REQUIRE(thresholdArray != nullptr);
 
     // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
@@ -168,11 +156,11 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
     {
       if(i <= 15)
       {
-        REQUIRE((*thresholdArray)[i] == falseValue);
+        REQUIRE((*thresholdArray)[i] == false);
       }
       else
       {
-        REQUIRE((*thresholdArray)[i] == trueValue);
+        REQUIRE((*thresholdArray)[i] == true);
       }
     }
   }
