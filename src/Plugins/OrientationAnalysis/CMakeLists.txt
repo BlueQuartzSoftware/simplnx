@@ -63,6 +63,7 @@ set(FilterList
   GenerateQuaternionConjugateFilter
   ImportH5EspritDataFilter
   ImportH5OimDataFilter
+  INLWriterFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
@@ -195,6 +196,7 @@ set(filter_algorithms
   GroupFeatures
   ImportH5EspritData
   ImportH5OimData
+  INLWriter
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData
