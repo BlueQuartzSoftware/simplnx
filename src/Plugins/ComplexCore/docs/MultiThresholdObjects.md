@@ -15,6 +15,8 @@ For example, an integer array contains the values 1, 2, 3, 4, 5. For a compariso
 
 It is possible to set custom values for both the TRUE and FALSE values that will be output to the threshold array.  For example, if the user selects an output threshold array type of uint32, then they could set a custom FALSE value of 5 and a custom TRUE value of 20.  So then instead of outputting 0's and 1's to the threshold array, the filter would output 5's and 20's.
 
+**NOTE**: If custom TRUE/FALSE values are chosen, then using the resulting mask array in any other filters that require a mask array will break those other filters.  This is because most other filters that require a mask array make the assumption that the true/false values are 1/0.
+
 ## Parameters ##
 
 | Name                     | Type            | Description                                                                                                    |
