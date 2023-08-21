@@ -42,7 +42,7 @@ std::string FindEuclideanDistMapFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindEuclideanDistMapFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

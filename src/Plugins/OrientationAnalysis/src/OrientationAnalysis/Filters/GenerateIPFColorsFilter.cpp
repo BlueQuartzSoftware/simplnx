@@ -52,7 +52,7 @@ std::string GenerateIPFColorsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateIPFColorsFilter::defaultTags() const
 {
-  return {"Processing", "Crystallography"};
+  return {className(), "Processing", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

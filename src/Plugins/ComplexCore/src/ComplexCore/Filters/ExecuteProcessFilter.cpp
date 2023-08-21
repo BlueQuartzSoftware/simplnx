@@ -40,7 +40,7 @@ std::string ExecuteProcessFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExecuteProcessFilter::defaultTags() const
 {
-  return {"Core", "Misc"};
+  return {className(), "Core", "Misc"};
 }
 
 //------------------------------------------------------------------------------

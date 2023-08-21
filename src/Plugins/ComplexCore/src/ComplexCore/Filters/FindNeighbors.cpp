@@ -44,7 +44,7 @@ std::string FindNeighbors::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindNeighbors::defaultTags() const
 {
-  return {"Statistics", "Neighbors", "Features"};
+  return {className(), "Statistics", "Neighbors", "Features"};
 }
 
 //------------------------------------------------------------------------------

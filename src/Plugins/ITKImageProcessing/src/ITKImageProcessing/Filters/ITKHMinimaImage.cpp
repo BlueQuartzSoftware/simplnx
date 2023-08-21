@@ -63,7 +63,7 @@ std::string ITKHMinimaImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKHMinimaImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKHMinimaImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKHMinimaImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

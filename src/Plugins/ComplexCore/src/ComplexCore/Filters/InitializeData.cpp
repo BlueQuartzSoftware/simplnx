@@ -176,7 +176,7 @@ std::string InitializeData::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> InitializeData::defaultTags() const
 {
-  return {"Memory Management", "Initialize", "Create", "Generate", "Data"};
+  return {className(), "Memory Management", "Initialize", "Create", "Generate", "Data"};
 }
 
 //------------------------------------------------------------------------------

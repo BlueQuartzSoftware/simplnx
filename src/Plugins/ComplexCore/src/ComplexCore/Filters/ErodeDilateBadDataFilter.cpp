@@ -43,7 +43,7 @@ std::string ErodeDilateBadDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ErodeDilateBadDataFilter::defaultTags() const
 {
-  return {"Processing", "Cleanup", "Erode", "Dilate"};
+  return {className(), "Processing", "Cleanup", "Erode", "Dilate"};
 }
 
 //------------------------------------------------------------------------------

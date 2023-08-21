@@ -325,7 +325,7 @@ std::string ConvertOrientations::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ConvertOrientations::defaultTags() const
 {
-  return {"Processing", "Conversion", "Orientation", "Quaternions", "Euler Angles", "Orientation Matrix", "Cubochoric", "Homochoric", "Rodrigues", "AxisAngle"};
+  return {className(), "Processing", "Conversion", "Orientation", "Quaternions", "Euler Angles", "Orientation Matrix", "Cubochoric", "Homochoric", "Rodrigues", "AxisAngle"};
 }
 
 //------------------------------------------------------------------------------

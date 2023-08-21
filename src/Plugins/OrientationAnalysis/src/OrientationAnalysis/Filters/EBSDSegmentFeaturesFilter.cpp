@@ -51,7 +51,7 @@ std::string EBSDSegmentFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> EBSDSegmentFeaturesFilter::defaultTags() const
 {
-  return {"Reconstruction", "Segmentation"};
+  return {className(), "Reconstruction", "Segmentation"};
 }
 
 //------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ std::string CreateEnsembleInfoFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateEnsembleInfoFilter::defaultTags() const
 {
-  return {"Processing", "Generation"};
+  return {className(), "Processing", "Generation"};
 }
 
 //------------------------------------------------------------------------------

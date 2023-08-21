@@ -277,7 +277,7 @@ std::string RemoveMinimumSizeFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RemoveMinimumSizeFeaturesFilter::defaultTags() const
 {
-  return {"Processing", "Cleanup", "MinSize"};
+  return {className(), "Processing", "Cleanup", "MinSize"};
 }
 
 Parameters RemoveMinimumSizeFeaturesFilter::parameters() const

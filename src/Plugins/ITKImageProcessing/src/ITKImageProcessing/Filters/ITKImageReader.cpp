@@ -264,7 +264,7 @@ std::string ITKImageReader::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImageReader::defaultTags() const
 {
-  return {"io", "input", "read", "import"};
+  return {className(), "io", "input", "read", "import"};
 }
 
 //------------------------------------------------------------------------------

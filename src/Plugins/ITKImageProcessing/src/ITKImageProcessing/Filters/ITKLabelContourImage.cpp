@@ -63,7 +63,7 @@ std::string ITKLabelContourImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKLabelContourImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKLabelContourImage", "ITKImageLabel", "ImageLabel"};
+  return {className(), "ITKImageProcessing", "ITKLabelContourImage", "ITKImageLabel", "ImageLabel"};
 }
 
 //------------------------------------------------------------------------------

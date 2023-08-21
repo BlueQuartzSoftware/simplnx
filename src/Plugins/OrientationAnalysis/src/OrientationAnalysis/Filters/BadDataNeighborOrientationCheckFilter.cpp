@@ -47,7 +47,7 @@ std::string BadDataNeighborOrientationCheckFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> BadDataNeighborOrientationCheckFilter::defaultTags() const
 {
-  return {"Processing", "Cleanup"};
+  return {className(), "Processing", "Cleanup"};
 }
 
 //------------------------------------------------------------------------------

@@ -55,7 +55,7 @@ std::string KMeansFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> KMeansFilter::defaultTags() const
 {
-  return {"DREAM3D Review", "Clustering"};
+  return {className(), "DREAM3D Review", "Clustering"};
 }
 
 //------------------------------------------------------------------------------

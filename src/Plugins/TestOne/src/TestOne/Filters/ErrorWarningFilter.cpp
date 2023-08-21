@@ -62,7 +62,7 @@ std::string ErrorWarningFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ErrorWarningFilter::defaultTags() const
 {
-  return {"Example", "Test", "Error"};
+  return {className(), "Example", "Test", "Error"};
 }
 
 //------------------------------------------------------------------------------

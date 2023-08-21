@@ -47,7 +47,7 @@ std::string CalculateFeatureSizesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CalculateFeatureSizesFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological", "Feature Calculation", "Find Feature Sizes"};
+  return {className(), "Statistics", "Morphological", "Feature Calculation", "Find Feature Sizes"};
 }
 
 Parameters CalculateFeatureSizesFilter::parameters() const

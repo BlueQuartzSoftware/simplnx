@@ -39,7 +39,7 @@ std::string FindBoundaryElementFractionsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindBoundaryElementFractionsFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

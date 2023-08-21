@@ -59,7 +59,7 @@ std::string CreateDataArray::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateDataArray::defaultTags() const
 {
-  return {"Create", "Data Structure", "Data Array", "Initialize", "Make"};
+  return {className(), "Create", "Data Structure", "Data Array", "Initialize", "Make"};
 }
 
 //------------------------------------------------------------------------------

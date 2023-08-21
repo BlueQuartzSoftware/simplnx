@@ -71,7 +71,7 @@ std::string ITKBinaryDilateImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKBinaryDilateImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKBinaryDilateImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKBinaryDilateImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

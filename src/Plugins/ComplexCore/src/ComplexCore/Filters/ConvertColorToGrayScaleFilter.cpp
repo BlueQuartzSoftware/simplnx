@@ -44,7 +44,7 @@ std::string ConvertColorToGrayScaleFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ConvertColorToGrayScaleFilter::defaultTags() const
 {
-  return {"Core", "Image"};
+  return {className(), "Core", "Image"};
 }
 
 //------------------------------------------------------------------------------

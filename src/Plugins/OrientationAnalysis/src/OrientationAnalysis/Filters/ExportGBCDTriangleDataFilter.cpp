@@ -42,7 +42,7 @@ std::string ExportGBCDTriangleDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExportGBCDTriangleDataFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export"};
+  return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

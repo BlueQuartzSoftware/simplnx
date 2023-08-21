@@ -97,7 +97,7 @@ std::string TriangleNormalFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> TriangleNormalFilter::defaultTags() const
 {
-  return {"Surface Meshing", "Misc"};
+  return {className(), "Surface Meshing", "Misc"};
 }
 
 //------------------------------------------------------------------------------

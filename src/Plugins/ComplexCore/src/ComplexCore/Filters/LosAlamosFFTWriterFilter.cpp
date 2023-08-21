@@ -42,7 +42,7 @@ std::string LosAlamosFFTWriterFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> LosAlamosFFTWriterFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export"};
+  return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

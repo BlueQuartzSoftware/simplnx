@@ -53,7 +53,7 @@ std::string RawBinaryReaderFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RawBinaryReaderFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

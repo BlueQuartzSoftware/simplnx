@@ -59,7 +59,7 @@ std::string ITKNormalizeImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKNormalizeImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKNormalizeImage", "ITKImageIntensity", "ImageIntensity"};
+  return {className(), "ITKImageProcessing", "ITKNormalizeImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------

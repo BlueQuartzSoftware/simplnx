@@ -71,7 +71,7 @@ std::string ITKBinaryErodeImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKBinaryErodeImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKBinaryErodeImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKBinaryErodeImage", "ITKBinaryMathematicalMorphology", "BinaryMathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

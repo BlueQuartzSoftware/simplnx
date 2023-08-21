@@ -45,7 +45,7 @@ std::string RenameDataObject::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RenameDataObject::defaultTags() const
 {
-  return {"Data Management", "Rename", "Data Structure", "Data Object"};
+  return {className(), "Data Management", "Rename", "Data Structure", "Data Object"};
 }
 
 //------------------------------------------------------------------------------

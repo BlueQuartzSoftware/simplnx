@@ -43,7 +43,7 @@ std::string ExportDREAM3DFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExportDREAM3DFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export", "Binary"};
+  return {className(), "IO", "Output", "Write", "Export", "Binary"};
 }
 
 //------------------------------------------------------------------------------

@@ -97,7 +97,7 @@ std::string CopyFeatureArrayToElementArray::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CopyFeatureArrayToElementArray::defaultTags() const
 {
-  return {"Core", "Memory Management"};
+  return {className(), "Core", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------

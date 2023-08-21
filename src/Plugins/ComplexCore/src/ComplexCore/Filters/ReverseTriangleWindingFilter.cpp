@@ -75,7 +75,7 @@ std::string ReverseTriangleWindingFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReverseTriangleWindingFilter::defaultTags() const
 {
-  return {"Surface Meshing", "Connectivity Arrangement"};
+  return {className(), "Surface Meshing", "Connectivity Arrangement"};
 }
 
 //------------------------------------------------------------------------------

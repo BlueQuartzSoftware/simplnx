@@ -39,7 +39,7 @@ std::string ComputeFeatureRectFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeFeatureRectFilter::defaultTags() const
 {
-  return {"#Statistics", "#Reconstruction", "#Rect", "#Calculate"};
+  return {className(), "#Statistics", "#Reconstruction", "#Rect", "#Calculate"};
 }
 
 //------------------------------------------------------------------------------

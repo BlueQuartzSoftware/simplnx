@@ -66,7 +66,7 @@ std::string ITKSigmoidImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKSigmoidImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKSigmoidImage", "ITKImageIntensity", "ImageIntensity"};
+  return {className(), "ITKImageProcessing", "ITKSigmoidImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------

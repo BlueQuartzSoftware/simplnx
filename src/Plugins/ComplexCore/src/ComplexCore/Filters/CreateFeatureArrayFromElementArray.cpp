@@ -101,7 +101,7 @@ std::string CreateFeatureArrayFromElementArray::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateFeatureArrayFromElementArray::defaultTags() const
 {
-  return {"Core", "Memory Management"};
+  return {className(), "Core", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------

@@ -59,7 +59,7 @@ std::string ResampleImageGeomFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ResampleImageGeomFilter::defaultTags() const
 {
-  return {"Sampling", "Spacing", "Image Geometry", "Conversion"};
+  return {className(), "Sampling", "Spacing", "Image Geometry", "Conversion"};
 }
 
 //------------------------------------------------------------------------------

@@ -80,7 +80,7 @@ std::string RemoveFlaggedVertices::humanName() const
 
 std::vector<std::string> RemoveFlaggedVertices::defaultTags() const
 {
-  return {"Remove", "Memory Management", "Vertex Geometry", "Delete", "Reduce"};
+  return {className(), "Remove", "Memory Management", "Vertex Geometry", "Delete", "Reduce"};
 }
 
 Parameters RemoveFlaggedVertices::parameters() const

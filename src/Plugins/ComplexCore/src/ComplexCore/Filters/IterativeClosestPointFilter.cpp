@@ -89,7 +89,7 @@ std::string IterativeClosestPointFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> IterativeClosestPointFilter::defaultTags() const
 {
-  return {"Transformation", "Align", "Geometry", "ICP"};
+  return {className(), "Transformation", "Align", "Geometry", "ICP"};
 }
 
 //------------------------------------------------------------------------------

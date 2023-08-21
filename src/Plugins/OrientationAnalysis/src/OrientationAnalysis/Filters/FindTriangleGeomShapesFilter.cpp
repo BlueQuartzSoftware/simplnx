@@ -40,7 +40,7 @@ std::string FindTriangleGeomShapesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindTriangleGeomShapesFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological", "SurfaceMesh"};
+  return {className(), "Statistics", "Morphological", "SurfaceMesh"};
 }
 
 //------------------------------------------------------------------------------

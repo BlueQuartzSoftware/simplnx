@@ -60,7 +60,7 @@ std::string ITKGrayscaleGrindPeakImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKGrayscaleGrindPeakImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKGrayscaleGrindPeakImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKGrayscaleGrindPeakImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

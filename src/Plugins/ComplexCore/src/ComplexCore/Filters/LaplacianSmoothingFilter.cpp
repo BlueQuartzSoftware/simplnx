@@ -40,7 +40,7 @@ std::string LaplacianSmoothingFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> LaplacianSmoothingFilter::defaultTags() const
 {
-  return {"Surface Meshing", "Smoothing", "Triangle Geometry"};
+  return {className(), "Surface Meshing", "Smoothing", "Triangle Geometry"};
 }
 
 //------------------------------------------------------------------------------

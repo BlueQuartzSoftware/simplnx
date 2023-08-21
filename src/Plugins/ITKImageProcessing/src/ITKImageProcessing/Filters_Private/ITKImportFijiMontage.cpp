@@ -44,7 +44,7 @@ std::string ITKImportFijiMontage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImportFijiMontage::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

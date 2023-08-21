@@ -45,7 +45,7 @@ std::string ExtractVertexGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExtractVertexGeometryFilter::defaultTags() const
 {
-  return {"Core", "Conversion"};
+  return {className(), "Core", "Conversion"};
 }
 
 //------------------------------------------------------------------------------

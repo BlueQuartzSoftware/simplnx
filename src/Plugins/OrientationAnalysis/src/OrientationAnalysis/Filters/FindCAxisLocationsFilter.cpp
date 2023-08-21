@@ -39,7 +39,7 @@ std::string FindCAxisLocationsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindCAxisLocationsFilter::defaultTags() const
 {
-  return {"Statistics", "Crystallography"};
+  return {className(), "Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

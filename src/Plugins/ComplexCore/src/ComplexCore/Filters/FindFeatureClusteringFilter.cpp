@@ -47,7 +47,7 @@ std::string FindFeatureClusteringFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindFeatureClusteringFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

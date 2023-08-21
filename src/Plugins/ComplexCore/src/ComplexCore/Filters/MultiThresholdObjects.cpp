@@ -366,7 +366,7 @@ std::string MultiThresholdObjects::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> MultiThresholdObjects::defaultTags() const
 {
-  return {"Find Outliers", "Threshold", "Isolate", "Data Management"};
+  return {className(), "Find Outliers", "Threshold", "Isolate", "Data Management"};
 }
 
 //------------------------------------------------------------------------------

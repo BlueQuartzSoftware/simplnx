@@ -44,7 +44,7 @@ std::string PointSampleTriangleGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> PointSampleTriangleGeometryFilter::defaultTags() const
 {
-  return {"ComplexCore", "Geometry", "TriangleGeometry", "Resample"};
+  return {className(), "ComplexCore", "Geometry", "TriangleGeometry", "Resample"};
 }
 
 //------------------------------------------------------------------------------

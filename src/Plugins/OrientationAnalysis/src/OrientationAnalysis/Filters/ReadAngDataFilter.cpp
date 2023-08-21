@@ -49,7 +49,7 @@ std::string ReadAngDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReadAngDataFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import", "EDAX", "ANG", "EBSD"};
+  return {className(), "IO", "Input", "Read", "Import", "EDAX", "ANG", "EBSD"};
 }
 
 //------------------------------------------------------------------------------

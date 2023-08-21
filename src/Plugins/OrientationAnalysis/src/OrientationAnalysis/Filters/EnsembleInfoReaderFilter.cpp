@@ -44,7 +44,7 @@ std::string EnsembleInfoReaderFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> EnsembleInfoReaderFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

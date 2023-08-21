@@ -45,7 +45,7 @@ std::string TestFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> TestFilter::defaultTags() const
 {
-  return {"Example", "Test"};
+  return {className(), "Example", "Test"};
 }
 
 //------------------------------------------------------------------------------

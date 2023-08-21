@@ -43,7 +43,7 @@ std::string FindLargestCrossSectionsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindLargestCrossSectionsFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

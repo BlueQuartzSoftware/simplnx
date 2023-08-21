@@ -39,7 +39,7 @@ std::string FindFeaturePhasesBinaryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindFeaturePhasesBinaryFilter::defaultTags() const
 {
-  return {"Generic", "Morphological"};
+  return {className(), "Generic", "Morphological"};
 }
 
 //------------------------------------------------------------------------------
