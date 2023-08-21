@@ -166,6 +166,56 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution", "[ComplexCore][
   }
 }
 
+TEMPLATE_TEST_CASE("ComplexCore::MultiThresholdObjects: Valid Execution - Custom Values", "[ComplexCore][MultiThresholdObjects]", int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32,
+                   float64)
+{
+  MultiThresholdObjects filter;
+  DataStructure dataStructure = CreateTestDataStructure();
+  Arguments args;
+
+  float64 trueValue = 25;
+  float64 falseValue = 10;
+
+  ArrayThresholdSet thresholdSet;
+  auto threshold = std::make_shared<ArrayThreshold>();
+  threshold->setArrayPath(k_TestArrayIntPath);
+  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+  threshold->setComparisonValue(15);
+  thresholdSet.setArrayThresholds({threshold});
+
+  args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+  args.insertOrAssign(MultiThresholdObjects::k_UseCustomTrueValue, std::make_any<bool>(true));
+  args.insertOrAssign(MultiThresholdObjects::k_CustomTrueValue, std::make_any<float64>(trueValue));
+  args.insertOrAssign(MultiThresholdObjects::k_UseCustomFalseValue, std::make_any<bool>(true));
+  args.insertOrAssign(MultiThresholdObjects::k_CustomFalseValue, std::make_any<float64>(falseValue));
+  args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(GetDataType<TestType>()));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  auto* thresholdArray = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArray != nullptr);
+
+  // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
+  for(usize i = 0; i < 20; i++)
+  {
+    if(i <= 15)
+    {
+      REQUIRE((*thresholdArray)[i] == falseValue);
+    }
+    else
+    {
+      REQUIRE((*thresholdArray)[i] == trueValue);
+    }
+  }
+}
+
 TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution", "[ComplexCore][MultiThresholdObjects]")
 {
   MultiThresholdObjects filter;
@@ -229,7 +279,7 @@ TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution", "[ComplexCore
 }
 
 TEMPLATE_TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[ComplexCore][MultiThresholdObjects]", int8, uint8, int16, uint16, int32, uint32, int64,
-                   uint64, float32, bool)
+                   uint64, float32)
 {
   MultiThresholdObjects filter;
   DataStructure dataStructure = CreateTestDataStructure();
@@ -237,29 +287,34 @@ TEMPLATE_TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution - Out 
 
   float64 trueValue;
   float64 falseValue;
+  int32 code;
 
   SECTION("True Value < Minimum")
   {
     trueValue = GetOutOfBoundsMinimumValue<TestType>();
     falseValue = 1;
+    code = MultiThresholdObjects::ErrorCodes::CustomTrueOutOfBounds;
   }
 
   SECTION("False Value < Minimum")
   {
     trueValue = 1;
     falseValue = GetOutOfBoundsMinimumValue<TestType>();
+    code = MultiThresholdObjects::ErrorCodes::CustomFalseOutOfBounds;
   }
 
   SECTION("True Value > Maximum")
   {
     trueValue = GetOutOfBoundsMaximumValue<TestType>();
     falseValue = 1;
+    code = MultiThresholdObjects::ErrorCodes::CustomTrueOutOfBounds;
   }
 
   SECTION("False Value > Maximum")
   {
     trueValue = 1;
     falseValue = GetOutOfBoundsMaximumValue<TestType>();
+    code = MultiThresholdObjects::ErrorCodes::CustomFalseOutOfBounds;
   }
 
   ArrayThresholdSet thresholdSet;
@@ -277,9 +332,49 @@ TEMPLATE_TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution - Out 
   args.insertOrAssign(MultiThresholdObjects::k_CustomFalseValue, std::make_any<float64>(falseValue));
   args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(GetDataType<TestType>()));
 
-  // Preflight the filter and check result
+  // Preflight the filter
   auto preflightResult = filter.preflight(dataStructure, args);
-  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == code);
+}
+
+TEST_CASE("ComplexCore::MultiThresholdObjects: Invalid Execution - Boolean Custom Values", "[ComplexCore][MultiThresholdObjects]")
+{
+  MultiThresholdObjects filter;
+  DataStructure dataStructure = CreateTestDataStructure();
+  Arguments args;
+
+  int32 code;
+
+  SECTION("Custom True Value")
+  {
+    code = MultiThresholdObjects::ErrorCodes::CustomTrueWithBoolean;
+    args.insertOrAssign(MultiThresholdObjects::k_UseCustomTrueValue, std::make_any<bool>(true));
+  }
+
+  SECTION("Custom False Value")
+  {
+    code = MultiThresholdObjects::ErrorCodes::CustomFalseWithBoolean;
+    args.insertOrAssign(MultiThresholdObjects::k_UseCustomFalseValue, std::make_any<bool>(true));
+  }
+
+  ArrayThresholdSet thresholdSet;
+  auto threshold = std::make_shared<ArrayThreshold>();
+  threshold->setArrayPath(k_TestArrayIntPath);
+  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+  threshold->setComparisonValue(15);
+  thresholdSet.setArrayThresholds({threshold});
+
+  args.insertOrAssign(MultiThresholdObjects::k_ArrayThresholds_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  args.insertOrAssign(MultiThresholdObjects::k_CreatedDataPath_Key, std::make_any<std::string>(k_ThresholdArrayName));
+  args.insertOrAssign(MultiThresholdObjects::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
+
+  // Preflight the filter
+  auto preflightResult = filter.preflight(dataStructure, args);
+  COMPLEX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == code);
 }
 
 template <typename T>
