@@ -43,7 +43,7 @@ std::string AlignSectionsListFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AlignSectionsListFilter::defaultTags() const
 {
-  return {"Reconstruction", "Alignment"};
+  return {className(), "Reconstruction", "Alignment"};
 }
 
 //------------------------------------------------------------------------------

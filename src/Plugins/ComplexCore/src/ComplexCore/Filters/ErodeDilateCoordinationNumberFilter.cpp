@@ -41,7 +41,7 @@ std::string ErodeDilateCoordinationNumberFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ErodeDilateCoordinationNumberFilter::defaultTags() const
 {
-  return {"Processing", "Cleanup", "Erode", "Dilate", "Smooth Bad Data"};
+  return {className(), "Processing", "Cleanup", "Erode", "Dilate", "Smooth Bad Data"};
 }
 
 //------------------------------------------------------------------------------

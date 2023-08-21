@@ -66,7 +66,7 @@ std::string ITKBlackTopHatImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKBlackTopHatImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKBlackTopHatImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKBlackTopHatImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

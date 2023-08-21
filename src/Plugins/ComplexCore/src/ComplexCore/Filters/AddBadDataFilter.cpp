@@ -43,7 +43,7 @@ std::string AddBadDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AddBadDataFilter::defaultTags() const
 {
-  return {"Synthetic Building", "Misc"};
+  return {className(), "Synthetic Building", "Misc"};
 }
 
 //------------------------------------------------------------------------------

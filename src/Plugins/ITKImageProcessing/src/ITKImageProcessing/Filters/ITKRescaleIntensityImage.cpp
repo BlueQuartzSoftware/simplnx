@@ -63,7 +63,7 @@ std::string ITKRescaleIntensityImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKRescaleIntensityImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKRescaleIntensityImage", "ITKImageIntensity", "ImageIntensity"};
+  return {className(), "ITKImageProcessing", "ITKRescaleIntensityImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------

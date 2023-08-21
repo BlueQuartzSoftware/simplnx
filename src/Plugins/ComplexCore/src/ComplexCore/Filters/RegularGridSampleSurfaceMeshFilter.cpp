@@ -45,7 +45,7 @@ std::string RegularGridSampleSurfaceMeshFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> RegularGridSampleSurfaceMeshFilter::defaultTags() const
 {
-  return {"Sampling", "Spacing"};
+  return {className(), "Sampling", "Spacing"};
 }
 
 //------------------------------------------------------------------------------

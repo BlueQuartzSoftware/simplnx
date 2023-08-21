@@ -42,7 +42,7 @@ std::string AbaqusHexahedronWriterFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AbaqusHexahedronWriterFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export"};
+  return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

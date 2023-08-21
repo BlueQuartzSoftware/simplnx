@@ -62,7 +62,7 @@ std::string ITKMedianImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKMedianImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKMedianImage", "ITKSmoothing", "Smoothing"};
+  return {className(), "ITKImageProcessing", "ITKMedianImage", "ITKSmoothing", "Smoothing"};
 }
 
 //------------------------------------------------------------------------------

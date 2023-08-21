@@ -58,7 +58,7 @@ std::string ITKSqrtImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKSqrtImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKSqrtImage", "ITKImageIntensity", "ImageIntensity"};
+  return {className(), "ITKImageProcessing", "ITKSqrtImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------

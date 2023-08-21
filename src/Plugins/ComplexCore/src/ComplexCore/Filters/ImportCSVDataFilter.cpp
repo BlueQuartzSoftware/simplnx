@@ -307,7 +307,7 @@ std::string ImportCSVDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportCSVDataFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import", "ASCII", "ascii", "CSV", "csv", "Column"};
+  return {className(), "IO", "Input", "Read", "Import", "ASCII", "ascii", "CSV", "csv", "Column"};
 }
 
 //------------------------------------------------------------------------------

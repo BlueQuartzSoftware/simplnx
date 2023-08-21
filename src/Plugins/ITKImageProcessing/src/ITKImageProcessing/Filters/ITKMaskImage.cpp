@@ -133,7 +133,7 @@ std::string ITKMaskImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKMaskImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKMaskImage", "ITKImageIntensity", "ImageIntensity"};
+  return {className(), "ITKImageProcessing", "ITKMaskImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------

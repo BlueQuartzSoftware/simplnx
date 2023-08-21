@@ -56,7 +56,7 @@ std::string AlignSectionsFeatureCentroidFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AlignSectionsFeatureCentroidFilter::defaultTags() const
 {
-  return {"Reconstruction", "Alignment"};
+  return {className(), "Reconstruction", "Alignment"};
 }
 
 //------------------------------------------------------------------------------

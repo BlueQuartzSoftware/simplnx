@@ -69,7 +69,7 @@ std::string ITKSignedMaurerDistanceMapImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKSignedMaurerDistanceMapImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKSignedMaurerDistanceMapImage", "ITKDistanceMap", "DistanceMap"};
+  return {className(), "ITKImageProcessing", "ITKSignedMaurerDistanceMapImage", "ITKDistanceMap", "DistanceMap"};
 }
 
 //------------------------------------------------------------------------------

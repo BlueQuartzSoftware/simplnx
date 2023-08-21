@@ -93,7 +93,7 @@ std::string CalculateTriangleAreasFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CalculateTriangleAreasFilter::defaultTags() const
 {
-  return {"Surface Meshing", "Misc", "Triangle Geometry"};
+  return {className(), "Surface Meshing", "Misc", "Triangle Geometry"};
 }
 
 //------------------------------------------------------------------------------

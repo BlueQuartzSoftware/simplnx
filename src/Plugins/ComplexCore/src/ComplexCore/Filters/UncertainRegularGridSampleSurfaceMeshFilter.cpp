@@ -47,7 +47,7 @@ std::string UncertainRegularGridSampleSurfaceMeshFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> UncertainRegularGridSampleSurfaceMeshFilter::defaultTags() const
 {
-  return {"Sampling", "Spacing"};
+  return {className(), "Sampling", "Spacing"};
 }
 
 //------------------------------------------------------------------------------

@@ -63,7 +63,7 @@ std::string ITKMorphologicalGradientImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKMorphologicalGradientImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKMorphologicalGradientImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKMorphologicalGradientImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

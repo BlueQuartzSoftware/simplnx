@@ -41,7 +41,7 @@ std::string FindTriangleGeomCentroidsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindTriangleGeomCentroidsFilter::defaultTags() const
 {
-  return {"Generic", "Morphological", "SurfaceMesh", "Statistics", "Triangle"};
+  return {className(), "Generic", "Morphological", "SurfaceMesh", "Statistics", "Triangle"};
 }
 
 //------------------------------------------------------------------------------

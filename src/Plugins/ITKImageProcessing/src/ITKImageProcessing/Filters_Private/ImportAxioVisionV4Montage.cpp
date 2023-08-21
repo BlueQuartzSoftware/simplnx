@@ -42,7 +42,7 @@ std::string ImportAxioVisionV4Montage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportAxioVisionV4Montage::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

@@ -47,7 +47,7 @@ std::string ImportDREAM3DFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportDREAM3DFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

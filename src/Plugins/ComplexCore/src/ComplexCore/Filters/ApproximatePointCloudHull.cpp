@@ -51,7 +51,7 @@ std::string ApproximatePointCloudHull::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ApproximatePointCloudHull::defaultTags() const
 {
-  return {"Point Cloud", "Grid", "Vertex Geometry", "Geometry", "Hull"};
+  return {className(), "Point Cloud", "Grid", "Vertex Geometry", "Geometry", "Hull"};
 }
 
 //------------------------------------------------------------------------------

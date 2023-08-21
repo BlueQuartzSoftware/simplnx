@@ -57,7 +57,7 @@ std::string ITKExpNegativeImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKExpNegativeImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKExpNegativeImage", "ITKImageIntensity", "ImageIntensity"};
+  return {className(), "ITKImageProcessing", "ITKExpNegativeImage", "ITKImageIntensity", "ImageIntensity"};
 }
 
 //------------------------------------------------------------------------------

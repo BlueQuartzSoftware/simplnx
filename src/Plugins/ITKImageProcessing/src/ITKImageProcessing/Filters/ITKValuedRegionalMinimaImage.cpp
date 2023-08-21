@@ -60,7 +60,7 @@ std::string ITKValuedRegionalMinimaImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKValuedRegionalMinimaImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKValuedRegionalMinimaImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKValuedRegionalMinimaImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

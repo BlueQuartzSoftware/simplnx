@@ -40,7 +40,7 @@ std::string FindSchmidsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindSchmidsFilter::defaultTags() const
 {
-  return {"Statistics", "Crystallography"};
+  return {className(), "Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

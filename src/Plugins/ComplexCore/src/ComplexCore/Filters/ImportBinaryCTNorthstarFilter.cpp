@@ -356,7 +356,7 @@ std::string ImportBinaryCTNorthstarFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportBinaryCTNorthstarFilter::defaultTags() const
 {
-  return {"#IO", "#Input", "#Read", "#Import", "#Northstar", "#CT", "#Binary"};
+  return {className(), "#IO", "#Input", "#Read", "#Import", "#Northstar", "#CT", "#Binary"};
 }
 
 //------------------------------------------------------------------------------

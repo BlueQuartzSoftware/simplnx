@@ -39,7 +39,7 @@ std::string FindVolFractionsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindVolFractionsFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

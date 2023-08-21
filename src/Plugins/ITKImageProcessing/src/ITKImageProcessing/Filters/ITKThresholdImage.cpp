@@ -64,7 +64,7 @@ std::string ITKThresholdImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKThresholdImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKThresholdImage", "ITKThresholding", "Thresholding"};
+  return {className(), "ITKImageProcessing", "ITKThresholdImage", "ITKThresholding", "Thresholding"};
 }
 
 //------------------------------------------------------------------------------

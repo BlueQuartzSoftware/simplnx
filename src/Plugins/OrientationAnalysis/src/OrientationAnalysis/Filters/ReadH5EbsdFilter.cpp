@@ -46,7 +46,7 @@ std::string ReadH5EbsdFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReadH5EbsdFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import", "EDAX", "ANG", "EBSD", "CTF", "Oxford"};
+  return {className(), "IO", "Input", "Read", "Import", "EDAX", "ANG", "EBSD", "CTF", "Oxford"};
 }
 
 //------------------------------------------------------------------------------

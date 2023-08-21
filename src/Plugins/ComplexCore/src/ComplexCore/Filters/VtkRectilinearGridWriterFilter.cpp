@@ -43,7 +43,7 @@ std::string VtkRectilinearGridWriterFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> VtkRectilinearGridWriterFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export"};
+  return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

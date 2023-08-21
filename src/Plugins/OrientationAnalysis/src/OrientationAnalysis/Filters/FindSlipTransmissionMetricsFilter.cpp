@@ -40,7 +40,7 @@ std::string FindSlipTransmissionMetricsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindSlipTransmissionMetricsFilter::defaultTags() const
 {
-  return {"Statistics", "Crystallography"};
+  return {className(), "Statistics", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------

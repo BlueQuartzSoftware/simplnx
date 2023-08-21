@@ -63,7 +63,7 @@ std::string ITKGrayscaleDilateImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKGrayscaleDilateImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKGrayscaleDilateImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKGrayscaleDilateImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

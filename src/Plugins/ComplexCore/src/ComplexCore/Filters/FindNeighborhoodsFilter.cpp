@@ -42,7 +42,7 @@ std::string FindNeighborhoodsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindNeighborhoodsFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

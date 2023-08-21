@@ -63,7 +63,7 @@ std::string ITKRelabelComponentImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKRelabelComponentImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKRelabelComponentImage", "ITKConnectedComponents", "ConnectedComponents"};
+  return {className(), "ITKImageProcessing", "ITKRelabelComponentImage", "ITKConnectedComponents", "ConnectedComponents"};
 }
 
 //------------------------------------------------------------------------------

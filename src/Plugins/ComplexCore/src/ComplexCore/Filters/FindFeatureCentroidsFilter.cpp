@@ -42,7 +42,7 @@ std::string FindFeatureCentroidsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindFeatureCentroidsFilter::defaultTags() const
 {
-  return {"Generic", "Morphological"};
+  return {className(), "Generic", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

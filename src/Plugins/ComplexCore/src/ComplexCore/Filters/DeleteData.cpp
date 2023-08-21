@@ -43,7 +43,7 @@ std::string DeleteData::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> DeleteData::defaultTags() const
 {
-  return {"Core", "Memory Management", "Remove Data", "Delete Data"};
+  return {className(), "Core", "Memory Management", "Remove Data", "Delete Data"};
 }
 
 Parameters DeleteData::parameters() const

@@ -45,7 +45,7 @@ std::string NearestPointFuseRegularGridsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> NearestPointFuseRegularGridsFilter::defaultTags() const
 {
-  return {"Sampling", "Spacing"};
+  return {className(), "Sampling", "Spacing"};
 }
 
 //------------------------------------------------------------------------------

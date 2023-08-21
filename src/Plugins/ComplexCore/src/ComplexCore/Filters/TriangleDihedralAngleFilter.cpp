@@ -131,7 +131,7 @@ std::string TriangleDihedralAngleFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> TriangleDihedralAngleFilter::defaultTags() const
 {
-  return {"Surface Meshing", "Misc", "Statistics", "Triangle"};
+  return {className(), "Surface Meshing", "Misc", "Statistics", "Triangle"};
 }
 
 //------------------------------------------------------------------------------

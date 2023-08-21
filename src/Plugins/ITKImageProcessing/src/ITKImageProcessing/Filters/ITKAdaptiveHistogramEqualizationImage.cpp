@@ -70,7 +70,7 @@ std::string ITKAdaptiveHistogramEqualizationImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKAdaptiveHistogramEqualizationImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKAdaptiveHistogramEqualizationImage", "ITKImageStatistics", "ImageStatistics"};
+  return {className(), "ITKImageProcessing", "ITKAdaptiveHistogramEqualizationImage", "ITKImageStatistics", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

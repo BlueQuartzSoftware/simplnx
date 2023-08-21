@@ -39,7 +39,7 @@ std::string CopyDataObjectFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CopyDataObjectFilter::defaultTags() const
 {
-  return {"Copy", "Data Management", "Memory Management", "Data Structure", "Duplicate"};
+  return {className(), "Copy", "Data Management", "Memory Management", "Data Structure", "Duplicate"};
 }
 
 //------------------------------------------------------------------------------

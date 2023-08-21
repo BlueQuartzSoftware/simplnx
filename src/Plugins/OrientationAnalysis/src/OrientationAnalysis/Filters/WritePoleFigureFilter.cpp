@@ -75,7 +75,7 @@ std::string WritePoleFigureFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> WritePoleFigureFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export", "EBSD", "Pole Figure"};
+  return {className(), "IO", "Output", "Write", "Export", "EBSD", "Pole Figure"};
 }
 
 //------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ std::string SharedFeatureFaceFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> SharedFeatureFaceFilter::defaultTags() const
 {
-  return {"Surface Meshing", "Connectivity Arrangement", "SurfaceMesh"};
+  return {className(), "Surface Meshing", "Connectivity Arrangement", "SurfaceMesh"};
 }
 
 //------------------------------------------------------------------------------

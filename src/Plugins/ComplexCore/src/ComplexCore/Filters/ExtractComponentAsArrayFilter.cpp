@@ -43,7 +43,7 @@ std::string ExtractComponentAsArrayFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ExtractComponentAsArrayFilter::defaultTags() const
 {
-  return {"Core", "Memory Management"};
+  return {className(), "Core", "Memory Management"};
 }
 
 //------------------------------------------------------------------------------

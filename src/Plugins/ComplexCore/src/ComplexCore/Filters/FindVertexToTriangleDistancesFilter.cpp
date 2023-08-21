@@ -47,7 +47,7 @@ std::string FindVertexToTriangleDistancesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindVertexToTriangleDistancesFilter::defaultTags() const
 {
-  return {"#Sampling", "#Spatial"};
+  return {className(), "#Sampling", "#Spatial"};
 }
 
 //------------------------------------------------------------------------------

@@ -44,7 +44,7 @@ std::string AvizoRectilinearCoordinateWriterFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AvizoRectilinearCoordinateWriterFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export"};
+  return {className(), "IO", "Output", "Write", "Export"};
 }
 
 //------------------------------------------------------------------------------

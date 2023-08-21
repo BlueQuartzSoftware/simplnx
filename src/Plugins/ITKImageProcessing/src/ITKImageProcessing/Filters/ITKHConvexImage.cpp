@@ -63,7 +63,7 @@ std::string ITKHConvexImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKHConvexImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKHConvexImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKHConvexImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

@@ -39,7 +39,7 @@ std::string FindNumFeaturesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindNumFeaturesFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

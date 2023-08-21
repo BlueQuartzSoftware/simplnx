@@ -64,7 +64,7 @@ std::string ITKBinaryProjectionImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKBinaryProjectionImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKBinaryProjectionImage", "ITKImageStatistics", "ImageStatistics"};
+  return {className(), "ITKImageProcessing", "ITKBinaryProjectionImage", "ITKImageStatistics", "ImageStatistics"};
 }
 
 //------------------------------------------------------------------------------

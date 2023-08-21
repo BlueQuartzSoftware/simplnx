@@ -242,7 +242,7 @@ std::string ITKImageWriter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImageWriter::defaultTags() const
 {
-  return {"io", "output", "write", "export"};
+  return {className(), "io", "output", "write", "export"};
 }
 
 //------------------------------------------------------------------------------

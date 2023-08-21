@@ -45,7 +45,7 @@ std::string WriteStlFileFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> WriteStlFileFilter::defaultTags() const
 {
-  return {"IO", "Output", "Write", "Export", "Triangles", "SurfaceMesh"};
+  return {className(), "IO", "Output", "Write", "Export", "Triangles", "SurfaceMesh"};
 }
 
 //------------------------------------------------------------------------------

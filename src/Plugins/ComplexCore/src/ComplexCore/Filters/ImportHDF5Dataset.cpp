@@ -87,7 +87,7 @@ std::string ImportHDF5Dataset::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ImportHDF5Dataset::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import"};
 }
 
 //------------------------------------------------------------------------------

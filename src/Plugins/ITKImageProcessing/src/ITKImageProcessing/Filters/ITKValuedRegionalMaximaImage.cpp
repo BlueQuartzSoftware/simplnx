@@ -60,7 +60,7 @@ std::string ITKValuedRegionalMaximaImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKValuedRegionalMaximaImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKValuedRegionalMaximaImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
+  return {className(), "ITKImageProcessing", "ITKValuedRegionalMaximaImage", "ITKMathematicalMorphology", "MathematicalMorphology"};
 }
 
 //------------------------------------------------------------------------------

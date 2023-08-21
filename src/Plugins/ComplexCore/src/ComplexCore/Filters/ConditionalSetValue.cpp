@@ -77,7 +77,7 @@ std::string ConditionalSetValue::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ConditionalSetValue::defaultTags() const
 {
-  return {"Core", "Processing", "DataArray"};
+  return {className(), "Core", "Processing", "DataArray"};
 }
 
 Parameters ConditionalSetValue::parameters() const

@@ -68,7 +68,7 @@ std::string ITKMorphologicalWatershedImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKMorphologicalWatershedImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKMorphologicalWatershedImage", "ITKWatersheds", "Watersheds"};
+  return {className(), "ITKImageProcessing", "ITKMorphologicalWatershedImage", "ITKWatersheds", "Watersheds"};
 }
 
 //------------------------------------------------------------------------------

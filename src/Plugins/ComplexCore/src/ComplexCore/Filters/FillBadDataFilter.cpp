@@ -42,7 +42,7 @@ std::string FillBadDataFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FillBadDataFilter::defaultTags() const
 {
-  return {"Processing", "Cleanup"};
+  return {className(), "Processing", "Cleanup"};
 }
 
 //------------------------------------------------------------------------------

@@ -50,7 +50,7 @@ std::string SilhouetteFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> SilhouetteFilter::defaultTags() const
 {
-  return {"DREAM3D Review", "Clustering"};
+  return {className(), "DREAM3D Review", "Clustering"};
 }
 
 //------------------------------------------------------------------------------

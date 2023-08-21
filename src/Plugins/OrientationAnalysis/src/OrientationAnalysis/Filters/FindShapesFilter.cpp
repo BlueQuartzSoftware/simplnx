@@ -40,7 +40,7 @@ std::string FindShapesFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindShapesFilter::defaultTags() const
 {
-  return {"Statistics", "Morphological"};
+  return {className(), "Statistics", "Morphological"};
 }
 
 //------------------------------------------------------------------------------

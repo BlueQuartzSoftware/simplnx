@@ -156,7 +156,7 @@ std::string FindDifferencesMap::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> FindDifferencesMap::defaultTags() const
 {
-  return {"Statistics", "ComplexCore"};
+  return {className(), "Statistics", "ComplexCore"};
 }
 
 //------------------------------------------------------------------------------

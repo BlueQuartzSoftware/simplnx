@@ -45,7 +45,7 @@ std::string GenerateVectorColorsFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateVectorColorsFilter::defaultTags() const
 {
-  return {"Generic", "Coloring"};
+  return {className(), "Generic", "Coloring"};
 }
 
 //------------------------------------------------------------------------------

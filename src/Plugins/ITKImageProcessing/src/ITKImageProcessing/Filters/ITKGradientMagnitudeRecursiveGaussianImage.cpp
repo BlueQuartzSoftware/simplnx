@@ -80,7 +80,7 @@ std::string ITKGradientMagnitudeRecursiveGaussianImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKGradientMagnitudeRecursiveGaussianImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKGradientMagnitudeRecursiveGaussianImage", "ITKImageGradient", "ImageGradient"};
+  return {className(), "ITKImageProcessing", "ITKGradientMagnitudeRecursiveGaussianImage", "ITKImageGradient", "ImageGradient"};
 }
 
 //------------------------------------------------------------------------------

@@ -396,7 +396,7 @@ std::string AlignGeometries::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AlignGeometries::defaultTags() const
 {
-  return {"Match", "Align", "Geometry", "Move"};
+  return {className(), "Match", "Align", "Geometry", "Move"};
 }
 
 //------------------------------------------------------------------------------

@@ -63,7 +63,7 @@ std::string ITKGradientMagnitudeImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKGradientMagnitudeImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKGradientMagnitudeImage", "ITKImageGradient", "ImageGradient"};
+  return {className(), "ITKImageProcessing", "ITKGradientMagnitudeImage", "ITKImageGradient", "ImageGradient"};
 }
 
 //------------------------------------------------------------------------------

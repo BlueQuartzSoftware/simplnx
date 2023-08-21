@@ -39,7 +39,7 @@ Uuid ImportTextFilter::uuid() const
 
 std::vector<std::string> ImportTextFilter::defaultTags() const
 {
-  return {"IO", "Input", "Read", "Import", "Text"};
+  return {className(), "IO", "Input", "Read", "Import", "Text"};
 }
 
 std::string ImportTextFilter::humanName() const

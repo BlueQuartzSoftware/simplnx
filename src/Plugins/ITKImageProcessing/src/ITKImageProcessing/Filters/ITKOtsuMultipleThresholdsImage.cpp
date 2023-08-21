@@ -72,7 +72,7 @@ std::string ITKOtsuMultipleThresholdsImage::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKOtsuMultipleThresholdsImage::defaultTags() const
 {
-  return {"ITKImageProcessing", "ITKOtsuMultipleThresholdsImage", "ITKThresholding", "Thresholding"};
+  return {className(), "ITKImageProcessing", "ITKOtsuMultipleThresholdsImage", "ITKThresholding", "Thresholding"};
 }
 
 //------------------------------------------------------------------------------

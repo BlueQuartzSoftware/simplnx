@@ -39,7 +39,7 @@ std::string GenerateFaceMisorientationColoringFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> GenerateFaceMisorientationColoringFilter::defaultTags() const
 {
-  return {"Processing", "Crystallography"};
+  return {className(), "Processing", "Crystallography"};
 }
 
 //------------------------------------------------------------------------------
